@@ -1,0 +1,253 @@
+{
+  "budgets": {
+    "gpu_total_hours": 18.0,
+    "per_task_minutes": 25.0,
+    "preprocess_per_dataset_minutes": 30.0,
+    "wall_hard_hours": 10.0,
+    "wall_soft_hours": 6.0
+  },
+  "correctness_gates": [
+    "split pairwise disjoint and complete",
+    "TU outer Test never accessed during training or checkpoint selection",
+    "OGB official split indices match the cache rows",
+    "train-only normalization",
+    "target labels absent from structural caches",
+    "node renumbering invariance",
+    "single-graph vs batched forward consistency",
+    "S2 hand-count equality on small graphs",
+    "LCRC-C1 structure equals FULL minus b_mean",
+    "loss, gradient and checkpoint reload",
+    "Test metric independently recomputed from saved predictions",
+    "Peptides AP and OGB ROC-AUC shapes/missing-value behavior"
+  ],
+  "large_graph_precheck": {
+    "datasets": [
+      "COLLAB",
+      "REDDIT-BINARY",
+      "DD",
+      "PEPTIDES-FUNC"
+    ],
+    "forbidden": [
+      "random S2 sampling",
+      "silent high-order truncation",
+      "dropping large graphs",
+      "silent edge changes",
+      "changing the S2 definition for speed"
+    ],
+    "requirements": [
+      "label-free cache before formal run",
+      "per-graph node/edge/S2 distribution and maximum",
+      "5-epoch train-throughput check without Test labels",
+      "actual epoch time, CPU memory, GPU memory",
+      "RESOURCE_BLOCKED if projected full task exceeds 25 minutes",
+      "stop dataset if preprocessing exceeds 30 minutes"
+    ]
+  },
+  "model": {
+    "augmentation": false,
+    "checkpoint": "one per training task: Validation-selected state",
+    "class_reweighting": false,
+    "ema": false,
+    "ensembles": false,
+    "extra_loss": false,
+    "frozen_widths": {
+      "atom_hidden": 128,
+      "atom_out": 96,
+      "bond_hidden": 160,
+      "bond_out": 96,
+      "local_hidden": 192,
+      "rho_hidden": 64,
+      "stat_rank": 32,
+      "width": 64
+    },
+    "init": "seed-matched FULL state mapped to C1 by the frozen remap; no pretraining",
+    "name": "LCRC-C1 / NO_BOND_MEAN",
+    "normalization": "all fitted statistics use only the corresponding Train split",
+    "only_structural_change": "delete the 96-d b_mean = b_sum/deg local-input block from LCRC-A",
+    "soup": false,
+    "swa": false,
+    "test": "one terminal evaluation after checkpoint hash is recorded",
+    "training": "from scratch, no SSL",
+    "variant": "C1"
+  },
+  "ogb": {
+    "datasets": [
+      "ogbg-molhiv",
+      "ogbg-molbace",
+      "ogbg-moltox21"
+    ],
+    "input": "frozen lipo_v1 SMILES -> raw attributes -> LCRC molecular graph; no new RDKit target descriptor",
+    "loss": "BCEWithLogitsLoss with missing-label mask; MolTox21 NaNs are never converted to negatives",
+    "metric": "official OGB Evaluator ROC-AUC on each epoch's Validation split; terminal Test with the same Evaluator",
+    "recipe": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "batch_size": 128,
+      "dropout": 0.1,
+      "gradient_clip": 5.0,
+      "min_lr": 1e-05,
+      "optimizer": "AdamW",
+      "peak_lr": 0.0003,
+      "scheduler": "per_step_cosine",
+      "scheduler_horizon_epochs": 360,
+      "test_policy": "terminal: one evaluation with the OGB official Evaluator after checkpoint hash is recorded",
+      "weight_decay": 0.001
+    },
+    "report": "per-seed ROC-AUC; mean and sample std over 3 seeds",
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "source": "OGB GraphPropPredDataset official get_idx_split(); official SMILES mapping for label-free input construction",
+    "stopping": {
+      "ogbg-molbace": {
+        "max_epochs": 150,
+        "min_epochs": 50,
+        "patience": 35
+      },
+      "ogbg-molhiv": {
+        "max_epochs": 110,
+        "min_epochs": 60,
+        "patience": 40
+      },
+      "ogbg-moltox21": {
+        "max_epochs": 120,
+        "min_epochs": 40,
+        "patience": 30
+      }
+    }
+  },
+  "peptides_func": {
+    "batch_fallback": [
+      64,
+      32,
+      16
+    ],
+    "dataset": "peptides-func",
+    "input": {
+      "atom": "9 OGB-style discrete columns, one-hot with legal category counts 119,4,12,12,6,6,6,2,2",
+      "bond": "3 discrete columns, one-hot with legal category counts 5,6,2",
+      "s1_s2_types": "atom column 0 and bond column 0",
+      "topology": "historical LCRC local statistics and 28 global structural fields"
+    },
+    "loss": "BCEWithLogitsLoss over 10 independent labels",
+    "metric": "macro mean of 10 average-precision scores (percent)",
+    "recipe": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "batch_size": 64,
+      "batch_size_fallbacks": [
+        32,
+        16
+      ],
+      "dropout": 0.1,
+      "early_stop": "after min_epochs, stop when 25 consecutive epochs do not strictly improve best Validation mean AP",
+      "gradient_clip": 5.0,
+      "loss": "BCEWithLogitsLoss over 10 independent labels",
+      "max_epochs": 120,
+      "min_epochs": 40,
+      "min_lr": 1e-05,
+      "optimizer": "AdamW",
+      "patience": 25,
+      "peak_lr": 0.0003,
+      "scheduler": "per_step_cosine",
+      "scheduler_horizon_epochs": 120,
+      "selection": "max Validation mean average precision (macro AP over 10 labels)",
+      "test_policy": "terminal: one evaluation after checkpoint hash is recorded",
+      "weight_decay": 0.001
+    },
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "selection": "max Validation mean AP",
+    "source": "official PyG LRGBDataset Peptides-func fixed train/val/test"
+  },
+  "protocol_id": "lcrc-benchmark-positioning-fast-v1",
+  "result_label": "EXPLORATORY_FAST_BENCHMARK",
+  "round_id": "lcrc-benchmark-positioning-fast-v1",
+  "scope": "LCRC benchmark positioning, 13 datasets, exploratory fast round",
+  "screenshot_reference": {
+    "label": "SCREENSHOT_REFERENCE_PROTOCOL_UNVERIFIED",
+    "usage": "visual positioning only; not a verified same-protocol competitor",
+    "values_pct": {
+      "COLLAB": 80.72,
+      "DD": 79.48,
+      "ENZYMES": 69.73,
+      "IMDB-BINARY": 73.87,
+      "IMDB-MULTI": 50.97,
+      "MUTAG": 89.2,
+      "NCI1": 83.09,
+      "PROTEINS": 77.85,
+      "REDDIT-BINARY": 91.14,
+      "ogbg-molbace": 81.67,
+      "ogbg-molhiv": 81.47,
+      "ogbg-moltox21": 76.67,
+      "peptides-func": 71.57
+    }
+  },
+  "tu": {
+    "datasets": [
+      "IMDB-BINARY",
+      "IMDB-MULTI",
+      "COLLAB",
+      "REDDIT-BINARY",
+      "MUTAG",
+      "NCI1",
+      "PROTEINS",
+      "DD",
+      "ENZYMES"
+    ],
+    "early_stop": "minimum 40 epochs; stop after 25 consecutive epochs without strictly higher best Validation accuracy",
+    "features": {
+      "continuous_node_attributes": "retained verbatim and standardized on the fold Train split only",
+      "degree_datasets": "degree buckets 0..15, >=16 + reserved UNK",
+      "edge_labels": "deterministic dataset-wide sorted mapping to one-based LCRC bond types plus reserved UNK",
+      "node_labels": "retained as the discrete node type; dataset-wide sorted vocabulary plus reserved UNK",
+      "topology": "historical TU S1/S2, 9 scalars and 28 global fields; no target label"
+    },
+    "loader": "torch_geometric.datasets.TUDataset(cleaned=False, use_node_attr=True, use_edge_attr=True)",
+    "raw_source": "https://www.chrsmrrs.com/graphkerneldatasets/{name}.zip",
+    "recipe": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "batch_size": 64,
+      "dropout": 0.1,
+      "early_stop": "after min_epochs, stop when 25 consecutive epochs do not strictly improve best Valid accuracy",
+      "gradient_clip": 5.0,
+      "loss": "CrossEntropyLoss (unweighted)",
+      "max_epochs": 120,
+      "min_epochs": 40,
+      "min_lr": 1e-05,
+      "optimizer": "AdamW",
+      "patience": 25,
+      "peak_lr": 0.001,
+      "scheduler": "per_step_cosine",
+      "scheduler_horizon_epochs": 200,
+      "selection": "max Valid accuracy; ties -> lower Valid CE; ties -> earlier epoch",
+      "test_policy": "terminal: one evaluation after checkpoint hash is recorded",
+      "weight_decay": 0.0001
+    },
+    "report": "mean and sample std of 10 outer Test accuracies in percent; per-fold macro-F1 retained but not used for selection",
+    "selection": "max Validation accuracy; tie -> lower Validation CE; tie -> earlier epoch",
+    "split": {
+      "model_seed": "100+fold_id",
+      "no_inner_grid_search": true,
+      "outer": "StratifiedKFold(n_splits=10, shuffle=True, random_state=20261104)",
+      "outer_test": "current fold",
+      "outer_train": "remaining 9 folds",
+      "validation": "stratified 1/9 of outer_train; random_state=1000+fold_id"
+    }
+  }
+}

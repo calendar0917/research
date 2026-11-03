@@ -1,0 +1,839 @@
+{
+  "atom_feature_fields": [
+    {
+      "description": "one-hot over element x aromatic class (15 source classes + UNK)",
+      "dim": 16,
+      "dtype": "float32",
+      "name": "atom_type",
+      "source": "raw atom_class"
+    },
+    {
+      "description": "one-hot over -2,-1,0,+1,+2,UNK",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "formal_charge",
+      "source": "raw atom_charge index"
+    },
+    {
+      "description": "one-hot over 0,1,2,3,4,UNK explicit+implicit H count",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "n_hydrogens",
+      "source": "raw atom_h index"
+    },
+    {
+      "description": "heavy-atom degree one-hot 0..4,>=5",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "degree",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "atom lies on at least one cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "in_ring",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "one-hot acyclic,3,4,5,6,7,>=8 minimum ring size",
+      "dim": 7,
+      "dtype": "float32",
+      "name": "min_ring_size",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "ring-bond count / 4",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_bond_count_over_4",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "ring-bond count / degree (0 for isolated atoms)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_bond_fraction",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "fraction of incident bonds in SINGLE,DOUBLE,TRIPLE,AROMATIC,UNK",
+      "dim": 5,
+      "dtype": "float32",
+      "name": "incident_bond_class_fraction",
+      "source": "raw edge_class"
+    },
+    {
+      "description": "degree == 1",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_terminal",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "ring-bond count >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_fused_or_spiro",
+      "source": "physical-bond graph"
+    }
+  ],
+  "atom_feature_source": "lipo_v1 adapter from raw atom_class/atom_charge/atom_h + physical-bond graph",
+  "atom_scalar_fields": [
+    {
+      "description": "log1p(number of atoms at graph distance exactly 2)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_d2",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "log1p(number of ordered non-backtracking 2-paths rooted at the atom)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_paths2",
+      "source": "S2 enumeration"
+    },
+    {
+      "description": "fraction of rooted 2-paths whose end atom is adjacent to the root",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "closure_ratio",
+      "source": "S2 enumeration"
+    },
+    {
+      "description": "log1p(heavy-atom degree)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_degree",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "ring-atom flag",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "in_ring",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "minimum ring size / 8 (0 if acyclic)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "min_ring_size_over_8",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "ring-bond count / 4",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_bond_count_over_4",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "degree == 1",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_terminal",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "ring-bond count >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_fused_or_spiro",
+      "source": "physical-bond graph"
+    }
+  ],
+  "atom_type_encoding": "atom_type = raw atom_class (0..14 named element x aromatic class, 15 UNK); 0-based",
+  "atom_type_metadata": [
+    {
+      "aromatic": false,
+      "element": "B",
+      "index": 0,
+      "is_unknown": false,
+      "name": "B",
+      "raw_index": 0
+    },
+    {
+      "aromatic": false,
+      "element": "Br",
+      "index": 1,
+      "is_unknown": false,
+      "name": "Br",
+      "raw_index": 1
+    },
+    {
+      "aromatic": false,
+      "element": "C",
+      "index": 2,
+      "is_unknown": false,
+      "name": "C",
+      "raw_index": 2
+    },
+    {
+      "aromatic": true,
+      "element": "C",
+      "index": 3,
+      "is_unknown": false,
+      "name": "C_aromatic",
+      "raw_index": 3
+    },
+    {
+      "aromatic": false,
+      "element": "Cl",
+      "index": 4,
+      "is_unknown": false,
+      "name": "Cl",
+      "raw_index": 4
+    },
+    {
+      "aromatic": false,
+      "element": "F",
+      "index": 5,
+      "is_unknown": false,
+      "name": "F",
+      "raw_index": 5
+    },
+    {
+      "aromatic": false,
+      "element": "I",
+      "index": 6,
+      "is_unknown": false,
+      "name": "I",
+      "raw_index": 6
+    },
+    {
+      "aromatic": false,
+      "element": "N",
+      "index": 7,
+      "is_unknown": false,
+      "name": "N",
+      "raw_index": 7
+    },
+    {
+      "aromatic": true,
+      "element": "N",
+      "index": 8,
+      "is_unknown": false,
+      "name": "N_aromatic",
+      "raw_index": 8
+    },
+    {
+      "aromatic": false,
+      "element": "O",
+      "index": 9,
+      "is_unknown": false,
+      "name": "O",
+      "raw_index": 9
+    },
+    {
+      "aromatic": true,
+      "element": "O",
+      "index": 10,
+      "is_unknown": false,
+      "name": "O_aromatic",
+      "raw_index": 10
+    },
+    {
+      "aromatic": false,
+      "element": "P",
+      "index": 11,
+      "is_unknown": false,
+      "name": "P",
+      "raw_index": 11
+    },
+    {
+      "aromatic": false,
+      "element": "S",
+      "index": 12,
+      "is_unknown": false,
+      "name": "S",
+      "raw_index": 12
+    },
+    {
+      "aromatic": true,
+      "element": "S",
+      "index": 13,
+      "is_unknown": false,
+      "name": "S_aromatic",
+      "raw_index": 13
+    },
+    {
+      "aromatic": false,
+      "element": "Si",
+      "index": 14,
+      "is_unknown": false,
+      "name": "Si",
+      "raw_index": 14
+    },
+    {
+      "aromatic": false,
+      "element": null,
+      "index": 15,
+      "is_unknown": true,
+      "name": "UNK",
+      "raw_index": 15
+    }
+  ],
+  "atom_type_names": [
+    "B",
+    "Br",
+    "C",
+    "C_aromatic",
+    "Cl",
+    "F",
+    "I",
+    "N",
+    "N_aromatic",
+    "O",
+    "O_aromatic",
+    "P",
+    "S",
+    "S_aromatic",
+    "Si",
+    "UNK"
+  ],
+  "atom_unk_index": 15,
+  "atom_unknown_policy": "map_to_UNK: raw atom_class 15 is the source UNK category; raw classes 0..14 keep their chemical name; MASK (16) is rejected",
+  "bond_feature_fields": [
+    {
+      "description": "one-hot SINGLE,DOUBLE,TRIPLE,AROMATIC,UNK",
+      "dim": 5,
+      "dtype": "float32",
+      "name": "bond_class",
+      "source": "raw edge_class"
+    },
+    {
+      "description": "bond lies on at least one cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_ring",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "exactly one endpoint is a ring atom",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "exactly_one_endpoint_in_ring",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "both endpoints are ring atoms",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "both_endpoints_in_ring",
+      "source": "physical-bond graph"
+    },
+    {
+      "description": "one-hot NONE,E,Z,OTHER,UNK; encoder-only, not part of S1/S2 joint codes",
+      "dim": 5,
+      "dtype": "float32",
+      "name": "stereo",
+      "source": "raw edge_stereo"
+    }
+  ],
+  "bond_feature_source": "lipo_v1 adapter from raw edge_class/edge_stereo + physical-bond graph",
+  "bond_type_encoding": "bond_type = raw edge_class + 1 (SINGLE=1, DOUBLE=2, TRIPLE=3, AROMATIC=4, UNK=5); one-based",
+  "bond_type_metadata": [
+    {
+      "id": 1,
+      "is_unknown": false,
+      "name": "SINGLE",
+      "raw_index": 0
+    },
+    {
+      "id": 2,
+      "is_unknown": false,
+      "name": "DOUBLE",
+      "raw_index": 1
+    },
+    {
+      "id": 3,
+      "is_unknown": false,
+      "name": "TRIPLE",
+      "raw_index": 2
+    },
+    {
+      "id": 4,
+      "is_unknown": false,
+      "name": "AROMATIC",
+      "raw_index": 3
+    },
+    {
+      "id": 5,
+      "is_unknown": true,
+      "name": "UNK",
+      "raw_index": 4
+    }
+  ],
+  "bond_type_names": [
+    "SINGLE",
+    "DOUBLE",
+    "TRIPLE",
+    "AROMATIC",
+    "UNK"
+  ],
+  "bond_unk_id": 5,
+  "bond_unknown_policy": "map_to_UNK: raw edge_class 4 maps to UNK id 5; raw classes 0..3 map to ids 1..4",
+  "description": "Explicit Lipophilicity structure schema built from the committed label-free raw graph. Atom/bond/global widths and vocabularies are independent of legacy_zinc.  Disconnected molecules and isolated atoms are supported with finite statistics.",
+  "dimensions": {
+    "atom_feat_dim": 51,
+    "bond_feat_dim": 13,
+    "code_max": 2147483647,
+    "global_dim": 42,
+    "n_atom_types": 16,
+    "n_bond_types": 5,
+    "n_nbr_codes": 80,
+    "n_path_codes": 400,
+    "n_scalars": 9
+  },
+  "disconnected_policy": "supported with finite statistics: unreachable pairs are excluded from diameter/mean distance, reported separately via frac_unreachable_pairs, and never counted as a finite distance >= 3",
+  "feature_dtype": "float32",
+  "global_feature_fields": [
+    {
+      "description": "log1p(number of atoms)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_atoms",
+      "source": "molecular graph"
+    },
+    {
+      "description": "log1p(number of physical bonds)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_bonds",
+      "source": "molecular graph"
+    },
+    {
+      "description": "log1p(number of unordered neighbour pairs at a centre)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_junctions",
+      "source": "molecular graph"
+    },
+    {
+      "description": "n_bonds - n_atoms + n_components (first Betti number)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "cyclomatic_number",
+      "source": "molecular graph"
+    },
+    {
+      "description": "number of connected components",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "n_components",
+      "source": "molecular graph"
+    },
+    {
+      "description": "fraction of atoms on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_atom_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "fraction of bonds on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_bond_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "number of biconnected blocks with at least three edges",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "n_ring_systems",
+      "source": "ring analysis"
+    },
+    {
+      "description": "maximum finite shortest-path distance within components (0 for a single atom)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "diameter_max_finite",
+      "source": "all-pairs BFS"
+    },
+    {
+      "description": "mean finite unordered-pair shortest-path distance; unreachable pairs excluded",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "mean_finite_pair_distance",
+      "source": "all-pairs BFS"
+    },
+    {
+      "description": "unreachable unordered pairs / all unordered pairs (0 for connected molecules)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_unreachable_pairs",
+      "source": "all-pairs BFS"
+    },
+    {
+      "description": "finite unordered pairs at distance >= 3 / all unordered pairs; unreachable pairs are NOT counted as >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_finite_pairs_ge3",
+      "source": "all-pairs BFS"
+    },
+    {
+      "description": "n_bonds / n_atoms",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bonds_per_atom",
+      "source": "molecular graph"
+    },
+    {
+      "description": "log1p(number of ring atoms)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_ring_atoms",
+      "source": "ring analysis"
+    },
+    {
+      "description": "maximum heavy-atom degree",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "max_degree",
+      "source": "molecular graph"
+    },
+    {
+      "description": "fraction of degree-1 atoms",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "terminal_atom_fraction",
+      "source": "molecular graph"
+    },
+    {
+      "description": "n_junctions / n_bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "junction_per_bond",
+      "source": "molecular graph"
+    },
+    {
+      "description": "fraction of junction centres on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_junction_centers_ring",
+      "source": "ring analysis"
+    },
+    {
+      "description": "fraction of junctions whose centre has degree 2",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_deg2_junctions",
+      "source": "molecular graph"
+    },
+    {
+      "description": "fraction of junctions whose centre has degree >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_deg3plus_junctions",
+      "source": "molecular graph"
+    },
+    {
+      "description": "fraction of SINGLE bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_single_fraction",
+      "source": "raw edge_class"
+    },
+    {
+      "description": "fraction of DOUBLE bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_double_fraction",
+      "source": "raw edge_class"
+    },
+    {
+      "description": "fraction of TRIPLE bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_triple_fraction",
+      "source": "raw edge_class"
+    },
+    {
+      "description": "fraction of AROMATIC bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_aromatic_fraction",
+      "source": "raw edge_class"
+    },
+    {
+      "description": "fraction of UNK bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bond_unknown_fraction",
+      "source": "raw edge_class"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size3_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 4",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size4_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 5",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size5_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 6",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size6_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size 7",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size7_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "ring-atom fraction with minimum ring size >= 8",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size8plus_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "fraction of atoms with >= 3 ring bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "fused_ring_atom_fraction",
+      "source": "ring analysis"
+    },
+    {
+      "description": "fraction of atoms whose type is aromatic",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "aromatic_atom_fraction",
+      "source": "raw atom_class"
+    },
+    {
+      "description": "fraction of atoms mapped to UNK",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "unknown_atom_fraction",
+      "source": "raw atom_class"
+    },
+    {
+      "description": "fraction of atoms with non-zero known formal charge",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "charged_atom_fraction",
+      "source": "raw atom_charge"
+    },
+    {
+      "description": "mean known formal charge; UNK charge treated as 0",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "mean_formal_charge",
+      "source": "raw atom_charge"
+    },
+    {
+      "description": "mean known hydrogen count; UNK H treated as 0",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "mean_hydrogens",
+      "source": "raw atom_h"
+    },
+    {
+      "description": "number of distinct categorical atom types present",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "distinct_atom_types",
+      "source": "atom_type"
+    },
+    {
+      "description": "number of distinct categorical bond types present",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "distinct_bond_types",
+      "source": "bond_type"
+    },
+    {
+      "description": "maximum absolute known formal charge; UNK charge treated as 0",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "max_abs_formal_charge",
+      "source": "raw atom_charge"
+    },
+    {
+      "description": "fraction of atoms with UNK charge bucket",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "unknown_charge_fraction",
+      "source": "raw atom_charge"
+    },
+    {
+      "description": "fraction of atoms with UNK hydrogen bucket",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "unknown_hydrogen_fraction",
+      "source": "raw atom_h"
+    }
+  ],
+  "global_feature_source": "lipo_v1 graph statistics with explicit disconnected handling",
+  "name": "lipo_v1",
+  "nbr_code_formula": "atom_type[neighbour] * 5 + (bond_type - 1)",
+  "output_tensors": [
+    {
+      "description": "per-atom feature matrix",
+      "dtype": "float32",
+      "name": "atom_feat",
+      "shape": "[N, 51]"
+    },
+    {
+      "description": "categorical atom type id (0-based)",
+      "dtype": "int64",
+      "name": "atom_type",
+      "shape": "[N]"
+    },
+    {
+      "description": "per-atom scalar vector before Fit-only standardisation",
+      "dtype": "float32",
+      "name": "atom_scalar",
+      "shape": "[N, 9]"
+    },
+    {
+      "description": "per-physical-bond feature matrix",
+      "dtype": "float32",
+      "name": "bond_feat",
+      "shape": "[M, 13]"
+    },
+    {
+      "description": "categorical bond type id (1-based)",
+      "dtype": "int64",
+      "name": "bond_type",
+      "shape": "[M]"
+    },
+    {
+      "description": "physical bond endpoints, u < v, sorted",
+      "dtype": "int64",
+      "name": "bond_index",
+      "shape": "[M, 2]"
+    },
+    {
+      "description": "molecule atom offsets",
+      "dtype": "int64",
+      "name": "atom_ptr",
+      "shape": "[B + 1]"
+    },
+    {
+      "description": "molecule bond offsets",
+      "dtype": "int64",
+      "name": "bond_ptr",
+      "shape": "[B + 1]"
+    },
+    {
+      "description": "per-atom S1 code offsets",
+      "dtype": "int64",
+      "name": "nbr_ptr",
+      "shape": "[N_total + 1]"
+    },
+    {
+      "description": "joint (neighbour atom type, bond type) code",
+      "dtype": "int32",
+      "name": "nbr_code",
+      "shape": "[nnz_S1]"
+    },
+    {
+      "description": "per-root S2 record offsets",
+      "dtype": "int64",
+      "name": "path_ptr",
+      "shape": "[N_total + 1]"
+    },
+    {
+      "description": "joint (middle type, bond1, bond2) code",
+      "dtype": "int32",
+      "name": "path_cat",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "joint (end atom type, bond2) code",
+      "dtype": "int32",
+      "name": "path_end63",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "absolute end-atom index in the batch",
+      "dtype": "int64",
+      "name": "path_end",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "1 iff the end atom is adjacent to the root",
+      "dtype": "int8",
+      "name": "path_closure",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "graph-level structural statistics before Fit-only standardisation",
+      "dtype": "float32",
+      "name": "global",
+      "shape": "[B, 42]"
+    }
+  ],
+  "path_code_formula": "atom_type[middle] * 25 + (bond_type_1 - 1) * 5 + (bond_type_2 - 1)",
+  "path_end_code_formula": "atom_type[end] * 5 + (bond_type_2 - 1)",
+  "schema_version": "lcrc-feature-spec-v1",
+  "source_provenance": {
+    "csv_sha256": "aed41590cb30609d51d8e08ad3ff06495a76e80e211358801f596b10da69bacd",
+    "fit_observed_atom_classes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "fit_observed_bond_classes": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "frozen_split_sha256": "9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6",
+    "numpy_version": "2.1.3",
+    "official_split_sha256": "7f0e0b991b0a0465bfe5fa30dc2ca77e40239aeecbdd0bc87322c9621c2393f8",
+    "protocol": "ssrc-phase1a-lipo-v1",
+    "python_version": "3.12.15",
+    "raw_graph_sha256": "8416837ea3e56e3e5218865391c88913bb16948b48b7a61be1ee890ea4dda6dd",
+    "rdkit_version": "2026.09.1",
+    "round_id": "lcrc-cross-task-preparation-v1",
+    "row_hashes": {
+      "fit": "c474e38cdecf10071965527409901403ec8b670b96fe4a3c42452531dd0210e9",
+      "monitor": "fe81cc7904a6da9378f5bf5ae7452ac71629adad83a2a98b917f87299a85f39f",
+      "reserved": "bc28c5d37c2fe2fbe39c01d5bf2ab9c56630eee2d0a4454a108d150ab2f42d86",
+      "split_file": "9fa96d49efd94cd2ff381922f83a07f963d832064c75469657b4ce5f68c332b6"
+    },
+    "row_manifest_sha256": "2c638e4814cb6d21ccec9d8c8af357d28ce210fb2c20c3d09b9c19afd476073d",
+    "torch_version": "2.5.1+cu124",
+    "vocabulary_policy": "fixed_source_classes_0..15_and_bond_classes_0..4"
+  },
+  "spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+  "structural_code_dtype": "int32",
+  "structural_index_dtype": "int64",
+  "supports_disconnected": true
+}

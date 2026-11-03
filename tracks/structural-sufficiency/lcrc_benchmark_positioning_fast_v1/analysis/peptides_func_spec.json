@@ -1,0 +1,1412 @@
+{
+  "atom_feature_fields": [
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 0",
+      "dim": 119,
+      "dtype": "float32",
+      "name": "atomic_number",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 1",
+      "dim": 4,
+      "dtype": "float32",
+      "name": "chirality",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 2",
+      "dim": 12,
+      "dtype": "float32",
+      "name": "degree",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 3",
+      "dim": 12,
+      "dtype": "float32",
+      "name": "formal_charge",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 4",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "num_hydrogens",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 5",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "num_radical_electrons",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 6",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "hybridization",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 7",
+      "dim": 2,
+      "dtype": "float32",
+      "name": "aromatic",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func atom feature column 8",
+      "dim": 2,
+      "dtype": "float32",
+      "name": "ring",
+      "source": "LRGB Peptides-func x"
+    },
+    {
+      "description": "degree one-hot 0..15,>=16 from the cleaned physical graph",
+      "dim": 17,
+      "dtype": "float32",
+      "name": "degree_bucket",
+      "source": "graph"
+    },
+    {
+      "description": "node lies on at least one cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "in_cycle",
+      "source": "biconnected-block analysis"
+    },
+    {
+      "description": "one-hot acyclic,3,4,5,6,7,>=8 minimum cycle length",
+      "dim": 7,
+      "dtype": "float32",
+      "name": "min_cycle_size",
+      "source": "smallest cycle through the node"
+    },
+    {
+      "description": "log1p(number of incident cycle edges)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_cycle_degree",
+      "source": "biconnected-block analysis"
+    },
+    {
+      "description": "cycle_degree / max(degree, 1)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "cycle_degree_fraction",
+      "source": "biconnected-block analysis"
+    },
+    {
+      "description": "degree == 1",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_terminal",
+      "source": "graph"
+    },
+    {
+      "description": "cycle_degree >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "cycle_degree_ge3",
+      "source": "biconnected-block analysis"
+    }
+  ],
+  "atom_feature_source": "Peptides-func 9-column discrete atom features, one-hot by legal category count",
+  "atom_scalar_fields": [
+    {
+      "description": "log1p(number of nodes at graph distance exactly 2)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_d2",
+      "source": "topology"
+    },
+    {
+      "description": "log1p(number of ordered non-backtracking 2-paths rooted at the node)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_paths2",
+      "source": "topology"
+    },
+    {
+      "description": "closure-count / path-count (0 when there is no rooted 2-path)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "closure_ratio",
+      "source": "topology"
+    },
+    {
+      "description": "log1p(degree)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_degree",
+      "source": "topology"
+    },
+    {
+      "description": "node lies on at least one cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "in_cycle",
+      "source": "topology"
+    },
+    {
+      "description": "log1p(smallest cycle through the node); 0 if acyclic",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_min_cycle_size",
+      "source": "topology"
+    },
+    {
+      "description": "log1p(number of incident cycle edges)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_cycle_degree",
+      "source": "topology"
+    },
+    {
+      "description": "degree == 1",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_terminal",
+      "source": "topology"
+    },
+    {
+      "description": "cycle_degree >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "cycle_degree_ge3",
+      "source": "topology"
+    }
+  ],
+  "atom_type_encoding": "atom_type = atom feature column 0 (atomic number category), 0-based",
+  "atom_type_metadata": [
+    {
+      "index": 0,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_0",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 1,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_1",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 2,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_2",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 3,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_3",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 4,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_4",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 5,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_5",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 6,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_6",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 7,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_7",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 8,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_8",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 9,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_9",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 10,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_10",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 11,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_11",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 12,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_12",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 13,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_13",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 14,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_14",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 15,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_15",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 16,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_16",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 17,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_17",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 18,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_18",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 19,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_19",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 20,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_20",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 21,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_21",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 22,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_22",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 23,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_23",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 24,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_24",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 25,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_25",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 26,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_26",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 27,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_27",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 28,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_28",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 29,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_29",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 30,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_30",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 31,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_31",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 32,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_32",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 33,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_33",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 34,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_34",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 35,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_35",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 36,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_36",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 37,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_37",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 38,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_38",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 39,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_39",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 40,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_40",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 41,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_41",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 42,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_42",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 43,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_43",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 44,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_44",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 45,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_45",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 46,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_46",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 47,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_47",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 48,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_48",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 49,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_49",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 50,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_50",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 51,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_51",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 52,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_52",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 53,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_53",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 54,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_54",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 55,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_55",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 56,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_56",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 57,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_57",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 58,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_58",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 59,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_59",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 60,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_60",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 61,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_61",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 62,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_62",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 63,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_63",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 64,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_64",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 65,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_65",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 66,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_66",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 67,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_67",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 68,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_68",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 69,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_69",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 70,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_70",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 71,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_71",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 72,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_72",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 73,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_73",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 74,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_74",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 75,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_75",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 76,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_76",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 77,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_77",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 78,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_78",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 79,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_79",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 80,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_80",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 81,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_81",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 82,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_82",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 83,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_83",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 84,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_84",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 85,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_85",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 86,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_86",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 87,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_87",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 88,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_88",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 89,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_89",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 90,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_90",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 91,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_91",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 92,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_92",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 93,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_93",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 94,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_94",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 95,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_95",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 96,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_96",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 97,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_97",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 98,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_98",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 99,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_99",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 100,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_100",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 101,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_101",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 102,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_102",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 103,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_103",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 104,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_104",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 105,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_105",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 106,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_106",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 107,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_107",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 108,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_108",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 109,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_109",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 110,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_110",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 111,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_111",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 112,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_112",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 113,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_113",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 114,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_114",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 115,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_115",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 116,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_116",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 117,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_117",
+      "source": "Peptides-func atom column 0"
+    },
+    {
+      "index": 118,
+      "is_unknown": false,
+      "name": "ATOMIC_NUMBER_118",
+      "source": "Peptides-func atom column 0"
+    }
+  ],
+  "atom_type_names": [
+    "ATOMIC_NUMBER_0",
+    "ATOMIC_NUMBER_1",
+    "ATOMIC_NUMBER_2",
+    "ATOMIC_NUMBER_3",
+    "ATOMIC_NUMBER_4",
+    "ATOMIC_NUMBER_5",
+    "ATOMIC_NUMBER_6",
+    "ATOMIC_NUMBER_7",
+    "ATOMIC_NUMBER_8",
+    "ATOMIC_NUMBER_9",
+    "ATOMIC_NUMBER_10",
+    "ATOMIC_NUMBER_11",
+    "ATOMIC_NUMBER_12",
+    "ATOMIC_NUMBER_13",
+    "ATOMIC_NUMBER_14",
+    "ATOMIC_NUMBER_15",
+    "ATOMIC_NUMBER_16",
+    "ATOMIC_NUMBER_17",
+    "ATOMIC_NUMBER_18",
+    "ATOMIC_NUMBER_19",
+    "ATOMIC_NUMBER_20",
+    "ATOMIC_NUMBER_21",
+    "ATOMIC_NUMBER_22",
+    "ATOMIC_NUMBER_23",
+    "ATOMIC_NUMBER_24",
+    "ATOMIC_NUMBER_25",
+    "ATOMIC_NUMBER_26",
+    "ATOMIC_NUMBER_27",
+    "ATOMIC_NUMBER_28",
+    "ATOMIC_NUMBER_29",
+    "ATOMIC_NUMBER_30",
+    "ATOMIC_NUMBER_31",
+    "ATOMIC_NUMBER_32",
+    "ATOMIC_NUMBER_33",
+    "ATOMIC_NUMBER_34",
+    "ATOMIC_NUMBER_35",
+    "ATOMIC_NUMBER_36",
+    "ATOMIC_NUMBER_37",
+    "ATOMIC_NUMBER_38",
+    "ATOMIC_NUMBER_39",
+    "ATOMIC_NUMBER_40",
+    "ATOMIC_NUMBER_41",
+    "ATOMIC_NUMBER_42",
+    "ATOMIC_NUMBER_43",
+    "ATOMIC_NUMBER_44",
+    "ATOMIC_NUMBER_45",
+    "ATOMIC_NUMBER_46",
+    "ATOMIC_NUMBER_47",
+    "ATOMIC_NUMBER_48",
+    "ATOMIC_NUMBER_49",
+    "ATOMIC_NUMBER_50",
+    "ATOMIC_NUMBER_51",
+    "ATOMIC_NUMBER_52",
+    "ATOMIC_NUMBER_53",
+    "ATOMIC_NUMBER_54",
+    "ATOMIC_NUMBER_55",
+    "ATOMIC_NUMBER_56",
+    "ATOMIC_NUMBER_57",
+    "ATOMIC_NUMBER_58",
+    "ATOMIC_NUMBER_59",
+    "ATOMIC_NUMBER_60",
+    "ATOMIC_NUMBER_61",
+    "ATOMIC_NUMBER_62",
+    "ATOMIC_NUMBER_63",
+    "ATOMIC_NUMBER_64",
+    "ATOMIC_NUMBER_65",
+    "ATOMIC_NUMBER_66",
+    "ATOMIC_NUMBER_67",
+    "ATOMIC_NUMBER_68",
+    "ATOMIC_NUMBER_69",
+    "ATOMIC_NUMBER_70",
+    "ATOMIC_NUMBER_71",
+    "ATOMIC_NUMBER_72",
+    "ATOMIC_NUMBER_73",
+    "ATOMIC_NUMBER_74",
+    "ATOMIC_NUMBER_75",
+    "ATOMIC_NUMBER_76",
+    "ATOMIC_NUMBER_77",
+    "ATOMIC_NUMBER_78",
+    "ATOMIC_NUMBER_79",
+    "ATOMIC_NUMBER_80",
+    "ATOMIC_NUMBER_81",
+    "ATOMIC_NUMBER_82",
+    "ATOMIC_NUMBER_83",
+    "ATOMIC_NUMBER_84",
+    "ATOMIC_NUMBER_85",
+    "ATOMIC_NUMBER_86",
+    "ATOMIC_NUMBER_87",
+    "ATOMIC_NUMBER_88",
+    "ATOMIC_NUMBER_89",
+    "ATOMIC_NUMBER_90",
+    "ATOMIC_NUMBER_91",
+    "ATOMIC_NUMBER_92",
+    "ATOMIC_NUMBER_93",
+    "ATOMIC_NUMBER_94",
+    "ATOMIC_NUMBER_95",
+    "ATOMIC_NUMBER_96",
+    "ATOMIC_NUMBER_97",
+    "ATOMIC_NUMBER_98",
+    "ATOMIC_NUMBER_99",
+    "ATOMIC_NUMBER_100",
+    "ATOMIC_NUMBER_101",
+    "ATOMIC_NUMBER_102",
+    "ATOMIC_NUMBER_103",
+    "ATOMIC_NUMBER_104",
+    "ATOMIC_NUMBER_105",
+    "ATOMIC_NUMBER_106",
+    "ATOMIC_NUMBER_107",
+    "ATOMIC_NUMBER_108",
+    "ATOMIC_NUMBER_109",
+    "ATOMIC_NUMBER_110",
+    "ATOMIC_NUMBER_111",
+    "ATOMIC_NUMBER_112",
+    "ATOMIC_NUMBER_113",
+    "ATOMIC_NUMBER_114",
+    "ATOMIC_NUMBER_115",
+    "ATOMIC_NUMBER_116",
+    "ATOMIC_NUMBER_117",
+    "ATOMIC_NUMBER_118"
+  ],
+  "atom_unk_index": null,
+  "atom_unknown_policy": "reject: every atom column 0 value must be a legal category in [0,119)",
+  "bond_feature_fields": [
+    {
+      "description": "one-hot legal category set for Peptides-func bond feature column 0",
+      "dim": 5,
+      "dtype": "float32",
+      "name": "bond_type",
+      "source": "LRGB Peptides-func edge_attr"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func bond feature column 1",
+      "dim": 6,
+      "dtype": "float32",
+      "name": "stereo",
+      "source": "LRGB Peptides-func edge_attr"
+    },
+    {
+      "description": "one-hot legal category set for Peptides-func bond feature column 2",
+      "dim": 2,
+      "dtype": "float32",
+      "name": "conjugated",
+      "source": "LRGB Peptides-func edge_attr"
+    },
+    {
+      "description": "edge lies on at least one cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "is_cycle_edge",
+      "source": "graph"
+    }
+  ],
+  "bond_feature_source": "Peptides-func 3-column discrete bond features, one-hot by legal category count",
+  "bond_type_encoding": "bond_type = bond feature column 0 + 1, one-based",
+  "bond_type_metadata": [
+    {
+      "id": 1,
+      "is_unknown": false,
+      "name": "BOND_TYPE_0",
+      "source": "Peptides-func bond column 0"
+    },
+    {
+      "id": 2,
+      "is_unknown": false,
+      "name": "BOND_TYPE_1",
+      "source": "Peptides-func bond column 0"
+    },
+    {
+      "id": 3,
+      "is_unknown": false,
+      "name": "BOND_TYPE_2",
+      "source": "Peptides-func bond column 0"
+    },
+    {
+      "id": 4,
+      "is_unknown": false,
+      "name": "BOND_TYPE_3",
+      "source": "Peptides-func bond column 0"
+    },
+    {
+      "id": 5,
+      "is_unknown": false,
+      "name": "BOND_TYPE_4",
+      "source": "Peptides-func bond column 0"
+    }
+  ],
+  "bond_type_names": [
+    "BOND_TYPE_0",
+    "BOND_TYPE_1",
+    "BOND_TYPE_2",
+    "BOND_TYPE_3",
+    "BOND_TYPE_4"
+  ],
+  "bond_unk_id": null,
+  "bond_unknown_policy": "reject: every bond column 0 value must be a legal category in [0,5)",
+  "description": "Peptides-func LCRC input: all 9 OGB-style discrete atom columns and 3 discrete bond columns one-hot encoded with their legal category counts, plus the historical LCRC topology descriptors.  S1/S2 type codes use atom column 0 and bond column 0.",
+  "dimensions": {
+    "atom_feat_dim": 198,
+    "bond_feat_dim": 14,
+    "code_max": 2147483647,
+    "global_dim": 28,
+    "n_atom_types": 119,
+    "n_bond_types": 5,
+    "n_nbr_codes": 595,
+    "n_path_codes": 2975,
+    "n_scalars": 9
+  },
+  "disconnected_policy": "supported with finite statistics: unreachable pairs (shortest-path sentinel -1) are excluded from diameter/mean distance and reported via frac_unreachable_pairs",
+  "feature_dtype": "float32",
+  "global_feature_fields": [
+    {
+      "description": "log1p(number of nodes)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_atoms",
+      "source": "graph statistics"
+    },
+    {
+      "description": "log1p(number of physical edges after cleaning)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_bonds",
+      "source": "graph statistics"
+    },
+    {
+      "description": "log1p(number of unordered neighbour pairs at a centre)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_junctions",
+      "source": "graph statistics"
+    },
+    {
+      "description": "n_bonds - n_atoms + n_components (first Betti number)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "cyclomatic_number",
+      "source": "graph statistics"
+    },
+    {
+      "description": "number of connected components (isolated nodes included)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "n_components",
+      "source": "graph statistics"
+    },
+    {
+      "description": "fraction of nodes on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_atom_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "fraction of edges on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_bond_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "number of biconnected blocks with at least three edges",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "n_ring_systems",
+      "source": "graph statistics"
+    },
+    {
+      "description": "maximum finite shortest-path distance inside a component (0 for a single node)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "diameter_max_finite",
+      "source": "graph statistics"
+    },
+    {
+      "description": "mean finite unordered-pair distance; unreachable pairs excluded",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "mean_finite_pair_distance",
+      "source": "graph statistics"
+    },
+    {
+      "description": "unreachable unordered pairs / all unordered pairs",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_unreachable_pairs",
+      "source": "graph statistics"
+    },
+    {
+      "description": "finite unordered pairs at distance >= 3 / all unordered pairs",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_finite_pairs_ge3",
+      "source": "graph statistics"
+    },
+    {
+      "description": "n_bonds / n_atoms",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "bonds_per_atom",
+      "source": "graph statistics"
+    },
+    {
+      "description": "log1p(number of nodes on a cycle)",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "log1p_n_ring_atoms",
+      "source": "graph statistics"
+    },
+    {
+      "description": "maximum node degree",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "max_degree",
+      "source": "graph statistics"
+    },
+    {
+      "description": "fraction of degree-1 nodes",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "terminal_atom_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "n_junctions / n_bonds",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "junction_per_bond",
+      "source": "graph statistics"
+    },
+    {
+      "description": "fraction of junction centres on a cycle",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_junction_centers_ring",
+      "source": "graph statistics"
+    },
+    {
+      "description": "fraction of junctions whose centre has degree 2",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_deg2_junctions",
+      "source": "graph statistics"
+    },
+    {
+      "description": "fraction of junctions whose centre has degree >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "frac_deg3plus_junctions",
+      "source": "graph statistics"
+    },
+    {
+      "description": "cycle-node fraction with minimum cycle length 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size3_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "cycle-node fraction with minimum cycle length 4",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size4_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "cycle-node fraction with minimum cycle length 5",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size5_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "cycle-node fraction with minimum cycle length 6",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size6_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "cycle-node fraction with minimum cycle length 7",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size7_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "cycle-node fraction with minimum cycle length >= 8",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "ring_size8plus_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "fraction of nodes with cycle_degree >= 3",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "fused_ring_atom_fraction",
+      "source": "graph statistics"
+    },
+    {
+      "description": "number of distinct atom types present",
+      "dim": 1,
+      "dtype": "float32",
+      "name": "distinct_atom_types",
+      "source": "graph statistics"
+    }
+  ],
+  "global_feature_source": "label-free graph statistics with explicit disconnected handling",
+  "name": "peptides_func_bench",
+  "nbr_code_formula": "node_type[neighbour] * 5 + (edge_type - 1)",
+  "output_tensors": [
+    {
+      "description": "per-node feature matrix",
+      "dtype": "float32",
+      "name": "atom_feat",
+      "shape": "[N, 198]"
+    },
+    {
+      "description": "discrete node type id (0-based)",
+      "dtype": "int64",
+      "name": "atom_type",
+      "shape": "[N]"
+    },
+    {
+      "description": "per-node topology scalars before Train-only standardisation",
+      "dtype": "float32",
+      "name": "atom_scalar",
+      "shape": "[N, 9]"
+    },
+    {
+      "description": "per-physical-edge feature matrix",
+      "dtype": "float32",
+      "name": "bond_feat",
+      "shape": "[M, 14]"
+    },
+    {
+      "description": "edge type id (1-based)",
+      "dtype": "int64",
+      "name": "bond_type",
+      "shape": "[M]"
+    },
+    {
+      "description": "physical edge endpoints, u < v, sorted",
+      "dtype": "int64",
+      "name": "bond_index",
+      "shape": "[M, 2]"
+    },
+    {
+      "description": "joint (neighbour node type, edge type) code",
+      "dtype": "int32",
+      "name": "nbr_code",
+      "shape": "[nnz_S1]"
+    },
+    {
+      "description": "joint (middle type, edge1, edge2) code",
+      "dtype": "int32",
+      "name": "path_cat",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "joint (end node type, edge2) code",
+      "dtype": "int32",
+      "name": "path_end63",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "absolute end-node index",
+      "dtype": "int64",
+      "name": "path_end",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "1 iff the end node is adjacent to the root",
+      "dtype": "int8",
+      "name": "path_closure",
+      "shape": "[nnz_S2]"
+    },
+    {
+      "description": "graph-level topology statistics before Train-only standardisation",
+      "dtype": "float32",
+      "name": "global",
+      "shape": "[B, 28]"
+    }
+  ],
+  "path_code_formula": "node_type[middle] * 25 + (bt1 - 1) * 5 + (bt2 - 1)",
+  "path_end_code_formula": "node_type[end] * 5 + (bt2 - 1)",
+  "schema_version": "lcrc-feature-spec-v1",
+  "source_provenance": {
+    "atom_vocabs": [
+      119,
+      4,
+      12,
+      12,
+      6,
+      6,
+      6,
+      2,
+      2
+    ],
+    "bond_vocabs": [
+      5,
+      6,
+      2
+    ],
+    "dataset": "LRGB Peptides-func",
+    "loader": "torch_geometric.datasets.LRGBDataset(root, name='Peptides-func', split=...)",
+    "s1_s2_type_sources": "atom feature column 0 and bond feature column 0"
+  },
+  "spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+  "structural_code_dtype": "int32",
+  "structural_index_dtype": "int64",
+  "supports_disconnected": true
+}

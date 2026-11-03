@@ -1,0 +1,976 @@
+{
+  "bond_types": {
+    "encoding": "all physical edges use EDGE=1; UNK=2 reserved and never produced",
+    "map": null,
+    "names": [
+      "EDGE",
+      "UNK"
+    ],
+    "unk_id": 2
+  },
+  "cache": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/NCI1.pt",
+  "cache_build_seconds": 19.718558801003383,
+  "cache_bytes": 54970132,
+  "cache_sha256": "8e965712d3952d5569c5415acd76d3503cdcbe0e9cf698ebd1d1d007cd756ad1",
+  "cache_validation": {
+    "finite": true,
+    "index_ranges_valid": true,
+    "labels_present": false,
+    "n_atoms": 122747,
+    "n_bonds": 132753,
+    "n_molecules_checked": 4110,
+    "n_s1_codes": 265506,
+    "n_s2_paths": 383116
+  },
+  "data": {
+    "class_counts": [
+      2053,
+      2057
+    ],
+    "clean_totals": {
+      "n_directed_records": 265506,
+      "n_duplicate_directed_records_merged": 132753,
+      "n_physical_edges": 132753,
+      "n_self_loops_dropped": 0
+    },
+    "continuous_node_attribute_dim": 0,
+    "dataset": "NCI1",
+    "graph_labels_used_for_schema": false,
+    "has_continuous_edge_attributes": false,
+    "has_continuous_node_attributes": false,
+    "has_edge_labels": false,
+    "max_nodes": 111,
+    "min_nodes": 3,
+    "n_classes": 2,
+    "n_graphs": 4110,
+    "n_nodes_total": 122747,
+    "node_label_mode": "raw_node_labels"
+  },
+  "dataset": "NCI1",
+  "feature_spec": {
+    "atom_feature_fields": [
+      {
+        "description": "one-hot discrete node type (raw TU node label vocabulary + reserved UNK, or degree bucket)",
+        "dim": 38,
+        "dtype": "float32",
+        "name": "node_type",
+        "source": "TU node label / degree bucket"
+      },
+      {
+        "description": "degree one-hot 0..15,>=16 from the cleaned physical graph",
+        "dim": 17,
+        "dtype": "float32",
+        "name": "degree_bucket",
+        "source": "graph"
+      },
+      {
+        "description": "node lies on at least one cycle",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "in_cycle",
+        "source": "biconnected-block analysis"
+      },
+      {
+        "description": "one-hot acyclic,3,4,5,6,7,>=8 minimum cycle length",
+        "dim": 7,
+        "dtype": "float32",
+        "name": "min_cycle_size",
+        "source": "smallest cycle through the node"
+      },
+      {
+        "description": "log1p(number of incident cycle edges)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_cycle_degree",
+        "source": "biconnected-block analysis"
+      },
+      {
+        "description": "cycle_degree / max(degree, 1)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "cycle_degree_fraction",
+        "source": "biconnected-block analysis"
+      },
+      {
+        "description": "degree == 1",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "is_terminal",
+        "source": "graph"
+      },
+      {
+        "description": "cycle_degree >= 3",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "cycle_degree_ge3",
+        "source": "biconnected-block analysis"
+      }
+    ],
+    "atom_feature_source": "TU raw node labels/attributes + cleaned graph topology",
+    "atom_scalar_fields": [
+      {
+        "description": "log1p(number of nodes at graph distance exactly 2)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_n_d2",
+        "source": "topology"
+      },
+      {
+        "description": "log1p(number of ordered non-backtracking 2-paths rooted at the node)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_n_paths2",
+        "source": "topology"
+      },
+      {
+        "description": "closure-count / path-count (0 when there is no rooted 2-path)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "closure_ratio",
+        "source": "topology"
+      },
+      {
+        "description": "log1p(degree)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_degree",
+        "source": "topology"
+      },
+      {
+        "description": "node lies on at least one cycle",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "in_cycle",
+        "source": "topology"
+      },
+      {
+        "description": "log1p(smallest cycle through the node); 0 if acyclic",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_min_cycle_size",
+        "source": "topology"
+      },
+      {
+        "description": "log1p(number of incident cycle edges)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_cycle_degree",
+        "source": "topology"
+      },
+      {
+        "description": "degree == 1",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "is_terminal",
+        "source": "topology"
+      },
+      {
+        "description": "cycle_degree >= 3",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "cycle_degree_ge3",
+        "source": "topology"
+      }
+    ],
+    "atom_type_encoding": "atom_type = rank of the raw node label in the sorted dataset-wide vocabulary; degree datasets use min(degree,16); UNK reserved",
+    "atom_type_metadata": [
+      {
+        "index": 0,
+        "is_unknown": false,
+        "name": "NODE_LABEL_0",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 1,
+        "is_unknown": false,
+        "name": "NODE_LABEL_1",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 2,
+        "is_unknown": false,
+        "name": "NODE_LABEL_2",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 3,
+        "is_unknown": false,
+        "name": "NODE_LABEL_3",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 4,
+        "is_unknown": false,
+        "name": "NODE_LABEL_4",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 5,
+        "is_unknown": false,
+        "name": "NODE_LABEL_5",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 6,
+        "is_unknown": false,
+        "name": "NODE_LABEL_6",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 7,
+        "is_unknown": false,
+        "name": "NODE_LABEL_7",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 8,
+        "is_unknown": false,
+        "name": "NODE_LABEL_8",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 9,
+        "is_unknown": false,
+        "name": "NODE_LABEL_9",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 10,
+        "is_unknown": false,
+        "name": "NODE_LABEL_10",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 11,
+        "is_unknown": false,
+        "name": "NODE_LABEL_11",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 12,
+        "is_unknown": false,
+        "name": "NODE_LABEL_12",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 13,
+        "is_unknown": false,
+        "name": "NODE_LABEL_13",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 14,
+        "is_unknown": false,
+        "name": "NODE_LABEL_14",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 15,
+        "is_unknown": false,
+        "name": "NODE_LABEL_15",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 16,
+        "is_unknown": false,
+        "name": "NODE_LABEL_16",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 17,
+        "is_unknown": false,
+        "name": "NODE_LABEL_17",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 18,
+        "is_unknown": false,
+        "name": "NODE_LABEL_18",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 19,
+        "is_unknown": false,
+        "name": "NODE_LABEL_19",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 20,
+        "is_unknown": false,
+        "name": "NODE_LABEL_20",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 21,
+        "is_unknown": false,
+        "name": "NODE_LABEL_21",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 22,
+        "is_unknown": false,
+        "name": "NODE_LABEL_22",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 23,
+        "is_unknown": false,
+        "name": "NODE_LABEL_23",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 24,
+        "is_unknown": false,
+        "name": "NODE_LABEL_24",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 25,
+        "is_unknown": false,
+        "name": "NODE_LABEL_25",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 26,
+        "is_unknown": false,
+        "name": "NODE_LABEL_26",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 27,
+        "is_unknown": false,
+        "name": "NODE_LABEL_27",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 28,
+        "is_unknown": false,
+        "name": "NODE_LABEL_28",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 29,
+        "is_unknown": false,
+        "name": "NODE_LABEL_29",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 30,
+        "is_unknown": false,
+        "name": "NODE_LABEL_30",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 31,
+        "is_unknown": false,
+        "name": "NODE_LABEL_31",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 32,
+        "is_unknown": false,
+        "name": "NODE_LABEL_32",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 33,
+        "is_unknown": false,
+        "name": "NODE_LABEL_33",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 34,
+        "is_unknown": false,
+        "name": "NODE_LABEL_34",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 35,
+        "is_unknown": false,
+        "name": "NODE_LABEL_35",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 36,
+        "is_unknown": false,
+        "name": "NODE_LABEL_36",
+        "source": "TU raw node label"
+      },
+      {
+        "index": 37,
+        "is_unknown": true,
+        "name": "UNK",
+        "source": "TU raw node label"
+      }
+    ],
+    "atom_type_names": [
+      "NODE_LABEL_0",
+      "NODE_LABEL_1",
+      "NODE_LABEL_2",
+      "NODE_LABEL_3",
+      "NODE_LABEL_4",
+      "NODE_LABEL_5",
+      "NODE_LABEL_6",
+      "NODE_LABEL_7",
+      "NODE_LABEL_8",
+      "NODE_LABEL_9",
+      "NODE_LABEL_10",
+      "NODE_LABEL_11",
+      "NODE_LABEL_12",
+      "NODE_LABEL_13",
+      "NODE_LABEL_14",
+      "NODE_LABEL_15",
+      "NODE_LABEL_16",
+      "NODE_LABEL_17",
+      "NODE_LABEL_18",
+      "NODE_LABEL_19",
+      "NODE_LABEL_20",
+      "NODE_LABEL_21",
+      "NODE_LABEL_22",
+      "NODE_LABEL_23",
+      "NODE_LABEL_24",
+      "NODE_LABEL_25",
+      "NODE_LABEL_26",
+      "NODE_LABEL_27",
+      "NODE_LABEL_28",
+      "NODE_LABEL_29",
+      "NODE_LABEL_30",
+      "NODE_LABEL_31",
+      "NODE_LABEL_32",
+      "NODE_LABEL_33",
+      "NODE_LABEL_34",
+      "NODE_LABEL_35",
+      "NODE_LABEL_36",
+      "UNK"
+    ],
+    "atom_unk_index": 37,
+    "atom_unknown_policy": "map_to_UNK: raw node label absent from the fixed dataset vocabulary maps to the reserved UNK index",
+    "bond_feature_fields": [
+      {
+        "description": "always 1",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "constant_one",
+        "source": "adapter"
+      },
+      {
+        "description": "edge lies on at least one cycle",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "is_cycle_edge",
+        "source": "biconnected-block analysis"
+      }
+    ],
+    "bond_feature_source": "TU raw edge labels + cleaned graph topology",
+    "bond_type_encoding": "bond_type = 1 + rank of the raw edge label in the sorted dataset-wide vocabulary; one-based",
+    "bond_type_metadata": [
+      {
+        "id": 1,
+        "is_unknown": false,
+        "name": "EDGE",
+        "source": "TU raw edge label"
+      },
+      {
+        "id": 2,
+        "is_unknown": true,
+        "name": "UNK",
+        "source": "TU raw edge label"
+      }
+    ],
+    "bond_type_names": [
+      "EDGE",
+      "UNK"
+    ],
+    "bond_unk_id": 2,
+    "bond_unknown_policy": "map_to_UNK: observed raw edge labels map to 1..B-1; the reserved UNK id is B",
+    "description": "Fast positioning TU schema for NCI1: discrete node labels/degree buckets, generic cycle/degree descriptors, retained continuous node attributes, and exact S1/S2 topology. No target label or fitted statistic is part of the schema.",
+    "dimensions": {
+      "atom_feat_dim": 67,
+      "bond_feat_dim": 2,
+      "code_max": 2147483647,
+      "global_dim": 28,
+      "n_atom_types": 38,
+      "n_bond_types": 2,
+      "n_nbr_codes": 76,
+      "n_path_codes": 152,
+      "n_scalars": 9
+    },
+    "disconnected_policy": "supported with finite statistics: unreachable pairs (shortest-path sentinel -1) are excluded from diameter/mean distance, reported via frac_unreachable_pairs, and never counted as finite distance >= 3",
+    "feature_dtype": "float32",
+    "global_feature_fields": [
+      {
+        "description": "log1p(number of nodes)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_n_atoms",
+        "source": "graph statistics"
+      },
+      {
+        "description": "log1p(number of physical edges after cleaning)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_n_bonds",
+        "source": "graph statistics"
+      },
+      {
+        "description": "log1p(number of unordered neighbour pairs at a centre)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_n_junctions",
+        "source": "graph statistics"
+      },
+      {
+        "description": "n_bonds - n_atoms + n_components (first Betti number)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "cyclomatic_number",
+        "source": "graph statistics"
+      },
+      {
+        "description": "number of connected components (isolated nodes included)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "n_components",
+        "source": "graph statistics"
+      },
+      {
+        "description": "fraction of nodes on a cycle",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_atom_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "fraction of edges on a cycle",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_bond_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "number of biconnected blocks with at least three edges",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "n_ring_systems",
+        "source": "graph statistics"
+      },
+      {
+        "description": "maximum finite shortest-path distance inside a component (0 for a single node)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "diameter_max_finite",
+        "source": "graph statistics"
+      },
+      {
+        "description": "mean finite unordered-pair distance; unreachable pairs excluded",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "mean_finite_pair_distance",
+        "source": "graph statistics"
+      },
+      {
+        "description": "unreachable unordered pairs / all unordered pairs",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "frac_unreachable_pairs",
+        "source": "graph statistics"
+      },
+      {
+        "description": "finite unordered pairs at distance >= 3 / all unordered pairs",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "frac_finite_pairs_ge3",
+        "source": "graph statistics"
+      },
+      {
+        "description": "n_bonds / n_atoms",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "bonds_per_atom",
+        "source": "graph statistics"
+      },
+      {
+        "description": "log1p(number of nodes on a cycle)",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "log1p_n_ring_atoms",
+        "source": "graph statistics"
+      },
+      {
+        "description": "maximum node degree",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "max_degree",
+        "source": "graph statistics"
+      },
+      {
+        "description": "fraction of degree-1 nodes",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "terminal_atom_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "n_junctions / n_bonds",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "junction_per_bond",
+        "source": "graph statistics"
+      },
+      {
+        "description": "fraction of junction centres on a cycle",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "frac_junction_centers_ring",
+        "source": "graph statistics"
+      },
+      {
+        "description": "fraction of junctions whose centre has degree 2",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "frac_deg2_junctions",
+        "source": "graph statistics"
+      },
+      {
+        "description": "fraction of junctions whose centre has degree >= 3",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "frac_deg3plus_junctions",
+        "source": "graph statistics"
+      },
+      {
+        "description": "cycle-node fraction with minimum cycle length 3",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_size3_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "cycle-node fraction with minimum cycle length 4",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_size4_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "cycle-node fraction with minimum cycle length 5",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_size5_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "cycle-node fraction with minimum cycle length 6",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_size6_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "cycle-node fraction with minimum cycle length 7",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_size7_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "cycle-node fraction with minimum cycle length >= 8",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "ring_size8plus_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "fraction of nodes with cycle_degree >= 3",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "fused_ring_atom_fraction",
+        "source": "graph statistics"
+      },
+      {
+        "description": "number of distinct atom types present",
+        "dim": 1,
+        "dtype": "float32",
+        "name": "distinct_atom_types",
+        "source": "graph statistics"
+      }
+    ],
+    "global_feature_source": "label-free graph statistics with explicit disconnected handling",
+    "name": "tu_bench_nci1",
+    "nbr_code_formula": "node_type[neighbour] * 2 + (edge_type - 1)",
+    "output_tensors": [
+      {
+        "description": "per-node feature matrix",
+        "dtype": "float32",
+        "name": "atom_feat",
+        "shape": "[N, 67]"
+      },
+      {
+        "description": "discrete node type id (0-based)",
+        "dtype": "int64",
+        "name": "atom_type",
+        "shape": "[N]"
+      },
+      {
+        "description": "per-node topology scalars before Train-only standardisation",
+        "dtype": "float32",
+        "name": "atom_scalar",
+        "shape": "[N, 9]"
+      },
+      {
+        "description": "per-physical-edge feature matrix",
+        "dtype": "float32",
+        "name": "bond_feat",
+        "shape": "[M, 2]"
+      },
+      {
+        "description": "edge type id (1-based)",
+        "dtype": "int64",
+        "name": "bond_type",
+        "shape": "[M]"
+      },
+      {
+        "description": "physical edge endpoints, u < v, sorted",
+        "dtype": "int64",
+        "name": "bond_index",
+        "shape": "[M, 2]"
+      },
+      {
+        "description": "joint (neighbour node type, edge type) code",
+        "dtype": "int32",
+        "name": "nbr_code",
+        "shape": "[nnz_S1]"
+      },
+      {
+        "description": "joint (middle type, edge1, edge2) code",
+        "dtype": "int32",
+        "name": "path_cat",
+        "shape": "[nnz_S2]"
+      },
+      {
+        "description": "joint (end node type, edge2) code",
+        "dtype": "int32",
+        "name": "path_end63",
+        "shape": "[nnz_S2]"
+      },
+      {
+        "description": "absolute end-node index",
+        "dtype": "int64",
+        "name": "path_end",
+        "shape": "[nnz_S2]"
+      },
+      {
+        "description": "1 iff the end node is adjacent to the root",
+        "dtype": "int8",
+        "name": "path_closure",
+        "shape": "[nnz_S2]"
+      },
+      {
+        "description": "graph-level topology statistics before Train-only standardisation",
+        "dtype": "float32",
+        "name": "global",
+        "shape": "[B, 28]"
+      }
+    ],
+    "path_code_formula": "node_type[middle] * 4 + (bt1 - 1) * 2 + (bt2 - 1)",
+    "path_end_code_formula": "node_type[end] * 2 + (bt2 - 1)",
+    "schema_version": "lcrc-feature-spec-v1",
+    "source_provenance": {
+      "bond_type_encoding": "all physical edges use EDGE=1; UNK=2 reserved and never produced",
+      "dataset": "NCI1",
+      "loader": "torch_geometric.datasets.TUDataset(cleaned=False, use_node_attr=True, use_edge_attr=True)",
+      "node_label_mode": "label",
+      "node_type_encoding": "raw node label -> rank in the sorted dataset-wide vocabulary; unseen -> UNK",
+      "source_manifest": {
+        "dataset": "NCI1",
+        "files": [
+          {
+            "bytes": 3235898,
+            "file": "NCI1_A.txt",
+            "sha256": "2c028eda59a5fe96e2265a63d9ac236901bd9a7dc658498be13cd704a703076d"
+          },
+          {
+            "bytes": 585267,
+            "file": "NCI1_graph_indicator.txt",
+            "sha256": "ffe5acfa754b057d5ce0dc725c5aadb631628161886cc040d38c719635257dc5"
+          },
+          {
+            "bytes": 8220,
+            "file": "NCI1_graph_labels.txt",
+            "sha256": "fae44681e70113f496256ae87eaac33b7836e3a97fe8e023933b84fde6a5c8a2"
+          },
+          {
+            "bytes": 245932,
+            "file": "NCI1_node_labels.txt",
+            "sha256": "dc0a22b6cbff0c939de00373e823977ba32b358f560e4288d7602f7b51407ee2"
+          },
+          {
+            "bytes": 2477,
+            "file": "README.txt",
+            "sha256": "1866d918409a22531ef00ff7b0f72200c3a06722342c23c5e3299cebb5cd8757"
+          }
+        ],
+        "loader": "torch_geometric.datasets.TUDataset(cleaned=False, use_node_attr=True, use_edge_attr=True)",
+        "raw_dir": "data/TUD/NCI1/NCI1/raw",
+        "source": "https://www.chrsmrrs.com/graphkerneldatasets/NCI1.zip",
+        "source_docs": "https://chrsmrrs.github.io/datasets/docs/datasets/"
+      }
+    },
+    "structural_code_dtype": "int32",
+    "structural_index_dtype": "int64",
+    "supports_disconnected": true
+  },
+  "feature_spec_hash": "7a14768e94add6f70a85c94198c34bd8d48a07399d040755d6b319220ccb9383",
+  "n_atoms": {
+    "max": 111,
+    "mean": 29.8654501216545,
+    "min": 3,
+    "p50": 27.0,
+    "p95": 59.0,
+    "p99": 79.90999999999985,
+    "total": 122747
+  },
+  "n_bonds": {
+    "max": 119,
+    "mean": 32.3,
+    "min": 2,
+    "p50": 29.0,
+    "p95": 64.0,
+    "p99": 87.81999999999971,
+    "total": 132753
+  },
+  "node_types": {
+    "encoding": "raw node label -> rank in the sorted dataset-wide vocabulary; unseen -> UNK",
+    "map": {
+      "0": 0,
+      "1": 1,
+      "2": 2,
+      "3": 3,
+      "4": 4,
+      "5": 5,
+      "6": 6,
+      "7": 7,
+      "8": 8,
+      "9": 9,
+      "10": 10,
+      "11": 11,
+      "12": 12,
+      "13": 13,
+      "14": 14,
+      "15": 15,
+      "16": 16,
+      "17": 17,
+      "18": 18,
+      "19": 19,
+      "20": 20,
+      "21": 21,
+      "22": 22,
+      "23": 23,
+      "24": 24,
+      "25": 25,
+      "26": 26,
+      "27": 27,
+      "28": 28,
+      "29": 29,
+      "30": 30,
+      "31": 31,
+      "32": 32,
+      "33": 33,
+      "34": 34,
+      "35": 35,
+      "36": 36
+    },
+    "mode": "label",
+    "names": [
+      "NODE_LABEL_0",
+      "NODE_LABEL_1",
+      "NODE_LABEL_2",
+      "NODE_LABEL_3",
+      "NODE_LABEL_4",
+      "NODE_LABEL_5",
+      "NODE_LABEL_6",
+      "NODE_LABEL_7",
+      "NODE_LABEL_8",
+      "NODE_LABEL_9",
+      "NODE_LABEL_10",
+      "NODE_LABEL_11",
+      "NODE_LABEL_12",
+      "NODE_LABEL_13",
+      "NODE_LABEL_14",
+      "NODE_LABEL_15",
+      "NODE_LABEL_16",
+      "NODE_LABEL_17",
+      "NODE_LABEL_18",
+      "NODE_LABEL_19",
+      "NODE_LABEL_20",
+      "NODE_LABEL_21",
+      "NODE_LABEL_22",
+      "NODE_LABEL_23",
+      "NODE_LABEL_24",
+      "NODE_LABEL_25",
+      "NODE_LABEL_26",
+      "NODE_LABEL_27",
+      "NODE_LABEL_28",
+      "NODE_LABEL_29",
+      "NODE_LABEL_30",
+      "NODE_LABEL_31",
+      "NODE_LABEL_32",
+      "NODE_LABEL_33",
+      "NODE_LABEL_34",
+      "NODE_LABEL_35",
+      "NODE_LABEL_36",
+      "UNK"
+    ],
+    "raw_vocab": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36
+    ],
+    "unk_index": 37
+  },
+  "s1_codes_total": 265506,
+  "s2_paths": {
+    "max": 344,
+    "mean": 93.21557177615571,
+    "min": 2,
+    "p50": 82.0,
+    "p95": 189.09999999999945,
+    "p99": 273.8199999999997,
+    "total": 383116
+  },
+  "s2_paths_total": 383116
+}
