@@ -1,0 +1,121 @@
+{
+  "created_utc": "2026-11-03T03:36:02Z",
+  "evidence_files": {
+    "feature_checks": "analysis/feature_checks.json",
+    "initialization_checks": "analysis/initialization_checks.json",
+    "null_checks": "analysis/null_checks.json"
+  },
+  "gate_14_static": {
+    "details": {
+      "checkpoint_manifest_exists": false,
+      "forbidden_symbols": [
+        "load_test_cache",
+        "molecule_test",
+        "build_test_structure_cache"
+      ],
+      "scan_mode": "python AST (names / attributes / imports); docstrings and comments are not code",
+      "static_hits_by_ast": {
+        "si_features.py": [],
+        "si_model.py": [],
+        "si_sparse.py": [],
+        "si_train.py": []
+      },
+      "test_access_ledger_events_before_freeze": 0,
+      "train_view_scope": "ptb_data.molecule_view -> Train + Validation only",
+      "training_module_imports": [
+        "si_common",
+        "si_features",
+        "si_model",
+        "lcrc_data",
+        "mb2_metrics",
+        "ptb_data",
+        "ptb_train_mol"
+      ]
+    },
+    "id": 14,
+    "name": "no_test_access_during_training",
+    "pass": true
+  },
+  "gates": [
+    {
+      "id": 1,
+      "name": "official_split_alignment",
+      "pass": true
+    },
+    {
+      "id": 2,
+      "name": "vocabulary_train_structures_only",
+      "pass": true
+    },
+    {
+      "id": 3,
+      "name": "key_matches_production_s2",
+      "pass": true
+    },
+    {
+      "id": 4,
+      "name": "invariance_to_renumbering_and_order",
+      "pass": true
+    },
+    {
+      "id": 5,
+      "name": "batch_equals_single_molecule",
+      "pass": true
+    },
+    {
+      "id": 6,
+      "name": "wide_parameter_counts",
+      "pass": true
+    },
+    {
+      "id": 7,
+      "name": "null_marginals_conserved",
+      "pass": true
+    },
+    {
+      "id": 8,
+      "name": "null_differs_from_true",
+      "pass": true
+    },
+    {
+      "id": 9,
+      "name": "fold64_buckets",
+      "pass": true
+    },
+    {
+      "id": 10,
+      "name": "zero_init_matches_a0",
+      "pass": true
+    },
+    {
+      "id": 11,
+      "name": "branch_is_trained",
+      "pass": true
+    },
+    {
+      "id": 12,
+      "name": "trunk_and_recipe_identical_to_history",
+      "pass": true
+    },
+    {
+      "id": 13,
+      "name": "checkpoint_reload_reproduces_validation",
+      "pass": null,
+      "status": "enforced per training run; completed at freeze"
+    },
+    {
+      "id": 14,
+      "name": "no_test_access_during_training",
+      "pass": true,
+      "status": "static precondition verified here; completed at freeze"
+    }
+  ],
+  "ring18_witness": {
+    "collision": true,
+    "is_gate": false,
+    "jaccard": 1.0
+  },
+  "round_id": "lcrc-sparse-identity-v1",
+  "schema": "lcrc-sparse-identity-correctness-gates-v1",
+  "status": "PASS"
+}

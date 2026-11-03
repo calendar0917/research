@@ -1,0 +1,250 @@
+{
+  "created_utc": "2026-11-03T03:36:02Z",
+  "gates": [
+    {
+      "details": {
+        "a0_parameter_count": 247106,
+        "branch_parameters": {
+          "FOLD64": 64,
+          "WIDE_NULL": 512,
+          "WIDE_TRUE": 512
+        },
+        "expected_a0_parameter_count": 247106,
+        "per_seed": {
+          "0": {
+            "a0_matches_frozen": true,
+            "a0_plus_512": true,
+            "fold64_a0_plus_64": true,
+            "parameters": {
+              "A0": 247106,
+              "FOLD64": 247170,
+              "WIDE_NULL": 247618,
+              "WIDE_TRUE": 247618
+            },
+            "true_equals_null": true
+          },
+          "1": {
+            "a0_matches_frozen": true,
+            "a0_plus_512": true,
+            "fold64_a0_plus_64": true,
+            "parameters": {
+              "A0": 247106,
+              "FOLD64": 247170,
+              "WIDE_NULL": 247618,
+              "WIDE_TRUE": 247618
+            },
+            "true_equals_null": true
+          },
+          "2": {
+            "a0_matches_frozen": true,
+            "a0_plus_512": true,
+            "fold64_a0_plus_64": true,
+            "parameters": {
+              "A0": 247106,
+              "FOLD64": 247170,
+              "WIDE_NULL": 247618,
+              "WIDE_TRUE": 247618
+            },
+            "true_equals_null": true
+          }
+        }
+      },
+      "id": 6,
+      "name": "wide_parameter_counts",
+      "pass": true
+    },
+    {
+      "details": {
+        "device": "cpu",
+        "dtype": "float32",
+        "n_molecules": 32,
+        "note": "branches are zero-initialised, so the wide forward must equal the same-seed A0 forward",
+        "per_seed": {
+          "0": {
+            "FOLD64": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            },
+            "WIDE_NULL": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            },
+            "WIDE_TRUE": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            }
+          },
+          "1": {
+            "FOLD64": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            },
+            "WIDE_NULL": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            },
+            "WIDE_TRUE": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            }
+          },
+          "2": {
+            "FOLD64": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            },
+            "WIDE_NULL": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            },
+            "WIDE_TRUE": {
+              "branch_weight_abs_sum": 0.0,
+              "max_abs_diff_vs_a0": 0.0,
+              "pass": true,
+              "tolerance": 1e-06
+            }
+          }
+        },
+        "tolerance": 1e-06
+      },
+      "id": 10,
+      "name": "zero_init_matches_a0",
+      "pass": true
+    },
+    {
+      "details": {
+        "branch_grad_abs_sum": 0.10863017290830612,
+        "branch_grad_max_abs": 0.003882583463564515,
+        "branch_grad_nonzero_entries": 240,
+        "branch_in_optimizer": true,
+        "n_trainable_parameters": 247618,
+        "optimizer": "torch.optim.AdamW",
+        "weight_abs_change_l2": 0.0046378253027796745,
+        "weight_changed_after_one_step": true
+      },
+      "id": 11,
+      "name": "branch_is_trained",
+      "pass": true
+    },
+    {
+      "details": {
+        "a0_init_hash_reproduced": {
+          "0": {
+            "build_model_init_hash": "849adda7fc6a4f60c49ed8ff2b08c4d8a3d76c14aacc0f6f2e353e63405e1f3d",
+            "full_state_hash": "849adda7fc6a4f60c49ed8ff2b08c4d8a3d76c14aacc0f6f2e353e63405e1f3d",
+            "match": true
+          },
+          "1": {
+            "build_model_init_hash": "2e292ef24b022aa29d102ce548a69020d31d5aa15dd4ed0cce31e13b3d8359e0",
+            "full_state_hash": "2e292ef24b022aa29d102ce548a69020d31d5aa15dd4ed0cce31e13b3d8359e0",
+            "match": true
+          },
+          "2": {
+            "build_model_init_hash": "f621a7425213e3c874472b7c93ad12b80bc19f04eda986ce3c922cf134ce16bc",
+            "full_state_hash": "f621a7425213e3c874472b7c93ad12b80bc19f04eda986ce3c922cf134ce16bc",
+            "match": true
+          }
+        },
+        "cache_rows_match_frozen_manifest": true,
+        "cache_rows_sha256": {
+          "test": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+          "train": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+          "valid": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+        },
+        "dataset_epoch_cap": 100,
+        "epochs": 100,
+        "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+        "frozen_cache_rows_sha256": {
+          "test": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+          "train": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+          "valid": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+        },
+        "frozen_feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+        "model_code_path": "ptb_model.build_model -> PTBLCRC(variant=A0)",
+        "recipe": {
+          "adam_betas": [
+            0.9,
+            0.999
+          ],
+          "adam_eps": 1e-08,
+          "batch_size": 128,
+          "dropout": 0.1,
+          "dropout_position": "final atom-level local representation h, before the per-atom contribution f and the global rho",
+          "early_stopping": false,
+          "ema": false,
+          "epochs": 360,
+          "epochs_by_dataset": {
+            "BACE": 360,
+            "BBBP": 360,
+            "ESOL": 360,
+            "FreeSolv": 360,
+            "Tox21": 360,
+            "ogbg-molhiv": 100
+          },
+          "gradient_clip": 5.0,
+          "hyperparameter_search": false,
+          "min_lr": 1e-05,
+          "optimizer": "AdamW",
+          "peak_lr": 0.0003,
+          "scheduler": "per_step_cosine",
+          "shuffle_offset": 917000,
+          "soup": false,
+          "ssl": false,
+          "swa": false,
+          "weight_decay": 0.001
+        },
+        "recipe_epochs_by_dataset": {
+          "BACE": 360,
+          "BBBP": 360,
+          "ESOL": 360,
+          "FreeSolv": 360,
+          "Tox21": 360,
+          "ogbg-molhiv": 100
+        },
+        "recipe_equals_frozen_dissection_recipe": true,
+        "seeds": [
+          0,
+          1,
+          2
+        ],
+        "selection_rule": "highest_validation_roc_auc__tie_lower_validation_bce__then_earlier_epoch",
+        "selection_rule_expected": "highest_validation_roc_auc__tie_lower_validation_bce__then_earlier_epoch",
+        "train_norm_fingerprint": "c339e63b8f1101271d908834b6df5c218c1fd6b11e21dc2fdc00bfb5f8852ca1",
+        "train_norm_source": "ogbg-molhiv_train_structures_only",
+        "train_norm_valid_or_test_used": false,
+        "wide_trunk_bitwise_equal_to_a0": {
+          "s0_FOLD64": true,
+          "s0_WIDE_NULL": true,
+          "s0_WIDE_TRUE": true,
+          "s1_FOLD64": true,
+          "s1_WIDE_NULL": true,
+          "s1_WIDE_TRUE": true,
+          "s2_FOLD64": true,
+          "s2_WIDE_NULL": true,
+          "s2_WIDE_TRUE": true
+        }
+      },
+      "id": 12,
+      "name": "trunk_and_recipe_identical_to_history",
+      "pass": true
+    }
+  ],
+  "round_id": "lcrc-sparse-identity-v1",
+  "schema": "lcrc-sparse-identity-initialization-checks-v1"
+}
