@@ -272,6 +272,8 @@ def cmd_ledger(args: argparse.Namespace) -> int:
             measured = json.loads(train_json.read_text(encoding="utf-8"))["timing"]["process_wall_seconds"]
         entries.append(
             {
+                "superseded": bool(launch.get("superseded")),
+                "note": launch.get("note"),
                 "unit_key": launch["unit_key"],
                 "experiment": exp,
                 "pool": launch.get("pool"),
@@ -306,8 +308,10 @@ def cmd_ledger(args: argparse.Namespace) -> int:
         "entries": entries,
         "totals": {
             "n_units": len(entries),
-            "n_completed": int(sum(1 for e in entries if e["state"] == "completed")),
+            "n_completed": int(sum(1 for e in entries if e["state"] == "completed" and not e["superseded"])),
+            "n_superseded": int(sum(1 for e in entries if e["superseded"])),
             "job_wall_gpu_hours": round(total_hours, 4),
+            "charged_gpu_hours_including_superseded": round(total_hours, 4),
             "trainer_measured_gpu_hours": round(
                 sum(e["trainer_measured_gpu_hours"] or 0.0 for e in entries), 4
             ),
