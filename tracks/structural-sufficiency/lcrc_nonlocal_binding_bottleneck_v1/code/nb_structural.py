@@ -333,6 +333,11 @@ def forward_record(
     atom_counts = batch["atom_counts"].detach().cpu().numpy().astype(np.int64)
     offs = np.concatenate([[0], np.cumsum(atom_counts)]).astype(np.int64)
     h_graphs = [h[int(offs[i]) : int(offs[i + 1])] for i in range(len(atom_counts))]
+    local_input = aux.get("local_input")
+    local_graphs = None
+    if local_input is not None:
+        li = local_input.detach().cpu().numpy().astype(np.float64)
+        local_graphs = [li[int(offs[i]) : int(offs[i + 1])] for i in range(len(atom_counts))]
     out = {
         "y": y.detach().cpu().numpy().astype(np.float64),
         "contrib": aux["contrib"].detach().cpu().numpy().astype(np.float64),
@@ -341,6 +346,7 @@ def forward_record(
         "mean_h2": aux["mean_h2"].detach().cpu().numpy().astype(np.float64),
         "h": h,
         "h_graphs": h_graphs,
+        "local_input_graphs": local_graphs,
         "global_raw": batch["global"].detach().cpu().numpy().astype(np.float64),
         "atom_counts": atom_counts,
     }
@@ -561,6 +567,11 @@ def run_phase_a(*, renumber_seed: int = 0) -> dict[str, Any]:
         res = forward_record(model, cache, [0, 1], spec=spec)
         h_a, h_b = res["h_graphs"][0], res["h_graphs"][1]
         match = minimum_cost_row_matching(h_a, h_b)
+        local_match = None
+        if res["local_input_graphs"] is not None:
+            local_match = minimum_cost_row_matching(
+                res["local_input_graphs"][0], res["local_input_graphs"][1]
+            )
         ren = forward_record(model, cache_perm, [0], spec=spec)
         ren_match = minimum_cost_row_matching(res["h_graphs"][0], ren["h_graphs"][0])
         d_contrib = float(abs(res["contrib"][0] - res["contrib"][1]))
@@ -578,6 +589,7 @@ def run_phase_a(*, renumber_seed: int = 0) -> dict[str, Any]:
             "eval_mode": True,
             "global_raw_identical": bool(np.array_equal(res["global_raw"][0], res["global_raw"][1])),
             "h_row_matching": match,
+            "local_input_row_matching": local_match,
             "mean_h_max_abs_diff": d_mean_h,
             "mean_h2_max_abs_diff": d_mean_h2,
             "mean_h_identical": bool(d_mean_h == 0.0),

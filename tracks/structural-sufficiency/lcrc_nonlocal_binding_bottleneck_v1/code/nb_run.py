@@ -281,10 +281,21 @@ def phase_b(ledger: C.CpuLedger) -> dict[str, Any]:
         C.log(f"folds status={folds['status']} scaffolds={folds['n_scaffolds_total']}")
 
     correctness = correctness_gates(data, cache, g, feats, folds, scaf)
+    parse_modes = [str(m) for m in np.asarray(feats["parse_modes"]).tolist()]
     C.write_json(C.ANALYSIS / "feature_margin_checks.json", {
         "round_id": C.ROUND_ID,
         "phase": "B",
         "created_utc": C.utcnow(),
+        "parse_modes": {
+            "counts": {m: int(parse_modes.count(m)) for m in sorted(set(parse_modes))},
+            "non_strict_rows": {
+                "train_row_ids": [int(r) for r, m in zip(data["rows"], parse_modes) if m != "strict"],
+                "train_positions": [int(i) for i, m in enumerate(parse_modes) if m != "strict"],
+                "smiles": [str(s) for s, m in zip(data["smiles"], parse_modes) if m != "strict"],
+                "reason": "invalid-valence metal complexes (Al valence 7, Ge valence 5); see PROTOCOL.md §5.1",
+            },
+            "rows_dropped": 0,
+        },
         "feature_definition": {
             "element_classes": list(C.ELEMENT_CLASSES),
             "halogens_in_X": sorted(C.HALOGENS),
