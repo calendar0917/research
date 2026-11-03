@@ -33,8 +33,8 @@ from p1_common import (
     ROUND,
     RUNS,
     SPLITS,
+    fresh_unit_key,
     track_rel,
-    unit_key,
     write_json,
 )
 
@@ -88,7 +88,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.epochs != planned:
             raise SystemExit(f"formal runs must use {planned} epochs")
 
-    key = unit_key(args.split, args.arm, args.seed)
+    key = fresh_unit_key(args.split, args.arm, args.seed)
     if args.out_dir:
         out_dir = Path(args.out_dir)
     elif args.smoke:
