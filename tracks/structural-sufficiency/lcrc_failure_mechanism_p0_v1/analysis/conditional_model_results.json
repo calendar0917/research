@@ -1,0 +1,1327 @@
+{
+  "definition": {
+    "target": "d_i = squared_error_LCRC - squared_error_PNA (positive = PNA better)",
+    "base_covariates": [
+      "heavy_atoms",
+      "tpsa",
+      "mol_logp",
+      "hbd",
+      "hba",
+      "formal_charge",
+      "ring_count",
+      "max_train_tanimoto",
+      "scaffold_seen"
+    ],
+    "support_variables": [
+      "unseen_atom_frac",
+      "rare_atom_frac",
+      "median_log1p_df",
+      "p10_log1p_df"
+    ],
+    "ridge_alpha": 10.0,
+    "standardisation": "training-fold mean/std only (ddof=0); zero-variance columns use sd=1",
+    "folds": 5,
+    "fold_assignment": "deterministic balanced whole-scaffold assignment (row-order invariant)",
+    "hyperparameter_search": false,
+    "causal_interpretation": false
+  },
+  "n": 420,
+  "group": "A_random42",
+  "split": "random42",
+  "exposure": "FROZEN_VALIDATION_ONLY",
+  "fold_profile": {
+    "sizes": [
+      84,
+      84,
+      84,
+      84,
+      84
+    ],
+    "n_scaffolds": [
+      74,
+      74,
+      74,
+      74,
+      74
+    ]
+  },
+  "oof_metrics": {
+    "M0": {
+      "mse": 0.5561095856590219,
+      "mae": 0.3778530371407109,
+      "rmse": 0.7457275545794334,
+      "n": 420
+    },
+    "M1": {
+      "mse": 0.5670097961863908,
+      "mae": 0.3858746743381504,
+      "rmse": 0.7530005286760367,
+      "n": 420
+    },
+    "delta_M1_minus_M0": {
+      "mse": 0.010900210527368892,
+      "mae": 0.008021637197439535,
+      "rmse": 0.007272974096603324
+    }
+  },
+  "folds": [
+    {
+      "fold": 0,
+      "n": 84,
+      "n_scaffolds": 74,
+      "mse_M0": 0.39880833426687684,
+      "mse_M1": 0.4057232529661938,
+      "mae_M0": 0.3481522768046803,
+      "mae_M1": 0.3533518893595288,
+      "delta_mse_M1_minus_M0": 0.006914918699316985,
+      "delta_mae_M1_minus_M0": 0.005199612554848521
+    },
+    {
+      "fold": 1,
+      "n": 84,
+      "n_scaffolds": 74,
+      "mse_M0": 0.591229244945763,
+      "mse_M1": 0.5873584158960107,
+      "mae_M0": 0.42486542338688327,
+      "mae_M1": 0.43306943937989506,
+      "delta_mse_M1_minus_M0": -0.0038708290497523334,
+      "delta_mae_M1_minus_M0": 0.008204015993011793
+    },
+    {
+      "fold": 2,
+      "n": 84,
+      "n_scaffolds": 74,
+      "mse_M0": 0.46641206072409636,
+      "mse_M1": 0.47317994240389705,
+      "mae_M0": 0.3931313829609251,
+      "mae_M1": 0.3997696516454307,
+      "delta_mse_M1_minus_M0": 0.006767881679800691,
+      "delta_mae_M1_minus_M0": 0.006638268684505622
+    },
+    {
+      "fold": 3,
+      "n": 84,
+      "n_scaffolds": 74,
+      "mse_M0": 0.20966720141016096,
+      "mse_M1": 0.24753423221001386,
+      "mae_M0": 0.32171308408476756,
+      "mae_M1": 0.34220653391979355,
+      "delta_mse_M1_minus_M0": 0.0378670307998529,
+      "delta_mae_M1_minus_M0": 0.02049344983502599
+    },
+    {
+      "fold": 4,
+      "n": 84,
+      "n_scaffolds": 74,
+      "mse_M0": 1.1144310869482124,
+      "mse_M1": 1.1212531374558385,
+      "mae_M0": 0.4014030184662981,
+      "mae_M1": 0.4009758573861039,
+      "delta_mse_M1_minus_M0": 0.006822050507626187,
+      "delta_mae_M1_minus_M0": -0.00042716108019419385
+    }
+  ],
+  "bootstrap": {
+    "unit": "Bemis-Murcko scaffold",
+    "n_boot": 2000,
+    "cluster_profile": {
+      "n": 420,
+      "n_clusters": 370,
+      "median_cluster_size": 1.0,
+      "max_cluster_size": 5,
+      "max_cluster_molecule_share": 0.011904761904761904,
+      "singleton_clusters": 340,
+      "low_cluster_support": false,
+      "low_cluster_support_rule": "n_clusters < 30 OR largest scaffold cluster > 10% of evaluation molecules"
+    },
+    "intervals": {
+      "mse_M0": {
+        "point": 0.5561095856590219,
+        "n_boot": 2000,
+        "n_finite": 2000,
+        "mean": 0.5555525526453851,
+        "sd": 0.1398784330278969,
+        "ci_low": 0.31920481790293115,
+        "ci_high": 0.849265714818673,
+        "ci_percentiles": [
+          2.5,
+          97.5
+        ],
+        "frac_gt_zero": 1.0
+      },
+      "mse_M1": {
+        "point": 0.5670097961863908,
+        "n_boot": 2000,
+        "n_finite": 2000,
+        "mean": 0.5664985805440913,
+        "sd": 0.14012757103092824,
+        "ci_low": 0.3293443433673714,
+        "ci_high": 0.8634910337116842,
+        "ci_percentiles": [
+          2.5,
+          97.5
+        ],
+        "frac_gt_zero": 1.0
+      },
+      "mae_M0": {
+        "point": 0.3778530371407109,
+        "n_boot": 2000,
+        "n_finite": 2000,
+        "mean": 0.3780794164171993,
+        "sd": 0.0314684496222198,
+        "ci_low": 0.32118927823029625,
+        "ci_high": 0.4412361783610033,
+        "ci_percentiles": [
+          2.5,
+          97.5
+        ],
+        "frac_gt_zero": 1.0
+      },
+      "mae_M1": {
+        "point": 0.3858746743381504,
+        "n_boot": 2000,
+        "n_finite": 2000,
+        "mean": 0.3860587398319876,
+        "sd": 0.031772083827932826,
+        "ci_low": 0.32942476793409503,
+        "ci_high": 0.44954241202902584,
+        "ci_percentiles": [
+          2.5,
+          97.5
+        ],
+        "frac_gt_zero": 1.0
+      },
+      "delta_mse_M1_minus_M0": {
+        "point": 0.010900210527368892,
+        "n_boot": 2000,
+        "n_finite": 2000,
+        "mean": 0.01094602789870627,
+        "sd": 0.006490452110620755,
+        "ci_low": -0.0012321828761430063,
+        "ci_high": 0.02402449243357894,
+        "ci_percentiles": [
+          2.5,
+          97.5
+        ],
+        "frac_gt_zero": 0.96
+      },
+      "delta_mae_M1_minus_M0": {
+        "point": 0.008021637197439535,
+        "n_boot": 2000,
+        "n_finite": 2000,
+        "mean": 0.007979323414788247,
+        "sd": 0.004176671896895432,
+        "ci_low": -0.00032607425785634574,
+        "ci_high": 0.015897748066802986,
+        "ci_percentiles": [
+          2.5,
+          97.5
+        ],
+        "frac_gt_zero": 0.9715
+      }
+    },
+    "note": "OOF predictions are held fixed; the bootstrap quantifies scaffold-cluster sampling uncertainty only."
+  },
+  "full_fit_coefficients": {
+    "M0": {
+      "heavy_atoms": -0.02165985334162195,
+      "tpsa": 0.03788729279011017,
+      "mol_logp": 0.041639366388628626,
+      "hbd": -0.051359845927476125,
+      "hba": 0.0245966658973916,
+      "formal_charge": -0.05649219639286321,
+      "ring_count": 0.13430951543568836,
+      "max_train_tanimoto": -0.05488685312548556,
+      "scaffold_seen": 0.00602956299082086
+    },
+    "M1": {
+      "heavy_atoms": 6.810313847121234e-05,
+      "tpsa": 0.029691593918317317,
+      "mol_logp": 0.035987513965572315,
+      "hbd": -0.050533105833875026,
+      "hba": 0.021210968894665696,
+      "formal_charge": -0.05065891074922628,
+      "ring_count": 0.12910040078593493,
+      "max_train_tanimoto": -0.09059705876953306,
+      "scaffold_seen": 0.012555886518996988,
+      "unseen_atom_frac": -0.12987737834546229,
+      "rare_atom_frac": 0.0025235550703030804,
+      "median_log1p_df": -0.076445186363933,
+      "p10_log1p_df": -0.04642114680335937
+    },
+    "standardisation": "full Validation420 sample, descriptive only",
+    "intercept": {
+      "M0": 0.03997556118663705,
+      "M1": 0.03997556118663721
+    },
+    "caveat": "coefficients are descriptive, not causal; OOF metrics are the registered comparison"
+  },
+  "stratified_support_correlations": [
+    {
+      "stratum": "overall",
+      "stratum_label": "all",
+      "support_variable": "unseen_atom_frac",
+      "n": 420,
+      "rho": -0.003709746783357573,
+      "p": 0.9395775285633549,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        7.0,
+        20.0
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 97,
+      "rho": -0.036158616063354354,
+      "p": 0.725123670576677,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        21.0,
+        26.0
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 109,
+      "rho": 0.05673310266157653,
+      "p": 0.5579060537730418,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        27.0,
+        31.0
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 109,
+      "rho": 0.04996818476314319,
+      "p": 0.6058605071405287,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        32.0,
+        49.0
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 105,
+      "rho": -0.03364103354530944,
+      "p": 0.7333384485222116,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        3.24,
+        56.73
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 105,
+      "rho": -0.03325586359663991,
+      "p": 0.7362788433226481,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        56.89,
+        79.89999999999999
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 104,
+      "rho": 0.11131811871698405,
+      "p": 0.26058627265416096,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        80.0,
+        98.73999999999998
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 105,
+      "rho": 0.04190545288947756,
+      "p": 0.6712380373882466,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        99.36000000000001,
+        164.55
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 106,
+      "rho": -0.08938019432851671,
+      "p": 0.36222175946460555,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        0.22666666666666666,
+        0.4583333333333333
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 105,
+      "rho": -0.06309617666620689,
+      "p": 0.5225357038141031,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        0.4594594594594595,
+        0.696969696969697
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 105,
+      "rho": -0.13855996332678125,
+      "p": 0.15864875992084518,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        0.6976744186046512,
+        0.8070175438596491
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 105,
+      "rho": 0.16490216375115926,
+      "p": 0.09275388476160641,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        0.8076923076923077,
+        1.0
+      ],
+      "support_variable": "unseen_atom_frac",
+      "n": 105,
+      "rho": 0.02739819884372514,
+      "p": 0.7814427382870099,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 0,
+      "stratum_range": null,
+      "support_variable": "unseen_atom_frac",
+      "n": 203,
+      "rho": 0.017214668963833085,
+      "p": 0.8074052717348982,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 1,
+      "stratum_range": null,
+      "support_variable": "unseen_atom_frac",
+      "n": 217,
+      "rho": 0.004077842987271326,
+      "p": 0.9523757132074064,
+      "status": "OK"
+    },
+    {
+      "stratum": "overall",
+      "stratum_label": "all",
+      "support_variable": "rare_atom_frac",
+      "n": 420,
+      "rho": 0.003049928580225697,
+      "p": 0.9503089580936742,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        7.0,
+        20.0
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 97,
+      "rho": 0.05285004563170475,
+      "p": 0.6071650392229054,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        21.0,
+        26.0
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 109,
+      "rho": -0.08557462364513624,
+      "p": 0.37629173380409064,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        27.0,
+        31.0
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 109,
+      "rho": 0.10022041768008631,
+      "p": 0.29979080144918396,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        32.0,
+        49.0
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 105,
+      "rho": -0.06801970445928326,
+      "p": 0.49053993142891883,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        3.24,
+        56.73
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 105,
+      "rho": -0.13082582704442713,
+      "p": 0.18343800177495337,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        56.89,
+        79.89999999999999
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 104,
+      "rho": 0.11182050250009402,
+      "p": 0.25842745264465683,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        80.0,
+        98.73999999999998
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 105,
+      "rho": 0.012834517454728304,
+      "p": 0.896609375907362,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        99.36000000000001,
+        164.55
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 106,
+      "rho": 0.0053012571487816755,
+      "p": 0.9569885392683005,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        0.22666666666666666,
+        0.4583333333333333
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 105,
+      "rho": 0.03679079912444021,
+      "p": 0.7094410315369608,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        0.4594594594594595,
+        0.696969696969697
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 105,
+      "rho": 0.07989444954878129,
+      "p": 0.41784202487127076,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        0.6976744186046512,
+        0.8070175438596491
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 105,
+      "rho": 0.012485417768460105,
+      "p": 0.8994066718105397,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        0.8076923076923077,
+        1.0
+      ],
+      "support_variable": "rare_atom_frac",
+      "n": 105,
+      "rho": -0.14224087148963727,
+      "p": 0.14776849318045052,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 0,
+      "stratum_range": null,
+      "support_variable": "rare_atom_frac",
+      "n": 203,
+      "rho": -0.004269645399390331,
+      "p": 0.9517911013457987,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 1,
+      "stratum_range": null,
+      "support_variable": "rare_atom_frac",
+      "n": 217,
+      "rho": 0.02658239263027738,
+      "p": 0.6969874789717618,
+      "status": "OK"
+    },
+    {
+      "stratum": "overall",
+      "stratum_label": "all",
+      "support_variable": "median_log1p_df",
+      "n": 420,
+      "rho": -0.005570376692301091,
+      "p": 0.9093809515816964,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        7.0,
+        20.0
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 97,
+      "rho": 0.0609591094623949,
+      "p": 0.5530830868427125,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        21.0,
+        26.0
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 109,
+      "rho": -0.04676521381920322,
+      "p": 0.629181926518126,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        27.0,
+        31.0
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 109,
+      "rho": -0.1432845144824839,
+      "p": 0.13718159140725478,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        32.0,
+        49.0
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 105,
+      "rho": 0.03856067383406817,
+      "p": 0.6961337722131151,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        3.24,
+        56.73
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 105,
+      "rho": 0.07954598035499105,
+      "p": 0.4198820719351821,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        56.89,
+        79.89999999999999
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 104,
+      "rho": -0.18160405389001735,
+      "p": 0.06503829434393923,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        80.0,
+        98.73999999999998
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 105,
+      "rho": -0.07693908868582494,
+      "p": 0.43532556108853426,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        99.36000000000001,
+        164.55
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 106,
+      "rho": 0.09273015860472247,
+      "p": 0.34443710238069003,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        0.22666666666666666,
+        0.4583333333333333
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 105,
+      "rho": 0.008633112847071347,
+      "p": 0.9303489943827092,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        0.4594594594594595,
+        0.696969696969697
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 105,
+      "rho": -0.011322737619944196,
+      "p": 0.9087317885484859,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        0.6976744186046512,
+        0.8070175438596491
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 105,
+      "rho": -0.11699828083065032,
+      "p": 0.2345925234884333,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        0.8076923076923077,
+        1.0
+      ],
+      "support_variable": "median_log1p_df",
+      "n": 105,
+      "rho": 0.08672643769256251,
+      "p": 0.3790204189834996,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 0,
+      "stratum_range": null,
+      "support_variable": "median_log1p_df",
+      "n": 203,
+      "rho": -0.01813505293876712,
+      "p": 0.7973252272786576,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 1,
+      "stratum_range": null,
+      "support_variable": "median_log1p_df",
+      "n": 217,
+      "rho": -0.02397183363093742,
+      "p": 0.7254847645356503,
+      "status": "OK"
+    },
+    {
+      "stratum": "overall",
+      "stratum_label": "all",
+      "support_variable": "p10_log1p_df",
+      "n": 420,
+      "rho": -0.02748042553854791,
+      "p": 0.5743826018544944,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        7.0,
+        20.0
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 97,
+      "rho": -0.042087821363627466,
+      "p": 0.6823013400102609,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        21.0,
+        26.0
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 109,
+      "rho": -0.047978251874826926,
+      "p": 0.6203049319658496,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        27.0,
+        31.0
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 109,
+      "rho": -0.11490966998161395,
+      "p": 0.23412229470705698,
+      "status": "OK"
+    },
+    {
+      "stratum": "heavy_atoms_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        32.0,
+        49.0
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 105,
+      "rho": 0.034149819065967923,
+      "p": 0.7294602780971193,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        3.24,
+        56.73
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 105,
+      "rho": 0.10698960985122441,
+      "p": 0.2773394910146638,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        56.89,
+        79.89999999999999
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 104,
+      "rho": -0.2303386599830129,
+      "p": 0.018655908709796068,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        80.0,
+        98.73999999999998
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 105,
+      "rho": -0.09666074181579871,
+      "p": 0.32663187500547863,
+      "status": "OK"
+    },
+    {
+      "stratum": "tpsa_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        99.36000000000001,
+        164.55
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 106,
+      "rho": 0.09178655662433974,
+      "p": 0.34939013046407175,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 0,
+      "stratum_range": [
+        0.22666666666666666,
+        0.4583333333333333
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 105,
+      "rho": -0.1267963019080563,
+      "p": 0.19742182461678603,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 1,
+      "stratum_range": [
+        0.4594594594594595,
+        0.696969696969697
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 105,
+      "rho": 0.08398840649183378,
+      "p": 0.39430878405230363,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 2,
+      "stratum_range": [
+        0.6976744186046512,
+        0.8070175438596491
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 105,
+      "rho": -0.11569425376093799,
+      "p": 0.23988531612735275,
+      "status": "OK"
+    },
+    {
+      "stratum": "max_train_tanimoto_quartile",
+      "stratum_label": 3,
+      "stratum_range": [
+        0.8076923076923077,
+        1.0
+      ],
+      "support_variable": "p10_log1p_df",
+      "n": 105,
+      "rho": -0.012544869842967925,
+      "p": 0.898930201162145,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 0,
+      "stratum_range": null,
+      "support_variable": "p10_log1p_df",
+      "n": 203,
+      "rho": -0.11383994535825274,
+      "p": 0.1058318064573449,
+      "status": "OK"
+    },
+    {
+      "stratum": "scaffold_seen",
+      "stratum_label": 1,
+      "stratum_range": null,
+      "support_variable": "p10_log1p_df",
+      "n": 217,
+      "rho": 0.013055313513428337,
+      "p": 0.8483578075757036,
+      "status": "OK"
+    }
+  ],
+  "support_quartile_trends": [
+    {
+      "support_variable": "unseen_atom_frac",
+      "quartile": 0,
+      "n": 103,
+      "low_support": false,
+      "range": [
+        0.0,
+        0.0625
+      ],
+      "mean_d_i": 0.017967090454161103,
+      "median_d_i": 0.001120992070987802,
+      "mean_se_lcrc": 0.14249427882448384,
+      "mean_se_pna": 0.12452718837032273,
+      "rmse_lcrc": 0.37748414380538403,
+      "rmse_pna": 0.3528841004782204
+    },
+    {
+      "support_variable": "unseen_atom_frac",
+      "quartile": 1,
+      "n": 101,
+      "low_support": false,
+      "range": [
+        0.06451612903225806,
+        0.1956521739130435
+      ],
+      "mean_d_i": 0.02008054376823085,
+      "median_d_i": -0.02034422947443223,
+      "mean_se_lcrc": 0.26018334372447144,
+      "mean_se_pna": 0.2401027999562406,
+      "rmse_lcrc": 0.5100817029893069,
+      "rmse_pna": 0.4900028570898751
+    },
+    {
+      "support_variable": "unseen_atom_frac",
+      "quartile": 2,
+      "n": 109,
+      "low_support": false,
+      "range": [
+        0.2,
+        0.39285714285714285
+      ],
+      "mean_d_i": 0.18163514346052995,
+      "median_d_i": 0.004934437056187193,
+      "mean_se_lcrc": 0.46353487460393566,
+      "mean_se_pna": 0.2818997311434058,
+      "rmse_lcrc": 0.6808339552372045,
+      "rmse_pna": 0.5309423049102471
+    },
+    {
+      "support_variable": "unseen_atom_frac",
+      "quartile": 3,
+      "n": 107,
+      "low_support": false,
+      "range": [
+        0.4,
+        0.8846153846153846
+      ],
+      "mean_d_i": -0.06436673061850715,
+      "median_d_i": -0.017289789597768883,
+      "mean_se_lcrc": 0.5068192203782415,
+      "mean_se_pna": 0.5711859509967484,
+      "rmse_lcrc": 0.711912368468368,
+      "rmse_pna": 0.7557684506492371
+    },
+    {
+      "support_variable": "unseen_atom_frac",
+      "quartile": "edges",
+      "n": 420,
+      "low_support": false,
+      "range": null,
+      "mean_d_i": null,
+      "median_d_i": null,
+      "mean_se_lcrc": null,
+      "mean_se_pna": null,
+      "rmse_lcrc": null,
+      "rmse_pna": null,
+      "edges": [
+        0.06451612903225806,
+        0.2,
+        0.4
+      ]
+    },
+    {
+      "support_variable": "rare_atom_frac",
+      "quartile": 0,
+      "n": 105,
+      "low_support": false,
+      "range": [
+        0.0,
+        0.10638297872340426
+      ],
+      "mean_d_i": 0.01062773137910133,
+      "median_d_i": -0.0061825166098012285,
+      "mean_se_lcrc": 0.40093406536518167,
+      "mean_se_pna": 0.3903063339860803,
+      "rmse_lcrc": 0.6331935449490793,
+      "rmse_pna": 0.6247450151750554
+    },
+    {
+      "support_variable": "rare_atom_frac",
+      "quartile": 1,
+      "n": 105,
+      "low_support": false,
+      "range": [
+        0.10714285714285714,
+        0.2
+      ],
+      "mean_d_i": -0.06771761593918617,
+      "median_d_i": 0.0034542697085798903,
+      "mean_se_lcrc": 0.31035984604560635,
+      "mean_se_pna": 0.3780774619847924,
+      "rmse_lcrc": 0.5570994938479179,
+      "rmse_pna": 0.614880038694372
+    },
+    {
+      "support_variable": "rare_atom_frac",
+      "quartile": 2,
+      "n": 103,
+      "low_support": false,
+      "range": [
+        0.20588235294117646,
+        0.35135135135135137
+      ],
+      "mean_d_i": 0.14428896392970125,
+      "median_d_i": -0.0030297811098035,
+      "mean_se_lcrc": 0.41236037004711246,
+      "mean_se_pna": 0.26807140611741115,
+      "rmse_lcrc": 0.642152917962001,
+      "rmse_pna": 0.5177561261032178
+    },
+    {
+      "support_variable": "rare_atom_frac",
+      "quartile": 3,
+      "n": 107,
+      "low_support": false,
+      "range": [
+        0.35294117647058826,
+        1.0
+      ],
+      "mean_d_i": 0.07404121768632786,
+      "median_d_i": 0.0016247135935738087,
+      "mean_se_lcrc": 0.26683558443372846,
+      "mean_se_pna": 0.19279436674740055,
+      "rmse_lcrc": 0.5165613075267335,
+      "rmse_pna": 0.43908355326452453
+    },
+    {
+      "support_variable": "rare_atom_frac",
+      "quartile": "edges",
+      "n": 420,
+      "low_support": false,
+      "range": null,
+      "mean_d_i": null,
+      "median_d_i": null,
+      "mean_se_lcrc": null,
+      "mean_se_pna": null,
+      "rmse_lcrc": null,
+      "rmse_pna": null,
+      "edges": [
+        0.10695288753799392,
+        0.20294117647058824,
+        0.35294117647058826
+      ]
+    },
+    {
+      "support_variable": "median_log1p_df",
+      "quartile": 0,
+      "n": 73,
+      "low_support": false,
+      "range": [
+        0.0,
+        0.34657359027997264
+      ],
+      "mean_d_i": -0.0753801131984346,
+      "median_d_i": -0.0020803862782878164,
+      "mean_se_lcrc": 0.5870883363954094,
+      "mean_se_pna": 0.662468449593844,
+      "rmse_lcrc": 0.7662168990536617,
+      "rmse_pna": 0.8139216483137944
+    },
+    {
+      "support_variable": "median_log1p_df",
+      "quartile": 1,
+      "n": 137,
+      "low_support": false,
+      "range": [
+        0.6931471805599453,
+        1.7005986908310777
+      ],
+      "mean_d_i": 0.16011144609332284,
+      "median_d_i": 0.0016247135935738087,
+      "mean_se_lcrc": 0.40622938117237706,
+      "mean_se_pna": 0.24611793507905422,
+      "rmse_lcrc": 0.6373612642547216,
+      "rmse_pna": 0.49610274649416547
+    },
+    {
+      "support_variable": "median_log1p_df",
+      "quartile": 2,
+      "n": 100,
+      "low_support": false,
+      "range": [
+        1.700598690831078,
+        2.484906649788
+      ],
+      "mean_d_i": 0.02542088761240868,
+      "median_d_i": 0.0025606909614123404,
+      "mean_se_lcrc": 0.23752763831297674,
+      "mean_se_pna": 0.2121067507005681,
+      "rmse_lcrc": 0.4873680727263294,
+      "rmse_pna": 0.4605504865924778
+    },
+    {
+      "support_variable": "median_log1p_df",
+      "quartile": 3,
+      "n": 110,
+      "low_support": false,
+      "range": [
+        2.4849066497880004,
+        3.6888794541139363
+      ],
+      "mean_d_i": -0.0198624810377542,
+      "median_d_i": -0.006031656640054976,
+      "mean_se_lcrc": 0.213152261260146,
+      "mean_se_pna": 0.23301474229790015,
+      "rmse_lcrc": 0.4616841574714753,
+      "rmse_pna": 0.4827160058439125
+    },
+    {
+      "support_variable": "median_log1p_df",
+      "quartile": "edges",
+      "n": 420,
+      "low_support": false,
+      "range": null,
+      "mean_d_i": null,
+      "median_d_i": null,
+      "mean_se_lcrc": null,
+      "mean_se_pna": null,
+      "rmse_lcrc": null,
+      "rmse_pna": null,
+      "edges": [
+        0.6931471805599453,
+        1.700598690831078,
+        2.4849066497880004
+      ]
+    },
+    {
+      "support_variable": "p10_log1p_df",
+      "quartile": 0,
+      "n": 0,
+      "low_support": true,
+      "range": null,
+      "mean_d_i": null,
+      "median_d_i": null,
+      "mean_se_lcrc": null,
+      "mean_se_pna": null,
+      "rmse_lcrc": null,
+      "rmse_pna": null
+    },
+    {
+      "support_variable": "p10_log1p_df",
+      "quartile": 1,
+      "n": 0,
+      "low_support": true,
+      "range": null,
+      "mean_d_i": null,
+      "median_d_i": null,
+      "mean_se_lcrc": null,
+      "mean_se_pna": null,
+      "rmse_lcrc": null,
+      "rmse_pna": null
+    },
+    {
+      "support_variable": "p10_log1p_df",
+      "quartile": 2,
+      "n": 284,
+      "low_support": false,
+      "range": [
+        0.0,
+        0.623832462503951
+      ],
+      "mean_d_i": 0.056418794507236934,
+      "median_d_i": -0.0015173555200614216,
+      "mean_se_lcrc": 0.4434023105412814,
+      "mean_se_pna": 0.3869835160340444,
+      "rmse_lcrc": 0.6658846075269208,
+      "rmse_pna": 0.6220799916683099
+    },
+    {
+      "support_variable": "p10_log1p_df",
+      "quartile": 3,
+      "n": 136,
+      "low_support": false,
+      "range": [
+        0.6931471805599453,
+        2.70805020110221
+      ],
+      "mean_d_i": 0.005638221017147913,
+      "median_d_i": 0.0001467753986969326,
+      "mean_se_lcrc": 0.14547154524757624,
+      "mean_se_pna": 0.13983332423042835,
+      "rmse_lcrc": 0.38140732196377175,
+      "rmse_pna": 0.3739429424797697
+    },
+    {
+      "support_variable": "p10_log1p_df",
+      "quartile": "edges",
+      "n": 420,
+      "low_support": false,
+      "range": null,
+      "mean_d_i": null,
+      "median_d_i": null,
+      "mean_se_lcrc": null,
+      "mean_se_pna": null,
+      "rmse_lcrc": null,
+      "rmse_pna": null,
+      "edges": [
+        0.0,
+        0.0,
+        0.6931471805599453
+      ]
+    }
+  ],
+  "low_support_rule": "n < 30 -> LOW_SUPPORT; no threshold is merged after seeing results",
+  "interpretation_warning": "Held-out OOF MSE/MAE describe predictive association only. They do not identify a causal effect of support, because support co-varies with size, polarity and similarity."
+}

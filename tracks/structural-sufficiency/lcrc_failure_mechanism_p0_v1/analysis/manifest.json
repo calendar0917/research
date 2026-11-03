@@ -1,0 +1,3185 @@
+{
+  "round": "lcrc-failure-mechanism-p0-v1",
+  "created_utc": "2026-11-03T13:15:58Z",
+  "git": {
+    "commit": "b54d3cfb51700d3639ba7040ecb4d66bd8f30d41",
+    "commit_short": "b54d3cfb",
+    "dirty": true,
+    "dirty_files": [
+      "?? tracks/structural-sufficiency/lcrc_failure_mechanism_p0_v1/"
+    ]
+  },
+  "environment": {
+    "python": "3.12.15",
+    "python_executable": "/home/calendar/code/research/.venv/bin/python",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "numpy": "2.1.3",
+    "scipy": "1.14.1",
+    "scikit_learn": "1.5.2",
+    "gpu_used": false,
+    "training_or_finetuning": false,
+    "rdkit": "2026.09.1",
+    "pandas": "2.2.3"
+  },
+  "flags": {
+    "cpu_only": true,
+    "gpu_used": false,
+    "training_or_finetuning": false,
+    "checkpoint_selection": false,
+    "historical_files_modified": false,
+    "new_inference_on_frozen_checkpoints": false,
+    "group_a_test_predictions_or_labels_read": false,
+    "group_b_test_predictions_or_labels_read": true,
+    "group_b_test_exposure": "POST_HOC_EXPOSED_DISCOVERY",
+    "group_a_and_group_b_pooled": false
+  },
+  "analysis_constants": {
+    "signature_version": "rooted-radius2-labelled-ball-v1",
+    "signature_radius": 2,
+    "rare_df_max": 4,
+    "morgan_radius": 2,
+    "morgan_bits": 2048,
+    "metric_tolerance": 1e-05,
+    "top_fraction": 0.1,
+    "n_folds": 5,
+    "ridge_alpha": 10.0,
+    "bootstrap_reps": 2000,
+    "bootstrap_seed": 20261103,
+    "ci_percentiles": [
+      2.5,
+      97.5
+    ],
+    "low_support_n": 30
+  },
+  "data_groups": {
+    "A": {
+      "group": "A_random42",
+      "dataset": "Lipophilicity",
+      "split": "random42",
+      "split_seed": 42,
+      "split_file": {
+        "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/split_esa_random42_v1.json",
+        "sha256": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4",
+        "n_molecules": 4200,
+        "smiles_sha256": "4ea3d409b3fcea1d5fd57e1859f7ff87862a16de493bb99d2ba204d38148f9d6",
+        "row_sha256": {
+          "train": "0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee",
+          "valid": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44",
+          "test": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b"
+        },
+        "sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        },
+        "method": "torch.utils.data.random_split(list(range(4200)), [3360, 420, 420], generator=torch.Generator().manual_seed(42))"
+      },
+      "metric_file": {
+        "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/metrics_validation.json",
+        "sha256": "c540f9ac89a391ea13c8235b7b14cb7faf10ae2a9d60616d2e4716659c576fdd",
+        "definition": "frozen valid RMSE/MAE for LCRC-A-R3 and PNA-native; SSE derived as n*RMSE^2 for the reproduction check"
+      },
+      "labels": {
+        "path": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/data/labels_train_valid_v1.json",
+        "sha256": "1da269356e0e89974a7388d1e430d7e810a0ab1056be5cd747a1c8ed3d2009ca",
+        "scope": "train_and_valid_only",
+        "vector_sha256": {
+          "train": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8",
+          "valid": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+        }
+      },
+      "models": [
+        {
+          "run": "lcrc_a_r3_s0",
+          "model": "LCRC-A-R3-scratch",
+          "prediction_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/lcrc_a_r3_s0/valid_predictions.npz",
+          "prediction_sha256": "7f9ad3919d57755d5adc08b99f1209b18ab6629c14eb182592a858183d88e894",
+          "rows_sha256": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44",
+          "n": 420,
+          "strict_row_order_match": true,
+          "recomputed": {
+            "n": 420,
+            "sse": 145.71038634739426,
+            "mse": 0.3469294913033197,
+            "rmse": 0.5890072081930064,
+            "mae": 0.4208143415034744,
+            "p90_abs": 0.9520388360343272,
+            "mean_residual": -0.030388452855351383
+          },
+          "reported_valid_metrics": {
+            "mae": 0.4208143415034744,
+            "r2": 0.7704497521401419,
+            "rmse": 0.5890072081930064
+          },
+          "metric_checks": [
+            {
+              "metric": "rmse",
+              "reported": 0.5890072081930064,
+              "recomputed": 0.5890072081930064,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "mae",
+              "reported": 0.4208143415034744,
+              "recomputed": 0.4208143415034744,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "sse",
+              "reported": 145.71038634739423,
+              "recomputed": 145.71038634739426,
+              "abs_diff": 2.842170943040401e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint_rule": "average_last_5_epoch_end_state_dicts",
+          "best_epoch": null,
+          "parameters_total": 247106,
+          "seed": 0
+        },
+        {
+          "run": "pna_native_s0",
+          "model": "PNA-native",
+          "prediction_file": "tracks/structural-sufficiency/lcrc_lipo_esa_random42_v1/analysis/runs/pna_native_s0/valid_predictions.npz",
+          "prediction_sha256": "735df74915d43803b63323e09d85089c6c2d284e04acffcf242eb587ae1ac905",
+          "rows_sha256": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44",
+          "n": 420,
+          "strict_row_order_match": true,
+          "recomputed": {
+            "n": 420,
+            "sse": 128.92065064900686,
+            "mse": 0.306953930116683,
+            "rmse": 0.5540342318996931,
+            "mae": 0.4007184723844865,
+            "p90_abs": 0.9017776266563677,
+            "mean_residual": -0.017933940869077326
+          },
+          "reported_valid_metrics": {
+            "mae": 0.4007184723844865,
+            "r2": 0.7969000834286586,
+            "rmse": 0.5540342318996931
+          },
+          "metric_checks": [
+            {
+              "metric": "rmse",
+              "reported": 0.5540342318996931,
+              "recomputed": 0.5540342318996931,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "mae",
+              "reported": 0.4007184723844865,
+              "recomputed": 0.4007184723844865,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "sse",
+              "reported": 128.92065064900686,
+              "recomputed": 128.92065064900686,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint_rule": "best_validation_loss",
+          "best_epoch": 84,
+          "parameters_total": 7767349,
+          "seed": 0
+        }
+      ],
+      "row_overlap": {
+        "train_valid": 0,
+        "train_test": 0,
+        "valid_test": 0,
+        "union": 4200
+      },
+      "checks": [
+        {
+          "check": "split_n_molecules",
+          "passed": true,
+          "detail": 4200
+        },
+        {
+          "check": "split_smiles_sha256",
+          "passed": true,
+          "detail": "4ea3d409b3fcea1d5fd57e1859f7ff87862a16de493bb99d2ba204d38148f9d6"
+        },
+        {
+          "check": "split_rows_sha256_train",
+          "passed": true,
+          "detail": "0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee"
+        },
+        {
+          "check": "split_rows_unique_train",
+          "passed": true,
+          "detail": {
+            "n": 3360,
+            "n_unique": 3360
+          }
+        },
+        {
+          "check": "split_rows_in_range_train",
+          "passed": true,
+          "detail": [
+            0,
+            4199
+          ]
+        },
+        {
+          "check": "split_rows_sha256_valid",
+          "passed": true,
+          "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+        },
+        {
+          "check": "split_rows_unique_valid",
+          "passed": true,
+          "detail": {
+            "n": 420,
+            "n_unique": 420
+          }
+        },
+        {
+          "check": "split_rows_in_range_valid",
+          "passed": true,
+          "detail": [
+            1,
+            4195
+          ]
+        },
+        {
+          "check": "split_rows_sha256_test",
+          "passed": true,
+          "detail": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b"
+        },
+        {
+          "check": "split_rows_unique_test",
+          "passed": true,
+          "detail": {
+            "n": 420,
+            "n_unique": 420
+          }
+        },
+        {
+          "check": "split_rows_in_range_test",
+          "passed": true,
+          "detail": [
+            2,
+            4187
+          ]
+        },
+        {
+          "check": "split_row_isolation",
+          "passed": true,
+          "detail": {
+            "train_valid": 0,
+            "train_test": 0,
+            "valid_test": 0,
+            "union": 4200
+          }
+        },
+        {
+          "check": "split_declared_sizes",
+          "passed": true,
+          "detail": {
+            "test": 420,
+            "train": 3360,
+            "valid": 420
+          }
+        },
+        {
+          "check": "split_method_random42",
+          "passed": true,
+          "detail": "torch.utils.data.random_split(list(range(4200)), [3360, 420, 420], generator=torch.Generator().manual_seed(42))"
+        },
+        {
+          "check": "labels_scope_train_valid_only",
+          "passed": true,
+          "detail": {
+            "scope": "train_and_valid_only",
+            "test_labels_included": false
+          }
+        },
+        {
+          "check": "labels_split_file_sha256",
+          "passed": true,
+          "detail": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4"
+        },
+        {
+          "check": "labels_rows_match_split_train",
+          "passed": true,
+          "detail": {
+            "n": 3360
+          }
+        },
+        {
+          "check": "labels_row_sha256_train",
+          "passed": true,
+          "detail": "0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee"
+        },
+        {
+          "check": "labels_vector_sha256_train",
+          "passed": true,
+          "detail": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8"
+        },
+        {
+          "check": "labels_rows_match_split_valid",
+          "passed": true,
+          "detail": {
+            "n": 420
+          }
+        },
+        {
+          "check": "labels_row_sha256_valid",
+          "passed": true,
+          "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+        },
+        {
+          "check": "labels_vector_sha256_valid",
+          "passed": true,
+          "detail": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+        },
+        {
+          "check": "predictions_finite_lcrc_a_r3_s0",
+          "passed": true,
+          "detail": 0
+        },
+        {
+          "metric": "rmse",
+          "reported": 0.5890072081930064,
+          "recomputed": 0.5890072081930064,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "lcrc_a_r3_s0_rmse"
+        },
+        {
+          "metric": "mae",
+          "reported": 0.4208143415034744,
+          "recomputed": 0.4208143415034744,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "lcrc_a_r3_s0_mae"
+        },
+        {
+          "metric": "sse",
+          "reported": 145.71038634739423,
+          "recomputed": 145.71038634739426,
+          "abs_diff": 2.842170943040401e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "lcrc_a_r3_s0_sse"
+        },
+        {
+          "check": "prediction_file_sha256_lcrc_a_r3_s0",
+          "passed": true,
+          "detail": "7f9ad3919d57755d5adc08b99f1209b18ab6629c14eb182592a858183d88e894"
+        },
+        {
+          "check": "prediction_rows_sha256_lcrc_a_r3_s0",
+          "passed": true,
+          "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+        },
+        {
+          "check": "predictions_finite_pna_native_s0",
+          "passed": true,
+          "detail": 0
+        },
+        {
+          "metric": "rmse",
+          "reported": 0.5540342318996931,
+          "recomputed": 0.5540342318996931,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "pna_native_s0_rmse"
+        },
+        {
+          "metric": "mae",
+          "reported": 0.4007184723844865,
+          "recomputed": 0.4007184723844865,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "pna_native_s0_mae"
+        },
+        {
+          "metric": "sse",
+          "reported": 128.92065064900686,
+          "recomputed": 128.92065064900686,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "pna_native_s0_sse"
+        },
+        {
+          "check": "prediction_file_sha256_pna_native_s0",
+          "passed": true,
+          "detail": "735df74915d43803b63323e09d85089c6c2d284e04acffcf242eb587ae1ac905"
+        },
+        {
+          "check": "prediction_rows_sha256_pna_native_s0",
+          "passed": true,
+          "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+        },
+        {
+          "check": "group_a_valid_row_sets_identical",
+          "passed": true,
+          "detail": {
+            "lcrc_a_r3_s0": 420,
+            "pna_native_s0": 420
+          }
+        }
+      ]
+    },
+    "B": {
+      "group": "B_lipo_random122",
+      "dataset": "Lipophilicity",
+      "split": "random122(published)",
+      "split_seed": null,
+      "split_seed_note": "The published split file is named random122; the frozen train.json does not record a split seed, so none is asserted here.",
+      "split_file": {
+        "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random122.ind.pkl",
+        "sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "row_sha256": {
+          "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "sizes": {
+          "train": 3360,
+          "valid": 420,
+          "test": 420
+        }
+      },
+      "labels_source": {
+        "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+        "sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "n": 4200,
+        "test_labels_used_for": "POST_HOC_EXPOSED_DISCOVERY evaluation only"
+      },
+      "runs": [
+        {
+          "run": "p0_base_lipo_parity",
+          "arm": "base",
+          "seed": 0,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p0_base_lipo_parity/train.json",
+          "train_json_sha256": "384684317136f87460aad1e9ceb34564d19a3b97624f2706996dcadf0874575b",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p0_base_lipo_parity/valid_predictions.npz",
+          "valid_predictions_sha256": "a50bd66119f6d0410340af51883e3b7e0bd480408868bffe6b642096672d2934",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p0_base_lipo_parity/test_predictions.npz",
+          "test_predictions_sha256": "f93e1983585b12369be66ecbd46dfb515ad6e0a712c8da7dc1d9794d6c156f61",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 215.1800366457969,
+              "mse": 0.5123334205852307,
+              "rmse": 0.7157746995984355,
+              "mae": 0.4147544542658695,
+              "p90_abs": 0.8554420079020039,
+              "mean_residual": -0.024633463346670673
+            },
+            "test": {
+              "n": 420,
+              "sse": 136.67153560752396,
+              "mse": 0.3254084181131523,
+              "rmse": 0.5704458064646916,
+              "mae": 0.42411895467959176,
+              "p90_abs": 0.8787229894417379,
+              "mean_residual": -0.049058638047117194
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": -0.024633463346670673,
+              "checkpoint": "best_epoch",
+              "mae": 0.4147544542658695,
+              "n": 420,
+              "r2": 0.616051813659344,
+              "rmse": 0.7157746995984355
+            },
+            "test": {
+              "bias": -0.049058638047117194,
+              "checkpoint": "best_epoch",
+              "mae": 0.42411895467959176,
+              "n": 420,
+              "r2": 0.773252538262335,
+              "rmse": 0.5704458064646916
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.7157746995984355,
+              "recomputed": 0.7157746995984355,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.4147544542658695,
+              "recomputed": 0.4147544542658695,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 215.1800366457969,
+              "recomputed": 215.1800366457969,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5704458064646916,
+              "recomputed": 0.5704458064646916,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.42411895467959176,
+              "recomputed": 0.42411895467959176,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 136.671535607524,
+              "recomputed": 136.67153560752396,
+              "abs_diff": 2.842170943040401e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 331,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 247106,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        },
+        {
+          "run": "p1_chem8_lipo",
+          "arm": "chem8",
+          "seed": 0,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_chem8_lipo/train.json",
+          "train_json_sha256": "5fa9a390a3a4a9b8a3e1198ad0afd8b106b07e46fb6d6941924fbc6ae6a35217",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_chem8_lipo/valid_predictions.npz",
+          "valid_predictions_sha256": "3fb287089f0f96819221a5acfd77c7fde47cff8884636400dca7132a55338da9",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_chem8_lipo/test_predictions.npz",
+          "test_predictions_sha256": "f93d8955f02033d9bb7c4f182e94a56f28e534cd82313d490a8d8708bfb71a5a",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 207.4467024483056,
+              "mse": 0.4939207201150133,
+              "rmse": 0.702794934611095,
+              "mae": 0.4040006880337306,
+              "p90_abs": 0.8200020417894256,
+              "mean_residual": -0.01200501563719452
+            },
+            "test": {
+              "n": 420,
+              "sse": 134.5292420702641,
+              "mse": 0.3203077192149145,
+              "rmse": 0.5659573475226861,
+              "mae": 0.4245368359742913,
+              "p90_abs": 0.8574799954969852,
+              "mean_residual": -0.033857321833667624
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": -0.01200501563719452,
+              "checkpoint": "best_epoch",
+              "mae": 0.4040006880337306,
+              "n": 420,
+              "r2": 0.6298504898087514,
+              "rmse": 0.702794934611095
+            },
+            "test": {
+              "bias": -0.033857321833667624,
+              "checkpoint": "best_epoch",
+              "mae": 0.4245368359742913,
+              "n": 420,
+              "r2": 0.776806750335181,
+              "rmse": 0.5659573475226861
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.702794934611095,
+              "recomputed": 0.702794934611095,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.4040006880337306,
+              "recomputed": 0.4040006880337306,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 207.44670244830556,
+              "recomputed": 207.4467024483056,
+              "abs_diff": 2.842170943040401e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5659573475226861,
+              "recomputed": 0.5659573475226861,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.4245368359742913,
+              "recomputed": 0.4245368359742913,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 134.5292420702641,
+              "recomputed": 134.5292420702641,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 240,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 248130,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        },
+        {
+          "run": "p1_contrib_lipo",
+          "arm": "multicontrib",
+          "seed": 0,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_contrib_lipo/train.json",
+          "train_json_sha256": "78eb7225ff0649a6e4a436598b2f911dcb8f163a6c69ece66ad36a2a472862d9",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_contrib_lipo/valid_predictions.npz",
+          "valid_predictions_sha256": "7e603063024e10c1a0f111210751be953311e046cec6a00eedaeb1fdf2d707be",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_contrib_lipo/test_predictions.npz",
+          "test_predictions_sha256": "463bfafcb6125d9557676b03c330eed55b8121ef36fb284a6bcce48b90ebc2f5",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 151.39405593362844,
+              "mse": 0.36046203793721054,
+              "rmse": 0.6003849081524373,
+              "mae": 0.39927056058775584,
+              "p90_abs": 0.8576940622237476,
+              "mean_residual": -0.010523575505021107
+            },
+            "test": {
+              "n": 420,
+              "sse": 138.3526400378043,
+              "mse": 0.3294110477090578,
+              "rmse": 0.5739434185606259,
+              "mae": 0.42600879635135774,
+              "p90_abs": 0.9122125042256507,
+              "mean_residual": -0.02888467772841791
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": -0.010523575505021107,
+              "checkpoint": "best_epoch",
+              "mae": 0.39927056058775584,
+              "n": 420,
+              "r2": 0.7298658643963575,
+              "rmse": 0.6003849081524373
+            },
+            "test": {
+              "bias": -0.02888467772841791,
+              "checkpoint": "best_epoch",
+              "mae": 0.42600879635135774,
+              "n": 420,
+              "r2": 0.7704634705842147,
+              "rmse": 0.5739434185606259
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.6003849081524373,
+              "recomputed": 0.6003849081524373,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.39927056058775584,
+              "recomputed": 0.39927056058775584,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 151.39405593362844,
+              "recomputed": 151.39405593362844,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5739434185606259,
+              "recomputed": 0.5739434185606259,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.42600879635135774,
+              "recomputed": 0.42600879635135774,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 138.3526400378043,
+              "recomputed": 138.3526400378043,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 232,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 252139,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        },
+        {
+          "run": "p2b_combo_chem_contrib_lipo",
+          "arm": "combo_chem_contrib",
+          "seed": 0,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2b_combo_chem_contrib_lipo/train.json",
+          "train_json_sha256": "8aaf54bd4059c010cceac0f65fa0406b42925c8a930a81a343268c7a6ded9e2c",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2b_combo_chem_contrib_lipo/valid_predictions.npz",
+          "valid_predictions_sha256": "92fec82f6413b84bc77f74cadb23667a5c7d9ecc580a7273ea8ad2b108b6958b",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2b_combo_chem_contrib_lipo/test_predictions.npz",
+          "test_predictions_sha256": "a8456ff10208b04a268ea5798db42e6e48c030a1bf82691d57f423899f718be6",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 206.47434784748958,
+              "mse": 0.4916055901130704,
+              "rmse": 0.7011459121417385,
+              "mae": 0.4036864031751311,
+              "p90_abs": 0.8655549644309747,
+              "mean_residual": -0.01713642936987434
+            },
+            "test": {
+              "n": 420,
+              "sse": 127.5318086250505,
+              "mse": 0.30364716339297737,
+              "rmse": 0.5510418889639674,
+              "mae": 0.4120265041770213,
+              "p90_abs": 0.8905256587568872,
+              "mean_residual": -0.031003270097895157
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": -0.01713642936987434,
+              "checkpoint": "best_epoch",
+              "mae": 0.4036864031751311,
+              "n": 420,
+              "r2": 0.6315854731802704,
+              "rmse": 0.7011459121417385
+            },
+            "test": {
+              "bias": -0.031003270097895157,
+              "checkpoint": "best_epoch",
+              "mae": 0.4120265041770213,
+              "n": 420,
+              "r2": 0.7884159728797844,
+              "rmse": 0.5510418889639674
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.7011459121417385,
+              "recomputed": 0.7011459121417385,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.4036864031751311,
+              "recomputed": 0.4036864031751311,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 206.4743478474896,
+              "recomputed": 206.47434784748958,
+              "abs_diff": 2.842170943040401e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5510418889639674,
+              "recomputed": 0.5510418889639674,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.4120265041770213,
+              "recomputed": 0.4120265041770213,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 127.53180862505052,
+              "recomputed": 127.5318086250505,
+              "abs_diff": 1.4210854715202004e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 266,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 253163,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        },
+        {
+          "run": "p5_base_lipo_s1",
+          "arm": "base",
+          "seed": 1,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s1/train.json",
+          "train_json_sha256": "2738e04d4c60f5f6de955cd324c86525215202f404168a93033172ae1e22512c",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s1/valid_predictions.npz",
+          "valid_predictions_sha256": "6e68b294fd009642b32165815b2aecef9acacf835ff7a4ae96befbc6b337a3f6",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s1/test_predictions.npz",
+          "test_predictions_sha256": "421f78b2442710655fcd77132ca0ad5dc4bae0d866d1e1cccf845a4fdd33d59b",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 192.34093160000424,
+              "mse": 0.45795459904762914,
+              "rmse": 0.6767234287710373,
+              "mae": 0.40835470985729067,
+              "p90_abs": 0.81129196999946,
+              "mean_residual": -0.05136818639333085
+            },
+            "test": {
+              "n": 420,
+              "sse": 133.30021175151825,
+              "mse": 0.3173814565512339,
+              "rmse": 0.5633661833578884,
+              "mae": 0.4242561523658639,
+              "p90_abs": 0.899559509149983,
+              "mean_residual": -0.062402513006904976
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": -0.05136818639333085,
+              "checkpoint": "best_epoch",
+              "mae": 0.40835470985729067,
+              "n": 420,
+              "r2": 0.6568038885110197,
+              "rmse": 0.6767234287710373
+            },
+            "test": {
+              "bias": -0.062402513006904976,
+              "checkpoint": "best_epoch",
+              "mae": 0.4242561523658639,
+              "n": 420,
+              "r2": 0.7788457960218742,
+              "rmse": 0.5633661833578884
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.6767234287710373,
+              "recomputed": 0.6767234287710373,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.40835470985729067,
+              "recomputed": 0.40835470985729067,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 192.34093160000427,
+              "recomputed": 192.34093160000424,
+              "abs_diff": 2.842170943040401e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5633661833578884,
+              "recomputed": 0.5633661833578884,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.4242561523658639,
+              "recomputed": 0.4242561523658639,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 133.30021175151825,
+              "recomputed": 133.30021175151825,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 166,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 247106,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        },
+        {
+          "run": "p5b_combo_lipo_s1",
+          "arm": "combo_chem_contrib",
+          "seed": 1,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s1/train.json",
+          "train_json_sha256": "e3d828fe8bc2ea03a1566c19e6aa786643cacb96b506a8f063c6b90bc043a600",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s1/valid_predictions.npz",
+          "valid_predictions_sha256": "8713fa89b9305ca4db7a6787e4386531e9fd745356b6ec01396b549c8a46d47e",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s1/test_predictions.npz",
+          "test_predictions_sha256": "e5de6a58fd56008f2c656198f84a144c680a444577b62bbba1dafdb07b310742",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 155.2378399095424,
+              "mse": 0.36961390454652954,
+              "rmse": 0.6079588016852208,
+              "mae": 0.4026223453200056,
+              "p90_abs": 0.8120483003828884,
+              "mean_residual": -0.04089684594206544
+            },
+            "test": {
+              "n": 420,
+              "sse": 125.76854866840159,
+              "mse": 0.2994489254009562,
+              "rmse": 0.5472192662918185,
+              "mae": 0.4100828824174348,
+              "p90_abs": 0.8576245920751883,
+              "mean_residual": -0.059870725708023
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": -0.04089684594206544,
+              "checkpoint": "best_epoch",
+              "mae": 0.4026223453200056,
+              "n": 420,
+              "r2": 0.7230073569379414,
+              "rmse": 0.6079588016852208
+            },
+            "test": {
+              "bias": -0.059870725708023,
+              "checkpoint": "best_epoch",
+              "mae": 0.4100828824174348,
+              "n": 420,
+              "r2": 0.7913413422171272,
+              "rmse": 0.5472192662918185
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.6079588016852208,
+              "recomputed": 0.6079588016852208,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.4026223453200056,
+              "recomputed": 0.4026223453200056,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 155.23783990954243,
+              "recomputed": 155.2378399095424,
+              "abs_diff": 2.842170943040401e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5472192662918185,
+              "recomputed": 0.5472192662918185,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.4100828824174348,
+              "recomputed": 0.4100828824174348,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 125.76854866840159,
+              "recomputed": 125.76854866840159,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 275,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 253163,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        },
+        {
+          "run": "p5_base_lipo_s2",
+          "arm": "base",
+          "seed": 2,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s2/train.json",
+          "train_json_sha256": "9ca818053efca2eed3c27bd37c5388b0e2db9bf213133d436e33ac4f88f04f88",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s2/valid_predictions.npz",
+          "valid_predictions_sha256": "8f134ff7246d508e8b75d4474cbb52998d6b92f53c66e0618421ff9e6e5d18f3",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s2/test_predictions.npz",
+          "test_predictions_sha256": "bca3bd54edb2f244130c8095ded66de75a4ad579acd76b74499a1364ad77d75f",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 225.67525123071965,
+              "mse": 0.5373220267398087,
+              "rmse": 0.7330225281257109,
+              "mae": 0.40185207305214116,
+              "p90_abs": 0.8171458710266664,
+              "mean_residual": 0.007165983839578472
+            },
+            "test": {
+              "n": 420,
+              "sse": 140.28780216311964,
+              "mse": 0.33401857657885625,
+              "rmse": 0.5779434025740378,
+              "mae": 0.42771870257317157,
+              "p90_abs": 0.9555739726994997,
+              "mean_residual": -0.014626746934630197
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": 0.007165983839578472,
+              "checkpoint": "best_epoch",
+              "mae": 0.40185207305214116,
+              "n": 420,
+              "r2": 0.5973250829274863,
+              "rmse": 0.7330225281257109
+            },
+            "test": {
+              "bias": -0.014626746934630197,
+              "checkpoint": "best_epoch",
+              "mae": 0.42771870257317157,
+              "n": 420,
+              "r2": 0.7672529037458776,
+              "rmse": 0.5779434025740378
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.7330225281257109,
+              "recomputed": 0.7330225281257109,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.40185207305214116,
+              "recomputed": 0.40185207305214116,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 225.67525123071965,
+              "recomputed": 225.67525123071965,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5779434025740378,
+              "recomputed": 0.5779434025740378,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.42771870257317157,
+              "recomputed": 0.42771870257317157,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 140.28780216311964,
+              "recomputed": 140.28780216311964,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 232,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 247106,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        },
+        {
+          "run": "p5b_combo_lipo_s2",
+          "arm": "combo_chem_contrib",
+          "seed": 2,
+          "train_json": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s2/train.json",
+          "train_json_sha256": "8246d8f09ff6582df78bd817814f8a64cf458015150d56311296dd85b5f7c866",
+          "valid_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s2/valid_predictions.npz",
+          "valid_predictions_sha256": "4fefd6dfaaa6bcc71896162d98106f7e0ce1cce01e60a165aabe4fc8f5a1a258",
+          "test_predictions": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s2/test_predictions.npz",
+          "test_predictions_sha256": "a6c3ed995e4841bfbb54c992c8e463c57bee96f40bdd72a84ff1e266bf0c017c",
+          "rows_sha256": {
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "target_norm": {
+            "mean": 2.176985119047619,
+            "scale": 1.2091154725538142,
+            "n": 3360
+          },
+          "recomputed": {
+            "valid": {
+              "n": 420,
+              "sse": 137.8309258760711,
+              "mse": 0.3281688711335026,
+              "rmse": 0.57286025445435,
+              "mae": 0.3716983167106538,
+              "p90_abs": 0.806057605996622,
+              "mean_residual": 0.0555446575839461
+            },
+            "test": {
+              "n": 420,
+              "sse": 130.18678283945093,
+              "mse": 0.30996853057012125,
+              "rmse": 0.5567481751834678,
+              "mae": 0.4112419056762635,
+              "p90_abs": 0.8782079517573066,
+              "mean_residual": -0.006278141239323937
+            }
+          },
+          "reported": {
+            "valid": {
+              "bias": 0.0555446575839461,
+              "checkpoint": "best_epoch",
+              "mae": 0.3716983167106538,
+              "n": 420,
+              "r2": 0.7540667115933193,
+              "rmse": 0.57286025445435
+            },
+            "test": {
+              "bias": -0.006278141239323937,
+              "checkpoint": "best_epoch",
+              "mae": 0.4112419056762635,
+              "n": 420,
+              "r2": 0.7840111883617922,
+              "rmse": 0.5567481751834678
+            }
+          },
+          "metric_checks": [
+            {
+              "metric": "valid_rmse",
+              "reported": 0.57286025445435,
+              "recomputed": 0.57286025445435,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_mae",
+              "reported": 0.3716983167106538,
+              "recomputed": 0.3716983167106538,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "valid_sse",
+              "reported": 137.8309258760711,
+              "recomputed": 137.8309258760711,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_rmse",
+              "reported": 0.5567481751834678,
+              "recomputed": 0.5567481751834678,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_mae",
+              "reported": 0.4112419056762635,
+              "recomputed": 0.4112419056762635,
+              "abs_diff": 0.0,
+              "tolerance": 1e-05,
+              "passed": true
+            },
+            {
+              "metric": "test_sse",
+              "reported": 130.18678283945096,
+              "recomputed": 130.18678283945093,
+              "abs_diff": 2.842170943040401e-14,
+              "tolerance": 1e-05,
+              "passed": true
+            }
+          ],
+          "checkpoint": {
+            "best_epoch": 271,
+            "best_metric_name": "rmse",
+            "selection_uses_test": false,
+            "epochs_run": 360
+          },
+          "parameters_total": 253163,
+          "exposure": {
+            "valid": "FROZEN_VALIDATION_ONLY",
+            "test": "POST_HOC_EXPOSED_DISCOVERY"
+          }
+        }
+      ],
+      "missing_cells": [
+        {
+          "arm": "chem8",
+          "seed": 1,
+          "reason": "no per-molecule prediction file in the frozen long-run"
+        },
+        {
+          "arm": "chem8",
+          "seed": 2,
+          "reason": "no per-molecule prediction file in the frozen long-run"
+        },
+        {
+          "arm": "multicontrib",
+          "seed": 1,
+          "reason": "no per-molecule prediction file in the frozen long-run"
+        },
+        {
+          "arm": "multicontrib",
+          "seed": 2,
+          "reason": "no per-molecule prediction file in the frozen long-run"
+        }
+      ],
+      "excluded_runs": [
+        {
+          "run": "p1_rho_lipo",
+          "reason": "rhoshape is outside the pre-declared four-arm BASE/CHEM8/MULTICONTRIB/COMBO set"
+        },
+        {
+          "run": "p2_combo_rho_contrib_lipo",
+          "reason": "combo_rho_contrib is outside the pre-declared four-arm set"
+        },
+        {
+          "run": "p3_base_scalem_lipo",
+          "reason": "scale-M variant outside the pre-declared four-arm set"
+        },
+        {
+          "run": "p3_rho_scalem_lipo",
+          "reason": "rho + scale-M variant outside the pre-declared four-arm set"
+        },
+        {
+          "run": "p4_rho_lipo123",
+          "reason": "random123: no matching BASE per-molecule prediction file"
+        },
+        {
+          "run": "p4_rho_lipo124",
+          "reason": "random124: no matching BASE per-molecule prediction file"
+        },
+        {
+          "run": "p4b_combo_lipo123",
+          "reason": "random123: COMBO exists but no matching BASE per-molecule prediction file"
+        },
+        {
+          "run": "p4b_combo_lipo124",
+          "reason": "random124: COMBO exists but no matching BASE per-molecule prediction file"
+        }
+      ],
+      "split_manifest": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/split_manifest_Lipophilicity.json",
+      "row_overlap": {
+        "train_valid": 0,
+        "train_test": 0,
+        "valid_test": 0,
+        "union": 4200
+      },
+      "table_cross_checks": [
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_chem8_lipo",
+          "metric": "valid_rmse",
+          "reported": 0.702794934611095,
+          "recomputed": 0.702794934611095,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_chem8_lipo",
+          "metric": "test_rmse",
+          "reported": 0.5659573475226861,
+          "recomputed": 0.5659573475226861,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_contrib_lipo",
+          "metric": "valid_rmse",
+          "reported": 0.6003849081524373,
+          "recomputed": 0.6003849081524373,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_contrib_lipo",
+          "metric": "test_rmse",
+          "reported": 0.5739434185606259,
+          "recomputed": 0.5739434185606259,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p2b_combo_chem_contrib_lipo",
+          "metric": "valid_rmse",
+          "reported": 0.7011459121417385,
+          "recomputed": 0.7011459121417385,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p2b_combo_chem_contrib_lipo",
+          "metric": "test_rmse",
+          "reported": 0.5510418889639674,
+          "recomputed": 0.5510418889639674,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p0_base_lipo_parity (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.7157746995984355,
+          "recomputed": 0.7157746995984355,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p0_base_lipo_parity (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5704458064646916,
+          "recomputed": 0.5704458064646916,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.6767234287710373,
+          "recomputed": 0.6767234287710373,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5633661833578884,
+          "recomputed": 0.5633661833578884,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.7330225281257109,
+          "recomputed": 0.7330225281257109,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5779434025740378,
+          "recomputed": 0.5779434025740378,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s1",
+          "metric": "valid_rmse",
+          "reported": 0.6079588016852208,
+          "recomputed": 0.6079588016852208,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s1",
+          "metric": "test_rmse",
+          "reported": 0.5472192662918185,
+          "recomputed": 0.5472192662918185,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.6767234287710373,
+          "recomputed": 0.6767234287710373,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5633661833578884,
+          "recomputed": 0.5633661833578884,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s2",
+          "metric": "valid_rmse",
+          "reported": 0.57286025445435,
+          "recomputed": 0.57286025445435,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s2",
+          "metric": "test_rmse",
+          "reported": 0.5567481751834678,
+          "recomputed": 0.5567481751834678,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.7330225281257109,
+          "recomputed": 0.7330225281257109,
+          "abs_diff": 0.0,
+          "passed": true
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5779434025740378,
+          "recomputed": 0.5779434025740378,
+          "abs_diff": 0.0,
+          "passed": true
+        }
+      ],
+      "checks": [
+        {
+          "check": "b_split_file_sha256",
+          "passed": true,
+          "detail": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d"
+        },
+        {
+          "check": "b_csv_sha256",
+          "passed": true,
+          "detail": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758"
+        },
+        {
+          "check": "b_split_rows_sha256_train",
+          "passed": true,
+          "detail": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        {
+          "check": "b_split_rows_unique_train",
+          "passed": true,
+          "detail": 3360
+        },
+        {
+          "check": "b_split_rows_sha256_valid",
+          "passed": true,
+          "detail": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        },
+        {
+          "check": "b_split_rows_unique_valid",
+          "passed": true,
+          "detail": 420
+        },
+        {
+          "check": "b_split_rows_sha256_test",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_split_rows_unique_test",
+          "passed": true,
+          "detail": 420
+        },
+        {
+          "check": "b_split_row_isolation",
+          "passed": true,
+          "detail": {
+            "train_valid": 0,
+            "train_test": 0,
+            "valid_test": 0,
+            "union": 4200
+          }
+        },
+        {
+          "check": "b_split_sizes",
+          "passed": true,
+          "detail": {
+            "train": 3360,
+            "valid": 420,
+            "test": 420
+          }
+        },
+        {
+          "check": "b_csv_columns_and_rows",
+          "passed": true,
+          "detail": {
+            "columns": [
+              "smiles",
+              "exp"
+            ],
+            "n": 4200
+          }
+        },
+        {
+          "check": "b_run_identity_p0_base_lipo_parity",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "base",
+            "seed": 0
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p0_base_lipo_parity",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p0_base_lipo_parity",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p0_base_lipo_parity",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p0_base_lipo_parity",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p0_base_lipo_parity",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.7157746995984355,
+          "recomputed": 0.7157746995984355,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p0_base_lipo_parity_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.4147544542658695,
+          "recomputed": 0.4147544542658695,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p0_base_lipo_parity_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 215.1800366457969,
+          "recomputed": 215.1800366457969,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p0_base_lipo_parity_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5704458064646916,
+          "recomputed": 0.5704458064646916,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p0_base_lipo_parity_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.42411895467959176,
+          "recomputed": 0.42411895467959176,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p0_base_lipo_parity_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 136.671535607524,
+          "recomputed": 136.67153560752396,
+          "abs_diff": 2.842170943040401e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p0_base_lipo_parity_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p0_base_lipo_parity",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p0_base_lipo_parity",
+          "passed": true,
+          "detail": "a50bd66119f6d0410340af51883e3b7e0bd480408868bffe6b642096672d2934"
+        },
+        {
+          "check": "b_test_file_sha256_p0_base_lipo_parity",
+          "passed": true,
+          "detail": "f93e1983585b12369be66ecbd46dfb515ad6e0a712c8da7dc1d9794d6c156f61"
+        },
+        {
+          "check": "b_run_identity_p1_chem8_lipo",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "chem8",
+            "seed": 0
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p1_chem8_lipo",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p1_chem8_lipo",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p1_chem8_lipo",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p1_chem8_lipo",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p1_chem8_lipo",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.702794934611095,
+          "recomputed": 0.702794934611095,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_chem8_lipo_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.4040006880337306,
+          "recomputed": 0.4040006880337306,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_chem8_lipo_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 207.44670244830556,
+          "recomputed": 207.4467024483056,
+          "abs_diff": 2.842170943040401e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_chem8_lipo_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5659573475226861,
+          "recomputed": 0.5659573475226861,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_chem8_lipo_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.4245368359742913,
+          "recomputed": 0.4245368359742913,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_chem8_lipo_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 134.5292420702641,
+          "recomputed": 134.5292420702641,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_chem8_lipo_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p1_chem8_lipo",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p1_chem8_lipo",
+          "passed": true,
+          "detail": "3fb287089f0f96819221a5acfd77c7fde47cff8884636400dca7132a55338da9"
+        },
+        {
+          "check": "b_test_file_sha256_p1_chem8_lipo",
+          "passed": true,
+          "detail": "f93d8955f02033d9bb7c4f182e94a56f28e534cd82313d490a8d8708bfb71a5a"
+        },
+        {
+          "check": "b_run_identity_p1_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "multicontrib",
+            "seed": 0
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p1_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p1_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p1_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p1_contrib_lipo",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p1_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.6003849081524373,
+          "recomputed": 0.6003849081524373,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_contrib_lipo_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.39927056058775584,
+          "recomputed": 0.39927056058775584,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_contrib_lipo_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 151.39405593362844,
+          "recomputed": 151.39405593362844,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_contrib_lipo_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5739434185606259,
+          "recomputed": 0.5739434185606259,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_contrib_lipo_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.42600879635135774,
+          "recomputed": 0.42600879635135774,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_contrib_lipo_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 138.3526400378043,
+          "recomputed": 138.3526400378043,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p1_contrib_lipo_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p1_contrib_lipo",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p1_contrib_lipo",
+          "passed": true,
+          "detail": "7e603063024e10c1a0f111210751be953311e046cec6a00eedaeb1fdf2d707be"
+        },
+        {
+          "check": "b_test_file_sha256_p1_contrib_lipo",
+          "passed": true,
+          "detail": "463bfafcb6125d9557676b03c330eed55b8121ef36fb284a6bcce48b90ebc2f5"
+        },
+        {
+          "check": "b_run_identity_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "combo_chem_contrib",
+            "seed": 0
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.7011459121417385,
+          "recomputed": 0.7011459121417385,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p2b_combo_chem_contrib_lipo_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.4036864031751311,
+          "recomputed": 0.4036864031751311,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p2b_combo_chem_contrib_lipo_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 206.4743478474896,
+          "recomputed": 206.47434784748958,
+          "abs_diff": 2.842170943040401e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p2b_combo_chem_contrib_lipo_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5510418889639674,
+          "recomputed": 0.5510418889639674,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p2b_combo_chem_contrib_lipo_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.4120265041770213,
+          "recomputed": 0.4120265041770213,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p2b_combo_chem_contrib_lipo_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 127.53180862505052,
+          "recomputed": 127.5318086250505,
+          "abs_diff": 1.4210854715202004e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p2b_combo_chem_contrib_lipo_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": "92fec82f6413b84bc77f74cadb23667a5c7d9ecc580a7273ea8ad2b108b6958b"
+        },
+        {
+          "check": "b_test_file_sha256_p2b_combo_chem_contrib_lipo",
+          "passed": true,
+          "detail": "a8456ff10208b04a268ea5798db42e6e48c030a1bf82691d57f423899f718be6"
+        },
+        {
+          "check": "b_run_identity_p5_base_lipo_s1",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "base",
+            "seed": 1
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p5_base_lipo_s1",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p5_base_lipo_s1",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p5_base_lipo_s1",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p5_base_lipo_s1",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p5_base_lipo_s1",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.6767234287710373,
+          "recomputed": 0.6767234287710373,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s1_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.40835470985729067,
+          "recomputed": 0.40835470985729067,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s1_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 192.34093160000427,
+          "recomputed": 192.34093160000424,
+          "abs_diff": 2.842170943040401e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s1_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5633661833578884,
+          "recomputed": 0.5633661833578884,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s1_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.4242561523658639,
+          "recomputed": 0.4242561523658639,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s1_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 133.30021175151825,
+          "recomputed": 133.30021175151825,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s1_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p5_base_lipo_s1",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p5_base_lipo_s1",
+          "passed": true,
+          "detail": "6e68b294fd009642b32165815b2aecef9acacf835ff7a4ae96befbc6b337a3f6"
+        },
+        {
+          "check": "b_test_file_sha256_p5_base_lipo_s1",
+          "passed": true,
+          "detail": "421f78b2442710655fcd77132ca0ad5dc4bae0d866d1e1cccf845a4fdd33d59b"
+        },
+        {
+          "check": "b_run_identity_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "combo_chem_contrib",
+            "seed": 1
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.6079588016852208,
+          "recomputed": 0.6079588016852208,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s1_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.4026223453200056,
+          "recomputed": 0.4026223453200056,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s1_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 155.23783990954243,
+          "recomputed": 155.2378399095424,
+          "abs_diff": 2.842170943040401e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s1_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5472192662918185,
+          "recomputed": 0.5472192662918185,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s1_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.4100828824174348,
+          "recomputed": 0.4100828824174348,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s1_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 125.76854866840159,
+          "recomputed": 125.76854866840159,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s1_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": "8713fa89b9305ca4db7a6787e4386531e9fd745356b6ec01396b549c8a46d47e"
+        },
+        {
+          "check": "b_test_file_sha256_p5b_combo_lipo_s1",
+          "passed": true,
+          "detail": "e5de6a58fd56008f2c656198f84a144c680a444577b62bbba1dafdb07b310742"
+        },
+        {
+          "check": "b_run_identity_p5_base_lipo_s2",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "base",
+            "seed": 2
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p5_base_lipo_s2",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p5_base_lipo_s2",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p5_base_lipo_s2",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p5_base_lipo_s2",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p5_base_lipo_s2",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.7330225281257109,
+          "recomputed": 0.7330225281257109,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s2_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.40185207305214116,
+          "recomputed": 0.40185207305214116,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s2_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 225.67525123071965,
+          "recomputed": 225.67525123071965,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s2_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5779434025740378,
+          "recomputed": 0.5779434025740378,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s2_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.42771870257317157,
+          "recomputed": 0.42771870257317157,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s2_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 140.28780216311964,
+          "recomputed": 140.28780216311964,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5_base_lipo_s2_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p5_base_lipo_s2",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p5_base_lipo_s2",
+          "passed": true,
+          "detail": "8f134ff7246d508e8b75d4474cbb52998d6b92f53c66e0618421ff9e6e5d18f3"
+        },
+        {
+          "check": "b_test_file_sha256_p5_base_lipo_s2",
+          "passed": true,
+          "detail": "bca3bd54edb2f244130c8095ded66de75a4ad579acd76b74499a1364ad77d75f"
+        },
+        {
+          "check": "b_run_identity_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": {
+            "dataset": "Lipophilicity",
+            "split": "published",
+            "arm": "combo_chem_contrib",
+            "seed": 2
+          }
+        },
+        {
+          "check": "b_target_norm_train_only_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": {
+            "source": "train_split_only",
+            "valid_or_test_used": false
+          }
+        },
+        {
+          "check": "b_valid_labels_match_source_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_labels_match_source_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": {
+            "max_abs_diff": 0.0
+          }
+        },
+        {
+          "check": "b_test_pred_reconstruction_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": 0.0
+        },
+        {
+          "check": "b_predictions_finite_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": {
+            "n_nonfinite_valid": 0,
+            "n_nonfinite_test": 0
+          }
+        },
+        {
+          "metric": "valid_rmse",
+          "reported": 0.57286025445435,
+          "recomputed": 0.57286025445435,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s2_valid_rmse"
+        },
+        {
+          "metric": "valid_mae",
+          "reported": 0.3716983167106538,
+          "recomputed": 0.3716983167106538,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s2_valid_mae"
+        },
+        {
+          "metric": "valid_sse",
+          "reported": 137.8309258760711,
+          "recomputed": 137.8309258760711,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s2_valid_sse"
+        },
+        {
+          "metric": "test_rmse",
+          "reported": 0.5567481751834678,
+          "recomputed": 0.5567481751834678,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s2_test_rmse"
+        },
+        {
+          "metric": "test_mae",
+          "reported": 0.4112419056762635,
+          "recomputed": 0.4112419056762635,
+          "abs_diff": 0.0,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s2_test_mae"
+        },
+        {
+          "metric": "test_sse",
+          "reported": 130.18678283945096,
+          "recomputed": 130.18678283945093,
+          "abs_diff": 2.842170943040401e-14,
+          "tolerance": 1e-05,
+          "passed": true,
+          "check": "p5b_combo_lipo_s2_test_sse"
+        },
+        {
+          "check": "b_test_rows_sha256_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        {
+          "check": "b_valid_file_sha256_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": "4fefd6dfaaa6bcc71896162d98106f7e0ce1cce01e60a165aabe4fc8f5a1a258"
+        },
+        {
+          "check": "b_test_file_sha256_p5b_combo_lipo_s2",
+          "passed": true,
+          "detail": "a6c3ed995e4841bfbb54c992c8e463c57bee96f40bdd72a84ff1e266bf0c017c"
+        },
+        {
+          "check": "b_target_norm_identical_across_runs",
+          "passed": true,
+          "detail": [
+            {
+              "run": "p0_base_lipo_parity",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            },
+            {
+              "run": "p1_chem8_lipo",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            },
+            {
+              "run": "p1_contrib_lipo",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            },
+            {
+              "run": "p2b_combo_chem_contrib_lipo",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            },
+            {
+              "run": "p5_base_lipo_s1",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            },
+            {
+              "run": "p5b_combo_lipo_s1",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            },
+            {
+              "run": "p5_base_lipo_s2",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            },
+            {
+              "run": "p5b_combo_lipo_s2",
+              "mean": 2.176985119047619,
+              "scale": 1.2091154725538142,
+              "n": 3360
+            }
+          ]
+        },
+        {
+          "check": "b_valid_row_sets_identical_across_runs",
+          "passed": true,
+          "detail": {
+            "n_distinct": 1,
+            "n_runs": 8
+          }
+        },
+        {
+          "check": "b_test_row_sets_identical_across_runs",
+          "passed": true,
+          "detail": {
+            "n_distinct": 1,
+            "n_runs": 8
+          }
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_chem8_lipo",
+          "metric": "valid_rmse",
+          "reported": 0.702794934611095,
+          "recomputed": 0.702794934611095,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p1_chem8_lipo_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_chem8_lipo",
+          "metric": "test_rmse",
+          "reported": 0.5659573475226861,
+          "recomputed": 0.5659573475226861,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p1_chem8_lipo_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_contrib_lipo",
+          "metric": "valid_rmse",
+          "reported": 0.6003849081524373,
+          "recomputed": 0.6003849081524373,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p1_contrib_lipo_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+          "key": "p1_contrib_lipo",
+          "metric": "test_rmse",
+          "reported": 0.5739434185606259,
+          "recomputed": 0.5739434185606259,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p1_contrib_lipo_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p2b_combo_chem_contrib_lipo",
+          "metric": "valid_rmse",
+          "reported": 0.7011459121417385,
+          "recomputed": 0.7011459121417385,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p2b_combo_chem_contrib_lipo_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p2b_combo_chem_contrib_lipo",
+          "metric": "test_rmse",
+          "reported": 0.5510418889639674,
+          "recomputed": 0.5510418889639674,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p2b_combo_chem_contrib_lipo_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p0_base_lipo_parity (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.7157746995984355,
+          "recomputed": 0.7157746995984355,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p0_base_lipo_parity (reference)_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+          "key": "p0_base_lipo_parity (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5704458064646916,
+          "recomputed": 0.5704458064646916,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p0_base_lipo_parity (reference)_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.6767234287710373,
+          "recomputed": 0.6767234287710373,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s1 (reference)_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5633661833578884,
+          "recomputed": 0.5633661833578884,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s1 (reference)_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.7330225281257109,
+          "recomputed": 0.7330225281257109,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s2 (reference)_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5779434025740378,
+          "recomputed": 0.5779434025740378,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s2 (reference)_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s1",
+          "metric": "valid_rmse",
+          "reported": 0.6079588016852208,
+          "recomputed": 0.6079588016852208,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5b_combo_lipo_s1_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s1",
+          "metric": "test_rmse",
+          "reported": 0.5472192662918185,
+          "recomputed": 0.5472192662918185,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5b_combo_lipo_s1_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.6767234287710373,
+          "recomputed": 0.6767234287710373,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s1 (reference)_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s1 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5633661833578884,
+          "recomputed": 0.5633661833578884,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s1 (reference)_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s2",
+          "metric": "valid_rmse",
+          "reported": 0.57286025445435,
+          "recomputed": 0.57286025445435,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5b_combo_lipo_s2_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5b_combo_lipo_s2",
+          "metric": "test_rmse",
+          "reported": 0.5567481751834678,
+          "recomputed": 0.5567481751834678,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5b_combo_lipo_s2_test_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "valid_rmse",
+          "reported": 0.7330225281257109,
+          "recomputed": 0.7330225281257109,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s2 (reference)_valid_rmse"
+        },
+        {
+          "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+          "key": "p5_base_lipo_s2 (reference)",
+          "metric": "test_rmse",
+          "reported": 0.5779434025740378,
+          "recomputed": 0.5779434025740378,
+          "abs_diff": 0.0,
+          "passed": true,
+          "check": "table_p5_base_lipo_s2 (reference)_test_rmse"
+        }
+      ]
+    },
+    "separation": {
+      "group_a": "A_random42",
+      "group_b": "B_lipo_random122",
+      "a_split": "random42",
+      "b_split": "random122(published)",
+      "a_valid_rows_sha256": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44",
+      "b_valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+      "same_train_row_set": false,
+      "same_valid_row_set": false,
+      "same_valid_row_order": false,
+      "valid_row_overlap_n": 40,
+      "valid_row_overlap_frac_of_a": 0.09523809523809523,
+      "a_test_rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+      "b_test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+      "same_test_row_set": false,
+      "treated_as_same_evaluation_set": false,
+      "pooled_across_groups": false,
+      "per_molecule_pairing_across_groups": false,
+      "policy": "random42 and random122 are different random partitions of the same 4,200-molecule Lipophilicity table; no per-molecule pairing or pooled metric is computed across them."
+    }
+  },
+  "support": {
+    "A_random42": {
+      "group": "A_random42",
+      "signature_version": "rooted-radius2-labelled-ball-v1",
+      "signature_radius": 2,
+      "n_train_molecules": 3360,
+      "n_train_atom_tokens": 91083,
+      "n_signatures": 28921,
+      "df_histogram": {
+        "df_1": 19391,
+        "df_2_4": 6273,
+        "df_5_9": 1753,
+        "df_10plus": 1504,
+        "max_df": 733
+      },
+      "signature_dictionary_sha256": "fb844f53d6506b374e829cbf72b1b6d901436edc552ad1153444f0984527afa9",
+      "train_only": true,
+      "valid_or_test_used_to_build_dictionary": false,
+      "query_rows": {
+        "valid": 420
+      },
+      "molecule_handling": {
+        "n_parse_failures": 0,
+        "n_multi_component": 1,
+        "n_charged": 7,
+        "n_empty_scaffold_fallback": 5,
+        "n_explicit_h_atoms": 0,
+        "invalid_smiles_policy": "recorded with parse_ok=False and NaN descriptors; never dropped silently, and never included in a pairwise prediction comparison",
+        "multi_component_policy": "kept as one disconnected molecular graph (no salt stripping, no fragment selection); rooted balls stay inside one component; descriptors sum over the whole record",
+        "empty_scaffold_policy": "acyclic molecules have an empty Bemis-Murcko scaffold; the canonical isomeric-free SMILES is used as the scaffold key and scaffold_fallback_used=True is recorded"
+      },
+      "query_summary": {
+        "valid": {
+          "n": 420,
+          "mean_unseen_atom_frac": 0.2516918586021149,
+          "median_unseen_atom_frac": 0.2,
+          "mean_rare_atom_frac": 0.24324303205497144,
+          "frac_molecules_with_any_unseen": 0.8095238095238095,
+          "mean_median_log1p_df": 1.6363360996998653
+        }
+      },
+      "train_loo_summary": {
+        "n": 3360,
+        "mean_unseen_atom_frac": 0.24842644005290634,
+        "mean_rare_atom_frac": 0.23205309816898004,
+        "frac_molecules_with_any_unseen": 0.7904761904761904
+      }
+    },
+    "B_lipo_random122": {
+      "group": "B_lipo_random122",
+      "signature_version": "rooted-radius2-labelled-ball-v1",
+      "signature_radius": 2,
+      "n_train_molecules": 3360,
+      "n_train_atom_tokens": 90863,
+      "n_signatures": 29024,
+      "df_histogram": {
+        "df_1": 19335,
+        "df_2_4": 6511,
+        "df_5_9": 1710,
+        "df_10plus": 1468,
+        "max_df": 727
+      },
+      "signature_dictionary_sha256": "eacbc9550b1d4e16fea3d2699c0dd33c1a0f3081ad9096c3518e9c79770d8363",
+      "train_only": true,
+      "valid_or_test_used_to_build_dictionary": false,
+      "query_rows": {
+        "valid": 420,
+        "test": 420
+      },
+      "molecule_handling": {
+        "n_parse_failures": 0,
+        "n_multi_component": 1,
+        "n_charged": 7,
+        "n_empty_scaffold_fallback": 5,
+        "n_explicit_h_atoms": 0,
+        "invalid_smiles_policy": "recorded with parse_ok=False and NaN descriptors; never dropped silently, and never included in a pairwise prediction comparison",
+        "multi_component_policy": "kept as one disconnected molecular graph (no salt stripping, no fragment selection); rooted balls stay inside one component; descriptors sum over the whole record",
+        "empty_scaffold_policy": "acyclic molecules have an empty Bemis-Murcko scaffold; the canonical isomeric-free SMILES is used as the scaffold key and scaffold_fallback_used=True is recorded"
+      },
+      "query_summary": {
+        "valid": {
+          "n": 420,
+          "mean_unseen_atom_frac": 0.23924945947979515,
+          "median_unseen_atom_frac": 0.17647058823529413,
+          "mean_rare_atom_frac": 0.23285281611437242,
+          "frac_molecules_with_any_unseen": 0.8142857142857143,
+          "mean_median_log1p_df": 1.7517222329175421
+        },
+        "test": {
+          "n": 420,
+          "mean_unseen_atom_frac": 0.2580513768900693,
+          "median_unseen_atom_frac": 0.20227272727272727,
+          "mean_rare_atom_frac": 0.2427416501210056,
+          "frac_molecules_with_any_unseen": 0.8023809523809524,
+          "mean_median_log1p_df": 1.6159174139942083
+        }
+      },
+      "train_loo_summary": {
+        "n": 3360,
+        "mean_unseen_atom_frac": 0.24787378925210501,
+        "mean_rare_atom_frac": 0.2381359079254833,
+        "frac_molecules_with_any_unseen": 0.7886904761904762
+      }
+    }
+  },
+  "structure_audits": {
+    "permutation_invariance": {
+      "n_molecules_checked": 25,
+      "n_atoms_checked": 601,
+      "renumbering_mismatches": 0,
+      "passed": true
+    },
+    "collision_audit": {
+      "checked": true,
+      "n_molecules_sampled": 60,
+      "n_balls": 1580,
+      "n_distinct_signatures": 1291,
+      "same_signature_pairs_checked": 464,
+      "same_signature_isomorphism_failures": 0,
+      "different_signature_pairs_checked": 1200,
+      "different_signature_isomorphic_pairs": 0,
+      "passed": true,
+      "isomorphism_test": "networkx VF2 with node label and bond-type matching"
+    }
+  },
+  "model_cells": {
+    "group_a": [
+      "lcrc_a_r3_s0",
+      "pna_native_s0"
+    ],
+    "group_b": [
+      "base_s0",
+      "base_s0_test",
+      "base_s1",
+      "base_s1_test",
+      "base_s2",
+      "base_s2_test",
+      "chem8_s0",
+      "chem8_s0_test",
+      "combo_chem_contrib_s0",
+      "combo_chem_contrib_s0_test",
+      "combo_chem_contrib_s1",
+      "combo_chem_contrib_s1_test",
+      "combo_chem_contrib_s2",
+      "combo_chem_contrib_s2_test",
+      "multicontrib_s0",
+      "multicontrib_s0_test"
+    ],
+    "missing_group_b_cells": [
+      {
+        "arm": "chem8",
+        "seed": 1,
+        "reason": "no per-molecule prediction file in the frozen long-run"
+      },
+      {
+        "arm": "chem8",
+        "seed": 2,
+        "reason": "no per-molecule prediction file in the frozen long-run"
+      },
+      {
+        "arm": "multicontrib",
+        "seed": 1,
+        "reason": "no per-molecule prediction file in the frozen long-run"
+      },
+      {
+        "arm": "multicontrib",
+        "seed": 2,
+        "reason": "no per-molecule prediction file in the frozen long-run"
+      }
+    ],
+    "excluded_runs": [
+      {
+        "run": "p1_rho_lipo",
+        "reason": "rhoshape is outside the pre-declared four-arm BASE/CHEM8/MULTICONTRIB/COMBO set"
+      },
+      {
+        "run": "p2_combo_rho_contrib_lipo",
+        "reason": "combo_rho_contrib is outside the pre-declared four-arm set"
+      },
+      {
+        "run": "p3_base_scalem_lipo",
+        "reason": "scale-M variant outside the pre-declared four-arm set"
+      },
+      {
+        "run": "p3_rho_scalem_lipo",
+        "reason": "rho + scale-M variant outside the pre-declared four-arm set"
+      },
+      {
+        "run": "p4_rho_lipo123",
+        "reason": "random123: no matching BASE per-molecule prediction file"
+      },
+      {
+        "run": "p4_rho_lipo124",
+        "reason": "random124: no matching BASE per-molecule prediction file"
+      },
+      {
+        "run": "p4b_combo_lipo123",
+        "reason": "random123: COMBO exists but no matching BASE per-molecule prediction file"
+      },
+      {
+        "run": "p4b_combo_lipo124",
+        "reason": "random124: COMBO exists but no matching BASE per-molecule prediction file"
+      }
+    ]
+  },
+  "outputs": {
+    "per_molecule.csv": {
+      "sha256": "f1e1b141e198441a4c02ffcb9fc2df4279b409265708c28598a0230f1c03eed2",
+      "bytes": 1029761
+    },
+    "support_diagnostics.csv": {
+      "sha256": "efec851c1533a1c23055a63c097bd3811cbfa0b033ffc3fe6878b12bf37d86bb",
+      "bytes": 2717741
+    },
+    "conditional_model_results.json": {
+      "sha256": "30f6237a4e1837f30b837c5da373ee14848d3fa032c93648bbf2424a3d4cb1a6",
+      "bytes": 33040
+    },
+    "combo_attribution.json": {
+      "sha256": "428491fc84be2f3a5b976997e4500f8059c78c435c3389be8a64761a586dfb82",
+      "bytes": 316843
+    },
+    "seed_stability.json": {
+      "sha256": "101cb2a377b46d0aef3202b4fd391bef787a7c51c4564263c202c8232d952466",
+      "bytes": 44637
+    },
+    "integrity_checks.json": {
+      "sha256": "14c958047e9deacc9b7f64268ad3427be07c5f9495f46ccdda1473edf2288200",
+      "bytes": 55326
+    },
+    "combo_group_table.csv": {
+      "sha256": "abc9807ac64dc1ce1d9d00ad267d033c2d129be57bc396e1342c840181cee17b",
+      "bytes": 94022
+    }
+  },
+  "reproduce": {
+    "command": "uv run python tracks/structural-sufficiency/lcrc_failure_mechanism_p0_v1/code/run_p0.py",
+    "tests": "uv run pytest -q tracks/structural-sufficiency/lcrc_failure_mechanism_p0_v1/tests",
+    "full": "uv run pytest -q tracks/structural-sufficiency/lcrc_failure_mechanism_p0_v1/tests && uv run python tracks/structural-sufficiency/lcrc_failure_mechanism_p0_v1/code/run_p0.py"
+  }
+}

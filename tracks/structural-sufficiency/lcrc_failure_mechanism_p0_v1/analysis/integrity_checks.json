@@ -1,0 +1,2026 @@
+{
+  "round": "lcrc-failure-mechanism-p0-v1",
+  "created_utc": "2026-11-03T13:15:58Z",
+  "git": {
+    "commit": "b54d3cfb51700d3639ba7040ecb4d66bd8f30d41",
+    "commit_short": "b54d3cfb",
+    "dirty": true,
+    "dirty_files": [
+      "?? tracks/structural-sufficiency/lcrc_failure_mechanism_p0_v1/"
+    ]
+  },
+  "environment": {
+    "python": "3.12.15",
+    "python_executable": "/home/calendar/code/research/.venv/bin/python",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "numpy": "2.1.3",
+    "scipy": "1.14.1",
+    "scikit_learn": "1.5.2",
+    "gpu_used": false,
+    "training_or_finetuning": false,
+    "rdkit": "2026.09.1",
+    "pandas": "2.2.3"
+  },
+  "tolerance": 1e-05,
+  "checks": [
+    {
+      "group": "group_a",
+      "check": "split_n_molecules",
+      "passed": true,
+      "detail": 4200
+    },
+    {
+      "group": "group_a",
+      "check": "split_smiles_sha256",
+      "passed": true,
+      "detail": "4ea3d409b3fcea1d5fd57e1859f7ff87862a16de493bb99d2ba204d38148f9d6"
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_sha256_train",
+      "passed": true,
+      "detail": "0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee"
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_unique_train",
+      "passed": true,
+      "detail": {
+        "n": 3360,
+        "n_unique": 3360
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_in_range_train",
+      "passed": true,
+      "detail": [
+        0,
+        4199
+      ]
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_sha256_valid",
+      "passed": true,
+      "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_unique_valid",
+      "passed": true,
+      "detail": {
+        "n": 420,
+        "n_unique": 420
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_in_range_valid",
+      "passed": true,
+      "detail": [
+        1,
+        4195
+      ]
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_sha256_test",
+      "passed": true,
+      "detail": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b"
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_unique_test",
+      "passed": true,
+      "detail": {
+        "n": 420,
+        "n_unique": 420
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "split_rows_in_range_test",
+      "passed": true,
+      "detail": [
+        2,
+        4187
+      ]
+    },
+    {
+      "group": "group_a",
+      "check": "split_row_isolation",
+      "passed": true,
+      "detail": {
+        "train_valid": 0,
+        "train_test": 0,
+        "valid_test": 0,
+        "union": 4200
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "split_declared_sizes",
+      "passed": true,
+      "detail": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "split_method_random42",
+      "passed": true,
+      "detail": "torch.utils.data.random_split(list(range(4200)), [3360, 420, 420], generator=torch.Generator().manual_seed(42))"
+    },
+    {
+      "group": "group_a",
+      "check": "labels_scope_train_valid_only",
+      "passed": true,
+      "detail": {
+        "scope": "train_and_valid_only",
+        "test_labels_included": false
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "labels_split_file_sha256",
+      "passed": true,
+      "detail": "1834414a6da73e9d2c5942ad157a345f08653110acfc4b9fef83c3064bc233b4"
+    },
+    {
+      "group": "group_a",
+      "check": "labels_rows_match_split_train",
+      "passed": true,
+      "detail": {
+        "n": 3360
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "labels_row_sha256_train",
+      "passed": true,
+      "detail": "0df18c72753974d502f8bede1cd2aa5c0ebdc1df450b8871fffdb1f67d2648ee"
+    },
+    {
+      "group": "group_a",
+      "check": "labels_vector_sha256_train",
+      "passed": true,
+      "detail": "85a4c7c559f4b7fd58ad78b1b05d5a4160e0f60c351b7fa842eb0354aa47abd8"
+    },
+    {
+      "group": "group_a",
+      "check": "labels_rows_match_split_valid",
+      "passed": true,
+      "detail": {
+        "n": 420
+      }
+    },
+    {
+      "group": "group_a",
+      "check": "labels_row_sha256_valid",
+      "passed": true,
+      "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+    },
+    {
+      "group": "group_a",
+      "check": "labels_vector_sha256_valid",
+      "passed": true,
+      "detail": "09bc1a1e1756bbd09dd17a5fc77a1b3c33e7010aef55fc352a4bba1d9822636f"
+    },
+    {
+      "group": "group_a",
+      "check": "predictions_finite_lcrc_a_r3_s0",
+      "passed": true,
+      "detail": 0
+    },
+    {
+      "group": "group_a",
+      "metric": "rmse",
+      "reported": 0.5890072081930064,
+      "recomputed": 0.5890072081930064,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "lcrc_a_r3_s0_rmse"
+    },
+    {
+      "group": "group_a",
+      "metric": "mae",
+      "reported": 0.4208143415034744,
+      "recomputed": 0.4208143415034744,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "lcrc_a_r3_s0_mae"
+    },
+    {
+      "group": "group_a",
+      "metric": "sse",
+      "reported": 145.71038634739423,
+      "recomputed": 145.71038634739426,
+      "abs_diff": 2.842170943040401e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "lcrc_a_r3_s0_sse"
+    },
+    {
+      "group": "group_a",
+      "check": "prediction_file_sha256_lcrc_a_r3_s0",
+      "passed": true,
+      "detail": "7f9ad3919d57755d5adc08b99f1209b18ab6629c14eb182592a858183d88e894"
+    },
+    {
+      "group": "group_a",
+      "check": "prediction_rows_sha256_lcrc_a_r3_s0",
+      "passed": true,
+      "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+    },
+    {
+      "group": "group_a",
+      "check": "predictions_finite_pna_native_s0",
+      "passed": true,
+      "detail": 0
+    },
+    {
+      "group": "group_a",
+      "metric": "rmse",
+      "reported": 0.5540342318996931,
+      "recomputed": 0.5540342318996931,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "pna_native_s0_rmse"
+    },
+    {
+      "group": "group_a",
+      "metric": "mae",
+      "reported": 0.4007184723844865,
+      "recomputed": 0.4007184723844865,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "pna_native_s0_mae"
+    },
+    {
+      "group": "group_a",
+      "metric": "sse",
+      "reported": 128.92065064900686,
+      "recomputed": 128.92065064900686,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "pna_native_s0_sse"
+    },
+    {
+      "group": "group_a",
+      "check": "prediction_file_sha256_pna_native_s0",
+      "passed": true,
+      "detail": "735df74915d43803b63323e09d85089c6c2d284e04acffcf242eb587ae1ac905"
+    },
+    {
+      "group": "group_a",
+      "check": "prediction_rows_sha256_pna_native_s0",
+      "passed": true,
+      "detail": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44"
+    },
+    {
+      "group": "group_a",
+      "check": "group_a_valid_row_sets_identical",
+      "passed": true,
+      "detail": {
+        "lcrc_a_r3_s0": 420,
+        "pna_native_s0": 420
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_file_sha256",
+      "passed": true,
+      "detail": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d"
+    },
+    {
+      "group": "group_b",
+      "check": "b_csv_sha256",
+      "passed": true,
+      "detail": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758"
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_rows_sha256_train",
+      "passed": true,
+      "detail": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_rows_unique_train",
+      "passed": true,
+      "detail": 3360
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_rows_sha256_valid",
+      "passed": true,
+      "detail": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_rows_unique_valid",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_rows_sha256_test",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_rows_unique_test",
+      "passed": true,
+      "detail": 420
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_row_isolation",
+      "passed": true,
+      "detail": {
+        "train_valid": 0,
+        "train_test": 0,
+        "valid_test": 0,
+        "union": 4200
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_split_sizes",
+      "passed": true,
+      "detail": {
+        "train": 3360,
+        "valid": 420,
+        "test": 420
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_csv_columns_and_rows",
+      "passed": true,
+      "detail": {
+        "columns": [
+          "smiles",
+          "exp"
+        ],
+        "n": 4200
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p0_base_lipo_parity",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "base",
+        "seed": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p0_base_lipo_parity",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p0_base_lipo_parity",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p0_base_lipo_parity",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p0_base_lipo_parity",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p0_base_lipo_parity",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.7157746995984355,
+      "recomputed": 0.7157746995984355,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p0_base_lipo_parity_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.4147544542658695,
+      "recomputed": 0.4147544542658695,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p0_base_lipo_parity_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 215.1800366457969,
+      "recomputed": 215.1800366457969,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p0_base_lipo_parity_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5704458064646916,
+      "recomputed": 0.5704458064646916,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p0_base_lipo_parity_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.42411895467959176,
+      "recomputed": 0.42411895467959176,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p0_base_lipo_parity_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 136.671535607524,
+      "recomputed": 136.67153560752396,
+      "abs_diff": 2.842170943040401e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p0_base_lipo_parity_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p0_base_lipo_parity",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p0_base_lipo_parity",
+      "passed": true,
+      "detail": "a50bd66119f6d0410340af51883e3b7e0bd480408868bffe6b642096672d2934"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p0_base_lipo_parity",
+      "passed": true,
+      "detail": "f93e1983585b12369be66ecbd46dfb515ad6e0a712c8da7dc1d9794d6c156f61"
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p1_chem8_lipo",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "chem8",
+        "seed": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p1_chem8_lipo",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p1_chem8_lipo",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p1_chem8_lipo",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p1_chem8_lipo",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p1_chem8_lipo",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.702794934611095,
+      "recomputed": 0.702794934611095,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_chem8_lipo_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.4040006880337306,
+      "recomputed": 0.4040006880337306,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_chem8_lipo_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 207.44670244830556,
+      "recomputed": 207.4467024483056,
+      "abs_diff": 2.842170943040401e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_chem8_lipo_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5659573475226861,
+      "recomputed": 0.5659573475226861,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_chem8_lipo_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.4245368359742913,
+      "recomputed": 0.4245368359742913,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_chem8_lipo_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 134.5292420702641,
+      "recomputed": 134.5292420702641,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_chem8_lipo_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p1_chem8_lipo",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p1_chem8_lipo",
+      "passed": true,
+      "detail": "3fb287089f0f96819221a5acfd77c7fde47cff8884636400dca7132a55338da9"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p1_chem8_lipo",
+      "passed": true,
+      "detail": "f93d8955f02033d9bb7c4f182e94a56f28e534cd82313d490a8d8708bfb71a5a"
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p1_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "multicontrib",
+        "seed": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p1_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p1_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p1_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p1_contrib_lipo",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p1_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.6003849081524373,
+      "recomputed": 0.6003849081524373,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_contrib_lipo_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.39927056058775584,
+      "recomputed": 0.39927056058775584,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_contrib_lipo_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 151.39405593362844,
+      "recomputed": 151.39405593362844,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_contrib_lipo_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5739434185606259,
+      "recomputed": 0.5739434185606259,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_contrib_lipo_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.42600879635135774,
+      "recomputed": 0.42600879635135774,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_contrib_lipo_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 138.3526400378043,
+      "recomputed": 138.3526400378043,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p1_contrib_lipo_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p1_contrib_lipo",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p1_contrib_lipo",
+      "passed": true,
+      "detail": "7e603063024e10c1a0f111210751be953311e046cec6a00eedaeb1fdf2d707be"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p1_contrib_lipo",
+      "passed": true,
+      "detail": "463bfafcb6125d9557676b03c330eed55b8121ef36fb284a6bcce48b90ebc2f5"
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "combo_chem_contrib",
+        "seed": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.7011459121417385,
+      "recomputed": 0.7011459121417385,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p2b_combo_chem_contrib_lipo_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.4036864031751311,
+      "recomputed": 0.4036864031751311,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p2b_combo_chem_contrib_lipo_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 206.4743478474896,
+      "recomputed": 206.47434784748958,
+      "abs_diff": 2.842170943040401e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p2b_combo_chem_contrib_lipo_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5510418889639674,
+      "recomputed": 0.5510418889639674,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p2b_combo_chem_contrib_lipo_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.4120265041770213,
+      "recomputed": 0.4120265041770213,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p2b_combo_chem_contrib_lipo_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 127.53180862505052,
+      "recomputed": 127.5318086250505,
+      "abs_diff": 1.4210854715202004e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p2b_combo_chem_contrib_lipo_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": "92fec82f6413b84bc77f74cadb23667a5c7d9ecc580a7273ea8ad2b108b6958b"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p2b_combo_chem_contrib_lipo",
+      "passed": true,
+      "detail": "a8456ff10208b04a268ea5798db42e6e48c030a1bf82691d57f423899f718be6"
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p5_base_lipo_s1",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "base",
+        "seed": 1
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p5_base_lipo_s1",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p5_base_lipo_s1",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p5_base_lipo_s1",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p5_base_lipo_s1",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p5_base_lipo_s1",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.6767234287710373,
+      "recomputed": 0.6767234287710373,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s1_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.40835470985729067,
+      "recomputed": 0.40835470985729067,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s1_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 192.34093160000427,
+      "recomputed": 192.34093160000424,
+      "abs_diff": 2.842170943040401e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s1_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5633661833578884,
+      "recomputed": 0.5633661833578884,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s1_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.4242561523658639,
+      "recomputed": 0.4242561523658639,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s1_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 133.30021175151825,
+      "recomputed": 133.30021175151825,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s1_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p5_base_lipo_s1",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p5_base_lipo_s1",
+      "passed": true,
+      "detail": "6e68b294fd009642b32165815b2aecef9acacf835ff7a4ae96befbc6b337a3f6"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p5_base_lipo_s1",
+      "passed": true,
+      "detail": "421f78b2442710655fcd77132ca0ad5dc4bae0d866d1e1cccf845a4fdd33d59b"
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "combo_chem_contrib",
+        "seed": 1
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.6079588016852208,
+      "recomputed": 0.6079588016852208,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s1_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.4026223453200056,
+      "recomputed": 0.4026223453200056,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s1_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 155.23783990954243,
+      "recomputed": 155.2378399095424,
+      "abs_diff": 2.842170943040401e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s1_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5472192662918185,
+      "recomputed": 0.5472192662918185,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s1_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.4100828824174348,
+      "recomputed": 0.4100828824174348,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s1_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 125.76854866840159,
+      "recomputed": 125.76854866840159,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s1_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": "8713fa89b9305ca4db7a6787e4386531e9fd745356b6ec01396b549c8a46d47e"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p5b_combo_lipo_s1",
+      "passed": true,
+      "detail": "e5de6a58fd56008f2c656198f84a144c680a444577b62bbba1dafdb07b310742"
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p5_base_lipo_s2",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "base",
+        "seed": 2
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p5_base_lipo_s2",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p5_base_lipo_s2",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p5_base_lipo_s2",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p5_base_lipo_s2",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p5_base_lipo_s2",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.7330225281257109,
+      "recomputed": 0.7330225281257109,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s2_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.40185207305214116,
+      "recomputed": 0.40185207305214116,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s2_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 225.67525123071965,
+      "recomputed": 225.67525123071965,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s2_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5779434025740378,
+      "recomputed": 0.5779434025740378,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s2_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.42771870257317157,
+      "recomputed": 0.42771870257317157,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s2_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 140.28780216311964,
+      "recomputed": 140.28780216311964,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5_base_lipo_s2_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p5_base_lipo_s2",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p5_base_lipo_s2",
+      "passed": true,
+      "detail": "8f134ff7246d508e8b75d4474cbb52998d6b92f53c66e0618421ff9e6e5d18f3"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p5_base_lipo_s2",
+      "passed": true,
+      "detail": "bca3bd54edb2f244130c8095ded66de75a4ad579acd76b74499a1364ad77d75f"
+    },
+    {
+      "group": "group_b",
+      "check": "b_run_identity_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": {
+        "dataset": "Lipophilicity",
+        "split": "published",
+        "arm": "combo_chem_contrib",
+        "seed": 2
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_train_only_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": {
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_labels_match_source_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_labels_match_source_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_pred_reconstruction_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": 0.0
+    },
+    {
+      "group": "group_b",
+      "check": "b_predictions_finite_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": {
+        "n_nonfinite_valid": 0,
+        "n_nonfinite_test": 0
+      }
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_rmse",
+      "reported": 0.57286025445435,
+      "recomputed": 0.57286025445435,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s2_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_mae",
+      "reported": 0.3716983167106538,
+      "recomputed": 0.3716983167106538,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s2_valid_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "valid_sse",
+      "reported": 137.8309258760711,
+      "recomputed": 137.8309258760711,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s2_valid_sse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_rmse",
+      "reported": 0.5567481751834678,
+      "recomputed": 0.5567481751834678,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s2_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_mae",
+      "reported": 0.4112419056762635,
+      "recomputed": 0.4112419056762635,
+      "abs_diff": 0.0,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s2_test_mae"
+    },
+    {
+      "group": "group_b",
+      "metric": "test_sse",
+      "reported": 130.18678283945096,
+      "recomputed": 130.18678283945093,
+      "abs_diff": 2.842170943040401e-14,
+      "tolerance": 1e-05,
+      "passed": true,
+      "check": "p5b_combo_lipo_s2_test_sse"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_rows_sha256_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_file_sha256_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": "4fefd6dfaaa6bcc71896162d98106f7e0ce1cce01e60a165aabe4fc8f5a1a258"
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_file_sha256_p5b_combo_lipo_s2",
+      "passed": true,
+      "detail": "a6c3ed995e4841bfbb54c992c8e463c57bee96f40bdd72a84ff1e266bf0c017c"
+    },
+    {
+      "group": "group_b",
+      "check": "b_target_norm_identical_across_runs",
+      "passed": true,
+      "detail": [
+        {
+          "run": "p0_base_lipo_parity",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        },
+        {
+          "run": "p1_chem8_lipo",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        },
+        {
+          "run": "p1_contrib_lipo",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        },
+        {
+          "run": "p2b_combo_chem_contrib_lipo",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        },
+        {
+          "run": "p5_base_lipo_s1",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        },
+        {
+          "run": "p5b_combo_lipo_s1",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        },
+        {
+          "run": "p5_base_lipo_s2",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        },
+        {
+          "run": "p5b_combo_lipo_s2",
+          "mean": 2.176985119047619,
+          "scale": 1.2091154725538142,
+          "n": 3360
+        }
+      ]
+    },
+    {
+      "group": "group_b",
+      "check": "b_valid_row_sets_identical_across_runs",
+      "passed": true,
+      "detail": {
+        "n_distinct": 1,
+        "n_runs": 8
+      }
+    },
+    {
+      "group": "group_b",
+      "check": "b_test_row_sets_identical_across_runs",
+      "passed": true,
+      "detail": {
+        "n_distinct": 1,
+        "n_runs": 8
+      }
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+      "key": "p1_chem8_lipo",
+      "metric": "valid_rmse",
+      "reported": 0.702794934611095,
+      "recomputed": 0.702794934611095,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p1_chem8_lipo_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+      "key": "p1_chem8_lipo",
+      "metric": "test_rmse",
+      "reported": 0.5659573475226861,
+      "recomputed": 0.5659573475226861,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p1_chem8_lipo_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+      "key": "p1_contrib_lipo",
+      "metric": "valid_rmse",
+      "reported": 0.6003849081524373,
+      "recomputed": 0.6003849081524373,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p1_contrib_lipo_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p1_table.csv",
+      "key": "p1_contrib_lipo",
+      "metric": "test_rmse",
+      "reported": 0.5739434185606259,
+      "recomputed": 0.5739434185606259,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p1_contrib_lipo_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+      "key": "p2b_combo_chem_contrib_lipo",
+      "metric": "valid_rmse",
+      "reported": 0.7011459121417385,
+      "recomputed": 0.7011459121417385,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p2b_combo_chem_contrib_lipo_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+      "key": "p2b_combo_chem_contrib_lipo",
+      "metric": "test_rmse",
+      "reported": 0.5510418889639674,
+      "recomputed": 0.5510418889639674,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p2b_combo_chem_contrib_lipo_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+      "key": "p0_base_lipo_parity (reference)",
+      "metric": "valid_rmse",
+      "reported": 0.7157746995984355,
+      "recomputed": 0.7157746995984355,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p0_base_lipo_parity (reference)_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p2b_table.csv",
+      "key": "p0_base_lipo_parity (reference)",
+      "metric": "test_rmse",
+      "reported": 0.5704458064646916,
+      "recomputed": 0.5704458064646916,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p0_base_lipo_parity (reference)_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+      "key": "p5_base_lipo_s1 (reference)",
+      "metric": "valid_rmse",
+      "reported": 0.6767234287710373,
+      "recomputed": 0.6767234287710373,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s1 (reference)_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+      "key": "p5_base_lipo_s1 (reference)",
+      "metric": "test_rmse",
+      "reported": 0.5633661833578884,
+      "recomputed": 0.5633661833578884,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s1 (reference)_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+      "key": "p5_base_lipo_s2 (reference)",
+      "metric": "valid_rmse",
+      "reported": 0.7330225281257109,
+      "recomputed": 0.7330225281257109,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s2 (reference)_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5_table.csv",
+      "key": "p5_base_lipo_s2 (reference)",
+      "metric": "test_rmse",
+      "reported": 0.5779434025740378,
+      "recomputed": 0.5779434025740378,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s2 (reference)_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5b_combo_lipo_s1",
+      "metric": "valid_rmse",
+      "reported": 0.6079588016852208,
+      "recomputed": 0.6079588016852208,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5b_combo_lipo_s1_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5b_combo_lipo_s1",
+      "metric": "test_rmse",
+      "reported": 0.5472192662918185,
+      "recomputed": 0.5472192662918185,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5b_combo_lipo_s1_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5_base_lipo_s1 (reference)",
+      "metric": "valid_rmse",
+      "reported": 0.6767234287710373,
+      "recomputed": 0.6767234287710373,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s1 (reference)_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5_base_lipo_s1 (reference)",
+      "metric": "test_rmse",
+      "reported": 0.5633661833578884,
+      "recomputed": 0.5633661833578884,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s1 (reference)_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5b_combo_lipo_s2",
+      "metric": "valid_rmse",
+      "reported": 0.57286025445435,
+      "recomputed": 0.57286025445435,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5b_combo_lipo_s2_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5b_combo_lipo_s2",
+      "metric": "test_rmse",
+      "reported": 0.5567481751834678,
+      "recomputed": 0.5567481751834678,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5b_combo_lipo_s2_test_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5_base_lipo_s2 (reference)",
+      "metric": "valid_rmse",
+      "reported": 0.7330225281257109,
+      "recomputed": 0.7330225281257109,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s2 (reference)_valid_rmse"
+    },
+    {
+      "group": "group_b",
+      "table": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/p5b_table.csv",
+      "key": "p5_base_lipo_s2 (reference)",
+      "metric": "test_rmse",
+      "reported": 0.5779434025740378,
+      "recomputed": 0.5779434025740378,
+      "abs_diff": 0.0,
+      "passed": true,
+      "check": "table_p5_base_lipo_s2 (reference)_test_rmse"
+    },
+    {
+      "group": "group_separation",
+      "check": "random42_and_random122_are_not_the_same_evaluation_set",
+      "passed": true,
+      "detail": {
+        "group_a": "A_random42",
+        "group_b": "B_lipo_random122",
+        "a_split": "random42",
+        "b_split": "random122(published)",
+        "a_valid_rows_sha256": "8f9c35171ac2125e678d2ad44d87b293719bb9806a528810ac271e9aa39f9b44",
+        "b_valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+        "same_train_row_set": false,
+        "same_valid_row_set": false,
+        "same_valid_row_order": false,
+        "valid_row_overlap_n": 40,
+        "valid_row_overlap_frac_of_a": 0.09523809523809523,
+        "a_test_rows_sha256": "4bc449106a64833973b8e8d3d16097bf5d2906c788d7dfcdf02a4b3a30ffa49b",
+        "b_test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+        "same_test_row_set": false,
+        "treated_as_same_evaluation_set": false,
+        "pooled_across_groups": false,
+        "per_molecule_pairing_across_groups": false,
+        "policy": "random42 and random122 are different random partitions of the same 4,200-molecule Lipophilicity table; no per-molecule pairing or pooled metric is computed across them."
+      }
+    },
+    {
+      "group": "structure",
+      "check": "rooted_signature_permutation_invariance",
+      "passed": true,
+      "detail": {
+        "n_molecules_checked": 25,
+        "n_atoms_checked": 601,
+        "renumbering_mismatches": 0,
+        "passed": true
+      }
+    },
+    {
+      "group": "structure",
+      "check": "rooted_signature_exactness_vs_vf2",
+      "passed": true,
+      "detail": {
+        "checked": true,
+        "n_molecules_sampled": 60,
+        "n_balls": 1580,
+        "n_distinct_signatures": 1291,
+        "same_signature_pairs_checked": 464,
+        "same_signature_isomorphism_failures": 0,
+        "different_signature_pairs_checked": 1200,
+        "different_signature_isomorphic_pairs": 0,
+        "passed": true,
+        "isomorphism_test": "networkx VF2 with node label and bond-type matching"
+      }
+    },
+    {
+      "group": "support",
+      "check": "A_random42_df_built_from_train_rows_only",
+      "passed": true,
+      "detail": {
+        "n_train": 3360,
+        "n_signatures": 28921,
+        "dictionary_sha256": "fb844f53d6506b374e829cbf72b1b6d901436edc552ad1153444f0984527afa9"
+      }
+    },
+    {
+      "group": "support",
+      "check": "A_random42_valid_or_test_rows_not_in_dictionary",
+      "passed": true,
+      "detail": {
+        "n_signatures_train_only": 28921,
+        "n_signatures_if_valid_or_test_included": 31307
+      }
+    },
+    {
+      "group": "support",
+      "check": "B_lipo_random122_df_built_from_train_rows_only",
+      "passed": true,
+      "detail": {
+        "n_train": 3360,
+        "n_signatures": 29024,
+        "dictionary_sha256": "eacbc9550b1d4e16fea3d2699c0dd33c1a0f3081ad9096c3518e9c79770d8363"
+      }
+    },
+    {
+      "group": "support",
+      "check": "B_lipo_random122_valid_or_test_rows_not_in_dictionary",
+      "passed": true,
+      "detail": {
+        "n_signatures_train_only": 29024,
+        "n_signatures_if_valid_or_test_included": 33652
+      }
+    },
+    {
+      "group": "support",
+      "check": "support_table_row_and_scaffold_alignment",
+      "passed": true,
+      "detail": {
+        "group_a_valid_rows": 420,
+        "group_b_valid_test_rows": 840
+      }
+    },
+    {
+      "check": "test_label_perturbation_does_not_change_support_features",
+      "passed": true,
+      "detail": {
+        "perturbation": "Test labels + 1000.0 (in memory only)",
+        "columns_compared": 32,
+        "n_rows": 420,
+        "identical": true,
+        "dictionary_sha256": "eacbc9550b1d4e16fea3d2699c0dd33c1a0f3081ad9096c3518e9c79770d8363"
+      }
+    },
+    {
+      "group": "alignment",
+      "check": "row_shuffle_does_not_change_alignment_statistics",
+      "passed": true,
+      "detail": {
+        "direct": {
+          "n": 420,
+          "sse": 215.1800366457969,
+          "mse": 0.5123334205852307,
+          "rmse": 0.7157746995984355,
+          "mae": 0.4147544542658695,
+          "p90_abs": 0.8554420079020039,
+          "mean_residual": -0.024633463346670673
+        },
+        "shuffled": {
+          "n": 420,
+          "sse": 215.1800366457969,
+          "mse": 0.5123334205852307,
+          "rmse": 0.7157746995984355,
+          "mae": 0.4147544542658695,
+          "p90_abs": 0.8554420079020039,
+          "mean_residual": -0.024633463346670673
+        }
+      }
+    },
+    {
+      "group": "alignment",
+      "check": "strict_order_guard_rejects_shuffled_prediction_file",
+      "passed": true,
+      "detail": {
+        "raised_AlignmentError": true
+      }
+    },
+    {
+      "group": "synthetic",
+      "check": "hand_computed_sse_rmse_mae",
+      "passed": true,
+      "detail": {
+        "n": 3,
+        "sse": 8.0,
+        "mse": 2.6666666666666665,
+        "rmse": 1.632993161855452,
+        "mae": 1.3333333333333333,
+        "p90_abs": 2.0,
+        "mean_residual": 0.0,
+        "expected": {
+          "sse": 8.0,
+          "mse": 2.6666666666666665,
+          "rmse": 1.632993161855452,
+          "mae": 1.3333333333333333
+        }
+      }
+    },
+    {
+      "group": "synthetic",
+      "check": "d_i_sign_direction",
+      "passed": true,
+      "detail": {
+        "y": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "lcrc_pred": [
+          3.0,
+          3.0,
+          3.0
+        ],
+        "pna_pred": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "d_i": [
+          4.0,
+          1.0,
+          0.0
+        ],
+        "interpretation": "positive d_i means PNA has the smaller squared error"
+      }
+    },
+    {
+      "group": "data_handling",
+      "check": "invalid_smiles_and_special_cases_are_recorded_not_dropped",
+      "passed": true,
+      "detail": {
+        "n_molecules": 4200,
+        "n_parse_failures": 0,
+        "n_multi_component": 1,
+        "n_charged": 7,
+        "n_empty_scaffold_fallback": 5,
+        "n_explicit_h_atoms": 0,
+        "policy": {
+          "n_parse_failures": 0,
+          "n_multi_component": 1,
+          "n_charged": 7,
+          "n_empty_scaffold_fallback": 5,
+          "n_explicit_h_atoms": 0,
+          "invalid_smiles_policy": "recorded with parse_ok=False and NaN descriptors; never dropped silently, and never included in a pairwise prediction comparison",
+          "multi_component_policy": "kept as one disconnected molecular graph (no salt stripping, no fragment selection); rooted balls stay inside one component; descriptors sum over the whole record",
+          "empty_scaffold_policy": "acyclic molecules have an empty Bemis-Murcko scaffold; the canonical isomeric-free SMILES is used as the scaffold key and scaffold_fallback_used=True is recorded"
+        }
+      }
+    },
+    {
+      "group": "per_molecule",
+      "check": "per_molecule_row_counts",
+      "passed": true,
+      "detail": {
+        "A_random42/valid": 420,
+        "B_lipo_random122/test": 420,
+        "B_lipo_random122/valid": 420
+      }
+    },
+    {
+      "group": "per_molecule",
+      "check": "per_molecule_row_order_matches_frozen_split",
+      "passed": true,
+      "detail": {
+        "A_random42": {
+          "n": 420,
+          "row_order_matches_frozen_split": true
+        },
+        "B_lipo_random122/valid": {
+          "n": 420,
+          "row_order_matches_frozen_split": true
+        },
+        "B_lipo_random122/test": {
+          "n": 420,
+          "row_order_matches_frozen_split": true
+        }
+      }
+    },
+    {
+      "group": "conditional",
+      "check": "d_i_recomputed_from_paired_predictions",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0,
+        "n": 420,
+        "tolerance": 1e-12
+      }
+    },
+    {
+      "group": "conditional",
+      "check": "out_of_fold_metrics_recomputed_from_per_molecule_table",
+      "passed": true,
+      "detail": {
+        "max_abs_diff": 0.0,
+        "recomputed": {
+          "M0": {
+            "mse": 0.5561095856590219,
+            "mae": 0.3778530371407109
+          },
+          "M1": {
+            "mse": 0.5670097961863908,
+            "mae": 0.3858746743381504
+          }
+        }
+      }
+    },
+    {
+      "group": "conditional",
+      "check": "M0_M1_share_folds_and_scaffolds_are_whole",
+      "passed": true,
+      "detail": {
+        "fold_sizes": [
+          84,
+          84,
+          84,
+          84,
+          84
+        ],
+        "scaffolds_split_across_folds": 0,
+        "M0_and_M1_use_same_fold_vector": true
+      }
+    },
+    {
+      "group": "support",
+      "check": "leave_one_out_support_rows_reproduced",
+      "passed": true,
+      "detail": {
+        "n_train_molecules": 3360,
+        "fields": [
+          "unseen_atom_frac",
+          "rare_atom_frac",
+          "median_log1p_df",
+          "p10_log1p_df"
+        ],
+        "max_abs_diff": 0.0
+      }
+    },
+    {
+      "group": "attribution",
+      "check": "base_tail_indices_reproduced_from_base_predictions_only",
+      "passed": true,
+      "detail": {
+        "valid/s0": true,
+        "valid/s1": true,
+        "valid/s2": true,
+        "test/s0": true,
+        "test/s1": true,
+        "test/s2": true
+      }
+    }
+  ],
+  "n_checks": 210,
+  "n_failed": 0,
+  "n_skipped_or_unknown": 0,
+  "failed_checks": [],
+  "all_blocking_checks_passed": true,
+  "blocking_policy": "Any metric reproduction |diff| > 1e-5 blocks the corresponding analysis; Test is POST_HOC_EXPOSED_DISCOVERY and never selects a checkpoint."
+}
