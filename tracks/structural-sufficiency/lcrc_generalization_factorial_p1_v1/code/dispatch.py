@@ -28,6 +28,7 @@ from typing import Any, Sequence
 
 from p1_common import (
     ANALYSIS,
+    REPO as C_REPO,
     FRESH_UNITS,
     ROUND,
     RUNS,
@@ -251,6 +252,62 @@ def cmd_pull(args: argparse.Namespace) -> int:
     return rc
 
 
+def cmd_sync(args: argparse.Namespace) -> int:
+    """Copy pulled run artefacts from ``.rr/pulled`` into the round's runs tree.
+
+    ``rr pull`` always unpacks a run bundle (meta/logs + ``result/<declared
+    path>``) into ``.rr/pulled/<run_id>/``; this step moves the declared result
+    subtree to ``analysis/runs/<unit_key>`` so the analysis sees real unit
+    directories.
+    """
+    import shutil
+
+    payload = _read_launches()
+    targets = []
+    seen: set[str] = set()
+    for launch in payload["launches"]:
+        if launch.get("superseded") or launch.get("state") == "launch_failed":
+            continue
+        if launch["experiment"] in seen:
+            continue
+        seen.add(launch["experiment"])
+        if args.wave is not None:
+            plan = json.loads(PLAN_FILE.read_text(encoding="utf-8"))
+            wave_names = {experiment_name(u["unit_key"]) for u in plan["waves"][int(args.wave)]}
+            if launch["experiment"] not in wave_names:
+                continue
+        targets.append(launch)
+    rc = 0
+    for launch in targets:
+        exp = launch["experiment"]
+        status = _status(exp)
+        run_id = status.get("run_id") or launch.get("run_id")
+        if not run_id:
+            _log(f"SYNC-SKIP {exp}: no run id")
+            rc = 1
+            continue
+        pulled = C_REPO / ".rr/pulled" / run_id
+        if not pulled.exists():
+            _log(f"sync {exp}: pulling {run_id}")
+            proc = subprocess.run(["rr", "pull", exp], capture_output=True, text=True)
+            if proc.returncode != 0:
+                _log(f"PULL-FAIL {exp}: {proc.stdout.strip()} {proc.stderr.strip()}")
+                rc = 1
+                continue
+        src = pulled / "result" / track_rel(RUNS / launch["unit_key"])
+        if not src.is_dir():
+            _log(f"SYNC-SKIP {exp}: {track_rel(src)} not present after pull")
+            rc = 1
+            continue
+        dest = RUNS / launch["unit_key"]
+        dest.mkdir(parents=True, exist_ok=True)
+        for item in src.iterdir():
+            if item.is_file():
+                shutil.copy2(item, dest / item.name)
+        _log(f"synced {exp} -> {track_rel(dest)} ({len(list(dest.iterdir()))} files)")
+    return rc
+
+
 def cmd_ledger(args: argparse.Namespace) -> int:
     payload = _read_launches()
     entries = []
@@ -359,6 +416,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     p_pull = sub.add_parser("pull")
     p_pull.add_argument("--wave", type=int, required=True)
     p_pull.set_defaults(func=cmd_pull)
+    p_sync = sub.add_parser("sync")
+    p_sync.add_argument("--wave", type=int, default=None)
+    p_sync.set_defaults(func=cmd_sync)
     p_ledger = sub.add_parser("ledger")
     p_ledger.set_defaults(func=cmd_ledger)
     args = parser.parse_args(argv)

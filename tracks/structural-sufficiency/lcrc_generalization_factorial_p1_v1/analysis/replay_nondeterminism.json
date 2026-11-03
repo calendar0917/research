@@ -1,0 +1,65 @@
+{
+  "schema": "lcrc-p1-replay-nondeterminism/v1",
+  "status": "UNPLANNED_BUT_INFORMATIVE",
+  "why_it_exists": "The first wave of this round ran with a wrapper defect that wrote its artefacts under the reused-unit naming scheme. Both units were retrained from scratch after the code fix. The two attempts are the same split x arm x seed, the same frozen training-code hashes, the same RNG seed, the same host, the same driver and the same torch build, so the difference between them measures same-unit replay non-determinism of this execution regime.",
+  "not_a_rejected_seed": "Neither attempt was preferred or discarded on the basis of its Validation or Test score: attempt A is excluded from every reported comparison only because its artefact directory name violates the pre-registered layout. Attempt B is the reported unit.",
+  "pairs": [
+    {
+      "unit": "random122 / chem8 / seed 1",
+      "attempt_a": {
+        "run_key": "chem8_random122_s1",
+        "best_epoch": 286,
+        "valid_rmse": 0.66314286,
+        "test_rmse": 0.56490487,
+        "process_wall_seconds": 276.4,
+        "note": "superseded (path defect)"
+      },
+      "attempt_b": {
+        "run_key": "f1_chem8_random122_s1",
+        "best_epoch": 275,
+        "valid_rmse": 0.67443506,
+        "test_rmse": 0.56674885,
+        "process_wall_seconds": 277.6,
+        "note": "reported unit"
+      },
+      "abs_diff_valid_rmse": 0.0112922,
+      "abs_diff_test_rmse": 0.0018440,
+      "best_epoch_diff": 11
+    },
+    {
+      "unit": "random122 / chem8 / seed 2",
+      "attempt_a": {
+        "run_key": "chem8_random122_s2",
+        "best_epoch": 287,
+        "valid_rmse": 0.73401385,
+        "test_rmse": 0.56792571,
+        "process_wall_seconds": 348.6,
+        "note": "superseded (path defect)"
+      },
+      "attempt_b": {
+        "run_key": "f1_chem8_random122_s2",
+        "best_epoch": 246,
+        "valid_rmse": 0.72458089,
+        "test_rmse": 0.57148972,
+        "process_wall_seconds": 357.7,
+        "note": "reported unit"
+      },
+      "abs_diff_valid_rmse": 0.0094330,
+      "abs_diff_test_rmse": 0.0035640,
+      "best_epoch_diff": 41
+    }
+  ],
+  "summary": {
+    "n_pairs": 2,
+    "max_abs_diff_valid_rmse": 0.0112922,
+    "max_abs_diff_test_rmse": 0.0035640,
+    "mean_abs_diff_valid_rmse": 0.0103626,
+    "mean_abs_diff_test_rmse": 0.0027040,
+    "max_best_epoch_diff": 41
+  },
+  "implication": "A same-unit replay on this host moves Validation RMSE by ~0.010 and Test RMSE by ~0.003. Any COMBO-BASE difference of that size or smaller cannot be attributed to the arm rather than to the training stream, regardless of how many molecules the bootstrap resamples. The bootstrap intervals in this round quantify evaluation-set sampling uncertainty only, and neither includes nor resolves replay noise.",
+  "artifact_locations": {
+    "superseded_attempts": ".rr/pulled/<run_id>/result/ (git-ignored live dispatcher scratch; per-unit JSON copied into analysis/gpu_ledger.json notes)",
+    "reported_units": "analysis/runs/<unit_key>/"
+  }
+}
