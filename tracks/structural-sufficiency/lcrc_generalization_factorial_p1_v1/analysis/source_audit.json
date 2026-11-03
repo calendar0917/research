@@ -1,0 +1,2179 @@
+{
+  "round_id": "lcrc-generalization-factorial-p1-v1",
+  "generated_at": "2026-11-03T14:13:59Z",
+  "git_commit": "b0fed141bf7feb8519d8217d79fef629605a5e4a",
+  "git_dirty": true,
+  "python": "3.12.15",
+  "numpy": "2.1.3",
+  "pandas": "2.2.3",
+  "analysis_code_freeze": {
+    "protocol_freeze": "tracks/structural-sufficiency/lcrc_generalization_factorial_p1_v1/analysis/protocol_freeze.json",
+    "protocol_freeze_sha256": "43dff7ad83aa6c76f4c886747cb8f7467cba22ea0f70e921af73d6fdb5763864",
+    "analysis_code_hashes_match": true
+  },
+  "analysis_code_hashes": {
+    "code/p1_common.py": "8837efa306c120da408f3bb99679172970cd50c49ac89ab9a10272ed24a9823c",
+    "code/p1_stats.py": "3c274d233b2833646ecaa5a5df2c5b1354570b7904c762dfeab66dd6b502c3b9",
+    "code/p1_sources.py": "913dcd36db77ab5b39635c79f5d220118e872b4e8cf76b4fcb8fa8550cc4b907",
+    "code/p1_analysis.py": "3dff93661c43d91073b38b5342b7c606a12aeca8c1ab8c047733da90ab09a12e",
+    "code/run_analysis.py": "fa667f9b76af5317062d8e81d4e8ebbf6284e7fa0c75a23355625bfb0c112218",
+    "code/run_unit.py": "f80d7be6d4a7ed9829a4d848ebdd5ad61104c18791be6da981b1739376c86f5e",
+    "code/dispatch.py": "ac2e44247c6a4c9e5c5eff65b22f73b3451d0faeb7ca2bbdd381b7affe97ae4c",
+    "code/write_freeze.py": "1aa6aff445b92b4ddc7ba804f40f5f096c1f97223da499fb0aaa558abe20c84c"
+  },
+  "inputs": {
+    "chembench_csv": {
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+      "sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+      "n_rows": 4200,
+      "columns": [
+        "smiles",
+        "exp"
+      ]
+    },
+    "splits": {
+      "random122": {
+        "longrun_split": "published",
+        "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random122.ind.pkl",
+        "sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "rows_sha256": {
+          "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "sizes": {
+          "train": 3360,
+          "valid": 420,
+          "test": 420
+        },
+        "n_unique_scaffolds": 2412,
+        "n_acyclic_fallback": 5,
+        "train_scaffold_coverage": {
+          "n_train_scaffolds": 2025,
+          "n_valid_scaffolds_seen_in_train": 161,
+          "n_test_scaffolds_seen_in_train": 160
+        }
+      },
+      "random123": {
+        "longrun_split": "lipo-repeat:123",
+        "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random123.ind.pkl",
+        "sha256": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+        "rows_sha256": {
+          "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+          "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982",
+          "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2"
+        },
+        "sizes": {
+          "train": 3360,
+          "valid": 420,
+          "test": 420
+        },
+        "n_unique_scaffolds": 2412,
+        "n_acyclic_fallback": 5,
+        "train_scaffold_coverage": {
+          "n_train_scaffolds": 2034,
+          "n_valid_scaffolds_seen_in_train": 161,
+          "n_test_scaffolds_seen_in_train": 164
+        }
+      },
+      "random124": {
+        "longrun_split": "lipo-repeat:124",
+        "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random124.ind.pkl",
+        "sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+        "rows_sha256": {
+          "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+          "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94",
+          "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d"
+        },
+        "sizes": {
+          "train": 3360,
+          "valid": 420,
+          "test": 420
+        },
+        "n_unique_scaffolds": 2412,
+        "n_acyclic_fallback": 5,
+        "train_scaffold_coverage": {
+          "n_train_scaffolds": 2032,
+          "n_valid_scaffolds_seen_in_train": 174,
+          "n_test_scaffolds_seen_in_train": 168
+        }
+      }
+    },
+    "frozen_training_protocol": {
+      "path": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/protocol_freeze.json",
+      "sha256": "4508b6275064407e460837ad2d4286c7806bbbf71ce70570a21a2dc42dac415c",
+      "round": "tracks/structural-sufficiency/lcrc_performance_longrun_v1"
+    }
+  },
+  "units": [
+    {
+      "unit_key": "base_random122_s0",
+      "split": "random122",
+      "arm": "base",
+      "seed": 0,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p0_base_lipo_parity",
+      "files": {
+        "train.json": "384684317136f87460aad1e9ceb34564d19a3b97624f2706996dcadf0874575b",
+        "checkpoint.pt": "9282600ef9f5ce95998617ea44337fb9cdf567f37ed9ef5898920e8f20ffeffb",
+        "valid_predictions.npz": "a50bd66119f6d0410340af51883e3b7e0bd480408868bffe6b642096672d2934",
+        "test_predictions.npz": "f93e1983585b12369be66ecbd46dfb515ad6e0a712c8da7dc1d9794d6c156f61",
+        "test_eval.json": "56b22c227d681c5a525fbaa909b39215e0022e4cddc99d55f88495d601838594",
+        "curve.csv": "0450a25a00b0719ea630b6bba0c86735cc68cd3ebbb737b831ff85ce31e65fc6"
+      },
+      "historical_git_commit": "0b4513e47759f465a958433379db28f09ceec64d",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "train_base": null,
+        "valid": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "valid_base": null,
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 331,
+      "epochs_run": 360,
+      "parameters": 247106,
+      "arm_label": "LCRC-A (BASE)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.024633463346670673,
+          "checkpoint": "best_epoch",
+          "mae": 0.4147544542658695,
+          "n": 420,
+          "r2": 0.616051813659344,
+          "rmse": 0.7157746995984355
+        },
+        "test": {
+          "bias": -0.049058638047117194,
+          "checkpoint": "best_epoch",
+          "mae": 0.42411895467959176,
+          "n": 420,
+          "r2": 0.773252538262335,
+          "rmse": 0.5704458064646916
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7157746995984355,
+          "mae": 0.4147544542658695,
+          "p90_ae": 0.8554420079020039,
+          "cvar90_ae": 1.427581062897397,
+          "sse": 215.1800366457969,
+          "bias": -0.024633463346670673
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5704458064646916,
+          "mae": 0.42411895467959176,
+          "p90_ae": 0.8787229894417379,
+          "cvar90_ae": 1.3101196309266978,
+          "sse": 136.67153560752396,
+          "bias": -0.049058638047117194
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": null,
+      "base_copy": null,
+      "base_init_state_hash": null,
+      "init_state_hash": "666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f",
+      "shared_encoder_state_hash": "07af179aad3a3aaad886af18f9b0c7df373ffe80a0275c08c124eab926289c3b",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.0578070676419884,
+        "mean_epoch_seconds": 0.8456737138680183,
+        "process_wall_seconds": 322.41874824790284,
+        "train_wall_seconds": 304.67659449391067
+      }
+    },
+    {
+      "unit_key": "base_random122_s1",
+      "split": "random122",
+      "arm": "base",
+      "seed": 1,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s1",
+      "files": {
+        "train.json": "2738e04d4c60f5f6de955cd324c86525215202f404168a93033172ae1e22512c",
+        "checkpoint.pt": "d02f892209d07de4e61237e97c222637d4ae7976682b6b3e5a543df2bb9e11f9",
+        "valid_predictions.npz": "6e68b294fd009642b32165815b2aecef9acacf835ff7a4ae96befbc6b337a3f6",
+        "test_predictions.npz": "421f78b2442710655fcd77132ca0ad5dc4bae0d866d1e1cccf845a4fdd33d59b",
+        "test_eval.json": "6701871e5dab72966101695d3be21ecf7551564c7ed3e45b38c308a91b7839ae",
+        "curve.csv": "46ca734ab430847bb9580c0ab2fa2912b8e17b662c2f28dfe06d0d8381704348"
+      },
+      "historical_git_commit": "2f426ed65df2464fdebfb36d27fa7635a97ade3d",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "train_base": null,
+        "valid": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "valid_base": null,
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 166,
+      "epochs_run": 360,
+      "parameters": 247106,
+      "arm_label": "LCRC-A (BASE)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.05136818639333085,
+          "checkpoint": "best_epoch",
+          "mae": 0.40835470985729067,
+          "n": 420,
+          "r2": 0.6568038885110197,
+          "rmse": 0.6767234287710373
+        },
+        "test": {
+          "bias": -0.062402513006904976,
+          "checkpoint": "best_epoch",
+          "mae": 0.4242561523658639,
+          "n": 420,
+          "r2": 0.7788457960218742,
+          "rmse": 0.5633661833578884
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6767234287710373,
+          "mae": 0.40835470985729067,
+          "p90_ae": 0.81129196999946,
+          "cvar90_ae": 1.3320312999319437,
+          "sse": 192.34093160000424,
+          "bias": -0.05136818639333085
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5633661833578884,
+          "mae": 0.4242561523658639,
+          "p90_ae": 0.899559509149983,
+          "cvar90_ae": 1.2620934400492871,
+          "sse": 133.30021175151825,
+          "bias": -0.062402513006904976
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": null,
+      "base_copy": null,
+      "base_init_state_hash": null,
+      "init_state_hash": "d8b3f5b858696f9b7cafa26db2014074e3d1943258f8af68524a03fc306666ac",
+      "shared_encoder_state_hash": "6315ab0e2c7c3fe1512b52035e6cd2da8a9254bee2a40e9f2e7850481e3c1215",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.03406449997176727,
+        "mean_epoch_seconds": 0.7623066425983173,
+        "process_wall_seconds": 277.6484999889508,
+        "train_wall_seconds": 274.5868912790902
+      }
+    },
+    {
+      "unit_key": "base_random122_s2",
+      "split": "random122",
+      "arm": "base",
+      "seed": 2,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5_base_lipo_s2",
+      "files": {
+        "train.json": "9ca818053efca2eed3c27bd37c5388b0e2db9bf213133d436e33ac4f88f04f88",
+        "checkpoint.pt": "c599eb88f74d1875df1c6e939a332f7d58e8c8e2fd2ccf231b1549282086c01b",
+        "valid_predictions.npz": "8f134ff7246d508e8b75d4474cbb52998d6b92f53c66e0618421ff9e6e5d18f3",
+        "test_predictions.npz": "bca3bd54edb2f244130c8095ded66de75a4ad579acd76b74499a1364ad77d75f",
+        "test_eval.json": "0e3b3b8c188b0264c2fb2535f3bff9b0edf664c200eac67e5e9789612d8da592",
+        "curve.csv": "b853b1060c0724efc920b784b1fa9213286528a2843b76c55b2b0e0138439012"
+      },
+      "historical_git_commit": "2f426ed65df2464fdebfb36d27fa7635a97ade3d",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917002
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "train_base": null,
+        "valid": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "valid_base": null,
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 232,
+      "epochs_run": 360,
+      "parameters": 247106,
+      "arm_label": "LCRC-A (BASE)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.007165983839578472,
+          "checkpoint": "best_epoch",
+          "mae": 0.40185207305214116,
+          "n": 420,
+          "r2": 0.5973250829274863,
+          "rmse": 0.7330225281257109
+        },
+        "test": {
+          "bias": -0.014626746934630197,
+          "checkpoint": "best_epoch",
+          "mae": 0.42771870257317157,
+          "n": 420,
+          "r2": 0.7672529037458776,
+          "rmse": 0.5779434025740378
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7330225281257109,
+          "mae": 0.40185207305214116,
+          "p90_ae": 0.8171458710266664,
+          "cvar90_ae": 1.3737861270445615,
+          "sse": 225.67525123071965,
+          "bias": 0.007165983839578472
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5779434025740378,
+          "mae": 0.42771870257317157,
+          "p90_ae": 0.9555739726994997,
+          "cvar90_ae": 1.3014545201067378,
+          "sse": 140.28780216311964,
+          "bias": -0.014626746934630197
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": null,
+      "base_copy": null,
+      "base_init_state_hash": null,
+      "init_state_hash": "1398f98b84191959d16ab04d0faa932846d32aac704f47ef4ef99ff92fe1e051",
+      "shared_encoder_state_hash": "ae8e86e9d24ed51c3d128f267cfb24f777ab81b6fa0e654cd197880f721d0e99",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.06331411570621033,
+        "mean_epoch_seconds": 1.0069941199203538,
+        "process_wall_seconds": 366.14306075288914,
+        "train_wall_seconds": 362.7330620151479
+      }
+    },
+    {
+      "unit_key": "chem8_random122_s0",
+      "split": "random122",
+      "arm": "chem8",
+      "seed": 0,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_chem8_lipo",
+      "files": {
+        "train.json": "5fa9a390a3a4a9b8a3e1198ad0afd8b106b07e46fb6d6941924fbc6ae6a35217",
+        "checkpoint.pt": "fbcb262234eab54f1bf56b18b251cb6489832ee66d881056a755dce182d1be35",
+        "valid_predictions.npz": "3fb287089f0f96819221a5acfd77c7fde47cff8884636400dca7132a55338da9",
+        "test_predictions.npz": "f93d8955f02033d9bb7c4f182e94a56f28e534cd82313d490a8d8708bfb71a5a",
+        "test_eval.json": "381581d230acecdbd3779f61ab9dff60c7af76dae512309781a832f906f4c244",
+        "curve.csv": "feae4dd99234dd22761b100c47ebc76cdb2a7409ff3785ae075374da51440c2a"
+      },
+      "historical_git_commit": "771fd56b3c0471614e99569050a24929336d6d7e",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+        "train_base": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "valid": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3",
+        "valid_base": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+          "train_cache_extended_fingerprint": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+          "valid_cache_extended_fingerprint": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3"
+        },
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 240,
+      "epochs_run": 360,
+      "parameters": 248130,
+      "arm_label": "LCRC-CHEMLOCAL8",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.01200501563719452,
+          "checkpoint": "best_epoch",
+          "mae": 0.4040006880337306,
+          "n": 420,
+          "r2": 0.6298504898087514,
+          "rmse": 0.702794934611095
+        },
+        "test": {
+          "bias": -0.033857321833667624,
+          "checkpoint": "best_epoch",
+          "mae": 0.4245368359742913,
+          "n": 420,
+          "r2": 0.776806750335181,
+          "rmse": 0.5659573475226861
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.702794934611095,
+          "mae": 0.4040006880337306,
+          "p90_ae": 0.8200020417894256,
+          "cvar90_ae": 1.4069041495027106,
+          "sse": 207.4467024483056,
+          "bias": -0.01200501563719452
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5659573475226861,
+          "mae": 0.4245368359742913,
+          "p90_ae": 0.8574799954969852,
+          "cvar90_ae": 1.3041713484131467,
+          "sse": 134.5292420702641,
+          "bias": -0.033857321833667624
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "chem8",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 0,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f",
+      "init_state_hash": "20958f8718e91cae5508976e03384e81378a72a50e38acb4d7c88014b36d6d79",
+      "shared_encoder_state_hash": "959cbc23b3e28349e07ed53ef365813276144c6012fd3013ee43506cc53f72c7",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.0547771486453712,
+        "mean_epoch_seconds": 0.787579688603162,
+        "process_wall_seconds": 287.09788030199707,
+        "train_wall_seconds": 283.70776857598685
+      }
+    },
+    {
+      "unit_key": "contrib_random122_s0",
+      "split": "random122",
+      "arm": "multicontrib",
+      "seed": 0,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p1_contrib_lipo",
+      "files": {
+        "train.json": "78eb7225ff0649a6e4a436598b2f911dcb8f163a6c69ece66ad36a2a472862d9",
+        "checkpoint.pt": "9729db4ea5930861903d37ec971e45f157176319f69a7e30aa63ebb794b720ca",
+        "valid_predictions.npz": "7e603063024e10c1a0f111210751be953311e046cec6a00eedaeb1fdf2d707be",
+        "test_predictions.npz": "463bfafcb6125d9557676b03c330eed55b8121ef36fb284a6bcce48b90ebc2f5",
+        "test_eval.json": "8e2331e85b4cc469f67c63d70773ca5aeee728f01d2d7da5937d3cf6a7c27c79",
+        "curve.csv": "f34c03c6b0caaa861439b94d90aec0bb71c1a0a402b8e2c8bf3abdf36777aa4a"
+      },
+      "historical_git_commit": "771fd56b3c0471614e99569050a24929336d6d7e",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "train_base": null,
+        "valid": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "valid_base": null,
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 232,
+      "epochs_run": 360,
+      "parameters": 252139,
+      "arm_label": "LCRC-MULTICONTRIB8",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.010523575505021107,
+          "checkpoint": "best_epoch",
+          "mae": 0.39927056058775584,
+          "n": 420,
+          "r2": 0.7298658643963575,
+          "rmse": 0.6003849081524373
+        },
+        "test": {
+          "bias": -0.02888467772841791,
+          "checkpoint": "best_epoch",
+          "mae": 0.42600879635135774,
+          "n": 420,
+          "r2": 0.7704634705842147,
+          "rmse": 0.5739434185606259
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6003849081524373,
+          "mae": 0.39927056058775584,
+          "p90_ae": 0.8576940622237476,
+          "cvar90_ae": 1.3618379372746034,
+          "sse": 151.39405593362844,
+          "bias": -0.010523575505021107
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5739434185606259,
+          "mae": 0.42600879635135774,
+          "p90_ae": 0.9122125042256507,
+          "cvar90_ae": 1.3007028207959903,
+          "sse": 138.3526400378043,
+          "bias": -0.02888467772841791
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "multicontrib",
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 35,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 51,
+        "widened_zero_padded": 0
+      },
+      "base_init_state_hash": "666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f",
+      "init_state_hash": "26f61aad0c0304786c486e3705465031fc10eb42013efc5b0bdca9b62e6cf1e7",
+      "shared_encoder_state_hash": "3cbb8cbf5bf49366c21e547d232d434efe8d418422c641032c1f328922e78189",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.05955500970594585,
+        "mean_epoch_seconds": 1.0676270937217245,
+        "process_wall_seconds": 388.18833003309555,
+        "train_wall_seconds": 384.6982905648183
+      }
+    },
+    {
+      "unit_key": "combo_random122_s0",
+      "split": "random122",
+      "arm": "combo_chem_contrib",
+      "seed": 0,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p2b_combo_chem_contrib_lipo",
+      "files": {
+        "train.json": "8aaf54bd4059c010cceac0f65fa0406b42925c8a930a81a343268c7a6ded9e2c",
+        "checkpoint.pt": "7e48049b10b74bb29ceff43f7ac059328aac837f87851a9e4810f2a4e611b9c2",
+        "valid_predictions.npz": "92fec82f6413b84bc77f74cadb23667a5c7d9ecc580a7273ea8ad2b108b6958b",
+        "test_predictions.npz": "a8456ff10208b04a268ea5798db42e6e48c030a1bf82691d57f423899f718be6",
+        "test_eval.json": "b6c129ba617720666c592ad8394cb3388d94d2717140068883b6108be5f37956",
+        "curve.csv": "9d9a8fe49207b12a06bb47189580c8e4a498e95f1ecfe8a8aca151a080afd93f"
+      },
+      "historical_git_commit": "614d667dfb49c9af717fd280a42880d9d62eb79b",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+        "train_base": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "valid": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3",
+        "valid_base": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+          "train_cache_extended_fingerprint": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+          "valid_cache_extended_fingerprint": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3"
+        },
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 266,
+      "epochs_run": 360,
+      "parameters": 253163,
+      "arm_label": "LCRC-COMBO (CHEMLOCAL8 + MULTICONTRIB8)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.01713642936987434,
+          "checkpoint": "best_epoch",
+          "mae": 0.4036864031751311,
+          "n": 420,
+          "r2": 0.6315854731802704,
+          "rmse": 0.7011459121417385
+        },
+        "test": {
+          "bias": -0.031003270097895157,
+          "checkpoint": "best_epoch",
+          "mae": 0.4120265041770213,
+          "n": 420,
+          "r2": 0.7884159728797844,
+          "rmse": 0.5510418889639674
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7011459121417385,
+          "mae": 0.4036864031751311,
+          "p90_ae": 0.8655549644309747,
+          "cvar90_ae": 1.4495818507715257,
+          "sse": 206.47434784748958,
+          "bias": -0.01713642936987434
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5510418889639674,
+          "mae": 0.4120265041770213,
+          "p90_ae": 0.8905256587568872,
+          "cvar90_ae": 1.2442585163792792,
+          "sse": 127.5318086250505,
+          "bias": -0.031003270097895157
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f",
+      "init_state_hash": "faa0b15e11f2b0a76cf128f63d8c5f24d0ffe69eb2f451e8ca8a000482b546c6",
+      "shared_encoder_state_hash": "d05862aaee709aa69e7648c05e1b45bfb25570538d4824b28c6be9f40da4c271",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.05919869104400277,
+        "mean_epoch_seconds": 0.9654430497411846,
+        "process_wall_seconds": 351.4083607229404,
+        "train_wall_seconds": 347.8094462440349
+      }
+    },
+    {
+      "unit_key": "combo_random122_s1",
+      "split": "random122",
+      "arm": "combo_chem_contrib",
+      "seed": 1,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s1",
+      "files": {
+        "train.json": "e3d828fe8bc2ea03a1566c19e6aa786643cacb96b506a8f063c6b90bc043a600",
+        "checkpoint.pt": "a55e233f00028f72fc74af28996a2df2ddced76383d4e10ed0b2880577eae2d7",
+        "valid_predictions.npz": "8713fa89b9305ca4db7a6787e4386531e9fd745356b6ec01396b549c8a46d47e",
+        "test_predictions.npz": "e5de6a58fd56008f2c656198f84a144c680a444577b62bbba1dafdb07b310742",
+        "test_eval.json": "0aecd35dd81052f64c95063183102ad67ebba7675f068e42898c9681a3b08027",
+        "curve.csv": "547253ad2e88d6a25ae1d396f8ddad68d13c8fc433d5971ef251a2110ec049a5"
+      },
+      "historical_git_commit": "407fa839a967259ee71aa8dce027edf92434654b",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917001
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+        "train_base": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "valid": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3",
+        "valid_base": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+          "train_cache_extended_fingerprint": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+          "valid_cache_extended_fingerprint": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3"
+        },
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 275,
+      "epochs_run": 360,
+      "parameters": 253163,
+      "arm_label": "LCRC-COMBO (CHEMLOCAL8 + MULTICONTRIB8)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": -0.04089684594206544,
+          "checkpoint": "best_epoch",
+          "mae": 0.4026223453200056,
+          "n": 420,
+          "r2": 0.7230073569379414,
+          "rmse": 0.6079588016852208
+        },
+        "test": {
+          "bias": -0.059870725708023,
+          "checkpoint": "best_epoch",
+          "mae": 0.4100828824174348,
+          "n": 420,
+          "r2": 0.7913413422171272,
+          "rmse": 0.5472192662918185
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6079588016852208,
+          "mae": 0.4026223453200056,
+          "p90_ae": 0.8120483003828884,
+          "cvar90_ae": 1.3049660197204793,
+          "sse": 155.2378399095424,
+          "bias": -0.04089684594206544
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5472192662918185,
+          "mae": 0.4100828824174348,
+          "p90_ae": 0.8576245920751883,
+          "cvar90_ae": 1.2247053223701605,
+          "sse": 125.76854866840159,
+          "bias": -0.059870725708023
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "d8b3f5b858696f9b7cafa26db2014074e3d1943258f8af68524a03fc306666ac",
+      "init_state_hash": "9c55d27fca988e14bf636680466c6402732a90de914dc7facd48ce883d1ed570",
+      "shared_encoder_state_hash": "4ba3239f3482f554b2f008f5c1db57f7abb88f8d08bab32e0f3e1ad4d2e90821",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.055580482662965856,
+        "mean_epoch_seconds": 0.9401144245225522,
+        "process_wall_seconds": 341.86598662496544,
+        "train_wall_seconds": 338.7006334338803
+      }
+    },
+    {
+      "unit_key": "combo_random122_s2",
+      "split": "random122",
+      "arm": "combo_chem_contrib",
+      "seed": 2,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p5b_combo_lipo_s2",
+      "files": {
+        "train.json": "8246d8f09ff6582df78bd817814f8a64cf458015150d56311296dd85b5f7c866",
+        "checkpoint.pt": "8510822b524ad4a6946aa61d9d9e9217eab82b91b5f0a22532104d5a3abc7df0",
+        "valid_predictions.npz": "4fefd6dfaaa6bcc71896162d98106f7e0ce1cce01e60a165aabe4fc8f5a1a258",
+        "test_predictions.npz": "a6c3ed995e4841bfbb54c992c8e463c57bee96f40bdd72a84ff1e266bf0c017c",
+        "test_eval.json": "d419ff07f6948c3d5769d4bf3aa0e98297051fa3f4011a074d856a2f9669a28a",
+        "curve.csv": "52f757f41ed6113a95f35ff1062e01a0c3960798c5a4559b22f8e987f4b3a6c6"
+      },
+      "historical_git_commit": "407fa839a967259ee71aa8dce027edf92434654b",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917002
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.176985119047619,
+        "n": 3360,
+        "scale": 1.2091154725538142,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+        "train_base": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+        "valid": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3",
+        "valid_base": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+        "train_norm": "b64365886ffc82cebdcc8b3d8d820dc2639e6df99926c83c3678261096447bc5"
+      },
+      "split_record_rows": {
+        "test": {
+          "n": 420,
+          "sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        },
+        "train": {
+          "n": 3360,
+          "sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        }
+      },
+      "source": {
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+          "train_cache_extended_fingerprint": "ab9982f3d5cc505776cbead8eed5ccec6a3c89fcca97a29a4c2e8825456001e1",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+          "valid_cache_extended_fingerprint": "88c5029f4c02363a6512fc902a25d7228497bbf501f6c8430bccff96a6d9d2f3"
+        },
+        "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+        "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+        "source_kind": "chembench",
+        "split_file": "Lipop.random122.ind.pkl",
+        "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+        "split_method": "random",
+        "split_repeat_index": 0,
+        "split_rows_sha256": [
+          "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+        ]
+      },
+      "best_epoch": 271,
+      "epochs_run": 360,
+      "parameters": 253163,
+      "arm_label": "LCRC-COMBO (CHEMLOCAL8 + MULTICONTRIB8)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.0555446575839461,
+          "checkpoint": "best_epoch",
+          "mae": 0.3716983167106538,
+          "n": 420,
+          "r2": 0.7540667115933193,
+          "rmse": 0.57286025445435
+        },
+        "test": {
+          "bias": -0.006278141239323937,
+          "checkpoint": "best_epoch",
+          "mae": 0.4112419056762635,
+          "n": 420,
+          "r2": 0.7840111883617922,
+          "rmse": 0.5567481751834678
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.57286025445435,
+          "mae": 0.3716983167106538,
+          "p90_ae": 0.806057605996622,
+          "cvar90_ae": 1.2877293355299675,
+          "sse": 137.8309258760711,
+          "bias": 0.0555446575839461
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5567481751834678,
+          "mae": 0.4112419056762635,
+          "p90_ae": 0.8782079517573066,
+          "cvar90_ae": 1.2712728552236237,
+          "sse": 130.18678283945093,
+          "bias": -0.006278141239323937
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "1398f98b84191959d16ab04d0faa932846d32aac704f47ef4ef99ff92fe1e051",
+      "init_state_hash": "636d1659574d098df4c6998f795bd2f6e2e9588d0c9b9f526dcabe9daab77391",
+      "shared_encoder_state_hash": "56b3760b399605a019ecaf93e0f6696c41b5de1448e61bd17376291604beaa30",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.06440751169187327,
+        "mean_epoch_seconds": 1.1006238090327114,
+        "process_wall_seconds": 399.5533252279274,
+        "train_wall_seconds": 396.518811670132
+      }
+    },
+    {
+      "unit_key": "combo_random123_s0",
+      "split": "random123",
+      "arm": "combo_chem_contrib",
+      "seed": 0,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_lipo123",
+      "files": {
+        "train.json": "c93fbedcdd63ae40af198e49ce078ba58d595057cf037c45ee83292cc49cedf8",
+        "checkpoint.pt": "9adaed31da96c93ab98e4ddfb7878773cd778322a546d931e352ffa4595e6b97",
+        "valid_predictions.npz": "5ef6661206e6acbf8cdf23f4d1998a00ca3372d45b4c4dd11c74fe639ba2d43b",
+        "test_predictions.npz": "46d437742dfb5920cee2fd33ad5c789f3b5a7e73291698ee84dce95ccf1fd90a",
+        "test_eval.json": "07d642b5844deb078683f5d473504a372ee5817a3d1736eb4f90b3eb3d4cde0a",
+        "curve.csv": "637881f0c5b97edaeb9d7b175f1938c7243d86e9a0fb63ff30d6da6c5485d8bc"
+      },
+      "historical_git_commit": "407fa839a967259ee71aa8dce027edf92434654b",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.1903154761904764,
+        "n": 3360,
+        "scale": 1.2061284808757047,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "19be3b7c4a2347d70c762986de72f3c30068b69c31bd4c7e914e00bc263a2d32",
+        "train_base": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+        "valid": "5100d1f4fbe1670ff9e62ebf75fab03d7b463d93ab74f59106eb56e6948a9997",
+        "valid_base": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+        "train_norm": "03c9b60d5faa79d48016ec9dcbf1f52ce57c4044a478c00893f62326ee136c25"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_train.a3af8ce779db.pt",
+            "rows_sha256": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+            "sha256": "89e793076837243e6b9c720cccfb75edd53ac1795cd50c4420f552fb697e8435",
+            "split_label": "lipo_r123_train",
+            "tag": "lipo_r123_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r123_valid.a79e192e922d.pt",
+            "rows_sha256": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982",
+            "sha256": "f1b21887ae0c47b0de70b23e8d1116eb81aaaa811a1a79ee54121f93948e3f30",
+            "split_label": "lipo_r123_valid",
+            "tag": "lipo_r123_valid"
+          }
+        },
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "2ba445a2e6eec7e904a2ddb5a9a9aa75dedd81a1a02771af837c37e849111ba2",
+          "train_cache_extended_fingerprint": "19be3b7c4a2347d70c762986de72f3c30068b69c31bd4c7e914e00bc263a2d32",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "b0ef49c13e10445c36cefcd6adb33d8ae3343eb717823a9c3eac2b594045b203",
+          "valid_cache_extended_fingerprint": "5100d1f4fbe1670ff9e62ebf75fab03d7b463d93ab74f59106eb56e6948a9997"
+        },
+        "file": "Lipop.random123.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "6c335c844cb1a53273fb784de389d7df25281df86a057bbe22882f130aa06df2",
+          "train": "a3af8ce779db41a288e4e82a7d7ce3d07a556ecf8f2e54ef60f43ad480626db4",
+          "valid": "a79e192e922d95bbfa9ff4be1564405d80a0d5ca4c1421fdb5abef5565170982"
+        },
+        "sha256": "afaed4c6d95b64ac64e8fb760b6de516802008965befe1601b3664303119a0e8",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 123
+      },
+      "best_epoch": 206,
+      "epochs_run": 360,
+      "parameters": 253163,
+      "arm_label": "LCRC-COMBO (CHEMLOCAL8 + MULTICONTRIB8)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.06223711434380433,
+          "checkpoint": "best_epoch",
+          "mae": 0.46668848643870503,
+          "n": 420,
+          "r2": 0.6160255630039475,
+          "rmse": 0.7421311027407343
+        },
+        "test": {
+          "bias": 0.0038504749312182345,
+          "checkpoint": "best_epoch",
+          "mae": 0.39123229741349114,
+          "n": 420,
+          "r2": 0.7930939988928647,
+          "rmse": 0.5373871710155423
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.7421311027407343,
+          "mae": 0.46668848643870503,
+          "p90_ae": 1.0143548787246313,
+          "cvar90_ae": 1.6732843168014058,
+          "sse": 231.3186009351749,
+          "bias": 0.06223711434380433
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5373871710155423,
+          "mae": 0.39123229741349114,
+          "p90_ae": 0.8619085465282739,
+          "cvar90_ae": 1.2193698632041314,
+          "sse": 121.28968806027686,
+          "bias": 0.0038504749312182345
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "2eafef5f209bcc9956f23ab6c9cd78a4a747a78429f8dcc1c54a711aaa9ac57f",
+      "init_state_hash": "507784e6f11bdf2109742f09ea65fe8731a89c0ae04b111f0f9e579c13fd2bcd",
+      "shared_encoder_state_hash": "afde85de42147a9721bdc1ed73b2d6354cc8ead687a171ce850cc25f4969be23",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.054335960963120065,
+        "mean_epoch_seconds": 0.9386726933751359,
+        "process_wall_seconds": 341.81074851192534,
+        "train_wall_seconds": 338.1461977609433
+      }
+    },
+    {
+      "unit_key": "combo_random124_s0",
+      "split": "random124",
+      "arm": "combo_chem_contrib",
+      "seed": 0,
+      "origin": "reused",
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/runs/p4b_combo_lipo124",
+      "files": {
+        "train.json": "0b7458133f195ae2c9b9cd640d9df99825f62ea16d4736a9d287808e582dcb83",
+        "checkpoint.pt": "ea7ee1db13d188a5ba755808a9f09d62ea399cbccfbc9d61fbf9b27e73af93dc",
+        "valid_predictions.npz": "242f37aea7e24149771173f38785ac2dde05831d7f6109f1f848e580cabbf268",
+        "test_predictions.npz": "8faf8a3f62dfa932d1a372272d553e6cd43f102f6f27bc388722f47692920d54",
+        "test_eval.json": "3c8166329a46a89985cc632f19e2e0eb7e3eaf5028e9d37570c2ba4e67c8c082",
+        "curve.csv": "718456c39965756f71f0f9bc89949854d81f8b8c1f8c93d9301a613489790090"
+      },
+      "historical_git_commit": "407fa839a967259ee71aa8dce027edf92434654b",
+      "protocol_id": "lcrc-performance-longrun-v1",
+      "code_hashes": {
+        "prep/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+        "prep/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+        "prep/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_common.py": "c2fba06310f0806d6374fab1c75d84f48dbd367178d3c0ace2c4b60163aae3d3",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_data.py": "8e37f1ece64843add0f300ca8779c88bb126d2fc20837ebba50b4b24dd5bda82",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_model.py": "7374253d27622505077e27ccf36db62105f889d0bf31e36464f2b42d7ccf7ff9",
+        "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_train.py": "7242bafcf1aa9a883d230034a15b961e4fb53f5820ebaff0a0408a46f4db39dc",
+        "v2/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+        "v2/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+        "v2/mb2_model.py": "75366675b98ffe5a8a82c96c241eb400dbce51be688070b4f4f7a142f4e0f4b4"
+      },
+      "recipe": {
+        "optimizer": "AdamW",
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "peak_lr": 0.0003,
+        "min_lr": 1e-05,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs_planned": 360,
+        "scheduler": "per_step_cosine",
+        "scheduler_horizon_epochs": 360,
+        "gradient_clip": 5.0,
+        "loss": "mse",
+        "checkpoint_rule": "lowest_validation_rmse__strict_improvement__tie_keeps_earlier",
+        "early_stopping": false,
+        "soup": false,
+        "ema": false,
+        "swa": false,
+        "ssl": false,
+        "hyperparameter_search": false,
+        "validation_used_for_checkpoint_selection": true,
+        "test_used_for_any_selection": false,
+        "shuffle_generator_seed": 917000
+      },
+      "environment": {
+        "hostname": "a100-2",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4",
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "python": "3.12.14",
+        "device": "cuda",
+        "precision": "fp32"
+      },
+      "target_norm": {
+        "formula": "y_scaled = (y - mean)/scale; metrics reported after y = pred*scale + mean",
+        "mean": 2.186172619047619,
+        "n": 3360,
+        "scale": 1.202886060674314,
+        "source": "train_split_only",
+        "valid_or_test_used": false
+      },
+      "cache_fingerprints": {
+        "train": "1e3596744b6785effda815d486d4617fc1646024d99e75a692743d3af080820f",
+        "train_base": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+        "valid": "93a322d269212eb78c638318cf1a25c7018c06c1946bb20631d96c2f6d30efa0",
+        "valid_base": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+        "train_norm": "3f7db6917537bde3c71c2637e2b63f5de031af40d5cbb31e49bf59efb90029e0"
+      },
+      "split_record_rows": {
+        "train": {
+          "n": 3360,
+          "sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887"
+        },
+        "valid": {
+          "n": 420,
+          "sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        }
+      },
+      "source": {
+        "cache_meta": {
+          "train": {
+            "cache_hit": true,
+            "content_fingerprint": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+            "dataset": "Lipophilicity",
+            "n_rows": 3360,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_train.dacdee79f1e3.pt",
+            "rows_sha256": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+            "sha256": "82de62c4c49477ea3635f2e0a54c8b777d318f39891cb4f2aa450d5a1d34b14b",
+            "split_label": "lipo_r124_train",
+            "tag": "lipo_r124_train"
+          },
+          "valid": {
+            "cache_hit": true,
+            "content_fingerprint": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+            "dataset": "Lipophilicity",
+            "n_rows": 420,
+            "path": "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/cache/Lipophilicity.lipo_r124_valid.e2100b1b236d.pt",
+            "rows_sha256": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94",
+            "sha256": "dd8c9f686aa4301d0e5ce2e9f07f2507fcfa6bae150f3b0e40c2573103afea06",
+            "split_label": "lipo_r124_valid",
+            "tag": "lipo_r124_valid"
+          }
+        },
+        "chem8": {
+          "artifact_manifest": "tracks/structural-sufficiency/lcrc_performance_longrun_v1/analysis/chem8_manifest.json",
+          "base_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "channel_names": [
+            "CIP_R",
+            "CIP_S",
+            "CIP_UNASSIGNED_TETRA",
+            "HBD",
+            "HBA",
+            "HYB_SP",
+            "HYB_SP2",
+            "HYB_SP3"
+          ],
+          "extended_spec_hash": "497933552f0a1c212980e4c483d791b8b39f97d3cdaee1aac974c78744f763df",
+          "train_cache_base_fingerprint": "13a74e08fd83c5186c1886d1db5edd5bbf053b1c80697a3f61921018f2726ce3",
+          "train_cache_extended_fingerprint": "1e3596744b6785effda815d486d4617fc1646024d99e75a692743d3af080820f",
+          "train_norm_fingerprint_unchanged": true,
+          "valid_cache_base_fingerprint": "6a580d135a59a86296902a0f544f430b7f7d3518e187de6131baba71f7935a7a",
+          "valid_cache_extended_fingerprint": "93a322d269212eb78c638318cf1a25c7018c06c1946bb20631d96c2f6d30efa0"
+        },
+        "file": "Lipop.random124.ind.pkl",
+        "kind": "published_repeat",
+        "rows_sha256": {
+          "test": "c4a5b71d8245ab426cffe475cd8862e11b16106d303b3ddb5dc409611fd0427d",
+          "train": "dacdee79f1e34d258c55e3bdc6b7b87ecf9bd63039516b64df9f2b2a68cbd887",
+          "valid": "e2100b1b236d236f7a3542b057f9026ff77f7bb920aeb662f64f924c3991ef94"
+        },
+        "sha256": "2b48a41ccc39b622bbb74f18331ca9d9513190eec2de29144ce2bc7d47ef7ef3",
+        "source": {
+          "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+          "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+          "source_kind": "chembench"
+        },
+        "suffix": 124
+      },
+      "best_epoch": 166,
+      "epochs_run": 360,
+      "parameters": 253163,
+      "arm_label": "LCRC-COMBO (CHEMLOCAL8 + MULTICONTRIB8)",
+      "recorded_metrics": {
+        "valid": {
+          "bias": 0.0033297370788256623,
+          "checkpoint": "best_epoch",
+          "mae": 0.41123300401410084,
+          "n": 420,
+          "r2": 0.7267039545294127,
+          "rmse": 0.6300452549125165
+        },
+        "test": {
+          "bias": -0.027858322616218522,
+          "checkpoint": "best_epoch",
+          "mae": 0.39808946193515615,
+          "n": 420,
+          "r2": 0.810919281964593,
+          "rmse": 0.5219124427834171
+        }
+      },
+      "recomputed_metrics": {
+        "valid": {
+          "n": 420,
+          "rmse": 0.6300452549125165,
+          "mae": 0.41123300401410084,
+          "p90_ae": 0.8292880964750471,
+          "cvar90_ae": 1.3723122902365634,
+          "sse": 166.72194975986673,
+          "bias": 0.0033297370788256623
+        },
+        "test": {
+          "n": 420,
+          "rmse": 0.5219124427834171,
+          "mae": 0.39808946193515615,
+          "p90_ae": 0.8366255163794446,
+          "cvar90_ae": 1.1493747315254068,
+          "sse": 114.4048911315045,
+          "bias": -0.027858322616218522
+        }
+      },
+      "selection_uses_test": false,
+      "test_used_for_development": true,
+      "extension_zero_init": {
+        "arm": "combo_chem_contrib",
+        "atom_encoder_new_columns_max_abs": 0.0,
+        "delta_last_bias_max_abs": 0.0,
+        "delta_last_weight_max_abs": 0.0,
+        "passed": true
+      },
+      "base_copy": {
+        "base_atom_width": 51,
+        "copied_identical": 34,
+        "new_extension_tensors": 8,
+        "spec_atom_width": 59,
+        "widened_zero_padded": 1
+      },
+      "base_init_state_hash": "c25be21820b2a7cf46e1d171e638b2b5f61671b7bbacf1b2745d17036e276620",
+      "init_state_hash": "75b196bb21c41a3792fd56effdb013a0543c4073c891fa656e915cf0ee04395c",
+      "shared_encoder_state_hash": "a67955e4287e5b1fca5a63cb25ff492b137916dab72e6977f798045b74ed75b4",
+      "timing": {
+        "inference_batch_size": 256,
+        "inference_seconds_per_valid_split": 0.06124151304053763,
+        "mean_epoch_seconds": 1.1565199004925995,
+        "process_wall_seconds": 419.81988438311964,
+        "train_wall_seconds": 416.66847013682127
+      }
+    }
+  ],
+  "completeness": {
+    "n_units_expected": 20,
+    "n_units_available": 10,
+    "n_reused": 10,
+    "n_fresh": 0,
+    "expected_units": [
+      {
+        "split": "random122",
+        "arm": "base",
+        "seed": 0,
+        "origin": "reused",
+        "key": "base_random122_s0"
+      },
+      {
+        "split": "random122",
+        "arm": "base",
+        "seed": 1,
+        "origin": "reused",
+        "key": "base_random122_s1"
+      },
+      {
+        "split": "random122",
+        "arm": "base",
+        "seed": 2,
+        "origin": "reused",
+        "key": "base_random122_s2"
+      },
+      {
+        "split": "random122",
+        "arm": "chem8",
+        "seed": 0,
+        "origin": "reused",
+        "key": "chem8_random122_s0"
+      },
+      {
+        "split": "random122",
+        "arm": "multicontrib",
+        "seed": 0,
+        "origin": "reused",
+        "key": "contrib_random122_s0"
+      },
+      {
+        "split": "random122",
+        "arm": "combo_chem_contrib",
+        "seed": 0,
+        "origin": "reused",
+        "key": "combo_random122_s0"
+      },
+      {
+        "split": "random122",
+        "arm": "combo_chem_contrib",
+        "seed": 1,
+        "origin": "reused",
+        "key": "combo_random122_s1"
+      },
+      {
+        "split": "random122",
+        "arm": "combo_chem_contrib",
+        "seed": 2,
+        "origin": "reused",
+        "key": "combo_random122_s2"
+      },
+      {
+        "split": "random123",
+        "arm": "combo_chem_contrib",
+        "seed": 0,
+        "origin": "reused",
+        "key": "combo_random123_s0"
+      },
+      {
+        "split": "random124",
+        "arm": "combo_chem_contrib",
+        "seed": 0,
+        "origin": "reused",
+        "key": "combo_random124_s0"
+      },
+      {
+        "split": "random122",
+        "arm": "chem8",
+        "seed": 1,
+        "origin": "fresh",
+        "key": "f1_chem8_random122_s1"
+      },
+      {
+        "split": "random122",
+        "arm": "chem8",
+        "seed": 2,
+        "origin": "fresh",
+        "key": "f1_chem8_random122_s2"
+      },
+      {
+        "split": "random122",
+        "arm": "multicontrib",
+        "seed": 1,
+        "origin": "fresh",
+        "key": "f1_contrib_random122_s1"
+      },
+      {
+        "split": "random122",
+        "arm": "multicontrib",
+        "seed": 2,
+        "origin": "fresh",
+        "key": "f1_contrib_random122_s2"
+      },
+      {
+        "split": "random123",
+        "arm": "base",
+        "seed": 0,
+        "origin": "fresh",
+        "key": "f1_base_random123_s0"
+      },
+      {
+        "split": "random123",
+        "arm": "base",
+        "seed": 1,
+        "origin": "fresh",
+        "key": "f1_base_random123_s1"
+      },
+      {
+        "split": "random123",
+        "arm": "combo_chem_contrib",
+        "seed": 1,
+        "origin": "fresh",
+        "key": "f1_combo_random123_s1"
+      },
+      {
+        "split": "random124",
+        "arm": "base",
+        "seed": 0,
+        "origin": "fresh",
+        "key": "f1_base_random124_s0"
+      },
+      {
+        "split": "random124",
+        "arm": "base",
+        "seed": 1,
+        "origin": "fresh",
+        "key": "f1_base_random124_s1"
+      },
+      {
+        "split": "random124",
+        "arm": "combo_chem_contrib",
+        "seed": 1,
+        "origin": "fresh",
+        "key": "f1_combo_random124_s1"
+      }
+    ]
+  },
+  "exposure": {
+    "test_policy": "DEVELOPMENT_TEST",
+    "checkpoint_selection": "Validation RMSE only (frozen in every unit)",
+    "test_used_for_training": false,
+    "test_used_within_run_for_epoch_selection": false
+  }
+}
