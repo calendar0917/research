@@ -223,6 +223,44 @@ def gpu_ledger() -> dict[str, Any]:
     }
 
 
+TRAINING_PATH_FILES = (
+    "code/si_common.py",
+    "code/si_features.py",
+    "code/si_model.py",
+    "code/si_train.py",
+    "code/si_sweep.py",
+    "code/si_gates.py",
+)
+
+
+def training_code_identity(commits: Sequence[str]) -> dict[str, Any]:
+    """Prove the files that trained are byte-identical to the committed ones.
+
+    The training jobs ran at one or more recorded ``git_commit`` values.  For every
+    training-path file this compares the bytes in that commit with the bytes on disk
+    now, so any post-hoc edit to the training path would be visible.
+    """
+    import subprocess
+
+    out: dict[str, Any] = {"training_commits": sorted(set(commits)), "files": {}, "all_identical": True}
+    for rel in TRAINING_PATH_FILES:
+        path = C.TRACK / rel
+        current = C.sha256_file(path) if path.exists() else None
+        per_commit: dict[str, Any] = {}
+        for commit in sorted(set(commits)):
+            try:
+                blob = subprocess.check_output(
+                    ["git", "show", f"{commit}:{C.track_rel(path)}"], cwd=C.REPO, text=False
+                )
+                digest = C.sha256_bytes(blob)
+            except subprocess.CalledProcessError:
+                digest = None
+            per_commit[commit] = {"sha256": digest, "matches_current": bool(digest == current)}
+            out["all_identical"] = out["all_identical"] and bool(digest == current)
+        out["files"][rel] = {"current_sha256": current, "per_commit": per_commit}
+    return out
+
+
 def historical_reference() -> dict[str, Any]:
     base = (
         C.REPO
@@ -251,6 +289,7 @@ def historical_reference() -> dict[str, Any]:
             "test_roc_auc": [0.7653488866142646, 0.7736128546321868, 0.775857007667201],
             "valid_pr_auc": [0.3131555159188919, 0.40047098860814556, 0.4038194003418263],
             "test_pr_auc": [0.24693590534319748, 0.3122057019660126, 0.2984051614523935],
+            "best_epoch": [53, 32, 29],
             "note": "same architecture and recipe, 100 epochs, earlier round; used only as a replication "
             "sanity check for the A0 arm, never as the paired baseline",
         },
@@ -366,6 +405,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sparse = manifest["sparse_only"]
     valid_sparse = {
         "arm": C.MODEL_SPARSE,
+        "best_epoch": 0,
         "roc_auc": float(sparse["valid_metrics"]["roc_auc"]),
         "pr_auc": float(sparse["valid_metrics"]["pr_auc"]),
         "bce": float(sparse["valid_metrics"]["bce"]),
@@ -398,6 +438,31 @@ def main(argv: Sequence[str] | None = None) -> int:
         return valid_sparse[key] if arm == C.MODEL_SPARSE else valid_units[f"{arm}_s{seed}"][key]
 
     valid_summary = summary_from(valid_get)
+    hist_a0 = historical_reference()["ptb_molhiv_a0_history"]
+    replication = {}
+    for seed in C.SEEDS:
+        mine = valid_units[f"{C.MODEL_A0}_s{seed}"]
+        replication[str(seed)] = {
+            "valid_roc_auc_recorded": mine["roc_auc"],
+            "valid_roc_auc_history": float(hist_a0["valid_roc_auc"][seed]),
+            "valid_roc_auc_diff": float(mine["roc_auc"] - float(hist_a0["valid_roc_auc"][seed])),
+            "valid_pr_auc_recorded": mine["pr_auc"],
+            "valid_pr_auc_history": float(hist_a0["valid_pr_auc"][seed]),
+            "valid_pr_auc_diff": float(mine["pr_auc"] - float(hist_a0["valid_pr_auc"][seed])),
+            "best_epoch_recorded": int(mine["best_epoch"]),
+            "best_epoch_history": int(hist_a0["best_epoch"][seed]),
+        }
+    replication["max_abs_valid_roc_auc_diff"] = max(
+        abs(v["valid_roc_auc_diff"]) for k, v in replication.items() if k.isdigit()
+    )
+    replication["identical_best_epochs"] = all(
+        v["best_epoch_recorded"] == v["best_epoch_history"] for k, v in replication.items() if k.isdigit()
+    )
+    replication["interpretation"] = (
+        "informational replication check of the frozen A0 recipe on the same host/software: a bitwise "
+        "reproduction of the historical PTB A0 numbers means the paired A0 baseline is the same recipe, "
+        "not an older checkpoint; any difference is reported, not corrected"
+    )
 
     def contrast_block(getter) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -427,6 +492,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "summary": valid_summary,
         "contrasts": valid_contrasts,
         "ap_contrasts": valid_ap_contrasts,
+        "a0_history_replication": replication,
         "train_valid_gap": {
             arm: {
                 "train_roc_auc_mean": float(
@@ -447,7 +513,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     for name, entry in scores["scores"].items():
         if entry["arm"] == C.MODEL_SPARSE:
             continue
-        test_units[name] = {
+        test_units[f"{entry['arm']}_s{int(entry['seed'])}"] = {
             "arm": entry["arm"],
             "seed": int(entry["seed"]),
             "roc_auc": float(entry["metrics"]["roc_auc"]),
@@ -463,6 +529,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     sp = scores["scores"][C.MODEL_SPARSE]
     test_sparse = {
         "arm": C.MODEL_SPARSE,
+        "best_epoch": 0,
         "roc_auc": float(sp["metrics"]["roc_auc"]),
         "pr_auc": float(sp["metrics"]["pr_auc"]),
         "bce": float(sp["metrics"]["bce"]),
@@ -756,6 +823,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "sha256": C.sha256_file(C.ANALYSIS / "correctness_gates.json"),
             "failed_gates": [g["id"] for g in gates_payload["gates"] if not bool(g["pass"])],
         },
+        "training_code_identity": training_code_identity(
+            [u["git_commit"] for u in manifest["units"]]
+        ),
         "gpu_ledger_sha256": C.sha256_file(C.ANALYSIS / "gpu_ledger.json"),
         "gpu_hours_total": ledger["total_gpu_hours"],
         "historical_reference": historical_reference(),
