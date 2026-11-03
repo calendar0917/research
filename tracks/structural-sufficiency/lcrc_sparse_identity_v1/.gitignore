@@ -1,5 +1,10 @@
-# rebuildable per-run artefacts (checkpoints, curves, remote run records)
-runs/
-# frozen per-molecule predictions + the SPARSE_ONLY coefficients: small, and every
+# Bulky per-run artefacts that are rebuildable from the committed records.
+# Everything else under runs/ is committed: run.json / selection.json / curve.csv
+# (the records the manifest and the GPU ledger cite) and the 12 frozen
+# checkpoints (1 MB each, the objects the one-shot Test pass re-verifies by SHA-256).
+runs/**/train_predictions.npz
+runs/**/valid_predictions.npz
+runs/smoke/**/checkpoint.pt
+# Frozen per-molecule predictions + the SPARSE_ONLY coefficients: small, and every
 # consumer re-verifies the SHA-256 recorded in analysis/checkpoint_manifest.json
 !analysis/predictions/*.npz

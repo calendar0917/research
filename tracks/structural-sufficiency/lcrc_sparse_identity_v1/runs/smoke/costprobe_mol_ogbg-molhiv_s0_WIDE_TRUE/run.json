@@ -1,0 +1,312 @@
+{
+  "anomalies": {
+    "grad_clip_events": 21,
+    "grad_norm_max": 109.15550994873047,
+    "nonfinite_events": 0
+  },
+  "arm": "WIDE_TRUE",
+  "branch": {
+    "contribution": {
+      "train": {
+        "max_abs": 0.07933536171913147,
+        "mean_abs": 0.029280885083386318,
+        "mean_signed": -0.0288271637236959,
+        "median_abs": 0.029714534059166908,
+        "n": 32901,
+        "n_negative": 31657,
+        "n_positive": 1235,
+        "n_zero": 9,
+        "p90_abs": 0.046765636652708054,
+        "p95_abs": 0.05331270024180412,
+        "p99_abs": 0.06359141319990158,
+        "sd_abs": 0.01410279224983446
+      },
+      "valid": {
+        "max_abs": 0.08282845467329025,
+        "mean_abs": 0.030562159134490383,
+        "mean_signed": -0.030279754875222997,
+        "median_abs": 0.030503151938319206,
+        "n": 4113,
+        "n_negative": 4013,
+        "n_positive": 100,
+        "n_zero": 0,
+        "p90_abs": 0.04987198039889336,
+        "p95_abs": 0.056538995355367654,
+        "p99_abs": 0.06724449098110201,
+        "sd_abs": 0.014763884308671415
+      }
+    },
+    "norms": {
+      "l1": 4.799542325199582,
+      "l2": 0.2574002858033171,
+      "linf": 0.031061969697475433,
+      "n_nonzero": 512,
+      "n_parameters": 512
+    }
+  },
+  "checkpoint": {
+    "best_epoch": 1,
+    "best_state_hash": "d85431fe46f4ecf1088ab2c0b9afa143b508161382707b08306d6e5d2d9c7de0",
+    "improvement_epochs": [
+      1
+    ],
+    "n_improvements": 1,
+    "path": "tracks/structural-sufficiency/lcrc_sparse_identity_v1/runs/smoke/costprobe_mol_ogbg-molhiv_s0_WIDE_TRUE/checkpoint.pt",
+    "reload_max_abs_valid_logit_diff": 1.430511474609375e-06,
+    "sha256": "0c04dfc6576aa0c0295a7d8b0af7d0d92d08cd247ddc8d2c03a286d095e3712a"
+  },
+  "curve": [
+    {
+      "epoch": 1,
+      "grad_clip_events": 20,
+      "is_best": true,
+      "lr": 0.00015500000000000005,
+      "train_seconds": 10.675399018917233,
+      "valid_bce": 0.09180562136783328,
+      "valid_pr_auc": 0.2201177042033406,
+      "valid_roc_auc": 0.7581370639819716,
+      "valid_seconds": 1.191839758772403
+    },
+    {
+      "epoch": 2,
+      "grad_clip_events": 21,
+      "is_best": false,
+      "lr": 1e-05,
+      "train_seconds": 10.309939252678305,
+      "valid_bce": 0.09227699156830929,
+      "valid_pr_auc": 0.23931707648189446,
+      "valid_roc_auc": 0.7576762443660592,
+      "valid_seconds": 0.6439914088696241
+    }
+  ],
+  "data": {
+    "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "rows": {
+      "test": {
+        "n": 4113,
+        "sha256": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804"
+      },
+      "train": {
+        "n": 32901,
+        "sha256": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a"
+      },
+      "valid": {
+        "n": 4113,
+        "sha256": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+      }
+    },
+    "source": {
+      "csv_sha256": "306c4ad8d54fc6cd40c71da4d0561fdcc73e1188662e6992bae0dda8f65bf6d0",
+      "label_agreement": {
+        "identical": true,
+        "mismatches": 0,
+        "rows_compared": 41127
+      },
+      "ogb_release": "v1 (2020-05-04)",
+      "source_kind": "ogb",
+      "split_file": "split/scaffold/{train,valid,test}.csv.gz",
+      "split_file_sha256": "9f1e46e77897b3de3d19452cbd47c312e2844a0ec664c1c9dc897c10d12e42f0",
+      "split_method": "scaffold (OGB official)",
+      "split_repeat_index": null,
+      "split_rows_sha256": [
+        "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+        "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a",
+        "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804"
+      ]
+    },
+    "test_cache_built": false,
+    "test_labels_read": false,
+    "train_norm_fingerprint": "c339e63b8f1101271d908834b6df5c218c1fd6b11e21dc2fdc00bfb5f8852ca1"
+  },
+  "dataset": "ogbg-molhiv",
+  "env": {
+    "cuda_available": true,
+    "cuda_device_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "cuda_driver": null,
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "epoch_90_100_valid_roc_auc": {
+    "last": null,
+    "max": null,
+    "min": null,
+    "values": []
+  },
+  "epochs_run": 2,
+  "feature_meta": {
+    "arm": "WIDE_TRUE",
+    "branch_dim": 512,
+    "branch_matrix_sha256": {
+      "train": "1bf7d5760cb623d1b4c4a5c27b745eeefb3d1d6183f2b40cde0448857ed8daee",
+      "valid": "a81a55090b12e2b19c699d72e3265ac66f58c7f388b58ceb7c7555f234ec6072"
+    },
+    "fold_assignment_sha256": null,
+    "vocabulary_sha256": "ac090b0e5186c478a5c6d2a02b8b95b2c38acf91bb069817ddedd41d94e61abe"
+  },
+  "gap": {
+    "train_bce": 0.13561148996570996,
+    "train_minus_valid_roc_auc": -0.0050187573541206065,
+    "train_pr_auc": 0.25921588610224205,
+    "train_roc_auc": 0.7531183066278507,
+    "valid_bce": 0.09180562042545558,
+    "valid_pr_auc": 0.2201177042033406,
+    "valid_roc_auc": 0.7581370639819713
+  },
+  "git_commit": "d2f54f6ae7ba1ffe5972665c1e6b2200356f9a53",
+  "git_dirty_tracked": false,
+  "model": {
+    "arm": "WIDE_TRUE",
+    "base_parameters": 247106,
+    "branch_bias": false,
+    "branch_dim": 512,
+    "branch_init": "zeros",
+    "branch_parameters": 512,
+    "dropout": 0.1,
+    "full_init_state_hash": "849adda7fc6a4f60c49ed8ff2b08c4d8a3d76c14aacc0f6f2e353e63405e1f3d",
+    "has_attention": false,
+    "has_iterative_message_passing": false,
+    "init_state_hash": "849adda7fc6a4f60c49ed8ff2b08c4d8a3d76c14aacc0f6f2e353e63405e1f3d",
+    "label": "A0 / FULL",
+    "local_input_cols": 529,
+    "n_tasks": 1,
+    "parameters": 247618,
+    "parameters_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "drop": 0,
+      "f": 4225,
+      "local": 148992,
+      "rho": 11073,
+      "total": 247106
+    },
+    "rho_input_cols": 171,
+    "seed": 0,
+    "shared_state_equal_to_full": {
+      "all_equal": true,
+      "checks": {
+        "atom_encoder.lins.0.bias": true,
+        "atom_encoder.lins.0.weight": true,
+        "atom_encoder.lins.1.bias": true,
+        "atom_encoder.lins.1.weight": true,
+        "bond_encoder.lins.0.bias": true,
+        "bond_encoder.lins.0.weight": true,
+        "bond_encoder.lins.1.bias": true,
+        "bond_encoder.lins.1.weight": true,
+        "f.lins.0.bias": true,
+        "f.lins.0.weight": true,
+        "f.lins.1.bias": true,
+        "f.lins.1.weight": true,
+        "global_mean": true,
+        "global_scale": true,
+        "local.close_emb.weight": true,
+        "local.end_emb.weight": true,
+        "local.joint_proj.bias": true,
+        "local.joint_proj.weight": true,
+        "local.mlp.lins.0.bias": true,
+        "local.mlp.lins.0.weight": true,
+        "local.mlp.lins.1.bias": true,
+        "local.mlp.lins.1.weight": true,
+        "local.nbr_emb.weight": true,
+        "local.norm.bias": true,
+        "local.norm.weight": true,
+        "local.path_emb.weight": true,
+        "local.path_gate.weight": true,
+        "local.path_u.weight": true,
+        "local.path_v.weight": true,
+        "rho.lins.0.bias": true,
+        "rho.lins.0.weight": true,
+        "rho.lins.1.bias": true,
+        "rho.lins.1.weight": true,
+        "scalar_mean": true,
+        "scalar_scale": true
+      },
+      "n_checked": 35
+    },
+    "variant": "A0"
+  },
+  "n_train": 32901,
+  "n_valid": 4113,
+  "parameters": 247618,
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local representation h, before the per-atom contribution f and the global rho",
+    "early_stopping": false,
+    "ema": false,
+    "epochs": 360,
+    "epochs_by_dataset": {
+      "BACE": 360,
+      "BBBP": 360,
+      "ESOL": 360,
+      "FreeSolv": 360,
+      "Tox21": 360,
+      "ogbg-molhiv": 100
+    },
+    "gradient_clip": 5.0,
+    "hyperparameter_search": false,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "shuffle_offset": 917000,
+    "soup": false,
+    "ssl": false,
+    "swa": false,
+    "weight_decay": 0.001
+  },
+  "result_label": "ENGINEERING_SMOKE",
+  "round_id": "lcrc-sparse-identity-v1",
+  "schema": "lcrc-sparse-identity-run-v1",
+  "seed": 0,
+  "smoke": true,
+  "tag": "costprobe",
+  "task": "binary",
+  "timing": {
+    "gpu_hours_estimate": 0.006340308906122421,
+    "gpu_peak_allocated_bytes": 96120320,
+    "gpu_peak_reserved_bytes": 121634816,
+    "mean_epoch_seconds": 11.410584719618782,
+    "process_wall_seconds": 31.455037251114845,
+    "train_seconds_total": 20.985338271595538,
+    "train_wall_seconds": 22.825112062040716,
+    "valid_seconds_total": 1.8358311676420271
+  },
+  "train": {
+    "metrics": {
+      "accuracy_at_0.5": 0.9648338956262728,
+      "bce": 0.13561148996570996,
+      "log_loss": 0.13561148996570996,
+      "n": 32901,
+      "positive_rate": 0.03744567034436643,
+      "pr_auc": 0.25921588610224205,
+      "pred_positive_rate_at_0.5": 0.006717121060150147,
+      "roc_auc": 0.7531183066278507,
+      "sigmoid_probability": true,
+      "threshold_used_for_selection": null
+    }
+  },
+  "validation": {
+    "metrics": {
+      "accuracy_at_0.5": 0.9798200826647216,
+      "bce": 0.09180562042545558,
+      "log_loss": 0.09180562042545558,
+      "n": 4113,
+      "positive_rate": 0.019693654266958426,
+      "pr_auc": 0.2201177042033406,
+      "pred_positive_rate_at_0.5": 0.005348893751519572,
+      "roc_auc": 0.7581370639819713,
+      "sigmoid_probability": true,
+      "threshold_used_for_selection": null
+    }
+  }
+}
