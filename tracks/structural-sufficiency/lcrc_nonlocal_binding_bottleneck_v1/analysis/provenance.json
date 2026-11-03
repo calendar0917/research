@@ -1,0 +1,181 @@
+{
+  "code": {
+    "code/nb_common.py": "1ea6599cb0635b095227638258f642b65f8e2a678a897b36c4bb5c5da4f9e250",
+    "code/nb_cv.py": "cbead7d5d2316ec54036d282a55896ea0aa095b268a102bc1f3c3932ff248e8e",
+    "code/nb_data.py": "d9a06a9a9302fe759efae60c0dcdc49093592d3d3262ca32aeda0fbcc19fb35d",
+    "code/nb_features.py": "9e64cfc48db8917338dc48169c13239c1d3031b0d583314755e2d7b799221045",
+    "code/nb_run.py": "58e35f3d0f8ebfe4bf30a873fff41d7159975c34f8391d6fd6bcf8de1d3b93c0",
+    "code/nb_structural.py": "0aed219a290649a631a6d3ca81223697a6a192920fb6168486cfd6dd6246af77"
+  },
+  "command": "uv run python tracks/structural-sufficiency/lcrc_nonlocal_binding_bottleneck_v1/code/nb_run.py",
+  "correctness_gates": {
+    "ecfp4_binary": true,
+    "folds_feasible_and_partitioned": true,
+    "g42_shape_and_finiteness": true,
+    "heavy_atom_graph_reproduces_frozen_sample_set": true,
+    "labels_binary": true,
+    "labels_restricted_to_official_train": true,
+    "no_cross_fold_scaffold_leakage": true,
+    "null_margin_conservation": true,
+    "official_train_rows_match_frozen_benchmark": true,
+    "pair_features_finite_nonnegative": true,
+    "pair_features_shape": true,
+    "scaffold_groups_defined": true,
+    "structure_cache_matches_frozen_benchmark": true,
+    "structure_cache_rows_equal_official_train_rows": true,
+    "train_size": true
+  },
+  "created_utc": "2026-11-03T02:39:41Z",
+  "data": {
+    "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "files": {
+      "mapping/mol.csv.gz": {
+        "sha256": "306c4ad8d54fc6cd40c71da4d0561fdcc73e1188662e6992bae0dda8f65bf6d0",
+        "size_bytes": 404655
+      },
+      "raw/graph-label.csv.gz": {
+        "sha256": "88f950d08c606556cca1c1ffef05229f46d64043ad7fa617e8938a3ae9779993",
+        "size_bytes": 1727
+      },
+      "split/scaffold/train.csv.gz": {
+        "sha256": "9f1e46e77897b3de3d19452cbd47c312e2844a0ec664c1c9dc897c10d12e42f0",
+        "size_bytes": 73605
+      }
+    },
+    "n_train": 32901,
+    "official_train_rows_sha256": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+    "structure_cache_fingerprint": "111d91752a6d451c6f94a6700b4df889a9d9762c90e734ef4f16e4b1a4258596",
+    "valid_test_index_files_opened": false,
+    "valid_test_labels_read": false
+  },
+  "decision": "NO_OBSERVED_INCREMENT",
+  "environment": {
+    "cuda_available": false,
+    "device_used": "cpu",
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scikit_learn": "1.5.2",
+    "scipy": "1.14.1",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+  "frozen_design": {
+    "C_grid": [
+      0.01,
+      0.1,
+      1.0
+    ],
+    "bootstrap": {
+      "max_attempts": 2000,
+      "replicates": 1000,
+      "seed": 20261103
+    },
+    "branches": [
+      "BASE",
+      "BASE_NULL",
+      "BASE_REAL"
+    ],
+    "clip": 5.0,
+    "folds": {
+      "group_key": "Bemis-Murcko scaffold, canonical-SMILES fallback",
+      "inner_seed_rule": "SPLIT_SEED + outer_fold",
+      "inner_splits": 2,
+      "outer_splits": 3,
+      "seed": 20261103
+    },
+    "gates": {
+      "all_fold_diffs_positive": true,
+      "bootstrap_ci_lower": "> 0",
+      "real_minus_base_auc_mean": 0.01,
+      "real_minus_null_ap_mean": 0.0,
+      "real_minus_null_auc_mean": 0.015
+    },
+    "logreg": {
+      "class_weight": null,
+      "fit_intercept": true,
+      "max_iter": 4000,
+      "penalty": "l2",
+      "random_state": 20261103,
+      "solver": "liblinear",
+      "tol": 0.0001
+    },
+    "pair_features": {
+      "distance_bins": [
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        ">=10"
+      ],
+      "element_classes": [
+        "C",
+        "N",
+        "O",
+        "S",
+        "X",
+        "OTHER"
+      ],
+      "n_features": 126
+    },
+    "phase_a": {
+      "nitrogen_index_A": 6,
+      "nitrogen_index_B": 8,
+      "prediction_tolerance": 1e-05,
+      "ring_size": 18,
+      "seeds": [
+        0,
+        1,
+        2
+      ],
+      "variants": [
+        "A0",
+        "C1"
+      ]
+    }
+  },
+  "git_dirty_tracked": false,
+  "git_head": "d9da9c0c2d1aaec7d5257fd4b8354da1c9d93068",
+  "gpu_hours_planned": 0.0,
+  "model_init_state_hashes": {
+    "A0_s0": "666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f",
+    "A0_s1": "d8b3f5b858696f9b7cafa26db2014074e3d1943258f8af68524a03fc306666ac",
+    "A0_s2": "1398f98b84191959d16ab04d0faa932846d32aac704f47ef4ef99ff92fe1e051",
+    "C1_s0": "aac1e061176a93bd12b0e6a3f79e80eced2ff93f84eb72391dc819be59ebb83c",
+    "C1_s1": "bcce49b8d309dc773f1cdabaae16fa7cc7c00da0c7d2b5f5221c063edc2ffbe1",
+    "C1_s2": "375daa9622d901ee8b9d157ffe7d8f3df0656199328af420a94ae2ef7df88ad8"
+  },
+  "phase_a_gates": {
+    "canonical_smiles": true,
+    "formula": true,
+    "forward_equivalent": true,
+    "global42_identical": true,
+    "morgan2048_identical": true,
+    "n_o_distance": true,
+    "non_isomorphic": true,
+    "radius2_multiset_identical": true,
+    "sanitize": true,
+    "type_distance_separates": true
+  },
+  "reused_modules": {
+    "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+    "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_common.py": "799be6b52ed155572d067a2edb53ff92d06fd89304e49d96af8b0c8a8bf079cf",
+    "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+    "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+    "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_common.py": "a8db1c0f2c28031792fc25673e39ce7404cbf884250592f7bdd33a1005e3e45c",
+    "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+    "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_rdkit.py": "567d045914315d1bcd819c0d0de56f53c7210c76362d71992df925834958c355",
+    "tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/code/ptb_common.py": "6076ff50263f208e06d1a803719474fe788dbbe54e100f4aa155b4ec740728c5",
+    "tracks/structural-sufficiency/lcrc_predictive_trace_benchmark_v1/code/ptb_model.py": "57cd0405c3b53f73b51333c0b11ccb273b9769c09937f0fb504c4628401c04b5",
+    "tracks/structural-sufficiency/lcrc_taskaware_representation_pilot_v1/code/ta_collision.py": "8bf2a5d30edefd43eecb9150abc56e5c6c5b4c75735b5b756a08b238b67e490a"
+  },
+  "round_id": "lcrc-nonlocal-binding-bottleneck-v1"
+}

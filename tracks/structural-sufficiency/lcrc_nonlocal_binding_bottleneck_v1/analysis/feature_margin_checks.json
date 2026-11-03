@@ -1,0 +1,612 @@
+{
+  "correctness_gates": {
+    "all_passed": true,
+    "checks": {
+      "ecfp4_binary": {
+        "n_zero_molecules": 0,
+        "passed": true,
+        "shape": [
+          32901,
+          2048
+        ],
+        "unique_values": [
+          0,
+          1
+        ]
+      },
+      "folds_feasible_and_partitioned": {
+        "partition_ok": true,
+        "passed": true,
+        "status": "OK"
+      },
+      "g42_shape_and_finiteness": {
+        "finite": true,
+        "n_columns_with_variation": 41,
+        "passed": true,
+        "shape": [
+          32901,
+          42
+        ]
+      },
+      "heavy_atom_graph_reproduces_frozen_sample_set": {
+        "n_mismatch": 0,
+        "n_rows_checked": 32901,
+        "note": "heavy atoms + explicit hydrogen nodes == the frozen lipo_v1 atom count for every Train molecule",
+        "passed": true
+      },
+      "labels_binary": {
+        "classes": [
+          0,
+          1
+        ],
+        "n_negative": 31669,
+        "n_positive": 1232,
+        "passed": true
+      },
+      "labels_restricted_to_official_train": {
+        "n_labels": 32901,
+        "n_rows": 32901,
+        "passed": true,
+        "valid_test_index_files_opened": false,
+        "valid_test_labels_read": false
+      },
+      "no_cross_fold_scaffold_leakage": {
+        "checked": "outer train/valid and both inner train/valid splits of every outer fold",
+        "passed": true
+      },
+      "null_margin_conservation": {
+        "col_margin_conserved": true,
+        "col_margin_exact": false,
+        "col_margin_max_abs_residual": 3.637978807091713e-12,
+        "conservation_tolerance": 1e-08,
+        "conservation_units": "atom pairs (feature x max(1,total))",
+        "n_molecules": 32901,
+        "n_molecules_with_pairs": 32592,
+        "n_molecules_without_pairs": 309,
+        "passed": true,
+        "raw_col_margin_matches_counts": true,
+        "raw_row_margin_matches_counts": true,
+        "raw_total_matches_counts": true,
+        "row_margin_conserved": true,
+        "row_margin_exact": false,
+        "row_margin_max_abs_residual": 9.094947017729282e-13,
+        "total_conserved": true,
+        "total_exact": false,
+        "total_max_abs_residual": 3.637978807091713e-12,
+        "zero_pair_rows_all_zero": true
+      },
+      "official_train_rows_match_frozen_benchmark": {
+        "frozen": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+        "passed": true,
+        "sha256": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+        "value": true
+      },
+      "pair_features_finite_nonnegative": {
+        "finite": true,
+        "min": 0.0,
+        "passed": true
+      },
+      "pair_features_shape": {
+        "null": [
+          32901,
+          126
+        ],
+        "passed": true,
+        "real": [
+          32901,
+          126
+        ]
+      },
+      "scaffold_groups_defined": {
+        "empty_groups": 0,
+        "kind_counts": {
+          "canonical_smiles_fallback": 1585,
+          "murcko": 31316
+        },
+        "n_groups": 12444,
+        "passed": true
+      },
+      "structure_cache_matches_frozen_benchmark": {
+        "frozen": "111d91752a6d451c6f94a6700b4df889a9d9762c90e734ef4f16e4b1a4258596",
+        "labels_present": false,
+        "n_molecules": 32901,
+        "passed": true,
+        "value": "111d91752a6d451c6f94a6700b4df889a9d9762c90e734ef4f16e4b1a4258596"
+      },
+      "structure_cache_rows_equal_official_train_rows": {
+        "passed": true
+      },
+      "train_size": {
+        "expected": 32901,
+        "passed": true,
+        "value": 32901
+      }
+    },
+    "feature_source": "official Train SMILES only; every feature is label-free",
+    "labels_used_for_features": false,
+    "n_checks": 15,
+    "n_passed": 15
+  },
+  "coverage": {
+    "class_legend": {
+      "C": "C",
+      "N": "N",
+      "O": "O",
+      "OTHER": "OTHER",
+      "S": "S",
+      "X": "X"
+    },
+    "distance_bin_lower_bounds": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "distance_bins_with_any_real_mass": 6,
+    "feature_nonzero_rate_null": {
+      "max_per_column": 0.9650162609039239,
+      "mean_per_column": 0.24780739524972226,
+      "min_per_column": 0.0027658733777088844,
+      "n_columns_never_nonzero": 0,
+      "overall": 0.24780739524972223
+    },
+    "feature_nonzero_rate_real": {
+      "max_per_column": 0.9621895991003313,
+      "mean_per_column": 0.16177175103955443,
+      "min_per_column": 0.0002127594905929911,
+      "n_columns_never_nonzero": 0,
+      "overall": 0.16177175103955446
+    },
+    "n_molecules": 32901,
+    "n_molecules_with_pairs": 32592,
+    "nonzero_rate_pairs": 0.9906081882009665,
+    "pairs_ge5_max_per_molecule": 23223,
+    "pairs_ge5_mean_per_molecule": 228.02896568493358,
+    "per_distance_bin": [
+      {
+        "distance_bin": "5",
+        "index": 0,
+        "n_molecules_nonzero_null": 32592,
+        "n_molecules_nonzero_real": 32592,
+        "real_total_mass": 9658.513695529246
+      },
+      {
+        "distance_bin": "6",
+        "index": 1,
+        "n_molecules_nonzero_null": 31952,
+        "n_molecules_nonzero_real": 31952,
+        "real_total_mass": 7017.131438996285
+      },
+      {
+        "distance_bin": "7",
+        "index": 2,
+        "n_molecules_nonzero_null": 30719,
+        "n_molecules_nonzero_real": 30719,
+        "real_total_mass": 5070.960794557158
+      },
+      {
+        "distance_bin": "8",
+        "index": 3,
+        "n_molecules_nonzero_null": 29012,
+        "n_molecules_nonzero_real": 29012,
+        "real_total_mass": 3581.4607601776456
+      },
+      {
+        "distance_bin": "9",
+        "index": 4,
+        "n_molecules_nonzero_null": 26356,
+        "n_molecules_nonzero_real": 26356,
+        "real_total_mass": 2425.526905537874
+      },
+      {
+        "distance_bin": ">=10",
+        "index": 5,
+        "n_molecules_nonzero_null": 22766,
+        "n_molecules_nonzero_real": 22766,
+        "real_total_mass": 4838.406405201789
+      }
+    ],
+    "per_type_pair": [
+      {
+        "classes": [
+          "C",
+          "C"
+        ],
+        "index": 0,
+        "n_molecules_nonzero_null": 31750,
+        "n_molecules_nonzero_real": 31750,
+        "null_total_mass": 16070.332189126431,
+        "real_total_mass": 16070.332189126433
+      },
+      {
+        "classes": [
+          "C",
+          "N"
+        ],
+        "index": 1,
+        "n_molecules_nonzero_null": 25419,
+        "n_molecules_nonzero_real": 25419,
+        "null_total_mass": 4188.466964888587,
+        "real_total_mass": 4188.466964888589
+      },
+      {
+        "classes": [
+          "C",
+          "O"
+        ],
+        "index": 2,
+        "n_molecules_nonzero_null": 29119,
+        "n_molecules_nonzero_real": 29119,
+        "null_total_mass": 7241.353234619904,
+        "real_total_mass": 7241.353234619902
+      },
+      {
+        "classes": [
+          "C",
+          "S"
+        ],
+        "index": 3,
+        "n_molecules_nonzero_null": 9044,
+        "n_molecules_nonzero_real": 9044,
+        "null_total_mass": 786.7968760905669,
+        "real_total_mass": 786.7968760905669
+      },
+      {
+        "classes": [
+          "C",
+          "X"
+        ],
+        "index": 4,
+        "n_molecules_nonzero_null": 7640,
+        "n_molecules_nonzero_real": 7640,
+        "null_total_mass": 1104.5512651597633,
+        "real_total_mass": 1104.5512651597633
+      },
+      {
+        "classes": [
+          "C",
+          "OTHER"
+        ],
+        "index": 5,
+        "n_molecules_nonzero_null": 1708,
+        "n_molecules_nonzero_real": 1708,
+        "null_total_mass": 85.37437781364946,
+        "real_total_mass": 85.37437781364946
+      },
+      {
+        "classes": [
+          "N",
+          "N"
+        ],
+        "index": 6,
+        "n_molecules_nonzero_null": 11560,
+        "n_molecules_nonzero_real": 11560,
+        "null_total_mass": 314.002064436686,
+        "real_total_mass": 314.002064436686
+      },
+      {
+        "classes": [
+          "N",
+          "O"
+        ],
+        "index": 7,
+        "n_molecules_nonzero_null": 19252,
+        "n_molecules_nonzero_real": 19252,
+        "null_total_mass": 889.1896283199746,
+        "real_total_mass": 889.1896283199748
+      },
+      {
+        "classes": [
+          "N",
+          "S"
+        ],
+        "index": 8,
+        "n_molecules_nonzero_null": 4649,
+        "n_molecules_nonzero_real": 4649,
+        "null_total_mass": 101.73815096426512,
+        "real_total_mass": 101.73815096426512
+      },
+      {
+        "classes": [
+          "N",
+          "X"
+        ],
+        "index": 9,
+        "n_molecules_nonzero_null": 5684,
+        "n_molecules_nonzero_real": 5684,
+        "null_total_mass": 214.40337272142378,
+        "real_total_mass": 214.40337272142375
+      },
+      {
+        "classes": [
+          "N",
+          "OTHER"
+        ],
+        "index": 10,
+        "n_molecules_nonzero_null": 722,
+        "n_molecules_nonzero_real": 722,
+        "null_total_mass": 10.899496331659934,
+        "real_total_mass": 10.899496331659932
+      },
+      {
+        "classes": [
+          "O",
+          "O"
+        ],
+        "index": 11,
+        "n_molecules_nonzero_null": 19700,
+        "n_molecules_nonzero_real": 19700,
+        "null_total_mass": 966.703500270553,
+        "real_total_mass": 966.703500270553
+      },
+      {
+        "classes": [
+          "O",
+          "S"
+        ],
+        "index": 12,
+        "n_molecules_nonzero_null": 5962,
+        "n_molecules_nonzero_real": 5962,
+        "null_total_mass": 163.04451663204966,
+        "real_total_mass": 163.04451663204966
+      },
+      {
+        "classes": [
+          "O",
+          "X"
+        ],
+        "index": 13,
+        "n_molecules_nonzero_null": 6457,
+        "n_molecules_nonzero_real": 6457,
+        "null_total_mass": 300.58649428610545,
+        "real_total_mass": 300.58649428610545
+      },
+      {
+        "classes": [
+          "O",
+          "OTHER"
+        ],
+        "index": 14,
+        "n_molecules_nonzero_null": 1013,
+        "n_molecules_nonzero_real": 1013,
+        "null_total_mass": 20.837243277087993,
+        "real_total_mass": 20.837243277087993
+      },
+      {
+        "classes": [
+          "S",
+          "S"
+        ],
+        "index": 15,
+        "n_molecules_nonzero_null": 1541,
+        "n_molecules_nonzero_real": 1541,
+        "null_total_mass": 26.235690517117465,
+        "real_total_mass": 26.23569051711746
+      },
+      {
+        "classes": [
+          "S",
+          "X"
+        ],
+        "index": 16,
+        "n_molecules_nonzero_null": 1928,
+        "n_molecules_nonzero_real": 1928,
+        "null_total_mass": 40.00709016862172,
+        "real_total_mass": 40.00709016862172
+      },
+      {
+        "classes": [
+          "S",
+          "OTHER"
+        ],
+        "index": 17,
+        "n_molecules_nonzero_null": 98,
+        "n_molecules_nonzero_real": 98,
+        "null_total_mass": 0.6892256847566105,
+        "real_total_mass": 0.6892256847566105
+      },
+      {
+        "classes": [
+          "X",
+          "X"
+        ],
+        "index": 18,
+        "n_molecules_nonzero_null": 1833,
+        "n_molecules_nonzero_real": 1833,
+        "null_total_mass": 61.58277888131871,
+        "real_total_mass": 61.5827788813187
+      },
+      {
+        "classes": [
+          "X",
+          "OTHER"
+        ],
+        "index": 19,
+        "n_molecules_nonzero_null": 243,
+        "n_molecules_nonzero_real": 243,
+        "null_total_mass": 4.432791877034203,
+        "real_total_mass": 4.432791877034203
+      },
+      {
+        "classes": [
+          "OTHER",
+          "OTHER"
+        ],
+        "index": 20,
+        "n_molecules_nonzero_null": 190,
+        "n_molecules_nonzero_real": 190,
+        "null_total_mass": 0.7730479324422871,
+        "real_total_mass": 0.7730479324422871
+      }
+    ],
+    "total_pairs_ge5": 7502381,
+    "type_pairs_with_any_real_mass": 21
+  },
+  "created_utc": "2026-11-03T02:40:17Z",
+  "feature_definition": {
+    "distance_bins": [
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      ">=10"
+    ],
+    "element_classes": [
+      "C",
+      "N",
+      "O",
+      "S",
+      "X",
+      "OTHER"
+    ],
+    "halogens_in_X": [
+      "Br",
+      "Cl",
+      "F",
+      "I"
+    ],
+    "minimum_pair_distance": 5,
+    "n_features": 126,
+    "n_type_pairs": 21,
+    "normalisation": "P = R / max(1, total_number_of_pairs_with_distance_>=5); all-zero when no such pair",
+    "null": "NULL[p,k] = row_margin[p] * col_margin[k] / N, computed on raw counts, then divided by the same max(1,total)",
+    "type_pairs": [
+      [
+        "C",
+        "C"
+      ],
+      [
+        "C",
+        "N"
+      ],
+      [
+        "C",
+        "O"
+      ],
+      [
+        "C",
+        "S"
+      ],
+      [
+        "C",
+        "X"
+      ],
+      [
+        "C",
+        "OTHER"
+      ],
+      [
+        "N",
+        "N"
+      ],
+      [
+        "N",
+        "O"
+      ],
+      [
+        "N",
+        "S"
+      ],
+      [
+        "N",
+        "X"
+      ],
+      [
+        "N",
+        "OTHER"
+      ],
+      [
+        "O",
+        "O"
+      ],
+      [
+        "O",
+        "S"
+      ],
+      [
+        "O",
+        "X"
+      ],
+      [
+        "O",
+        "OTHER"
+      ],
+      [
+        "S",
+        "S"
+      ],
+      [
+        "S",
+        "X"
+      ],
+      [
+        "S",
+        "OTHER"
+      ],
+      [
+        "X",
+        "X"
+      ],
+      [
+        "X",
+        "OTHER"
+      ],
+      [
+        "OTHER",
+        "OTHER"
+      ]
+    ],
+    "unreachable_pairs": "not counted (component-restricted)"
+  },
+  "labels_used": false,
+  "margin_checks": {
+    "col_margin_conserved": true,
+    "col_margin_exact": false,
+    "col_margin_max_abs_residual": 3.637978807091713e-12,
+    "conservation_tolerance": 1e-08,
+    "conservation_units": "atom pairs (feature x max(1,total))",
+    "n_molecules": 32901,
+    "n_molecules_with_pairs": 32592,
+    "n_molecules_without_pairs": 309,
+    "raw_col_margin_matches_counts": true,
+    "raw_row_margin_matches_counts": true,
+    "raw_total_matches_counts": true,
+    "row_margin_conserved": true,
+    "row_margin_exact": false,
+    "row_margin_max_abs_residual": 9.094947017729282e-13,
+    "total_conserved": true,
+    "total_exact": false,
+    "total_max_abs_residual": 3.637978807091713e-12,
+    "zero_pair_rows_all_zero": true
+  },
+  "parse_modes": {
+    "counts": {
+      "partial_sanitize": 3,
+      "strict": 32898
+    },
+    "non_strict_rows": {
+      "reason": "invalid-valence metal complexes (Al valence 7, Ge valence 5); see PROTOCOL.md \u00a75.1",
+      "smiles": [
+        "CC(c1cccs1)=[N+]1[N-]C(N)=[S+][AlH3-]12[OH+]B(c1ccccc1)[OH+]2",
+        "CC(c1ccccn1)=[N+]1[N-]C(N)=[S+][AlH3-]12[OH+]B(c1ccccc1)[OH+]2",
+        "[Na+].c1ccc([SH+][GeH2+]2[SH+]c3ccccc3[SH+]2)c([SH+][GeH2+]2[SH+]c3ccccc3[SH+]2)c1"
+      ],
+      "train_positions": [
+        22558,
+        22559,
+        27502
+      ],
+      "train_row_ids": [
+        30784,
+        30785,
+        35728
+      ]
+    },
+    "rows_dropped": 0
+  },
+  "phase": "B",
+  "round_id": "lcrc-nonlocal-binding-bottleneck-v1"
+}
