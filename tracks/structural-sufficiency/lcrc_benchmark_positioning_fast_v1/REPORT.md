@@ -171,7 +171,7 @@ macro-F1 的每 fold 值与均值/样本标准差保存在 `results/tu_folds.csv
 | 训练参数范围 | 192,100–464,739（随输入/输出维度变化，主干宽度固定） |
 
 - GPU 分配：gpu0 完成 34 个任务记录，gpu1 完成 48 个任务记录；每个 GPU 同时最多一个训练进程。
-- `res-gpu0`/`res-gpu1` 均通过 `rr` 启动；`rr status` 两个 worker 均 `completed`，exit code 0。`run.json` 记录 `git_commit = 4c24f5f50db0`、`git_dirty = false`、CUDA 可用。
+- `res-gpu0`/`res-gpu1` 均通过 `rr` 启动；`rr status` 两个 worker 均 `completed`，exit code 0。`run.json` 记录 `git_commit = 4c24f5f50db0`、`git_dirty = false`、CUDA 可用。rr run_id / GPU / exit status 明细见 `analysis/rr_runs.json`：worker-gpu0 `lcrc-bp-worker-gpu0-20261104-051753-df91e88c`、worker-gpu1 `lcrc-bp-worker-gpu1-20261104-051804-cd449c9d`、seed0 重跑 `lcrc-bp-peptide-seed0-retry-20261104-064158-e2cd3078`、汇总 `lcrc-bp-aggregate-20261104-070435-2ec50480`。
 - Peptide seed0 第一次尝试在 epoch 120 开始前达到 1500 s，`bp_train.py` 主动写 `RESOURCE_BLOCKED / PER_TASK_TIME_LIMIT`，没有 checkpoint、没有 Test。归档于 `analysis/blocked_runs/peptide_peptides-func_seed0_attempt1_PER_TASK_TIME_LIMIT/`；同一 seed/配方重跑 1150.4 s 完成并记录 Test。`results/peptide_seed0_attempts.csv` 保留两次记录。
 - 完整逐任务明细（best/actual epoch、秒数、VRAM、参数、checkpoint hash）见附录 A 与 `results/resource_ledger.csv`。
 
@@ -310,7 +310,7 @@ rr run res lcrc-bp-aggregate --pool res-local --time 00:15:00 \
 ## 附录 B：文件索引
 
 - `PROTOCOL.md`、`configs/protocol.json`：冻结协议与机器可读配置。
-- `analysis/formal_plan.json`：102-task 顺序；`analysis/skipped_tasks.jsonl`：被阻塞跳过的任务。
+- `analysis/formal_plan.json`：102-task 顺序；`analysis/rr_runs.json`：worker/重跑/汇总的 rr run_id 与退出状态；`analysis/skipped_tasks.jsonl`：被阻塞跳过的任务。
 - `analysis/*_data_manifest.json`：TU 原始文件与 SHA-256；`analysis/*_split.json`：OGB 官方 split 行号与 hash；`analysis/*_folds.json`：TU folds。
 - `analysis/*_cache_stats.json`、`*_precheck_counts.json`、`*_graph_distribution.npz`：缓存/S2/预检查统计。
 - `analysis/correctness_gates.json`、`tests/test_bp_core.py`：门禁结果。
