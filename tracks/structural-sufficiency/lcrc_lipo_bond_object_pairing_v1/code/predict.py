@@ -60,7 +60,7 @@ def _load_soup_and_model(arm: str, seed: int, device):
 
 def _predict(
     model,
-    cache,
+    cache_info,
     device,
     target_norm,
     *,
@@ -72,6 +72,7 @@ def _predict(
     out_json: Path,
     purpose: str,
 ) -> dict[str, Any]:
+    cache = cache_info["cache"]
     out = D.predict_cache(model, cache, device, return_aux=True)
     # ``predict_cache`` calls model(batch) with the model's current mode; for the
     # counterfactual we force the operator by temporarily switching ``mode``.
@@ -80,7 +81,7 @@ def _predict(
         model.mode = mode
         out = D.predict_cache(model, cache, device, return_aux=True)
         model.mode = saved
-    rows = [int(r) for r in cache["rows"]]
+    rows = [int(r) for r in cache_info["rows"]]
     pred_raw = D.denormalise(out["pred"], target_norm)
     base_raw = D.denormalise(out["pred_base"], target_norm)
     delta_raw = out["delta"] * float(target_norm["scale"])
@@ -110,7 +111,7 @@ def _predict(
         "file": C.track_rel(out_npz),
         "sha256": sha,
         "rows": rows,
-        "rows_sha256": D.monitor_rows_sha256({"monitor": cache}),
+        "rows_sha256": D.monitor_rows_sha256({"monitor": cache_info}),
         "n_predictions": int(pred_raw.shape[0]),
         "prediction_mean": float(pred_raw.mean()),
         "prediction_std": float(pred_raw.std()),
@@ -148,14 +149,14 @@ def predict_nn(arm: str, seed: int, device="cpu") -> dict[str, Any]:
     target_norm = D.load_target_norm(verify=False)
     npz_path, json_path = prediction_paths(f"{arm}_s{seed}")
     meta = _predict(
-        model, caches["monitor"]["cache"], device, target_norm,
+        model, caches["monitor"], device, target_norm,
         arm=arm, mode=arm, key=f"{arm}_s{seed}", train_meta=train,
         out_npz=npz_path, out_json=json_path, purpose="primary",
     )
     if arm == "R":
         cf_npz, cf_json = counterfactual_paths(f"R_s{seed}_nullswap")
         _predict(
-            model, caches["monitor"]["cache"], device, target_norm,
+            model, caches["monitor"], device, target_norm,
             arm=arm, mode="N", key=f"R_s{seed}_nullswap", train_meta=train,
             out_npz=cf_npz, out_json=cf_json, purpose="mechanism_counterfactual_frozen_weights",
         )
