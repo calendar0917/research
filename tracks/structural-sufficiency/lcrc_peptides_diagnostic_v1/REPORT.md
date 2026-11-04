@@ -76,7 +76,7 @@ SHA-256 与历史 `run.json` 记录逐项核对通过（`analysis/learning_curve
 | 2 | 464,739 | 1127.4 | 113 / 120 | 3e-4 | 1e-3 | 0.1 | 64 | `fa00c1430f3c` | `7c7dcf89e0eb` |
 
 历史 Test mean AP 与历史文件核对一致（仅核对，不参与任何选择）：
-`tracks/.../lcrc_benchmark_positioning_fast_v1/results/peptide_seeds.csv` → 51.70 % / 50.68 % / 51.80 %。
+`tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/results/peptide_seeds.csv` → 51.70 % / 50.68 % / 51.80 %。
 
 ---
 
