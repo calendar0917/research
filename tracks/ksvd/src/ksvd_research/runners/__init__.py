@@ -8,9 +8,43 @@ so concrete runners can import them without importing the registry itself
 
 from __future__ import annotations
 
+import importlib
+import os
+import sys
+from pathlib import Path
 from typing import Any
 
 from ksvd_research.runner_api import Runner, RunnerError
+from ksvd_research.runtime.paths import REPO_ROOT
+
+
+def _extra_runners() -> list[Runner]:
+    """Runners contributed by another track (opt-in, default empty).
+
+    ``RESEARCH_EXTRA_RUNNER_PATHS`` is an ``os.pathsep``-separated list of
+    directories (absolute or repository-relative) prepended to ``sys.path``;
+    ``RESEARCH_EXTRA_RUNNERS`` is a comma-separated list of module names that
+    expose ``build_runner() -> Runner``.  Both unset (the default) reproduces
+    the historical KSVD-only registry exactly.
+    """
+    for raw in os.environ.get("RESEARCH_EXTRA_RUNNER_PATHS", "").split(os.pathsep):
+        entry = raw.strip()
+        if not entry:
+            continue
+        path = Path(entry).expanduser()
+        if not path.is_absolute():
+            path = REPO_ROOT / path
+        resolved = str(path.resolve())
+        if resolved not in sys.path:
+            sys.path.insert(0, resolved)
+    runners: list[Runner] = []
+    for module_name in os.environ.get("RESEARCH_EXTRA_RUNNERS", "").split(","):
+        name = module_name.strip()
+        if not name:
+            continue
+        module = importlib.import_module(name)
+        runners.append(module.build_runner())
+    return runners
 
 
 def _registry() -> dict[str, Runner]:
@@ -82,7 +116,7 @@ def _registry() -> dict[str, Runner]:
             zinc_upstream_portfolio_v1.build_runner(),
             zinc_node_binding_residual_pair_v1.build_runner(),
             zinc_overnight_bottleneck_v1.build_runner(),
-        )
+        ) + tuple(_extra_runners())
     }
 
 

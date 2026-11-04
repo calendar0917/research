@@ -11,12 +11,35 @@ are git-ignored; promoted records live under ``records/`` and are tracked.
 from __future__ import annotations
 
 from datetime import datetime
+import os
 from pathlib import Path
 
 _PACKAGE_DIR = Path(__file__).resolve()
 # <repo>/tracks/ksvd/src/ksvd_research/runtime/paths.py
 REPO_ROOT = _PACKAGE_DIR.parents[5]
-TRACK_ROOT = _PACKAGE_DIR.parents[3]  # <repo>/tracks/ksvd
+_DEFAULT_TRACK_ROOT = _PACKAGE_DIR.parents[3]  # <repo>/tracks/ksvd
+
+
+def _resolve_track_root() -> Path:
+    """Track root for the control plane.
+
+    Defaults to this package's own track (``tracks/ksvd``).  A *different*
+    track may opt in with ``RESEARCH_TRACK_ROOT`` (absolute, or relative to the
+    repository root) so that its runs/records land inside its own directory
+    instead of being attributed to KSVD.  The override is intentionally
+    opt-in: with the variable unset the behaviour is byte-identical to the
+    historical single-track control plane.
+    """
+    override = os.environ.get("RESEARCH_TRACK_ROOT", "").strip()
+    if not override:
+        return _DEFAULT_TRACK_ROOT
+    candidate = Path(override).expanduser()
+    if not candidate.is_absolute():
+        candidate = REPO_ROOT / candidate
+    return candidate.resolve()
+
+
+TRACK_ROOT = _resolve_track_root()
 
 
 def repo_root() -> Path:
