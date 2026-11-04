@@ -1,0 +1,25 @@
+# Independent rr host/pool for this round only.
+# The shared host checkout /home/hxy/cy/research and its .venv belong to the
+# parallel Peptides agent and are never deployed to or mutated by this round.
+[hosts.res-bond]
+ssh_alias = "res"
+backend = "process"
+code = "/home/hxy/cy/research-bond-object-pairing-v1"
+runs = "/home/hxy/cy/rr-runs-bond-object-pairing"
+default_pool = "res-bond-gpu1"
+deploy_method = "bundle"
+tool_dir = "$HOME/.rr-bond-object-pairing"
+deployments_dir = "$HOME/.rr-bond-object-pairing/deployments"
+
+[hosts.res-bond.env]
+uv_bin = "$HOME/.local/bin/uv"
+offline = false
+
+[pools.res-bond-gpu1]
+host = "res-bond"
+backend = "process"
+gpus = 1
+torch_backend = "cu124"
+env = { CUDA_VISIBLE_DEVICES = "1" }
+# New, independent venv under the separate checkout.
+venv = "/home/hxy/cy/research-bond-object-pairing-v1/.venv"
