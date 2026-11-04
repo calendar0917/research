@@ -1,0 +1,68 @@
+{
+  "protocol_id": "lcrc-lipo-bond-object-pairing-v1",
+  "round_id": "lcrc-lipo-bond-object-pairing-v1",
+  "status": "FROZEN_PRE_RUN",
+  "date_utc": "2026-11-04",
+  "data": {
+    "dataset": "Lipophilicity",
+    "fit_rows": 2352,
+    "monitor_rows": 504,
+    "reserved_rows": 504,
+    "reserved_usage": "never read; not scored; structures not used",
+    "official_valid_test_usage": "never read; not scored; structures not used",
+    "patient_split_reselection": false
+  },
+  "training": {
+    "seeds": [0, 1, 2],
+    "arms": ["R", "N"],
+    "optimizer": "AdamW",
+    "peak_lr": 0.001,
+    "min_lr": 1e-05,
+    "scheduler": "per_step_cosine",
+    "weight_decay": 1e-05,
+    "batch_size": 128,
+    "epochs": 360,
+    "steps_per_epoch": 19,
+    "total_updates": 6840,
+    "grad_clip": 5.0,
+    "dropout": 0.0,
+    "loss": "mse_on_fit_standardised_target",
+    "target_normalisation": "fit_only",
+    "checkpoint": "mean_of_last_5_epoch_end_state_dicts",
+    "soup_last": 5,
+    "shuffle_offset": 917000,
+    "ssl": false,
+    "early_stopping": false,
+    "monitor_during_training": false
+  },
+  "model": {
+    "trunk": "lcrc_a_lipo_v1",
+    "width": 64,
+    "atom_out": 96,
+    "bond_out": 96,
+    "atom_context_dim": 32,
+    "edge_hidden_1": 64,
+    "edge_hidden_2": 32,
+    "new_parameters": 12449,
+    "total_parameters": 259555,
+    "final_score_zero_init": true
+  },
+  "evaluation": {
+    "monitor_split": "monitor",
+    "primary_metric": "raw_rmse",
+    "secondary_metrics": ["raw_mae", "paired_mse", "paired_mae"],
+    "bootstrap_resamples": 2000,
+    "bootstrap_seed": 0,
+    "materiality_rmse": 0.03,
+    "monitor_used_for_selection": false,
+    "reserved_labels_read": false,
+    "official_valid_test_read": false,
+    "report_best_seed_only": false,
+    "seed_and_molecule_uncertainty_separate": true
+  },
+  "budget": {
+    "gpu_hour_cap": 1.5,
+    "per_run_wall_cap_seconds": 1200,
+    "same_backend_for_all_formal_runs": true
+  }
+}
