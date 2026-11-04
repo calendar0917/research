@@ -237,7 +237,7 @@ A2−A0 的区间跨 0；A2−A3 的区间整体为正。
 2. **远端部署被未跟踪文件阻塞**：远端 checkout 有未跟踪的 `lcrc_peptides_weighted_bce_v1/runs/weighted_bce_seed0/*`，与本地已提交文件同名。逐文件 SHA-256 与本地已提交版本完全相同；为不覆盖用户文件，移动到 `/home/hxy/cy/rr_untracked_backup/lcrc_peptides_weighted_bce_v1_runs_20261104/`，未删除。之后 `rr deploy` 成功。
 3. **首次 GPU smoke 缺少特征矩阵**：`analysis/features_*.npz` 原被 `.gitignore` 忽略，远端没有；GPU 任务在 `load_counts` 处 `FileNotFoundError`。修复方式是把两个冻结特征矩阵（Train 9.6 MB、Valid 2.1 MB）加入版本控制并重新 deploy；没有改变特征内容。后续正式 run 使用 `29f77cf0` 引入的同一矩阵，正式代码在 `d35c39f3`。
 4. **CUDA 初始化门禁的浮点舍入**：第二次 GPU smoke 的 init gate 曾因两次独立 C1 前向的 float32 差（约 9.15e−5）判失败。检查确认分支权重全零、分支增量恰为 0；这是重复 base 前向的 CUDA 舍入差，不是分支非零。门禁改为要求分支增量精确为 0，并单独记录 `max_abs_output_delta_vs_base` 与 `max_abs_base_forward_repeat_diff`；CPU gate 仍要求加分支前后 logits 差为 0。该修改只修门禁，不改变科学设计。
-5. **失败 smoke 的日志为空**：早期两次 GPU smoke 的 `rr logs` 为空；第二次通过远端 `/tmp` 的 `run.json` 定位到 init gate。失败 smoke 未产生正式结果，未计入科学表格。
+5. **失败 smoke 的日志为空**：早期两次 GPU smoke 的 `rr logs` 为空；第二次通过远端 `/tmp` 的 `run.json` 定位到 init gate。为定位该空日志，曾在远端直接执行一次 1-epoch A2 到 `/tmp` 的诊断（非正式 run，未用于任何科学表格）；所有正式 P1a/P1b 训练均通过 `rr` 提交。失败 smoke 未产生正式结果，未计入科学表格。
 6. **P0 LightGBM/MLP 重跑**：NULL 的 canonical path order 修正后重建了 `features_*.npz`；TYPE/FULL 不受影响，但为保持 JSON 与当前矩阵一致，重跑了 P0 LightGBM 与 MLP。最终 P0 数值以 `analysis/p0_lgbm.json`、`analysis/p0_mlp.json` 为准。
 7. **`rr pull` 的落盘位置**：`rr pull` 写入 `.rr/pulled/<run-id>/result/...`，本轮将其复制到 `runs/<name>/` 供 aggregate；未修改 `rr` 或远端产物。
 
