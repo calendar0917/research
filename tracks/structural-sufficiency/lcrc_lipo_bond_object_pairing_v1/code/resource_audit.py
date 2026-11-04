@@ -114,6 +114,7 @@ def run_resource_audit() -> dict[str, Any]:
                 except ValueError:
                     pass
     peptide_on_gpu0 = bool(gpu0_apps) and any(any(p["pid"] == a["pid"] for p in peptide_pids) for a in gpu0_apps)
+    peptide_on_selected = bool(selected_apps) and any(any(p["pid"] == a["pid"] for p in peptide_pids) for a in selected_apps)
     selected_memory_mib = None
     if selected:
         m = re.search(r"(\d+)\s*MiB", selected["memory_used"])
@@ -132,6 +133,10 @@ def run_resource_audit() -> dict[str, Any]:
         {"experiment": j.get("experiment"), "run_id": j.get("run_id"), "pool": j.get("pool"), "state": j.get("state"), "cuda_visible_devices": j.get("cuda_visible_devices")}
         for j in jobs if j.get("state") == "running" and "peptides" in str(j.get("experiment", ""))
     ]
+    completed_peptides = [
+        {"experiment": j.get("experiment"), "run_id": j.get("run_id"), "pool": j.get("pool"), "state": j.get("state"), "cuda_visible_devices": j.get("cuda_visible_devices"), "completed_at": j.get("completed_at")}
+        for j in jobs if j.get("state") == "completed" and "peptides" in str(j.get("experiment", ""))
+    ][:10]
     running_ours = [
         {"experiment": j.get("experiment"), "run_id": j.get("run_id"), "state": j.get("state")}
         for j in jobs if j.get("state") == "running" and str(j.get("experiment", "")).startswith("lcrc-lipo-bond")
@@ -154,17 +159,19 @@ def run_resource_audit() -> dict[str, Any]:
         "remote_code_not_nested_in_shared": not OUR_REMOTE_CODE.startswith(SHARED_REMOTE_CODE + "/"),
         "gpu_inventory_available": bool(gpus) and len(gpus) >= 2,
         "peptide_process_visible": bool(peptide_pids),
+        "peptide_running_now": bool(peptide_pids or running_peptides),
         "peptide_on_gpu0": peptide_on_gpu0,
-        "selected_gpu_is_not_peptide_gpu": not (peptide_on_gpu0 and selected and gpu0 and selected["uuid"] == gpu0["uuid"]),
+        "peptide_on_selected_gpu": peptide_on_selected or any(str(j.get("cuda_visible_devices")) == str(SELECTED_PHYSICAL_GPU) for j in running_peptides),
+        "no_peptide_on_selected_gpu": not (peptide_on_selected or any(str(j.get("cuda_visible_devices")) == str(SELECTED_PHYSICAL_GPU) for j in running_peptides)),
         "selected_gpu_no_compute_apps": not selected_apps,
         "selected_gpu_low_memory": selected_memory_mib is not None and selected_memory_mib < 512,
         "selected_gpu_idle": selected_util is not None and selected_util <= 5,
         "selected_gpu_free": selected_free,
         "our_round_not_already_running": not running_ours,
-        "peptide_run_not_using_selected_gpu": not any(str(j.get("cuda_visible_devices")) == str(SELECTED_PHYSICAL_GPU) for j in running_peptides),
         "remote_gpu_check_ok": gpu["returncode"] == 0 and apps["returncode"] == 0 and ps["returncode"] == 0,
     }
-    blocking = [k for k, v in checks.items() if v is not True]
+    informational = {"peptide_process_visible", "peptide_running_now", "peptide_on_gpu0", "peptide_on_selected_gpu"}
+    blocking = [k for k, v in checks.items() if v is not True and k not in informational]
     return {
         "protocol_id": C.PROTOCOL_ID,
         "created_utc": C.utcnow(),
@@ -191,6 +198,8 @@ def run_resource_audit() -> dict[str, Any]:
             "peptide_processes": peptide_pids,
             "peptide_on_gpu0": peptide_on_gpu0,
             "running_peptide_jobs": running_peptides,
+            "completed_peptide_jobs": completed_peptides,
+            "peptide_status": "RUNNING" if (peptide_pids or running_peptides) else "NOT_RUNNING",
             "running_our_jobs": running_ours,
             "disk": disk.get("stdout"),
             "rr_jobs_returncode": rr_jobs.get("returncode"),
