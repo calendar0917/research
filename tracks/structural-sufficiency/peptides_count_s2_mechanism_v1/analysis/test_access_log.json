@@ -1,0 +1,64 @@
+{
+  "ecfp_mixed_csv_relaxation": {
+    "allowed_paths": [
+      "data/lrgb_skfp/LRGB_Peptides-func/peptides_func.csv",
+      "data/lrgb_skfp/LRGB_Peptides-func/lrgb_splits_peptides_func.json"
+    ],
+    "label_columns_parsed": false,
+    "parsed_fields": [
+      "SMILES (first CSV column)",
+      "train/valid split index lists only"
+    ],
+    "reason": "historical ECFP is SMILES-based; the 9-column PyG graph omits isotope/explicit-H information",
+    "test_labels_read": false,
+    "test_row_labels_decoded": false,
+    "test_rows_parsed": 0,
+    "test_rows_retained": 0,
+    "test_rows_streamed_and_discarded": 2331,
+    "use_in_p1": false
+  },
+  "formal_runs": {
+    "a0_s0": {
+      "guard_attempts": [],
+      "test_evaluated": false
+    },
+    "a1_s0": {
+      "guard_attempts": [],
+      "test_evaluated": false
+    },
+    "a2_s0": {
+      "guard_attempts": [],
+      "test_evaluated": false
+    },
+    "a3_s0": {
+      "guard_attempts": [],
+      "test_evaluated": false
+    },
+    "p1a_480_s0": {
+      "guard_attempts": [],
+      "test_evaluated": false
+    }
+  },
+  "policy": "Test split never read, built, or evaluated; fail-closed sys.addaudithook guard in every formal entry point.",
+  "round_id": "peptides-count-s2-mechanism-v1",
+  "strict_guard": {
+    "development_attempts": [
+      {
+        "path": "data/lrgb_skfp/LRGB_Peptides-func/lrgb_splits_peptides_func.json",
+        "phase": "P0 ECFP input inspection",
+        "result": "TEST_ACCESS_BLOCKED (expected; no bytes returned to the analysis code)"
+      }
+    ],
+    "forbidden_substrings": [
+      "peptides_func_test",
+      "peptides_func_y_test",
+      "test_predictions.npz",
+      "peptides-func/processed/test.pt",
+      "peptides-func/raw/test.pt",
+      "LRGB_Peptides-func",
+      "lrgb_splits_peptides_func.json"
+    ]
+  },
+  "test_artifacts_opened": 0,
+  "test_evaluated": false
+}
