@@ -1,0 +1,163 @@
+{
+  "all_passed": true,
+  "checks": {
+    "entrypoint_source_no_test_access": true,
+    "extreme_imbalance_manual_formula": true,
+    "finite_gradient_optimizer_update": true,
+    "label_order_dimension": true,
+    "missing_label_mask_no_broadcast": true,
+    "ones_equals_ordinary_bce_value_and_grad": true,
+    "pos_weight_train_only_and_exact": true,
+    "test_access_guard_blocks": true
+  },
+  "details": {
+    "entrypoint_source_no_test_access": {
+      "files_checked": [
+        "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/code/wb_p2_train.py",
+        "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/code/wb_compute_pos_weight.py"
+      ],
+      "forbidden_tokens": [
+        "peptides_func_test",
+        "peptides_func_y_test",
+        "test_predictions",
+        "y_test",
+        "_peptide_test_loader"
+      ],
+      "hits": {}
+    },
+    "extreme_imbalance_manual_formula": {
+      "batch_shape": [
+        3,
+        10
+      ],
+      "manual_delta": 0.0,
+      "manual_formula": "-[w*y*logsigmoid(x) + (1-y)*logsigmoid(-x)], mean",
+      "single_element_delta": 0.0
+    },
+    "finite_gradient_optimizer_update": {
+      "grad_norm": 1.0449336767196655,
+      "gradients_finite": true,
+      "loss": 2.8858065605163574,
+      "parameters_updated": true
+    },
+    "label_order_dimension": {
+      "dtype": "float64 in JSON, cast to float32 on the logits device",
+      "label_order": [
+        "antifungal",
+        "cell_cell_communication",
+        "anticancer",
+        "drug_delivery_vehicle",
+        "antimicrobial",
+        "antiviral",
+        "antihypertensive",
+        "antibacterial",
+        "antiparasitic",
+        "toxic"
+      ],
+      "n_labels": 10,
+      "shape": [
+        10
+      ]
+    },
+    "missing_label_mask_no_broadcast": {
+      "all_missing_loss": 0.0,
+      "elementwise_shape_preserved": [
+        5,
+        10
+      ],
+      "masked_gradient_zero_at_missing": true,
+      "masked_manual_delta": 0.0,
+      "n_masked": 3
+    },
+    "ones_equals_ordinary_bce_value_and_grad": {
+      "grad_delta_float64": 0.0,
+      "ordinary_bce_delta_float64": 0.0,
+      "ordinary_grad_delta_float64": 0.0,
+      "value_delta_float32": 0.0,
+      "value_delta_float64": 0.0
+    },
+    "pos_weight_train_only_and_exact": {
+      "counts_match_exact_ratio": true,
+      "label_order": [
+        "antifungal",
+        "cell_cell_communication",
+        "anticancer",
+        "drug_delivery_vehicle",
+        "antimicrobial",
+        "antiviral",
+        "antihypertensive",
+        "antibacterial",
+        "antiparasitic",
+        "toxic"
+      ],
+      "merged_ratio_equal": false,
+      "n_train": 10873,
+      "n_valid_used_for_negative_control": 2331,
+      "payload_canonical_sha256": "8e6580599dbd19d02e81049fbfd91c84dd66b610a396d2dd03e5fa17522467ef",
+      "pos_weight": [
+        10.255693581780537,
+        27.241558441558443,
+        14.577363896848137,
+        15.060561299852289,
+        0.5942815249266862,
+        4.061918063314711,
+        8.357142857142858,
+        4.431068931068931,
+        49.105990783410135,
+        2.848849557522124
+      ],
+      "pos_weight_sha256": "54f95aaff744cbe5e14303f471775ffe6a8aa4e4eaaedef543819b1b04388faa",
+      "test_used": false,
+      "train_labels_array_sha256": "6fd32369a848f2c772b7f3b4062c13905966d13bbb81442edf8abcd695556070",
+      "train_neg": [
+        9907,
+        10488,
+        10175,
+        10196,
+        4053,
+        8725,
+        9711,
+        8871,
+        10656,
+        8048
+      ],
+      "train_pos": [
+        966,
+        385,
+        698,
+        677,
+        6820,
+        2148,
+        1162,
+        2002,
+        217,
+        2825
+      ],
+      "valid_ratio_equal": false,
+      "valid_used": false
+    },
+    "test_access_guard_blocks": {
+      "blocked": true,
+      "error_type": "TestAccessBlocked",
+      "guard_state_after": 0,
+      "recorded_attempts": 1
+    }
+  },
+  "environment": {
+    "cuda_available": false,
+    "git_commit": "6665dd426756eca50425ef24c842fccfaeb4383a",
+    "git_dirty": true,
+    "git_tracked_dirty": false,
+    "hostname": "main",
+    "machine": "x86_64",
+    "numpy": "2.1.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "utc": "2026-11-04T02:14:15Z"
+  },
+  "generated_utc": "2026-11-04T02:14:15Z",
+  "result_label": "EXPLORATORY_VALIDATION_ONLY_DIAGNOSTIC",
+  "round_id": "lcrc-peptides-weighted-bce-v1"
+}

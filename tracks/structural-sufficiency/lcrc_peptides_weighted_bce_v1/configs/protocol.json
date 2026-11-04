@@ -1,0 +1,125 @@
+{
+  "round_id": "lcrc-peptides-weighted-bce-v1",
+  "protocol_id": "lcrc-peptides-weighted-bce-v1",
+  "result_label": "EXPLORATORY_VALIDATION_ONLY_DIAGNOSTIC",
+  "scope": "Peptides-func only; one frozen LCRC-C1 seed0 240-epoch run with Train-only per-label pos_weight weighted BCE",
+  "single_intervention": {
+    "changed": "training loss",
+    "from": "BCEWithLogitsLoss over 10 independent labels, elementwise mean",
+    "to": "BCEWithLogitsLoss over 10 independent labels with per-label pos_weight, elementwise mean",
+    "pos_weight_formula": "pos_weight_j = train_negative_j / train_positive_j",
+    "pos_weight_source": "official Train split only",
+    "pos_weight_constraints": "no clipping, smoothing, square root, normalisation, rescaling or upper bound; values below 1 are retained",
+    "zero_positive_policy": "stop and record an error; do not alter the formula",
+    "pytorch_call": "torch.nn.functional.binary_cross_entropy_with_logits(logits, targets, pos_weight=pos_weight, reduction='mean')",
+    "missing_label_policy": "retain a finite-label mask; compute elementwise loss then average only valid entries; never flatten [batch, labels] before applying pos_weight"
+  },
+  "forbidden_changes": [
+    "LCRC architecture, S1/S2, atom or bond features, readout",
+    "learning rate, weight decay, dropout, batch size, loss scaling",
+    "Focal Loss, Dice Loss or any other objective",
+    "ECFP+MLP, additional seeds, additional datasets",
+    "a second configuration chosen from Validation results",
+    "reading Test data, Test labels or Test predictions",
+    "modifying or overwriting historical experiments"
+  ],
+  "dataset": {
+    "name": "peptides-func",
+    "source": "official PyG LRGBDataset Peptides-func fixed split",
+    "n_samples": {"train": 10873, "valid": 2331, "test": 2331, "total": 15535},
+    "labels": [
+      "antifungal",
+      "cell_cell_communication",
+      "anticancer",
+      "drug_delivery_vehicle",
+      "antimicrobial",
+      "antiviral",
+      "antihypertensive",
+      "antibacterial",
+      "antiparasitic",
+      "toxic"
+    ],
+    "train_labels_path": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/peptides_func_y_train.npy",
+    "valid_labels_path": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/peptides_func_y_valid.npy",
+    "test_policy": "terminal; no Test artifact is opened by any code path in this round"
+  },
+  "historical_reference": {
+    "run_json": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/runs/peptide_c1_seed0_240ep/run.json",
+    "model": "LCRC-C1 / NO_BOND_MEAN",
+    "seed": 0,
+    "loss": "ordinary BCEWithLogitsLoss",
+    "max_epochs": 240,
+    "cosine_horizon_epochs": 240,
+    "best_epoch": 231,
+    "best_valid_macro_ap": 0.606228818027094,
+    "best_valid_macro_ap_pct": 60.62288180270941,
+    "train_macro_ap": 0.6794355830532705,
+    "parameters": 464739,
+    "checkpoint_sha256": "22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b"
+  },
+  "background_reference": {
+    "method": "ECFP4 count + LightGBM",
+    "valid_macro_ap_pct": 72.97597907704434,
+    "role": "fixed background reference from Diagnostic v1; not retrained and not a single-variable control"
+  },
+  "training": {
+    "task": "Peptides-func / LCRC-C1 / seed 0",
+    "init": "from scratch with the frozen Fast v1 seed0 initialisation mapping",
+    "expected_parameters": 464739,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "weight_decay": 0.001,
+    "adam_betas": [0.9, 0.999],
+    "adam_eps": 1e-08,
+    "dropout": 0.1,
+    "batch_size": 64,
+    "batch_size_fallbacks": [32, 16],
+    "batch_fallback_policy": "only on CUDA OOM; record actual batch size and mark the run as no longer a strict single-variable control",
+    "gradient_clip": 5.0,
+    "scheduler": "per_step_cosine",
+    "min_lr": 1e-05,
+    "scheduler_horizon_epochs": 240,
+    "max_epochs": 240,
+    "min_epochs": 80,
+    "patience": 40,
+    "loss": "weighted BCE with Train-only per-label pos_weight",
+    "selection": "maximum Validation mean average precision over 10 labels",
+    "test_evaluated": false
+  },
+  "recorded_each_epoch": [
+    "Train weighted BCE loss",
+    "Validation mean AP",
+    "10 per-label Validation AP values",
+    "learning rate",
+    "gradient norm mean and maximum",
+    "best-checkpoint flag",
+    "train, validation and total seconds"
+  ],
+  "artifacts": {
+    "protocol": "PROTOCOL.md",
+    "config": "configs/protocol.json",
+    "pos_weight": "analysis/pos_weight.json",
+    "gates": "analysis/gates.json",
+    "curve": "runs/weighted_bce_seed0/curve.csv",
+    "run": "runs/weighted_bce_seed0/run.json",
+    "selection": "runs/weighted_bce_seed0/selection.json",
+    "validation_comparison": "results/validation_comparison.csv",
+    "per_label_comparison": "results/per_label_comparison.csv",
+    "report": "REPORT.md"
+  },
+  "resource_budget": {
+    "host": "res",
+    "gpus": 1,
+    "gpu_model": "NVIDIA A100-SXM4-40GB",
+    "gpu_hours_hard": 1.25,
+    "per_run_seconds_hard": 4200,
+    "formal_runs": 1,
+    "seeds": [0],
+    "smoke": "one minimal CUDA engineering smoke is permitted; no additional formal training"
+  },
+  "test_isolation": {
+    "audit_hook": "sys.addaudithook on open(); forbidden historical Test artifact names raise TEST_ACCESS_BLOCKED",
+    "must_record": {"test_evaluated": false, "test_access_attempts": []},
+    "on_attempt": "stop immediately"
+  }
+}
