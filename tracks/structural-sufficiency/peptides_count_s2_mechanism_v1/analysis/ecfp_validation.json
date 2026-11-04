@@ -1,0 +1,223 @@
+{
+  "classifier": {
+    "implementation": "lightgbm.LGBMClassifier",
+    "kwargs": {
+      "importance_type": "gain",
+      "is_unbalance": true,
+      "n_estimators": 500,
+      "n_jobs": 8,
+      "random_state": 0,
+      "verbose": -1
+    },
+    "other_parameters": "LightGBM defaults",
+    "tree_count_search": "none",
+    "tuning": "none"
+  },
+  "delta_vs_historical_pp": -0.004020922955660922,
+  "entry_point": "code/pc_p0_ecfp.py",
+  "environment": {
+    "git_commit": "df6ae5475be749f28633420850662a543f80f902",
+    "git_dirty": true,
+    "git_tracked_dirty": false,
+    "hostname": "main",
+    "machine": "x86_64",
+    "numpy": "2.5.4",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "torch_error": "ModuleNotFoundError: No module named 'torch'",
+    "utc": "2026-11-04T06:08:04Z"
+  },
+  "fingerprint": {
+    "empty_rows_train": 0,
+    "empty_rows_valid": 0,
+    "implementation": "skfp.fingerprints.ECFPFingerprint",
+    "input": "official CSV SMILES for the Train / Validation split rows only",
+    "kwargs": {
+      "count": true,
+      "fp_size": 2048,
+      "radius": 2
+    },
+    "labels_used_as_features": false,
+    "max_count_train": 114.0,
+    "max_count_valid": 93.0,
+    "nnz_train": 1105722,
+    "nnz_valid": 235742,
+    "purity": {
+      "finite": true,
+      "non_negative_integer": true,
+      "recompute_identical": true,
+      "subset_matches_full_rows": true
+    },
+    "raw_graph_rebuild_note": "the 9-column PyG graph omits SMILES isotope/explicit-H information; ECFP must use the historical SMILES input to reproduce 72.98%",
+    "row_loader": "streaming CSV reader; SMILES field only; no label column parsed",
+    "shape_train": [
+      10873,
+      2048
+    ],
+    "shape_valid": [
+      2331,
+      2048
+    ]
+  },
+  "generated_utc": "2026-11-04T06:08:04Z",
+  "historical_accept_pp": 0.01,
+  "historical_macro_ap_pct": 72.98,
+  "interpreter": "/home/calendar/.cache/research-venvs/peptides-ecfp/bin/python",
+  "mixed_csv_access": {
+    "label_columns_parsed": false,
+    "path": "data/lrgb_skfp/LRGB_Peptides-func/peptides_func.csv",
+    "rows_requested": 13204,
+    "sha256_at_start": "9d2e253d2c3f9770edda82ba467117d17b9f119297c8166046de07b0046db98f",
+    "split_json": "data/lrgb_skfp/LRGB_Peptides-func/lrgb_splits_peptides_func.json",
+    "split_json_sha256_at_start": "39ca1b1400761460c381fa407a234881bb617c8df06f7bd39fe11c70fcf85b14",
+    "test_labels_read": false,
+    "test_rows_parsed": 0,
+    "test_rows_retained": 0,
+    "train_rows_requested": 10873,
+    "valid_rows_requested": 2331
+  },
+  "n_labels": 10,
+  "n_train": 10873,
+  "n_valid": 2331,
+  "per_label": [
+    {
+      "fit_seconds": 0.5544536850065924,
+      "label": "antifungal",
+      "label_index": 0,
+      "train_pos": 966,
+      "valid_ap": 0.5029904654757799,
+      "valid_ap_pct": 50.29904654757799,
+      "valid_pos": 207,
+      "valid_pos_rate": 0.0888030888030888
+    },
+    {
+      "fit_seconds": 0.6511571779847145,
+      "label": "cell_cell_communication",
+      "label_index": 1,
+      "train_pos": 385,
+      "valid_ap": 0.7350972463716948,
+      "valid_ap_pct": 73.50972463716948,
+      "valid_pos": 79,
+      "valid_pos_rate": 0.03389103389103389
+    },
+    {
+      "fit_seconds": 0.6339000680018216,
+      "label": "anticancer",
+      "label_index": 2,
+      "train_pos": 698,
+      "valid_ap": 0.6617166950142942,
+      "valid_ap_pct": 66.17166950142942,
+      "valid_pos": 150,
+      "valid_pos_rate": 0.06435006435006435
+    },
+    {
+      "fit_seconds": 0.6720604790025391,
+      "label": "drug_delivery_vehicle",
+      "label_index": 3,
+      "train_pos": 677,
+      "valid_ap": 0.6923121673145383,
+      "valid_ap_pct": 69.23121673145383,
+      "valid_pos": 146,
+      "valid_pos_rate": 0.06263406263406264
+    },
+    {
+      "fit_seconds": 0.5925796430092305,
+      "label": "antimicrobial",
+      "label_index": 4,
+      "train_pos": 6820,
+      "valid_ap": 0.9723174762946275,
+      "valid_ap_pct": 97.23174762946275,
+      "valid_pos": 1464,
+      "valid_pos_rate": 0.6280566280566281
+    },
+    {
+      "fit_seconds": 0.5929112099984195,
+      "label": "antiviral",
+      "label_index": 5,
+      "train_pos": 2148,
+      "valid_ap": 0.8670575203916294,
+      "valid_ap_pct": 86.70575203916295,
+      "valid_pos": 461,
+      "valid_pos_rate": 0.19776919776919777
+    },
+    {
+      "fit_seconds": 0.6739299379987642,
+      "label": "antihypertensive",
+      "label_index": 6,
+      "train_pos": 1162,
+      "valid_ap": 0.9204206537313475,
+      "valid_ap_pct": 92.04206537313475,
+      "valid_pos": 250,
+      "valid_pos_rate": 0.10725010725010725
+    },
+    {
+      "fit_seconds": 0.5876591370033566,
+      "label": "antibacterial",
+      "label_index": 7,
+      "train_pos": 2002,
+      "valid_ap": 0.6859332641098862,
+      "valid_ap_pct": 68.59332641098862,
+      "valid_pos": 433,
+      "valid_pos_rate": 0.18575718575718575
+    },
+    {
+      "fit_seconds": 0.6434774730005302,
+      "label": "antiparasitic",
+      "label_index": 8,
+      "train_pos": 217,
+      "valid_ap": 0.3531701937265648,
+      "valid_ap_pct": 35.317019372656475,
+      "valid_pos": 43,
+      "valid_pos_rate": 0.018447018447018446
+    },
+    {
+      "fit_seconds": 0.5880924579978455,
+      "label": "toxic",
+      "label_index": 9,
+      "train_pos": 2825,
+      "valid_ap": 0.906582225274071,
+      "valid_ap_pct": 90.65822252740709,
+      "valid_pos": 609,
+      "valid_pos_rate": 0.26126126126126126
+    }
+  ],
+  "reproduction_ok": true,
+  "result_label": "EXPLORATORY_VALIDATION_ONLY_MECHANISM",
+  "round_id": "peptides-count-s2-mechanism-v1",
+  "test_access": {
+    "attempts": [],
+    "strict": true
+  },
+  "test_rows_read": 0,
+  "timing_seconds": {
+    "csv_smiles_read": 0.013898147008148953,
+    "fingerprints": 2.1863264339917805,
+    "lightgbm_per_label": [
+      0.5544536850065924,
+      0.6511571779847145,
+      0.6339000680018216,
+      0.6720604790025391,
+      0.5925796430092305,
+      0.5929112099984195,
+      0.6739299379987642,
+      0.5876591370033566,
+      0.6434774730005302,
+      0.5880924579978455
+    ],
+    "lightgbm_total": 6.190221269003814,
+    "mol_parse": 4.06585916900076,
+    "total": 12.605438392987708
+  },
+  "valid_macro_ap": 0.7297597907704434,
+  "valid_macro_ap_pct": 72.97597907704434,
+  "valid_macro_ap_recheck_delta": 0.0,
+  "versions": {
+    "lightgbm": "4.7.0",
+    "numpy": "2.5.4",
+    "pandas": "3.1.0",
+    "rdkit": "2026.3.5",
+    "scikit-fingerprints": "2.1.0",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.18.1"
+  }
+}

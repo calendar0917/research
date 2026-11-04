@@ -1,0 +1,136 @@
+{
+  "round_id": "peptides-count-s2-mechanism-v1",
+  "result_label": "EXPLORATORY_VALIDATION_ONLY_MECHANISM",
+  "frozen_utc": "2026-11-04T06:25:00Z",
+  "dataset": {
+    "name": "Peptides-func",
+    "source": "official LRGB split",
+    "n_train": 10873,
+    "n_valid": 2331,
+    "n_test": 2331,
+    "test_policy": "never read, build, or evaluate",
+    "resplit": false
+  },
+  "s2_counts": {
+    "path_definition": "directed non-backtracking 2-hop (u,v,w), u != w, undirected bonds stored once",
+    "n_buckets": 2048,
+    "hash": "blake2b(digest_size=8, person=b'pcs2v1'), little-endian int mod 2048",
+    "python_builtin_hash": false,
+    "type_key_fields": [
+      "root atom col0",
+      "bond1 col0",
+      "middle atom col0",
+      "bond2 col0",
+      "end atom col0"
+    ],
+    "full_key_fields": "root 9 atom cols, bond1 3 cols, middle 9 atom cols, bond2 3 cols, end 9 atom cols",
+    "full_key_width": 33,
+    "atom_vocabs": [119, 4, 12, 12, 6, 6, 6, 2, 2],
+    "bond_vocabs": [5, 6, 2],
+    "full_binary": "nonzero bucket -> 1",
+    "null": {
+      "purpose": "A3 structural-matched null",
+      "canonical_path_order": "lexicographic 33-byte FULL key",
+      "seed": "sha256(b'pc-canonical-full-v1' + sorted FULL key bytes)[:8] little-endian",
+      "permutation": "numpy PCG64 per-graph derangement of second halves (bond2 3 + end 9); identity only for P<=1",
+      "first_half_fixed": "root 9 + bond1 3 + middle 9",
+      "second_half_permuted": "bond2 3 + end 9",
+      "same_total_and_marginals": true,
+      "label_free": true
+    }
+  },
+  "ecfp": {
+    "fingerprint": "ECFPFingerprint(count=True, radius=2, fp_size=2048)",
+    "input": "official CSV SMILES of Train/Validation rows only",
+    "lightgbm": "same fixed LGBM as P0",
+    "historical_valid_macro_ap_pct": 72.98,
+    "tolerance_pp": 0.01,
+    "expected_nnz_train": 1105722,
+    "expected_nnz_valid": 235742
+  },
+  "p0_lightgbm": {
+    "n_estimators": 500,
+    "is_unbalance": true,
+    "importance_type": "gain",
+    "random_state": 0,
+    "n_jobs": 8,
+    "verbose": -1,
+    "other_params": "LightGBM defaults",
+    "features": ["type", "full", "full_binary"],
+    "labels": 10,
+    "metric": "validation macro average precision (%)"
+  },
+  "p0_mlp": {
+    "input": "log1p(FULL-S2 counts), 2048",
+    "hidden": 64,
+    "activation": "SiLU",
+    "output": 10,
+    "optimizer": "AdamW",
+    "peak_lr": 0.001,
+    "weight_decay": 0.0001,
+    "betas": [0.9, 0.999],
+    "eps": 1e-08,
+    "batch_size": 256,
+    "epochs": 200,
+    "scheduler": "per-step cosine to 1e-5",
+    "grad_clip": 5.0,
+    "loss": "unweighted BCEWithLogitsLoss",
+    "seed": 0,
+    "selection": "best validation macro AP"
+  },
+  "p1_recipe": {
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "weight_decay": 0.001,
+    "betas": [0.9, 0.999],
+    "eps": 1e-08,
+    "min_lr": 1e-05,
+    "dropout": 0.1,
+    "batch_size": 64,
+    "gradient_clip": 5.0,
+    "loss": "unweighted BCEWithLogitsLoss",
+    "scheduler": "per-step cosine",
+    "early_stop": false,
+    "selection": "max validation macro AP; tie -> earlier epoch",
+    "p1a_epochs": 480,
+    "p1b_epochs": 240,
+    "seeds": [0, 1, 2]
+  },
+  "arms": {
+    "A0": {"counts": null, "epochs": 240, "parameters": 464739, "label": "BASE"},
+    "A1": {"counts": "type", "epochs": 240, "parameters": 485219, "label": "TYPE"},
+    "A2": {"counts": "full", "epochs": 240, "parameters": 485219, "label": "FULL"},
+    "A3": {"counts": "null", "epochs": 240, "parameters": 485219, "label": "NULL"},
+    "P1A": {"counts": null, "epochs": 480, "parameters": 464739, "label": "C1 480-epoch"}
+  },
+  "branch": {
+    "layer": "Linear(2048,10,bias=False)",
+    "input": "log1p(counts)",
+    "init": "zeros",
+    "parameters": 20480,
+    "total_parameters": 485219
+  },
+  "decision": {
+    "gain_full_base_pp_min": 2.0,
+    "gain_full_null_pp_min": 1.5,
+    "full_ge_null_labels_min": 6,
+    "confirmation_arms": ["A0", "A2", "A3"],
+    "confirmation_seeds": [1, 2],
+    "otherwise": "stop; no new model or hyperparameter search"
+  },
+  "budget": {
+    "gpu_hours_hard_cap": 10.0,
+    "host": "res",
+    "pools": ["res-gpu0", "res-gpu1"],
+    "max_jobs_per_gpu": 1
+  },
+  "forbidden": [
+    "test access",
+    "resplitting",
+    "literature search",
+    "hyperparameter search",
+    "architecture changes",
+    "loss changes",
+    "radius/bucket/width changes"
+  ]
+}
