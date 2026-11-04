@@ -177,6 +177,7 @@ def environment() -> dict[str, Any]:
         "numpy": np.__version__,
         "git_commit": git_commit(),
         "git_dirty": git_dirty(),
+        "git_tracked_dirty": git_tracked_dirty(),
         "hostname": platform.node(),
         "utc": utcnow(),
     }
@@ -199,6 +200,17 @@ def git_commit() -> str | None:
             ["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True, check=True
         )
         return out.stdout.strip()
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def git_tracked_dirty() -> bool | None:
+    """True only when tracked files differ from HEAD (untracked run outputs excluded)."""
+    try:
+        out = subprocess.run(
+            ["git", "status", "--porcelain"], cwd=REPO, capture_output=True, text=True, check=True
+        )
+        return any(line.strip() and not line.startswith("??") for line in out.stdout.splitlines())
     except Exception:  # noqa: BLE001
         return None
 
@@ -266,6 +278,8 @@ __all__ = [
     "TestAccessBlocked",
     "environment",
     "git_commit",
+    "git_dirty",
+    "git_tracked_dirty",
     "history_checkpoint_path",
     "history_curve_path",
     "history_dir",

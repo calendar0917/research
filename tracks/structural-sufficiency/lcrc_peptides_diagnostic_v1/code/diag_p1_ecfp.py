@@ -285,7 +285,12 @@ def main() -> int:
         "fingerprint": {
             "implementation": "skfp.fingerprints.ECFPFingerprint",
             "kwargs": FINGERPRINT_KWARGS,
-            "atom_invariants": "RDKit defaults (no pharmacophore invariants, no explicit chirality flag)",
+            "atom_invariants": "RDKit Morgan invariants as exposed by skfp with no override "
+            "(use_pharmacophoric_invariants=False, include_chirality=False, use_bond_types=True, "
+            "include_ring_membership=True, count_simulation=False)",
+            "requested_overrides": "count=True, radius=2, fp_size=2048 only",
+            "feature_input": "RDKit molecule built from SMILES only; the label matrix is never passed to the fingerprint",
+            "labels_used_as_features": False,
             "extra_descriptors": "none",
             "purity": fp_purity,
             "features": feature_meta,

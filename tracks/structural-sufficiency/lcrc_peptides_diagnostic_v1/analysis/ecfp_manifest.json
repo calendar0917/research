@@ -54,8 +54,9 @@
   },
   "entry_point": "code/diag_p1_ecfp.py",
   "environment": {
-    "git_commit": "34a8a9cade3edc2ce3147c6adfda55808826d8b2",
+    "git_commit": "f2f2d1b0292f77cbbd9b3e3d6fa9b0b7d1af08b1",
     "git_dirty": true,
+    "git_tracked_dirty": true,
     "hostname": "main",
     "machine": "x86_64",
     "numpy": "2.5.4",
@@ -64,11 +65,12 @@
     "torch": null,
     "torch_cuda": null,
     "torch_error": "No module named 'torch'",
-    "utc": "2026-11-04T00:53:49Z"
+    "utc": "2026-11-04T01:47:57Z"
   },
   "fingerprint": {
-    "atom_invariants": "RDKit defaults (no pharmacophore invariants, no explicit chirality flag)",
+    "atom_invariants": "RDKit Morgan invariants as exposed by skfp with no override (use_pharmacophoric_invariants=False, include_chirality=False, use_bond_types=True, include_ring_membership=True, count_simulation=False)",
     "extra_descriptors": "none",
+    "feature_input": "RDKit molecule built from SMILES only; the label matrix is never passed to the fingerprint",
     "features": {
       "dtype": "float32",
       "empty_feature_rows_train": 0,
@@ -97,14 +99,16 @@
       "fp_size": 2048,
       "radius": 2
     },
+    "labels_used_as_features": false,
     "purity": {
       "finite": true,
       "non_negative_integer": true,
       "recompute_identical": true,
       "subset_matches_full_rows": true
-    }
+    },
+    "requested_overrides": "count=True, radius=2, fp_size=2048 only"
   },
-  "generated_utc": "2026-11-04T00:53:49Z",
+  "generated_utc": "2026-11-04T01:47:57Z",
   "interpreter": {
     "note": "isolated CPU venv; the repo's pinned GPU environment is not modified",
     "path": "/home/calendar/.cache/research-venvs/peptides-ecfp/bin/python",
@@ -128,20 +132,20 @@
   "round_id": "lcrc-peptides-diagnostic-v1",
   "test_rows_read": 0,
   "timing_seconds": {
-    "lightgbm_total": 6.096128566990956,
-    "load_and_fingerprint": 2.132184486996266,
+    "lightgbm_total": 6.164488434995292,
+    "load_and_fingerprint": 2.1476180799945723,
     "per_label": [
-      0.5632706679898547,
-      0.6511754969978938,
-      0.6270049930026289,
-      0.6247596100001829,
-      0.5945957679941785,
-      0.5897321780066704,
-      0.6298425080021843,
-      0.5790071470109979,
-      0.6295469059987227,
-      0.5856303940090584
+      0.5647612830071012,
+      0.6529180659999838,
+      0.6320680509961676,
+      0.617468305004877,
+      0.5920942390075652,
+      0.5887229049985763,
+      0.6272403629991459,
+      0.5961025249998784,
+      0.677449829003308,
+      0.5939978030073689
     ],
-    "total": 12.380735918006394
+    "total": 12.453384695996647
   }
 }
