@@ -10,7 +10,11 @@
 
 > **Test 政策**：正式训练与分析入口安装 `sys.addaudithook`，任何打开历史 Test artifact 的行为立即失败。
 > 本轮 `test_evaluated = False`，`test_access_attempts = []`，
-> 训练进程 `guard.attempts = []`。没有读取 Test 数据、Test 标签或 Test 预测。
+> 训练进程 `guard.attempts = []`。正式训练进程没有读取 Test 数据、Test 标签或 Test 预测。
+>
+> **Test 授权修订（2026-11-04T03:36:43Z）**：本报告冻结后，用户明确授权对已冻结 checkpoint 做一次
+> post-hoc terminal Test 评估。正式训练记录仍为 `test_evaluated = false`；Test 只用于事后比较，
+> 未参与任何选择。结果见 `TEST_REPORT.md`。
 
 ---
 
@@ -28,7 +32,7 @@
 | Train/Validation macro gap | 6.54 pp（历史 7.32 pp，-0.78 pp） |
 | GPU / 时间 | 正式 0.596 A100 GPU-hours；2145.4 s（上限 1.25 h / 4200 s） |
 | 正确性门禁 | `analysis/gates.json`：48 项全部通过 = True |
-| Test 访问 | 0 次；`test_evaluated = false` |
+| 正式训练 Test 访问 | 0 次；`test_evaluated = false`（post-hoc 授权评估见 `TEST_REPORT.md`） |
 
 ---
 
@@ -223,10 +227,11 @@ uv run python tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/code/w
 ## 8. 实验局限
 
 - **单 seed、单配置**：只有一个 seed 0 和一个预先冻结的加权 BCE 配置；没有第二次训练、没有调参、没有根据 Validation 结果选择第二套配置。因此无法估计 seed 方差，也不能把差值分解为 loss 效应与优化噪声。
-- **Validation-only**：本轮只报告 Train/Validation；Test 完全未访问，不能据此推断 Test 表现。
+- **原始训练/选择为 Validation-only**：正式训练与 checkpoint 选择只使用 Train/Validation，Test 未参与；用户随后授权的 post-hoc Test 评估见 `TEST_REPORT.md`，不能反推训练时使用过 Test。
 - **目标函数已改变**：普通 BCE 与 weighted BCE 的 loss 尺度不同，loss 数值不能用于判断哪个目标“训练得更好”。
 - **单变量对照的边界**：ECFP4 + LightGBM 是不同模型/不同目标的固定背景参照，不是单变量对照。
 - **指标细节**：`best_valid_macro_ap` 是训练中实时模型的 checkpoint 选择指标；逐标签 AP 来自 reloaded checkpoint，reload 差值为 5.87e-05。
 - **gap 解释限制**：Train/Validation gap 收窄伴随两个 AP 同时下降，不能单独解释为泛化改善。
 - **执行环境**：远端 `git_dirty=true` 仅由未跟踪的 `runs/` 输出目录触发；实际执行 commit 为 `e8def281d60f4c6aff55bfbc75c54fb2861a0143`，`git_tracked_dirty=false`。
+- 用户随后授权的 post-hoc Test 评估见 `TEST_REPORT.md`；它没有改变本文件的 Validation-only 训练结论，也没有参与任何选择。原正式训练 `run.json` 仍记录 `test_evaluated = false`。
 - 本轮到此停止；不提出、不执行下一轮实验。上述事实不足以支持“架构问题已解决”或“架构问题已证明”的结论。

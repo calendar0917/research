@@ -1,0 +1,303 @@
+{
+  "all_passed": true,
+  "amendment": {
+    "amendment": "user authorized one terminal Test evaluation after the checkpoint selection had been frozen",
+    "amendment_id": "posthoc-terminal-test-eval-v1",
+    "authorization": "analysis/test_access_authorization.json",
+    "created_utc": "2026-11-04T03:36:43Z",
+    "ecfp_test_status": "not_evaluated: the Diagnostic v1 ECFP4 + LightGBM model was not persisted; retraining it would be a new ECFP run and is outside this amendment",
+    "evaluated_checkpoints": [
+      {
+        "id": "fastv1_seed0_120ep",
+        "role": "historical Test-pipeline sanity check",
+        "sha256": "1da869b8735872443c96bc5055d9628c58a63741911e93b106369e6efdba9a46"
+      },
+      {
+        "id": "diagnostic_ordinary_bce_240ep",
+        "role": "single-variable control",
+        "sha256": "22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b"
+      },
+      {
+        "id": "weighted_bce_240ep",
+        "role": "single-variable intervention",
+        "sha256": "8d9f7f6f78f1aed27c137ab59e3399bc2551f0ba283a62237acbc968b4c7d26b"
+      }
+    ],
+    "not_changed": [
+      "no training",
+      "no checkpoint selection or re-selection",
+      "no hyperparameter or configuration change",
+      "no ECFP4 + LightGBM retraining",
+      "the formal run.json retains test_evaluated=false for the training process"
+    ],
+    "official_test_split": {
+      "cache": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/peptides_func_test.pt",
+      "labels": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/peptides_func_y_test.npy",
+      "n": 2331,
+      "row_identity_evidence": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/analysis/row_identity.json"
+    },
+    "original_policy": "training and Validation-only; Test blocked by an audit hook in the formal training path",
+    "result_label": "POSTHOC_AUTHORIZED_TERMINAL_TEST_EVALUATION",
+    "round_id": "lcrc-peptides-weighted-bce-v1",
+    "status": "AUTHORIZED_POSTHOC_TERMINAL_TEST_EVALUATION"
+  },
+  "amendment_id": "posthoc-terminal-test-eval-v1",
+  "artifacts": {
+    "predictions_dir": "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/runs/test_eval",
+    "test_comparison": "results/test_comparison.csv",
+    "test_gates": "analysis/test_gates.json",
+    "test_per_label_comparison": "results/test_per_label_comparison.csv"
+  },
+  "authorization": {
+    "authorization_id": "user-authorized-peptides-test-access-20261104",
+    "authorization_message": "\u6211\u6307\u7684\u662ftest\u6570\u636e\u96c6\uff0c\u6211\u73b0\u5728\u6388\u6743\u8bbf\u95ee\uff0c\u4e0d\u7136\u6ca1\u529e\u6cd5\u6bd4\u8f83",
+    "authorization_received_utc": "2026-11-04T03:36:43Z",
+    "authorized": true,
+    "authorized_by": "user",
+    "note": "The formal training run had already completed with test_evaluated=false before this authorization.",
+    "round_id": "lcrc-peptides-weighted-bce-v1",
+    "scope": {
+      "allowed": "one post-hoc terminal evaluation of already-frozen checkpoints on the official Peptides-func Test split, for reporting and comparison only",
+      "checkpoints": [
+        {
+          "id": "fastv1_seed0_120ep",
+          "path": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/history/peptide_seed0/checkpoint.pt",
+          "sha256": "1da869b8735872443c96bc5055d9628c58a63741911e93b106369e6efdba9a46"
+        },
+        {
+          "id": "diagnostic_ordinary_bce_240ep",
+          "path": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/runs/peptide_c1_seed0_240ep/checkpoint.pt",
+          "sha256": "22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b"
+        },
+        {
+          "id": "weighted_bce_240ep",
+          "path": "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/runs/weighted_bce_seed0/checkpoint.pt",
+          "sha256": "8d9f7f6f78f1aed27c137ab59e3399bc2551f0ba283a62237acbc968b4c7d26b"
+        }
+      ],
+      "forbidden": [
+        "training or fine-tuning on Test",
+        "using Test metrics to choose a checkpoint, seed, hyperparameter or configuration",
+        "retraining ECFP4 + LightGBM",
+        "changing the already-reported Validation results"
+      ]
+    },
+    "selection_status_at_authorization": "all checkpoints were already frozen and selected using Validation only; no Test metric existed for the two 240-epoch checkpoints"
+  },
+  "checkpoint_selection_used_test": false,
+  "checkpoints": [
+    {
+      "best_epoch": 116,
+      "checkpoint_path": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/history/peptide_seed0/checkpoint.pt",
+      "checkpoint_sha256": "1da869b8735872443c96bc5055d9628c58a63741911e93b106369e6efdba9a46",
+      "frozen_at": "2026-11-03T23:01:26Z",
+      "id": "fastv1_seed0_120ep",
+      "loss": "ordinary BCE",
+      "per_label_test_ap": {
+        "antibacterial": 0.4523875139493515,
+        "anticancer": 0.3691288869813053,
+        "antifungal": 0.2621190958597104,
+        "antihypertensive": 0.8731300863354128,
+        "antimicrobial": 0.9237254848217317,
+        "antiparasitic": 0.21954018640740736,
+        "antiviral": 0.6372229224918142,
+        "cell_cell_communication": 0.3707914343201963,
+        "drug_delivery_vehicle": 0.32801249959237305,
+        "toxic": 0.733094240631839
+      },
+      "per_label_valid_ap": {
+        "antibacterial": 0.4827916269602544,
+        "anticancer": 0.37910222815734346,
+        "antifungal": 0.34297096234009716,
+        "antihypertensive": 0.8886193106558044,
+        "antimicrobial": 0.9135665471192079,
+        "antiparasitic": 0.1517450237739853,
+        "antiviral": 0.6511002506045107,
+        "cell_cell_communication": 0.40731413548298884,
+        "drug_delivery_vehicle": 0.38719641829301993,
+        "toxic": 0.7690889047912151
+      },
+      "recomputed_validation_macro_ap": 0.5373495408178427,
+      "role": "historical Test-pipeline sanity check",
+      "selection_metric": "Validation macro AP",
+      "stored_test_delta": 7.418127387759377e-05,
+      "stored_test_macro_ap": 0.5169894164129918,
+      "stored_test_per_label_delta": 0.0006783340116672809,
+      "stored_validation_macro_ap": 0.537302559788599,
+      "test_ap_recheck_delta": 0.0,
+      "test_macro_ap": 0.5169152351391142,
+      "test_macro_ap_pct": 51.69152351391142,
+      "test_minus_validation_pp": -2.0434305678728504,
+      "test_probs_max": 0.9998695254325867,
+      "test_probs_min": 1.6457313289919284e-10,
+      "validation_delta": 4.698102924372005e-05
+    },
+    {
+      "best_epoch": 231,
+      "checkpoint_path": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/runs/peptide_c1_seed0_240ep/checkpoint.pt",
+      "checkpoint_sha256": "22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b",
+      "frozen_at": "2026-11-04T01:43:33Z",
+      "id": "diagnostic_ordinary_bce_240ep",
+      "loss": "ordinary BCE",
+      "per_label_test_ap": {
+        "antibacterial": 0.4926780000119563,
+        "anticancer": 0.4409753694724115,
+        "antifungal": 0.3305181191924119,
+        "antihypertensive": 0.8798205237633578,
+        "antimicrobial": 0.9432824185540979,
+        "antiparasitic": 0.3395646921840271,
+        "antiviral": 0.7139460880338034,
+        "cell_cell_communication": 0.4611968508964801,
+        "drug_delivery_vehicle": 0.4324655872430134,
+        "toxic": 0.787478195201234
+      },
+      "per_label_valid_ap": {
+        "antibacterial": 0.5293837314721074,
+        "anticancer": 0.4697475328732197,
+        "antifungal": 0.3697309454603763,
+        "antihypertensive": 0.9009301453974811,
+        "antimicrobial": 0.9357244493267096,
+        "antiparasitic": 0.32185628575102276,
+        "antiviral": 0.7410946469984632,
+        "cell_cell_communication": 0.5063175700881177,
+        "drug_delivery_vehicle": 0.47678314816305023,
+        "toxic": 0.8122740690507317
+      },
+      "recomputed_validation_macro_ap": 0.6063842524581279,
+      "role": "single-variable control",
+      "selection_metric": "Validation macro AP",
+      "stored_test_delta": null,
+      "stored_test_macro_ap": null,
+      "stored_test_per_label_delta": null,
+      "stored_validation_macro_ap": 0.606228818027094,
+      "test_ap_recheck_delta": 0.0,
+      "test_macro_ap": 0.5821925844552793,
+      "test_macro_ap_pct": 58.219258445527934,
+      "test_minus_validation_pp": -2.4191668002848554,
+      "test_probs_max": 0.9999847412109375,
+      "test_probs_min": 3.235723592277112e-13,
+      "validation_delta": 0.0001554344310338296
+    },
+    {
+      "best_epoch": 221,
+      "checkpoint_path": "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/runs/weighted_bce_seed0/checkpoint.pt",
+      "checkpoint_sha256": "8d9f7f6f78f1aed27c137ab59e3399bc2551f0ba283a62237acbc968b4c7d26b",
+      "frozen_at": "2026-11-04T02:57:44Z",
+      "id": "weighted_bce_240ep",
+      "loss": "weighted BCE",
+      "per_label_test_ap": {
+        "antibacterial": 0.4847774778024356,
+        "anticancer": 0.4142168020719213,
+        "antifungal": 0.2962361752100412,
+        "antihypertensive": 0.8687516193306555,
+        "antimicrobial": 0.9366293320038441,
+        "antiparasitic": 0.3311690657860232,
+        "antiviral": 0.6475646567543578,
+        "cell_cell_communication": 0.3839718325556027,
+        "drug_delivery_vehicle": 0.3641452161209201,
+        "toxic": 0.7648901770862038
+      },
+      "per_label_valid_ap": {
+        "antibacterial": 0.5044707380681787,
+        "anticancer": 0.4089243464530571,
+        "antifungal": 0.3589740417207641,
+        "antihypertensive": 0.9009470876776702,
+        "antimicrobial": 0.9220036042005562,
+        "antiparasitic": 0.2956581880405531,
+        "antiviral": 0.6650725113670887,
+        "cell_cell_communication": 0.43333831103867726,
+        "drug_delivery_vehicle": 0.4182585127527254,
+        "toxic": 0.7835305676187203
+      },
+      "recomputed_validation_macro_ap": 0.5691177908937991,
+      "role": "single-variable intervention",
+      "selection_metric": "Validation macro AP",
+      "stored_test_delta": null,
+      "stored_test_macro_ap": null,
+      "stored_test_per_label_delta": null,
+      "stored_validation_macro_ap": 0.5688915520054741,
+      "test_ap_recheck_delta": 0.0,
+      "test_macro_ap": 0.5492352354722005,
+      "test_macro_ap_pct": 54.92352354722006,
+      "test_minus_validation_pp": -1.9882555421598558,
+      "test_probs_max": 0.9999905824661255,
+      "test_probs_min": 7.519642894471268e-12,
+      "validation_delta": 0.00022623888832495886
+    }
+  ],
+  "checks": {
+    "all_checkpoint_hashes_match": true,
+    "all_checkpoints_frozen_before_authorization": true,
+    "amendment_status_valid": true,
+    "authorization_present": true,
+    "ecfp_not_retrained": true,
+    "fastv1_test_ap_reproduces_stored_within_1e-3": true,
+    "fastv1_test_per_label_reproduces_stored_within_1e-3": true,
+    "fastv1_valid_ap_reproduces_stored_within_1e-3": true,
+    "formal_training_run_kept_test_evaluated_false": true,
+    "no_checkpoint_selection_used_test": true,
+    "no_training_performed": true,
+    "ordinary_valid_ap_reproduces_stored_within_1e-3": true,
+    "test_ap_recheck_delta_zero": true,
+    "test_cache_feature_spec_matches": true,
+    "test_cache_sha_matches_historical": true,
+    "test_cache_split_is_test": true,
+    "test_labels_finite_binary": true,
+    "test_labels_shape_2331x10": true,
+    "test_probabilities_finite_and_in_0_1": true,
+    "test_row_identity_pass": true,
+    "weighted_valid_ap_reproduces_stored_within_1e-3": true
+  },
+  "comparison": {
+    "fastv1_test_pipeline_sanity": {
+      "delta": 7.418127387759377e-05,
+      "per_label_delta": 0.0006783340116672809,
+      "recomputed_test_macro_ap": 0.5169152351391142,
+      "stored_test_macro_ap": 0.5169894164129918
+    },
+    "ordinary_bce_240ep": {
+      "test_macro_ap": 0.5821925844552793,
+      "validation_macro_ap": 0.6063842524581279
+    },
+    "weighted_bce_240ep": {
+      "test_macro_ap": 0.5492352354722005,
+      "validation_macro_ap": 0.5691177908937991
+    },
+    "weighted_minus_ordinary_test_pp": -3.2957348983078782,
+    "weighted_minus_ordinary_validation_pp": -3.726646156432878
+  },
+  "duration_seconds": 17.465192536998075,
+  "ecfp_test_status": "not_evaluated: the Diagnostic v1 ECFP4 + LightGBM model was not persisted; retraining it would be a new ECFP run and is outside this amendment",
+  "environment": {
+    "cuda_available": false,
+    "git_commit": "db8753db379d3d4766809cd1558b173835c69479",
+    "git_dirty": true,
+    "git_tracked_dirty": false,
+    "hostname": "main",
+    "machine": "x86_64",
+    "numpy": "2.1.3",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "utc": "2026-11-04T03:40:10Z"
+  },
+  "finished_utc": "2026-11-04T03:40:10Z",
+  "formal_training_test_evaluated": false,
+  "result_label": "POSTHOC_AUTHORIZED_TERMINAL_TEST_EVALUATION",
+  "round_id": "lcrc-peptides-weighted-bce-v1",
+  "test_evaluated": true,
+  "test_split": {
+    "cache": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/peptides_func_test.pt",
+    "cache_sha256": "ea897c1b51432be4ae8c50fdd6dc7c70fd0a973b9779d711bc3c9737715ffbf6",
+    "cache_split": "test",
+    "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+    "labels": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/peptides_func_y_test.npy",
+    "labels_array_sha256": "5059461eb517cba9ec7c4273ccc243518f63e5a3f3a576114b2ab571b9aac977",
+    "labels_file_sha256": "5ea5101be6d62ecbfff5f8ab83e201a18a5a5a8c3a9b079d87b4dcb1fe2ea97d",
+    "n": 2331,
+    "row_identity_status": "PASS"
+  },
+  "test_used_for_any_decision": false,
+  "training_performed": false
+}

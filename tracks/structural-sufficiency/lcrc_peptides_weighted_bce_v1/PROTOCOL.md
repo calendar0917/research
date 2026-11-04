@@ -14,7 +14,7 @@
 - 所有新产物写入 `tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/`。
 - 历史 240-epoch 普通 BCE seed0 结果为固定对照：best epoch 231，Validation macro AP **60.62 %**，best-checkpoint Train macro AP **67.94 %**，参数量 464,739，checkpoint SHA-256 `22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b`。
 - ECFP4 + LightGBM 的 72.98 % 只作为不同方法的背景参照，不重训，不作为单变量对照。
-- 本轮不读取任何 Test 数据、标签或预测，也不读取历史 Test 预测产物。
+- 本轮训练阶段不读取任何 Test 数据、标签或预测，也不读取历史 Test 预测产物；训练结束后用户明确授权的一次 post-hoc 评估见第 7 节。
 
 ## 1. 唯一干预：Weighted BCE
 
@@ -94,7 +94,7 @@ torch.nn.functional.binary_cross_entropy_with_logits(
 | Patience | 40 |
 | Loss | Weighted BCEWithLogitsLoss，Train-only `pos_weight` |
 | Checkpoint selection | 最高 Validation mean AP |
-| Test | 禁止访问 |
+| Test | 训练阶段禁止访问；授权后仅允许第 7 节的 post-hoc terminal evaluation |
 
 - 从头训练，不加载历史训练好的 checkpoint。
 - 与历史一致的 train/validation cache、feature spec、normalization。
@@ -105,9 +105,10 @@ torch.nn.functional.binary_cross_entropy_with_logits(
 ## 3. Test 隔离
 
 - 训练与分析入口导入时安装 `sys.addaudithook`；历史 Test artifact 名称一出现即抛 `TEST_ACCESS_BLOCKED`。
-- 本轮只报告 Train 与 Validation 指标。
+- 正式训练与原始 Validation 分析只报告 Train 与 Validation 指标。
 - 必须记录：`test_evaluated = false`，`test_access_attempts = []`。
 - 出现 Test 访问立即停止。
+- 以上限制适用于正式训练与原始 Validation 分析；训练完成且 checkpoint 冻结后，用户授权的一次 post-hoc Test 评估见第 7 节。
 
 ## 4. 记录
 
@@ -130,3 +131,13 @@ torch.nn.functional.binary_cross_entropy_with_logits(
 `PROTOCOL.md`、`configs/protocol.json`、`code/`、`tests/`、`analysis/pos_weight.json`、`analysis/gates.json`、`runs/weighted_bce_seed0/{curve.csv,run.json,selection.json}`、`results/validation_comparison.csv`、`results/per_label_comparison.csv`、`REPORT.md`。
 
 `REPORT.md` 只给可核验事实、差值与实验局限；不得解释为“架构问题已解决”或“架构问题已证明”。
+
+## 7. 授权后的 Test 修订（post-hoc）
+
+- 正式训练完成、checkpoint 已按 Validation 选择并冻结后，用户于 `2026-11-04T03:36:43Z` 明确授权访问官方 Test split。
+- 该授权只允许一次 **post-hoc terminal Test evaluation**：对已冻结 checkpoint 做前向评估，用于报告和比较。
+- 不做训练、不调参、不重新选择 checkpoint/seed/配置，不重训 ECFP。
+- 正式训练 `runs/weighted_bce_seed0/run.json` 仍记录 `test_evaluated = false`；Test 访问只发生在独立的 `code/wb_test_eval.py`。
+- 授权和评估记录：`analysis/test_access_authorization.json`、`configs/test_access_amendment.json`、`analysis/test_eval.json`、`analysis/test_gates.json`。
+- Test 结果：`TEST_REPORT.md`、`results/test_comparison.csv`、`results/test_per_label_comparison.csv`。
+- 这些 Test 数值未用于任何选择；若未来用其选模型，性质将变为 Test-based selection，必须另行声明。

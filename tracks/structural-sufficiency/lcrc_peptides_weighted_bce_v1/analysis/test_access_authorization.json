@@ -1,0 +1,36 @@
+{
+  "authorization_id": "user-authorized-peptides-test-access-20261104",
+  "round_id": "lcrc-peptides-weighted-bce-v1",
+  "authorized": true,
+  "authorized_by": "user",
+  "authorization_message": "我指的是test数据集，我现在授权访问，不然没办法比较",
+  "authorization_received_utc": "2026-11-04T03:36:43Z",
+  "scope": {
+    "allowed": "one post-hoc terminal evaluation of already-frozen checkpoints on the official Peptides-func Test split, for reporting and comparison only",
+    "checkpoints": [
+      {
+        "id": "fastv1_seed0_120ep",
+        "path": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/history/peptide_seed0/checkpoint.pt",
+        "sha256": "1da869b8735872443c96bc5055d9628c58a63741911e93b106369e6efdba9a46"
+      },
+      {
+        "id": "diagnostic_ordinary_bce_240ep",
+        "path": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/runs/peptide_c1_seed0_240ep/checkpoint.pt",
+        "sha256": "22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b"
+      },
+      {
+        "id": "weighted_bce_240ep",
+        "path": "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/runs/weighted_bce_seed0/checkpoint.pt",
+        "sha256": "8d9f7f6f78f1aed27c137ab59e3399bc2551f0ba283a62237acbc968b4c7d26b"
+      }
+    ],
+    "forbidden": [
+      "training or fine-tuning on Test",
+      "using Test metrics to choose a checkpoint, seed, hyperparameter or configuration",
+      "retraining ECFP4 + LightGBM",
+      "changing the already-reported Validation results"
+    ]
+  },
+  "selection_status_at_authorization": "all checkpoints were already frozen and selected using Validation only; no Test metric existed for the two 240-epoch checkpoints",
+  "note": "The formal training run had already completed with test_evaluated=false before this authorization."
+}

@@ -27,7 +27,16 @@ rr run res lcrc-pepweighted-p2-seed0 --result tracks/structural-sufficiency/lcrc
 # 5. Pull, then build comparison tables and gates (local CPU)
 rr pull lcrc-pepweighted-p2-seed0
 uv run python tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/code/wb_analyze.py
+
+# 6. Post-hoc authorized Test evaluation (only after a written user authorization)
+uv run python tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/code/wb_test_eval.py \
+  --device cpu --out-dir tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/runs/test_eval
+uv run python tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/code/wb_test_report.py
 ```
+
+The Test entry point is intentionally separate from the training path.  It is
+post-hoc only: checkpoints are frozen, no training or selection is performed,
+and the original `run.json` keeps `test_evaluated = false`.
 
 `REPORT.md` is generated from `analysis/run_facts.json` and the two CSV tables
 after the formal run.

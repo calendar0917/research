@@ -1,0 +1,41 @@
+{
+  "amendment_id": "posthoc-terminal-test-eval-v1",
+  "round_id": "lcrc-peptides-weighted-bce-v1",
+  "status": "AUTHORIZED_POSTHOC_TERMINAL_TEST_EVALUATION",
+  "created_utc": "2026-11-04T03:36:43Z",
+  "authorization": "analysis/test_access_authorization.json",
+  "original_policy": "training and Validation-only; Test blocked by an audit hook in the formal training path",
+  "amendment": "user authorized one terminal Test evaluation after the checkpoint selection had been frozen",
+  "not_changed": [
+    "no training",
+    "no checkpoint selection or re-selection",
+    "no hyperparameter or configuration change",
+    "no ECFP4 + LightGBM retraining",
+    "the formal run.json retains test_evaluated=false for the training process"
+  ],
+  "result_label": "POSTHOC_AUTHORIZED_TERMINAL_TEST_EVALUATION",
+  "official_test_split": {
+    "n": 2331,
+    "cache": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/peptides_func_test.pt",
+    "labels": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/analysis/peptides_func_y_test.npy",
+    "row_identity_evidence": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/analysis/row_identity.json"
+  },
+  "evaluated_checkpoints": [
+    {
+      "id": "fastv1_seed0_120ep",
+      "role": "historical Test-pipeline sanity check",
+      "sha256": "1da869b8735872443c96bc5055d9628c58a63741911e93b106369e6efdba9a46"
+    },
+    {
+      "id": "diagnostic_ordinary_bce_240ep",
+      "role": "single-variable control",
+      "sha256": "22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b"
+    },
+    {
+      "id": "weighted_bce_240ep",
+      "role": "single-variable intervention",
+      "sha256": "8d9f7f6f78f1aed27c137ab59e3399bc2551f0ba283a62237acbc968b4c7d26b"
+    }
+  ],
+  "ecfp_test_status": "not_evaluated: the Diagnostic v1 ECFP4 + LightGBM model was not persisted; retraining it would be a new ECFP run and is outside this amendment"
+}
