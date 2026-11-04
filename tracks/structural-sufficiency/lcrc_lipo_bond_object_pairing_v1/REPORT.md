@@ -5,8 +5,10 @@
 - **Final status:** `COMPLETE_MONITOR_EVALUATED`
 - **Final label:** **`EXPOSED_MONITOR_EXPLORATORY_ONLY`**
 - **Pre-registered decision case:** **`NO_CLEAR_VALIDATION_SIGNAL`**
-- **Frozen code commit:** `9887fc380ab081ccec054a8aef3470f0877c87ad`
-  (branch `exp/lcrc-lipo-bond-object-pairing-v1`)
+- **Formal training code commit:** `8eb75f03378257545f9b9d936e44a7625ea1c61f`
+- **Prediction/evaluation code commit:** `9887fc380ab081ccec054a8aef3470f0877c87ad`
+  (only `code/predict.py` row-metadata fix; no training/model/data change)
+- **Branch:** `exp/lcrc-lipo-bond-object-pairing-v1`
 - **Prediction freeze:** `analysis/prediction_manifest.json`
   SHA-256 `8c1a234ff8c1b9854b8e1d09914aa78b8bd98e36432897774f1d45dabfcfcc8a`
 - **Monitor evaluation:** one label read at `2026-11-04T03:41:27Z`, after the freeze
@@ -169,8 +171,11 @@ Parameter/init evidence: `analysis/parameter_audit.json` (all checks pass).
 
 ## 5. Correctness gates
 
-`analysis/gates.json`: **G1–G7 all PASS**, `all_passed=true`, at code commit
-`9887fc38…`. The pytest suite `tests/test_bond_pairing.py` passed **8/8**.
+`analysis/gates.json`: **G1–G7 all PASS**, `all_passed=true`. The gate record was
+regenerated at code commit `9887fc38…`; the formal training runs executed at
+`8eb75f03…`, whose only code difference is `code/predict.py` (not used by
+training, and fixed before any prediction was frozen). The pytest suite
+`tests/test_bond_pairing.py` passed **8/8**.
 
 | gate | evidence summary |
 |---|---|
