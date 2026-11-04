@@ -1,0 +1,46 @@
+id: tsb-lipo-feature-ladder-v1
+protocol: tsb-lipo-feature-ladder-v1
+active: true
+focus: true
+created: 2026-11-04
+
+question: >-
+  On the published Lipophilicity random splits, how much predictive signal do
+  explicit, label-free graph statistics carry for a tree model, and how does it
+  change when local pattern identity (typed WL), pattern multiplicity (counts
+  vs presence), structural radius (WL round 3) and a standard chemistry
+  fingerprint (Morgan count) are added on top of a fixed G0 baseline?
+
+baseline: >-
+  Arm G0 (global composition/topology counts) under the same frozen XGBoost
+  recipe; not a legacy number.
+
+candidates:
+  - id: G0
+    status: active
+    note: base global composition and topology statistics
+  - id: WL2_BIN
+    status: active
+    note: G0 + rooted typed-WL rounds 0-2, 0/1 presence
+  - id: WL2_COUNT
+    status: active
+    note: G0 + the same vocabulary, raw counts
+  - id: WL3_COUNT
+    status: active
+    note: G0 + typed-WL rounds 0-3, raw counts
+  - id: MORGAN_COUNT
+    status: active
+    note: G0 + RDKit Morgan radius-2, 2048 buckets, counts
+
+open_questions:
+  - Is presence-only local pattern identity enough, or does multiplicity add signal?
+  - Does one extra WL round change Validation RMSE at this sample size?
+  - How does a standard Morgan count fingerprint compare with typed-WL counts?
+  - How much of the signal survives at N=1,000 and N=2,000 Train rows?
+
+guardrails:
+  - no GNN/MLP/LightGBM/CatBoost in this round
+  - no hyper-parameter search, no early stopping, no per-arm tuning
+  - no label, label component or prediction may enter a feature vector
+  - Test is scored once, after the full-Train freeze, for all 15 pre-registered models
+  - Test scores never select a representation or a next round

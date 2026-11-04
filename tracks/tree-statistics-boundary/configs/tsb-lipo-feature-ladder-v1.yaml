@@ -1,0 +1,56 @@
+# Frozen configuration for tsb-lipo-feature-ladder-v1.
+#
+# The runner asserts every value below against `code/tsb_common.py`; editing a
+# value here without editing the protocol is a hard error, not a quiet override.
+# Change the protocol id if any of it changes.
+
+protocol_id: tsb-lipo-feature-ladder-v1
+stage: features
+seed: 20261104
+
+dataset: Lipophilicity
+dataset_source: >-
+  ChemBench commit 0b10d4c1ac72b6929503694a5f60446824736391 vendored at
+  tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop
+splits: [122, 123, 124]
+
+arms: [G0, WL2_BIN, WL2_COUNT, WL3_COUNT, MORGAN_COUNT]
+sample_sizes: [1000, 2000, 3360]
+sample_order: "sha256('20261104:<original row id>') ascending; sizes are nested prefixes"
+
+wl_vocab_size: 512
+wl_atom_attributes: [atomic_number, formal_charge, aromaticity, total_h, hybridization, chirality]
+wl_bond_attributes: [bond_type, aromaticity, conjugation, stereo]
+
+morgan:
+  radius: 2
+  n_bits: 2048
+  use_counts: true
+
+xgboost:
+  objective: reg:squarederror
+  tree_method: hist
+  device: cpu
+  n_estimators: 500
+  max_depth: 5
+  learning_rate: 0.03
+  subsample: 0.8
+  colsample_bytree: 0.8
+  reg_lambda: 5.0
+  min_child_weight: 1
+  random_state: 0
+  n_jobs: 4
+
+bootstrap:
+  replicates: 1000
+  seed: 20261104
+
+test_policy:
+  rule: "Test is scored only after all 15 full-Train models are hashed and frozen"
+  exposure: EXPOSED_PUBLIC_TEST
+  selection_use: forbidden
+
+budget:
+  compute: CPU-only
+  wall_clock_cap_minutes: 90
+  priority: "3 splits x 5 arms at N=3360 first, then N=1000/2000"

@@ -1,0 +1,71 @@
+# Comparability protocol for the tree-statistics-boundary Lipophilicity ladder.
+# Rules only: dataset, split, metric, fitting scope, test policy, seeds.
+
+id: tsb-lipo-feature-ladder-v1
+
+dataset:
+  name: Lipophilicity (MoleculeNet via ChemBench)
+  source_policy: vendored ChemBench commit 0b10d4c1ac72b6929503694a5f60446824736391
+  fingerprint_policy: SHA-256 of Lipop.csv.gz and of each published split pickle, verified on every load
+  expected_rows: 4200
+  target: exp (logD)
+  units: log10 octanol/water distribution coefficient
+
+split:
+  description: >-
+    The three published ChemBench random repeats Lipop.random122/123/124, used
+    exactly as published. No new Train/Validation/Test split is generated.
+  repeats: [122, 123, 124]
+  sizes:
+    train: 3360
+    valid: 420
+    test: 420
+  fingerprint_policy: per-split int64 row-index SHA-256, cross-checked against the recorded history
+  sub_sampling: >-
+    N=1,000 and N=2,000 are nested prefixes of the full Train ordered by
+    sha256('20261104:<original row id>'). No label-based or stratified choice.
+
+metric:
+  ranking_metric: valid_rmse
+  metric_direction: lower_is_better
+  secondary_metrics: [valid_mae, valid_r2, train_rmse, train_valid_gap_rmse]
+  unit: RMSE on the original label scale (logD units)
+
+train_only_fitting_scope:
+  description: >-
+    Typed-WL vocabularies, XGBoost parameters and every derived statistic are
+    fitted from the official Train rows only; Validation is evaluation-only.
+  vocab_note: >-
+    Vocabularies are always built from the FULL official Train, including for
+    the N=1,000 / N=2,000 models. Those arms therefore use label-free graphs of
+    all 3,360 Train molecules; this is a labelled-sample-size curve, not an
+    "only N graphs exist" experiment.
+
+validation_selection_policy:
+  selection: none
+  selection_rule: >-
+    One frozen XGBoost recipe for all 45 fits. No early stopping, no grid, no
+    Optuna, no per-arm or per-split tuning; Validation never selects anything.
+
+test_policy: terminal
+test_reporting_rule: >-
+  After all 15 full-Train models, their predictions and a freeze manifest are
+  written and hashed, Test is scored once for every one of those 15 models.
+  Test scores never influence the representation, the parameters, the arm list
+  or the next round.
+test_exposure: EXPOSED_PUBLIC_TEST
+test_exposure_note: >-
+  Lipophilicity Test labels were already read by earlier structural-sufficiency
+  rounds in this repository. This round cannot claim a first blind read.
+
+seed_semantics:
+  seed_role: >-
+    fixes the XGBoost random_state, the nested sample order and the bootstrap
+    resampling; it is not varied in this round
+  seeds: [20261104]
+  notes: one model per (split, arm, N); no training-seed replication this round
+
+compute:
+  device: cpu
+  parallelism: xgboost n_jobs=4
+  budget_minutes_wall_clock: 90

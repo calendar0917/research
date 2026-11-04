@@ -1,0 +1,35 @@
+# Navigation pointer for the tree-statistics-boundary track. Not a result dump.
+# Durable facts live in REPORT.md, records/runs/ and analysis/tables/.
+
+phase: tsb-lipo-feature-ladder-v1
+current_round: tsb-lipo-feature-ladder-v1
+status: ROUND1_COMPLETE_AWAITING_RESEARCHER_INSTRUCTION
+updated: 2026-11-04
+main_line: true
+latest_report: tracks/tree-statistics-boundary/REPORT.md
+active_studies:
+  - tsb-lipo-feature-ladder-v1
+focus_study: tsb-lipo-feature-ladder-v1
+baseline_record: null
+current_candidate: G0
+open_design_questions:
+  - Is presence-only local pattern identity enough, or does multiplicity add signal?
+  - Does one extra typed-WL round change Validation RMSE at this sample size?
+  - How does a standard Morgan count fingerprint compare with typed-WL counts?
+deferred_scientific_questions:
+  - Whether the observed ladder transfers to other endpoints is out of scope this round.
+  - Whether the 512-token vocabulary cap is the binding constraint on WL3 is untested
+    (round-3 OOV is ~72% of token mass; changing the cap requires a new protocol id).
+authorized_next_action:
+  status: stop_after_round1_wait_for_researcher
+  note: >-
+    Round 1 (tsb-lipo-feature-ladder-v1) is complete: 11/11 CPU gates passed,
+    45 fits recorded, 15 full-Train models frozen and Test-scored once under
+    EXPOSED_PUBLIC_TEST, tables A-D in analysis/tables/. No second round is
+    authorized; do not add arms, tune, or use Test ranks to pick a direction.
+guardrails:
+  - CPU only; no GPU request
+  - no hyper-parameter search or per-arm tuning
+  - Test only after the freeze, once, for all 15 full-Train models
+  - Test exposure must be labelled EXPOSED_PUBLIC_TEST
+  - results are not comparable with KSVD/SSRC/WL-kernel tracks (different protocol)

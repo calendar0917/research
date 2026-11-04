@@ -1,0 +1,21 @@
+{
+  "created_utc": "2026-11-04T11:45:20Z",
+  "external_reference_label": "EXTERNAL_READONLY_ECFP4_BINARY_PLUS_217_RDKIT_DESCRIPTORS_XGB",
+  "git_commit": "0611d18e7ad7f2ca3f2cfd3f0198315283eac0b2",
+  "n_fits": 45,
+  "n_test_models": 15,
+  "protocol_id": "tsb-lipo-feature-ladder-v1",
+  "schema": "tsb-tables-v1",
+  "table_a_note": "the three repeats share the same 4,200 molecules (only the random partition changes), so the mean/std across repeats is NOT a mean/std across three independent external datasets",
+  "table_b_note": "delta = RMSE(left) - RMSE(right) on the Validation rows; lower RMSE is better, so a NEGATIVE delta means the left arm is better. The bootstrap interval is a molecule-sampling interval for one frozen seed and is not an estimate of training-seed variance.",
+  "table_c_note": "smaller sizes are nested prefixes of the frozen order sha256('20261104:<original row id>'); the typed-WL vocabularies always come from the full official Train, so this curve is a labelled-sample-size curve, not a 'only N graphs exist' curve",
+  "table_d_note": "coverage is computed per role directly from the frozen cached CSR blocks (the last column of each typed-WL block is the OOV bucket); the `coverage` block inside cache/features_manifest.json is the all-4,200-molecule aggregate and is NOT the per-role number. feature_assembly_seconds is the time to assemble one arm/split matrix from cached label-free blocks (hstack + dtype); the one-time tokenisation cost is reported separately because all three splits share it.",
+  "tables": [
+    "table_a",
+    "table_b",
+    "table_c",
+    "table_d",
+    "external_reference"
+  ],
+  "test_available": true
+}

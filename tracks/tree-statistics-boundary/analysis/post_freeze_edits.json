@@ -1,0 +1,26 @@
+{
+  "assets_verified_unchanged": {
+    "feature_spec_sha256": "1ed72d4a9f145b774a148a4868d4777cc1715edc953abe618728d7cabe73a91e",
+    "features_manifest_sha256": "2e8d08e02d3f6e027cacdd32b73d3269afc6aa25daa0ecddd9f8f9f441674fcf",
+    "models_and_test_predictions": "re-verified against analysis/test/test_summary.json; no mismatch"
+  },
+  "changed_files": {
+    "tracks/tree-statistics-boundary/code/tsb_tables.py": {
+      "current_sha256": "f8c8c58e3829a241b0be670ed2f14ea22b373635a233ef04682c5cdc5f43fd8c",
+      "frozen_sha256": "a839521b925016a346fbb4527c950833dbf23a083dc2c1731c97a19977563cbe"
+    }
+  },
+  "consequence_for_revalidation": "the freeze stage compares code hashes, so re-running the `test` stage now would (correctly) refuse. Any future round must start a new pre-registration instead of replaying this Test.",
+  "created_utc": "2026-11-04T11:47:10Z",
+  "freeze_sha256": "58afd451340ebc0c57d1fe5903ff54fee2a7726ec7e713b2e519db13bdaa1970",
+  "not_changed": [
+    "no feature block, vocabulary, column definition or cache file was rebuilt",
+    "no model was refitted, reloaded for scoring, or overwritten",
+    "no Test prediction, Test metric or frozen model hash changed",
+    "no hyper-parameter, arm, split or sample size changed"
+  ],
+  "protocol_id": "tsb-lipo-feature-ladder-v1",
+  "reason": "tsb_tables.py only: Table D per-role OOV/coverage recomputed directly from the frozen cached CSR blocks. The feature manifest coverage block had been an all-4,200-molecule aggregate, so the per-role report numbers would have been identical across roles. This is an analysis-only correction made after the one-shot Test scoring.",
+  "schema": "tsb-post-freeze-edits-v1",
+  "test_summary_sha256": "66b97ad1599385bcbcaf577d9687bcf4931c36960db7cc0408e37a9a0bfd9b29"
+}
