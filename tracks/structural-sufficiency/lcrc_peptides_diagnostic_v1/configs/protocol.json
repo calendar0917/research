@@ -1,0 +1,92 @@
+{
+  "round_id": "lcrc-peptides-diagnostic-v1",
+  "protocol_id": "lcrc-peptides-diagnostic-v1",
+  "result_label": "EXPLORATORY_VALIDATION_ONLY_DIAGNOSTIC",
+  "scope": "Peptides-func only: existing LCRC learning curves, label statistics, frozen-checkpoint per-label Validation/Train AP, one fixed ECFP4+LightGBM baseline, one longer LCRC-C1 seed0 run",
+  "dataset": {
+    "name": "peptides-func",
+    "source": "official PyG LRGBDataset Peptides-func fixed train/val/test",
+    "smiles_source": "skfp.datasets.lrgb.load_peptides_func(mol_type=\"SMILES\") (HuggingFace mirror scikit-fingerprints/LRGB_Peptides-func)",
+    "split_source": "skfp.datasets.lrgb.load_lrgb_mol_splits(\"Peptides-func\")",
+    "n_samples": {"train": 10873, "valid": 2331, "test": 2331, "total": 15535},
+    "labels": [
+      "antifungal",
+      "cell_cell_communication",
+      "anticancer",
+      "drug_delivery_vehicle",
+      "antimicrobial",
+      "antiviral",
+      "antihypertensive",
+      "antibacterial",
+      "antiparasitic",
+      "toxic"
+    ],
+    "test_policy": "terminal; no Test data or Test predictions are opened in any P0/P2 code path"
+  },
+  "p0_existing_seeds": {
+    "seeds": [0, 1, 2],
+    "history_dir": "history/peptide_seed{seed}",
+    "checkpoint_eval": "frozen checkpoint reload; Train and Validation only",
+    "checkpoint_unavailable_policy": "record CHECKPOINT_UNAVAILABLE and do not retrain"
+  },
+  "p1_ecfp_lgbm": {
+    "fingerprint": {
+      "class": "skfp.fingerprints.ECFPFingerprint",
+      "variant": "count",
+      "radius": 2,
+      "fp_size": 2048,
+      "atom_invariants": "RDKit default",
+      "extra_features": "none",
+      "hyperparameter_search": "none"
+    },
+    "classifier": {
+      "class": "lightgbm.LGBMClassifier",
+      "n_estimators": 500,
+      "is_unbalance": true,
+      "importance_type": "gain",
+      "random_state": 0,
+      "n_jobs": 8,
+      "verbose": -1,
+      "other_parameters": "LightGBM defaults; no tuning, no early stopping, no tree-count search"
+    },
+    "training_rows": "official Train only (Train+Validation merged training is forbidden)",
+    "evaluation_rows": "official Validation only",
+    "metric": "sklearn.metrics.average_precision_score per label; unweighted mean over 10 labels",
+    "row_identity_gate": "10873/2331/2331, disjoint and complete split indices, row-wise identical labels, and atom/bond-level graph identity between SMILES-derived RDKit molecules and the PyG graphs; failure => ROW_ALIGNMENT_BLOCKED"
+  },
+  "p2_long_run": {
+    "task": "Peptides-func / LCRC-C1 / seed=0",
+    "init": "from scratch (no historical supervised checkpoint)",
+    "variant": "C1",
+    "expected_parameters": 464739,
+    "batch_size": 64,
+    "batch_size_fallbacks": [32, 16],
+    "optimizer": "AdamW",
+    "adam_betas": [0.9, 0.999],
+    "adam_eps": 1e-08,
+    "peak_lr": 0.0003,
+    "weight_decay": 0.001,
+    "min_lr": 1e-05,
+    "dropout": 0.1,
+    "gradient_clip": 5.0,
+    "loss": "BCEWithLogitsLoss over 10 independent labels (masked for missing labels)",
+    "scheduler": "per_step_cosine",
+    "scheduler_horizon_epochs": 240,
+    "max_epochs": 240,
+    "min_epochs": 80,
+    "patience": 40,
+    "selection": "max Validation mean average precision (macro AP over 10 labels)",
+    "test_access": "blocked at runtime by an audit hook",
+    "gpu_budget_hours": 1.25
+  },
+  "history_reference": {
+    "note": "Fast v1 Test mean AP; recorded only to cross-check the historical report, never used for any choice in this round",
+    "fast_v1_test_mean_ap_pct": {"0": 51.70, "1": 50.68, "2": 51.80},
+    "fast_v1_best_valid_mean_ap": {"0": 0.537302559788599, "1": 0.5393600940715544, "2": 0.547916587747426},
+    "literature_background_only": {
+      "ecfp4_lightgbm_test_ap_pct": 74.6,
+      "training_rows": "Train + Validation",
+      "note": "not comparable with this round's Train-only Validation number"
+    }
+  }
+}

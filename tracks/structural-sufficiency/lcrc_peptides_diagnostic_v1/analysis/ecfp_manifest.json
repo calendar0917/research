@@ -1,0 +1,147 @@
+{
+  "artifacts": {
+    "gain_importance": "results/ecfp_gain_importance.csv",
+    "per_label": "results/ecfp_per_label.csv",
+    "summary": "results/ecfp_validation.csv",
+    "valid_predictions": "results/ecfp_valid_predictions.npz"
+  },
+  "checks": {
+    "labels_10_columns": true,
+    "labels_binary": true,
+    "n_label_matrix": 15535,
+    "n_smiles": 15535,
+    "n_train": 10873,
+    "n_valid": 2331,
+    "sizes_ok": true,
+    "train_labels_equal_fast_v1": true,
+    "train_valid_disjoint": true,
+    "valid_labels_equal_fast_v1": true
+  },
+  "classifier": {
+    "implementation": "lightgbm.LGBMClassifier",
+    "kwargs": {
+      "importance_type": "gain",
+      "is_unbalance": true,
+      "n_estimators": 500,
+      "n_jobs": 8,
+      "random_state": 0,
+      "verbose": -1
+    },
+    "other_parameters": "LightGBM defaults",
+    "tree_count_search": "none",
+    "tuning": "none"
+  },
+  "data": {
+    "local_cache": "data/lrgb_skfp",
+    "smiles_csv_sha256": "9d2e253d2c3f9770edda82ba467117d17b9f119297c8166046de07b0046db98f",
+    "smiles_loader": "skfp.datasets.lrgb.load_peptides_func(mol_type='SMILES')",
+    "split_loader": "skfp.datasets.lrgb.load_lrgb_mol_splits('Peptides-func')",
+    "split_sizes": {
+      "train": 10873,
+      "valid": 2331
+    },
+    "splits_json_sha256": "39ca1b1400761460c381fa407a234881bb617c8df06f7bd39fe11c70fcf85b14",
+    "train_index_first_last": [
+      1,
+      15534
+    ],
+    "train_index_sha256": "617d4130c379aa8c603540516245ab7bea0b7db0bbcbf0bb3d6e58a032701623",
+    "valid_index_first_last": [
+      6,
+      15527
+    ],
+    "valid_index_sha256": "042c32ffa7aed06f8202de7dcfe53556a531823603ea103b79293611c525c358"
+  },
+  "entry_point": "code/diag_p1_ecfp.py",
+  "environment": {
+    "git_commit": "34a8a9cade3edc2ce3147c6adfda55808826d8b2",
+    "git_dirty": true,
+    "hostname": "main",
+    "machine": "x86_64",
+    "numpy": "2.5.4",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "torch": null,
+    "torch_cuda": null,
+    "torch_error": "No module named 'torch'",
+    "utc": "2026-11-04T00:53:49Z"
+  },
+  "fingerprint": {
+    "atom_invariants": "RDKit defaults (no pharmacophore invariants, no explicit chirality flag)",
+    "extra_descriptors": "none",
+    "features": {
+      "dtype": "float32",
+      "empty_feature_rows_train": 0,
+      "empty_feature_rows_valid": 0,
+      "expected_shape": [
+        10873,
+        2048
+      ],
+      "max_count_train": 114.0,
+      "max_count_valid": 93.0,
+      "nnz_train": 1105722,
+      "nnz_valid": 235742,
+      "shape_ok": true,
+      "shape_train": [
+        10873,
+        2048
+      ],
+      "shape_valid": [
+        2331,
+        2048
+      ]
+    },
+    "implementation": "skfp.fingerprints.ECFPFingerprint",
+    "kwargs": {
+      "count": true,
+      "fp_size": 2048,
+      "radius": 2
+    },
+    "purity": {
+      "finite": true,
+      "non_negative_integer": true,
+      "recompute_identical": true,
+      "subset_matches_full_rows": true
+    }
+  },
+  "generated_utc": "2026-11-04T00:53:49Z",
+  "interpreter": {
+    "note": "isolated CPU venv; the repo's pinned GPU environment is not modified",
+    "path": "/home/calendar/.cache/research-venvs/peptides-ecfp/bin/python",
+    "versions": {
+      "lightgbm": "4.7.0",
+      "numpy": "2.5.4",
+      "pandas": "3.1.0",
+      "rdkit": "2026.3.5",
+      "scikit-fingerprints": "2.1.0",
+      "scikit-learn": "1.9.1",
+      "scipy": "1.18.1"
+    }
+  },
+  "metrics": {
+    "constant_baseline_macro_ap": 0.16482196482196482,
+    "macro": "unweighted mean over the 10 labels",
+    "macro_ap": 0.7297597907704434,
+    "macro_ap_recheck_delta": 0.0,
+    "per_label": "sklearn.metrics.average_precision_score (positive class probability)"
+  },
+  "round_id": "lcrc-peptides-diagnostic-v1",
+  "test_rows_read": 0,
+  "timing_seconds": {
+    "lightgbm_total": 6.096128566990956,
+    "load_and_fingerprint": 2.132184486996266,
+    "per_label": [
+      0.5632706679898547,
+      0.6511754969978938,
+      0.6270049930026289,
+      0.6247596100001829,
+      0.5945957679941785,
+      0.5897321780066704,
+      0.6298425080021843,
+      0.5790071470109979,
+      0.6295469059987227,
+      0.5856303940090584
+    ],
+    "total": 12.380735918006394
+  }
+}
