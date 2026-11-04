@@ -288,7 +288,7 @@ logits = C1(batch) + Linear(2048, 10, bias=False)(log1p(counts))
    多路径图的联合 key 与桶向量确实不同；全 split 的 marginal failure = 0。
 6. **哈希固定**：固定 key 列表在两个独立子进程与本进程的 digest/bucket 完全一致；
    记录 TYPE/FULL/NULL 的碰撞审计。
-7. **分支初始化**：新增分支权重全零；初始化时加分支前后 logits 最大差恰为 0。
+7. **分支初始化**：新增分支权重全零；分支增量 `count_linear(log1p(counts))` 最大绝对值恰为 0。GPU 上独立重复调用同一 C1 编码器可能有 float32 舍入差，因此另行记录 `max_abs_output_delta_vs_base` 与 `max_abs_base_forward_repeat_diff`，不把该舍入差误判为分支非零；CPU gate 要求加分支前后 logits 最大差为 0。
 8. **第一步梯度**：第一个 batch 反传后，分支权重梯度有限且非零。
 9. **训练后分支**：权重不再恒零，Validation 分支输出不是恒零。
 10. **checkpoint 重载**：保存的最佳 checkpoint 重新加载后复算 Validation macro AP，

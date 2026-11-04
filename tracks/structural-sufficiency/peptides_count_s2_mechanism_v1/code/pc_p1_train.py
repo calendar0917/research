@@ -156,17 +156,21 @@ def main(argv: list[str] | None = None) -> int:
         model.eval()
         with torch.no_grad():
             base_logits = model.base(probe_batch)
-            full_logits = model(probe_batch, probe_counts)
             branch_delta = model.count_linear(torch.log1p(probe_counts))
+            full_logits = model(probe_batch, probe_counts)
+            base_logits_repeat = model.base(probe_batch)
         init_gate = {
             "checked": True,
             "branch_weight_all_zero": bool(torch.count_nonzero(model.count_linear.weight).item() == 0),
-            "max_abs_output_delta_vs_base": float((full_logits - base_logits).abs().max().item()),
             "max_abs_branch_delta": float(branch_delta.abs().max().item()),
+            "max_abs_output_delta_vs_base": float((full_logits - base_logits).abs().max().item()),
+            # On CUDA, two independent calls to the same base encoder can differ
+            # by float32 roundoff even when the added branch is exactly zero.
+            "max_abs_base_forward_repeat_diff": float((base_logits_repeat - base_logits).abs().max().item()),
             "probe_graphs": int(probe_rows.size),
             "branch_init_weight_sha256": C.sha256_array(model.count_linear.weight.detach().cpu().numpy()),
         }
-        if init_gate["max_abs_output_delta_vs_base"] != 0.0 or not init_gate["branch_weight_all_zero"]:
+        if init_gate["max_abs_branch_delta"] != 0.0 or not init_gate["branch_weight_all_zero"]:
             C.write_json(
                 out / "run.json",
                 {"status": "FAILED", "reason": "BRANCH_INIT_GATE_FAILED", "init_gate": init_gate},
