@@ -323,7 +323,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 3
     C.log(
         f"done: best valid macro AP {result['best_valid_macro_ap_pct']:.2f}% at epoch {result['best_epoch']} "
-        f"(history {result['history_best_valid_macro_ap_pct']:.2f}%)"
+        f"(history {result['history_reference']['best_valid_macro_ap_pct']:.2f}%)"
     )
     return 0
 
