@@ -273,10 +273,12 @@ def main(argv: list[str] | None = None) -> int:
         ) < 1e-9,
     }
 
+    run_checks = {k: bool(v) for k, v in run_checks.items()}
+    result_checks = {k: bool(v) for k, v in result_checks.items()}
     base = CH.run_all()
-    checks = dict(base["checks"])
-    checks.update({f"run_{k}": bool(v) for k, v in run_checks.items()})
-    checks.update({f"tables_{k}": bool(v) for k, v in result_checks.items()})
+    checks = {k: bool(v) for k, v in base["checks"].items()}
+    checks.update({f"run_{k}": v for k, v in run_checks.items()})
+    checks.update({f"tables_{k}": v for k, v in result_checks.items()})
     gates = {
         "round_id": C.ROUND_ID,
         "result_label": C.RESULT_LABEL,

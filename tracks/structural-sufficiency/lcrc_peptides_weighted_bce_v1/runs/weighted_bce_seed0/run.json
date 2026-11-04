@@ -1,0 +1,439 @@
+{
+  "batch_fallback_used": false,
+  "batch_size": 64,
+  "best_epoch": 221,
+  "best_epoch_grad_norm_max": 44.91706466674805,
+  "best_epoch_grad_norm_mean": 8.10822280294755,
+  "best_epoch_train_loss": 0.5650278345626943,
+  "best_valid_macro_ap": 0.5688915520054741,
+  "best_valid_macro_ap_pct": 56.889155200547414,
+  "cache_identity": {
+    "cache_train": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/peptides_func_train.pt",
+    "cache_train_sha256": "7b57289e8a7cc6174c6c356124c333d03d1cbeff11cf0fca0ef66826608b0ad1",
+    "cache_valid_sha256": "6c1d66677effdac1fa8ca8f25d457e962b89a837c5416985c6c10b717418be6c",
+    "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+    "norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a"
+  },
+  "checkpoint_path": "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/runs/weighted_bce_seed0/checkpoint.pt",
+  "checkpoint_sha256": "8d9f7f6f78f1aed27c137ab59e3399bc2551f0ba283a62237acbc968b4c7d26b",
+  "curve_sha256": "dba53190022864c6f813450056c36e3cb8811c7634805fd188a7c060b32289ae",
+  "dataset": "peptides-func",
+  "delta_vs_history_best_valid_macro_ap_pp": -3.733726602161991,
+  "delta_vs_history_train_macro_ap_pp": -4.51651106918558,
+  "delta_vs_history_train_valid_gap_pp": -0.7823571801552021,
+  "environment": {
+    "cuda_available": true,
+    "git_commit": "e8def281d60f4c6aff55bfbc75c54fb2861a0143",
+    "git_dirty": true,
+    "git_tracked_dirty": false,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "machine": "x86_64",
+    "numpy": "2.1.3",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "utc": "2026-11-04T02:57:44Z"
+  },
+  "epochs_run": 240,
+  "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+  "finished_utc": "2026-11-04T02:57:44Z",
+  "gpu_budget_hours": 1.25,
+  "gpu_hours_used": 0.595957947888334,
+  "gpu_peak_allocated_bytes": 357848576,
+  "gpu_peak_reserved_bytes": 773849088,
+  "grad_clip_events": 39144,
+  "grad_norm_max": 375.656982421875,
+  "guard": {
+    "attempts": [],
+    "forbidden": [
+      "peptides_func_test.pt",
+      "peptides_func_y_test.npy",
+      "test_predictions.npz"
+    ],
+    "installed_utc": "2026-11-04T02:21:52Z"
+  },
+  "history_reference": {
+    "best_epoch": 231,
+    "best_valid_macro_ap": 0.606228818027094,
+    "best_valid_macro_ap_pct": 60.62288180270941,
+    "checkpoint_sha256": "22643f093cc96dd3d8a81f916d7a6cc6e4bb38a91faf405eaf222fb7bf57634b",
+    "loss": "ordinary BCEWithLogitsLoss",
+    "run_json": "tracks/structural-sufficiency/lcrc_peptides_diagnostic_v1/runs/peptide_c1_seed0_240ep/run.json",
+    "train_macro_ap_per_label_mean": 0.6794355830532705,
+    "train_valid_macro_gap": 0.0732067650261764
+  },
+  "intervention": {
+    "loss": "WeightedBCEWithLogitsLoss (per-label pos_weight)",
+    "max_pos_weight": 49.10599136352539,
+    "only_change": "training loss",
+    "pos_weight": [
+      10.255693435668945,
+      27.241558074951172,
+      14.577363967895508,
+      15.060561180114746,
+      0.5942815542221069,
+      4.061918258666992,
+      8.357142448425293,
+      4.4310688972473145,
+      49.10599136352539,
+      2.8488495349884033
+    ],
+    "pos_weight_file": "tracks/structural-sufficiency/lcrc_peptides_weighted_bce_v1/analysis/pos_weight.json",
+    "pos_weight_file_sha256": "54f95aaff744cbe5e14303f471775ffe6a8aa4e4eaaedef543819b1b04388faa",
+    "pos_weight_formula": "N_negative_j / N_positive_j on official Train only",
+    "pos_weight_less_than_one": [
+      {
+        "label": "antimicrobial",
+        "pos_weight": 0.5942815542221069
+      }
+    ],
+    "pos_weight_payload_sha256": "8e6580599dbd19d02e81049fbfd91c84dd66b610a396d2dd03e5fa17522467ef",
+    "pos_weight_source": "official Train split; no Validation or Test statistics",
+    "verification": {
+      "n_labels": 10,
+      "n_train": 10873,
+      "pos_weight": [
+        10.255693581780537,
+        27.241558441558443,
+        14.577363896848137,
+        15.060561299852289,
+        0.5942815249266862,
+        4.061918063314711,
+        8.357142857142858,
+        4.431068931068931,
+        49.105990783410135,
+        2.848849557522124
+      ],
+      "source_file_sha256": "fd527b3318b3b7d6a8fa98af8424b66704f32cae5d5e7e7f9e5278af884c3ba9",
+      "status": "PASS",
+      "test_used": false,
+      "train_labels_array_sha256": "6fd32369a848f2c772b7f3b4062c13905966d13bbb81442edf8abcd695556070",
+      "valid_used": false,
+      "weights_exact_train_ratio": true,
+      "zero_positive_labels": []
+    }
+  },
+  "kind": "peptide",
+  "last_epoch_train_loss": 0.5605697801884483,
+  "last_epoch_valid_macro_ap": 0.566226810086484,
+  "max_seconds": 4200.0,
+  "model_info": {
+    "cont_norm_in_state": false,
+    "cont_slice": [
+      0,
+      0
+    ],
+    "full_init_state_hash": "4a823f6f3b5d3e9d17ddc7d7e035c9bc15744d2d2f57ec1f11453b764c325621",
+    "init_state_hash": "4b7ca35f3f791fc54921cf20b7e470a22ec9f90aff99f353ec60f8e997fec1a8",
+    "input_widths": {
+      "atom_feat": 198,
+      "bond_feat": 14,
+      "global": 28,
+      "n_nbr_codes": 595,
+      "n_path_codes": 2975,
+      "scalars": 9
+    },
+    "local_input_dim": 433,
+    "local_layout": {
+      "a": [
+        0,
+        96
+      ],
+      "atom_scalar": [
+        424,
+        433
+      ],
+      "b_sum": [
+        96,
+        192
+      ],
+      "s1_joint": [
+        192,
+        224
+      ],
+      "s2_closure": [
+        320,
+        328
+      ],
+      "s2_content": [
+        328,
+        424
+      ],
+      "s2_end": [
+        256,
+        288
+      ],
+      "s2_joint": [
+        288,
+        320
+      ],
+      "s2_type": [
+        224,
+        256
+      ]
+    },
+    "n_outputs": 10,
+    "parameters": 464739,
+    "parameters_breakdown": {
+      "atom_encoder": 37856,
+      "bond_encoder": 63936,
+      "drop": 0,
+      "f": 4810,
+      "local": 347375,
+      "rho": 10762,
+      "total": 464739
+    },
+    "rho_input_dim": 157,
+    "seed": 0,
+    "shared_with_full": {
+      "all_equal": true,
+      "checks": {
+        "atom_encoder.lins.0.bias": true,
+        "atom_encoder.lins.0.weight": true,
+        "atom_encoder.lins.1.bias": true,
+        "atom_encoder.lins.1.weight": true,
+        "bond_encoder.lins.0.bias": true,
+        "bond_encoder.lins.0.weight": true,
+        "bond_encoder.lins.1.bias": true,
+        "bond_encoder.lins.1.weight": true,
+        "f.lins.0.bias": true,
+        "f.lins.0.weight": true,
+        "f.lins.1.bias": true,
+        "f.lins.1.weight": true,
+        "global_mean": true,
+        "global_scale": true,
+        "local.close_emb.weight": true,
+        "local.end_emb.weight": true,
+        "local.joint_proj.bias": true,
+        "local.joint_proj.weight": true,
+        "local.mlp.lins.0.bias": true,
+        "local.mlp.lins.0.weight": true,
+        "local.mlp.lins.1.bias": true,
+        "local.mlp.lins.1.weight": true,
+        "local.nbr_emb.weight": true,
+        "local.norm.bias": true,
+        "local.norm.weight": true,
+        "local.path_emb.weight": true,
+        "local.path_gate.weight": true,
+        "local.path_u.weight": true,
+        "local.path_v.weight": true,
+        "rho.lins.0.bias": true,
+        "rho.lins.0.weight": true,
+        "rho.lins.1.bias": true,
+        "rho.lins.1.weight": true,
+        "scalar_mean": true,
+        "scalar_scale": true
+      },
+      "n_checked": 35
+    },
+    "variant": "C1",
+    "variant_definition": "LCRC-A minus the 96-d b_mean = b_sum/deg local-input block; no other change"
+  },
+  "n_outputs": 10,
+  "nonfinite_events": 0,
+  "norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a",
+  "overall_best": {
+    "best_epoch": 221,
+    "best_valid_macro_ap": 0.5688915520054741,
+    "best_valid_macro_ap_pct": 56.889155200547414,
+    "epoch_range": [
+      1,
+      240
+    ],
+    "last_epoch_valid_macro_ap": 0.566226810086484,
+    "n_epochs_present": 240
+  },
+  "parameters": 464739,
+  "per_label_delta_train_ap_pp_vs_history": {
+    "antibacterial": -5.275165680403604,
+    "anticancer": -4.449582071096614,
+    "antifungal": -6.009330321843703,
+    "antihypertensive": -1.725498549689819,
+    "antimicrobial": -2.0200570289171327,
+    "antiparasitic": -1.510952065750254,
+    "antiviral": -8.73532208568475,
+    "cell_cell_communication": -4.839804158034477,
+    "drug_delivery_vehicle": -6.491406866937238,
+    "toxic": -4.107991863498128
+  },
+  "per_label_delta_valid_ap_pp_vs_history": {
+    "antibacterial": -2.491751178807544,
+    "anticancer": -6.082937682392597,
+    "antifungal": -1.0736684811044617,
+    "antihypertensive": 0.00169422801890029,
+    "antimicrobial": -1.3723242239807032,
+    "antiparasitic": -2.749322593221076,
+    "antiviral": -7.6025119357117195,
+    "cell_cell_communication": -7.297925904944047,
+    "drug_delivery_vehicle": -5.852463541032499,
+    "toxic": -2.8743381507905563
+  },
+  "per_label_gap_change_pp": {
+    "antibacterial": -2.78341450159606,
+    "anticancer": 1.6333556112959835,
+    "antifungal": -4.935661840739241,
+    "antihypertensive": -1.7271927777087193,
+    "antimicrobial": -0.6477328049364295,
+    "antiparasitic": 1.2383705274708223,
+    "antiviral": -1.1328101499730292,
+    "cell_cell_communication": 2.4581217469095695,
+    "drug_delivery_vehicle": -0.6389433259047395,
+    "toxic": -1.233653712707572
+  },
+  "per_label_history_train_valid_gap": {
+    "antibacterial": 0.09688229893794997,
+    "anticancer": 0.10469249601280473,
+    "antifungal": 0.08752297300452883,
+    "antihypertensive": 0.040320169534221684,
+    "antimicrobial": 0.022799345844364383,
+    "antiparasitic": 0.12902028117409275,
+    "antiviral": 0.06424049671459953,
+    "cell_cell_communication": 0.08353557239377418,
+    "drug_delivery_vehicle": 0.0857663906118798,
+    "toxic": 0.016747520296923613
+  },
+  "per_label_train_ap": {
+    "antibacterial": 0.5735050963106547,
+    "anticancer": 0.5299079504264603,
+    "antifungal": 0.39710638303253737,
+    "antihypertensive": 0.9239953294348047,
+    "antimicrobial": 0.9383257656876425,
+    "antiparasitic": 0.43484581907681746,
+    "antiviral": 0.717984906581958,
+    "cell_cell_communication": 0.5414551009015471,
+    "drug_delivery_vehicle": 0.4976354701055577,
+    "toxic": 0.7879429020561675
+  },
+  "per_label_train_valid_gap": {
+    "antibacterial": 0.06904815392198937,
+    "anticancer": 0.12102605212576456,
+    "antifungal": 0.03816635459713641,
+    "antihypertensive": 0.02304824175713449,
+    "antimicrobial": 0.016322017795000088,
+    "antiparasitic": 0.14140398644880098,
+    "antiviral": 0.052912395214869234,
+    "cell_cell_communication": 0.10811678986286988,
+    "drug_delivery_vehicle": 0.0793769573528324,
+    "toxic": 0.004410983169847893
+  },
+  "per_label_valid_ap": {
+    "antibacterial": 0.5044569423886653,
+    "anticancer": 0.40888189830069577,
+    "antifungal": 0.35894002843540096,
+    "antihypertensive": 0.9009470876776702,
+    "antimicrobial": 0.9220037478926424,
+    "antiparasitic": 0.2934418326280165,
+    "antiviral": 0.6650725113670888,
+    "cell_cell_communication": 0.43333831103867726,
+    "drug_delivery_vehicle": 0.4182585127527253,
+    "toxic": 0.7835319188863196
+  },
+  "phase_121_240": {
+    "best_epoch": 221,
+    "best_valid_macro_ap": 0.5688915520054741,
+    "best_valid_macro_ap_pct": 56.889155200547414,
+    "epoch_range": [
+      121,
+      240
+    ],
+    "last_epoch_valid_macro_ap": 0.566226810086484,
+    "n_epochs_present": 120
+  },
+  "phase_first_120": {
+    "best_epoch": 107,
+    "best_valid_macro_ap": 0.5434190181187968,
+    "best_valid_macro_ap_pct": 54.34190181187968,
+    "epoch_range": [
+      1,
+      120
+    ],
+    "last_epoch_valid_macro_ap": 0.5405551508111494,
+    "n_epochs_present": 120
+  },
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 64,
+    "batch_size_fallbacks": [
+      32,
+      16
+    ],
+    "dropout": 0.1,
+    "early_stop": "after min_epochs=80, stop when 40 consecutive epochs do not strictly improve best Validation mean AP",
+    "gradient_clip": 5.0,
+    "loss": "WeightedBCEWithLogitsLoss: F.binary_cross_entropy_with_logits(logits, targets, pos_weight=Train_Nneg/Npos, reduction='mean')",
+    "max_epochs": 240,
+    "min_epochs": 80,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "patience": 40,
+    "peak_lr": 0.0003,
+    "pos_weight_source": "official Train labels only",
+    "result_label": "EXPLORATORY_VALIDATION_ONLY_DIAGNOSTIC",
+    "round_id": "lcrc-peptides-weighted-bce-v1",
+    "scheduler": "per_step_cosine",
+    "scheduler_horizon_epochs": 240,
+    "selection": "max Validation mean average precision (macro AP over 10 labels)",
+    "test_policy": "not evaluated in this round; Test is blocked by an audit hook",
+    "weight_decay": 0.001
+  },
+  "reload_valid_delta": 5.873153058877367e-05,
+  "reload_valid_macro_ap": 0.5689502835360629,
+  "seconds": 2145.4486123980023,
+  "seed": 0,
+  "smoke": false,
+  "status": "complete_no_test",
+  "stopped_early": false,
+  "strict_single_variable_control": true,
+  "structural_gate": {
+    "all_match": true,
+    "cache_identity": {
+      "cache_train": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/peptides_func_train.pt",
+      "cache_train_sha256": "7b57289e8a7cc6174c6c356124c333d03d1cbeff11cf0fca0ef66826608b0ad1",
+      "cache_valid_sha256": "6c1d66677effdac1fa8ca8f25d457e962b89a837c5416985c6c10b717418be6c",
+      "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+      "norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a"
+    },
+    "cache_identity_match_diagnostic_run": true,
+    "diagnostic_cache_identity": {
+      "cache_train": "tracks/structural-sufficiency/lcrc_benchmark_positioning_fast_v1/cache/peptides_func_train.pt",
+      "cache_train_sha256": "7b57289e8a7cc6174c6c356124c333d03d1cbeff11cf0fca0ef66826608b0ad1",
+      "cache_valid_sha256": "6c1d66677effdac1fa8ca8f25d457e962b89a837c5416985c6c10b717418be6c",
+      "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+      "norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a"
+    },
+    "diagnostic_feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+    "diagnostic_norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a",
+    "diagnostic_run_init_state_hash": "4b7ca35f3f791fc54921cf20b7e470a22ec9f90aff99f353ec60f8e997fec1a8",
+    "expected_parameters": 464739,
+    "fast_v1_seed0_init_state_hash": "4b7ca35f3f791fc54921cf20b7e470a22ec9f90aff99f353ec60f8e997fec1a8",
+    "feature_spec_hash": "0eaba915b633642f618bcd7a273436df2305a10838e70be749721c2ea394cdc9",
+    "init_state_hash": "4b7ca35f3f791fc54921cf20b7e470a22ec9f90aff99f353ec60f8e997fec1a8",
+    "init_state_hash_match_diagnostic_run": true,
+    "init_state_hash_match_fast_v1_seed0": true,
+    "local_layout_match": true,
+    "local_layout_match_diagnostic_run": true,
+    "norm_fingerprint": "919acc427ab2066ecade1e83d922845011aabafc00b6c2de6b091ba3ce531f6a",
+    "norm_fingerprint_match_diagnostic_run": true,
+    "parameters": 464739,
+    "parameters_match_diagnostic_run": true,
+    "parameters_match_history": true,
+    "spec_hash_match_diagnostic_run": true
+  },
+  "test_access_attempts": [],
+  "test_evaluated": false,
+  "train_macro_ap_per_label_mean": 0.6342704723614147,
+  "train_seconds": 1862.9010715899058,
+  "train_valid_macro_gap": 0.06538319322462438,
+  "unit": 0,
+  "valid_macro_ap_per_label_mean": 0.5688872791367903,
+  "valid_seconds": 269.2470528096892,
+  "variant": "C1"
+}
