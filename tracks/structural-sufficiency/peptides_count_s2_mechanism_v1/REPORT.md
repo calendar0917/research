@@ -208,6 +208,8 @@ A2−A0 的区间跨 0；A2−A3 的区间整体为正。
 - 特征路径数、NULL 边际/derangement、FULL/NULL 桶向量差异。
 - GPU 总量 ≤ 10 h。
 
+补充审计：`predictions.npz` 以 float32 保存概率；用保存的概率重新计算 macro AP 与 `run.json` 中基于 float64 概率的评估值最大差约 0.003 pp（P1a 最大 0.0026 pp，A0–A3 ≤0.0007 pp），属于存储精度差，不是选择/重载错误。
+
 ---
 
 ## 7. 观察数值 vs 因果解释
