@@ -49,11 +49,13 @@ def _permute_single(batch: Mapping[str, Any], perm: np.ndarray) -> dict[str, Any
     inv = np.empty_like(perm)
     inv[perm] = np.arange(len(perm))
     out = dict(batch)
+    dev = batch["atom_feat"].device
+    perm_t = torch.as_tensor(perm, dtype=torch.long, device=dev)
     for key in ("atom_feat", "atom_scalar", "atom_type"):
-        out[key] = batch[key][torch.as_tensor(perm, dtype=torch.long)]
+        out[key] = batch[key][perm_t]
     for key in ("bond_index", "nbr_atom", "path_atom", "path_end"):
         src = batch[key].detach().cpu().numpy()
-        out[key] = torch.as_tensor(inv[src], dtype=batch[key].dtype)
+        out[key] = torch.as_tensor(inv[src], dtype=batch[key].dtype, device=dev)
     return out
 
 
