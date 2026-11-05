@@ -48,6 +48,10 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
+_HERE = Path(__file__).resolve().parent
+if str(_HERE) not in sys.path:
+    sys.path.insert(0, str(_HERE))
+
 import pf_common as PF
 
 PILOT = PF.PILOT
