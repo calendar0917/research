@@ -1,5 +1,5 @@
 {
-  "all_passed": false,
+  "all_passed": true,
   "policy": {
     "A": "four graph-level attention pools; h is never updated; no atom-atom attention",
     "G": "per-molecule mean context broadcast; no bond messages",
@@ -24,26 +24,650 @@
       "n_graphs"
     ]
   },
-  "preflight_files": [],
+  "preflight_files": [
+    "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+    "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json"
+  ],
   "round_id": "lcrc-pcba-no-mp-sprint-v1",
   "runtime": {
     "A": {
-      "available": false,
-      "passed": false
+      "all_passed": true,
+      "available": true,
+      "checks": {
+        "attention_softmax": [
+          {
+            "max_abs_deviation": 2.384185791015625e-07,
+            "passed": true,
+            "per_graph_head_sums": [
+              [
+                1.0,
+                1.0,
+                1.0,
+                0.9999998807907104
+              ],
+              [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+              ],
+              [
+                1.000000238418579,
+                0.9999998807907104,
+                1.0,
+                1.0
+              ],
+              [
+                0.9999998807907104,
+                0.9999999403953552,
+                1.0,
+                0.9999999403953552
+              ],
+              [
+                0.9999998807907104,
+                0.9999999403953552,
+                1.0,
+                1.0
+              ],
+              [
+                1.0,
+                1.0,
+                0.9999999403953552,
+                1.0000001192092896
+              ],
+              [
+                1.0,
+                0.9999998807907104,
+                1.0,
+                1.0000001192092896
+              ],
+              [
+                1.0,
+                1.0000001192092896,
+                1.0,
+                0.9999999403953552
+              ]
+            ],
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "tolerance": 1e-05
+          }
+        ],
+        "base_parity": [
+          {
+            "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+            "expected_seed0": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json"
+          }
+        ],
+        "bond_perturbation_invariance": [
+          {
+            "bitwise_equal_for_added_state": false,
+            "max_abs_diff": 5.960464477539062e-07,
+            "note": "A's pooled sums use CUDA index_add_, whose reduction order is not bitwise stable",
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "tolerance_for_A_cuda_index_add": 1e-05
+          }
+        ],
+        "epoch0_ap_identity": [
+          {
+            "abs_delta": 7.75839367819775e-08,
+            "arm_ap": 0.02829488036753078,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "reference_ap": 0.028294957951467564,
+            "tolerance": 0.0001
+          }
+        ],
+        "gradient_flow": [
+          {
+            "all_required_new_params_nonzero": true,
+            "final_new_param_grad_norms": {
+              "readout.fc1.bias": 0.00014477077638730407,
+              "readout.fc1.weight": 0.001679378910921514,
+              "readout.fc2.bias": 0.05921408161520958,
+              "readout.fc2.weight": 0.13824401795864105,
+              "readout.heads.0.fc1.bias": 1.4678353181807324e-06,
+              "readout.heads.0.fc1.weight": 2.77789804385975e-05,
+              "readout.heads.0.fc2.bias": 1.4210854715202004e-13,
+              "readout.heads.0.fc2.weight": 1.9418894225964323e-05,
+              "readout.heads.1.fc1.bias": 1.7685558759694686e-06,
+              "readout.heads.1.fc1.weight": 3.8276397390291095e-05,
+              "readout.heads.1.fc2.bias": 5.684341886080802e-14,
+              "readout.heads.1.fc2.weight": 1.687343501544092e-05,
+              "readout.heads.2.fc1.bias": 9.376156526741397e-07,
+              "readout.heads.2.fc1.weight": 1.4118748367764056e-05,
+              "readout.heads.2.fc2.bias": 5.684341886080802e-14,
+              "readout.heads.2.fc2.weight": 9.029226021084469e-06,
+              "readout.heads.3.fc1.bias": 9.816869805945316e-07,
+              "readout.heads.3.fc1.weight": 1.6432128177257255e-05,
+              "readout.heads.3.fc2.bias": 1.4210854715202004e-14,
+              "readout.heads.3.fc2.weight": 1.0313804523320869e-05
+            },
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "steps": [
+              {
+                "all_finite": true,
+                "grad_norm_total": 11.351320266723633,
+                "loss": 1.680775761604309,
+                "new_param_grad_norms": {
+                  "readout.fc1.bias": 0.0,
+                  "readout.fc1.weight": 0.0,
+                  "readout.fc2.bias": 0.06023627892136574,
+                  "readout.fc2.weight": 0.1376633197069168,
+                  "readout.heads.0.fc1.bias": 0.0,
+                  "readout.heads.0.fc1.weight": 0.0,
+                  "readout.heads.0.fc2.bias": 0.0,
+                  "readout.heads.0.fc2.weight": 0.0,
+                  "readout.heads.1.fc1.bias": 0.0,
+                  "readout.heads.1.fc1.weight": 0.0,
+                  "readout.heads.1.fc2.bias": 0.0,
+                  "readout.heads.1.fc2.weight": 0.0,
+                  "readout.heads.2.fc1.bias": 0.0,
+                  "readout.heads.2.fc1.weight": 0.0,
+                  "readout.heads.2.fc2.bias": 0.0,
+                  "readout.heads.2.fc2.weight": 0.0,
+                  "readout.heads.3.fc1.bias": 0.0,
+                  "readout.heads.3.fc1.weight": 0.0,
+                  "readout.heads.3.fc2.bias": 0.0,
+                  "readout.heads.3.fc2.weight": 0.0
+                },
+                "step": 1
+              },
+              {
+                "all_finite": true,
+                "grad_norm_total": 10.826364517211914,
+                "loss": 1.5889015197753906,
+                "new_param_grad_norms": {
+                  "readout.fc1.bias": 7.342536991927773e-05,
+                  "readout.fc1.weight": 0.0008553320658393204,
+                  "readout.fc2.bias": 0.06011653691530228,
+                  "readout.fc2.weight": 0.139326274394989,
+                  "readout.heads.0.fc1.bias": 6.930363838364428e-07,
+                  "readout.heads.0.fc1.weight": 1.3315759133547544e-05,
+                  "readout.heads.0.fc2.bias": 7.105427357601002e-14,
+                  "readout.heads.0.fc2.weight": 9.226566362485755e-06,
+                  "readout.heads.1.fc1.bias": 8.503959634253988e-07,
+                  "readout.heads.1.fc1.weight": 1.848635292844847e-05,
+                  "readout.heads.1.fc2.bias": 6.394884621840902e-14,
+                  "readout.heads.1.fc2.weight": 8.390862603846472e-06,
+                  "readout.heads.2.fc1.bias": 3.766153042761289e-07,
+                  "readout.heads.2.fc1.weight": 5.787147074443055e-06,
+                  "readout.heads.2.fc2.bias": 0.0,
+                  "readout.heads.2.fc2.weight": 3.567948397176224e-06,
+                  "readout.heads.3.fc1.bias": 4.950537118020293e-07,
+                  "readout.heads.3.fc1.weight": 8.236852409027051e-06,
+                  "readout.heads.3.fc2.bias": 1.4210854715202004e-14,
+                  "readout.heads.3.fc2.weight": 5.308501386025455e-06
+                },
+                "step": 2
+              },
+              {
+                "all_finite": true,
+                "grad_norm_total": 11.045348167419434,
+                "loss": 1.5673850774765015,
+                "new_param_grad_norms": {
+                  "readout.fc1.bias": 0.00014477077638730407,
+                  "readout.fc1.weight": 0.001679378910921514,
+                  "readout.fc2.bias": 0.05921408161520958,
+                  "readout.fc2.weight": 0.13824401795864105,
+                  "readout.heads.0.fc1.bias": 1.4678353181807324e-06,
+                  "readout.heads.0.fc1.weight": 2.77789804385975e-05,
+                  "readout.heads.0.fc2.bias": 1.4210854715202004e-13,
+                  "readout.heads.0.fc2.weight": 1.9418894225964323e-05,
+                  "readout.heads.1.fc1.bias": 1.7685558759694686e-06,
+                  "readout.heads.1.fc1.weight": 3.8276397390291095e-05,
+                  "readout.heads.1.fc2.bias": 5.684341886080802e-14,
+                  "readout.heads.1.fc2.weight": 1.687343501544092e-05,
+                  "readout.heads.2.fc1.bias": 9.376156526741397e-07,
+                  "readout.heads.2.fc1.weight": 1.4118748367764056e-05,
+                  "readout.heads.2.fc2.bias": 5.684341886080802e-14,
+                  "readout.heads.2.fc2.weight": 9.029226021084469e-06,
+                  "readout.heads.3.fc1.bias": 9.816869805945316e-07,
+                  "readout.heads.3.fc1.weight": 1.6432128177257255e-05,
+                  "readout.heads.3.fc2.bias": 1.4210854715202004e-14,
+                  "readout.heads.3.fc2.weight": 1.0313804523320869e-05
+                },
+                "step": 3
+              }
+            ],
+            "structurally_redundant_zero_grad_params": {
+              "readout.heads.0.fc2.bias": "per-graph softmax is invariant to a constant shift; the head output bias adds a graph-constant score",
+              "readout.heads.1.fc2.bias": "per-graph softmax is invariant to a constant shift; the head output bias adds a graph-constant score",
+              "readout.heads.2.fc2.bias": "per-graph softmax is invariant to a constant shift; the head output bias adds a graph-constant score",
+              "readout.heads.3.fc2.bias": "per-graph softmax is invariant to a constant shift; the head output bias adds a graph-constant score"
+            }
+          }
+        ],
+        "graph_isolation": [
+          {
+            "cross_graph_changed": false,
+            "max_abs_diff": 2.384185791015625e-07,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "tolerance": 1e-05
+          }
+        ],
+        "identity_eval": [
+          {
+            "max_abs_logit_diff": 2.86102294921875e-06,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "tolerance": 0.0001
+          }
+        ],
+        "parameters": [
+          {
+            "expected_new": 42460,
+            "expected_total": 287644,
+            "new": 42460,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "total": 287644
+          }
+        ],
+        "permutation_invariance": [
+          {
+            "max_abs_diff": 4.76837158203125e-07,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+            "tolerance": 1e-05
+          }
+        ]
+      },
+      "flops": {
+        "atoms": 83,
+        "molecules": 4,
+        "new_module_forward_flops": 1651456,
+        "total_forward_flops": 34761984
+      },
+      "new_parameters": 42460,
+      "parameters": 287644,
+      "preflights": [
+        "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json"
+      ],
+      "speed": {
+        "gpu_peak_allocated_bytes": 89915392,
+        "gpu_peak_reserved_bytes": 130023424,
+        "projected_40_epoch_gpu_hours": 1.3730443736258895,
+        "step_ms_mean": 45.132941426709294,
+        "step_ms_p50": 44.757983880117536,
+        "step_ms_p90": 50.73221866041422,
+        "steps": 30,
+        "steps_per_second": 22.156765510705412
+      }
     },
     "G": {
-      "available": false,
-      "passed": false
+      "all_passed": true,
+      "available": true,
+      "checks": {
+        "base_parity": [
+          {
+            "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+            "expected_seed0": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json"
+          }
+        ],
+        "bond_perturbation_invariance": [
+          {
+            "bitwise_equal_for_added_state": true,
+            "max_abs_diff": 0.0,
+            "note": "A's pooled sums use CUDA index_add_, whose reduction order is not bitwise stable",
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance_for_A_cuda_index_add": 0.0
+          }
+        ],
+        "epoch0_ap_identity": [
+          {
+            "abs_delta": 1.4694682731741793e-07,
+            "arm_ap": 0.02829477342982297,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "reference_ap": 0.02829492037665029,
+            "tolerance": 0.0001
+          }
+        ],
+        "gradient_flow": [
+          {
+            "all_required_new_params_nonzero": true,
+            "final_new_param_grad_norms": {
+              "blocks.0.ctx.bias": 0.0007022106437943876,
+              "blocks.0.ctx.weight": 0.003884058678522706,
+              "blocks.0.fc1.bias": 0.0008946223533712327,
+              "blocks.0.fc1.weight": 0.006533167324960232,
+              "blocks.0.fc2.bias": 0.3813476264476776,
+              "blocks.0.fc2.weight": 1.2778143882751465,
+              "blocks.0.norm.bias": 0.0009818566031754017,
+              "blocks.0.norm.weight": 0.0008617244893684983,
+              "blocks.1.ctx.bias": 0.0007312842062674463,
+              "blocks.1.ctx.weight": 0.004041494335979223,
+              "blocks.1.fc1.bias": 0.0009243781678378582,
+              "blocks.1.fc1.weight": 0.006167755462229252,
+              "blocks.1.fc2.bias": 0.3813839852809906,
+              "blocks.1.fc2.weight": 1.1090060472488403,
+              "blocks.1.norm.bias": 0.000976820127107203,
+              "blocks.1.norm.weight": 0.0008896614308468997
+            },
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "steps": [
+              {
+                "all_finite": true,
+                "grad_norm_total": 11.536225318908691,
+                "loss": 1.6827472448349,
+                "new_param_grad_norms": {
+                  "blocks.0.ctx.bias": 0.0,
+                  "blocks.0.ctx.weight": 0.0,
+                  "blocks.0.fc1.bias": 0.0,
+                  "blocks.0.fc1.weight": 0.0,
+                  "blocks.0.fc2.bias": 0.4103127717971802,
+                  "blocks.0.fc2.weight": 1.3658415079116821,
+                  "blocks.0.norm.bias": 0.0,
+                  "blocks.0.norm.weight": 0.0,
+                  "blocks.1.ctx.bias": 0.0,
+                  "blocks.1.ctx.weight": 0.0,
+                  "blocks.1.fc1.bias": 0.0,
+                  "blocks.1.fc1.weight": 0.0,
+                  "blocks.1.fc2.bias": 0.4103127717971802,
+                  "blocks.1.fc2.weight": 1.1887216567993164,
+                  "blocks.1.norm.bias": 0.0,
+                  "blocks.1.norm.weight": 0.0
+                },
+                "step": 1
+              },
+              {
+                "all_finite": true,
+                "grad_norm_total": 10.957584381103516,
+                "loss": 1.582897424697876,
+                "new_param_grad_norms": {
+                  "blocks.0.ctx.bias": 0.00035095083876512945,
+                  "blocks.0.ctx.weight": 0.0019459342584013939,
+                  "blocks.0.fc1.bias": 0.0004473845474421978,
+                  "blocks.0.fc1.weight": 0.0032695825211703777,
+                  "blocks.0.fc2.bias": 0.37990638613700867,
+                  "blocks.0.fc2.weight": 1.2725969552993774,
+                  "blocks.0.norm.bias": 0.0004904831876046956,
+                  "blocks.0.norm.weight": 0.000429954583523795,
+                  "blocks.1.ctx.bias": 0.00036492760409601033,
+                  "blocks.1.ctx.weight": 0.0020220347214490175,
+                  "blocks.1.fc1.bias": 0.00046181934885680676,
+                  "blocks.1.fc1.weight": 0.0030860411934554577,
+                  "blocks.1.fc2.bias": 0.3799244165420532,
+                  "blocks.1.fc2.weight": 1.105517029762268,
+                  "blocks.1.norm.bias": 0.00048629811499267817,
+                  "blocks.1.norm.weight": 0.00044161995174363256
+                },
+                "step": 2
+              },
+              {
+                "all_finite": true,
+                "grad_norm_total": 11.14903450012207,
+                "loss": 1.5609164237976074,
+                "new_param_grad_norms": {
+                  "blocks.0.ctx.bias": 0.0007022106437943876,
+                  "blocks.0.ctx.weight": 0.003884058678522706,
+                  "blocks.0.fc1.bias": 0.0008946223533712327,
+                  "blocks.0.fc1.weight": 0.006533167324960232,
+                  "blocks.0.fc2.bias": 0.3813476264476776,
+                  "blocks.0.fc2.weight": 1.2778143882751465,
+                  "blocks.0.norm.bias": 0.0009818566031754017,
+                  "blocks.0.norm.weight": 0.0008617244893684983,
+                  "blocks.1.ctx.bias": 0.0007312842062674463,
+                  "blocks.1.ctx.weight": 0.004041494335979223,
+                  "blocks.1.fc1.bias": 0.0009243781678378582,
+                  "blocks.1.fc1.weight": 0.006167755462229252,
+                  "blocks.1.fc2.bias": 0.3813839852809906,
+                  "blocks.1.fc2.weight": 1.1090060472488403,
+                  "blocks.1.norm.bias": 0.000976820127107203,
+                  "blocks.1.norm.weight": 0.0008896614308468997
+                },
+                "step": 3
+              }
+            ],
+            "structurally_redundant_zero_grad_params": {}
+          }
+        ],
+        "graph_isolation": [
+          {
+            "cross_graph_changed": false,
+            "max_abs_diff": 0.0,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance": 1e-05
+          }
+        ],
+        "identity_eval": [
+          {
+            "max_abs_logit_diff": 1.9073486328125e-06,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance": 0.0001
+          }
+        ],
+        "parameters": [
+          {
+            "expected_new": 41728,
+            "expected_total": 286912,
+            "new": 41728,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "total": 286912
+          }
+        ],
+        "permutation_invariance": [
+          {
+            "max_abs_diff": 0.0,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance": 1e-05
+          }
+        ]
+      },
+      "flops": {
+        "atoms": 83,
+        "molecules": 4,
+        "new_module_forward_flops": 5505024,
+        "total_forward_flops": 38615552
+      },
+      "new_parameters": 41728,
+      "parameters": 286912,
+      "preflights": [
+        "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json"
+      ],
+      "speed": {
+        "gpu_peak_allocated_bytes": 96968192,
+        "gpu_peak_reserved_bytes": 130023424,
+        "projected_40_epoch_gpu_hours": 1.228958786689435,
+        "step_ms_mean": 40.396746092786394,
+        "step_ms_p50": 40.55314767174423,
+        "step_ms_p90": 43.60870253294706,
+        "steps": 30,
+        "steps_per_second": 24.75446902835001
+      }
     },
     "S": {
-      "available": false,
-      "passed": false
+      "all_passed": true,
+      "available": true,
+      "checks": {
+        "base_parity": [
+          {
+            "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+            "expected_seed0": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json"
+          }
+        ],
+        "bond_perturbation_invariance": [
+          {
+            "bitwise_equal_for_added_state": true,
+            "max_abs_diff": 0.0,
+            "note": "A's pooled sums use CUDA index_add_, whose reduction order is not bitwise stable",
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance_for_A_cuda_index_add": 0.0
+          }
+        ],
+        "epoch0_ap_identity": [
+          {
+            "abs_delta": 1.721146502869572e-05,
+            "arm_ap": 0.028311933492060345,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "reference_ap": 0.02829472202703165,
+            "tolerance": 0.0001
+          }
+        ],
+        "gradient_flow": [
+          {
+            "all_required_new_params_nonzero": true,
+            "final_new_param_grad_norms": {
+              "blocks.0.fc1.bias": 0.0009670470608398318,
+              "blocks.0.fc1.weight": 0.005469412077218294,
+              "blocks.0.fc2.bias": 0.3806767761707306,
+              "blocks.0.fc2.weight": 1.0374021530151367,
+              "blocks.0.norm.bias": 0.0008787141996435821,
+              "blocks.0.norm.weight": 0.0008119797566905618,
+              "blocks.1.fc1.bias": 0.000984842306934297,
+              "blocks.1.fc1.weight": 0.0055656470358371735,
+              "blocks.1.fc2.bias": 0.38081759214401245,
+              "blocks.1.fc2.weight": 1.0907753705978394,
+              "blocks.1.norm.bias": 0.0008464843267574906,
+              "blocks.1.norm.weight": 0.0008946742163971066
+            },
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "steps": [
+              {
+                "all_finite": true,
+                "grad_norm_total": 11.477527618408203,
+                "loss": 1.680775761604309,
+                "new_param_grad_norms": {
+                  "blocks.0.fc1.bias": 0.0,
+                  "blocks.0.fc1.weight": 0.0,
+                  "blocks.0.fc2.bias": 0.4097185432910919,
+                  "blocks.0.fc2.weight": 1.1044658422470093,
+                  "blocks.0.norm.bias": 0.0,
+                  "blocks.0.norm.weight": 0.0,
+                  "blocks.1.fc1.bias": 0.0,
+                  "blocks.1.fc1.weight": 0.0,
+                  "blocks.1.fc2.bias": 0.4097185432910919,
+                  "blocks.1.fc2.weight": 1.1611073017120361,
+                  "blocks.1.norm.bias": 0.0,
+                  "blocks.1.norm.weight": 0.0
+                },
+                "step": 1
+              },
+              {
+                "all_finite": true,
+                "grad_norm_total": 10.907076835632324,
+                "loss": 1.5848385095596313,
+                "new_param_grad_norms": {
+                  "blocks.0.fc1.bias": 0.00048464469728060067,
+                  "blocks.0.fc1.weight": 0.0027499934658408165,
+                  "blocks.0.fc2.bias": 0.37960317730903625,
+                  "blocks.0.fc2.weight": 1.0339847803115845,
+                  "blocks.0.norm.bias": 0.00043879071017727256,
+                  "blocks.0.norm.weight": 0.00040760936099104583,
+                  "blocks.1.fc1.bias": 0.0004930391442030668,
+                  "blocks.1.fc1.weight": 0.0027951367665082216,
+                  "blocks.1.fc2.bias": 0.37967294454574585,
+                  "blocks.1.fc2.weight": 1.0865570306777954,
+                  "blocks.1.norm.bias": 0.000423010322265327,
+                  "blocks.1.norm.weight": 0.0004504068929236382
+                },
+                "step": 2
+              },
+              {
+                "all_finite": true,
+                "grad_norm_total": 11.08293628692627,
+                "loss": 1.5592459440231323,
+                "new_param_grad_norms": {
+                  "blocks.0.fc1.bias": 0.0009670470608398318,
+                  "blocks.0.fc1.weight": 0.005469412077218294,
+                  "blocks.0.fc2.bias": 0.3806767761707306,
+                  "blocks.0.fc2.weight": 1.0374021530151367,
+                  "blocks.0.norm.bias": 0.0008787141996435821,
+                  "blocks.0.norm.weight": 0.0008119797566905618,
+                  "blocks.1.fc1.bias": 0.000984842306934297,
+                  "blocks.1.fc1.weight": 0.0055656470358371735,
+                  "blocks.1.fc2.bias": 0.38081759214401245,
+                  "blocks.1.fc2.weight": 1.0907753705978394,
+                  "blocks.1.norm.bias": 0.0008464843267574906,
+                  "blocks.1.norm.weight": 0.0008946742163971066
+                },
+                "step": 3
+              }
+            ],
+            "structurally_redundant_zero_grad_params": {}
+          }
+        ],
+        "graph_isolation": [
+          {
+            "cross_graph_changed": false,
+            "max_abs_diff": 0.0,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance": 1e-05
+          }
+        ],
+        "identity_eval": [
+          {
+            "max_abs_logit_diff": 1.430511474609375e-06,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance": 0.0001
+          }
+        ],
+        "parameters": [
+          {
+            "expected_new": 41664,
+            "expected_total": 286848,
+            "new": 41664,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "total": 286848
+          }
+        ],
+        "permutation_invariance": [
+          {
+            "max_abs_diff": 0.0,
+            "passed": true,
+            "preflight": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+            "tolerance": 1e-05
+          }
+        ]
+      },
+      "flops": {
+        "atoms": 83,
+        "molecules": 4,
+        "new_module_forward_flops": 6799360,
+        "total_forward_flops": 39909888
+      },
+      "new_parameters": 41664,
+      "parameters": 286848,
+      "preflights": [
+        "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json"
+      ],
+      "speed": {
+        "gpu_peak_allocated_bytes": 96434176,
+        "gpu_peak_reserved_bytes": 127926272,
+        "projected_40_epoch_gpu_hours": 1.223067337422873,
+        "step_ms_mean": 40.20308998102943,
+        "step_ms_p50": 41.13956564106047,
+        "step_ms_p90": 43.43739878386259,
+        "steps": 30,
+        "steps_per_second": 24.873709967862382
+      }
     }
   },
   "runtime_passed": {
-    "A": false,
-    "G": false,
-    "S": false
+    "A": true,
+    "G": true,
+    "S": true
   },
   "schema": "lcrc-pcba-no-mp-information-access-audit-v1",
   "static": {
