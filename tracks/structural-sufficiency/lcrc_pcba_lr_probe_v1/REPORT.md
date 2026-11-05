@@ -337,7 +337,9 @@ feature-spec/norm/split/label 身份、order plan hash、recipe 和 environment�
 | `385f8f6df07e` | 初始 protocol、实现、测试 |
 | `dd947d00e052` | 预检修复：NaN-aware label 比较 + 每次前向重置 dropout RNG |
 | `9b5a61a9fead1c2276c864f073e571fc454e68d4` | 配对预检全通过；正式 H/L 训练使用的 commit |
-| 最终分析/报告 commit | 见 `git log --oneline` 最后一条；包含 `analysis/*.json` 与 `REPORT.md` |
+| `3fa2ec65` | 分析 JSON、`checkpoint_audit.json`、`REPORT.md` 初版 |
+| `028a9d54` | 报告参考数值与措辞修正 |
+| 最终文档 commit | 见 `git log --oneline`；正式实验 commit 仍为 `9b5a61a9fead` |
 
 ### `rr` run IDs
 
