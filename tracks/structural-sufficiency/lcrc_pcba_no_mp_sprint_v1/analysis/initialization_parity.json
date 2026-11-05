@@ -1,0 +1,202 @@
+{
+  "all_passed": true,
+  "historical_references": {
+    "C": {
+      "mean": 0.2294251408210524,
+      "new_parameters": 0,
+      "parameters": 245184,
+      "seed0_ap40": 0.23194477365845528,
+      "seed0_ap40_10_20_30": [
+        0.20145150856692834,
+        0.2200291406127242,
+        0.22957291910653752
+      ],
+      "seed1_ap40": 0.2269055079836495,
+      "seed1_ap40_10_20_30": [
+        0.2006133392775197,
+        0.2192082817485945,
+        0.22555328709750214
+      ]
+    },
+    "V": {
+      "mean": 0.2583623910166268,
+      "new_parameters": 42624,
+      "parameters": 287808,
+      "role": "historical bond-MP performance reference; NOT a no-MP arm",
+      "seed0_ap40": 0.25777232477872586,
+      "seed0_ap40_10_20_30": [
+        0.2209033021478183,
+        0.24694282016950783,
+        0.25735474145276754
+      ],
+      "seed1_ap40": 0.25895245725452765,
+      "seed1_ap40_10_20_30": [
+        0.2187008824670966,
+        0.24676577186303533,
+        0.2565453157665737
+      ]
+    }
+  },
+  "lr_audit": {
+    "formula": "steps 0..2737 linear 3e-5->3e-4; then 1e-5+(3e-4-1e-5)*0.5*(1+cos(pi*(s-2738)/(109520-2738)))",
+    "post_warmup_first": 0.0003,
+    "step0": 3.0098612125639153e-05,
+    "step10e": 0.00026353405848480966,
+    "step20e": 0.0001608385613158652,
+    "step40e": 1e-05,
+    "steps_per_epoch": 2738,
+    "total_steps_40_epochs": 109520,
+    "warmup_last": 0.0003
+  },
+  "lr_numeric_equal": true,
+  "previous_lr_audit": {
+    "formula_phase12": "lr(s) = lo + (hi-lo)*0.5*(1+cos(pi*s/S40)); base 5e-5->1e-5, new 3e-4->3e-5",
+    "formula_phase3": "steps 0..2737 linear 3e-5->3e-4; then lo+(hi-lo)*0.5*(1+cos(pi*(s-2738)/(S40-2738)))",
+    "phase12": {
+      "base_step0": 5e-05,
+      "base_step12e": 4.1755705045849464e-05,
+      "base_step40e": 1e-05,
+      "new_step0": 0.0003,
+      "new_step12e": 0.00024435100905948387,
+      "new_step40e": 3e-05
+    },
+    "phase3": {
+      "post_warmup_first": 0.0003,
+      "step0": 3.0098612125639153e-05,
+      "step40e": 1e-05,
+      "warmup_last": 0.0003
+    },
+    "steps_per_epoch": 2738,
+    "total_steps_40_epochs": 109520
+  },
+  "recipe_comparison": {
+    "adam_betas": {
+      "equal": true,
+      "previous_phase3": [
+        0.9,
+        0.999
+      ],
+      "this_round": [
+        0.9,
+        0.999
+      ]
+    },
+    "adam_eps": {
+      "equal": true,
+      "previous_phase3": 1e-08,
+      "this_round": 1e-08
+    },
+    "batch_size": {
+      "equal": true,
+      "previous_phase3": 128,
+      "this_round": 128
+    },
+    "dropout": {
+      "equal": true,
+      "previous_phase3": 0.1,
+      "this_round": 0.1
+    },
+    "early_stopping": {
+      "equal": true,
+      "previous_phase3": false,
+      "this_round": false
+    },
+    "end_lr": {
+      "equal": true,
+      "previous_phase3": 1e-05,
+      "this_round": 1e-05
+    },
+    "epochs": {
+      "equal": true,
+      "previous_phase3": 40,
+      "this_round": 40
+    },
+    "gradient_clip": {
+      "equal": true,
+      "previous_phase3": 5.0,
+      "this_round": 5.0
+    },
+    "learning_rate": {
+      "equal": true,
+      "previous_phase3": 0.0003,
+      "this_round": 0.0003
+    },
+    "loss": {
+      "equal": true,
+      "previous_phase3": "masked BCEWithLogitsLoss over observed entries only",
+      "this_round": "masked BCEWithLogitsLoss over observed entries only"
+    },
+    "optimizer": {
+      "equal": true,
+      "previous_phase3": "AdamW",
+      "this_round": "AdamW"
+    },
+    "precision": {
+      "equal": true,
+      "previous_phase3": "fp32",
+      "this_round": "fp32"
+    },
+    "warmup_epochs": {
+      "equal": true,
+      "previous_phase3": 1.0,
+      "this_round": 1.0
+    },
+    "warmup_start_lr": {
+      "equal": true,
+      "previous_phase3": 3e-05,
+      "this_round": 3e-05
+    },
+    "weight_decay": {
+      "equal": true,
+      "previous_phase3": 0.001,
+      "this_round": 0.001
+    }
+  },
+  "recipe_equivalent_to_previous_phase3": true,
+  "round_id": "lcrc-pcba-no-mp-sprint-v1",
+  "schema": "lcrc-pcba-no-mp-initialization-parity-v1",
+  "seeds": {
+    "0": {
+      "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "base_init_matches_historical_phase3": true,
+      "consumed40_prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+      "expected_base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "expected_consumed40_prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+      "expected_global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+      "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+      "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+      "label_artifact_sha256": "5c3b5fbe642d80113522832fe01090097b860010868c59f8696bc247d5027d01",
+      "n_test_rows": 43793,
+      "n_train_rows": 350343,
+      "n_valid_rows": 43793,
+      "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+      "plan_matches_historical_phase3": true,
+      "prefix20_sha256": "5242c5a2b5c21a99562bdecb029b2b9f8a00f541e3014f4891a2c147c098f5b5",
+      "prefix40_matches_historical": true,
+      "split_partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f",
+      "test_labels_all_nan": true
+    },
+    "1": {
+      "base_init_fingerprint": "3af93edb835ea7763cf59479c3484e5def6814f8616ace2b9037a52d2f893d52",
+      "base_init_matches_historical_phase3": true,
+      "consumed40_prefix_sha256": "f86b59661de44a51dce6bed4173d219cad5a391f8ee285c16dfbb6c0736c9df6",
+      "expected_base_init_fingerprint": "3af93edb835ea7763cf59479c3484e5def6814f8616ace2b9037a52d2f893d52",
+      "expected_consumed40_prefix_sha256": "f86b59661de44a51dce6bed4173d219cad5a391f8ee285c16dfbb6c0736c9df6",
+      "expected_global_plan_sha256": "0af6ec6a5dffe9a7af831855e2a15a7b049d97acebda2bc6cdeb96eff56936e0",
+      "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+      "global_plan_sha256": "0af6ec6a5dffe9a7af831855e2a15a7b049d97acebda2bc6cdeb96eff56936e0",
+      "label_artifact_sha256": "5c3b5fbe642d80113522832fe01090097b860010868c59f8696bc247d5027d01",
+      "n_test_rows": 43793,
+      "n_train_rows": 350343,
+      "n_valid_rows": 43793,
+      "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+      "plan_matches_historical_phase3": true,
+      "prefix20_sha256": "87270b62e54e4050e7c243d18f82d61cd049ba421ba30cf943dd373a04c1d08e",
+      "prefix40_matches_historical": true,
+      "split_partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f",
+      "test_labels_all_nan": true
+    }
+  },
+  "source_phase3_run": "tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/runs/phase3_seed0_C/run.json",
+  "test_evaluated": false
+}

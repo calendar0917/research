@@ -1,0 +1,120 @@
+{
+  "all_passed": false,
+  "policy": {
+    "A": "four graph-level attention pools; h is never updated; no atom-atom attention",
+    "G": "per-molecule mean context broadcast; no bond messages",
+    "S": "per-atom transform only; no other atom, no bond, no graph context",
+    "added_modules_may_not_read": [
+      "adj",
+      "adjacency",
+      "bond_batch",
+      "bond_feat",
+      "bond_index",
+      "bond_type",
+      "edge_attr",
+      "edge_index",
+      "nbr_atom",
+      "nbr_ptr",
+      "path_end",
+      "path_ptr"
+    ],
+    "added_modules_may_read": [
+      "h",
+      "atom_batch",
+      "n_graphs"
+    ]
+  },
+  "preflight_files": [],
+  "round_id": "lcrc-pcba-no-mp-sprint-v1",
+  "runtime": {
+    "A": {
+      "available": false,
+      "passed": false
+    },
+    "G": {
+      "available": false,
+      "passed": false
+    },
+    "S": {
+      "available": false,
+      "passed": false
+    }
+  },
+  "runtime_passed": {
+    "A": false,
+    "G": false,
+    "S": false
+  },
+  "schema": "lcrc-pcba-no-mp-information-access-audit-v1",
+  "static": {
+    "all_static_passed": true,
+    "segments": {
+      "AttentionPoolReadout": {
+        "forbidden_tokens": [],
+        "passed": true,
+        "reads": [
+          "atom_batch",
+          "h",
+          "n_graphs",
+          "scores"
+        ]
+      },
+      "AttentionScorer": {
+        "forbidden_tokens": [],
+        "passed": true,
+        "reads": [
+          "x"
+        ]
+      },
+      "GraphContextBlock": {
+        "forbidden_tokens": [],
+        "passed": true,
+        "reads": [
+          "context",
+          "x"
+        ]
+      },
+      "NMPModel._atom_count": {
+        "forbidden_tokens": [],
+        "passed": true,
+        "reads": [
+          "atom_batch",
+          "n_graphs"
+        ]
+      },
+      "NMPModel._graph_mean": {
+        "forbidden_tokens": [],
+        "passed": true,
+        "reads": [
+          "atom_batch",
+          "n_graphs"
+        ]
+      },
+      "NMPModel.propagate": {
+        "forbidden_tokens": [],
+        "passed": true,
+        "reads": [
+          "atom_batch",
+          "context",
+          "h",
+          "n_graphs"
+        ]
+      },
+      "StaticFFNBlock": {
+        "forbidden_tokens": [],
+        "passed": true,
+        "reads": [
+          "x"
+        ]
+      }
+    },
+    "structural_checks": {
+      "A_per_molecule_segment_softmax": true,
+      "G_uses_atom_batch_and_n_graphs_only": true,
+      "S_no_other_atom_or_bond_access": true,
+      "no_atom_state_update_in_A": true,
+      "no_full_atom_self_attention": true
+    }
+  },
+  "test_evaluated": false
+}

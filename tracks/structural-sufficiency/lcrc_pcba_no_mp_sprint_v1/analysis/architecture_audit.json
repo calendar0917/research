@@ -1,0 +1,148 @@
+{
+  "all_parameter_checks_passed": true,
+  "arms": {
+    "A": {
+      "base_parameters": 245184,
+      "mode": "attention_pool",
+      "new_parameter_names": [
+        "readout.heads.0.fc1.weight",
+        "readout.heads.0.fc1.bias",
+        "readout.heads.0.fc2.weight",
+        "readout.heads.0.fc2.bias",
+        "readout.heads.1.fc1.weight",
+        "readout.heads.1.fc1.bias",
+        "readout.heads.1.fc2.weight",
+        "readout.heads.1.fc2.bias",
+        "readout.heads.2.fc1.weight",
+        "readout.heads.2.fc1.bias",
+        "readout.heads.2.fc2.weight",
+        "readout.heads.2.fc2.bias",
+        "readout.heads.3.fc1.weight",
+        "readout.heads.3.fc1.bias",
+        "readout.heads.3.fc2.weight",
+        "readout.heads.3.fc2.bias",
+        "readout.fc1.weight",
+        "readout.fc1.bias",
+        "readout.fc2.weight",
+        "readout.fc2.bias"
+      ],
+      "new_parameter_tensors": 20,
+      "new_parameters": 42460,
+      "own_parameter_breakdown": {
+        "readout.fc1": 22616,
+        "readout.fc2": 11392,
+        "readout.heads": 0,
+        "readout.heads.0": 0,
+        "readout.heads.0.fc1": 2080,
+        "readout.heads.0.fc2": 33,
+        "readout.heads.1": 0,
+        "readout.heads.1.fc1": 2080,
+        "readout.heads.1.fc2": 33,
+        "readout.heads.2": 0,
+        "readout.heads.2.fc1": 2080,
+        "readout.heads.2.fc2": 33,
+        "readout.heads.3": 0,
+        "readout.heads.3.fc1": 2080,
+        "readout.heads.3.fc2": 33
+      },
+      "relative_new_parameter_gap_to_V": 0.0038475975975975976,
+      "total_parameters": 287644,
+      "zero_residual_at_init": true
+    },
+    "G": {
+      "base_parameters": 245184,
+      "mode": "graph_context",
+      "new_parameter_names": [
+        "blocks.0.norm.weight",
+        "blocks.0.norm.bias",
+        "blocks.0.ctx.weight",
+        "blocks.0.ctx.bias",
+        "blocks.0.fc1.weight",
+        "blocks.0.fc1.bias",
+        "blocks.0.fc2.weight",
+        "blocks.0.fc2.bias",
+        "blocks.1.norm.weight",
+        "blocks.1.norm.bias",
+        "blocks.1.ctx.weight",
+        "blocks.1.ctx.bias",
+        "blocks.1.fc1.weight",
+        "blocks.1.fc1.bias",
+        "blocks.1.fc2.weight",
+        "blocks.1.fc2.bias"
+      ],
+      "new_parameter_tensors": 16,
+      "new_parameters": 41728,
+      "own_parameter_breakdown": {
+        "blocks.0": 0,
+        "blocks.0.ctx": 4160,
+        "blocks.0.fc1": 8320,
+        "blocks.0.fc2": 8256,
+        "blocks.0.norm": 128,
+        "blocks.1": 0,
+        "blocks.1.ctx": 4160,
+        "blocks.1.fc1": 8320,
+        "blocks.1.fc2": 8256,
+        "blocks.1.norm": 128
+      },
+      "relative_new_parameter_gap_to_V": 0.021021021021021023,
+      "total_parameters": 286912,
+      "zero_residual_at_init": true
+    },
+    "S": {
+      "base_parameters": 245184,
+      "mode": "static_ffn",
+      "new_parameter_names": [
+        "blocks.0.norm.weight",
+        "blocks.0.norm.bias",
+        "blocks.0.fc1.weight",
+        "blocks.0.fc1.bias",
+        "blocks.0.fc2.weight",
+        "blocks.0.fc2.bias",
+        "blocks.1.norm.weight",
+        "blocks.1.norm.bias",
+        "blocks.1.fc1.weight",
+        "blocks.1.fc1.bias",
+        "blocks.1.fc2.weight",
+        "blocks.1.fc2.bias"
+      ],
+      "new_parameter_tensors": 12,
+      "new_parameters": 41664,
+      "own_parameter_breakdown": {
+        "blocks.0": 0,
+        "blocks.0.fc1": 10400,
+        "blocks.0.fc2": 10304,
+        "blocks.0.norm": 128,
+        "blocks.1": 0,
+        "blocks.1.fc1": 10400,
+        "blocks.1.fc2": 10304,
+        "blocks.1.norm": 128
+      },
+      "relative_new_parameter_gap_to_V": 0.02252252252252252,
+      "total_parameters": 286848,
+      "zero_residual_at_init": true
+    }
+  },
+  "c1": {
+    "local_input_dim": 433,
+    "parameters": 245184,
+    "state_tensors": 37,
+    "variant": "C1"
+  },
+  "expected_parameters": {
+    "A": 287644,
+    "C": 245184,
+    "G": 286912,
+    "S": 286848,
+    "V": 287808
+  },
+  "flops_source": "torch.utils.flop_counter.FlopCounterMode on a fixed 4-molecule batch",
+  "historical_V": {
+    "new_parameters": 42624,
+    "parameters": 287808,
+    "role": "historical bond-MP performance reference; NOT a no-MP arm"
+  },
+  "parameter_gap_tolerance": 0.03,
+  "round_id": "lcrc-pcba-no-mp-sprint-v1",
+  "schema": "lcrc-pcba-no-mp-architecture-audit-v1",
+  "test_evaluated": false
+}
