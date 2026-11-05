@@ -173,3 +173,63 @@ def test_fast_collate_matches_frozen_on_many_measured_batches():
                     assert np.array_equal(a.numpy(), b.numpy()), (i, key)
                 else:
                     assert a == b, (i, key)
+
+
+# ---------------------------------------------------------------------------
+# device transfer (the measured bottleneck)
+# ---------------------------------------------------------------------------
+
+
+def test_transfer_variants_are_bit_identical(measured_batches):
+    """Pinned staging + non-blocking copy must move the same bytes."""
+    import torch
+
+    inputs, chosen = measured_batches
+    import pf_collate as PC_C
+    import pf_pipeline as PIPE
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    pageable = PIPE.PageableTransfer(device)
+    stager = PIPE.PinnedStager(device, depth=2)
+    for name, rows in chosen.items():
+        cpu_batch = PC_C.collate_reference(inputs.cache, rows.tolist())
+        a = pageable.batch(cpu_batch)
+        b = stager.batch(cpu_batch)
+        for key in cpu_batch:
+            ta, tb = a[key], b[key]
+            if not torch.is_tensor(ta):
+                assert ta == tb, (name, key)
+                continue
+            assert ta.dtype == tb.dtype and ta.shape == tb.shape, (name, key)
+            assert ta.device == tb.device, (name, key)
+            assert torch.equal(ta.reshape(-1).view(torch.uint8),
+                               tb.reshape(-1).view(torch.uint8)), (name, key)
+        ya = pageable.labels(inputs.labels[rows])
+        yb = stager.labels(inputs.labels[rows])
+        assert torch.equal(ya.reshape(-1).view(torch.uint8), yb.reshape(-1).view(torch.uint8))
+        assert np.array_equal(np.isnan(ya.cpu().numpy()), np.isnan(yb.cpu().numpy()))
+    stager.release()
+    assert stager._keep == []
+
+
+def test_stager_retains_bounded_pinned_references(measured_batches):
+    """The pinned sources must stay alive, but only for ``depth`` steps."""
+    import torch
+
+    inputs, chosen = measured_batches
+    import pf_collate as PC_C
+    import pf_pipeline as PIPE
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    stager = PIPE.PinnedStager(device, depth=2)
+    rows = list(chosen.values())[0]
+    cpu_batch = PC_C.collate_reference(inputs.cache, rows.tolist())
+    for _ in range(5):
+        out = stager.batch(cpu_batch)
+    assert len(stager._keep) == 2
+    n_fields = sum(1 for k, v in cpu_batch.items() if torch.is_tensor(v))
+    assert stager.counters["tensors_staged"] == 5 * n_fields
+    for key, value in cpu_batch.items():
+        if torch.is_tensor(value):
+            assert out[key].device == device
+    stager.release()

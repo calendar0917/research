@@ -19,6 +19,9 @@ Round: `lcrc-pcba-pipeline-perf-v1`
 # 性能分解（写 analysis/profile.json）
 uv run python tracks/structural-sufficiency/lcrc_pcba_pipeline_perf_v1/code/pf_profile.py --device cuda
 
+# H2D 机制探针（写 analysis/h2d_probe.json）
+uv run python tracks/structural-sufficiency/lcrc_pcba_pipeline_perf_v1/code/pf_h2d_probe.py --device cuda
+
 # 正确性门槛 + 300-step A/B 吞吐（写 analysis/throughput_comparison.json）
 uv run python tracks/structural-sufficiency/lcrc_pcba_pipeline_perf_v1/code/pf_bench.py --device cuda
 
@@ -34,11 +37,14 @@ uv run pytest -q tracks/structural-sufficiency/lcrc_pcba_pipeline_perf_v1/tests
 |---|---|
 | `PROTOCOL.md` | 测量协议、阶段定义、预先声明的不可测指标、验收门槛 |
 | `code/pf_common.py` | 冻结输入装载、固定 batch 顺序、环境/指纹 |
-| `code/pf_collate.py` | 冻结 collate 引用、计时镜像、优化版 collate |
+| `code/pf_collate.py` | 冻结 collate 引用、计时镜像（未改 collate 本身） |
+| `code/pf_pipeline.py` | 设备传输：冻结的 pageable 路径 vs `PinnedStager`（本轮唯一优化） |
 | `code/pf_profile.py` | 300-step 性能分解（coarse / isolated / profiler 三 pass） |
+| `code/pf_h2d_probe.py` | H2D 机制探针（pageable vs pinned vs bulk，解释瓶颈成因） |
 | `code/pf_bench.py` | 正确性门槛 + 原版 vs 新版 300-step 吞吐对照 |
-| `tests/test_pf_collate.py` | CPU-only 逐字段等价测试 |
+| `tests/test_pf_collate.py` | CPU-only 逐字段/逐字节等价测试 |
 | `analysis/profile.json` | 性能分解结果 |
+| `analysis/h2d_probe.json` | H2D 机制探针结果 |
 | `analysis/throughput_comparison.json` | 吞吐对照、显存、数值一致性 |
 | `REPORT.md` | 结论、结果表、局限性 |
 

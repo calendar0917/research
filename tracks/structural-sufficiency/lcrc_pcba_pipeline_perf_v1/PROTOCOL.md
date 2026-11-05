@@ -91,3 +91,29 @@ GPU 测量总预算 **0.25 A100 GPU-hours**（`res-gpu0`）。
 本轮只做：性能分解 → 单一瓶颈优化 → 正确性门槛 → 同环境 300 step A/B。
 完成后立即停止；不启动 PCBA 低学习率实验、正式训练、多 seed、其他数据集、
 模型消融或任何新架构探索。
+
+---
+
+## 9. 测量后追加（post-hoc，未改动上文预先注册的规则）
+
+A 阶段结果（`analysis/profile.json`、`analysis/h2d_probe.json`）显示：
+
+| 阶段 | ms/step | 占 step wall |
+|---|---|---|
+| CPU→GPU 传输（`to_device` + labels） | **29.1** | **39.6%** |
+| CPU memmap + `collate` | 13.1 | 17.8% |
+| loss + 隐式同步 | 10.2 | 13.9% |
+| backward | 12.4 | 16.9% |
+| forward | 3.1 | 4.2% |
+| optimizer / scheduler（含 clip + 同步） | 5.3 | 7.2% |
+| 标量读取 `.item()` | 0.05 | 0.07% |
+| 未归因（sync 延迟 + Python 循环） | 0.01 | 0.0% |
+
+最大已测瓶颈是 **CPU→GPU 传输**，不是 `collate`（后者为第二大）。机制已由
+`pf_h2d_probe.py` 定位：21 个逐张量 pageable 拷贝每次固定 ~1.27 ms 主机阻塞，
+而 memcpy 引擎本身只要 0.16 ms/step；pin 后同类拷贝 0.245 ms。
+
+因此按 §5「只优化一个最大已测瓶颈」改为优化 H2D：`code/pf_pipeline.py` 的
+`PinnedStager`（pinned 暂存 + 非阻塞拷贝），**`collate` 一行未改**。
+若只优化 `collate`，投影上限约 70.9/(70.9−17) ≈ 1.31×，达不到 §6 的 1.5× 门槛，
+这也是选择 H2D 的工程理由。
