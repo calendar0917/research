@@ -1,0 +1,43 @@
+{
+  "schema": "lcrc-pcba-structural-gain-failed-attempts-v1",
+  "round_id": "lcrc-pcba-structural-gain-sprint-v1",
+  "note": "Conservative GPU-allocated wall time for processes that failed before writing a run.json; each entry held one A100 for the recorded interval. The two Phase-2 failures completed one training epoch (~2 min) before the curve-row TypeError, so the full one-epoch allocation is charged.",
+  "attempts": [
+    {
+      "name": "sgs-preflight-gpu0",
+      "stage": "preflight (first attempt)",
+      "status": "failed",
+      "wall_seconds": 41.0,
+      "gpu_hours": 0.011389,
+      "git_commit": "166a783b",
+      "note": "identity tolerance 1e-6 was below CUDA index_add reduction noise; pre-registered calibration to 1e-4 followed."
+    },
+    {
+      "name": "sgs-preflight-gpu1",
+      "stage": "preflight (first attempt)",
+      "status": "failed",
+      "wall_seconds": 33.0,
+      "gpu_hours": 0.009167,
+      "git_commit": "166a783b",
+      "note": "same identity-tolerance gate; no model or data change."
+    },
+    {
+      "name": "sgs-p2-C",
+      "stage": "Phase 2 first attempt",
+      "status": "failed",
+      "wall_seconds": 142.0,
+      "gpu_hours": 0.039444,
+      "git_commit": "520f0793",
+      "note": "TypeError on int(None) in the pre-first-eval curve row; optimizer was restored, no epoch completed. Fixed in c39616c3; rerun sgs-p2-C2."
+    },
+    {
+      "name": "sgs-p2-V",
+      "stage": "Phase 2 first attempt",
+      "status": "failed",
+      "wall_seconds": 128.0,
+      "gpu_hours": 0.035556,
+      "git_commit": "520f0793",
+      "note": "same curve-row TypeError; rerun sgs-p2-V2."
+    }
+  ]
+}

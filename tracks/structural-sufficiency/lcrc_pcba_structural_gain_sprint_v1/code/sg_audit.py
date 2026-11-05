@@ -188,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     C.write_json(C.ANALYSIS / "initialization_audit.json", init)
     C.log(f"architecture audit passed={arch['passed']}; initialization passed={init['passed']}")
-    return 0 if arch["passed"] else 1
+    return 0 if (arch["passed"] and init["passed"]) else 1
 
 
 if __name__ == "__main__":

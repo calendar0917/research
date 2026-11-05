@@ -25,7 +25,9 @@ Local CPU tests:
 
 ```bash
 uv run pytest -q tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/tests
-uv run python tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/code/sg_audit.py
+uv run python tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/code/sg_audit.py \
+  --preflight tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/analysis/preflight_C_F.json \
+              tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/analysis/preflight_M_V.json
 ```
 
 Remote (all execution goes through `rr`):
@@ -58,4 +60,4 @@ uv run python tracks/.../code/sg_analyze.py registry --rr-jobs /tmp/rr_jobs.json
 uv run python tracks/.../code/sg_analyze.py ledger
 ```
 
-Official Test targets are never read, indexed or scored in this round.
+Official Test targets are never scored or used for selection in this round. The frozen loader audits that the Test label slice is entirely NaN; no Test logit, AP or BCE is computed or saved.

@@ -507,12 +507,32 @@ def analyze_gpu_ledger() -> dict[str, Any]:
             }
         )
         total += hours
+    failed_attempts = []
+    failed_path = C.ANALYSIS / "failed_gpu_attempts.json"
+    if failed_path.exists():
+        payload = C.read_json(failed_path)
+        for e in payload.get("attempts", []):
+            hours = float(e.get("gpu_hours") or 0.0)
+            failed_attempts.append(
+                {
+                    "kind": "failed_attempt",
+                    "name": e.get("name"),
+                    "stage": e.get("stage"),
+                    "status": e.get("status"),
+                    "gpu_hours": hours,
+                    "wall_seconds": e.get("wall_seconds"),
+                    "note": e.get("note"),
+                    "git_commit": (e.get("git_commit") or "")[:12],
+                }
+            )
+            total += hours
     return {
         "schema": "lcrc-pcba-structural-gain-gpu-ledger-v1",
         "round_id": C.ROUND_ID,
         "budget": C.BUDGET,
         "training_entries": entries,
         "preflight_entries": preflights,
+        "failed_attempt_entries": failed_attempts,
         "gpu_hours_total": float(total),
         "target_gpu_hours": C.BUDGET["gpu_target_hours"],
         "hard_gpu_hours": C.BUDGET["gpu_hard_hours"],
@@ -583,7 +603,7 @@ def main(argv: list[str] | None = None) -> int:
         C.write_json(C.ANALYSIS / "gpu_ledger.json", payload)
         C.log(f"gpu_hours_total={payload['gpu_hours_total']:.4f}")
         out = payload
-    if args.command in ("registry", "all"):
+    if args.command == "registry" or (args.command == "all" and args.rr_jobs):
         payload = build_registry(Path(args.rr_jobs) if args.rr_jobs else None)
         C.write_json(C.ANALYSIS / "run_registry.json", payload)
         C.log(f"registry jobs={len(payload['jobs'])}")

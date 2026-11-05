@@ -1,0 +1,235 @@
+{
+  "budget": {
+    "gpu_hard_hours": 16.0,
+    "gpu_target_hours": 15.0,
+    "no_new_gpu_stage_below_minutes": 30,
+    "wall_hard_hours": 8.0,
+    "wall_target_hours": 7.5
+  },
+  "failed_attempt_entries": [
+    {
+      "git_commit": "166a783b",
+      "gpu_hours": 0.011389,
+      "kind": "failed_attempt",
+      "name": "sgs-preflight-gpu0",
+      "note": "identity tolerance 1e-6 was below CUDA index_add reduction noise; pre-registered calibration to 1e-4 followed.",
+      "stage": "preflight (first attempt)",
+      "status": "failed",
+      "wall_seconds": 41.0
+    },
+    {
+      "git_commit": "166a783b",
+      "gpu_hours": 0.009167,
+      "kind": "failed_attempt",
+      "name": "sgs-preflight-gpu1",
+      "note": "same identity-tolerance gate; no model or data change.",
+      "stage": "preflight (first attempt)",
+      "status": "failed",
+      "wall_seconds": 33.0
+    },
+    {
+      "git_commit": "520f0793",
+      "gpu_hours": 0.039444,
+      "kind": "failed_attempt",
+      "name": "sgs-p2-C",
+      "note": "TypeError on int(None) in the pre-first-eval curve row; optimizer was restored, no epoch completed. Fixed in c39616c3; rerun sgs-p2-C2.",
+      "stage": "Phase 2 first attempt",
+      "status": "failed",
+      "wall_seconds": 142.0
+    },
+    {
+      "git_commit": "520f0793",
+      "gpu_hours": 0.035556,
+      "kind": "failed_attempt",
+      "name": "sgs-p2-V",
+      "note": "same curve-row TypeError; rerun sgs-p2-V2.",
+      "stage": "Phase 2 first attempt",
+      "status": "failed",
+      "wall_seconds": 128.0
+    }
+  ],
+  "gpu_hours_total": 9.15198924160172,
+  "hard_gpu_hours": 16.0,
+  "note": "every preflight, failed and formal GPU process is included",
+  "preflight_entries": [
+    {
+      "arms": [
+        "C",
+        "F"
+      ],
+      "git_commit": "43794ab8d081c1080e3cfe1f95cb97bab864856b",
+      "gpu_hours": 0.008059728079371982,
+      "kind": "preflight",
+      "name": "preflight_C_F",
+      "status": "PASS",
+      "wall_seconds": 29.015021085739136
+    },
+    {
+      "arms": [
+        "M",
+        "V"
+      ],
+      "git_commit": "43794ab8d081c1080e3cfe1f95cb97bab864856b",
+      "gpu_hours": 0.006486219829983182,
+      "kind": "preflight",
+      "name": "preflight_M_V",
+      "status": "PASS",
+      "wall_seconds": 23.350391387939453
+    }
+  ],
+  "round_id": "lcrc-pcba-structural-gain-sprint-v1",
+  "schema": "lcrc-pcba-structural-gain-gpu-ledger-v1",
+  "target_gpu_hours": 15.0,
+  "training_entries": [
+    {
+      "arm": "C",
+      "finished_utc": "2026-11-05T17:08:16Z",
+      "git_commit": "520f0793cf41150494e9e959ccb8405872967f2b",
+      "gpu_hours": 0.44539710045636943,
+      "gpu_peak_allocated_bytes": 127740416,
+      "kind": "training",
+      "name": "phase1_C",
+      "parameters": 245184,
+      "phase": 1,
+      "seed": 0,
+      "started_utc": "2026-11-05T16:41:32Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE1"
+    },
+    {
+      "arm": "F",
+      "finished_utc": "2026-11-05T17:03:12Z",
+      "git_commit": "520f0793cf41150494e9e959ccb8405872967f2b",
+      "gpu_hours": 0.3577353239713961,
+      "gpu_peak_allocated_bytes": 127621120,
+      "kind": "training",
+      "name": "phase1_F",
+      "parameters": 278592,
+      "phase": 1,
+      "seed": 0,
+      "started_utc": "2026-11-05T16:41:44Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE1"
+    },
+    {
+      "arm": "M",
+      "finished_utc": "2026-11-05T17:38:35Z",
+      "git_commit": "520f0793cf41150494e9e959ccb8405872967f2b",
+      "gpu_hours": 0.4657675960518989,
+      "gpu_peak_allocated_bytes": 128297472,
+      "kind": "training",
+      "name": "phase1_M",
+      "parameters": 279488,
+      "phase": 1,
+      "seed": 0,
+      "started_utc": "2026-11-05T17:10:38Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE1"
+    },
+    {
+      "arm": "V",
+      "finished_utc": "2026-11-05T17:35:15Z",
+      "git_commit": "520f0793cf41150494e9e959ccb8405872967f2b",
+      "gpu_hours": 0.4071633755880046,
+      "gpu_peak_allocated_bytes": 128432640,
+      "kind": "training",
+      "name": "phase1_V",
+      "parameters": 287808,
+      "phase": 1,
+      "seed": 0,
+      "started_utc": "2026-11-05T17:10:49Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE1"
+    },
+    {
+      "arm": "C",
+      "finished_utc": "2026-11-05T18:48:16Z",
+      "git_commit": "c39616c3287537f82c70bca85a32c5098e37f56e",
+      "gpu_hours": 0.9975484401116975,
+      "gpu_peak_allocated_bytes": 128409600,
+      "kind": "training",
+      "name": "phase2_C",
+      "parameters": 245184,
+      "phase": 2,
+      "seed": 0,
+      "started_utc": "2026-11-05T17:48:25Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE2"
+    },
+    {
+      "arm": "V",
+      "finished_utc": "2026-11-05T18:43:02Z",
+      "git_commit": "c39616c3287537f82c70bca85a32c5098e37f56e",
+      "gpu_hours": 0.9072042243683245,
+      "gpu_peak_allocated_bytes": 127302144,
+      "kind": "training",
+      "name": "phase2_V",
+      "parameters": 287808,
+      "phase": 2,
+      "seed": 0,
+      "started_utc": "2026-11-05T17:48:36Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE2"
+    },
+    {
+      "arm": "C",
+      "finished_utc": "2026-11-05T20:18:32Z",
+      "git_commit": "c39616c3287537f82c70bca85a32c5098e37f56e",
+      "gpu_hours": 1.4299217026838515,
+      "gpu_peak_allocated_bytes": 128409600,
+      "kind": "training",
+      "name": "phase3_seed0_C",
+      "parameters": 245184,
+      "phase": 3,
+      "seed": 0,
+      "started_utc": "2026-11-05T18:52:44Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE3"
+    },
+    {
+      "arm": "V",
+      "finished_utc": "2026-11-05T20:09:34Z",
+      "git_commit": "c39616c3287537f82c70bca85a32c5098e37f56e",
+      "gpu_hours": 1.277574474406946,
+      "gpu_peak_allocated_bytes": 127508480,
+      "kind": "training",
+      "name": "phase3_seed0_V",
+      "parameters": 287808,
+      "phase": 3,
+      "seed": 0,
+      "started_utc": "2026-11-05T18:52:55Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE3"
+    },
+    {
+      "arm": "C",
+      "finished_utc": "2026-11-05T21:47:43Z",
+      "git_commit": "c39616c3287537f82c70bca85a32c5098e37f56e",
+      "gpu_hours": 1.447797642473597,
+      "gpu_peak_allocated_bytes": 127638528,
+      "kind": "training",
+      "name": "phase3_seed1_C",
+      "parameters": 245184,
+      "phase": 3,
+      "seed": 1,
+      "started_utc": "2026-11-05T20:20:51Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE3"
+    },
+    {
+      "arm": "V",
+      "finished_utc": "2026-11-05T21:39:22Z",
+      "git_commit": "c39616c3287537f82c70bca85a32c5098e37f56e",
+      "gpu_hours": 1.305777413580282,
+      "gpu_peak_allocated_bytes": 127339008,
+      "kind": "training",
+      "name": "phase3_seed1_V",
+      "parameters": 287808,
+      "phase": 3,
+      "seed": 1,
+      "started_utc": "2026-11-05T20:21:01Z",
+      "status": "COMPLETED",
+      "stop_reason": "COMPLETED_PHASE3"
+    }
+  ]
+}
