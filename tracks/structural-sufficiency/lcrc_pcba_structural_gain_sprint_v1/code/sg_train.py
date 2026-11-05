@@ -602,8 +602,8 @@ def train(
             "train_molecules_per_second": float(len(task.train_rows) / train_seconds)
             if train_seconds > 0
             else float("nan"),
-            "best_epoch_so_far": int(tracker.best_epoch),
-            "best_valid_ap_so_far": float(tracker.best_metric),
+            "best_epoch_so_far": None if tracker.best_epoch is None else int(tracker.best_epoch),
+            "best_valid_ap_so_far": None if tracker.best_epoch is None else float(tracker.best_metric),
             "is_best": bool(strict),
             "strict_improve": bool(strict),
             "grad_norm_max_epoch": float(max(grad_norms)) if grad_norms else None,
