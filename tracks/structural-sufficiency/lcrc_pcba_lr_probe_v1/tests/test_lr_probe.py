@@ -77,6 +77,22 @@ def test_order_plan_is_repeatable_and_independent_of_arm():
     assert torch.equal(before, torch.get_rng_state())
 
 
+def test_nan_aware_label_comparison():
+    import torch
+    from lr_preflight import _labels_equal
+
+    a = torch.tensor([[1.0, float("nan")], [0.0, 1.0]])
+    b = torch.tensor([[1.0, float("nan")], [0.0, 1.0]])
+    c = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
+    ok = _labels_equal(a, b)
+    assert ok["equal"] is True
+    assert ok["nan_mask_equal"] is True
+    assert ok["n_nan_a"] == 1
+    bad = _labels_equal(a, c)
+    assert bad["equal"] is False
+    assert bad["nan_mask_equal"] is False
+
+
 def test_decision_labels_are_verbatim():
     def label(h, low, hs="COMPLETED", ls="COMPLETED"):
         return C.decide_label(h, low, hs, ls)["label"]

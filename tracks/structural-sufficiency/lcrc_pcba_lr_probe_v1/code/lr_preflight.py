@@ -48,6 +48,33 @@ import pc_model as BM  # noqa: E402
 from pf_pipeline import PinnedStager  # noqa: E402
 
 
+def _labels_equal(a: torch.Tensor, b: torch.Tensor) -> dict[str, Any]:
+    """NaN-aware label equality: NaN is a mask, not a value to compare."""
+    if tuple(a.shape) != tuple(b.shape) or a.dtype != b.dtype:
+        return {
+            "equal": False,
+            "reason": "shape/dtype mismatch",
+            "shape_a": list(a.shape),
+            "shape_b": list(b.shape),
+            "dtype_a": str(a.dtype),
+            "dtype_b": str(b.dtype),
+        }
+    nan_a = torch.isnan(a)
+    nan_b = torch.isnan(b)
+    nan_mask_equal = bool(torch.equal(nan_a, nan_b))
+    finite = torch.isfinite(a) & torch.isfinite(b)
+    finite_values_equal = bool(torch.equal(a[finite], b[finite])) if bool(finite.any()) else True
+    max_diff = float((a[finite] - b[finite]).abs().max().item()) if bool(finite.any()) else 0.0
+    return {
+        "equal": bool(nan_mask_equal and finite_values_equal),
+        "nan_mask_equal": nan_mask_equal,
+        "finite_values_equal": finite_values_equal,
+        "n_nan_a": int(nan_a.sum()),
+        "n_nan_b": int(nan_b.sum()),
+        "max_abs_diff_finite": max_diff,
+    }
+
+
 def _compare_batches(a: Mapping[str, Any], b: Mapping[str, Any]) -> dict[str, Any]:
     fields = []
     all_keys_equal = list(a.keys()) == list(b.keys())
@@ -180,12 +207,22 @@ def _pinned_smoke(
         y_pinned = stager.labels(task.labels[rows])
 
         batch_cmp = _compare_batches(batch_pageable, batch_pinned)
-        label_exact = bool(y_pageable.dtype == y_pinned.dtype and torch.equal(y_pageable, y_pinned))
-        label_diff = float((y_pageable - y_pinned).abs().max().item())
+        label_cmp = _labels_equal(y_pageable, y_pinned)
+        label_exact = bool(label_cmp["equal"])
+        label_diff = float(label_cmp.get("max_abs_diff_finite", 0.0))
 
         model_pageable.train()
         model_pinned.train()
+        # Reset immediately before *each* forward so the two models see the
+        # same dropout mask.  A single reset before both forwards would let the
+        # first forward advance the CUDA generator.
+        torch.manual_seed(C.SEED)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(C.SEED)
         logits_a = model_pageable(batch_pageable)
+        torch.manual_seed(C.SEED)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(C.SEED)
         logits_b = model_pinned(batch_pinned)
         logits_diff = float((logits_a - logits_b).abs().max().item())
         loss_a = MET.masked_bce_loss(logits_a, y_pageable)
@@ -209,7 +246,10 @@ def _pinned_smoke(
             "rows_sha256": C.sha256_int64(rows),
             "batch": batch_cmp,
             "labels_exact_equal": label_exact,
-            "labels_max_abs_diff": float(label_diff),
+            "labels_nan_mask_equal": bool(label_cmp.get("nan_mask_equal", False)),
+            "labels_finite_values_equal": bool(label_cmp.get("finite_values_equal", False)),
+            "labels_n_nan": int(label_cmp.get("n_nan_a", 0)),
+            "labels_max_abs_diff_finite": float(label_diff),
             "logits_max_abs_diff": float(logits_diff),
             "loss_a": float(loss_a.item()),
             "loss_b": float(loss_b.item()),
