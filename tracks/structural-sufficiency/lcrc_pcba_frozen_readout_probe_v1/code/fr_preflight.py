@@ -109,6 +109,8 @@ def run(*, device: torch.device, out_dir: Path = C.PREFLIGHT_RUN) -> dict[str, A
     replay_diff = float(np.abs(replay.astype(np.float64) - extracted.astype(np.float64)).max())
     valid_ap = FM.official_ap(task.labels[task.valid_rows], BM.sigmoid(replay))["value"]
     valid_delta = abs(float(valid_ap) - float(C.AP0))
+    extracted_ap = FM.official_ap(task.labels[task.valid_rows], BM.sigmoid(extracted))["value"]
+    replay_ap_delta = abs(float(valid_ap) - float(extracted_ap))
 
     # ---- 2. small Train subset: identity + content checks -------------------
     train_rows = np.asarray(task.train_rows[:SMOKE_TRAIN_ROWS], dtype=np.int64)
@@ -167,7 +169,11 @@ def run(*, device: torch.device, out_dir: Path = C.PREFLIGHT_RUN) -> dict[str, A
     grads_present = any(p.grad is not None for p in model.parameters())
     gates = {
         "valid_ap_reproduces_ap0": bool(valid_delta <= C.VALID_AP_TOL),
-        "independent_replay_matches_extracted": bool(replay_diff <= 1e-5),
+        "extracted_ap_reproduces_ap0": bool(abs(float(extracted_ap) - float(C.AP0)) <= C.VALID_AP_TOL),
+        "independent_replay_logits_within_calibrated_bound": bool(
+            replay_diff <= C.REPLAY_LOGIT_TOL
+        ),
+        "independent_replay_valid_ap": bool(replay_ap_delta <= C.REPLAY_AP_TOL),
         "rho_in_reconstruction": bool(valid["audit"]["rho_reconstruction_gate"] and train["audit"]["rho_reconstruction_gate"]),
         "rho_replay": bool(valid["audit"]["rho_replay_gate"] and train["audit"]["rho_replay_gate"]),
         "logits_identity": bool(valid["audit"]["logits_identity_gate"] and train["audit"]["logits_identity_gate"]),
@@ -207,6 +213,10 @@ def run(*, device: torch.device, out_dir: Path = C.PREFLIGHT_RUN) -> dict[str, A
             "abs_delta": float(valid_delta),
             "tolerance": float(C.VALID_AP_TOL),
             "independent_replay_max_abs_logit_diff": replay_diff,
+            "independent_replay_logit_tolerance": float(C.REPLAY_LOGIT_TOL),
+            "extracted_official_ap": float(extracted_ap),
+            "independent_replay_vs_extracted_ap_delta": float(replay_ap_delta),
+            "independent_replay_ap_tolerance": float(C.REPLAY_AP_TOL),
             "extraction": valid["audit"],
         },
         "train_smoke_subset": {

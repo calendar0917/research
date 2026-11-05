@@ -96,6 +96,13 @@ AP0 = 0.2374902968831333
 TRAIN_AP0 = 0.38833559949014146
 VALID_AP_TOL = 1e-4
 TRAIN_AP_TOL = 1e-4
+#: Independent-replay tolerances, calibrated on the measured cross-call spread of
+#: the frozen encoder (``runs/replay_diag/replay_diag.json``): CUDA ``index_add_``
+#: atomics move the logits by up to ~8e-5 while the AP moves by <= ~6.4e-6.
+REPLAY_LOGIT_TOL = 1e-3
+REPLAY_AP_TOL = 1e-5
+RHO_RECONSTRUCT_TOL = 1e-5
+RHO_REPLAY_TOL = 1e-5
 N_SCORABLE_TASKS_EXPECTED = 127
 
 #: ``rho_in`` column layout of the frozen model: [g | mean_h | mean_h2 | log1p(n)].
@@ -450,9 +457,13 @@ __all__ = [
     "PREFLIGHT_RUN",
     "PROTOCOL_ID",
     "REPO",
+    "REPLAY_AP_TOL",
+    "REPLAY_LOGIT_TOL",
     "RESULT_LABELS",
     "RHO_IN_DIM_EXPECTED",
     "RHO_LAYOUT",
+    "RHO_RECONSTRUCT_TOL",
+    "RHO_REPLAY_TOL",
     "ROUND",
     "ROUND_ID",
     "RUNS",

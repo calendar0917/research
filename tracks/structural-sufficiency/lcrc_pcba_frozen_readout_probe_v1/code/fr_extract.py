@@ -155,6 +155,13 @@ def run(
     extraction_seconds = float(valid["audit"]["seconds"] + train["audit"]["seconds"])
 
     # ---- independent replay through the historical inference path -----------
+    # NOTE (calibration, recorded in PROTOCOL.md §1): the frozen forward uses
+    # CUDA atomic ``index_add_`` reductions, so its logits are not bitwise
+    # reproducible across calls (measured spread <= 8e-5 absolute; the g and
+    # log1p(n) blocks are exactly reproducible, mean_h/mean_h2 are not).  The
+    # replay is therefore gated on AP agreement (1e-5) plus a coarse logit
+    # sanity bound (1e-3) that a real layout/path bug would exceed by orders of
+    # magnitude.  The measured values are always recorded.
     replay = MODEL.replay_logits(model, task, task.valid_rows, device)
     extracted_valid = valid["logits"].cpu().numpy()
     replay_diff = float(np.abs(replay.astype(np.float64) - extracted_valid.astype(np.float64)).max())
@@ -259,8 +266,8 @@ def run(
         "logits_identity_contrib_plus_rho": bool(
             train["audit"]["logits_identity_gate"] and valid["audit"]["logits_identity_gate"]
         ),
-        "independent_replay_matches_extracted_logits": bool(replay_diff <= 1e-5),
-        "independent_replay_matches_valid_ap": bool(replay_ap_delta <= 1e-5),
+        "independent_replay_matches_extracted_logits": bool(replay_diff <= C.REPLAY_LOGIT_TOL),
+        "independent_replay_matches_valid_ap": bool(replay_ap_delta <= C.REPLAY_AP_TOL),
         "valid_ap_reproduces_ap0": bool(valid_delta <= C.VALID_AP_TOL),
         "train_ap_reproduces_frozen_diagnostic": bool(train_delta <= C.TRAIN_AP_TOL),
         "standardizer_zero_variance_safe": bool(
@@ -372,8 +379,16 @@ def run(
             "hook": "forward_pre_hook on model.rho (read-only, removed after extraction)",
             "independent_replay_path": "pc_model.predict_logits (batch 256)",
             "independent_replay_max_abs_logit_diff": replay_diff,
+            "independent_replay_logit_tolerance": float(C.REPLAY_LOGIT_TOL),
+            "independent_replay_logit_gate": bool(replay_diff <= C.REPLAY_LOGIT_TOL),
             "independent_replay_valid_ap": float(replay_ap),
             "independent_replay_valid_ap_delta": replay_ap_delta,
+            "independent_replay_ap_tolerance": float(C.REPLAY_AP_TOL),
+            "replay_nondeterminism_note": (
+                "cross-call logit spread is intrinsic to the frozen encoder's CUDA "
+                "index_add_ reductions; the gate is calibrated in "
+                "runs/replay_diag/replay_diag.json and PROTOCOL.md §1"
+            ),
             "seconds": extraction_seconds,
             "metric_seconds": metric_seconds,
         },

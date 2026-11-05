@@ -217,9 +217,15 @@ def extract_split(
             "max_abs_rho_reconstruction_diff": float(max_reconstruct_diff),
             "max_abs_rho_replay_diff": float(max_replay_diff),
             "max_abs_contrib_plus_rho_minus_logits": float(max_contrib_diff),
-            "rho_reconstruction_gate": bool(max_reconstruct_diff <= 1e-5),
-            "rho_replay_gate": bool(max_replay_diff <= 1e-5),
+            "rho_reconstruction_gate": bool(max_reconstruct_diff <= C.RHO_RECONSTRUCT_TOL),
+            "rho_reconstruction_tolerance": float(C.RHO_RECONSTRUCT_TOL),
+            "rho_replay_gate": bool(max_replay_diff <= C.RHO_REPLAY_TOL),
+            "rho_replay_tolerance": float(C.RHO_REPLAY_TOL),
             "logits_identity_gate": bool(max_contrib_diff == 0.0),
+            "cross_call_nondeterminism_note": (
+                "mean_h/mean_h2 use CUDA atomic index_add_; a repeated forward is not "
+                "bitwise identical (see runs/replay_diag/replay_diag.json)"
+            ),
             "rho_in_sha256": C.sha256_array(rho_buf.cpu().numpy()),
             "logits_sha256": C.sha256_array(logit_buf.cpu().numpy()),
             "rows_sha256": C.sha256_int64(rows),

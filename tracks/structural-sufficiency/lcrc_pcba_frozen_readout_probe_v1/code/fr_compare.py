@@ -283,6 +283,10 @@ def build(analysis_dir: Path = C.ANALYSIS, *, write: bool = True) -> dict[str, A
     preflight_path = C.PREFLIGHT_RUN / "preflight.json"
     if preflight_path.exists():
         preflight = C.read_json(preflight_path)
+    replay_diag = None
+    replay_diag_path = C.RUNS / "replay_diag" / "replay_diag.json"
+    if replay_diag_path.exists():
+        replay_diag = C.read_json(replay_diag_path)
 
     extraction_hours = float(extraction.get("gpu_hours") or 0.0)
     heads_hours = float(heads.get("gpu_hours") or 0.0)
@@ -442,6 +446,25 @@ def build(analysis_dir: Path = C.ANALYSIS, *, write: bool = True) -> dict[str, A
             "frozen_logits_unchanged": bool(heads["gates"]["frozen_logits_unchanged"]),
             "seeds": {"init": C.SEED, "row_order": C.SEED},
             "single_seed_limitation": "one seed per head; no seed replication in this round",
+            "encoder_forward_not_bitwise_reproducible": None
+            if replay_diag is None
+            else {
+                "measured_on": replay_diag.get("rows"),
+                "extraction_vs_extraction_logits_max_abs_diff": replay_diag["extraction_vs_extraction"]["logits_max_abs_diff"],
+                "extraction_vs_extraction_rho_in_max_abs_diff": replay_diag["extraction_vs_extraction"]["rho_in_max_abs_diff"],
+                "rho_in_block_max_abs_diff": replay_diag["extraction_vs_extraction"]["rho_in_block_max_abs_diff"],
+                "extraction_vs_extraction_ap_abs_diff": replay_diag["extraction_vs_extraction"]["ap_abs_diff"],
+                "predict_logits_vs_predict_logits_logits_max_abs_diff": replay_diag["predict_logits_vs_predict_logits_bs512"]["logits_max_abs_diff"],
+                "cause": "CUDA atomic index_add_ reductions in mean_h / mean_h2",
+                "consequence": "the cached (rho_in, logits) pair is internally consistent (one forward pass) and AP-level comparisons are stable to ~6e-6; only bitwise logit equality across calls is unavailable",
+                "artifact": C.track_rel(replay_diag_path),
+                "artifact_sha256": C.sha256_file(replay_diag_path),
+                "calibrated_replay_gates": {
+                    "logits": float(C.REPLAY_LOGIT_TOL),
+                    "ap": float(C.REPLAY_AP_TOL),
+                    "rho_reconstruction": float(C.RHO_RECONSTRUCT_TOL),
+                },
+            },
         },
         "decision": decision,
         "interpretation_guardrails": C.DECISION["interpretation_guardrails"],

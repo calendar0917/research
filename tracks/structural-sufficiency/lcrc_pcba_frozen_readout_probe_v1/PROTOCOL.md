@@ -71,10 +71,39 @@ mean/scale、`manifest.json`（形状、dtype、SHA256、行顺序哈希、来�
 | Train AP 复现 | `|AP_train - TRAIN_AP0| <= 1e-4` |
 | `rho_in` 维度 | 等于 `model.rho.lins[0].weight.shape[1]` == 171 且布局宽度吻合 |
 | `rho_in` 内容 | 独立重建最大绝对差 `<= 1e-5` |
-| 原计算路径一致 | `contrib + rho == logits`（逐位）；独立重放最大 logit 差 `<= 1e-5` |
+| 原计算路径一致 | `contrib + rho == logits`（逐位）；独立重放 AP 差 `<= 1e-5` 且最大 logit 差 `<= 1e-3` |
 | 行完整性 | Train 350,343 / Valid 43,793 唯一且互不相交 |
 | Test 隔离 | Test 行有限标签数 0；Train/Valid 与 Test 无交集；从不索引 |
 | 标准化 | zero-variance 列 scale 恰为 1.0；拟合行数 = 350,343 |
+
+### 阈值修订（在阶段 A/B 任何正式 GPU 结果之前，2026-11-05T23:02Z）
+
+smoke（`fr-preflight`，run `fr-preflight-20261105-225804-13e5bbf8`）暴露了一条
+实现事实而不是数据问题：冻结前向里的 `mean_h` / `mean_h2` 用 CUDA
+`index_add_`（atomic）归约，因此**同一输入两次前向的 logits 不可能逐位相等**。
+随后用专门的诊断 run（`fr-replay-diag-20261105-230204-165891c2`，8,192 条
+Validation 行，`runs/replay_diag/replay_diag.json`）量化：
+
+| 对比 | logits 最大绝对差 | AP 绝对差 |
+|---|---:|---:|
+| 同代码、同 batch 的两次提取 | `6.10e-05` | `6.40e-06` |
+| `predict_logits(512)` 两次调用 | `5.34e-05` | — |
+| 提取 vs `predict_logits(512)` | `6.87e-05` | `6.31e-06` |
+| 提取 vs `predict_logits(256)` | `7.63e-05` | `6.21e-07` |
+
+`rho_in` 分块：`g` 与 `log1p_n` 块**逐位相同**（0.0），`mean_h` `8.9e-07`、
+`mean_h2` `2.4e-06`。同一 batch 内独立重建 `rho_in` 的差为 `1.4–2.1e-06`，
+`rho(rho_in)` 重放差为 `0.0`。
+
+因此把“独立重放”门槛改为有依据的双条件：**AP 差 `<= 1e-5`**（真正有意义的
+判据，实测 `<= 6.4e-6`）**且 logit 差 `<= 1e-3`**（粗粒度路径/布局错误检测；
+真实 bug 会是 O(0.1–1)，比实测扩散大 3–4 个数量级）。所有实测值照样记录。
+`rho_in` 重建 / 重放 / `contrib+rho==logits` 的门槛不放宽（`1e-5` / `1e-5` / 逐位）。
+
+这不是判定阈值变更：`AP0`、`0.005`、`64/127`、`0.003`、epoch 8、配方和评价点
+全部不变；改的是一条正确性检查的可达容差，且改动发生在任何正式提取或残差头
+训练之前，依据同时写入 `analysis/feature_extraction_audit.json`、
+`analysis/readout_comparison.json` 与 `REPORT.md`。
 
 ---
 
