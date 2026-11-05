@@ -245,11 +245,12 @@ Provenance:
 
 Not run. At confirmation (21:51 UTC) the round had ≈1 h 45 min of wall clock and ample
 GPU-hour headroom, but the Lipophilicity Fit-2352/Monitor-504
-adaptation is a different feature/graph pipeline from the PCBA cache; building
-and testing it would have consumed the window reserved for the PCBA analysis,
-report and commit. Protocol §9 explicitly permits skipping when the data
-adaptation would exceed the remaining budget, and prioritises the PCBA readout.
-No Lipophilicity label was read or scored in this round.
+adaptation is a different feature/graph pipeline from the PCBA cache. A new
+adapter, F/M-small model variant, correctness gates and four runs could not be
+validated safely inside the remaining window without risking the primary
+deliverable. Protocol §9 explicitly permits skipping when the data adaptation
+would exceed the remaining budget, and prioritises the PCBA readout. No
+Lipophilicity label was read or scored in this round.
 
 ## 11. Reproduction
 
