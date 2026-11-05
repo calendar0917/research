@@ -15,13 +15,967 @@
     "M": 279488,
     "V": 287808
   },
-  "passed": false,
+  "passed": true,
   "preflight": {
-    "all_four_arms_covered": false,
-    "all_passed": false,
-    "arms_covered": [],
-    "files": [],
-    "per_arm": {}
+    "all_four_arms_covered": true,
+    "all_passed": true,
+    "arms_covered": [
+      "C",
+      "F",
+      "M",
+      "V"
+    ],
+    "files": [
+      "tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/analysis/preflight_C_F.json",
+      "tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/analysis/preflight_M_V.json"
+    ],
+    "per_arm": {
+      "C": {
+        "adjacency": {
+          "applicable": false
+        },
+        "arm": "C",
+        "arm_name": "C_control",
+        "checks": {
+          "adjacency": true,
+          "context": true,
+          "epoch0": true,
+          "finite": true,
+          "gradients": true,
+          "identity_eval": true,
+          "identity_train_dropout": true,
+          "permutation": true
+        },
+        "context_isolation": {
+          "applicable": false
+        },
+        "device": "cuda",
+        "environment": {
+          "autocast_enabled": false,
+          "cuda_available": true,
+          "cuda_device_capability": [
+            8,
+            0
+          ],
+          "cuda_device_count": 1,
+          "cuda_device_index": 0,
+          "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+          "cuda_device_total_memory_bytes": 42285268992,
+          "cuda_visible_devices": "0",
+          "cudnn_allow_tf32": true,
+          "deterministic_algorithms": false,
+          "float32_matmul_precision": "highest",
+          "git_commit": "43794ab8d081c1080e3cfe1f95cb97bab864856b",
+          "git_dirty": false,
+          "hostname": "a100-2",
+          "matmul_allow_tf32": false,
+          "numpy": "2.1.3",
+          "python": "3.12.14",
+          "torch": "2.5.1+cu124",
+          "torch_cuda": "12.4"
+        },
+        "epoch0": {
+          "abs_delta": 9.164232969705033e-08,
+          "expected_ap": 0.2374902968831333,
+          "n_tasks_scored": 127,
+          "passed": true,
+          "tolerance": 0.0001,
+          "valid_ap": 0.2374902052408036,
+          "valid_bce": 0.04603864167862367
+        },
+        "gradients": {
+          "applicable": false,
+          "passed": true,
+          "steps": [
+            {
+              "grad_norms": {},
+              "step": 1
+            },
+            {
+              "grad_norms": {},
+              "step": 2
+            },
+            {
+              "grad_norms": {},
+              "step": 3
+            }
+          ]
+        },
+        "identity_eval": {
+          "max_abs_logit_diff": 2.86102294921875e-06,
+          "note": "cross-instance CUDA index_add_ reduction noise; the same-model repeated-forward floor is reported under permutation_invariance",
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "identity_train_dropout": {
+          "max_abs_logit_diff": 3.814697265625e-06,
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "model_audit": {
+          "arm": "C",
+          "arm_name": "C_control",
+          "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+          "base_parameter_count": 31,
+          "base_parameter_elements": 245184,
+          "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+          "block_mode": "none",
+          "model_info": {
+            "base_parameters": 31,
+            "new_parameters": 0,
+            "parameters": 245184
+          },
+          "new_module_init": {
+            "global_rng_unchanged": true,
+            "layernorm_layers_initialised": 0,
+            "linear_layers_initialised": 0,
+            "private_generator_seed": 17,
+            "residual_output_zeroed": true
+          },
+          "new_parameter_count": 0,
+          "new_parameter_names": [],
+          "new_parameter_tensors": 0,
+          "total_parameter_count": 245184,
+          "variant": "C1 + none",
+          "warm_start": {
+            "loaded": true,
+            "max_abs_diff": 0.0,
+            "n_tensors_compared": 37,
+            "state_dict_bitwise_equal": true
+          },
+          "zero_residual_at_init": false
+        },
+        "optimizer_audit": {
+          "base_lr": 5e-05,
+          "base_param_group_size": 31,
+          "group0_identical_to_source": true,
+          "moments_reinitialised": false,
+          "n_param_groups_after": 1,
+          "new_lr": 0.0003,
+          "new_param_group_size": 0,
+          "new_param_state_empty_at_start": true,
+          "optimizer": "AdamW",
+          "source_optimizer_state_fingerprint": "6409b6b75c9e25c6adf17cc38229023b9e34293f7ec0e372d3cc79bafd143b0c",
+          "source_step_restored": [
+            24642.0
+          ]
+        },
+        "passed": true,
+        "permutation_invariance": {
+          "identity_noise_floor": 3.814697265625e-06,
+          "max_abs_logit_diff": 2.86102294921875e-06,
+          "note": "graph logits are compared after a random global atom permutation; tolerance covers index_add reduction order",
+          "passed": true,
+          "repeated_forward_diff": 2.86102294921875e-06,
+          "tolerance": 0.0001
+        },
+        "seconds": 12.081031521782279,
+        "smoke": {
+          "epoch_seconds_estimate": 94.27552688506742,
+          "finite": true,
+          "forty_epoch_seconds_estimate": 3771.0210754026966,
+          "gpu_peak_allocated_bytes": 81168896,
+          "gpu_peak_reserved_bytes": 100663296,
+          "loss_first": 0.025562403723597527,
+          "loss_last": 0.018258485943078995,
+          "molecules_per_second": 3717.4440873425765,
+          "new_parameters": 0,
+          "parameters": 245184,
+          "step_ms_mean": 34.43225963662068,
+          "step_ms_p50": 25.892941746860743,
+          "step_ms_p90": 28.362445021048188,
+          "steps": 30,
+          "steps_per_second": 29.04253193236388,
+          "twelve_epoch_seconds_estimate": 1131.3063226208092
+        },
+        "source_audit_summary": {
+          "adamw_steps": [
+            24642.0
+          ],
+          "metadata_ok": true,
+          "sha256": "b158f1669f6d0ccbf5fc05f510050c69ef2fba9f6258cbe59d4d3d9a938eb6c5",
+          "state_shapes_match": true
+        }
+      },
+      "F": {
+        "adjacency": {
+          "add_reverse_bonds_max_abs_diff": 0.0,
+          "applicable": true,
+          "expectation": "invariant to adjacency (new branch takes no bond input)",
+          "n_atoms": 33,
+          "n_bonds": 36,
+          "passed": true,
+          "remove_one_bond_max_abs_diff": 0.0
+        },
+        "arm": "F",
+        "arm_name": "F_ffn2",
+        "checks": {
+          "adjacency": true,
+          "context": true,
+          "epoch0": true,
+          "finite": true,
+          "gradients": true,
+          "identity_eval": true,
+          "identity_train_dropout": true,
+          "permutation": true
+        },
+        "context_isolation": {
+          "applicable": false
+        },
+        "device": "cuda",
+        "environment": {
+          "autocast_enabled": false,
+          "cuda_available": true,
+          "cuda_device_capability": [
+            8,
+            0
+          ],
+          "cuda_device_count": 1,
+          "cuda_device_index": 0,
+          "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+          "cuda_device_total_memory_bytes": 42285268992,
+          "cuda_visible_devices": "0",
+          "cudnn_allow_tf32": true,
+          "deterministic_algorithms": false,
+          "float32_matmul_precision": "highest",
+          "git_commit": "43794ab8d081c1080e3cfe1f95cb97bab864856b",
+          "git_dirty": false,
+          "hostname": "a100-2",
+          "matmul_allow_tf32": false,
+          "numpy": "2.1.3",
+          "python": "3.12.14",
+          "torch": "2.5.1+cu124",
+          "torch_cuda": "12.4"
+        },
+        "epoch0": {
+          "abs_delta": 1.7472758004344335e-07,
+          "expected_ap": 0.2374902968831333,
+          "n_tasks_scored": 127,
+          "passed": true,
+          "tolerance": 0.0001,
+          "valid_ap": 0.23749012215555326,
+          "valid_bce": 0.0460386416219412
+        },
+        "gradients": {
+          "applicable": true,
+          "checks": {
+            "fc1_grads_nonzero_after_two_steps": true,
+            "fc2_grads_nonzero": true
+          },
+          "late_grad_norms": {
+            "blocks.0.fc1.bias": 4.399293538881466e-05,
+            "blocks.0.fc1.weight": 0.0001508800487499684,
+            "blocks.0.fc2.bias": 0.003150403266772628,
+            "blocks.0.fc2.weight": 0.007450605742633343,
+            "blocks.0.norm.bias": 3.636474866652861e-05,
+            "blocks.0.norm.weight": 3.9581234887009487e-05,
+            "blocks.1.fc1.bias": 4.583110785461031e-05,
+            "blocks.1.fc1.weight": 0.00015522386820521206,
+            "blocks.1.fc2.bias": 0.0031508109532296658,
+            "blocks.1.fc2.weight": 0.007632048334926367,
+            "blocks.1.norm.bias": 3.54179173882585e-05,
+            "blocks.1.norm.weight": 4.019340849481523e-05
+          },
+          "passed": true,
+          "steps": [
+            {
+              "grad_norms": {
+                "blocks.0.fc1.bias": 0.0,
+                "blocks.0.fc1.weight": 0.0,
+                "blocks.0.fc2.bias": 0.0036950595676898956,
+                "blocks.0.fc2.weight": 0.008330599404871464,
+                "blocks.0.norm.bias": 0.0,
+                "blocks.0.norm.weight": 0.0,
+                "blocks.1.fc1.bias": 0.0,
+                "blocks.1.fc1.weight": 0.0,
+                "blocks.1.fc2.bias": 0.0036950595676898956,
+                "blocks.1.fc2.weight": 0.008588405326008797,
+                "blocks.1.norm.bias": 0.0,
+                "blocks.1.norm.weight": 0.0
+              },
+              "step": 1
+            },
+            {
+              "grad_norms": {
+                "blocks.0.fc1.bias": 2.5423494662391022e-05,
+                "blocks.0.fc1.weight": 8.576431719120592e-05,
+                "blocks.0.fc2.bias": 0.003150403266772628,
+                "blocks.0.fc2.weight": 0.007450605742633343,
+                "blocks.0.norm.bias": 2.1009007468819618e-05,
+                "blocks.0.norm.weight": 2.1771400497527793e-05,
+                "blocks.1.fc1.bias": 2.6714738851296715e-05,
+                "blocks.1.fc1.weight": 8.814808825263754e-05,
+                "blocks.1.fc2.bias": 0.0031508109532296658,
+                "blocks.1.fc2.weight": 0.007632048334926367,
+                "blocks.1.norm.bias": 2.043393033090979e-05,
+                "blocks.1.norm.weight": 2.274349026265554e-05
+              },
+              "step": 2
+            },
+            {
+              "grad_norms": {
+                "blocks.0.fc1.bias": 4.399293538881466e-05,
+                "blocks.0.fc1.weight": 0.0001508800487499684,
+                "blocks.0.fc2.bias": 0.002810683101415634,
+                "blocks.0.fc2.weight": 0.007090151775628328,
+                "blocks.0.norm.bias": 3.636474866652861e-05,
+                "blocks.0.norm.weight": 3.9581234887009487e-05,
+                "blocks.1.fc1.bias": 4.583110785461031e-05,
+                "blocks.1.fc1.weight": 0.00015522386820521206,
+                "blocks.1.fc2.bias": 0.0028118398040533066,
+                "blocks.1.fc2.weight": 0.00720533961430192,
+                "blocks.1.norm.bias": 3.54179173882585e-05,
+                "blocks.1.norm.weight": 4.019340849481523e-05
+              },
+              "step": 3
+            }
+          ]
+        },
+        "identity_eval": {
+          "max_abs_logit_diff": 2.86102294921875e-06,
+          "note": "cross-instance CUDA index_add_ reduction noise; the same-model repeated-forward floor is reported under permutation_invariance",
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "identity_train_dropout": {
+          "max_abs_logit_diff": 2.86102294921875e-06,
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "model_audit": {
+          "arm": "F",
+          "arm_name": "F_ffn2",
+          "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+          "base_parameter_count": 31,
+          "base_parameter_elements": 245184,
+          "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+          "block_mode": "ffn",
+          "model_info": {
+            "base_parameters": 31,
+            "new_parameters": 33408,
+            "parameters": 278592
+          },
+          "new_module_init": {
+            "global_rng_unchanged": true,
+            "layernorm_layers_initialised": 2,
+            "linear_layers_initialised": 4,
+            "private_generator_seed": 17,
+            "residual_output_zeroed": true
+          },
+          "new_parameter_count": 33408,
+          "new_parameter_names": [
+            "blocks.0.norm.weight",
+            "blocks.0.norm.bias",
+            "blocks.0.fc1.weight",
+            "blocks.0.fc1.bias",
+            "blocks.0.fc2.weight",
+            "blocks.0.fc2.bias",
+            "blocks.1.norm.weight",
+            "blocks.1.norm.bias",
+            "blocks.1.fc1.weight",
+            "blocks.1.fc1.bias",
+            "blocks.1.fc2.weight",
+            "blocks.1.fc2.bias"
+          ],
+          "new_parameter_tensors": 12,
+          "total_parameter_count": 278592,
+          "variant": "C1 + ffn",
+          "warm_start": {
+            "loaded": true,
+            "max_abs_diff": 0.0,
+            "n_tensors_compared": 37,
+            "state_dict_bitwise_equal": true
+          },
+          "zero_residual_at_init": true
+        },
+        "optimizer_audit": {
+          "base_lr": 5e-05,
+          "base_param_group_size": 31,
+          "group0_identical_to_source": true,
+          "moments_reinitialised": false,
+          "n_param_groups_after": 2,
+          "new_lr": 0.0003,
+          "new_param_group_size": 12,
+          "new_param_state_empty_at_start": true,
+          "optimizer": "AdamW",
+          "source_optimizer_state_fingerprint": "6409b6b75c9e25c6adf17cc38229023b9e34293f7ec0e372d3cc79bafd143b0c",
+          "source_step_restored": [
+            24642.0
+          ]
+        },
+        "passed": true,
+        "permutation_invariance": {
+          "identity_noise_floor": 3.814697265625e-06,
+          "max_abs_logit_diff": 3.814697265625e-06,
+          "note": "graph logits are compared after a random global atom permutation; tolerance covers index_add reduction order",
+          "passed": true,
+          "repeated_forward_diff": 3.814697265625e-06,
+          "tolerance": 0.0001
+        },
+        "seconds": 9.837422439362854,
+        "smoke": {
+          "epoch_seconds_estimate": 85.27799487796923,
+          "finite": true,
+          "forty_epoch_seconds_estimate": 3411.1197951187696,
+          "gpu_peak_allocated_bytes": 91947520,
+          "gpu_peak_reserved_bytes": 104857600,
+          "loss_first": 0.025562403723597527,
+          "loss_last": 0.015177186578512192,
+          "molecules_per_second": 4109.665107645948,
+          "new_parameters": 33408,
+          "parameters": 278592,
+          "step_ms_mean": 31.146090167264145,
+          "step_ms_p50": 28.76657643355429,
+          "step_ms_p90": 31.632856978103558,
+          "steps": 30,
+          "steps_per_second": 32.10675865348397,
+          "twelve_epoch_seconds_estimate": 1023.3359385356308
+        },
+        "source_audit_summary": {
+          "adamw_steps": [
+            24642.0
+          ],
+          "metadata_ok": true,
+          "sha256": "b158f1669f6d0ccbf5fc05f510050c69ef2fba9f6258cbe59d4d3d9a938eb6c5",
+          "state_shapes_match": true
+        }
+      },
+      "M": {
+        "adjacency": {
+          "add_reverse_bonds_max_abs_diff": 0.5765965580940247,
+          "applicable": true,
+          "expectation": "responds to real adjacency changes",
+          "n_atoms": 33,
+          "n_bonds": 36,
+          "passed": true,
+          "remove_one_bond_max_abs_diff": 0.18311810493469238
+        },
+        "arm": "M",
+        "arm_name": "M_mp2",
+        "checks": {
+          "adjacency": true,
+          "context": true,
+          "epoch0": true,
+          "finite": true,
+          "gradients": true,
+          "identity_eval": true,
+          "identity_train_dropout": true,
+          "permutation": true
+        },
+        "context_isolation": {
+          "applicable": false
+        },
+        "device": "cuda",
+        "environment": {
+          "autocast_enabled": false,
+          "cuda_available": true,
+          "cuda_device_capability": [
+            8,
+            0
+          ],
+          "cuda_device_count": 1,
+          "cuda_device_index": 0,
+          "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+          "cuda_device_total_memory_bytes": 42285268992,
+          "cuda_visible_devices": "1",
+          "cudnn_allow_tf32": true,
+          "deterministic_algorithms": false,
+          "float32_matmul_precision": "highest",
+          "git_commit": "43794ab8d081c1080e3cfe1f95cb97bab864856b",
+          "git_dirty": false,
+          "hostname": "a100-2",
+          "matmul_allow_tf32": false,
+          "numpy": "2.1.3",
+          "python": "3.12.14",
+          "torch": "2.5.1+cu124",
+          "torch_cuda": "12.4"
+        },
+        "epoch0": {
+          "abs_delta": 1.325641954569301e-06,
+          "expected_ap": 0.2374902968831333,
+          "n_tasks_scored": 127,
+          "passed": true,
+          "tolerance": 0.0001,
+          "valid_ap": 0.23749162252508788,
+          "valid_bce": 0.04603864170497653
+        },
+        "gradients": {
+          "applicable": true,
+          "checks": {
+            "bond_proj_grad_nonzero": true,
+            "fc1_grads_nonzero_after_two_steps": true,
+            "fc2_grads_nonzero": true
+          },
+          "late_grad_norms": {
+            "blocks.0.fc1.bias": 3.83634542231448e-05,
+            "blocks.0.fc1.weight": 0.0003265374107286334,
+            "blocks.0.fc2.bias": 0.0026925422716885805,
+            "blocks.0.fc2.weight": 0.014418628998100758,
+            "blocks.0.norm.bias": 7.608388114022091e-05,
+            "blocks.0.norm.weight": 7.499509956687689e-05,
+            "blocks.1.fc1.bias": 3.96333598473575e-05,
+            "blocks.1.fc1.weight": 0.00033219889155589044,
+            "blocks.1.fc2.bias": 0.0026946936268359423,
+            "blocks.1.fc2.weight": 0.015033964067697525,
+            "blocks.1.norm.bias": 7.758454739814624e-05,
+            "blocks.1.norm.weight": 8.311976853292435e-05,
+            "bond_proj.bias": 8.03177899797447e-05,
+            "bond_proj.weight": 0.0001292764936806634
+          },
+          "passed": true,
+          "steps": [
+            {
+              "grad_norms": {
+                "blocks.0.fc1.bias": 0.0,
+                "blocks.0.fc1.weight": 0.0,
+                "blocks.0.fc2.bias": 0.0036950595676898956,
+                "blocks.0.fc2.weight": 0.01818373240530491,
+                "blocks.0.norm.bias": 0.0,
+                "blocks.0.norm.weight": 0.0,
+                "blocks.1.fc1.bias": 0.0,
+                "blocks.1.fc1.weight": 0.0,
+                "blocks.1.fc2.bias": 0.0036950595676898956,
+                "blocks.1.fc2.weight": 0.01914275251328945,
+                "blocks.1.norm.bias": 0.0,
+                "blocks.1.norm.weight": 0.0,
+                "bond_proj.bias": 0.0,
+                "bond_proj.weight": 0.0
+              },
+              "step": 1
+            },
+            {
+              "grad_norms": {
+                "blocks.0.fc1.bias": 2.6763278583530337e-05,
+                "blocks.0.fc1.weight": 0.00022161331435199827,
+                "blocks.0.fc2.bias": 0.0026925422716885805,
+                "blocks.0.fc2.weight": 0.014418628998100758,
+                "blocks.0.norm.bias": 5.4333024309016764e-05,
+                "blocks.0.norm.weight": 4.8161266022361815e-05,
+                "blocks.1.fc1.bias": 2.7769472580985166e-05,
+                "blocks.1.fc1.weight": 0.00022701545094605535,
+                "blocks.1.fc2.bias": 0.0026946936268359423,
+                "blocks.1.fc2.weight": 0.015033964067697525,
+                "blocks.1.norm.bias": 5.453299672808498e-05,
+                "blocks.1.norm.weight": 5.647607395076193e-05,
+                "bond_proj.bias": 5.6531469454057515e-05,
+                "bond_proj.weight": 8.650139352539554e-05
+              },
+              "step": 2
+            },
+            {
+              "grad_norms": {
+                "blocks.0.fc1.bias": 3.83634542231448e-05,
+                "blocks.0.fc1.weight": 0.0003265374107286334,
+                "blocks.0.fc2.bias": 0.0020920659881085157,
+                "blocks.0.fc2.weight": 0.01274910382926464,
+                "blocks.0.norm.bias": 7.608388114022091e-05,
+                "blocks.0.norm.weight": 7.499509956687689e-05,
+                "blocks.1.fc1.bias": 3.96333598473575e-05,
+                "blocks.1.fc1.weight": 0.00033219889155589044,
+                "blocks.1.fc2.bias": 0.0020937153603881598,
+                "blocks.1.fc2.weight": 0.013424123637378216,
+                "blocks.1.norm.bias": 7.758454739814624e-05,
+                "blocks.1.norm.weight": 8.311976853292435e-05,
+                "bond_proj.bias": 8.03177899797447e-05,
+                "bond_proj.weight": 0.0001292764936806634
+              },
+              "step": 3
+            }
+          ]
+        },
+        "identity_eval": {
+          "max_abs_logit_diff": 2.86102294921875e-06,
+          "note": "cross-instance CUDA index_add_ reduction noise; the same-model repeated-forward floor is reported under permutation_invariance",
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "identity_train_dropout": {
+          "max_abs_logit_diff": 3.814697265625e-06,
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "model_audit": {
+          "arm": "M",
+          "arm_name": "M_mp2",
+          "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+          "base_parameter_count": 31,
+          "base_parameter_elements": 245184,
+          "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+          "block_mode": "mp",
+          "model_info": {
+            "base_parameters": 31,
+            "new_parameters": 34304,
+            "parameters": 279488
+          },
+          "new_module_init": {
+            "global_rng_unchanged": true,
+            "layernorm_layers_initialised": 2,
+            "linear_layers_initialised": 5,
+            "private_generator_seed": 17,
+            "residual_output_zeroed": true
+          },
+          "new_parameter_count": 34304,
+          "new_parameter_names": [
+            "blocks.0.norm.weight",
+            "blocks.0.norm.bias",
+            "blocks.0.fc1.weight",
+            "blocks.0.fc1.bias",
+            "blocks.0.fc2.weight",
+            "blocks.0.fc2.bias",
+            "blocks.1.norm.weight",
+            "blocks.1.norm.bias",
+            "blocks.1.fc1.weight",
+            "blocks.1.fc1.bias",
+            "blocks.1.fc2.weight",
+            "blocks.1.fc2.bias",
+            "bond_proj.weight",
+            "bond_proj.bias"
+          ],
+          "new_parameter_tensors": 14,
+          "total_parameter_count": 279488,
+          "variant": "C1 + mp",
+          "warm_start": {
+            "loaded": true,
+            "max_abs_diff": 0.0,
+            "n_tensors_compared": 37,
+            "state_dict_bitwise_equal": true
+          },
+          "zero_residual_at_init": true
+        },
+        "optimizer_audit": {
+          "base_lr": 5e-05,
+          "base_param_group_size": 31,
+          "group0_identical_to_source": true,
+          "moments_reinitialised": false,
+          "n_param_groups_after": 2,
+          "new_lr": 0.0003,
+          "new_param_group_size": 14,
+          "new_param_state_empty_at_start": true,
+          "optimizer": "AdamW",
+          "source_optimizer_state_fingerprint": "6409b6b75c9e25c6adf17cc38229023b9e34293f7ec0e372d3cc79bafd143b0c",
+          "source_step_restored": [
+            24642.0
+          ]
+        },
+        "passed": true,
+        "permutation_invariance": {
+          "identity_noise_floor": 3.814697265625e-06,
+          "max_abs_logit_diff": 3.814697265625e-06,
+          "note": "graph logits are compared after a random global atom permutation; tolerance covers index_add reduction order",
+          "passed": true,
+          "repeated_forward_diff": 2.86102294921875e-06,
+          "tolerance": 0.0001
+        },
+        "seconds": 8.93391166208312,
+        "smoke": {
+          "epoch_seconds_estimate": 101.57335466602817,
+          "finite": true,
+          "forty_epoch_seconds_estimate": 4062.934186641127,
+          "gpu_peak_allocated_bytes": 99999232,
+          "gpu_peak_reserved_bytes": 125829120,
+          "loss_first": 0.025562403723597527,
+          "loss_last": 0.013143753632903099,
+          "molecules_per_second": 3450.353699081033,
+          "new_parameters": 34304,
+          "parameters": 279488,
+          "step_ms_mean": 37.09764597006142,
+          "step_ms_p50": 29.41728592850268,
+          "step_ms_p90": 34.13523300550878,
+          "steps": 30,
+          "steps_per_second": 26.95588827407057,
+          "twelve_epoch_seconds_estimate": 1218.8802559923379
+        },
+        "source_audit_summary": {
+          "adamw_steps": [
+            24642.0
+          ],
+          "metadata_ok": true,
+          "sha256": "b158f1669f6d0ccbf5fc05f510050c69ef2fba9f6258cbe59d4d3d9a938eb6c5",
+          "state_shapes_match": true
+        }
+      },
+      "V": {
+        "adjacency": {
+          "add_reverse_bonds_max_abs_diff": 0.5493886470794678,
+          "applicable": true,
+          "expectation": "responds to real adjacency changes",
+          "n_atoms": 33,
+          "n_bonds": 36,
+          "passed": true,
+          "remove_one_bond_max_abs_diff": 0.165183424949646
+        },
+        "arm": "V",
+        "arm_name": "V_mp2_graph_context",
+        "checks": {
+          "adjacency": true,
+          "context": true,
+          "epoch0": true,
+          "finite": true,
+          "gradients": true,
+          "identity_eval": true,
+          "identity_train_dropout": true,
+          "permutation": true
+        },
+        "context_isolation": {
+          "applicable": true,
+          "context_atom_spread_max_abs_diff": 0.0,
+          "context_maps_per_block": 2,
+          "graph0_context_change_when_graph1_states_shift": 1.1920928955078125e-07,
+          "mean_pool_manual_max_abs_diff": 2.384185791015625e-07,
+          "n_graphs": 2,
+          "passed": true
+        },
+        "device": "cuda",
+        "environment": {
+          "autocast_enabled": false,
+          "cuda_available": true,
+          "cuda_device_capability": [
+            8,
+            0
+          ],
+          "cuda_device_count": 1,
+          "cuda_device_index": 0,
+          "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+          "cuda_device_total_memory_bytes": 42285268992,
+          "cuda_visible_devices": "1",
+          "cudnn_allow_tf32": true,
+          "deterministic_algorithms": false,
+          "float32_matmul_precision": "highest",
+          "git_commit": "43794ab8d081c1080e3cfe1f95cb97bab864856b",
+          "git_dirty": false,
+          "hostname": "a100-2",
+          "matmul_allow_tf32": false,
+          "numpy": "2.1.3",
+          "python": "3.12.14",
+          "torch": "2.5.1+cu124",
+          "torch_cuda": "12.4"
+        },
+        "epoch0": {
+          "abs_delta": 8.218157785122582e-07,
+          "expected_ap": 0.2374902968831333,
+          "n_tasks_scored": 127,
+          "passed": true,
+          "tolerance": 0.0001,
+          "valid_ap": 0.2374894750673548,
+          "valid_bce": 0.04603864162178791
+        },
+        "gradients": {
+          "applicable": true,
+          "checks": {
+            "bond_proj_grad_nonzero": true,
+            "context_proj_grads_nonzero": true,
+            "fc1_grads_nonzero_after_two_steps": true,
+            "fc2_grads_nonzero": true
+          },
+          "late_grad_norms": {
+            "blocks.0.ctx_proj.bias": 2.988216328958515e-05,
+            "blocks.0.ctx_proj.weight": 9.415032400283962e-05,
+            "blocks.0.fc1.bias": 3.836291580228135e-05,
+            "blocks.0.fc1.weight": 0.0003066742210648954,
+            "blocks.0.fc2.bias": 0.0027312145102769136,
+            "blocks.0.fc2.weight": 0.013382959179580212,
+            "blocks.0.norm.bias": 7.427157834172249e-05,
+            "blocks.0.norm.weight": 7.494106830563396e-05,
+            "blocks.1.ctx_proj.bias": 3.0513912861351855e-05,
+            "blocks.1.ctx_proj.weight": 9.332124318461865e-05,
+            "blocks.1.fc1.bias": 3.93177178921178e-05,
+            "blocks.1.fc1.weight": 0.0003265386330895126,
+            "blocks.1.fc2.bias": 0.0027328350115567446,
+            "blocks.1.fc2.weight": 0.01436071377247572,
+            "blocks.1.norm.bias": 7.854784053051844e-05,
+            "blocks.1.norm.weight": 7.718895358266309e-05,
+            "bond_proj.bias": 7.154389459174126e-05,
+            "bond_proj.weight": 0.000118020769150462
+          },
+          "passed": true,
+          "steps": [
+            {
+              "grad_norms": {
+                "blocks.0.ctx_proj.bias": 0.0,
+                "blocks.0.ctx_proj.weight": 0.0,
+                "blocks.0.fc1.bias": 0.0,
+                "blocks.0.fc1.weight": 0.0,
+                "blocks.0.fc2.bias": 0.0036950598005205393,
+                "blocks.0.fc2.weight": 0.016455065459012985,
+                "blocks.0.norm.bias": 0.0,
+                "blocks.0.norm.weight": 0.0,
+                "blocks.1.ctx_proj.bias": 0.0,
+                "blocks.1.ctx_proj.weight": 0.0,
+                "blocks.1.fc1.bias": 0.0,
+                "blocks.1.fc1.weight": 0.0,
+                "blocks.1.fc2.bias": 0.0036950598005205393,
+                "blocks.1.fc2.weight": 0.01834448054432869,
+                "blocks.1.norm.bias": 0.0,
+                "blocks.1.norm.weight": 0.0,
+                "bond_proj.bias": 0.0,
+                "bond_proj.weight": 0.0
+              },
+              "step": 1
+            },
+            {
+              "grad_norms": {
+                "blocks.0.ctx_proj.bias": 2.0796638636966236e-05,
+                "blocks.0.ctx_proj.weight": 6.474040856119245e-05,
+                "blocks.0.fc1.bias": 2.5985225875047036e-05,
+                "blocks.0.fc1.weight": 0.00020005575788673013,
+                "blocks.0.fc2.bias": 0.0027312145102769136,
+                "blocks.0.fc2.weight": 0.013382959179580212,
+                "blocks.0.norm.bias": 5.093619256513193e-05,
+                "blocks.0.norm.weight": 4.638165046344511e-05,
+                "blocks.1.ctx_proj.bias": 2.2481468477053568e-05,
+                "blocks.1.ctx_proj.weight": 6.871334335301071e-05,
+                "blocks.1.fc1.bias": 2.777791814878583e-05,
+                "blocks.1.fc1.weight": 0.00022156198974698782,
+                "blocks.1.fc2.bias": 0.0027328350115567446,
+                "blocks.1.fc2.weight": 0.01436071377247572,
+                "blocks.1.norm.bias": 5.661095565301366e-05,
+                "blocks.1.norm.weight": 5.1372542657190934e-05,
+                "bond_proj.bias": 5.009581582271494e-05,
+                "bond_proj.weight": 7.76479282649234e-05
+              },
+              "step": 2
+            },
+            {
+              "grad_norms": {
+                "blocks.0.ctx_proj.bias": 2.988216328958515e-05,
+                "blocks.0.ctx_proj.weight": 9.415032400283962e-05,
+                "blocks.0.fc1.bias": 3.836291580228135e-05,
+                "blocks.0.fc1.weight": 0.0003066742210648954,
+                "blocks.0.fc2.bias": 0.0021509986836463213,
+                "blocks.0.fc2.weight": 0.012191658839583397,
+                "blocks.0.norm.bias": 7.427157834172249e-05,
+                "blocks.0.norm.weight": 7.494106830563396e-05,
+                "blocks.1.ctx_proj.bias": 3.0513912861351855e-05,
+                "blocks.1.ctx_proj.weight": 9.332124318461865e-05,
+                "blocks.1.fc1.bias": 3.93177178921178e-05,
+                "blocks.1.fc1.weight": 0.0003265386330895126,
+                "blocks.1.fc2.bias": 0.0021541945170611143,
+                "blocks.1.fc2.weight": 0.013021775521337986,
+                "blocks.1.norm.bias": 7.854784053051844e-05,
+                "blocks.1.norm.weight": 7.718895358266309e-05,
+                "bond_proj.bias": 7.154389459174126e-05,
+                "bond_proj.weight": 0.000118020769150462
+              },
+              "step": 3
+            }
+          ]
+        },
+        "identity_eval": {
+          "max_abs_logit_diff": 2.86102294921875e-06,
+          "note": "cross-instance CUDA index_add_ reduction noise; the same-model repeated-forward floor is reported under permutation_invariance",
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "identity_train_dropout": {
+          "max_abs_logit_diff": 2.86102294921875e-06,
+          "passed": true,
+          "tolerance": 0.0001
+        },
+        "model_audit": {
+          "arm": "V",
+          "arm_name": "V_mp2_graph_context",
+          "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+          "base_parameter_count": 31,
+          "base_parameter_elements": 245184,
+          "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+          "block_mode": "mp_context",
+          "model_info": {
+            "base_parameters": 31,
+            "new_parameters": 42624,
+            "parameters": 287808
+          },
+          "new_module_init": {
+            "global_rng_unchanged": true,
+            "layernorm_layers_initialised": 2,
+            "linear_layers_initialised": 7,
+            "private_generator_seed": 17,
+            "residual_output_zeroed": true
+          },
+          "new_parameter_count": 42624,
+          "new_parameter_names": [
+            "blocks.0.norm.weight",
+            "blocks.0.norm.bias",
+            "blocks.0.fc1.weight",
+            "blocks.0.fc1.bias",
+            "blocks.0.fc2.weight",
+            "blocks.0.fc2.bias",
+            "blocks.0.ctx_proj.weight",
+            "blocks.0.ctx_proj.bias",
+            "blocks.1.norm.weight",
+            "blocks.1.norm.bias",
+            "blocks.1.fc1.weight",
+            "blocks.1.fc1.bias",
+            "blocks.1.fc2.weight",
+            "blocks.1.fc2.bias",
+            "blocks.1.ctx_proj.weight",
+            "blocks.1.ctx_proj.bias",
+            "bond_proj.weight",
+            "bond_proj.bias"
+          ],
+          "new_parameter_tensors": 18,
+          "total_parameter_count": 287808,
+          "variant": "C1 + mp_context",
+          "warm_start": {
+            "loaded": true,
+            "max_abs_diff": 0.0,
+            "n_tensors_compared": 37,
+            "state_dict_bitwise_equal": true
+          },
+          "zero_residual_at_init": true
+        },
+        "optimizer_audit": {
+          "base_lr": 5e-05,
+          "base_param_group_size": 31,
+          "group0_identical_to_source": true,
+          "moments_reinitialised": false,
+          "n_param_groups_after": 2,
+          "new_lr": 0.0003,
+          "new_param_group_size": 18,
+          "new_param_state_empty_at_start": true,
+          "optimizer": "AdamW",
+          "source_optimizer_state_fingerprint": "6409b6b75c9e25c6adf17cc38229023b9e34293f7ec0e372d3cc79bafd143b0c",
+          "source_step_restored": [
+            24642.0
+          ]
+        },
+        "passed": true,
+        "permutation_invariance": {
+          "identity_noise_floor": 2.86102294921875e-06,
+          "max_abs_logit_diff": 3.814697265625e-06,
+          "note": "graph logits are compared after a random global atom permutation; tolerance covers index_add reduction order",
+          "passed": true,
+          "repeated_forward_diff": 2.86102294921875e-06,
+          "tolerance": 0.0001
+        },
+        "seconds": 6.789875032380223,
+        "smoke": {
+          "epoch_seconds_estimate": 87.76446757807086,
+          "finite": true,
+          "forty_epoch_seconds_estimate": 3510.5787031228347,
+          "gpu_peak_allocated_bytes": 102084096,
+          "gpu_peak_reserved_bytes": 127926272,
+          "loss_first": 0.025562403723597527,
+          "loss_last": 0.01302658673375845,
+          "molecules_per_second": 3993.233362787108,
+          "new_parameters": 42624,
+          "parameters": 287808,
+          "step_ms_mean": 32.05422482763728,
+          "step_ms_p50": 31.658876221626997,
+          "step_ms_p90": 36.13310665823519,
+          "steps": 30,
+          "steps_per_second": 31.19713564677428,
+          "twelve_epoch_seconds_estimate": 1053.1736109368503
+        },
+        "source_audit_summary": {
+          "adamw_steps": [
+            24642.0
+          ],
+          "metadata_ok": true,
+          "sha256": "b158f1669f6d0ccbf5fc05f510050c69ef2fba9f6258cbe59d4d3d9a938eb6c5",
+          "state_shapes_match": true
+        }
+      }
+    }
   },
   "public_dropout_rng_untouched_by_new_modules": true,
   "round_id": "lcrc-pcba-structural-gain-sprint-v1",
