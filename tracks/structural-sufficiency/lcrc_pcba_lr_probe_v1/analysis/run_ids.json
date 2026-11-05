@@ -1,0 +1,63 @@
+{
+  "created_utc": "2026-11-05T12:06:41Z",
+  "environment": "res = a100-2, driver 550.163.01, torch 2.5.1+cu124, python 3.12.14",
+  "formal": {
+    "H": {
+      "pool": "res-gpu0",
+      "result": "runs/H_high_lr",
+      "run_id": "lr-probe-H12-20261105-193541-317733c4",
+      "status": "completed"
+    },
+    "L": {
+      "pool": "res-gpu1",
+      "result": "runs/L_low_lr",
+      "run_id": "lr-probe-L12-20261105-193608-6506e97b",
+      "status": "completed"
+    }
+  },
+  "git_commits": {
+    "initial_implementation": "385f8f6df07e",
+    "note": "formal H/L ran at 9b5a61a9fead; post-run local analysis commits are reported in REPORT.md",
+    "preflight_gates_passed_and_formal_training": "9b5a61a9fead1c2276c864f073e571fc454e68d4",
+    "preflight_label_fix": "dd947d00e052"
+  },
+  "preflight": {
+    "H": {
+      "all_passed": true,
+      "pool": "res-gpu0",
+      "result": "analysis/preflight_H.json",
+      "run_id": "lr-probe-preflight2-H-20261105-192920-cb3f9d33",
+      "status": "completed"
+    },
+    "L": {
+      "all_passed": true,
+      "pool": "res-gpu1",
+      "result": "analysis/preflight_L.json",
+      "run_id": "lr-probe-preflight2-L-20261105-192942-d4cd9f48",
+      "status": "completed"
+    }
+  },
+  "rejected_preflight_attempts": [
+    {
+      "pool": "res-gpu0",
+      "reason": "rejected: preflight label equality used torch.equal on NaN-containing labels; fixed to NaN-aware equality and per-forward dropout reseeding before rerun",
+      "run_id": "lr-probe-preflight-H-20261105-192223-9e2bf4d7"
+    },
+    {
+      "pool": "res-gpu1",
+      "reason": "rejected for the same preflight bug; no formal training started from these runs",
+      "run_id": "lr-probe-preflight-L-20261105-192253-da8d74a1"
+    }
+  ],
+  "round_id": "lcrc-pcba-lr-probe-v1",
+  "rr_deploy": {
+    "commit": "9b5a61a9fead1c2276c864f073e571fc454e68d4",
+    "host": "res",
+    "pools": [
+      "res-gpu0",
+      "res-gpu1"
+    ]
+  },
+  "schema": "lcrc-pcba-lr-probe-run-ids-v1",
+  "test_evaluated": false
+}

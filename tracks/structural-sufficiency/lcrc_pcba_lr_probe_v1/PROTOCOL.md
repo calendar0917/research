@@ -210,3 +210,24 @@ D_old = AP_L(epoch12) - 0.23449
 - 不使用 scheduler；两组 LR 固定。
 - 官方 Test 从未读取；报告中的 AP 不可与论文 Test AP 直接比较。
 - 资源决策标签不是统计显著性检验。
+
+---
+
+## 11. 执行后记录（post-run execution record）
+
+- 正式 H/L 均从 commit `9b5a61a9fead1c2276c864f073e571fc454e68d4` 部署并运行：
+  H `lr-probe-H12-20261105-193541-317733c4`（`res-gpu0`，CUDA_VISIBLE_DEVICES=0），
+  L `lr-probe-L12-20261105-193608-6506e97b`（`res-gpu1`，CUDA_VISIBLE_DEVICES=1）。
+  两组各完成 12/12 epoch，状态 `COMPLETED`。
+- `res-gpu0` 在正式运行期间确有外部共租进程（用户 `wujiayu`，PID 3841932，约 16 GB），
+  但仍有约 24 GB 空闲；预检和正式训练均正常完成。因此**没有启用第 10 节的
+  “两组顺序在 res-gpu1 运行”回退**，而是保留主分配 H=GPU0、L=GPU1。
+  这是执行选择偏差：H 的 step p50 为 43.30 ms，L 为 33.04 ms；H 的吞吐较低，
+  但 AP 评价规则、数据、模型、LR、batch 顺序均未改变。
+- 第一次 preflight（`lr-probe-preflight-H-20261105-192223-9e2bf4d7` /
+  `lr-probe-preflight-L-20261105-192253-da8d74a1`）因 NaN 标签比较与 dropout RNG
+  重置问题失败；修正后重跑，只有第二轮 preflight 通过后才启动正式训练。
+  被拒绝的 run 不进入主比较。
+- 正式训练后新增本地审计：四个 checkpoint 的 CPU AP 重算、主比较、资源记账与
+  逐任务差异；结果见 `analysis/checkpoint_audit.json`、`analysis/comparison.json`。
+- 官方 Test 在所有正式/预检/审计路径中均未读取或评价。

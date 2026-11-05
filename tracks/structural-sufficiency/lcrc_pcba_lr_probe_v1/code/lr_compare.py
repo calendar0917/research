@@ -170,7 +170,17 @@ def _resource_summary(run: Mapping[str, Any]) -> dict[str, Any]:
     curve = load_curve(run["curve"]) if run.get("curve") and Path(C.REPO / run["curve"]).exists() else []
     train_rows = int(run.get("data", {}).get("split_sizes", {}).get("train", 0))
     train_seconds = float(run.get("train_seconds", 0.0))
-    epoch_seconds = float(run.get("epoch_seconds_mean", 0.0))
+    completed_train_epochs = [
+        r for r in curve if int(r["epoch"]) >= 1 and r.get("train_seconds") is not None
+    ]
+    n_train_epochs = len(completed_train_epochs)
+    total_train_rows = int(train_rows * n_train_epochs)
+    total_train_steps = int(C.STEPS_PER_EPOCH * n_train_epochs)
+    epoch_seconds_end_to_end = (
+        float(np.mean([float(r["epoch_seconds"]) for r in completed_train_epochs]))
+        if completed_train_epochs
+        else None
+    )
     return {
         "status": run.get("status"),
         "gpu_seconds": run.get("gpu_seconds"),
@@ -178,14 +188,20 @@ def _resource_summary(run: Mapping[str, Any]) -> dict[str, Any]:
         "data_load_seconds": run.get("data_load_seconds"),
         "train_seconds": train_seconds,
         "valid_seconds": run.get("valid_seconds"),
-        "epoch_seconds_mean": epoch_seconds,
+        "train_epochs_measured": n_train_epochs,
+        "epoch_seconds_mean_end_to_end": epoch_seconds_end_to_end,
         "step_ms_p50_mean": run.get("step_ms_p50_mean"),
         "steps_per_second_mean": run.get("steps_per_second_mean"),
+        "train_steps_per_second": (
+            float(total_train_steps / train_seconds) if train_seconds > 0 and total_train_steps else None
+        ),
         "train_molecules_per_second": (
-            float(train_rows / train_seconds) if train_seconds > 0 and train_rows else None
+            float(total_train_rows / train_seconds) if train_seconds > 0 and total_train_rows else None
         ),
         "epoch_molecules_per_second": (
-            float(train_rows / epoch_seconds) if epoch_seconds > 0 and train_rows else None
+            float(train_rows / epoch_seconds_end_to_end)
+            if epoch_seconds_end_to_end and train_rows
+            else None
         ),
         "gpu_peak_allocated_bytes": run.get("gpu_peak_allocated_bytes"),
         "gpu_peak_reserved_bytes": run.get("gpu_peak_reserved_bytes"),
