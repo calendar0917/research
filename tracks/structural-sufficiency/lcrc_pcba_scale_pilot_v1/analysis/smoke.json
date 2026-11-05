@@ -1,0 +1,220 @@
+{
+  "ap_gate": {
+    "abs_delta": 1.0408340855860843e-17,
+    "independent_ap": 0.03023963392263816,
+    "independent_source": "sklearn average_precision_score per task with NaN masking",
+    "missing_label_policy": "NaN rows are excluded per task; tasks without both classes are skipped by both paths",
+    "n_nan_entries": 194160,
+    "n_observed_entries": 330128,
+    "n_rows": 4096,
+    "n_tasks_scored": 119,
+    "n_tasks_with_observed_labels": 128,
+    "official_ap": 0.03023963392263817,
+    "official_source": "OGB official Evaluator(ogbg-molpcba)",
+    "ok": true
+  },
+  "atom_renumbering_gate": {
+    "cache_row": 23,
+    "max_abs_logit_delta": 1.9073486328125e-06,
+    "n_atoms": 29,
+    "ok": true
+  },
+  "budget": {
+    "cache_build_worker_cap": 16,
+    "gpu_hours_total": 4.0,
+    "outer_kill_seconds": 13860.0,
+    "projected_40_epoch_hours": 2.2208270437236988,
+    "projected_total_with_smoke_hours": 2.228420746241485,
+    "smoke_epochs": 2,
+    "smoke_seconds": 1200.0,
+    "smoke_train_rows": 8192,
+    "smoke_valid_rows": 4096,
+    "train_hard_seconds": 12960.0,
+    "train_soft_seconds": 11880.0,
+    "within_total_budget": true
+  },
+  "cache": {
+    "bytes": 4740359231,
+    "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "format": "npy-directory-v1",
+    "label_like_keys": [],
+    "labels_present": false,
+    "n_atoms_total": 11373137,
+    "n_molecules": 437929,
+    "n_s2_paths": 34369144,
+    "path": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1",
+    "sha256": "caad3e90dd76d1f1483d2a01501eba23413072a7b5a2fc4b62780c315aa59035"
+  },
+  "created_utc": "2026-11-05T07:11:05Z",
+  "data_load_seconds": 5.97184037277475,
+  "device": "cuda",
+  "environment": {
+    "cuda_available": true,
+    "cuda_device_count": 1,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "git_commit": "37fd6777fec6d6b9cdc618886f737ff0f3b96739",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "formal_steps_per_epoch": 2738,
+  "gates": {
+    "ap_gate": true,
+    "atom_renumbering_gate": true,
+    "gradient_gate": true,
+    "label_masking_gate": true,
+    "masked_loss_gate": true,
+    "reload_gate": true,
+    "shape_gate": true,
+    "single_vs_batch_gate": true
+  },
+  "gates_ok": true,
+  "git_commit": "37fd6777fec6d6b9cdc618886f737ff0f3b96739",
+  "gradient_gate": {
+    "loss": 1.7186115980148315,
+    "loss_finite": true,
+    "max_abs_grad": 0.6878992319107056,
+    "n_grad_elements": 245184,
+    "n_nonfinite_grad": 0,
+    "ok": true
+  },
+  "label_masking_gate": {
+    "n_test_rows": 43793,
+    "ok": true,
+    "test_rows_all_nan": true,
+    "test_rows_indexed_by_training_code": false
+  },
+  "masked_loss_gate": {
+    "abs_delta": 5.923566104293343e-08,
+    "all_nan_batch_loss": 0.0,
+    "delta_vs_nan_as_zero": 0.009134443082614796,
+    "n_observed_entries": 118,
+    "n_total_entries": 128,
+    "nan_as_zero_counterfactual": 1.1226401016332666,
+    "numpy_reference": 1.1317744854802203,
+    "ok": true,
+    "torch_loss": 1.1317745447158813
+  },
+  "model": {
+    "has_b_mean": false,
+    "init_state_hash": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+    "local_input_dim": 433,
+    "local_layout": {
+      "a": [
+        0,
+        96
+      ],
+      "atom_scalar": [
+        424,
+        433
+      ],
+      "b_sum": [
+        96,
+        192
+      ],
+      "s1_joint": [
+        192,
+        224
+      ],
+      "s2_closure": [
+        320,
+        328
+      ],
+      "s2_content": [
+        328,
+        424
+      ],
+      "s2_end": [
+        256,
+        288
+      ],
+      "s2_joint": [
+        288,
+        320
+      ],
+      "s2_type": [
+        224,
+        256
+      ]
+    },
+    "n_outputs": 128,
+    "parameters": 245184,
+    "variant": "C1"
+  },
+  "purpose": "correctness, throughput, memory, numerical stability; no hyper-parameter selection",
+  "reload_gate": {
+    "checkpoint_sha256": "208054aa9423def9478e31327c8f135c8e4a5ed2524ee63393f007ee2084a31e",
+    "max_abs_logit_delta": 9.5367431640625e-06,
+    "n_rows": 256,
+    "ok": true,
+    "reloaded_state_matches": true
+  },
+  "round_id": "lcrc-pcba-scale-pilot-v1",
+  "schema": "lcrc-pcba-smoke-v1",
+  "shape_gate": {
+    "batch_size": 128,
+    "expected_shape": [
+      128,
+      128
+    ],
+    "finite_logits": true,
+    "logits_shape": [
+      128,
+      128
+    ],
+    "ok": true,
+    "output_dim_128": true
+  },
+  "single_vs_batch_gate": {
+    "max_abs_logit_delta": 2.86102294921875e-06,
+    "n_molecules": 8,
+    "ok": true
+  },
+  "smoke_rows": {
+    "train": 8192,
+    "valid": 4096
+  },
+  "smoke_seconds": 27.3373290640302,
+  "status": "OK",
+  "timing": {
+    "epochs": [
+      {
+        "epoch": 1,
+        "n_tasks_scored": 119,
+        "n_train_rows": 8192,
+        "seconds_per_step": 0.05857783901592484,
+        "steps": 64,
+        "train_loss": 0.2414369311882183,
+        "train_seconds": 3.7489816970191896,
+        "valid_ap_subset": 0.032107463023024176,
+        "valid_seconds": 1.1058857729658484
+      },
+      {
+        "epoch": 2,
+        "n_tasks_scored": 119,
+        "n_train_rows": 8192,
+        "seconds_per_step": 0.06974079432984581,
+        "steps": 64,
+        "train_loss": 0.06276214757235721,
+        "train_seconds": 4.463410837110132,
+        "valid_ap_subset": 0.03599239033596194,
+        "valid_seconds": 1.0995599902234972
+      }
+    ],
+    "first_step_seconds": 0.1402289648540318,
+    "formal_steps_per_epoch": 2738,
+    "gpu_peak_allocated_bytes": 82640384,
+    "gpu_peak_reserved_bytes": 123731968,
+    "median_seconds_per_step": 0.06869412213563919,
+    "n_steps_timed": 128,
+    "projected_40_epoch_hours": 2.2208270437236988,
+    "projected_seconds_per_epoch": 199.8744339351329,
+    "projected_train_seconds_per_epoch": 188.0845064073801,
+    "projected_valid_seconds_per_epoch": 11.789927527752809,
+    "train_rows": 8192,
+    "valid_rows": 4096
+  }
+}
