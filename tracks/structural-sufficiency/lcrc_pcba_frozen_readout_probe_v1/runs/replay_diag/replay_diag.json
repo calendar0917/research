@@ -1,0 +1,80 @@
+{
+  "device": "cuda",
+  "environment": {
+    "autocast_enabled": false,
+    "cuda_available": true,
+    "cuda_device_capability": [
+      8,
+      0
+    ],
+    "cuda_device_count": 1,
+    "cuda_device_index": 0,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cuda_device_total_memory_bytes": 42285268992,
+    "cuda_visible_devices": "1",
+    "cudnn_allow_tf32": true,
+    "deterministic_algorithms": false,
+    "float32_matmul_precision": "highest",
+    "git_commit": "af3200bfcada9b82f78a1d388838d2c90f9b8045",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "matmul_allow_tf32": false,
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "extraction_vs_extraction": {
+    "ap_abs_diff": 6.398985786582045e-06,
+    "logits_max_abs_diff": 6.103515625e-05,
+    "logits_sha256_equal": false,
+    "official_ap_first": 0.2539086590862913,
+    "official_ap_second": 0.25391505807207787,
+    "rho_in_block_max_abs_diff": {
+      "g": 0.0,
+      "log1p_n": 0.0,
+      "mean_h": 8.940696716308594e-07,
+      "mean_h2": 2.384185791015625e-06
+    },
+    "rho_in_max_abs_diff": 2.384185791015625e-06
+  },
+  "extraction_vs_predict_logits_bs256": {
+    "ap_abs_diff": 6.210902682157737e-07,
+    "logits_max_abs_diff": 7.62939453125e-05
+  },
+  "extraction_vs_predict_logits_bs512": {
+    "ap_abs_diff": 6.308751245409638e-06,
+    "logits_max_abs_diff": 6.866455078125e-05
+  },
+  "finished_utc": "2026-11-05T15:02:22Z",
+  "gpu_hours": 0.0032254496161153333,
+  "gpu_peak": {
+    "peak_allocated_bytes": 145502208,
+    "peak_reserved_bytes": 180355072
+  },
+  "gpu_seconds": 11.611618084833026,
+  "interpretation": "index_add_ reductions in the frozen forward use CUDA atomics, so the encoder is not bitwise reproducible across calls; logits can differ in the last fp32 bits while the AP is stable. This spread bounds the independent-replay gate, it does not change the model or the cache.",
+  "model_is_eval": true,
+  "parameters_frozen": true,
+  "per_batch_reconstruction_max_abs_diff": {
+    "first_extraction": 1.430511474609375e-06,
+    "second_extraction": 2.1457672119140625e-06
+  },
+  "phase": "diagnostic_replay_nondeterminism",
+  "predict_logits_vs_predict_logits_bs512": {
+    "logits_max_abs_diff": 5.340576171875e-05,
+    "official_ap_first": 0.2539149678375367,
+    "official_ap_second": 0.2539091267038527
+  },
+  "round_id": "lcrc-pcba-frozen-readout-probe-v1",
+  "rows": 8192,
+  "rows_sha256": "cad114e85d2e2faae2e535a9abab03bb6b896a373e77dab9cbb96f208a76c741",
+  "schema": "lcrc-pcba-frozen-readout-replay-diag-v1",
+  "test_evaluated": false,
+  "torch_state": {
+    "cudnn_allow_tf32": true,
+    "deterministic_algorithms": false,
+    "float32_matmul_precision": "highest",
+    "matmul_allow_tf32": false
+  }
+}
