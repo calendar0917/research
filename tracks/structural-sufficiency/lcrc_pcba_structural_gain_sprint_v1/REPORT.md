@@ -54,8 +54,9 @@ All gates passed before formal training:
   reset, new parameters appended as a separate group.
 * CPU tests: 15/15 (`tests/test_sg_model.py`, `tests/test_continuation.py`).
 * Architecture audit: C = 245,184; F = 278,592; M = 279,488; V = 287,808
-  parameters; F/M new-parameter difference 2.68% (≤ 5%); F/M shared FFN
-  tensors have identical initial state.
+  parameters; F/M new-parameter difference 2.68% of F's new parameters
+  (0.32% of F's total; both ≤ 5%); F/M shared FFN tensors have identical
+  initial state.
 * GPU preflight, both GPUs, all four arms: epoch-0 Validation AP reproduces
   `AP0` (within 1e-4), zero-residual identity with C1, permutation invariance,
   F-invariance with fixed atom states, M-response to real adjacency, V context
