@@ -314,6 +314,11 @@ def batch_plan_fingerprint(batches: Sequence[np.ndarray]) -> dict[str, Any]:
 
 
 def batch_shape_table(cache: Mapping[str, Any], batches: Sequence[np.ndarray]) -> dict[str, list[int]]:
+    """Per-batch atom / bond / S2 counts.
+
+    ``atom_ptr`` and ``bond_ptr`` are per-molecule, ``path_ptr`` is per-atom, so
+    the S2 count of a molecule is ``path_ptr[atom_ptr[m+1]] - path_ptr[atom_ptr[m]]``.
+    """
     atom_ptr = np.asarray(cache["atom_ptr"], dtype=np.int64)
     bond_ptr = np.asarray(cache["bond_ptr"], dtype=np.int64)
     path_ptr = np.asarray(cache["path_ptr"], dtype=np.int64)
@@ -322,7 +327,7 @@ def batch_shape_table(cache: Mapping[str, Any], batches: Sequence[np.ndarray]) -
         r = np.asarray(rows, dtype=np.int64)
         atoms.append(int(atom_ptr[r + 1].sum() - atom_ptr[r].sum()))
         bonds.append(int(bond_ptr[r + 1].sum() - bond_ptr[r].sum()))
-        paths.append(int(path_ptr[r + 1].sum() - path_ptr[r].sum()))
+        paths.append(int(path_ptr[atom_ptr[r + 1]].sum() - path_ptr[atom_ptr[r]].sum()))
     return {"atoms": atoms, "bonds": bonds, "s2": paths}
 
 
@@ -332,14 +337,22 @@ def diverse_batches(cache: Mapping[str, Any], batches: Sequence[np.ndarray]) -> 
     atoms = np.asarray(table["atoms"])
     bonds = np.asarray(table["bonds"])
     s2 = np.asarray(table["s2"])
-    return {
-        "min_atoms": batches[int(np.argmin(atoms))],
-        "max_atoms": batches[int(np.argmax(atoms))],
-        "max_bonds": batches[int(np.argmax(bonds))],
-        "max_s2": batches[int(np.argmax(s2))],
-        "median_atoms": batches[int(np.argsort(atoms)[len(atoms) // 2])],
-        "typical": batches[0],
-    }
+    order_atoms = np.argsort(atoms)
+    candidates = [
+        ("max_atoms", np.argsort(-atoms, kind="stable")),
+        ("max_s2", np.argsort(-s2, kind="stable")),
+        ("max_bonds", np.argsort(-bonds, kind="stable")),
+        ("min_atoms", order_atoms),
+        ("median_atoms", np.concatenate([order_atoms[len(atoms) // 2 :], order_atoms[: len(atoms) // 2]])),
+    ]
+    out: dict[str, np.ndarray] = {}
+    used: set[int] = set()
+    for name, order in candidates:
+        idx = next(int(x) for x in order if int(x) not in used)
+        out[name] = batches[idx]
+        used.add(int(idx))
+    out["typical"] = batches[0]
+    return out
 
 
 def fingerprint_like_batches(batches: Sequence[np.ndarray]) -> dict[str, Any]:
