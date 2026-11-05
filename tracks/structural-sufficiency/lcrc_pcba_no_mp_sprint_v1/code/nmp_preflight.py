@@ -129,11 +129,22 @@ def check_arm(
     with torch.no_grad():
         o1, a1, p1, r1 = model.propagate(h, batch, return_attention=True)
         o2, a2, p2, r2 = model.propagate(h, perturbed, return_attention=True)
-    bond_ok = torch.equal(o1, o2)
     if arm == "A":
-        bond_ok = bond_ok and torch.equal(a1, a2) and torch.equal(p1, p2) and torch.equal(r1, r2)
+        bond_diff = max(
+            _max_diff(o1, o2),
+            _max_diff(a1, a2),
+            _max_diff(p1, p2),
+            _max_diff(r1, r2),
+        )
+        bond_ok = bool(bond_diff <= 1e-5)
+    else:
+        bond_diff = _max_diff(o1, o2)
+        bond_ok = bool(torch.equal(o1, o2))
     out["checks"]["bond_perturbation_invariance"] = {
-        "bitwise_equal": bool(bond_ok),
+        "max_abs_diff": float(bond_diff),
+        "bitwise_equal_for_added_state": bool(bond_ok and arm != "A"),
+        "tolerance_for_A_cuda_index_add": 1e-5 if arm == "A" else 0.0,
+        "note": "A's pooled sums use CUDA index_add_, whose reduction order is not bitwise stable",
         "passed": bool(bond_ok),
     }
 
@@ -145,8 +156,12 @@ def check_arm(
         o1, a1, p1, r1 = model.propagate(h, batch, return_attention=True)
         o2, a2, p2, r2 = model.propagate(h2, batch, return_attention=True)
     if arm == "A":
-        same = torch.equal(r1[1:], r2[1:]) and torch.equal(p1[1:], p2[1:])
-        graph_ok = same and torch.equal(a1[atom_batch != 0], a2[atom_batch != 0])
+        graph_diff = max(
+            _max_diff(r1[1:], r2[1:]),
+            _max_diff(p1[1:], p2[1:]),
+            _max_diff(a1[atom_batch != 0], a2[atom_batch != 0]),
+        )
+        graph_ok = bool(graph_diff <= 1e-5)
         sums = []
         for g in range(int(batch["n_graphs"])):
             sums.append(a1[atom_batch == g].sum(dim=0).detach().cpu().tolist())
@@ -160,8 +175,14 @@ def check_arm(
         }
     else:
         mask = atom_batch != 0
-        graph_ok = torch.equal(o1[mask], o2[mask])
-    out["checks"]["graph_isolation"] = {"passed": bool(graph_ok), "cross_graph_changed": bool(not graph_ok)}
+        graph_diff = _max_diff(o1[mask], o2[mask])
+        graph_ok = bool(torch.equal(o1[mask], o2[mask]))
+    out["checks"]["graph_isolation"] = {
+        "max_abs_diff": float(graph_diff),
+        "tolerance": 1e-5,
+        "passed": bool(graph_ok),
+        "cross_graph_changed": bool(not graph_ok),
+    }
 
     # Atom-order permutation of the new module.
     one = _to_device(BM.collate(task.cache, [0]), device)
@@ -215,14 +236,23 @@ def check_arm(
             }
         )
     final_norms = grad_rows[-1]["new_param_grad_norms"]
+    redundant = {
+        name for name in final_norms
+        if name.startswith("readout.heads.") and name.endswith(".fc2.bias")
+    }
+    required = {name: value for name, value in final_norms.items() if name not in redundant}
     grad_ok = bool(
         all(np.isfinite(v) for v in final_norms.values())
-        and all(v > 0.0 for v in final_norms.values())
+        and all(v > 0.0 for v in required.values())
     )
     out["checks"]["gradient_flow"] = {
         "steps": grad_rows,
         "final_new_param_grad_norms": final_norms,
-        "all_new_params_nonzero": bool(all(v > 0.0 for v in final_norms.values())),
+        "all_required_new_params_nonzero": bool(all(v > 0.0 for v in required.values())),
+        "structurally_redundant_zero_grad_params": {
+            name: "per-graph softmax is invariant to a constant shift; the head output bias adds a graph-constant score"
+            for name in sorted(redundant)
+        },
         "passed": grad_ok,
     }
 
