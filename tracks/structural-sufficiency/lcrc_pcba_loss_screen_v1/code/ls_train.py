@@ -271,6 +271,7 @@ def train(
 ) -> dict[str, Any]:
     t_start = time.perf_counter()
     started_utc = C.utcnow()
+    gpu_occupancy_start = C.gpu_occupancy()
     out_dir.mkdir(parents=True, exist_ok=True)
     eval_epochs = tuple(int(x) for x in eval_epochs)
     if eval_epochs != tuple(C.EVAL_EPOCHS):
@@ -751,6 +752,7 @@ def train(
         )
 
     total_seconds = float(time.perf_counter() - t_start)
+    gpu_occupancy_end = C.gpu_occupancy()
     all_eval = set(eval_completed) == set(eval_epochs)
     if epochs_run == int(max_epochs) and all_eval and non_finite_events == 0:
         status = "COMPLETED"
@@ -802,8 +804,8 @@ def train(
         "assigned_pool": assigned_pool,
         "actual_device": str(device),
         "environment": C.environment(),
-        "gpu_occupancy_start": C.gpu_occupancy(),
-        "gpu_occupancy_end": C.gpu_occupancy(),
+        "gpu_occupancy_start": gpu_occupancy_start,
+        "gpu_occupancy_end": gpu_occupancy_end,
         "recipe": C.recipe_for_group(group),
         "loss_definition": {
             "M": "pc_metrics.masked_bce_loss (historical, unchanged)",

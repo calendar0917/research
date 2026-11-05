@@ -326,5 +326,29 @@ GPU0 若有其他进程共租，记录实际状态与吞吐差异；不得把共
 
 ## 7. 执行记录（运行后填写）
 
-待正式运行后补充：`rr` run ID、commit、GPU 分配、实际 GPU-hours、preflight
-结果、阶段 A 门槛、正式 M/T 状态与是否触发任何偏差。
+- 正式运行 commit：`98bbf66c9f0893fdeebd2843ad59f894f5af6b7b`；`rr deploy res` 从
+  `9b5a61a9fead` 增量部署到该 commit。正式 M/T 使用同一 commit。
+- Phase A（只读）：`lcrc-loss-A-diag-20261105-20261105-211307-9ff5486b`，
+  pool `res-gpu1`（node `a100-2`），2026-11-05 21:13:13–21:14:19 (+08:00)；
+  15/15 门槛通过；`0.016750` GPU-hour。
+- Preflight M：`lcrc-loss-preflight-M-20261105-20261105-211726-f4dbe16a`，
+  pool `res-gpu0`，21:17:32–21:17:57；`all_passed=true`；`0.005524` GPU-hour。
+- Preflight T：`lcrc-loss-preflight-T-20261105-20261105-211751-12a31a19`，
+  pool `res-gpu1`，21:17:58–21:18:16；`all_passed=true`；`0.003842` GPU-hour。
+- 配对审计：32/32 项通过，`analysis/paired_initialization.json.all_passed=true`。
+- 正式 M：`lcrc-loss-M6-20261105-20261105-212242-bf3b9a59`，pool `res-gpu0`，
+  21:22:50–21:35:30；`COMPLETED`，6/6 epochs，评价点 0/2/4/6 齐全；
+  `0.208506` GPU-hour；epoch-6 AP `0.23722683307799955`。
+- 正式 T：`lcrc-loss-T6-20261105-20261105-212307-b1a33e08`，pool `res-gpu1`，
+  21:23:15–21:33:15；`COMPLETED`，6/6 epochs，评价点 0/2/4/6 齐全；
+  `0.163519` GPU-hour；epoch-6 AP `0.23550376491774172`。
+- 总 GPU 时间：`0.398142` A100 GPU-hour（预算 `1.0`）。
+- 判决：`D6 = AP_T6 - AP_M6 = -0.001723068160257829 < +0.003`；
+  T 更好任务数 42/127；预注册标签 **`SCREEN_NO_SIGNAL`**。
+- 偏差记录：正式运行期间 GPU0 有共租进程（约 16.08 GB，100% utilization），
+  M 的 step p50 `43.27 ms`、T `33.36 ms`；仅影响吞吐，不作为模型/loss 差异。
+  `runs/*/run.json` 的 `gpu_occupancy_start` 在正式运行时为收尾采样，属于日志
+  仪表错误；真实起点见 preflight JSON。运行后修正 `ls_train.py` 为启动时采样，
+  仅为仪表修复，未重跑、未改写 run.json。无其他协议偏差。
+- 没有访问官方 Test；`test_evaluated=false`。没有提前停止、没有 scheduler、
+  没有换 checkpoint、没有额外实验。
