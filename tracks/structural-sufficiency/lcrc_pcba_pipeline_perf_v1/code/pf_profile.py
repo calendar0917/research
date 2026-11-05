@@ -188,7 +188,7 @@ class NvmlSampler(threading.Thread):
         super().__init__(daemon=True)
         self.interval_s = float(interval_s)
         self.samples: list[dict[str, Any]] = []
-        self._stop = threading.Event()
+        self._stop_evt = threading.Event()
 
     def run(self) -> None:
         cmd = [
@@ -196,7 +196,7 @@ class NvmlSampler(threading.Thread):
             "--query-gpu=index,utilization.gpu,utilization.memory,memory.used,clocks.sm,clocks.max.sm,power.draw",
             "--format=csv,noheader,nounits",
         ]
-        while not self._stop.is_set():
+        while not self._stop_evt.is_set():
             try:
                 out = subprocess.check_output(cmd, text=True, stderr=subprocess.DEVNULL, timeout=5)
                 for line in out.strip().splitlines():
@@ -214,10 +214,10 @@ class NvmlSampler(threading.Thread):
                     )
             except Exception:  # pragma: no cover - NVML may be broken on the host
                 self.samples.append({"error": True})
-            self._stop.wait(self.interval_s)
+            self._stop_evt.wait(self.interval_s)
 
     def stop(self) -> None:
-        self._stop.set()
+        self._stop_evt.set()
         self.join(timeout=5)
 
     def summary(self) -> dict[str, Any]:
