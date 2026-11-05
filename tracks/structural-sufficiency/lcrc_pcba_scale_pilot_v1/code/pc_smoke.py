@@ -52,7 +52,7 @@ def _permute_single(batch: Mapping[str, Any], perm: np.ndarray) -> dict[str, Any
     for key in ("atom_feat", "atom_scalar", "atom_type"):
         out[key] = batch[key][torch.as_tensor(perm, dtype=torch.long)]
     for key in ("bond_index", "nbr_atom", "path_atom", "path_end"):
-        src = batch[key].numpy()
+        src = batch[key].detach().cpu().numpy()
         out[key] = torch.as_tensor(inv[src], dtype=batch[key].dtype)
     return out
 
