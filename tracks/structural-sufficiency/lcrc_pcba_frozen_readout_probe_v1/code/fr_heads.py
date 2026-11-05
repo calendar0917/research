@@ -131,19 +131,25 @@ def load_cache(device: torch.device) -> dict[str, Any]:
         path = C.REPO / record["path"]
         if not path.exists():
             raise RuntimeError(f"cached array missing: {path}")
-        sha = C.sha256_file(path)
-        out["files"][key] = {
+        file_sha = C.sha256_file(path)
+        arr = np.load(path)
+        content_sha = C.sha256_array(arr)
+        entry = {
             "path": record["path"],
-            "sha256": sha,
-            "expected_sha256": record["sha256"],
+            "file_sha256": file_sha,
+            "expected_file_sha256": record["file_sha256"],
+            "content_sha256": content_sha,
+            "expected_content_sha256": record["content_sha256"],
+            "file_hash_ok": bool(file_sha == record["file_sha256"]),
+            "content_hash_ok": bool(content_sha == record["content_sha256"]),
             "shape": record["shape"],
             "dtype": record["dtype"],
             "bytes": record["bytes"],
-            "hash_ok": bool(sha == record["sha256"]),
         }
-        if not out["files"][key]["hash_ok"]:
-            raise RuntimeError(f"cached array hash mismatch for {key}: {sha} != {record['sha256']}")
-        arr = np.load(path)
+        entry["hash_ok"] = bool(entry["file_hash_ok"] and entry["content_hash_ok"])
+        out["files"][key] = entry
+        if not entry["hash_ok"]:
+            raise RuntimeError(f"cached array hash mismatch for {key}: {entry}")
         if list(arr.shape) != list(record["shape"]) or str(arr.dtype) != str(record["dtype"]):
             raise RuntimeError(f"cached array {key} shape/dtype drifted from the manifest")
         out["arrays"][key] = arr
@@ -529,8 +535,8 @@ def train_arm(
                 "manifest": C.track_rel(C.FEATURE_CACHE / "manifest.json"),
                 "manifest_sha256": cache["manifest_sha256"],
                 "phase_a_audit_sha256": cache["audit_sha256"],
-                "train_rho_in_sha256": cache["manifest"]["arrays"]["train_rho_in"]["sha256"],
-                "train_logits_sha256": cache["manifest"]["arrays"]["train_logits"]["sha256"],
+                "train_rho_in_content_sha256": cache["manifest"]["arrays"]["train_rho_in"]["content_sha256"],
+                "train_logits_content_sha256": cache["manifest"]["arrays"]["train_logits"]["content_sha256"],
             },
             "source_checkpoint": C.track_rel(C.SOURCE["checkpoint"]),
             "source_checkpoint_sha256": C.SOURCE["checkpoint_sha256"],

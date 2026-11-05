@@ -68,13 +68,19 @@ def _save_arrays(arrays: Mapping[str, np.ndarray], out_dir: Path) -> dict[str, A
     records: dict[str, Any] = {}
     for key, arr in arrays.items():
         path = out_dir / CACHE_FILES[key]
-        np.save(path, np.ascontiguousarray(arr))
+        contiguous = np.ascontiguousarray(arr)
+        np.save(path, contiguous)
+        # ``file_sha256`` fingerprints the .npy container (header included);
+        # ``content_sha256`` fingerprints dtype+shape+payload and is what Phase B
+        # re-computes after ``np.load``.  Both are recorded so the two are never
+        # compared against each other by mistake.
         records[key] = {
             "path": C.track_rel(path),
             "file": path.name,
-            "shape": list(arr.shape),
-            "dtype": str(arr.dtype),
-            "sha256": C.sha256_file(path),
+            "shape": list(contiguous.shape),
+            "dtype": str(contiguous.dtype),
+            "file_sha256": C.sha256_file(path),
+            "content_sha256": C.sha256_array(contiguous),
             "bytes": int(path.stat().st_size),
         }
     return records
@@ -274,10 +280,14 @@ def run(
             all(float(scale_np[c]) == 1.0 for c in zero_cols)
         ),
         "saved_raw_arrays_match_extraction_hashes": bool(
-            records["train_rho_in"]["sha256"] == train["audit"]["rho_in_sha256"]
-            and records["valid_rho_in"]["sha256"] == valid["audit"]["rho_in_sha256"]
-            and records["train_logits"]["sha256"] == train["audit"]["logits_sha256"]
-            and records["valid_logits"]["sha256"] == valid["audit"]["logits_sha256"]
+            records["train_rho_in"]["content_sha256"] == train["audit"]["rho_in_sha256"]
+            and records["valid_rho_in"]["content_sha256"] == valid["audit"]["rho_in_sha256"]
+            and records["train_logits"]["content_sha256"] == train["audit"]["logits_sha256"]
+            and records["valid_logits"]["content_sha256"] == valid["audit"]["logits_sha256"]
+            and records["train_labels"]["content_sha256"] == C.sha256_array(train_labels)
+            and records["valid_labels"]["content_sha256"] == C.sha256_array(valid_labels)
+            and records["train_mask"]["content_sha256"] == C.sha256_array(train_mask)
+            and records["valid_mask"]["content_sha256"] == C.sha256_array(valid_mask)
         ),
         "standardizer_fit_rows": int(stats["n_rows_fit"]) == C.N_TRAIN,
         "train_valid_disjoint": rows["gates"]["train_valid_disjoint"],
