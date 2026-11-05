@@ -203,9 +203,26 @@ def test_row_plan_is_deterministic_shared_and_isolated():
     assert plan_a["steps_per_epoch"] == 5
     for perm in plan_a["perms"]:
         assert sorted(perm.tolist()) == list(range(n))
-    forbidden = list(range(4_000, n))
-    assert FM.plan_isolated(plan_a, forbidden, n)["passed"] is False
-    assert FM.plan_isolated(plan_a, [], n)["passed"] is True
+
+    # Train positions 0..n-1 are disjoint from the official Validation/Test ids.
+    train_rows = np.arange(0, 2 * n, 2)  # even ids
+    valid_rows = np.arange(1, 2 * n, 4)
+    test_rows = np.arange(3, 2 * n, 4)
+    good = FM.plan_isolation(plan_a, train_rows, valid_rows, test_rows)
+    assert good["passed"], good["checks"]
+    assert good["row_id_overlaps"] == {"train_valid": 0, "train_test": 0, "valid_test": 0}
+
+    # A leaking split must fail (a Train id also used as Validation id).
+    leaky = FM.plan_isolation(plan_a, train_rows, np.concatenate([valid_rows, train_rows[:1]]), test_rows)
+    assert leaky["passed"] is False
+    assert leaky["checks"]["train_valid_disjoint"] is False
+
+    # A permutation that leaves the Train block must fail.
+    broken = dict(plan_a)
+    broken["perms"] = [p.copy() for p in plan_a["perms"]]
+    broken["perms"][0][0] = n  # position outside 0..n-1
+    assert FM.plan_isolation(broken, train_rows, valid_rows, test_rows)["passed"] is False
+
     other_seed = FM.row_plan(n, batch_size=1024, epochs=C.EPOCHS, seed=C.SEED + 1)
     assert other_seed["global_plan_sha256"] != plan_a["global_plan_sha256"]
 

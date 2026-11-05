@@ -687,13 +687,7 @@ def run(
     base_fp_before = base_audit["parameter_fingerprint"]
 
     plan = FM.row_plan(int(cache["gpu"]["train_rho_in"].shape[0]))
-    isolation = FM.plan_isolated(
-        plan,
-        np.concatenate(
-            [np.asarray(task.valid_rows, dtype=np.int64), np.asarray(task.test_rows, dtype=np.int64)]
-        ),
-        C.N_MOLECULES,
-    )
+    isolation = FM.plan_isolation(plan, task.train_rows, task.valid_rows, task.test_rows)
     if not isolation["passed"]:
         raise RuntimeError(f"row plan isolation gate failed: {isolation}")
     if int(plan["steps_per_epoch"]) != C.STEPS_PER_EPOCH:

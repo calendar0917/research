@@ -229,16 +229,68 @@ def row_plan(
     }
 
 
-def plan_isolated(plan: Mapping[str, Any], forbidden_rows: Iterable[int], n_total: int) -> dict[str, Any]:
-    """Check that no forbidden (Validation/Test) row can enter the training order."""
-    mask = np.zeros(int(n_total), dtype=bool)
-    mask[np.asarray(list(forbidden_rows), dtype=np.int64)] = True
-    bad = [(i, int(mask[p].sum())) for i, p in enumerate(plan["perms"]) if int(mask[p].sum())]
+def plan_isolation(
+    plan: Mapping[str, Any],
+    train_rows: Iterable[int],
+    valid_rows: Iterable[int],
+    test_rows: Iterable[int],
+) -> dict[str, Any]:
+    """Audit the paired row plan against the official split rows.
+
+    The plan permutes **positions inside the Train arrays** (``0..n_train-1``), and
+    those arrays are indexed by the official Train row ids.  Isolation therefore
+    has two independent parts:
+
+    1. every epoch permutation is a permutation of ``range(n_train)`` (so no
+       position outside the Train block can be selected), and
+    2. the Train row ids are disjoint from the Validation and Test row ids (so a
+       Train position can never resolve to a Validation/Test molecule).
+
+    Comparing a position permutation directly with global molecule ids is a
+    category error and is what this function replaces.
+    """
+    train_rows = np.asarray(list(train_rows), dtype=np.int64)
+    valid_rows = np.asarray(list(valid_rows), dtype=np.int64)
+    test_rows = np.asarray(list(test_rows), dtype=np.int64)
+    n = int(train_rows.size)
+    expected = np.arange(n, dtype=np.int64)
+    perm_checks = []
+    for i, perm in enumerate(plan["perms"]):
+        perm = np.asarray(perm, dtype=np.int64)
+        perm_checks.append(
+            {
+                "epoch": i + 1,
+                "is_permutation_of_train_positions": bool(perm.size == n and np.array_equal(np.sort(perm), expected)),
+                "min_position": int(perm.min()) if perm.size else -1,
+                "max_position": int(perm.max()) if perm.size else -1,
+            }
+        )
+    overlaps = {
+        "train_valid": int(np.intersect1d(train_rows, valid_rows).size),
+        "train_test": int(np.intersect1d(train_rows, test_rows).size),
+        "valid_test": int(np.intersect1d(valid_rows, test_rows).size),
+    }
+    n_unique = int(np.unique(train_rows).size)
+    checks = {
+        "plan_length_matches_n_rows": int(plan["n_rows"]) == n,
+        "train_rows_unique": n_unique == n,
+        "all_epochs_are_train_position_permutations": all(
+            c["is_permutation_of_train_positions"] for c in perm_checks
+        ),
+        "train_valid_disjoint": overlaps["train_valid"] == 0,
+        "train_test_disjoint": overlaps["train_test"] == 0,
+        "valid_test_disjoint": overlaps["valid_test"] == 0,
+    }
     return {
-        "passed": not bad,
-        "epochs_checked": len(plan["perms"]),
-        "forbidden_rows": int(mask.sum()),
-        "violations": [{"epoch": i + 1, "n_forbidden": n} for i, n in bad],
+        "passed": bool(all(checks.values())),
+        "checks": {k: bool(v) for k, v in checks.items()},
+        "epochs_checked": len(perm_checks),
+        "n_train_rows": n,
+        "n_valid_rows": int(valid_rows.size),
+        "n_test_rows": int(test_rows.size),
+        "row_id_overlaps": overlaps,
+        "position_space": "0..n_train-1 (positions inside the Train arrays)",
+        "epochs": perm_checks,
     }
 
 
@@ -317,7 +369,7 @@ __all__ = [
     "masked_bce_numpy",
     "masked_bce_torch",
     "official_ap",
-    "plan_isolated",
+    "plan_isolation",
     "row_plan",
     "standardize_",
     "task_table",
