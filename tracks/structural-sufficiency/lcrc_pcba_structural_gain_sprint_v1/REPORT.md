@@ -171,9 +171,9 @@ Epoch 40 is the primary comparison.
 | **Total** | | **9.1520** |
 
 Budget: target 15 GPU-hours / hard 16; actual **9.1520** (61% of target), at most
-two GPUs concurrently. Wall clock from sprint start (≈16:07 UTC) to completed
-Phase 3 (21:48 UTC) is ≈5 h 41 min, plus analysis/reporting; still below the
-7.5 h target and 8 h hard cap. No GPU stage was started with < 30 min remaining.
+two GPUs concurrently. Wall clock from sprint start (≈16:07 UTC) to this final
+report/analysis commit (≈21:56 UTC) is ≈5 h 49 min, below the 7.5 h target and
+8 h hard cap. No GPU stage was started with < 30 min remaining.
 Peak allocated memory was ≈ 122–128 MB per run; the runs are data-transfer- and
 step-bound, not memory-bound.
 
