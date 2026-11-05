@@ -450,6 +450,19 @@ def pass_profiler(state, inputs, batches, device) -> dict[str, Any]:
     ka = prof.key_averages()
     table = ka.table(sort_by="self_cuda_time_total", row_limit=25)
 
+    def _dev_us(e: Any) -> float:
+        # torch>=2.1 renamed cuda_time_total -> device_time_total
+        for attr in ("self_device_time_total", "self_cuda_time_total"):
+            if hasattr(e, attr):
+                return float(getattr(e, attr))
+        return 0.0
+
+    def _cpu_us(e: Any) -> float:
+        for attr in ("self_cpu_time_total", "self_cpu_time"):
+            if hasattr(e, attr):
+                return float(getattr(e, attr))
+        return 0.0
+
     def _top(key: str, n: int = 15) -> list[dict[str, Any]]:
         rows = []
         for e in ka:
@@ -457,28 +470,41 @@ def pass_profiler(state, inputs, batches, device) -> dict[str, Any]:
                 {
                     "key": str(e.key),
                     "calls": int(e.count),
-                    "cpu_us_total": float(e.self_cpu_time_total),
-                    "cuda_us_total": float(getattr(e, "self_cuda_time_total", 0.0)),
-                    "cuda_us_mean": float(getattr(e, "self_cuda_time_total", 0.0)) / max(int(e.count), 1),
+                    "cpu_us_total": _cpu_us(e),
+                    "cuda_us_total": _dev_us(e),
+                    "cuda_us_mean": _dev_us(e) / max(int(e.count), 1),
                 }
             )
         rows.sort(key=lambda r: r[key], reverse=True)
         return rows[:n]
 
-    gpu_total = float(sum(getattr(e, "self_cuda_time_total", 0.0) for e in ka))
-    cpu_total = float(sum(e.self_cpu_time_total for e in ka))
+    gpu_total = float(sum(_dev_us(e) for e in ka))
+    cpu_total = float(sum(_cpu_us(e) for e in ka))
+    per_step = float(PF.PROFILER_STEPS)
+    named = {str(e.key): e for e in ka}
+    copy_stats = {
+        key: {
+            "calls_per_step": float(int(named[key].count) / per_step),
+            "cuda_us_per_step": _dev_us(named[key]) / per_step,
+            "cpu_us_per_step": _cpu_us(named[key]) / per_step,
+        }
+        for key in named
+        if key in ("aten::copy_", "cudaStreamSynchronize", "cudaMemcpyAsync")
+        or key.startswith("Memcpy HtoD")
+    }
     return {
         "steps": int(PF.PROFILER_STEPS),
         "activities": [str(a) for a in acts],
         "cuda_time_total_us": gpu_total,
         "cpu_time_total_us": cpu_total,
-        "cuda_us_per_step": gpu_total / PF.PROFILER_STEPS,
-        "cpu_us_per_step": cpu_total / PF.PROFILER_STEPS,
+        "cuda_us_per_step": gpu_total / per_step,
+        "cpu_us_per_step": cpu_total / per_step,
         "top_cuda": _top("cuda_us_total"),
         "top_cpu": _top("cpu_us_total"),
+        "copy_stats": copy_stats,
         "table": table.splitlines(),
         "kernel_count_total": int(sum(int(e.count) for e in ka)),
-        "kernel_count_per_step": float(sum(int(e.count) for e in ka) / PF.PROFILER_STEPS),
+        "kernel_count_per_step": float(sum(int(e.count) for e in ka) / per_step),
     }
 
 
