@@ -476,7 +476,10 @@ def train(
         "budget": C.BUDGET,
         "cache_identity": {
             "cache": C.track_rel(task.cache_path),
-            "cache_sha256": C.sha256_file(task.cache_path),
+            "cache_sha256": C.sha256_tree(task.cache_path)
+        if Path(task.cache_path).is_dir()
+        else C.sha256_file(task.cache_path),
+        "cache_format": "npy-directory-v1" if Path(task.cache_path).is_dir() else "pickle",
             "feature_spec_hash": task.spec.hash(),
             "norm_fingerprint": task.norm["norm_fingerprint"],
             "split_partition_sha256": task.split_partition_sha256,

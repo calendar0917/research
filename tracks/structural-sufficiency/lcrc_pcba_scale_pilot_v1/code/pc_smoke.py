@@ -347,8 +347,13 @@ def main(argv: Sequence[str] | None = None) -> int:
         payload["data_load_seconds"] = float(task.load_seconds)
         payload["cache"] = {
             "path": C.track_rel(task.cache_path),
-            "sha256": C.sha256_file(task.cache_path),
-            "bytes": int(task.cache_path.stat().st_size),
+            "sha256": C.sha256_tree(task.cache_path)
+            if Path(task.cache_path).is_dir()
+            else C.sha256_file(task.cache_path),
+            "bytes": int(sum(f.stat().st_size for f in Path(task.cache_path).rglob("*") if f.is_file()))
+            if Path(task.cache_path).is_dir()
+            else int(Path(task.cache_path).stat().st_size),
+            "format": "npy-directory-v1" if Path(task.cache_path).is_dir() else "pickle",
             "n_molecules": int(task.cache["n_molecules"]),
             "n_atoms_total": int(task.cache["meta"]["n_atoms_total"]),
             "n_s2_paths": int(task.cache["meta"]["n_s2_paths"]),
