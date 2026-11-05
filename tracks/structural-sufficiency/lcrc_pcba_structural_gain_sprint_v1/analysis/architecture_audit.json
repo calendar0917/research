@@ -1,0 +1,1165 @@
+{
+  "F_M_relative_parameter_difference": 0.0032161727544222376,
+  "F_M_shared_ffn_initial_state_equal": true,
+  "F_M_shared_ffn_tensors": 12,
+  "arms": {
+    "C": {
+      "arm": "C",
+      "arm_name": "C_control",
+      "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "base_parameter_count": 31,
+      "base_parameter_elements": 245184,
+      "base_state_bitwise_equal_to_source": true,
+      "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+      "block_mode": "none",
+      "block_modules": [],
+      "model_info": {
+        "base_parameters": 31,
+        "new_parameters": 0,
+        "parameters": 245184
+      },
+      "new_module_init": {
+        "global_rng_unchanged": true,
+        "layernorm_layers_initialised": 0,
+        "linear_layers_initialised": 0,
+        "private_generator_seed": 17,
+        "residual_output_zeroed": true
+      },
+      "new_parameter_breakdown": {
+        "blocks": 0,
+        "bond_proj": 0
+      },
+      "new_parameter_count": 0,
+      "new_parameter_names": [],
+      "new_parameter_tensors": 0,
+      "total_parameter_count": 245184,
+      "variant": "C1 + none",
+      "warm_start": {
+        "loaded": true,
+        "max_abs_diff": 0.0,
+        "n_tensors_compared": 37,
+        "state_dict_bitwise_equal": true
+      },
+      "zero_final_linear": null,
+      "zero_residual_at_init": false
+    },
+    "F": {
+      "arm": "F",
+      "arm_name": "F_ffn2",
+      "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "base_parameter_count": 31,
+      "base_parameter_elements": 245184,
+      "base_state_bitwise_equal_to_source": true,
+      "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+      "block_mode": "ffn",
+      "block_modules": [
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.0.norm",
+          "type": "LayerNorm",
+          "weight_shape": [
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            128
+          ],
+          "name": "blocks.0.fc1",
+          "type": "Linear",
+          "weight_shape": [
+            128,
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.0.fc2",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            128
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.1.norm",
+          "type": "LayerNorm",
+          "weight_shape": [
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            128
+          ],
+          "name": "blocks.1.fc1",
+          "type": "Linear",
+          "weight_shape": [
+            128,
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.1.fc2",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            128
+          ]
+        }
+      ],
+      "model_info": {
+        "base_parameters": 31,
+        "new_parameters": 33408,
+        "parameters": 278592
+      },
+      "new_module_init": {
+        "global_rng_unchanged": true,
+        "layernorm_layers_initialised": 2,
+        "linear_layers_initialised": 4,
+        "private_generator_seed": 17,
+        "residual_output_zeroed": true
+      },
+      "new_parameter_breakdown": {
+        "blocks": 33408,
+        "bond_proj": 0
+      },
+      "new_parameter_count": 33408,
+      "new_parameter_names": [
+        "blocks.0.norm.weight",
+        "blocks.0.norm.bias",
+        "blocks.0.fc1.weight",
+        "blocks.0.fc1.bias",
+        "blocks.0.fc2.weight",
+        "blocks.0.fc2.bias",
+        "blocks.1.norm.weight",
+        "blocks.1.norm.bias",
+        "blocks.1.fc1.weight",
+        "blocks.1.fc1.bias",
+        "blocks.1.fc2.weight",
+        "blocks.1.fc2.bias"
+      ],
+      "new_parameter_tensors": 12,
+      "total_parameter_count": 278592,
+      "variant": "C1 + ffn",
+      "warm_start": {
+        "loaded": true,
+        "max_abs_diff": 0.0,
+        "n_tensors_compared": 37,
+        "state_dict_bitwise_equal": true
+      },
+      "zero_final_linear": true,
+      "zero_residual_at_init": true
+    },
+    "M": {
+      "arm": "M",
+      "arm_name": "M_mp2",
+      "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "base_parameter_count": 31,
+      "base_parameter_elements": 245184,
+      "base_state_bitwise_equal_to_source": true,
+      "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+      "block_mode": "mp",
+      "block_modules": [
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.0.norm",
+          "type": "LayerNorm",
+          "weight_shape": [
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            128
+          ],
+          "name": "blocks.0.fc1",
+          "type": "Linear",
+          "weight_shape": [
+            128,
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.0.fc2",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            128
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.1.norm",
+          "type": "LayerNorm",
+          "weight_shape": [
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            128
+          ],
+          "name": "blocks.1.fc1",
+          "type": "Linear",
+          "weight_shape": [
+            128,
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.1.fc2",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            128
+          ]
+        }
+      ],
+      "model_info": {
+        "base_parameters": 31,
+        "new_parameters": 34304,
+        "parameters": 279488
+      },
+      "new_module_init": {
+        "global_rng_unchanged": true,
+        "layernorm_layers_initialised": 2,
+        "linear_layers_initialised": 5,
+        "private_generator_seed": 17,
+        "residual_output_zeroed": true
+      },
+      "new_parameter_breakdown": {
+        "blocks": 33408,
+        "bond_proj": 896
+      },
+      "new_parameter_count": 34304,
+      "new_parameter_names": [
+        "blocks.0.norm.weight",
+        "blocks.0.norm.bias",
+        "blocks.0.fc1.weight",
+        "blocks.0.fc1.bias",
+        "blocks.0.fc2.weight",
+        "blocks.0.fc2.bias",
+        "blocks.1.norm.weight",
+        "blocks.1.norm.bias",
+        "blocks.1.fc1.weight",
+        "blocks.1.fc1.bias",
+        "blocks.1.fc2.weight",
+        "blocks.1.fc2.bias",
+        "bond_proj.weight",
+        "bond_proj.bias"
+      ],
+      "new_parameter_tensors": 14,
+      "total_parameter_count": 279488,
+      "variant": "C1 + mp",
+      "warm_start": {
+        "loaded": true,
+        "max_abs_diff": 0.0,
+        "n_tensors_compared": 37,
+        "state_dict_bitwise_equal": true
+      },
+      "zero_final_linear": true,
+      "zero_residual_at_init": true
+    },
+    "V": {
+      "arm": "V",
+      "arm_name": "V_mp2_graph_context",
+      "base_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "base_parameter_count": 31,
+      "base_parameter_elements": 245184,
+      "base_state_bitwise_equal_to_source": true,
+      "base_state_fingerprint_after_load": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+      "block_mode": "mp_context",
+      "block_modules": [
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.0.norm",
+          "type": "LayerNorm",
+          "weight_shape": [
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            128
+          ],
+          "name": "blocks.0.fc1",
+          "type": "Linear",
+          "weight_shape": [
+            128,
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.0.fc2",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            128
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.0.ctx_proj",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.1.norm",
+          "type": "LayerNorm",
+          "weight_shape": [
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            128
+          ],
+          "name": "blocks.1.fc1",
+          "type": "Linear",
+          "weight_shape": [
+            128,
+            64
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.1.fc2",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            128
+          ]
+        },
+        {
+          "bias_shape": [
+            64
+          ],
+          "name": "blocks.1.ctx_proj",
+          "type": "Linear",
+          "weight_shape": [
+            64,
+            64
+          ]
+        }
+      ],
+      "model_info": {
+        "base_parameters": 31,
+        "new_parameters": 42624,
+        "parameters": 287808
+      },
+      "new_module_init": {
+        "global_rng_unchanged": true,
+        "layernorm_layers_initialised": 2,
+        "linear_layers_initialised": 7,
+        "private_generator_seed": 17,
+        "residual_output_zeroed": true
+      },
+      "new_parameter_breakdown": {
+        "blocks": 41728,
+        "bond_proj": 896
+      },
+      "new_parameter_count": 42624,
+      "new_parameter_names": [
+        "blocks.0.norm.weight",
+        "blocks.0.norm.bias",
+        "blocks.0.fc1.weight",
+        "blocks.0.fc1.bias",
+        "blocks.0.fc2.weight",
+        "blocks.0.fc2.bias",
+        "blocks.0.ctx_proj.weight",
+        "blocks.0.ctx_proj.bias",
+        "blocks.1.norm.weight",
+        "blocks.1.norm.bias",
+        "blocks.1.fc1.weight",
+        "blocks.1.fc1.bias",
+        "blocks.1.fc2.weight",
+        "blocks.1.fc2.bias",
+        "blocks.1.ctx_proj.weight",
+        "blocks.1.ctx_proj.bias",
+        "bond_proj.weight",
+        "bond_proj.bias"
+      ],
+      "new_parameter_tensors": 18,
+      "total_parameter_count": 287808,
+      "variant": "C1 + mp_context",
+      "warm_start": {
+        "loaded": true,
+        "max_abs_diff": 0.0,
+        "n_tensors_compared": 37,
+        "state_dict_bitwise_equal": true
+      },
+      "zero_final_linear": true,
+      "zero_residual_at_init": true
+    }
+  },
+  "c1_model_info": {
+    "cont_norm_in_state": false,
+    "cont_slice": [
+      0,
+      0
+    ],
+    "full_init_state_hash": "3404cc5c77ae11852a784d8eaceda4fef4cb13c160321170ddad0509fe330d89",
+    "init_state_hash": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+    "input_widths": {
+      "atom_feat": 51,
+      "bond_feat": 13,
+      "global": 42,
+      "n_nbr_codes": 80,
+      "n_path_codes": 400,
+      "scalars": 9
+    },
+    "local_input_dim": 433,
+    "local_layout": {
+      "a": [
+        0,
+        96
+      ],
+      "atom_scalar": [
+        424,
+        433
+      ],
+      "b_sum": [
+        96,
+        192
+      ],
+      "s1_joint": [
+        192,
+        224
+      ],
+      "s2_closure": [
+        320,
+        328
+      ],
+      "s2_content": [
+        328,
+        424
+      ],
+      "s2_end": [
+        256,
+        288
+      ],
+      "s2_joint": [
+        288,
+        320
+      ],
+      "s2_type": [
+        224,
+        256
+      ]
+    },
+    "n_outputs": 128,
+    "parameters": 245184,
+    "parameters_breakdown": {
+      "atom_encoder": 19040,
+      "bond_encoder": 63776,
+      "drop": 0,
+      "f": 12480,
+      "local": 130560,
+      "rho": 19328,
+      "total": 245184
+    },
+    "rho_input_dim": 171,
+    "seed": 0,
+    "shared_with_full": {
+      "all_equal": true,
+      "checks": {
+        "atom_encoder.lins.0.bias": true,
+        "atom_encoder.lins.0.weight": true,
+        "atom_encoder.lins.1.bias": true,
+        "atom_encoder.lins.1.weight": true,
+        "bond_encoder.lins.0.bias": true,
+        "bond_encoder.lins.0.weight": true,
+        "bond_encoder.lins.1.bias": true,
+        "bond_encoder.lins.1.weight": true,
+        "f.lins.0.bias": true,
+        "f.lins.0.weight": true,
+        "f.lins.1.bias": true,
+        "f.lins.1.weight": true,
+        "global_mean": true,
+        "global_scale": true,
+        "local.close_emb.weight": true,
+        "local.end_emb.weight": true,
+        "local.joint_proj.bias": true,
+        "local.joint_proj.weight": true,
+        "local.mlp.lins.0.bias": true,
+        "local.mlp.lins.0.weight": true,
+        "local.mlp.lins.1.bias": true,
+        "local.mlp.lins.1.weight": true,
+        "local.nbr_emb.weight": true,
+        "local.norm.bias": true,
+        "local.norm.weight": true,
+        "local.path_emb.weight": true,
+        "local.path_gate.weight": true,
+        "local.path_u.weight": true,
+        "local.path_v.weight": true,
+        "rho.lins.0.bias": true,
+        "rho.lins.0.weight": true,
+        "rho.lins.1.bias": true,
+        "rho.lins.1.weight": true,
+        "scalar_mean": true,
+        "scalar_scale": true
+      },
+      "n_checked": 35
+    },
+    "variant": "C1",
+    "variant_definition": "LCRC-A minus the 96-d b_mean = b_sum/deg local-input block; no other change"
+  },
+  "model_variant": "frozen LCRC-C1 + pre-registered residual blocks",
+  "new_parameter_counts": {
+    "C": 0,
+    "F": 33408,
+    "M": 34304,
+    "V": 42624
+  },
+  "parameter_checks": {
+    "C_equals_frozen_245184": true,
+    "FM_relative_diff_le_5pct": true,
+    "F_new_33408": true,
+    "M_new_34304": true,
+    "V_new_42624": true
+  },
+  "parameter_counts": {
+    "C": 245184,
+    "F": 278592,
+    "M": 279488,
+    "V": 287808
+  },
+  "passed": true,
+  "protocol": {
+    "F": "2x pre-norm residual FFN 64->128->64, per atom",
+    "M": "F shape + directed messages over real bonds, shared bond_proj(13->64)",
+    "V": "M + per-block mean-pool graph context, per-block Linear(64->64)"
+  },
+  "round_id": "lcrc-pcba-structural-gain-sprint-v1",
+  "schema": "lcrc-pcba-structural-gain-architecture-audit-v1",
+  "source_audit": {
+    "adamw_moments": [
+      {
+        "param": 0,
+        "shape": [
+          128,
+          51
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 1,
+        "shape": [
+          128
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 2,
+        "shape": [
+          96,
+          128
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 3,
+        "shape": [
+          96
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 4,
+        "shape": [
+          160,
+          301
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 5,
+        "shape": [
+          160
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 6,
+        "shape": [
+          96,
+          160
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 7,
+        "shape": [
+          96
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 8,
+        "shape": [
+          80,
+          32
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 9,
+        "shape": [
+          400,
+          32
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 10,
+        "shape": [
+          80,
+          32
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 11,
+        "shape": [
+          400,
+          32
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 12,
+        "shape": [
+          80,
+          32
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 13,
+        "shape": [
+          32,
+          32
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 14,
+        "shape": [
+          32
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 15,
+        "shape": [
+          2,
+          8
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 16,
+        "shape": [
+          400,
+          1
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 17,
+        "shape": [
+          192,
+          433
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 18,
+        "shape": [
+          192
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 19,
+        "shape": [
+          64,
+          192
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 20,
+        "shape": [
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 21,
+        "shape": [
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 22,
+        "shape": [
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 23,
+        "shape": [
+          64,
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 24,
+        "shape": [
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 25,
+        "shape": [
+          128,
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 26,
+        "shape": [
+          128
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 27,
+        "shape": [
+          64,
+          171
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 28,
+        "shape": [
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 29,
+        "shape": [
+          128,
+          64
+        ],
+        "step": 24642.0
+      },
+      {
+        "param": 30,
+        "shape": [
+          128
+        ],
+        "step": 24642.0
+      }
+    ],
+    "adamw_param_groups": 1,
+    "adamw_param_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30
+    ],
+    "adamw_step_values": [
+      24642.0
+    ],
+    "metadata_checks": {
+      "cache_sha256_manifest": true,
+      "dataset": true,
+      "epoch": true,
+      "feature_spec_hash": true,
+      "group": true,
+      "group_name": true,
+      "has_optimizer_state": true,
+      "has_rng_state": true,
+      "label_artifact_sha256": true,
+      "n_outputs": true,
+      "norm_fingerprint": true,
+      "optimizer_is_adamw": true,
+      "recipe_batch_size": true,
+      "recipe_betas": true,
+      "recipe_clip": true,
+      "recipe_dropout": true,
+      "recipe_eps": true,
+      "recipe_learning_rate": true,
+      "recipe_wd": true,
+      "round": true,
+      "schema": true,
+      "split_partition_sha256": true,
+      "test_evaluated_false": true,
+      "valid_ap": true,
+      "variant": true
+    },
+    "n_outputs": 128,
+    "parameter_count": 245184,
+    "rng_cuda_states": 1,
+    "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_lr_probe_v1/runs/L_low_lr/checkpoint_best.pt",
+    "source_checkpoint_sha256": "b158f1669f6d0ccbf5fc05f510050c69ef2fba9f6258cbe59d4d3d9a938eb6c5",
+    "source_epoch": 9,
+    "source_valid_ap": 0.2374902968831333,
+    "state_dict_fingerprint": "bd969c6328749735e8a509cd00ab272052b3d47f57ee97b2d576f9b62d91eee1",
+    "state_dict_keys_shapes_match_frozen_c1": true,
+    "state_dict_tensor_shapes": [
+      {
+        "dtype": "torch.float32",
+        "name": "atom_encoder.lins.0.bias",
+        "shape": [
+          128
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "atom_encoder.lins.0.weight",
+        "shape": [
+          128,
+          51
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "atom_encoder.lins.1.bias",
+        "shape": [
+          96
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "atom_encoder.lins.1.weight",
+        "shape": [
+          96,
+          128
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "bond_encoder.lins.0.bias",
+        "shape": [
+          160
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "bond_encoder.lins.0.weight",
+        "shape": [
+          160,
+          301
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "bond_encoder.lins.1.bias",
+        "shape": [
+          96
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "bond_encoder.lins.1.weight",
+        "shape": [
+          96,
+          160
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "cont_mean",
+        "shape": [
+          0
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "cont_scale",
+        "shape": [
+          0
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "f.lins.0.bias",
+        "shape": [
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "f.lins.0.weight",
+        "shape": [
+          64,
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "f.lins.1.bias",
+        "shape": [
+          128
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "f.lins.1.weight",
+        "shape": [
+          128,
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "global_mean",
+        "shape": [
+          42
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "global_scale",
+        "shape": [
+          42
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.close_emb.weight",
+        "shape": [
+          2,
+          8
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.end_emb.weight",
+        "shape": [
+          80,
+          32
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.joint_proj.bias",
+        "shape": [
+          32
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.joint_proj.weight",
+        "shape": [
+          32,
+          32
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.mlp.lins.0.bias",
+        "shape": [
+          192
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.mlp.lins.0.weight",
+        "shape": [
+          192,
+          433
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.mlp.lins.1.bias",
+        "shape": [
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.mlp.lins.1.weight",
+        "shape": [
+          64,
+          192
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.nbr_emb.weight",
+        "shape": [
+          80,
+          32
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.norm.bias",
+        "shape": [
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.norm.weight",
+        "shape": [
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.path_emb.weight",
+        "shape": [
+          400,
+          32
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.path_gate.weight",
+        "shape": [
+          400,
+          1
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.path_u.weight",
+        "shape": [
+          400,
+          32
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "local.path_v.weight",
+        "shape": [
+          80,
+          32
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "rho.lins.0.bias",
+        "shape": [
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "rho.lins.0.weight",
+        "shape": [
+          64,
+          171
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "rho.lins.1.bias",
+        "shape": [
+          128
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "rho.lins.1.weight",
+        "shape": [
+          128,
+          64
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "scalar_mean",
+        "shape": [
+          9
+        ]
+      },
+      {
+        "dtype": "torch.float32",
+        "name": "scalar_scale",
+        "shape": [
+          9
+        ]
+      }
+    ],
+    "state_dict_tensors": 37,
+    "test_evaluated": false
+  },
+  "test_evaluated": false
+}
