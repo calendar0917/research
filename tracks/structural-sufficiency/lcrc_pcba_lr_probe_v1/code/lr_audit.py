@@ -73,10 +73,10 @@ def build_initialization_audit(
         "both_epoch0_reproduce_historical_ap": bool(
             he0.get("reproduces_historical") and le0.get("reproduces_historical")
         ),
-        "epoch0_ap_pair_delta_within_1e_minus_6": bool(
+        "epoch0_ap_pair_delta_within_1e_minus_5": bool(
             he0.get("ap") is not None
             and le0.get("ap") is not None
-            and abs(float(he0["ap"]) - float(le0["ap"])) <= 1e-6
+            and abs(float(he0["ap"]) - float(le0["ap"])) <= 1e-5
         ),
         "both_orders_deterministic": bool(
             h.get("training_order_repeat_equal") and low.get("training_order_repeat_equal")

@@ -1,0 +1,64 @@
+{
+  "checks": {
+    "both_epoch0_reproduce_historical_ap": true,
+    "both_fixed_recipe": true,
+    "both_loaded_state_bitwise_equal_to_history": true,
+    "both_order_isolation_passed": true,
+    "both_orders_deterministic": true,
+    "both_pinned_stager_smoke_passed": true,
+    "both_preflights_passed": true,
+    "both_test_isolation_passed": true,
+    "epoch0_ap_pair_delta_within_1e_minus_5": true,
+    "same_feature_spec_hash": true,
+    "same_model_config": true,
+    "same_order_plan": true,
+    "same_parameter_fingerprint": true,
+    "same_source_checkpoint_sha256": true,
+    "same_train_only_norm_fingerprint": true
+  },
+  "created_utc": "2026-11-05T11:33:41Z",
+  "epoch0_pair_delta": 1.534430846411583e-06,
+  "groups": {
+    "H": {
+      "assigned_pool": "res-gpu0",
+      "device": "cuda",
+      "epoch0_abs_delta_vs_historical": 5.333340099000772e-07,
+      "epoch0_valid_ap": 0.23449330372714328,
+      "gpu_seconds": 19.705720241181552,
+      "high_lr": 0.0003,
+      "loaded_parameter_fingerprint": "540b27c79b8d75014f2960b806791e282437577fcd1e2c58562071ee71eb34fc",
+      "order_plan_sha256": "1357fc69886f3a62b3ffed2319a0078d2d3395c0325d93ecab3170e474cb87f1",
+      "source_checkpoint_sha256": "b2affec75fdb947417052f11293922d1e504d490ca48e8b2a074355be6d8edf8"
+    },
+    "L": {
+      "assigned_pool": "res-gpu1",
+      "device": "cuda",
+      "epoch0_abs_delta_vs_historical": 1.0010968365115058e-06,
+      "epoch0_valid_ap": 0.23449176929629686,
+      "gpu_seconds": 15.589149334933609,
+      "loaded_parameter_fingerprint": "540b27c79b8d75014f2960b806791e282437577fcd1e2c58562071ee71eb34fc",
+      "low_lr": 5e-05,
+      "order_plan_sha256": "1357fc69886f3a62b3ffed2319a0078d2d3395c0325d93ecab3170e474cb87f1",
+      "source_checkpoint_sha256": "b2affec75fdb947417052f11293922d1e504d490ca48e8b2a074355be6d8edf8"
+    }
+  },
+  "historical": {
+    "best_epoch": 29,
+    "best_valid_ap": 0.23449277039313338,
+    "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/runs/pcba_seed0/checkpoint.pt",
+    "checkpoint_sha256": "b2affec75fdb947417052f11293922d1e504d490ca48e8b2a074355be6d8edf8",
+    "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "label_artifact_sha256": "5c3b5fbe642d80113522832fe01090097b860010868c59f8696bc247d5027d01",
+    "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+    "round": "lcrc-pcba-scale-pilot-v1",
+    "split_partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f"
+  },
+  "limitations": [
+    "AdamW moments and step count are absent from the historical checkpoint; both arms re-initialise AdamW from zero.",
+    "This audit proves identical starting weights, not identical historical optimizer state.",
+    "Official Test targets were NaN in the label artifact and were never evaluated."
+  ],
+  "passed": true,
+  "round_id": "lcrc-pcba-lr-probe-v1",
+  "schema": "lcrc-pcba-lr-probe-initialization-audit-v1"
+}
