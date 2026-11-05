@@ -328,6 +328,8 @@ def main(argv: list[str] | None = None) -> int:
     try:
         task = D.load_task()
         ref, info, base_init = M.build_reference(task.spec, task.norm, C.N_TASKS, int(args.seed))
+        ref.to(device)
+        ref.eval()
         payload["c1_parameters"] = int(info["parameters"])
         payload["base_init_fingerprint"] = C.state_fingerprint(base_init)
         payload["per_arm"] = {}
