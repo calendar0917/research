@@ -1,0 +1,96 @@
+{
+  "created_utc": "2026-11-05T10:28:55Z",
+  "environment": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cudnn_allow_tf32": true,
+    "cudnn_version": 90100,
+    "float32_matmul_precision": "highest",
+    "git_commit": "750609d73120ee3c9e68ba82f76f94dc252b7292",
+    "git_dirty": false,
+    "gpu_capability": "8.0",
+    "gpu_multiprocessor_count": 108,
+    "gpu_name": "NVIDIA A100-SXM4-40GB",
+    "gpu_total_memory_bytes": 42285268992,
+    "hostname": "a100-2",
+    "matmul_allow_tf32": false,
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "utc": "2026-11-05T10:28:55Z"
+  },
+  "git_commit": "750609d73120ee3c9e68ba82f76f94dc252b7292",
+  "measurements": {
+    "bytes_per_batch": {
+      "mean": 1747123.8666666667,
+      "n_tensors": 20,
+      "p50": 1746374
+    },
+    "device": "cuda",
+    "effective_bandwidth_gb_s": {
+      "bulk_single_pageable": 6.36289766081165,
+      "pageable_bulk": 5.459817042308299,
+      "pageable_per_tensor": 0.06527383939053963,
+      "pinned_bulk": 7.30496227155141,
+      "pinned_per_tensor": 4.41398415947105
+    },
+    "n_reps": 60,
+    "timings": {
+      "bulk_single_pageable": {
+        "mean_ms": 0.27457990994056064,
+        "min_ms": 0.23250887170433998,
+        "p50_ms": 0.2735098823904991,
+        "p90_ms": 0.28430307283997536
+      },
+      "pageable_bulk": {
+        "mean_ms": 0.31999677885323763,
+        "min_ms": 0.25133974850177765,
+        "p50_ms": 0.31701987609267235,
+        "p90_ms": 0.33272039145231247
+      },
+      "pageable_per_tensor": {
+        "mean_ms": 26.76606559349845,
+        "min_ms": 25.709050707519054,
+        "p50_ms": 26.604918530210853,
+        "p90_ms": 27.598459366708994
+      },
+      "pin_memory_only": {
+        "mean_ms": 0.6810114098091921,
+        "min_ms": 0.4276726394891739,
+        "p50_ms": 0.44957222416996956,
+        "p90_ms": 0.48777409829199314
+      },
+      "pinned_bulk": {
+        "mean_ms": 0.23916945792734623,
+        "min_ms": 0.17616711556911469,
+        "p50_ms": 0.23869238793849945,
+        "p90_ms": 0.2528207376599312
+      },
+      "pinned_per_tensor": {
+        "mean_ms": 0.395815617715319,
+        "min_ms": 0.22253766655921936,
+        "p50_ms": 0.24459208361804485,
+        "p90_ms": 0.3078531473875046
+      },
+      "sync_only": {
+        "mean_ms": 0.0048645539209246635,
+        "min_ms": 0.004474073648452759,
+        "p50_ms": 0.004740431904792786,
+        "p90_ms": 0.005225371569395065
+      }
+    }
+  },
+  "notes": [
+    "every variant is followed by torch.cuda.synchronize() so the number is the wall time to have the data actually resident on the device",
+    "pin_memory_only isolates the host cost of staging into pinned memory",
+    "pinned_bulk/pageable_bulk concatenate all fields into one flat buffer first, so they include the concatenation cost"
+  ],
+  "protocol": {
+    "batch_size": 128,
+    "reps": 60,
+    "seed": 0
+  },
+  "round_id": "lcrc-pcba-pipeline-perf-v1",
+  "schema": "lcrc-pcba-h2d-probe-v1"
+}

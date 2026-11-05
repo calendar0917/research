@@ -43,7 +43,11 @@ RECIPE = dict(PC.RECIPE)
 TOL = {
     "device_batch_exact": 0.0,          # bytes must be identical
     "labels_exact": 0.0,
-    "logits_max_abs": 1e-6,             # == pc_common.GRAD_TOL
+    "logits_max_abs": float(PC.INFERENCE_TOL),  # 1e-5: the frozen round's inference tolerance
+    # (a same-input GPU forward is not bitwise reproducible here: index_add
+    #  reduction order moves logits by ~2e-6 between two runs of the *same*
+    #  transfer path, so the frozen 1e-5 tolerance -- not 1e-6 -- is the
+    #  pre-existing FP32 standard; the A/A and B/B noise floors are reported)
     "loss_max_abs": 1e-6,
     "grad_max_abs": float(PC.GRAD_TOL),  # 1e-6
     "weight_max_abs_one_step": float(PC.GRAD_TOL),
@@ -243,9 +247,14 @@ def gate2_3_inference(inputs, rows, device) -> dict[str, Any]:
     stager = PIPE.PinnedStager(device)
     batch_cpu = PC_C.collate_reference(inputs.cache, rows.tolist())
     with torch.no_grad():
+        # noise floor: same transfer twice (no code change involved)
         logits_a = model(pageable.batch(batch_cpu))
+        logits_a2 = model(pageable.batch(batch_cpu))
         logits_b = model(stager.batch(batch_cpu))
+        logits_b2 = model(stager.batch(batch_cpu))
         _sync()
+        noise_aa = float((logits_a - logits_a2).abs().max().item())
+        noise_bb = float((logits_b - logits_b2).abs().max().item())
         ab_diff = float((logits_a - logits_b).abs().max().item())
         ab_equal = _bit_equal(logits_a, logits_b)
         # per-molecule inference vs the batched result
@@ -262,6 +271,12 @@ def gate2_3_inference(inputs, rows, device) -> dict[str, Any]:
         "all_finite": bool(torch.isfinite(logits_a).all()),
         "a_vs_b_max_abs_diff": ab_diff,
         "a_vs_b_bitwise_equal": ab_equal,
+        "noise_floor_a_vs_a": noise_aa,
+        "noise_floor_b_vs_b": noise_bb,
+        "noise_floor_note": (
+            "same model, same batch, same transfer path run twice: this is the "
+            "kernel-reduction-order noise that exists without any code change"
+        ),
         "single_vs_batch_max_abs_diff": single,
         "single_vs_batch_bitwise_equal": single_equal,
         "single_vs_batch_n_checked": len(single),
@@ -558,7 +573,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         speedup_p50 = a["step_ms"]["p50_ms"] / b["step_ms"]["p50_ms"]
         speedup_mean = a["step_ms"]["mean_ms"] / b["step_ms"]["mean_ms"]
-        speedup_total = a["steps_per_second"] / b["steps_per_second"]
+        # end-to-end: both variants ran the same number of steps, so this is
+        # total wall time A / total wall time B
+        speedup_total = b["steps_per_second"] / a["steps_per_second"]
         result["throughput"] = {
             "A_original": a,
             "B_optimized": b,
@@ -566,8 +583,12 @@ def main(argv: Sequence[str] | None = None) -> int:
             "speedup": {
                 "p50": float(speedup_p50),
                 "mean": float(speedup_mean),
-                "wall_total": float(speedup_total),
-                "definition": "step time A / step time B; >1 means B is faster",
+                "end_to_end_wall": float(speedup_total),
+                "definition": (
+                    "end_to_end_wall = step/s(B) / step/s(A) over the identical 300 steps "
+                    "(total wall A / total wall B); p50/mean = per-step-time ratios. "
+                    ">1 means B is faster"
+                ),
             },
             "drift_check": {
                 "A_p50_ms_first": a["step_ms"]["p50_ms"],
@@ -599,10 +620,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
 
     correctness_ok = result.get("correctness", {}).get("all_passed")
-    speedup = result.get("throughput", {}).get("speedup", {}).get("p50")
+    speedup = result.get("throughput", {}).get("speedup", {}).get("end_to_end_wall")
     result["decision"] = {
         "correctness_all_passed": correctness_ok,
-        "speedup_p50": speedup,
+        "speedup_end_to_end_wall": speedup,
+        "speedup_p50": result.get("throughput", {}).get("speedup", {}).get("p50"),
         "threshold": 1.5,
         "label": (
             PF.RESULT_LABEL_ACCEPTED
