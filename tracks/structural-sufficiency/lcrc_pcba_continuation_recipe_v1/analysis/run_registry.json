@@ -1,18 +1,90 @@
 {
-  "generated_utc": "2026-11-06T09:01:36Z",
-  "git_commit": "4aacb7320c4322d5f429e8a154c50333c00107ed",
+  "auxiliary": [
+    {
+      "experiment": "cc-preflight",
+      "gpu_hours": 0.0100976904151806,
+      "model": "A+G+V",
+      "rr": {
+        "commit": "76f029e52c32489e6c0c4c9071b942329a3ec570",
+        "completed_at": "2026-11-06T13:24:23+08:00",
+        "exit_code": 0,
+        "git_dirty": false,
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "run_id": "cc-preflight-20261106-132330-9b22e064",
+        "started_at": "2026-11-06T13:23:33+08:00",
+        "state": "completed"
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/preflight",
+      "stage": "stage0"
+    },
+    {
+      "experiment": "cc-test-freeze",
+      "gpu_hours": 0.027438819465848308,
+      "model": "C/A/G/V + selected",
+      "rr": {
+        "commit": "9200038d786a6b92a5b31d798ea71f7a0f2e0fd3",
+        "completed_at": "2026-11-06T17:04:10+08:00",
+        "exit_code": 0,
+        "git_dirty": false,
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "run_id": "cc-test-freeze-20261106-170219-9f4eb783",
+        "started_at": "2026-11-06T17:02:22+08:00",
+        "state": "completed"
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/test_freeze",
+      "stage": "test"
+    },
+    {
+      "experiment": "cc-test-score",
+      "gpu_hours": 0.0,
+      "model": "6 unique / 7 logical",
+      "note": "CPU-only post-freeze scoring; the freeze job produced the Test logits.",
+      "rr": null,
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/analysis/test_results.json",
+      "stage": "test"
+    }
+  ],
+  "generated_utc": "2026-11-06T09:13:08Z",
+  "git_commit": "e375743965341ff95bd543d16cea6d65e7cdede2",
   "round_id": "lcrc-pcba-continuation-recipe-v1",
   "runs": [
     {
+      "batch_plan_prefix_sha256": "0c86830b47588582006c4a34ca521f4bb4c0798b8f823110ffda63753697ff17",
+      "batch_plan_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
       "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_A_L/checkpoint_epoch60.pt",
       "checkpoint_sha256": "06f1e89cf0a1c9a5e2a1310799c8ae0961f18b4ea09947cbec4ae3cfdb9ef061",
       "experiment": "cc-s1-A-L",
       "finished_utc": "2026-11-06T06:16:07Z",
+      "first_step": {
+        "batch_rows_sha256": "fe76ce37f4f490cbe1f411e167f0ea6cb61bc5c11d6bec7839bf704498f1e5ae",
+        "epoch": 41,
+        "global_step": 109520,
+        "grad_norm": 0.07012707740068436,
+        "logits_sha256": "375dbcfbb43ddd6ea36a0b95b9e594007609dadb81ff89dea2fb12d1ef791a00",
+        "loss": 0.03544294461607933,
+        "lr": 1e-05,
+        "step": 0
+      },
       "git_commit": "4707e428e23354de7f87a56cff67784243edc4e9",
       "gpu_hours": 0.8080101457605552,
       "gpu_seconds": 2908.836524737999,
+      "lr_schedule_sha256": {
+        "L": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+        "R": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd"
+      },
       "model": "A",
       "recipe": "L",
+      "recipe_lr_schedule_sha256": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+      "restore_audit": {
+        "optimizer_state_bitwise_equal": true,
+        "optimizer_step_values": [
+          109520.0
+        ],
+        "state_dict_bitwise_equal": true
+      },
+      "rng_state_start_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
       "rr": {
         "command": "python tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/code/cc_train.py --model A --recipe L --start-epoch 41 --final-epoch 60 --resume tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/checkpoint_epoch40.pt --out-dir tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_A_L --soft-seconds 3300 --hard-seconds 4200",
         "commit": "4707e428e23354de7f87a56cff67784243edc4e9",
@@ -33,21 +105,48 @@
         "torch_version": "2.5.1+cu124"
       },
       "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_A_L",
+      "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/checkpoint_epoch40.pt",
+      "source_checkpoint_sha256": "f110935a6055f3c087f9d0b40580506a512cdeb09f6af67a56bde787cc93a437",
       "stage": "stage1",
       "started_utc": "2026-11-06T05:27:38Z",
       "status": "COMPLETED",
       "stop_reason": "COMPLETED_STAGE1"
     },
     {
+      "batch_plan_prefix_sha256": "0c86830b47588582006c4a34ca521f4bb4c0798b8f823110ffda63753697ff17",
+      "batch_plan_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
       "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_A_R/checkpoint_epoch60.pt",
       "checkpoint_sha256": "ccfe0e7757c4fb54d09e6a05bc25d297fdcb0e9f77fb5cfed83bcb0d49e5ed83",
       "experiment": "cc-s1-A-R",
       "finished_utc": "2026-11-06T06:08:18Z",
+      "first_step": {
+        "batch_rows_sha256": "fe76ce37f4f490cbe1f411e167f0ea6cb61bc5c11d6bec7839bf704498f1e5ae",
+        "epoch": 41,
+        "global_step": 109520,
+        "grad_norm": 0.07012707740068436,
+        "logits_sha256": "376f6b4ebb6270aa0fb8992a9bd7792eeef7f4b4139d94c26cbb8fcc4d4ef5d4",
+        "loss": 0.03544294461607933,
+        "lr": 1e-05,
+        "step": 0
+      },
       "git_commit": "4707e428e23354de7f87a56cff67784243edc4e9",
       "gpu_hours": 0.6746007699947546,
       "gpu_seconds": 2428.5627719811164,
+      "lr_schedule_sha256": {
+        "L": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+        "R": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd"
+      },
       "model": "A",
       "recipe": "R",
+      "recipe_lr_schedule_sha256": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd",
+      "restore_audit": {
+        "optimizer_state_bitwise_equal": true,
+        "optimizer_step_values": [
+          109520.0
+        ],
+        "state_dict_bitwise_equal": true
+      },
+      "rng_state_start_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
       "rr": {
         "command": "python tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/code/cc_train.py --model A --recipe R --start-epoch 41 --final-epoch 60 --resume tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/checkpoint_epoch40.pt --out-dir tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_A_R --soft-seconds 3300 --hard-seconds 4200",
         "commit": "4707e428e23354de7f87a56cff67784243edc4e9",
@@ -68,21 +167,48 @@
         "torch_version": "2.5.1+cu124"
       },
       "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_A_R",
+      "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/checkpoint_epoch40.pt",
+      "source_checkpoint_sha256": "f110935a6055f3c087f9d0b40580506a512cdeb09f6af67a56bde787cc93a437",
       "stage": "stage1",
       "started_utc": "2026-11-06T05:27:50Z",
       "status": "COMPLETED",
       "stop_reason": "COMPLETED_STAGE1"
     },
     {
+      "batch_plan_prefix_sha256": "0c86830b47588582006c4a34ca521f4bb4c0798b8f823110ffda63753697ff17",
+      "batch_plan_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
       "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_G_L/checkpoint_epoch60.pt",
       "checkpoint_sha256": "0679e305970151ebffe66d8502e6a2d44366d9dc389dbf4221ab8ecd2fe9574a",
       "experiment": "cc-s1-G-L",
       "finished_utc": "2026-11-06T07:08:56Z",
+      "first_step": {
+        "batch_rows_sha256": "fe76ce37f4f490cbe1f411e167f0ea6cb61bc5c11d6bec7839bf704498f1e5ae",
+        "epoch": 41,
+        "global_step": 109520,
+        "grad_norm": 0.0829610601067543,
+        "logits_sha256": "400c15c94243dc3bd58ed3d21403c3c09bcfd936bfb830294e6644ba6e75bb78",
+        "loss": 0.03363855555653572,
+        "lr": 1e-05,
+        "step": 0
+      },
       "git_commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
       "gpu_hours": 0.7602196231761222,
       "gpu_seconds": 2736.7906434340402,
+      "lr_schedule_sha256": {
+        "L": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+        "R": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd"
+      },
       "model": "G",
       "recipe": "L",
+      "recipe_lr_schedule_sha256": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+      "restore_audit": {
+        "optimizer_state_bitwise_equal": true,
+        "optimizer_step_values": [
+          109520.0
+        ],
+        "state_dict_bitwise_equal": true
+      },
+      "rng_state_start_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
       "rr": {
         "command": "python tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/code/cc_train.py --model G --recipe L --start-epoch 41 --final-epoch 60 --resume tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_G/checkpoint_epoch40.pt --out-dir tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_G_L --soft-seconds 3300 --hard-seconds 4200",
         "commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
@@ -103,21 +229,48 @@
         "torch_version": "2.5.1+cu124"
       },
       "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_G_L",
+      "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_G/checkpoint_epoch40.pt",
+      "source_checkpoint_sha256": "e363e3729629f5799f3e2e74ae091ec21e273565e542d939a6bef9bab16849bb",
       "stage": "stage1",
       "started_utc": "2026-11-06T06:23:19Z",
       "status": "COMPLETED",
       "stop_reason": "COMPLETED_STAGE1"
     },
     {
+      "batch_plan_prefix_sha256": "0c86830b47588582006c4a34ca521f4bb4c0798b8f823110ffda63753697ff17",
+      "batch_plan_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
       "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_G_R/checkpoint_epoch60.pt",
       "checkpoint_sha256": "3046d32c361ae7f386b1dd5bc3d80c6cc296b789cb5d47e5d4ac7923419592fd",
       "experiment": "cc-s1-G-R",
       "finished_utc": "2026-11-06T07:00:17Z",
+      "first_step": {
+        "batch_rows_sha256": "fe76ce37f4f490cbe1f411e167f0ea6cb61bc5c11d6bec7839bf704498f1e5ae",
+        "epoch": 41,
+        "global_step": 109520,
+        "grad_norm": 0.0829610601067543,
+        "logits_sha256": "9680c7b10158b00059c26f08472dd6a61c1bcdfbb1f140ac52344fac24a3caf5",
+        "loss": 0.03363855928182602,
+        "lr": 1e-05,
+        "step": 0
+      },
       "git_commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
       "gpu_hours": 0.6130753881512727,
       "gpu_seconds": 2207.071397344582,
+      "lr_schedule_sha256": {
+        "L": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+        "R": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd"
+      },
       "model": "G",
       "recipe": "R",
+      "recipe_lr_schedule_sha256": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd",
+      "restore_audit": {
+        "optimizer_state_bitwise_equal": true,
+        "optimizer_step_values": [
+          109520.0
+        ],
+        "state_dict_bitwise_equal": true
+      },
+      "rng_state_start_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
       "rr": {
         "command": "python tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/code/cc_train.py --model G --recipe R --start-epoch 41 --final-epoch 60 --resume tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_G/checkpoint_epoch40.pt --out-dir tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_G_R --soft-seconds 3300 --hard-seconds 4200",
         "commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
@@ -138,21 +291,48 @@
         "torch_version": "2.5.1+cu124"
       },
       "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_G_R",
+      "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_G/checkpoint_epoch40.pt",
+      "source_checkpoint_sha256": "e363e3729629f5799f3e2e74ae091ec21e273565e542d939a6bef9bab16849bb",
       "stage": "stage1",
       "started_utc": "2026-11-06T06:23:30Z",
       "status": "COMPLETED",
       "stop_reason": "COMPLETED_STAGE1"
     },
     {
+      "batch_plan_prefix_sha256": "0c86830b47588582006c4a34ca521f4bb4c0798b8f823110ffda63753697ff17",
+      "batch_plan_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
       "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_L/checkpoint_epoch60.pt",
       "checkpoint_sha256": "d4817d817c1dae20ee73c42948b923dbd165dc00c6a195102cf635be6d7b1bc5",
       "experiment": "cc-s1-V-L",
       "finished_utc": "2026-11-06T08:02:40Z",
+      "first_step": {
+        "batch_rows_sha256": "fe76ce37f4f490cbe1f411e167f0ea6cb61bc5c11d6bec7839bf704498f1e5ae",
+        "epoch": 41,
+        "global_step": 109520,
+        "grad_norm": 0.08104625344276428,
+        "logits_sha256": "9ee17c10461f474a7a829069083f9e9b67b8c9cc24d0fa7f841b87b4997067e1",
+        "loss": 0.03316212072968483,
+        "lr": 1e-05,
+        "step": 0
+      },
       "git_commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
       "gpu_hours": 0.7933426602580584,
       "gpu_seconds": 2856.0335769290105,
+      "lr_schedule_sha256": {
+        "L": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+        "R": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd"
+      },
       "model": "V",
       "recipe": "L",
+      "recipe_lr_schedule_sha256": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+      "restore_audit": {
+        "optimizer_state_bitwise_equal": true,
+        "optimizer_step_values": [
+          109520.0
+        ],
+        "state_dict_bitwise_equal": true
+      },
+      "rng_state_start_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
       "rr": {
         "command": "python tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/code/cc_train.py --model V --recipe L --start-epoch 41 --final-epoch 60 --resume tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/runs/phase3_seed0_V/checkpoint_epoch40.pt --out-dir tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_L --soft-seconds 3300 --hard-seconds 4200",
         "commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
@@ -173,21 +353,48 @@
         "torch_version": "2.5.1+cu124"
       },
       "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_L",
+      "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/runs/phase3_seed0_V/checkpoint_epoch40.pt",
+      "source_checkpoint_sha256": "2d75e4449cc1be669c779fa11b6d9842923965654c880290c430c64e698939a0",
       "stage": "stage1",
       "started_utc": "2026-11-06T07:15:04Z",
       "status": "COMPLETED",
       "stop_reason": "COMPLETED_STAGE1"
     },
     {
+      "batch_plan_prefix_sha256": "0c86830b47588582006c4a34ca521f4bb4c0798b8f823110ffda63753697ff17",
+      "batch_plan_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
       "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_R/checkpoint_epoch60.pt",
       "checkpoint_sha256": "dd127911e917a020ca7553d108b13704bb09e3f07ae357149319d5fdba98f212",
       "experiment": "cc-s1-V-R",
       "finished_utc": "2026-11-06T07:54:38Z",
+      "first_step": {
+        "batch_rows_sha256": "fe76ce37f4f490cbe1f411e167f0ea6cb61bc5c11d6bec7839bf704498f1e5ae",
+        "epoch": 41,
+        "global_step": 109520,
+        "grad_norm": 0.08104626089334488,
+        "logits_sha256": "0a0d40fe32c9f09dded1a0bc14a516ac260f99e66c0586621aca257e317eb806",
+        "loss": 0.03316211700439453,
+        "lr": 1e-05,
+        "step": 0
+      },
       "git_commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
       "gpu_hours": 0.651396159549994,
       "gpu_seconds": 2345.0261743799783,
+      "lr_schedule_sha256": {
+        "L": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+        "R": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd"
+      },
       "model": "V",
       "recipe": "R",
+      "recipe_lr_schedule_sha256": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd",
+      "restore_audit": {
+        "optimizer_state_bitwise_equal": true,
+        "optimizer_step_values": [
+          109520.0
+        ],
+        "state_dict_bitwise_equal": true
+      },
+      "rng_state_start_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
       "rr": {
         "command": "python tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/code/cc_train.py --model V --recipe R --start-epoch 41 --final-epoch 60 --resume tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/runs/phase3_seed0_V/checkpoint_epoch40.pt --out-dir tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_R --soft-seconds 3300 --hard-seconds 4200",
         "commit": "f9f5457f1edda6482b6282f9ef64b77b04f7057a",
@@ -208,21 +415,48 @@
         "torch_version": "2.5.1+cu124"
       },
       "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_R",
+      "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/runs/phase3_seed0_V/checkpoint_epoch40.pt",
+      "source_checkpoint_sha256": "2d75e4449cc1be669c779fa11b6d9842923965654c880290c430c64e698939a0",
       "stage": "stage1",
       "started_utc": "2026-11-06T07:15:33Z",
       "status": "COMPLETED",
       "stop_reason": "COMPLETED_STAGE1"
     },
     {
+      "batch_plan_prefix_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
+      "batch_plan_sha256": "67e865291cd03d1bea699936fcbd10bfa230e87460cf161502abef9b74acef6d",
       "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage2_V_R/checkpoint_epoch80.pt",
       "checkpoint_sha256": "e5f0f7d696ef94c2bd8adc01570cca1ee0cb91b17ba84d883151316d5cd82969",
       "experiment": "cc-s2-V-R",
       "finished_utc": "2026-11-06T08:55:06Z",
+      "first_step": {
+        "batch_rows_sha256": "902df8073eb3b0ff052dbf34e0f6f21394297e61eadb756f854a67b17ed9db0a",
+        "epoch": 61,
+        "global_step": 164280,
+        "grad_norm": 0.08965131640434265,
+        "logits_sha256": "cfcd6eabc4e9f4986d87e99ecc5d991b1c3a452aa515da131ce0c1aa5c230884",
+        "loss": 0.03561490774154663,
+        "lr": 3.080531880218831e-05,
+        "step": 0
+      },
       "git_commit": "4942c8896f374ab39e05faed8a8ac67738ee1aec",
       "gpu_hours": 0.794956306052239,
       "gpu_seconds": 2861.8427017880604,
+      "lr_schedule_sha256": {
+        "L": "290cd33809b49434ecb7addda387406a43bb7cf5b831dc4b21794e5692232619",
+        "R": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd"
+      },
       "model": "V",
       "recipe": "R",
+      "recipe_lr_schedule_sha256": "79b2e9ef8b56d692145a7be68f4e1cd3d74c3987a0c4b315294fe56957475bfd",
+      "restore_audit": {
+        "optimizer_state_bitwise_equal": true,
+        "optimizer_step_values": [
+          164280.0
+        ],
+        "state_dict_bitwise_equal": true
+      },
+      "rng_state_start_sha256": "876b2dc68384681130158b0aa050853999d3f2f2171e9ec140a6a76da3108979",
       "rr": {
         "command": "python tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/code/cc_train.py --model V --recipe R --start-epoch 61 --final-epoch 80 --resume tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_R/checkpoint_epoch60.pt --out-dir tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage2_V_R --soft-seconds 3300 --hard-seconds 4200",
         "commit": "4942c8896f374ab39e05faed8a8ac67738ee1aec",
@@ -243,6 +477,8 @@
         "torch_version": "2.5.1+cu124"
       },
       "run_dir": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage2_V_R",
+      "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_continuation_recipe_v1/runs/stage1_V_R/checkpoint_epoch60.pt",
+      "source_checkpoint_sha256": "dd127911e917a020ca7553d108b13704bb09e3f07ae357149319d5fdba98f212",
       "stage": "stage2",
       "started_utc": "2026-11-06T08:07:24Z",
       "status": "COMPLETED",

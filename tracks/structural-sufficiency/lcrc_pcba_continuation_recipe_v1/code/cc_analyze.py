@@ -642,6 +642,31 @@ def ledger() -> tuple[dict[str, Any], dict[str, Any]]:
             "stop_reason": None if run is None else run.get("stop_reason"),
             "checkpoint": None if run is None else run.get("checkpoint"),
             "checkpoint_sha256": None if run is None else _checkpoint_sha(run),
+            "source_checkpoint": None if run is None else run.get("source_checkpoint"),
+            "source_checkpoint_sha256": None if run is None else run.get("source_checkpoint_sha256"),
+            "batch_plan_sha256": None
+            if run is None
+            else (run.get("batch_plan") or {}).get("global_plan_sha256"),
+            "batch_plan_prefix_sha256": None
+            if run is None
+            else (run.get("batch_plan") or {}).get("prefix_sha256"),
+            "lr_schedule_sha256": None
+            if run is None
+            else (run.get("lr_schedule") or {}).get("schedule_sha256"),
+            "recipe_lr_schedule_sha256": None
+            if run is None
+            else ((run.get("lr_schedule") or {}).get("schedule_sha256") or {}).get(recipe),
+            "rng_state_start_sha256": None
+            if run is None
+            else (run.get("rng_state_start") or {}).get("combined_sha256"),
+            "first_step": None if run is None else run.get("first_step"),
+            "restore_audit": None
+            if run is None
+            else {
+                "state_dict_bitwise_equal": run.get("restore_audit", {}).get("state_dict_bitwise_equal"),
+                "optimizer_state_bitwise_equal": run.get("restore_audit", {}).get("optimizer_state_bitwise_equal"),
+                "optimizer_step_values": run.get("restore_audit", {}).get("optimizer_step_values"),
+            },
             "gpu_hours": None if run is None else run.get("gpu_hours"),
             "gpu_seconds": None if run is None else run.get("gpu_seconds"),
             "started_utc": None if run is None else run.get("started_utc"),
@@ -682,6 +707,24 @@ def ledger() -> tuple[dict[str, Any], dict[str, Any]]:
                     "checkpoint_sha256": _checkpoint_sha(run),
                 }
             )
+    superseded_path = C.ANALYSIS / "preflight_gpu_superseded.json"
+    if superseded_path.is_file():
+        superseded = C.read_json(superseded_path)
+        jobs.append(
+            {
+                "stage": "stage0",
+                "experiment": "cc-preflight (superseded)",
+                "model": "A+G+V",
+                "recipe": "none",
+                "gpu_hours_process": float(superseded.get("total_gpu_hours", 0.0)),
+                "status": "COMPLETED",
+                "note": (
+                    "First Stage-0 GPU preflight at commit "
+                    f"{str(superseded.get('git_commit', ''))[:8]}; superseded by the "
+                    "PinnedStager preflight.  Counted in the GPU budget."
+                ),
+            }
+        )
     preflight_path = C.ANALYSIS / "preflight_gpu.json"
     preflight_hours = 0.0
     if preflight_path.is_file():
@@ -710,6 +753,57 @@ def ledger() -> tuple[dict[str, Any], dict[str, Any]]:
                 "status": "COMPLETED",
             }
         )
+    # Auxiliary GPU jobs and maintenance actions, kept separate from the
+    # paired training registry but visible for the resource audit.
+    auxiliary: list[dict[str, Any]] = []
+    for stage, experiment, model, run_dir in (
+        ("stage0", "cc-preflight", "A+G+V", C.RUNS / "preflight"),
+        ("test", "cc-test-freeze", "C/A/G/V + selected", C.RUNS / "test_freeze"),
+    ):
+        status = _rr_status(experiment)
+        run_json = run_dir / "run.json"
+        gpu_hours = None
+        if experiment == "cc-preflight" and (C.ANALYSIS / "preflight_gpu.json").is_file():
+            gpu_hours = float(C.read_json(C.ANALYSIS / "preflight_gpu.json").get("total_gpu_hours", 0.0))
+        elif experiment == "cc-test-freeze" and (C.ANALYSIS / "test_prediction_freeze.json").is_file():
+            gpu_hours = float(
+                C.read_json(C.ANALYSIS / "test_prediction_freeze.json").get("total_gpu_hours", 0.0)
+            )
+        auxiliary.append(
+            {
+                "stage": stage,
+                "experiment": experiment,
+                "model": model,
+                "run_dir": str(run_dir.relative_to(C.REPO)),
+                "gpu_hours": gpu_hours,
+                "rr": None
+                if status is None
+                else {
+                    "run_id": status.get("run_id"),
+                    "state": status.get("state"),
+                    "pool": status.get("pool"),
+                    "node": status.get("node"),
+                    "commit": status.get("commit"),
+                    "git_dirty": status.get("git_dirty"),
+                    "started_at": status.get("started_at"),
+                    "completed_at": status.get("completed_at"),
+                    "exit_code": status.get("exit_code"),
+                },
+            }
+        )
+    auxiliary.append(
+        {
+            "stage": "test",
+            "experiment": "cc-test-score",
+            "model": "6 unique / 7 logical",
+            "run_dir": str((C.ANALYSIS / "test_results.json").relative_to(C.REPO)),
+            "gpu_hours": 0.0,
+            "rr": None,
+            "note": "CPU-only post-freeze scoring; the freeze job produced the Test logits.",
+        }
+    )
+    registry["auxiliary"] = auxiliary
+
     total = float(sum(j["gpu_hours_process"] for j in jobs))
     gpu_ledger = {
         "schema": "lcrc-pcba-continuation-gpu-ledger-v1",

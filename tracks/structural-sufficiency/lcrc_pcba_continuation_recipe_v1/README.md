@@ -5,6 +5,15 @@ This round tests whether the existing PCBA A/G/V models still improve after the
 beats keeping the low fixed LR (Recipe L).  It then performs one
 Validation-frozen official Test evaluation.
 
+## Execution status
+
+Completed on 2026-11-06.  Six Stage-1 runs (A/G/V × L/R, 40→60) and one
+Stage-2 run (V-R, 60→80) finished.  A and G stopped at epoch 60 under the
+frozen eligibility rule; only V-R reached epoch 80.  Validation selection:
+A = epoch40, G = G-L60, V = V-R80.  Official Test was frozen first and scored
+once afterwards.  Total GPU use: **5.144 GPU-hours** (target ≤7, hard ≤8; includes a superseded Stage-0 preflight).
+See **`REPORT.md`** for the results and the exact answer to Q1–Q8.
+
 ## Layout
 
 ```
@@ -20,6 +29,7 @@ code/cc_analyze.py          fixed-epoch comparison, selection, ledger
 tests/                      CPU schedule/plan tests and source-restore test
 analysis/                   committed audit/comparison/selection/Test JSONs
 runs/                       local per-run curves/checkpoints (Git-ignored)
+REPORT.md                   final report and Q1–Q8 answers
 ```
 
 ## Reproduce
@@ -40,16 +50,22 @@ python .../cc_train.py --model A --recipe L --start-epoch 41 --final-epoch 60 \
 uv run python .../cc_analyze.py stage1
 
 # 5. Stage 2 only for eligible models, from their epoch-60 checkpoint
-python .../cc_train.py --model A --recipe L --start-epoch 61 --final-epoch 80 \
-  --resume .../runs/stage1_A_L/checkpoint_epoch60.pt \
-  --out-dir .../runs/stage2_A_L --soft-seconds 3300 --hard-seconds 4200
+#    In this round only V-R was eligible.
+python .../cc_train.py --model V --recipe R --start-epoch 61 --final-epoch 80 \
+  --resume .../runs/stage1_V_R/checkpoint_epoch60.pt \
+  --out-dir .../runs/stage2_V_R --soft-seconds 3300 --hard-seconds 4200
 
 # 6. Final comparison, Validation selection, ledger
 uv run python .../cc_analyze.py all
 
 # 7. Freeze Test predictions, pull them, then score locally
-python .../cc_test.py freeze --device cuda
-uv run python .../cc_test.py score
+python .../cc_test.py freeze --device cuda \
+  --selection .../analysis/validation_selection.json \
+  --out .../runs/test_freeze/test_prediction_freeze.json \
+  --predictions-dir .../runs/test_freeze/test_predictions
+uv run python .../cc_test.py score \
+  --freeze .../analysis/test_prediction_freeze.json \
+  --predictions-dir .../runs/test_freeze/test_predictions
 ```
 
 Formal runs are launched only through `rr` from a clean committed revision.
