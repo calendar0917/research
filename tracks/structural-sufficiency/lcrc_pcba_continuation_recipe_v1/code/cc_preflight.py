@@ -419,6 +419,7 @@ def _gpu_probe(
     gnorm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), float(C.COMMON_RECIPE["gradient_clip"])))
     if not np.isfinite(gnorm):
         raise RuntimeError("non-finite GPU preflight gradient norm")
+    grads = {n: p.grad.detach().cpu().clone() for n, p in model.named_parameters() if p.grad is not None}
     out = {
         "global_step": int(global_step),
         "lr": float(lr),
@@ -427,14 +428,17 @@ def _gpu_probe(
         "logits_sha256": C.sha256_bytes(
             np.ascontiguousarray(logits.detach().cpu().numpy(), dtype=np.float32).tobytes()
         ),
-        "grad_fingerprint": _grad_fingerprint(model),
+        "grad_state": grads,
         "state_fingerprint_before_step": C.state_fingerprint(model.state_dict()),
         "optimizer_fingerprint_before_step": R.optimizer_fingerprint(optimizer),
+        "state_before_step": {k: v.detach().cpu().clone() for k, v in model.state_dict().items()},
     }
     if take_step:
         optimizer.step()
         out["state_fingerprint_after_step"] = C.state_fingerprint(model.state_dict())
         out["optimizer_fingerprint_after_step"] = R.optimizer_fingerprint(optimizer)
+        out["state_after_step"] = {k: v.detach().cpu().clone() for k, v in model.state_dict().items()}
+        out["optimizer_after_step"] = R.SM.optimizer_state_cpu(optimizer)
     return out
 
 
@@ -475,11 +479,17 @@ def gpu_preflight(task: Any, plan: Sequence[Mapping[str, Any]], device: torch.de
         loss_delta = abs(l_probe["loss"] - r_probe["loss"])
         grad_delta = abs(l_probe["grad_norm"] - r_probe["grad_norm"])
         logits_equal = l_probe["logits_sha256"] == r_probe["logits_sha256"]
+        lr_grad_cmp = R.SM.compare_states(l_probe["grad_state"], r_probe["grad_state"])
+        after_cmp = R.SM.compare_states(l_probe["state_after_step"], r_probe["state_after_step"])
+        opt_after_cmp = R.SM.compare_optimizer_states(
+            l_probe["optimizer_after_step"], r_probe["optimizer_after_step"]
+        )
         paired_ok = (
             initial_model_equal
             and initial_opt_equal
             and loss_delta <= 1e-4
             and grad_delta <= 1e-2
+            and float(lr_grad_cmp.get("max_abs_diff", 0.0)) <= 1e-2
             and l_probe["lr"] == r_probe["lr"]
         )
 
@@ -520,7 +530,6 @@ def gpu_preflight(task: Any, plan: Sequence[Mapping[str, Any]], device: torch.de
         projected_stage2_gpu_hours = float(step_mean * C.STEPS_PER_EPOCH * 20 * 3 / 3600.0)
         model_ok = bool(replay_ok and paired_ok and smoke_success)
         out["all_passed"] = bool(out["all_passed"] and model_ok)
-        lr_grad_cmp = R.SM.compare_states(l_probe["grad_state"], r_probe["grad_state"])
         out["models"][model_id] = {
             "source_sha256": spec["sha256"],
             "restore_audit": restore_audit,
@@ -551,6 +560,10 @@ def gpu_preflight(task: Any, plan: Sequence[Mapping[str, Any]], device: torch.de
                 "grad_norm_R": r_probe["grad_norm"],
                 "grad_norm_abs_delta": grad_delta,
                 "logits_sha256_equal": bool(logits_equal),
+                "grad_max_abs_diff": float(lr_grad_cmp.get("max_abs_diff", 0.0)),
+                "grad_bitwise_equal": bool(lr_grad_cmp.get("equal", False)),
+                "after_step_model_max_abs_diff": float(after_cmp.get("max_abs_diff", 0.0)),
+                "after_step_optimizer_max_abs_diff": float(opt_after_cmp.get("max_abs_diff", 0.0)),
                 "state_fingerprint_after_same_lr_step_L": l_probe["state_fingerprint_after_step"],
                 "state_fingerprint_after_same_lr_step_R": r_probe["state_fingerprint_after_step"],
                 "optimizer_fingerprint_after_same_lr_step_L": l_probe["optimizer_fingerprint_after_step"],
