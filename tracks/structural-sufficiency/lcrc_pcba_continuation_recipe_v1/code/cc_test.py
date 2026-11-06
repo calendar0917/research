@@ -294,6 +294,13 @@ def run_score(freeze_path: Path, out_path: Path, per_task_path: Path, prediction
         raise RuntimeError("freeze manifest does not declare test_labels_read=false")
     if freeze.get("seal_sha256") != D.freeze_seal(freeze):
         raise RuntimeError("freeze seal does not verify")
+    selection_path = Path(str(freeze["selection_manifest"]))
+    if not selection_path.is_absolute():
+        selection_path = C.REPO / selection_path
+    if not selection_path.is_file():
+        raise RuntimeError(f"frozen selection manifest missing: {selection_path}")
+    if C.sha256_file(selection_path) != freeze["selection_manifest_sha256"]:
+        raise RuntimeError("selection manifest changed after the prediction freeze")
     task = D.load_and_gate()
     test = D.read_official_test_labels(task, freeze_path=freeze_path)
     y_test = test["labels"]
@@ -416,9 +423,16 @@ def run_score(freeze_path: Path, out_path: Path, per_task_path: Path, prediction
         "n_tasks": C.N_TASKS,
         "test_exposure_history": {
             "prior_pcba_test_read_in_repo": False,
-            "evidence": (
-                "Earlier PCBA rounds' reports state official Test was never read; their "
-                "label artifact has Test rows NaN and their protocols forbid Test access."
+            "evidence": [
+                "lcrc_pcba_scale_pilot_v1/analysis/label_access_ledger.json records "
+                "test_row_values_inspected=false and test_row_values_used_in_any_metric=false.",
+                "lcrc_pcba_structural_gain_sprint_v1/REPORT.md: no Test target was scored.",
+                "lcrc_pcba_no_mp_sprint_v1/REPORT.md: official Test never evaluated.",
+                "lcrc_pcba_lr_probe_v1/REPORT.md: official Test never read or scored.",
+            ],
+            "other_dataset_test_exposure_not_applicable": (
+                "lcrc_sparse_identity_v1 exposed the MolHIV Test split; that is a different "
+                "dataset and does not expose the MolPCBA Test split used here."
             ),
             "this_round_read_after_freeze": True,
             "future_use_must_disclose_exposure": True,

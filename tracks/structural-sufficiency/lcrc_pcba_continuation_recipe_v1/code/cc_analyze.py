@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -559,19 +558,47 @@ def selection(stage1: Mapping[str, Any] | None = None, stage2: Mapping[str, Any]
 
 
 def _rr_status(experiment: str) -> dict[str, Any] | None:
-    try:
-        proc = subprocess.run(
-            ["rr", "status", experiment, "--json"],
-            cwd=str(C.REPO),
-            capture_output=True,
-            text=True,
-            timeout=60,
-        )
-        if proc.returncode != 0:
-            return None
-        return json.loads(proc.stdout)
-    except Exception:  # noqa: BLE001
+    """Read the latest pulled rr metadata for an experiment.
+
+    ``rr status`` has no JSON mode, and the pulled ``meta.json`` is the same
+    provenance record that rr writes at launch.  Reading it keeps the ledger
+    reproducible offline and avoids parsing human-oriented status text.
+    """
+    pulled = C.REPO / ".rr" / "pulled"
+    best: dict[str, Any] | None = None
+    for meta_path in pulled.glob("*/meta.json"):
+        try:
+            meta = C.read_json(meta_path)
+        except Exception:  # noqa: BLE001
+            continue
+        if meta.get("experiment") != experiment:
+            continue
+        if meta.get("state") != "completed":
+            continue
+        if best is None or str(meta.get("created_at", "")) > str(best.get("created_at", "")):
+            best = meta
+    if best is None:
         return None
+    runtime = best.get("runtime") or {}
+    return {
+        "run_id": best.get("run_id"),
+        "state": best.get("state"),
+        "pool": best.get("pool"),
+        "node": runtime.get("node"),
+        "job": best.get("slurm_job_id"),
+        "gpu_count": runtime.get("gpu_count"),
+        "cuda_visible_devices": runtime.get("cuda_visible_devices"),
+        "driver_version": runtime.get("driver_version"),
+        "torch_version": runtime.get("torch_version"),
+        "torch_cuda": runtime.get("torch_cuda"),
+        "commit": best.get("git_commit"),
+        "git_dirty": best.get("git_dirty"),
+        "command": best.get("command"),
+        "created_at": best.get("created_at"),
+        "started_at": runtime.get("started_at"),
+        "completed_at": runtime.get("completed_at"),
+        "exit_code": runtime.get("exit_code"),
+    }
 
 
 def ledger() -> tuple[dict[str, Any], dict[str, Any]]:
@@ -634,6 +661,8 @@ def ledger() -> tuple[dict[str, Any], dict[str, Any]]:
                 "torch_version": status.get("torch_version"),
                 "torch_cuda": status.get("torch_cuda"),
                 "commit": status.get("commit"),
+                "git_dirty": status.get("git_dirty"),
+                "command": status.get("command"),
                 "created_at": status.get("created_at"),
                 "started_at": status.get("started_at"),
                 "completed_at": status.get("completed_at"),
