@@ -1,0 +1,282 @@
+{
+  "schema": "lcrc-pcba-explicit-performance-rr-status-v1",
+  "runs": {
+    "prep": {
+      "experiment": "ep-prep-caches",
+      "run_id": "ep-prep-caches-20261106-183247-e3357b2c",
+      "state": "completed",
+      "pool": "res-local",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": null,
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "c934dfe1039a",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T18:32:47+08:00",
+      "started_at": "2026-11-06T18:32:50+08:00",
+      "completed_at": "2026-11-06T18:33:49+08:00",
+      "exit_code": 0,
+      "failure_reason": null,
+      "git_commit": "c934dfe1039a325f595011032e60719d000d99bb",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/prep; /usr/bin/time -v uv run --no-sync --with rdkit==2026.9.1 python $R/code/ep_build_features.py --which all --workers 24 --out $R/runs/prep/build.json 2>&1 | tail -20; echo ---; ls -la $R/cache; echo ---; df -h /home/hxy/cy | tail -1'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/prep"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 2,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "prep_branch": {
+      "experiment": "ep-prep-branch",
+      "run_id": "ep-prep-branch-20261106-183759-d703da75",
+      "state": "completed",
+      "pool": "res-local",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": null,
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "637a928475e7",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T18:37:59+08:00",
+      "started_at": "2026-11-06T18:38:02+08:00",
+      "completed_at": "2026-11-06T18:38:49+08:00",
+      "exit_code": 0,
+      "failure_reason": null,
+      "git_commit": "637a928475e7cd7395f16331ae781e520232b4d6",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/prep; dirname $(readlink -f $(which python)) >/dev/null; uv run --no-sync python $R/code/ep_build_features.py --which branch --workers 24 --out $R/runs/prep/build_branch.json 2>&1 | tail -5; echo ---; ls -la $R/cache'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/prep"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 2,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "preflight": {
+      "experiment": "ep-preflight",
+      "run_id": "ep-preflight-20261106-184544-2223eea0",
+      "state": "completed",
+      "pool": "res-gpu1",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": "1",
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "f6c5e8604989",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T18:45:44+08:00",
+      "started_at": "2026-11-06T18:45:46+08:00",
+      "completed_at": "2026-11-06T18:47:01+08:00",
+      "exit_code": 0,
+      "failure_reason": null,
+      "git_commit": "f6c5e86049893b0cd3a2ef4fa7c99504b30803aa",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/preflight; uv run --no-sync python $R/code/ep_preflight.py --device cuda --arms A0,A1,A2,A3 --out $R/runs/preflight/preflight.json 2>&1 | tail -8'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/preflight"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "smoke": {
+      "experiment": "ep-smoke",
+      "run_id": "ep-smoke-20261106-184838-d3fb2772",
+      "state": "completed",
+      "pool": "res-gpu1",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": "1",
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "f6c5e8604989",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T18:48:38+08:00",
+      "started_at": "2026-11-06T18:48:41+08:00",
+      "completed_at": "2026-11-06T18:51:45+08:00",
+      "exit_code": 0,
+      "failure_reason": null,
+      "git_commit": "f6c5e86049893b0cd3a2ef4fa7c99504b30803aa",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/smoke; uv run --no-sync python $R/code/ep_train.py --arm A0 --final-epoch 1 --eval-epochs 1 --device cuda --out-dir $R/runs/smoke --soft-seconds 600 --hard-seconds 900 2>&1 | tail -8'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/smoke"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "A0": {
+      "experiment": "ep-a0",
+      "run_id": "ep-a0-20261106-185436-018565da",
+      "state": "cancelled",
+      "pool": "res-gpu1",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": "1",
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "f6c5e8604989",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T18:54:36+08:00",
+      "started_at": "2026-11-06T18:54:38+08:00",
+      "completed_at": "2026-11-06T19:54:18+08:00",
+      "exit_code": 143,
+      "failure_reason": "cancelled",
+      "git_commit": "f6c5e86049893b0cd3a2ef4fa7c99504b30803aa",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/A0; nvidia-smi --query-gpu=index,memory.used,utilization.gpu --format=csv,noheader; uv run --no-sync python $R/code/ep_train.py --arm A0 --seed 0 --device cuda --out-dir $R/runs/A0 --soft-seconds 5400 --hard-seconds 6200 2>&1 | tail -6'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/A0"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "A1": {
+      "experiment": "ep-a1",
+      "run_id": "ep-a1-20261106-195822-cda5bc0d",
+      "state": "completed",
+      "pool": "res-gpu1",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": "1",
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "628c248719b3",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T19:58:22+08:00",
+      "started_at": "2026-11-06T19:58:26+08:00",
+      "completed_at": "2026-11-06T21:47:53+08:00",
+      "exit_code": 0,
+      "failure_reason": null,
+      "git_commit": "628c248719b34d7852029e68bd0483ee11ff5837",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/A1; nvidia-smi --query-gpu=index,memory.used,utilization.gpu --format=csv,noheader; uv run --no-sync python $R/code/ep_train.py --arm A1 --seed 0 --device cuda --out-dir $R/runs/A1 --soft-seconds 6800 --hard-seconds 7500'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/A1"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "A2": {
+      "experiment": "ep-a2",
+      "run_id": "ep-a2-20261106-215044-b62a005b",
+      "state": "completed",
+      "pool": "res-gpu1",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": "1",
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "628c248719b3",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T21:50:44+08:00",
+      "started_at": "2026-11-06T21:50:51+08:00",
+      "completed_at": "2026-11-06T23:17:23+08:00",
+      "exit_code": 0,
+      "failure_reason": null,
+      "git_commit": "628c248719b34d7852029e68bd0483ee11ff5837",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/A2; nvidia-smi --query-gpu=index,memory.used,utilization.gpu --format=csv,noheader; uv run --no-sync python $R/code/ep_train.py --arm A2 --seed 0 --device cuda --out-dir $R/runs/A2 --soft-seconds 5700 --hard-seconds 6300'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/A2"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "A3": {
+      "experiment": "ep-a3",
+      "run_id": "ep-a3-20261106-233411-53e1aca6",
+      "state": "completed",
+      "pool": "res-gpu1",
+      "node": "a100-2",
+      "gpu_count": 2,
+      "cuda_visible_devices": "1",
+      "driver_version": "550.163.01",
+      "torch_version": "2.5.1+cu124",
+      "torch_cuda": "12.4",
+      "commit": "628c248719b3",
+      "branch": "main",
+      "dirty": false,
+      "created_at": "2026-11-06T23:34:11+08:00",
+      "started_at": "2026-11-06T23:34:13+08:00",
+      "completed_at": "2026-11-07T01:07:45+08:00",
+      "exit_code": 0,
+      "failure_reason": null,
+      "git_commit": "628c248719b34d7852029e68bd0483ee11ff5837",
+      "command": "bash -c 'set -e; R=tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1; mkdir -p $R/runs/A3; nvidia-smi --query-gpu=index,memory.used,utilization.gpu --format=csv,noheader; uv run --no-sync python $R/code/ep_train.py --arm A3 --seed 0 --device cuda --out-dir $R/runs/A3 --eval-epochs $(seq -s, 1 40) --soft-seconds 6600 --hard-seconds 7200'",
+      "result_paths": [
+        "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/A3"
+      ],
+      "python_version": "3.12.14",
+      "requested": {
+        "gpus": 1,
+        "cpus": 4,
+        "mem": "32G",
+        "time": "24:00:00",
+        "partition": null,
+        "eligible_nodes": []
+      }
+    },
+    "COMBO": {
+      "experiment": "ep-combo",
+      "state": "not_found",
+      "detail": "{\n  \"ok\": false,\n  \"code\": \"rr.job.not_found\",\n  \"message\": \"no run found for 'ep-combo'\",\n  \"details\": {\n    \"ident\": \"ep-combo\",\n    \"host\": null\n  }\n}"
+    }
+  }
+}

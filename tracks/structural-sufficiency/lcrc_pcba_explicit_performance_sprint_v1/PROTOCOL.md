@@ -287,3 +287,9 @@ Git-ignored.
 2. The cancelled attempt consumed 0.994 GPU-hours; it is charged to the budget.
 3. No training-code change was made after the A0 launch. A1/A2/A3/COMBO run on
    the same training code; only documentation/analysis scripts differ.
+4. **2026-11-06 — A3 evaluated every epoch** at the principal's request, i.e.
+   40 official Validation evaluations instead of 10/20/30/40 (A1/A2 kept the
+   frozen four points). Evaluation is inference only, consumes no RNG and never
+   selects a checkpoint, so training is unchanged; the extra evaluations add
+   ≈2.7 min and are reported as supplementary curve points. Epoch 40 remains
+   the only primary comparison value.

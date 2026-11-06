@@ -1,0 +1,151 @@
+{
+  "a2": {
+    "algorithm": "ep-rdkit-physchem-v1",
+    "built_rows": 394134,
+    "cache_sha256": "c720320c62f235c1843a41baf89afc1cae2c28623447afb8f542589a3019265f",
+    "coverage_attempted": 0.9999949256094343,
+    "coverage_train": 0.9999942913088031,
+    "coverage_valid": 1.0,
+    "failed_rows": 2,
+    "failures": [
+      {
+        "error": "MolFromSmiles returned None",
+        "row": 5823
+      },
+      {
+        "error": "MolFromSmiles returned None",
+        "row": 303198
+      }
+    ],
+    "finite": true,
+    "missing_policy": "attempted-and-failed rows keep NaN in raw and get Train mean + flag 1 at load time",
+    "names": [
+      "TPSA",
+      "NumHDonors",
+      "NumHAcceptors",
+      "log1p_MolWt",
+      "Crippen_MolLogP",
+      "NumRotatableBonds",
+      "TotalFormalCharge",
+      "NumAromaticRings",
+      "MaxRingAtomCount",
+      "FractionCSP3"
+    ],
+    "rdkit_version": "2026.09.1",
+    "rows_attempted": 394136,
+    "rows_attempted_sha256": "6c5c546123fdd26646720ecc6a4177a002bbc168acd8655ff23fb3ee260d261b",
+    "source": {
+      "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+      "label_artifact_sha256": "5c3b5fbe642d80113522832fe01090097b860010868c59f8696bc247d5027d01",
+      "labels_read": false,
+      "smiles": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/smiles.jsonl",
+      "smiles_sha256": "16f557b78b1fade28860cdf44ee448cba3af95e2f401b4da4a936d8fc0ec90ba",
+      "split_partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f"
+    },
+    "test_rows_built": 0,
+    "train_only_norm": {
+      "constant_indices": [],
+      "fingerprint": "c3f2d59ed51fafba5df549b53a14249db1488dc8455ca8ea5ea7091bcdd0cd67",
+      "mean": [
+        74.78730247108722,
+        1.1697175038034373,
+        4.580645713747463,
+        5.8830514260402405,
+        3.073911263320591,
+        5.163991653845825,
+        0.0035907872615537433,
+        2.3069124081965855,
+        6.007098798028207,
+        0.299897047819107
+      ],
+      "n_fit_rows": 350341,
+      "scale": [
+        31.40061615884495,
+        1.0105720002949847,
+        1.7878452770097526,
+        0.24231329632345427,
+        1.3528137491944994,
+        2.683195400587066,
+        0.10657806542173967,
+        0.9753170564844398,
+        0.7176861734470161,
+        0.1755471326222693
+      ],
+      "valid_or_test_used": false,
+      "zero_std_policy": "std == 0 -> scale 1.0"
+    }
+  },
+  "a2_a3_same_row_set": true,
+  "a3": {
+    "algorithm": "ep-rooted-branch-token-v1",
+    "build_source": "tracks/structural-sufficiency/lcrc_pcba_explicit_performance_sprint_v1/runs/prep/build_branch.json",
+    "cache_sha256": "861739b8fd72e7309cd3be3051c49924b94067199b0336e554f73b604ecb690f",
+    "collision_stats": {
+      "max_bucket_count": 4843850,
+      "min_bucket_lower_bound": 296,
+      "n_buckets": 8192,
+      "n_buckets_empty": 6148,
+      "n_buckets_used": 2044,
+      "n_distinct_signatures": 2340,
+      "n_tokens": 22011330,
+      "note": "exact distinct 64-bit signatures; bucket collisions counted at bucket granularity",
+      "top1_share": 0.22006166824085596
+    },
+    "embedding_dim": 32,
+    "hash": "blake2b(digest_size=8, little-endian uint64) over stable uint16 packing",
+    "max_tokens_per_atom": 5,
+    "n_buckets": 8192,
+    "n_tokens": 22011330,
+    "n_zero_degree_atoms_built": 104,
+    "rows_attempted": 394136,
+    "rows_attempted_sha256": "6c5c546123fdd26646720ecc6a4177a002bbc168acd8655ff23fb3ee260d261b",
+    "source": {
+      "atom_ptr_sha256": "34ccf1e1bb914dcb2e5e7ebf05f6719584fbb82c47dc19c8904ce621224045b9",
+      "atom_type_sha256": "8fa3db5ffccc2ba6fbdcea03d941945d94f66524673ef3fe45ea78496ae52746",
+      "bond_index_sha256": "7991ab98381eb737e9c1bb73c86c3019bc753b1c4f4522b77b8ff9027dd103f1",
+      "bond_ptr_sha256": "43d66d6e8bcb2cb2d012ee4894d5bf885847d6353ae3f4084c72ecfe94163275",
+      "bond_type_sha256": "2df7964de30127f8f6e18bd46997c554e040a8bc535d00d4cc782959062782b8",
+      "cache_sha256_manifest": "caad3e90dd76d1f1483d2a01501eba23413072a7b5a2fc4b62780c315aa59035",
+      "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+      "labels_read": false
+    },
+    "symbol": "(atom_type(v), bond_type(v,u), atom_type(u), sorted[(bond_type(u,w), atom_type(w), is_edge(v,w)) for w in N(u), w != v])",
+    "test_rows_built": 0,
+    "tokens_per_molecule_mean": 55.84704264517831
+  },
+  "preflight_alignment": {
+    "A2": {
+      "batch_finite": true,
+      "batch_row_alignment": true,
+      "failed_rows": 2,
+      "passed": true,
+      "test_rows_finite": 0,
+      "train_coverage": 0.9999942913088031,
+      "train_only_norm": true,
+      "valid_coverage": 1.0
+    },
+    "A3": {
+      "algorithm": "ep-rooted-branch-token-v1",
+      "bucket_alignment": true,
+      "bucket_range_ok": true,
+      "collision_stats": {
+        "max_bucket_count": 4843850,
+        "min_bucket_lower_bound": 296,
+        "n_buckets": 8192,
+        "n_buckets_empty": 6148,
+        "n_buckets_used": 2044,
+        "n_distinct_signatures": 2340,
+        "n_tokens": 22011330,
+        "note": "exact distinct 64-bit signatures; bucket collisions counted at bucket granularity",
+        "top1_share": 0.22006166824085596
+      },
+      "n_tokens": 336,
+      "passed": true,
+      "pointer_alignment": true,
+      "test_rows_with_tokens": 0
+    }
+  },
+  "round_id": "lcrc-pcba-explicit-performance-sprint-v1",
+  "schema": "lcrc-pcba-explicit-performance-features-v1",
+  "test_evaluated": false
+}

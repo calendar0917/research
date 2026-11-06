@@ -30,6 +30,8 @@ No Test label is ever read.
 | `code/ep_build_features.py` | offline cache builder CLI (remote CPU) |
 | `code/ep_preflight.py` | identity, geometry, gradient, isolation and smoke gates |
 | `code/ep_analyze.py` | run registry, GPU ledger, comparison CSV/JSON, decision |
+| `code/ep_task_summary.py` | per-task concentration/stratum summary |
+| `code/ep_capture_rr.py` | point-in-time `rr` provenance capture |
 | `tests/` | signature algebra, descriptor cache, model geometry, data alignment |
 
 ## Workflow
@@ -60,6 +62,13 @@ rr pull ep-a0
 `uv run` here only means "use the deployed environment"; the remote job command
 is executed with `uv run --no-sync` by `rr` itself. `--with rdkit` is used only
 by the offline feature build and never by a training job.
+
+## Outcome (this round)
+
+A1 −0.000137, A2 −0.003193, A3 +0.001894 versus the historical A0 (0.246356);
+no arm reaches the 0.003 screen, so no COMBO was run. A0 was cancelled by
+principal instruction at epoch 29/40 and the historical phase-C run is the
+reference — see `REPORT.md` and `PROTOCOL.md` §10 for the consequences.
 
 ## Analysis artifacts
 

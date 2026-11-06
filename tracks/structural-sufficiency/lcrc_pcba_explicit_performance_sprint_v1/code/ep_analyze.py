@@ -152,6 +152,7 @@ def analyze(
     *,
     preflight_path: Path,
     build_path: Path,
+    branch_build_path: Path | None,
     out_dir: Path,
     rr_status: Mapping[str, Any] | None,
     smoke_path: Path | None = None,
@@ -170,6 +171,12 @@ def analyze(
         runs[arm] = run
     preflight = _load(preflight_path) if preflight_path.is_file() else {}
     build = _load(build_path) if build_path.is_file() else {}
+    if branch_build_path is not None and branch_build_path.is_file():
+        branch_build = _load(branch_build_path)
+        if "branch" in branch_build:
+            build = dict(build)
+            build["branch"] = branch_build["branch"]
+            build["branch_build_source"] = C.track_rel(branch_build_path)
 
     a0_run = runs.get("A0")
     cancelled_a0 = None
@@ -254,10 +261,13 @@ def analyze(
             "scorable": bool(t < len(a0_tasks) and a0_tasks[t] is not None),
         }
         for arm in arms:
-            run = runs[arm]
-            rep = (run or {}).get("fixed_epoch_reports", {}).get("40", {})
-            tasks = rep.get("per_task_ap") or []
-            ap = tasks[t] if t < len(tasks) else None
+            if arm == "A0":
+                ap = a0_tasks[t] if t < len(a0_tasks) else None
+            else:
+                run = runs[arm]
+                rep = (run or {}).get("fixed_epoch_reports", {}).get("40", {})
+                tasks = rep.get("per_task_ap") or []
+                ap = tasks[t] if t < len(tasks) else None
             row[f"ap_{arm}"] = "" if ap is None else round(float(ap), 9)
             if a0_ap is not None and ap is not None and t < len(a0_tasks) and a0_tasks[t] is not None:
                 row[f"delta_{arm}"] = round(float(ap) - float(a0_tasks[t]), 9)
@@ -373,7 +383,12 @@ def analyze(
             "module_names": [C.MODULES[m]["name"] for m in modules],
             "new_parameters_by_definition": sum(int(C.MODULES[m]["new_parameters"]) for m in modules),
             "expected_total_parameters": C.expected_parameters(modules),
-            "status": _status_of(run, arm),
+            "status": (
+                cancelled_a0["status"]
+                if (arm == "A0" and cancelled_a0 is not None)
+                else _status_of(run, arm)
+            ),
+            "same_round_control": bool(same_round_a0) if arm == "A0" else None,
         }
         if run is not None:
             entry["model_audit"] = run.get("model_audit")
@@ -398,6 +413,11 @@ def analyze(
         "a3": {},
     }
     if build:
+        feature_audit["a2_a3_same_row_set"] = bool(
+            (build.get("physchem") or {}).get("rows_attempted_sha256")
+            and (build.get("physchem") or {}).get("rows_attempted_sha256")
+            == (build.get("branch") or {}).get("rows_attempted_sha256")
+        )
         a2 = (build.get("physchem") or {})
         if a2:
             feature_audit["a2"] = {
@@ -436,6 +456,7 @@ def analyze(
                 "collision_stats": a3.get("collision_stats"),
                 "test_rows_built": a3.get("test_rows_built"),
                 "cache_sha256": (a3.get("files") or {}).get("cache_sha256"),
+                "build_source": build.get("branch_build_source"),
                 "source": a3.get("source"),
             }
     pf_checks = {}
@@ -481,7 +502,11 @@ def analyze(
                 {
                     "commit": run.get("git_commit"),
                     "device": (run.get("environment") or {}).get("cuda_device_name"),
-                    "driver_version": None,
+                    "driver_version": (
+                        entry.get("driver_version")
+                        or (run.get("environment") or {}).get("driver_version")
+                    ),
+                    "cuda_visible_devices": entry.get("cuda_visible_devices"),
                     "torch": (run.get("environment") or {}).get("torch"),
                     "torch_cuda": (run.get("environment") or {}).get("torch_cuda"),
                     "gpu_hours": round(float(run.get("gpu_hours", 0.0)), 6),
@@ -570,6 +595,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--runs-dir", required=True)
     parser.add_argument("--preflight", default="")
     parser.add_argument("--build", default="")
+    parser.add_argument("--build-branch", default="")
     parser.add_argument("--rr-status", default="")
     parser.add_argument("--smoke", default="")
     parser.add_argument("--historical-a0", default="")
@@ -580,6 +606,7 @@ def main(argv: list[str] | None = None) -> int:
         Path(args.runs_dir),
         preflight_path=Path(args.preflight) if args.preflight else Path(""),
         build_path=Path(args.build) if args.build else Path(""),
+        branch_build_path=Path(args.build_branch) if args.build_branch else None,
         out_dir=Path(args.out),
         rr_status=rr_status,
         smoke_path=Path(args.smoke) if args.smoke else None,
