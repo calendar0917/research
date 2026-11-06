@@ -118,8 +118,9 @@ The last Linear is zero-initialised. The original 42-d global descriptor and
 
 ### A3 — explicit rooted branch tokens
 
-For each directed bond `(v,u)` in the frozen undirected graph (both directions
-are present in `bond_index`), a deterministic signature
+For each directed bond `(v,u)` of the molecular graph (the frozen cache stores each
+undirected bond exactly once; both orientations are expanded inside the cache
+builder), a deterministic signature
 
 ```
 ( atom_type(v), bond_type(v,u), atom_type(u),

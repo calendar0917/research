@@ -39,12 +39,24 @@ def test_signature_is_deterministic_and_uses_blake2b():
     assert F.signature_bytes(3, 2, 7, keys) != F.signature_bytes(3, 2, 8, keys)
 
 
-def test_chain_reverse_edge_excludes_the_root():
-    # 0 - 1 - 2 chain, atom types 5,6,7, all single bonds.
+def test_undirected_bonds_expand_to_both_directions():
+    # The frozen cache stores each undirected bond once; the token builder must
+    # emit one token per directed bond and be invariant to the stored order.
     atom_types = [5, 6, 7]
-    src = [0, 1, 1, 2]
-    dst = [1, 0, 2, 1]
-    bts = [1, 1, 1, 1]
+    edges = [(0, 1, 1), (1, 2, 1)]
+    base = F.molecule_branch_tokens(atom_types, [e[0] for e in edges], [e[1] for e in edges], [e[2] for e in edges])
+    rev = F.molecule_branch_tokens(atom_types, [e[1] for e in edges], [e[0] for e in edges], [e[2] for e in edges])
+    shuffled = F.molecule_branch_tokens(atom_types, [1, 0], [2, 1], [1, 1])
+    assert base["tokens"] == 4 == 2 * len(edges)
+    assert sorted(base["digests"]) == sorted(rev["digests"]) == sorted(shuffled["digests"])
+
+
+def test_chain_reverse_edge_excludes_the_root():
+    # 0 - 1 - 2 chain, atom types 5,6,7, all single bonds (undirected input).
+    atom_types = [5, 6, 7]
+    src = [0, 1]
+    dst = [1, 2]
+    bts = [1, 1]
     out = F.molecule_branch_tokens(atom_types, src, dst, bts)
     # token(0->1): intermediate 1 has neighbours {0,2}, excluding 0 leaves 2.
     keys_0_1 = [F.branch_key(1, 7, False)]
@@ -66,22 +78,16 @@ def test_chain_reverse_edge_excludes_the_root():
 def test_branch_token_groups_second_hop_neighbours_by_intermediate_atom():
     """A repeated S2 sum over both intermediates would collide; the token must not."""
     # v=0 connects to u1=1 and u2=2.  u1 has one DOUBLE C branch (3);
-    # u2 has one DOUBLE C branch (4).  Same branch multiset overall, different
-    # intermediate environments.
+    # u2 has one TRIPLE C branch (4).  Same branch count, different grouping.
     atom_types = [0, 1, 6, 6, 6]
-    src = [0, 1, 1, 3, 1, 2, 2, 4, 2]
-    dst = [1, 0, 3, 1, 2, 0, 4, 2, 1]
-    # bond(v,u1)=SINGLE, bond(v,u2)=SINGLE, bond(u1,3)=DOUBLE, bond(u2,4)=TRIPLE
-    bts = [1, 1, 2, 2, 1, 1, 3, 3, 1]
-    # remove the spurious (1,2) bridge: keep v->u1, u1->v, u1->3, 3->u1, v->u2, u2->v, u2->4, 4->u2
-    src = [0, 1, 1, 3, 0, 2, 2, 4]
-    dst = [1, 0, 3, 1, 2, 0, 4, 2]
-    bts = [1, 1, 2, 2, 1, 1, 3, 3]
-    out = F.molecule_branch_tokens(atom_types, src, dst, bts)
+    edges = [(0, 1, 1), (1, 3, 2), (0, 2, 1), (2, 4, 3)]
+    out = F.molecule_branch_tokens(
+        atom_types, [e[0] for e in edges], [e[1] for e in edges], [e[2] for e in edges]
+    )
     d01 = F.signature_digest(0, 1, 1, [F.branch_key(2, 6, False)])[0]
     d02 = F.signature_digest(0, 1, 6, [F.branch_key(3, 6, False)])[0]
     assert out["digests"][0] == d01
-    assert out["digests"][4] == d02
+    assert out["digests"][1] == d02
     assert d01 != d02
     # The naive union of all second-hop branches from v would be the same list
     # in both tokens; the real token keeps each branch grouped under its own
@@ -94,20 +100,21 @@ def test_branch_token_groups_second_hop_neighbours_by_intermediate_atom():
 def test_is_edge_triangle_flag_and_branch_sort_independence():
     # triangle 0-1-2-0 plus a leaf 3 on 1; check is_edge via a v-w triangle.
     atom_types = [1, 1, 1, 7]
-    src = [0, 1, 1, 2, 2, 0, 1, 3]
-    dst = [1, 0, 2, 1, 0, 2, 3, 1]
-    bts = [1, 1, 1, 1, 1, 1, 1, 1]
+    edges = [(0, 1, 1), (1, 2, 1), (2, 0, 1), (1, 3, 1)]
+    src = [e[0] for e in edges]
+    dst = [e[1] for e in edges]
+    bts = [e[2] for e in edges]
     out = F.molecule_branch_tokens(atom_types, src, dst, bts)
     # token(0->1): intermediate 1 neighbours {0,2,3}, excluding 0 -> w=2 (v-w edge
     # exists: 0-2) and w=3 (no 0-3 edge).
     keys = sorted([F.branch_key(1, 1, True), F.branch_key(1, 7, False)])
     assert out["digests"][0] == F.signature_digest(1, 1, 1, keys)[0]
-    # Reversing the branch enumeration order is irrelevant: signatures use a
-    # canonical sorted list.
-    src2 = [0, 1, 1, 2, 2, 0, 1, 3]
-    dst2 = [1, 0, 2, 1, 0, 2, 3, 1]
-    perm = list(reversed(range(len(src2))))  # reverse the bond-record order
-    out2 = F.molecule_branch_tokens(atom_types, [src2[i] for i in perm], [dst2[i] for i in perm], [bts[i] for i in perm])
+    # Reversing the bond-record order is irrelevant: signatures use a canonical
+    # sorted branch list and every bond is expanded to both directions.
+    perm = list(reversed(range(len(src))))
+    out2 = F.molecule_branch_tokens(
+        atom_types, [src[i] for i in perm], [dst[i] for i in perm], [bts[i] for i in perm]
+    )
     assert sorted(out2["digests"]) == sorted(out["digests"])
 
 
@@ -115,11 +122,9 @@ def test_atom_renumbering_preserves_tokens_up_to_the_mapping():
     atom_types = [2, 2, 7, 8, 2, 6]
     # a small branched graph
     edges = [(0, 1, 1), (1, 2, 1), (1, 3, 2), (0, 4, 1), (4, 5, 3)]
-    src, dst, bts = [], [], []
-    for a, b, t in edges:
-        src += [a, b]
-        dst += [b, a]
-        bts += [t, t]
+    src = [a for a, _, _ in edges]
+    dst = [b for _, b, _ in edges]
+    bts = [t for _, _, t in edges]
     base = F.molecule_branch_tokens(atom_types, src, dst, bts)
     perm = [4, 5, 0, 1, 2, 3]  # new index -> old index
     inv = [0] * len(perm)

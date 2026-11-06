@@ -334,8 +334,10 @@ def molecule_branch_tokens(
 ) -> dict[str, Any]:
     """Per-atom out-edge token buckets for one molecule (pure function).
 
-    ``bond_src/bond_dst`` are directed bonds; the frozen cache already stores
-    both directions.  Root atom = ``bond_src``, intermediate atom = ``bond_dst``.
+    ``bond_src/bond_dst`` are the frozen cache's **undirected** bonds (exactly
+    one row per bond).  Every bond is expanded into both orientations here, so
+    the token set is invariant to the stored orientation and each atom receives
+    one token per incident bond.  Root atom = ``v``, intermediate = ``u``.
     """
     n = len(atom_types)
     src = [int(x) for x in bond_src]
@@ -350,30 +352,30 @@ def molecule_branch_tokens(
     for k in range(len(src)):
         if not (0 <= src[k] < n and 0 <= dst[k] < n):
             raise ValueError("bond endpoint outside the atom array")
+        if src[k] == dst[k]:
+            raise ValueError("self-loop in the bond list")
         adj[src[k]].append((dst[k], bt[k]))
+        adj[dst[k]].append((src[k], bt[k]))
     per_atom: list[list[int]] = [[] for _ in range(n)]
     digests: list[int] = []
-    token_of_edge: list[int] = []
+    bucket_of_edge: list[int] = []
     n_zero_branch = 0
-    for k in range(len(src)):
-        v, u = src[k], dst[k]
+    for v in range(n):
         v_nbrs = {w for w, _ in adj[v]}
-        keys: list[int] = []
-        for w, btype2 in adj[u]:
-            if w == v:
-                continue
-            keys.append(branch_key(btype2, at[w], w in v_nbrs))
-        keys.sort()
-        if not keys:
-            n_zero_branch += 1
-        digest, bucket = signature_digest(at[v], bt[k], at[u], keys)
-        per_atom[v].append(bucket)
-        digests.append(digest)
-        token_of_edge.append(bucket)
+        for u, b_vu in adj[v]:
+            keys = sorted(
+                branch_key(bt2, at[w], w in v_nbrs) for w, bt2 in adj[u] if w != v
+            )
+            if not keys:
+                n_zero_branch += 1
+            digest, bucket = signature_digest(at[v], b_vu, at[u], keys)
+            per_atom[v].append(bucket)
+            digests.append(digest)
+            bucket_of_edge.append(bucket)
     return {
         "per_atom": per_atom,
         "digests": digests,
-        "bucket_of_edge": token_of_edge,
+        "bucket_of_edge": bucket_of_edge,
         "zero_degree_atoms": [i for i in range(n) if not adj[i]],
         "tokens": sum(len(x) for x in per_atom),
         "empty_branch_lists": int(n_zero_branch),
