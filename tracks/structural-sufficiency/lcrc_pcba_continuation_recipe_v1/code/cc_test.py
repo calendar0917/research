@@ -40,7 +40,8 @@ def _np_sha(array: np.ndarray) -> str:
 def _save_npy_atomic(path: Path, array: np.ndarray) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
-    np.save(tmp, np.ascontiguousarray(array, dtype=np.float32))
+    with open(tmp, "wb") as fh:
+        np.save(fh, np.ascontiguousarray(array, dtype=np.float32))
     os.replace(tmp, path)
     return C.sha256_file(path)
 
@@ -192,7 +193,8 @@ def run_freeze(selection_path: Path, out_path: Path, predictions_dir: Path, devi
 
     rows_path = predictions_dir / "test_row_ids.npy"
     tmp = rows_path.with_suffix(".npy.tmp")
-    np.save(tmp, np.asarray(task.test_rows, dtype=np.int64))
+    with open(tmp, "wb") as fh:
+        np.save(fh, np.asarray(task.test_rows, dtype=np.int64))
     os.replace(tmp, rows_path)
     rows_sha = C.sha256_file(rows_path)
 
@@ -390,7 +392,7 @@ def run_score(freeze_path: Path, out_path: Path, per_task_path: Path, prediction
         "freeze_seal_sha256": freeze["seal_sha256"],
         "official_evaluator": C.DECISION["test"]["official_evaluator"],
         "independent_evaluator": C.DECISION["test"]["independent"],
-        "test_label_artifact": test,
+        "test_label_artifact": {k: v for k, v in test.items() if k != "labels"},
         "models": scored,
         "comparisons": comparisons,
         "valid_label_stats": {
