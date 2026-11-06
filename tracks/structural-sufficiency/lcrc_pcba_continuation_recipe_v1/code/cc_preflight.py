@@ -30,6 +30,7 @@ import cc_data as D  # noqa: E402
 import cc_restore as R  # noqa: E402
 import pc_metrics as MET  # noqa: E402
 import pc_model as BM  # noqa: E402
+from pf_pipeline import PinnedStager  # noqa: E402
 
 
 def _tensor_bytes_fingerprint(tensors: Mapping[str, torch.Tensor]) -> str:
@@ -502,12 +503,13 @@ def gpu_preflight(task: Any, plan: Sequence[Mapping[str, Any]], device: torch.de
             torch.cuda.synchronize(device)
         times: list[float] = []
         smoke_success = True
+        smoke_stager = PinnedStager(device, depth=2)
         for i, batch_rows in enumerate(plan[0]["batches"][:20]):
             step = C.STEP40 + i
             R.set_lr(smoke_opt, C.scheduled_lr("L", step))
             t0 = time.perf_counter()
-            batch = _to_device(BM.collate(task.cache, np.asarray(batch_rows).tolist()), device)
-            y = torch.as_tensor(task.labels[batch_rows], dtype=torch.float32, device=device)
+            batch = smoke_stager.batch(BM.collate(task.cache, np.asarray(batch_rows).tolist()))
+            y = smoke_stager.labels(task.labels[batch_rows])
             logits = smoke_model(batch)
             loss = MET.masked_bce_loss(logits, y)
             if not (torch.isfinite(logits).all() and torch.isfinite(loss)):
@@ -523,6 +525,7 @@ def gpu_preflight(task: Any, plan: Sequence[Mapping[str, Any]], device: torch.de
             if device.type == "cuda":
                 torch.cuda.synchronize(device)
             times.append(float(time.perf_counter() - t0))
+        smoke_stager.release()
         peak_alloc = int(torch.cuda.max_memory_allocated(device)) if device.type == "cuda" else 0
         peak_reserved = int(torch.cuda.max_memory_reserved(device)) if device.type == "cuda" else 0
         step_mean = float(np.mean(times)) if times else float("nan")
