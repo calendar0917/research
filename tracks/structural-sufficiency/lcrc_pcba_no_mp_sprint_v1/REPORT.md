@@ -304,7 +304,8 @@ These are resource/research-direction labels, not significance tests.
   `analysis/phase_d_seed1_confirmation.json`,
   `analysis/per_task_comparison.csv`, `analysis/per_task_summary.json`,
   `analysis/attention_diagnostic.json`, `analysis/gpu_ledger.json`,
-  `analysis/run_registry.json`, `analysis/failed_gpu_attempts.json`.
+  `analysis/run_registry.json`, `analysis/rr_job_ids.json`,
+  `analysis/failed_gpu_attempts.json`.
 * GPU ledger: 8.277 h total, 6.723 h below the 15 h target; hard limit not
   approached. Wall clock ≈5.6 h, below the 7.5 h target.
 * Official Test: never evaluated; all run records carry
