@@ -10,6 +10,17 @@ See [`PROTOCOL.md`](PROTOCOL.md) for the frozen arms, correctness gates,
 training recipe, stopping rules and interpretation labels. The historical C/V
 runs are references only and are never retrained here.
 
+## Outcome
+
+All three no-bond-MP arms beat the paired historical C1 control on both seeds.
+The best strict static arm is A (attention readout), two-seed mean **0.245279**;
+the best no-MP arm overall is G (graph-context feedback), mean **0.248040**.
+Neither reaches the historical V mean **0.258362** within the pre-registered
+0.008 margin. Assigned labels: **`STATIC_POSITIVE_BUT_BELOW_V`** and
+**`EDGE_MP_BUNDLE_RETAINS_ADVANTAGE`**; `GLOBAL_COMMUNICATION_PROMISING` was not
+triggered. Full numbers and the seven required answers are in
+[`REPORT.md`](REPORT.md).
+
 ## Layout
 
 ```

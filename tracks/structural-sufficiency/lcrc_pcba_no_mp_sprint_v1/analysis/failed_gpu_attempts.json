@@ -1,0 +1,39 @@
+{
+  "schema": "lcrc-pcba-no-mp-failed-gpu-attempts-v1",
+  "round_id": "lcrc-pcba-no-mp-sprint-v1",
+  "note": "All preflight attempts count against GPU-hours, including failed ones. Durations are wall-clock from the rr job metadata.",
+  "entries": [
+    {
+      "label": "nmp-preflight-gpu0 (attempt 1)",
+      "gpu_hours": 0.0066667,
+      "state": "failed",
+      "reason": "C1 reference was left on CPU while the batch was on CUDA"
+    },
+    {
+      "label": "nmp-preflight-gpu1 (attempt 1)",
+      "gpu_hours": 0.0063889,
+      "state": "failed",
+      "reason": "C1 reference was left on CPU while the batch was on CUDA"
+    },
+    {
+      "label": "nmp-preflight2-gpu0 (attempt 2)",
+      "gpu_hours": 0.0155556,
+      "state": "failed",
+      "reason": "A-only geometry checks demanded bitwise equality on CUDA index_add outputs"
+    },
+    {
+      "label": "nmp-preflight2-gpu1 (attempt 2)",
+      "gpu_hours": 0.0075,
+      "state": "failed",
+      "reason": "attention geometry checks demanded bitwise equality; scorer output bias has structurally zero gradient under softmax"
+    },
+    {
+      "label": "nmp-cleanup-pf",
+      "gpu_hours": 0.001,
+      "state": "completed",
+      "reason": "removed stale untracked preflight JSONs before deploy; no training"
+    }
+  ],
+  "gpu_hours_total": 0.0371106,
+  "test_evaluated": false
+}

@@ -345,6 +345,63 @@ def build_decisions(task, phase_b, phase_c, phase_d) -> dict[str, Any]:
     }
 
 
+def build_per_task_summary(task, runs) -> dict[str, Any]:
+    hist = {
+        (arm, seed): historical(seed, arm) for arm in ("C", "V") for seed in (0, 1)
+    }
+    out: dict[str, Any] = {}
+
+    def stats(a, b):
+        aa = np.asarray([np.nan if x is None else float(x) for x in a], dtype=np.float64)
+        bb = np.asarray([np.nan if x is None else float(x) for x in b], dtype=np.float64)
+        diff = aa - bb
+        return {
+            "improved": int(np.nansum(diff > 0)),
+            "regressed": int(np.nansum(diff < 0)),
+            "mean": float(np.nanmean(diff)),
+            "median": float(np.nanmedian(diff)),
+        }
+
+    for arm in C.ARM_ORDER:
+        arrays = {}
+        for seed, run in ((0, runs.get("C", {}).get(arm)), (1, runs.get("D", {}).get(arm))):
+            a = per_task(run, 40)
+            if a is None:
+                continue
+            arrays[seed] = [np.nan if x is None else float(x) for x in a]
+            out[f"{arm}{seed}"] = {
+                "ap": ap_at(run, 40),
+                "vs_C": stats(a, per_task(hist[("C", seed)], 40)),
+                "vs_V": stats(a, per_task(hist[("V", seed)], 40)),
+            }
+        if len(arrays) == 2:
+            mean_a = list(np.mean(np.asarray([arrays[0], arrays[1]], dtype=np.float64), axis=0))
+            mean_c = list(
+                np.mean(
+                    np.asarray([
+                        [np.nan if x is None else float(x) for x in per_task(hist[("C", s)], 40)]
+                        for s in (0, 1)
+                    ], dtype=np.float64),
+                    axis=0,
+                )
+            )
+            mean_v = list(
+                np.mean(
+                    np.asarray([
+                        [np.nan if x is None else float(x) for x in per_task(hist[("V", s)], 40)]
+                        for s in (0, 1)
+                    ], dtype=np.float64),
+                    axis=0,
+                )
+            )
+            out[f"{arm}_mean"] = {
+                "ap": float(np.nanmean(mean_a)),
+                "vs_C": stats(mean_a, mean_c),
+                "vs_V": stats(mean_a, mean_v),
+            }
+    return out
+
+
 def write_per_task(task, phase_c, phase_d, runs) -> str:
     positives = train_positive(task)
     strata = strata_from_counts(positives)
@@ -435,15 +492,22 @@ def build_ledger() -> dict[str, Any]:
             )
         except Exception:  # pragma: no cover
             continue
+    extra_failed: list[dict[str, Any]] = []
+    extra_path = C.ANALYSIS / "failed_gpu_attempts.json"
+    if extra_path.exists():
+        extra_failed = list(C.read_json(extra_path).get("entries") or [])
     total = sum(e["gpu_hours"] for e in entries) + sum(
         e["gpu_hours"] for e in failed
-    ) + sum(e["gpu_hours"] for e in preflight)
+    ) + sum(e["gpu_hours"] for e in preflight) + sum(
+        float(e.get("gpu_hours", 0.0)) for e in extra_failed
+    )
     return {
         "schema": "lcrc-pcba-no-mp-gpu-ledger-v1",
         "round_id": C.ROUND_ID,
         "budget": C.BUDGET,
         "training_entries": entries,
         "failed_entries": failed,
+        "failed_preflight_or_retry_entries": extra_failed,
         "preflight_entries": preflight,
         "gpu_hours_total": float(total),
         "remaining_to_target": float(C.BUDGET["gpu_target_hours"] - total),
@@ -506,6 +570,7 @@ def main(argv: list[str] | None = None) -> int:
     C.write_json(C.ANALYSIS / "phase_d_seed1_confirmation.json", phase_d)
     C.write_json(C.ANALYSIS / "decision_labels.json", decisions)
     p = write_per_task(task, phase_c, phase_d, runs)
+    C.write_json(C.ANALYSIS / "per_task_summary.json", build_per_task_summary(task, runs))
     ledger = build_ledger()
     C.write_json(C.ANALYSIS / "gpu_ledger.json", ledger)
     C.write_json(C.ANALYSIS / "run_registry.json", build_registry())

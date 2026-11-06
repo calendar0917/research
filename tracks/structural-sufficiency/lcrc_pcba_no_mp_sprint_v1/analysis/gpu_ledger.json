@@ -1,0 +1,392 @@
+{
+  "budget": {
+    "gpu_hard_hours": 16.0,
+    "gpu_target_hours": 15.0,
+    "max_concurrent_gpus": 2,
+    "no_new_gpu_stage_below_minutes": 30,
+    "wall_hard_hours": 8.0,
+    "wall_target_hours": 7.5
+  },
+  "failed_entries": [],
+  "failed_preflight_or_retry_entries": [
+    {
+      "gpu_hours": 0.0066667,
+      "label": "nmp-preflight-gpu0 (attempt 1)",
+      "reason": "C1 reference was left on CPU while the batch was on CUDA",
+      "state": "failed"
+    },
+    {
+      "gpu_hours": 0.0063889,
+      "label": "nmp-preflight-gpu1 (attempt 1)",
+      "reason": "C1 reference was left on CPU while the batch was on CUDA",
+      "state": "failed"
+    },
+    {
+      "gpu_hours": 0.0155556,
+      "label": "nmp-preflight2-gpu0 (attempt 2)",
+      "reason": "A-only geometry checks demanded bitwise equality on CUDA index_add outputs",
+      "state": "failed"
+    },
+    {
+      "gpu_hours": 0.0075,
+      "label": "nmp-preflight2-gpu1 (attempt 2)",
+      "reason": "attention geometry checks demanded bitwise equality; scorer output bias has structurally zero gradient under softmax",
+      "state": "failed"
+    },
+    {
+      "gpu_hours": 0.001,
+      "label": "nmp-cleanup-pf",
+      "reason": "removed stale untracked preflight JSONs before deploy; no training",
+      "state": "completed"
+    }
+  ],
+  "gpu_hours_total": 8.2770184270442,
+  "note": "sum of run-process wall seconds / 3600 per GPU job; all attempts included",
+  "preflight_entries": [
+    {
+      "arms": [
+        "S",
+        "G"
+      ],
+      "device": "cuda",
+      "file": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu0.json",
+      "gpu_hours": 0.013774939192226157,
+      "gpu_seconds": 49.589781092014164,
+      "status": "COMPLETED"
+    },
+    {
+      "arms": [
+        "A"
+      ],
+      "device": "cuda",
+      "file": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/preflight_gpu1.json",
+      "gpu_hours": 0.006388495575584885,
+      "gpu_seconds": 22.998584072105587,
+      "status": "COMPLETED"
+    }
+  ],
+  "remaining_to_hard": 7.722981572955799,
+  "remaining_to_target": 6.722981572955799,
+  "round_id": "lcrc-pcba-no-mp-sprint-v1",
+  "schema": "lcrc-pcba-no-mp-gpu-ledger-v1",
+  "test_evaluated": false,
+  "training_entries": [
+    {
+      "arm": "S",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "0",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T00:18:53Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 0.7159783646162962,
+      "phase": "B",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseB_seed0_S",
+      "seed": 0,
+      "started_utc": "2026-11-05T23:35:55Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "A",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "1",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T00:16:54Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 0.6830236909208665,
+      "phase": "B",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseB_seed0_A",
+      "seed": 0,
+      "started_utc": "2026-11-05T23:35:56Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "G",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "0",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T01:09:52Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 0.7846964097827569,
+      "phase": "B",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseB_seed0_G",
+      "seed": 0,
+      "started_utc": "2026-11-06T00:22:47Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "S",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "1",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T00:56:14Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 0.5575359399508064,
+      "phase": "C",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_S",
+      "seed": 0,
+      "started_utc": "2026-11-06T00:22:47Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "A",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "1",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T01:39:10Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 0.6628667584294453,
+      "phase": "C",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A",
+      "seed": 0,
+      "started_utc": "2026-11-06T00:59:24Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "G",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "0",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T01:59:06Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 0.7620237601228937,
+      "phase": "C",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_G",
+      "seed": 0,
+      "started_utc": "2026-11-06T01:13:23Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "S",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "0",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T03:56:17Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 1.4625582840667468,
+      "phase": "D",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseD_seed1_S",
+      "seed": 1,
+      "started_utc": "2026-11-06T02:28:32Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "A",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "1",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T03:07:38Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 1.3729810690368889,
+      "phase": "D",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseD_seed1_A",
+      "seed": 1,
+      "started_utc": "2026-11-06T01:45:15Z",
+      "status": "COMPLETED"
+    },
+    {
+      "arm": "G",
+      "environment": {
+        "autocast_enabled": false,
+        "cuda_available": true,
+        "cuda_device_capability": [
+          8,
+          0
+        ],
+        "cuda_device_count": 1,
+        "cuda_device_index": 0,
+        "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+        "cuda_device_total_memory_bytes": 42285268992,
+        "cuda_visible_devices": "1",
+        "cudnn_allow_tf32": true,
+        "deterministic_algorithms": false,
+        "float32_matmul_precision": "highest",
+        "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+        "git_dirty": false,
+        "hostname": "a100-2",
+        "matmul_allow_tf32": false,
+        "numpy": "2.1.3",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "finished_utc": "2026-11-06T04:33:34Z",
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "gpu_hours": 1.218079515349689,
+      "phase": "D",
+      "run_dir": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseD_seed1_G",
+      "seed": 1,
+      "started_utc": "2026-11-06T03:20:29Z",
+      "status": "COMPLETED"
+    }
+  ],
+  "within_hard": true,
+  "within_target": true
+}
