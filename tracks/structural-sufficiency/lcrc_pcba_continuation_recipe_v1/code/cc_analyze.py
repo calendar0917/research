@@ -140,15 +140,30 @@ def stage1_comparison() -> dict[str, Any]:
         ap40 = float(pf["epoch40_replay"]["official_valid_ap"])
         ap40_per_task = pf["epoch40_replay"].get("per_task_ap")
         valid_positive = pf["epoch40_replay"]["positive"]
+        source_run = C.read_json(C.SOURCE[model_id]["run_json"])
+        source_train = source_run.get("train_eval_final") or {}
+        source_train_ap = (
+            float(source_train["ap"]) if source_train.get("ap") is not None else None
+        )
+        source_train_bce = (
+            float(source_train["bce"]) if source_train.get("bce") is not None else None
+        )
+        source_valid40 = (source_run.get("fixed_epoch_reports") or {}).get("40", {})
         model: dict[str, Any] = {
             "source_epoch40": {
                 "checkpoint": C.SOURCE[model_id]["path"].relative_to(C.REPO).as_posix(),
                 "sha256": C.SOURCE[model_id]["sha256"],
                 "valid_ap": ap40,
+                "valid_bce": source_valid40.get("valid_bce"),
                 "historical_valid_ap": float(C.SOURCE[model_id]["valid_ap"]),
                 "replay_abs_delta": abs(ap40 - float(C.SOURCE[model_id]["valid_ap"])),
                 "per_task_ap": ap40_per_task,
                 "positive": valid_positive,
+                "train_ap": source_train_ap,
+                "train_bce": source_train_bce,
+                "train_valid_ap_gap": (
+                    None if source_train_ap is None else float(source_train_ap - ap40)
+                ),
             },
             "recipes": {},
         }
@@ -182,6 +197,14 @@ def stage1_comparison() -> dict[str, Any]:
                 "valid_bce60": float(rep60["valid_bce"]),
                 "train_bce60": _train_bce(run),
                 "train_ap60": _train_ap(run),
+                "train_ap_delta_40_60": (
+                    None
+                    if _train_ap(run) is None or source_train_ap is None
+                    else float(_train_ap(run) - source_train_ap)
+                ),
+                "train_valid_ap_gap40": (
+                    None if source_train_ap is None else float(source_train_ap - ap40)
+                ),
                 "train_valid_ap_gap60": (
                     None if _train_ap(run) is None else float(_train_ap(run) - float(rep60["ap"]))
                 ),
@@ -248,8 +271,11 @@ def stage1_comparison() -> dict[str, Any]:
                     label_a="epoch40", label_b="R",
                 ) if ap40_per_task is not None else None,
                 "train_ap_rose": {
-                    "L": bool(_train_ap(_load_run("stage1", model_id, "L")) is not None and _train_ap(_load_run("stage1", model_id, "L")) > ap40),
-                    "R": bool(_train_ap(_load_run("stage1", model_id, "R")) is not None and _train_ap(_load_run("stage1", model_id, "R")) > ap40),
+                    recipe_key: bool(
+                        rec.get("train_ap_delta_40_60") is not None
+                        and rec["train_ap_delta_40_60"] > 0
+                    )
+                    for recipe_key, rec in (("L", l), ("R", r))
                 },
             }
             # Stage-2 eligibility per recipe.
@@ -271,7 +297,7 @@ def stage1_comparison() -> dict[str, Any]:
                 }
             eligible_recipes = [k for k in ("L", "R") if elig[k]["eligible"]]
             if eligible_recipes:
-                best = max(eligible_recipes, key=lambda k: (float(l if k == "L" else r)["ap60"], k == "L"))
+                best = max(eligible_recipes, key=lambda k: (float((l if k == "L" else r)["ap60"]), k == "L"))
                 ap_best = float((l if best == "L" else r)["ap60"])
                 close = [
                     k
