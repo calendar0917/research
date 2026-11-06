@@ -58,10 +58,17 @@ def _status_of(run: Mapping[str, Any] | None, arm: str) -> str:
     return "INCOMPLETE"
 
 
-def _arm_row(arm: str, run: Mapping[str, Any] | None, a0_ap: float | None) -> dict[str, Any]:
+def _arm_row(
+    arm: str,
+    run: Mapping[str, Any] | None,
+    a0_ap: float | None,
+    a0_source: str,
+    cancelled: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     row: dict[str, Any] = {
         "arm": arm,
         "status": _status_of(run, arm),
+        "reference": a0_source,
         "modules": "",
         "valid_ap10": "",
         "valid_ap20": "",
@@ -83,6 +90,14 @@ def _arm_row(arm: str, run: Mapping[str, Any] | None, a0_ap: float | None) -> di
         "step_ms_p50": "",
         "checkpoint_sha256": "",
     }
+    if cancelled is not None and arm == "A0":
+        row["status"] = str(cancelled.get("status", "CANCELLED_BY_PRINCIPAL"))
+        row["label"] = "CANCELLED"
+        row["gpu_hours"] = round(float(cancelled.get("gpu_hours", 0.0)), 6)
+        row["parameters"] = int(C.A0_PARAMETERS)
+        for e, v in (cancelled.get("valid_ap_by_epoch") or {}).items():
+            row[f"valid_ap{e}"] = _fmt(v)
+        return row
     if run is None:
         return row
     reports = run.get("fixed_epoch_reports") or {}
@@ -97,10 +112,14 @@ def _arm_row(arm: str, run: Mapping[str, Any] | None, a0_ap: float | None) -> di
     if te:
         row["train_ap40"] = _fmt(te.get("ap"))
         row["train_bce40"] = _fmt(te.get("bce"))
+    if arm == "A0":
+        row["label"] = "REFERENCE"
     if a0_ap is not None and rep40 is not None:
         delta = float(rep40["ap"]) - float(a0_ap)
         row["delta_vs_A0"] = round(delta, 9)
-        if delta >= C.DECISION["screen_positive_delta_min"]:
+        if arm == "A0":
+            pass
+        elif delta >= C.DECISION["screen_positive_delta_min"]:
             row["label"] = "SCREEN_POSITIVE"
         elif delta >= C.DECISION["weak_signal_delta_min"]:
             row["label"] = "WEAK_SIGNAL"
@@ -135,6 +154,8 @@ def analyze(
     build_path: Path,
     out_dir: Path,
     rr_status: Mapping[str, Any] | None,
+    smoke_path: Path | None = None,
+    historical_a0_path: Path | None = None,
 ) -> dict[str, Any]:
     out_dir.mkdir(parents=True, exist_ok=True)
     arms = list(C.ARM_ORDER) + ["COMBO"]
@@ -151,14 +172,41 @@ def analyze(
     build = _load(build_path) if build_path.is_file() else {}
 
     a0_run = runs.get("A0")
-    a0_ap = None
-    if a0_run and a0_run.get("fixed_epoch_reports", {}).get("40"):
+    cancelled_a0 = None
+    if a0_run is None and (runs_dir / "A0" / "CANCELLED.json").is_file():
+        cancelled_a0 = _load(runs_dir / "A0" / "CANCELLED.json")
+    same_round_a0 = bool(a0_run and a0_run.get("fixed_epoch_reports", {}).get("40"))
+    hist_run = None
+    hist_task_rows: list[dict[str, Any]] = []
+    if not same_round_a0 and historical_a0_path is not None:
+        if (historical_a0_path / "run.json").is_file():
+            hist_run = _load(historical_a0_path / "run.json")
+            hist_ap = float(hist_run["fixed_epoch_reports"]["40"]["ap"])
+            if abs(hist_ap - float(C.HISTORICAL_A0["valid_ap40"])) > 1e-9:
+                raise RuntimeError(
+                    f"historical A0 run AP {hist_ap} != frozen reference {C.HISTORICAL_A0['valid_ap40']}"
+                )
+        task_csv = historical_a0_path / "per_task_ap.csv"
+        if task_csv.is_file():
+            with open(task_csv, newline="", encoding="utf-8") as fh:
+                hist_task_rows = [r for r in csv.DictReader(fh) if str(r.get("epoch")) == "40"]
+    if same_round_a0:
         a0_ap = float(a0_run["fixed_epoch_reports"]["40"]["ap"])
+        a0_source = "same_round_A0"
+    else:
+        a0_ap = float(C.HISTORICAL_A0["valid_ap40"])
+        a0_source = "historical_phaseC_seed0_A"
 
     # ---- epoch-40 comparison ------------------------------------------------
-    comp_rows = [_arm_row(arm, runs[arm], a0_ap) for arm in arms]
-    # per-task deltas vs A0
+    comp_rows = [
+        _arm_row(arm, runs[arm], a0_ap, a0_source, cancelled=cancelled_a0) for arm in arms
+    ]
+    # per-task deltas vs the reference A0
     a0_tasks = (a0_run or {}).get("fixed_epoch_reports", {}).get("40", {}).get("per_task_ap") or []
+    if not a0_tasks and hist_task_rows:
+        a0_tasks = [
+            None if not r["ap"] else float(r["ap"]) for r in hist_task_rows
+        ]
     for row in comp_rows:
         run = runs[row["arm"]]
         rep = (run or {}).get("fixed_epoch_reports", {}).get("40", {})
@@ -183,12 +231,15 @@ def analyze(
     _write_csv(out_dir / "epoch40_comparison.csv", comp_rows, fields)
 
     # ---- per-task comparison ------------------------------------------------
-    valid_pos = (
+    valid_pos = list(
         (a0_run or {}).get("fixed_epoch_reports", {}).get("40", {}).get("positive") or []
     )
-    valid_obs = (
+    valid_obs = list(
         (a0_run or {}).get("fixed_epoch_reports", {}).get("40", {}).get("observed") or []
     )
+    if not valid_pos and hist_task_rows:
+        valid_pos = [int(r["positive"]) for r in hist_task_rows]
+        valid_obs = [int(r["observed"]) for r in hist_task_rows]
     rows = []
     for t in range(C.N_TASKS):
         row: dict[str, Any] = {
@@ -215,7 +266,9 @@ def analyze(
         rows.append(row)
     task_fields = ["task", "valid_observed", "valid_positive", "stratum", "scorable"]
     for arm in arms:
-        task_fields += [f"ap_{arm}", f"delta_{arm}"]
+        task_fields.append(f"ap_{arm}")
+        if arm != "A0":
+            task_fields.append(f"delta_{arm}")
     _write_csv(out_dir / "per_task_comparison.csv", rows, task_fields)
 
     # ---- decision -----------------------------------------------------------
@@ -233,6 +286,19 @@ def analyze(
         "round_id": C.ROUND_ID,
         "main_metric": C.DECISION["main_metric"],
         "a0_valid_ap40": a0_ap,
+        "a0_reference": {
+            "same_round": bool(same_round_a0),
+            "source": a0_source,
+            "historical_a0_valid_ap40": C.HISTORICAL_A0["valid_ap40"],
+            "historical_a0_run": "lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A",
+            "note": (
+                "A0 was cancelled by principal instruction; deltas are versus the "
+                "historical phase-C A run and therefore do not control same-round "
+                "implementation drift"
+            )
+            if not same_round_a0
+            else "same-round A0 control",
+        },
         "historical_a0_valid_ap40": C.HISTORICAL_A0["valid_ap40"],
         "deltas_vs_a0": {k: round(v, 9) for k, v in deltas.items()},
         "eligible_delta_min": C.DECISION["combo_eligible_delta_min"],
@@ -246,7 +312,14 @@ def analyze(
         },
         "test_evaluated": False,
     }
-    if len(eligible) < C.DECISION["combo_min_eligible"]:
+    missing_arms = [
+        a for a in C.ARM_ORDER[1:]
+        if not (runs.get(a) or {}).get("fixed_epoch_reports", {}).get("40")
+    ]
+    if missing_arms:
+        decision["combo"]["decision"] = "PENDING"
+        decision["combo"]["reason"] = f"primary arms without an epoch-40 report: {missing_arms}"
+    elif len(eligible) < C.DECISION["combo_min_eligible"]:
         decision["combo"]["decision"] = "SKIPPED_BY_RULE"
         decision["combo"]["reason"] = (
             f"only {len(eligible)} arm(s) with delta >= {C.DECISION['combo_eligible_delta_min']}; "
@@ -265,6 +338,8 @@ def analyze(
             f"two largest deltas {chosen} with max delta {max(deltas.values()):.6f} "
             f">= {C.DECISION['combo_strong_delta_min']}"
         )
+    if combo_row is None:
+        decision["labels"]["COMBO"] = decision["combo"]["decision"]
     C.write_json(out_dir / "decision.json", decision)
 
     # ---- architecture audit -------------------------------------------------
@@ -288,7 +363,10 @@ def analyze(
     }
     for arm in arms:
         run = runs.get(arm)
-        modules = tuple((run or {}).get("modules") or C.arm_modules(arm))
+        modules = tuple(
+            (run or {}).get("modules")
+            or (() if arm in ("A0", "COMBO") else C.arm_modules(arm))
+        )
         pf = (preflight.get("per_arm") or {}).get(arm, {})
         entry: dict[str, Any] = {
             "modules": list(modules),
@@ -388,6 +466,12 @@ def analyze(
             "status": _status_of(run, arm),
             "arm_label": C.arm_label(arm, C.arm_modules(arm)) if arm != "COMBO" else "COMBO",
         }
+        if arm == "A0" and cancelled_a0 is not None:
+            entry.update({"status": cancelled_a0["status"], "run_id": cancelled_a0["run_id"],
+                          "gpu_hours": cancelled_a0["gpu_hours"],
+                          "epochs_completed": cancelled_a0["epochs_completed"],
+                          "same_round_control": False,
+                          "note": cancelled_a0["reason"]})
         if rr_status:
             statuses = (rr_status.get("runs") or {}).get(arm)
             if statuses:
@@ -423,7 +507,16 @@ def analyze(
     formal = {
         arm: round(float((runs.get(arm) or {}).get("gpu_hours") or 0.0), 6) for arm in arms
     }
-    total = preflight_gpu + sum(formal.values()) + prep_gpu
+    smoke_run = _load(smoke_path) if smoke_path is not None and smoke_path.is_file() else None
+    smoke_gpu = float((smoke_run or {}).get("gpu_hours") or 0.0)
+    # The first GPU preflight attempt died on a device-comparison bug before any
+    # training step; its cost is bounded by the 13 s of launcher wall time.
+    failed_attempt_gpu = 0.001
+    cancelled_gpu = float((cancelled_a0 or {}).get("gpu_hours") or 0.0)
+    total = (
+        preflight_gpu + sum(formal.values()) + prep_gpu + smoke_gpu
+        + failed_attempt_gpu + cancelled_gpu
+    )
     ledger = {
         "schema": "lcrc-pcba-explicit-performance-gpu-ledger-v1",
         "round_id": C.ROUND_ID,
@@ -438,6 +531,22 @@ def analyze(
             "gpu_hours": 0.0,
         },
         "formal_runs": formal,
+        "non_formal": {
+            "smoke_1_epoch_a0": {
+                "gpu_hours": round(smoke_gpu, 6),
+                "status": None if smoke_run is None else smoke_run.get("status"),
+                "note": "1-epoch A0 end-to-end trainer smoke test (not a result)",
+            },
+            "cancelled_A0_attempt": {
+                "gpu_hours": round(cancelled_gpu, 6),
+                "epochs_completed": None if cancelled_a0 is None else cancelled_a0.get("epochs_completed"),
+                "note": "A0 rerun cancelled by principal instruction; historical A0 used as reference",
+            },
+            "preflight_failed_attempt": {
+                "gpu_hours": failed_attempt_gpu,
+                "note": "device-comparison bug before any training step; bound from 13 s launcher wall time",
+            },
+        },
         "gpu_hours_total": round(total, 6),
         "remaining_to_target": round(C.DECISION["budget"]["gpu_target_hours"] - total, 6),
         "remaining_to_hard": round(C.DECISION["budget"]["gpu_hard_hours"] - total, 6),
@@ -462,6 +571,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--preflight", default="")
     parser.add_argument("--build", default="")
     parser.add_argument("--rr-status", default="")
+    parser.add_argument("--smoke", default="")
+    parser.add_argument("--historical-a0", default="")
     parser.add_argument("--out", required=True)
     args = parser.parse_args(argv)
     rr_status = _load(Path(args.rr_status)) if args.rr_status else None
@@ -471,6 +582,8 @@ def main(argv: list[str] | None = None) -> int:
         build_path=Path(args.build) if args.build else Path(""),
         out_dir=Path(args.out),
         rr_status=rr_status,
+        smoke_path=Path(args.smoke) if args.smoke else None,
+        historical_a0_path=Path(args.historical_a0) if args.historical_a0 else None,
     )
     print(json.dumps({k: v for k, v in summary.items() if k != "rows"}, indent=2, default=str))
     for row in summary["rows"]:

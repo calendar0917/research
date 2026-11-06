@@ -272,3 +272,18 @@ AP claim is made.
 `epoch40_comparison.csv`, `per_task_comparison.csv`, `decision.json`), one run
 directory per formal run, `REPORT.md`. Large checkpoints and caches stay
 Git-ignored.
+
+## 10. Deviation log (append-only)
+
+1. **2026-11-06 — A0 rerun cancelled by principal instruction.** The A0 control
+   was launched as required by §3 and cancelled at epoch 29/40 (last completed
+   evaluation: epoch 20, Valid AP 0.238138) after the principal directed that
+   the historical run not be reproduced. Consequence: A0 has **no same-round
+   40-epoch result**. All deltas are computed against the historical
+   `lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A` epoch-40 Valid AP
+   `0.2463560956` (params 287,644), and the same-round implementation-drift
+   control is **absent**. This deviation is carried into `decision.json`,
+   `gpu_ledger.json` and `REPORT.md` and weakens every causal claim.
+2. The cancelled attempt consumed 0.994 GPU-hours; it is charged to the budget.
+3. No training-code change was made after the A0 launch. A1/A2/A3/COMBO run on
+   the same training code; only documentation/analysis scripts differ.
