@@ -651,21 +651,26 @@ def run_audit() -> int:
     return 0
 
 
-def run_gpu(device_name: str) -> int:
+def run_gpu(device_name: str, out_dir: Path) -> int:
     device = torch.device(device_name)
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("CUDA requested but not available")
     task = D.load_and_gate()
     plan = D.make_plan_41_80(task, seed=C.SEED)
     preflight = gpu_preflight(task, plan, device)
-    C.write_json(C.ANALYSIS / "preflight_gpu.json", preflight)
-
-    # Merge the GPU evidence into the paired-initialization audit file.
-    paired_path = C.ANALYSIS / "paired_initialization_audit.json"
-    paired = C.read_json(paired_path) if paired_path.is_file() else {}
-    paired["gpu"] = preflight
-    paired["gpu_all_passed"] = bool(preflight["all_passed"])
-    C.write_json(paired_path, paired)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    C.write_json(out_dir / "preflight_gpu.json", preflight)
+    C.write_json(
+        out_dir / "paired_initialization_gpu.json",
+        {
+            "schema": "lcrc-pcba-continuation-paired-init-gpu-v1",
+            "round_id": C.ROUND_ID,
+            "generated_utc": C.utcnow(),
+            "git_commit": C.git_commit(),
+            "gpu": preflight,
+            "gpu_all_passed": bool(preflight["all_passed"]),
+        },
+    )
     return 0 if preflight["all_passed"] else 3
 
 
@@ -675,11 +680,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     sub.add_parser("audit")
     gpu_p = sub.add_parser("gpu")
     gpu_p.add_argument("--device", default="cuda")
+    gpu_p.add_argument("--out-dir", default=str(C.RUNS / "preflight"))
     args = parser.parse_args(argv)
     if args.mode == "audit":
         return run_audit()
     if args.mode == "gpu":
-        return run_gpu(args.device)
+        return run_gpu(args.device, Path(args.out_dir))
     raise KeyError(args.mode)
 
 
