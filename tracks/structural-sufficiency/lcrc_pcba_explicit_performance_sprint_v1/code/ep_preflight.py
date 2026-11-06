@@ -151,7 +151,7 @@ def check_arm(
         hist.to(device)
         hist.eval()
         state_equal = all(
-            torch.equal(v, model.state_dict()[k].cpu()) for k, v in hist.state_dict().items()
+            torch.equal(v.cpu(), model.state_dict()[k].cpu()) for k, v in hist.state_dict().items()
         )
         with torch.no_grad():
             hist_logits = hist(batch)
