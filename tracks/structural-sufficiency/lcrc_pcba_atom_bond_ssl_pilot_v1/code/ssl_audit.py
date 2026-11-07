@@ -258,15 +258,24 @@ def check_no_forbidden_fields(
     injected = sorted(set(extra) - set(D.MODEL_INPUT_KEYS))
     with torch.no_grad():
         ref = model(inputs, bond_inputs, ids, bids)
+        # CUDA index_add is not bitwise reproducible, so the injection test is
+        # calibrated against the intrinsic re-run noise of the same inputs.
+        ref_again = model(inputs, bond_inputs, ids, bids)
         out = model(extra, bond_inputs, ids, bids)
+    noise = {
+        key: _max_abs(ref[key], ref_again[key]) for key in ("atom_ctx", "bond_ctx", "atom_logits", "bond_logits")
+    }
     diffs = {
         k: _max_abs(ref[k], out[k])
         for k in ("atom_logits", "bond_logits", "atom_ctx", "bond_ctx")
     }
+    tol = max([float(v) for v in noise.values()] + [1e-7])
     return {
         "name": "no_forbidden_fields",
-        "passed": bool(all(v == 0.0 for v in diffs.values()) and bool(injected)),
+        "passed": bool(all(v <= tol for v in diffs.values()) and bool(injected)),
         "max_abs_diff_after_injecting_forbidden_tensors": diffs,
+        "rerun_noise_same_inputs": noise,
+        "tolerance": tol,
         "injected_but_ignored_keys": injected,
         "model_reads_only": list(D.MODEL_INPUT_KEYS),
         "structure_collate_materialises_forbidden_tensors": False,
@@ -283,7 +292,8 @@ def check_no_forbidden_fields(
         },
         "note": (
             "the structure collate does not materialise S1/S2/global/scalar tensors; even when "
-            "they are injected into the batch dict the encoder output is bitwise identical"
+            "they are injected into the batch dict the encoder output is unchanged up to the "
+            "intrinsic re-run noise of the same inputs (CUDA index_add is not bitwise stable)"
         ),
     }
 
