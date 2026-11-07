@@ -1,0 +1,1208 @@
+{
+  "atom_renumbering": {
+    "max_abs_logit_diff": 2.86102294921875e-06,
+    "n_atoms": 830,
+    "pass": true,
+    "tolerance": 2e-05
+  },
+  "audit_mode": "architecture",
+  "batch": {
+    "isolation": {
+      "cross_molecule": 0,
+      "isolated": true,
+      "max_end": 829,
+      "max_path_atom": 829,
+      "n_atoms": 830,
+      "n_paths": 3210
+    },
+    "paths_in_batch": 3210,
+    "paths_per_row_cached_sum": 3210,
+    "row_id_consistency": true
+  },
+  "bond_edit_sensitivity": {
+    "all_bond_removals_change_the_count": true,
+    "all_bond_type_edits_change_the_encoding": true,
+    "cases": [
+      {
+        "count_changed_by_bond_removal": true,
+        "path_types_changed_by_bond_type": true,
+        "paths_after_bond_removal": 136,
+        "paths_after_bond_type_change": 140,
+        "paths_base": 140,
+        "row": 36946
+      },
+      {
+        "count_changed_by_bond_removal": true,
+        "path_types_changed_by_bond_type": true,
+        "paths_after_bond_removal": 106,
+        "paths_after_bond_type_change": 108,
+        "paths_base": 108,
+        "row": 392335
+      },
+      {
+        "count_changed_by_bond_removal": true,
+        "path_types_changed_by_bond_type": true,
+        "paths_after_bond_removal": 86,
+        "paths_after_bond_type_change": 94,
+        "paths_base": 94,
+        "row": 346641
+      },
+      {
+        "count_changed_by_bond_removal": true,
+        "path_types_changed_by_bond_type": true,
+        "paths_after_bond_removal": 60,
+        "paths_after_bond_type_change": 68,
+        "paths_base": 68,
+        "row": 97288
+      },
+      {
+        "count_changed_by_bond_removal": true,
+        "path_types_changed_by_bond_type": true,
+        "paths_after_bond_removal": 50,
+        "paths_after_bond_type_change": 56,
+        "paths_base": 56,
+        "row": 248043
+      },
+      {
+        "count_changed_by_bond_removal": true,
+        "path_types_changed_by_bond_type": true,
+        "paths_after_bond_removal": 38,
+        "paths_after_bond_type_change": 42,
+        "paths_base": 42,
+        "row": 429838
+      }
+    ]
+  },
+  "checks": {
+    "all_pass": true,
+    "atom_renumbering_invariant": true,
+    "batch_isolated": true,
+    "bond_edits_change_s3": true,
+    "empty_s3_safe": true,
+    "one_local_one_drop": true,
+    "row_id_consistent": true,
+    "s3_branch_minimal_input_identical": true,
+    "zero_branch_equals_w2": true
+  },
+  "created_utc": "2026-11-07T21:43:28Z",
+  "device": "cpu",
+  "empty_s3": {
+    "logits_close_to_w2": 0.0,
+    "logits_finite": true,
+    "n_paths": 0,
+    "pathless_residual_equals_bias": true,
+    "residual_all_zero": true
+  },
+  "module_calls": {
+    "F": {
+      "atom_encoder": 1,
+      "bond_encoder": 1,
+      "drop": 1,
+      "f": 1,
+      "ffn": 1,
+      "local": 1,
+      "readout": 1,
+      "rho": 1,
+      "s3_branch": 0
+    },
+    "S3": {
+      "atom_encoder": 1,
+      "bond_encoder": 1,
+      "drop": 1,
+      "f": 1,
+      "ffn": 0,
+      "local": 1,
+      "readout": 1,
+      "rho": 1,
+      "s3_branch": 1
+    }
+  },
+  "n_paths": 3210,
+  "no_message_passing_statement": "the trunk runs exactly one atom encoder, one bond encoder and one S1/S2 local block; the S3 branch consumes only the static atom embedding and the once-enumerated path tensors (verified by the minimal-input call above), and nothing is propagated along a bond twice. There is no iterative message passing in either arm.",
+  "one_local_one_drop": {
+    "F": true,
+    "S3": true
+  },
+  "parameter_audit": {
+    "F": {
+      "base_full_trunk_init_fingerprint": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db",
+      "base_model": "W2",
+      "base_model_audit": {
+        "base_parameters": 848096,
+        "expected_parameters": 994324,
+        "full_trunk_init_fingerprint": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db",
+        "init": {
+          "global_rng_unchanged": true,
+          "linear_layers_initialised": 10,
+          "private_generator_seed": 17,
+          "readout_output_zeroed": true
+        },
+        "init_rule": "torch.manual_seed(seed) -> build the scale's FULL TULCRC -> remap to C1 (drop the 3*atom_out b_mean columns) -> load -> attention readout from the private generator seed*1000003+17 with readout.fc2 zeroed (historical A rule)",
+        "model": "W2",
+        "n_state_tensors": 57,
+        "parameter_check": "exact",
+        "parameter_tensors": 51,
+        "readout_parameters": 146228,
+        "ref_model_a0_parameters": 287644,
+        "scale": 2,
+        "seed": 0,
+        "state_keys": [
+          "atom_encoder.lins.0.bias",
+          "atom_encoder.lins.0.weight",
+          "atom_encoder.lins.1.bias",
+          "atom_encoder.lins.1.weight",
+          "bond_encoder.lins.0.bias",
+          "bond_encoder.lins.0.weight",
+          "bond_encoder.lins.1.bias",
+          "bond_encoder.lins.1.weight",
+          "cont_mean",
+          "cont_scale",
+          "f.lins.0.bias",
+          "f.lins.0.weight",
+          "f.lins.1.bias",
+          "f.lins.1.weight",
+          "global_mean",
+          "global_scale",
+          "local.close_emb.weight",
+          "local.end_emb.weight",
+          "local.joint_proj.bias",
+          "local.joint_proj.weight",
+          "local.mlp.lins.0.bias",
+          "local.mlp.lins.0.weight",
+          "local.mlp.lins.1.bias",
+          "local.mlp.lins.1.weight",
+          "local.nbr_emb.weight",
+          "local.norm.bias",
+          "local.norm.weight",
+          "local.path_emb.weight",
+          "local.path_gate.weight",
+          "local.path_u.weight",
+          "local.path_v.weight",
+          "readout.fc1.bias",
+          "readout.fc1.weight",
+          "readout.fc2.bias",
+          "readout.fc2.weight",
+          "readout.heads.0.fc1.bias",
+          "readout.heads.0.fc1.weight",
+          "readout.heads.0.fc2.bias",
+          "readout.heads.0.fc2.weight",
+          "readout.heads.1.fc1.bias",
+          "readout.heads.1.fc1.weight",
+          "readout.heads.1.fc2.bias",
+          "readout.heads.1.fc2.weight",
+          "readout.heads.2.fc1.bias",
+          "readout.heads.2.fc1.weight",
+          "readout.heads.2.fc2.bias",
+          "readout.heads.2.fc2.weight",
+          "readout.heads.3.fc1.bias",
+          "readout.heads.3.fc1.weight",
+          "readout.heads.3.fc2.bias",
+          "readout.heads.3.fc2.weight",
+          "rho.lins.0.bias",
+          "rho.lins.0.weight",
+          "rho.lins.1.bias",
+          "rho.lins.1.weight",
+          "scalar_mean",
+          "scalar_scale"
+        ],
+        "total_parameters": 994324,
+        "trunk_init_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+        "trunk_init_fingerprint_after_readout_init": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+        "width_audit": {
+          "all_match": true,
+          "checks": {
+            "atom_hidden": true,
+            "atom_out": true,
+            "bond_hidden": true,
+            "bond_out": true,
+            "f_out": true,
+            "f_width": true,
+            "local_hidden": true,
+            "local_input": true,
+            "local_norm": true,
+            "local_width": true,
+            "n_heads": true,
+            "pool_hidden": true,
+            "pool_in": true,
+            "readout_out": true,
+            "rho_hidden": true,
+            "rho_input": true,
+            "rho_out": true,
+            "scorer_hidden": true,
+            "scorer_in": true,
+            "stat_rank_end_emb": true,
+            "stat_rank_joint_proj": true,
+            "stat_rank_nbr_emb": true,
+            "stat_rank_path_emb": true,
+            "stat_rank_path_u": true,
+            "stat_rank_path_v": true
+          },
+          "expected": {
+            "atom_hidden": 256,
+            "atom_out": 192,
+            "bond_hidden": 320,
+            "bond_out": 192,
+            "local_hidden": 384,
+            "local_input": 849,
+            "local_width": 128,
+            "n_heads": 4,
+            "pool_hidden": 176,
+            "readout_out": 128,
+            "rho_hidden": 128,
+            "rho_input": 299,
+            "scorer_hidden": 64,
+            "stat_rank": 64
+          },
+          "observed": {
+            "atom_hidden": {
+              "in": 51,
+              "out": 256,
+              "params": 13312
+            },
+            "atom_out": {
+              "in": 256,
+              "out": 192,
+              "params": 49344
+            },
+            "bond_hidden": {
+              "in": 589,
+              "out": 320,
+              "params": 188800
+            },
+            "bond_out": {
+              "in": 320,
+              "out": 192,
+              "params": 61632
+            },
+            "f": [
+              {
+                "in": 128,
+                "out": 128,
+                "params": 16512
+              },
+              {
+                "in": 128,
+                "out": 128,
+                "params": 16512
+              }
+            ],
+            "local_hidden": {
+              "in": 849,
+              "out": 384,
+              "params": 326400
+            },
+            "local_input": {
+              "expected_from_widths": 849,
+              "layout": {
+                "a": [
+                  0,
+                  192
+                ],
+                "atom_scalar": [
+                  840,
+                  849
+                ],
+                "b_sum": [
+                  192,
+                  384
+                ],
+                "s1_joint": [
+                  384,
+                  448
+                ],
+                "s2_closure": [
+                  640,
+                  648
+                ],
+                "s2_content": [
+                  648,
+                  840
+                ],
+                "s2_end": [
+                  512,
+                  576
+                ],
+                "s2_joint": [
+                  576,
+                  640
+                ],
+                "s2_type": [
+                  448,
+                  512
+                ]
+              },
+              "observed": 849
+            },
+            "local_norm": 128,
+            "local_width": {
+              "in": 384,
+              "out": 128,
+              "params": 49280
+            },
+            "n_heads": 4,
+            "pool_hidden": {
+              "in": 512,
+              "out": 176,
+              "params": 90288
+            },
+            "readout_out": {
+              "in": 176,
+              "out": 128,
+              "params": 22656
+            },
+            "rho_hidden": {
+              "in": 299,
+              "out": 128,
+              "params": 38400
+            },
+            "rho_input": 299,
+            "rho_out": {
+              "in": 128,
+              "out": 128,
+              "params": 16512
+            },
+            "scorer_hidden": [
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              },
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              },
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              },
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              }
+            ],
+            "scorer_out": [
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              },
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              },
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              },
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              }
+            ],
+            "stat_rank": {
+              "close_emb": [
+                2,
+                8
+              ],
+              "end_emb": [
+                80,
+                64
+              ],
+              "joint_proj": {
+                "in": 64,
+                "out": 64,
+                "params": 4160
+              },
+              "nbr_emb": [
+                80,
+                64
+              ],
+              "path_emb": [
+                400,
+                64
+              ],
+              "path_gate": [
+                400,
+                1
+              ],
+              "path_u": [
+                400,
+                64
+              ],
+              "path_v": [
+                80,
+                64
+              ]
+            }
+          }
+        },
+        "widths": {
+          "atom_hidden": 256,
+          "atom_out": 192,
+          "bond_hidden": 320,
+          "bond_out": 192,
+          "local_hidden": 384,
+          "n_heads": 4,
+          "n_out": 128,
+          "pool_hidden": 176,
+          "rho_hidden": 128,
+          "scorer_hidden": 64,
+          "stat_rank": 64,
+          "width": 128
+        }
+      },
+      "base_parameters": 994324,
+      "base_state_sha256": "6a3df38f00a5a4754c310a82d4ad5f71d7f89e3392f1c914aacc4113a3d6f53b",
+      "base_trunk_init_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+      "expected_base_parameters": 994324,
+      "expected_new_parameters": 24285,
+      "expected_total_parameters": 1018609,
+      "global_rng_unchanged": true,
+      "init_rule": "torch.manual_seed(0) -> historical W2 seed-0 build (bs_model.build_model) -> new modules constructed under torch.random.fork_rng -> base state copied bitwise -> new tensors re-initialised from a private generator seed*1000003+offset; the S3 output layer (and the FFN's last Linear) are zero, so epoch-0 logits == W2 logits",
+      "model": "F",
+      "model_name": "LCRC-W2-LocalResidualFFN",
+      "model_state_sha256": "0eaa2ce3b6f6f0cb1e0c6495ccc8bf3fc3e4f62aadcdd98f69b53709c958873c",
+      "n_state_tensors": 63,
+      "new_module_init": {
+        "fc2_is_zero": true,
+        "global_rng_unchanged": true,
+        "kind": "standard_linear_fc1 + zero_fc2 + default_layernorm",
+        "norm_bias_zero": true,
+        "norm_weight_ones": true,
+        "private_generator_seed": 902,
+        "shapes": {
+          "fc1": [
+            93,
+            128
+          ],
+          "fc2": [
+            128,
+            93
+          ],
+          "norm": [
+            128
+          ]
+        }
+      },
+      "new_parameter_inventory": {
+        "ffn.fc1.bias": {
+          "numel": 93,
+          "shape": [
+            93
+          ]
+        },
+        "ffn.fc1.weight": {
+          "numel": 11904,
+          "shape": [
+            93,
+            128
+          ]
+        },
+        "ffn.fc2.bias": {
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "ffn.fc2.weight": {
+          "numel": 11904,
+          "shape": [
+            128,
+            93
+          ]
+        },
+        "ffn.norm.bias": {
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "ffn.norm.weight": {
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        }
+      },
+      "new_parameters": 24285,
+      "new_state_keys": [
+        "ffn.fc1.bias",
+        "ffn.fc1.weight",
+        "ffn.fc2.bias",
+        "ffn.fc2.weight",
+        "ffn.norm.bias",
+        "ffn.norm.weight"
+      ],
+      "original_w2_subset": {
+        "all_bitwise_equal": true,
+        "n_differing": 0,
+        "n_tensors": 57
+      },
+      "parameter_check": "exact",
+      "parameter_gap": -77,
+      "parameter_gap_fraction": 0.003180766688697951,
+      "parameter_tensors": 57,
+      "role": "near_parameter_matched_capacity_control",
+      "seed": 0,
+      "state_keys": [
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.1.bias",
+        "atom_encoder.lins.1.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.1.bias",
+        "bond_encoder.lins.1.weight",
+        "cont_mean",
+        "cont_scale",
+        "f.lins.0.bias",
+        "f.lins.0.weight",
+        "f.lins.1.bias",
+        "f.lins.1.weight",
+        "ffn.fc1.bias",
+        "ffn.fc1.weight",
+        "ffn.fc2.bias",
+        "ffn.fc2.weight",
+        "ffn.norm.bias",
+        "ffn.norm.weight",
+        "global_mean",
+        "global_scale",
+        "local.close_emb.weight",
+        "local.end_emb.weight",
+        "local.joint_proj.bias",
+        "local.joint_proj.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.1.bias",
+        "local.mlp.lins.1.weight",
+        "local.nbr_emb.weight",
+        "local.norm.bias",
+        "local.norm.weight",
+        "local.path_emb.weight",
+        "local.path_gate.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "readout.fc1.bias",
+        "readout.fc1.weight",
+        "readout.fc2.bias",
+        "readout.fc2.weight",
+        "readout.heads.0.fc1.bias",
+        "readout.heads.0.fc1.weight",
+        "readout.heads.0.fc2.bias",
+        "readout.heads.0.fc2.weight",
+        "readout.heads.1.fc1.bias",
+        "readout.heads.1.fc1.weight",
+        "readout.heads.1.fc2.bias",
+        "readout.heads.1.fc2.weight",
+        "readout.heads.2.fc1.bias",
+        "readout.heads.2.fc1.weight",
+        "readout.heads.2.fc2.bias",
+        "readout.heads.2.fc2.weight",
+        "readout.heads.3.fc1.bias",
+        "readout.heads.3.fc1.weight",
+        "readout.heads.3.fc2.bias",
+        "readout.heads.3.fc2.weight",
+        "rho.lins.0.bias",
+        "rho.lins.0.weight",
+        "rho.lins.1.bias",
+        "rho.lins.1.weight",
+        "scalar_mean",
+        "scalar_scale"
+      ],
+      "total_parameters": 1018609,
+      "widths": {
+        "atom_hidden": 256,
+        "atom_out": 192,
+        "bond_hidden": 320,
+        "bond_out": 192,
+        "local_hidden": 384,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 176,
+        "rho_hidden": 128,
+        "scorer_hidden": 64,
+        "stat_rank": 64,
+        "width": 128
+      }
+    },
+    "S3": {
+      "base_full_trunk_init_fingerprint": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db",
+      "base_model": "W2",
+      "base_model_audit": {
+        "base_parameters": 848096,
+        "expected_parameters": 994324,
+        "full_trunk_init_fingerprint": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db",
+        "init": {
+          "global_rng_unchanged": true,
+          "linear_layers_initialised": 10,
+          "private_generator_seed": 17,
+          "readout_output_zeroed": true
+        },
+        "init_rule": "torch.manual_seed(seed) -> build the scale's FULL TULCRC -> remap to C1 (drop the 3*atom_out b_mean columns) -> load -> attention readout from the private generator seed*1000003+17 with readout.fc2 zeroed (historical A rule)",
+        "model": "W2",
+        "n_state_tensors": 57,
+        "parameter_check": "exact",
+        "parameter_tensors": 51,
+        "readout_parameters": 146228,
+        "ref_model_a0_parameters": 287644,
+        "scale": 2,
+        "seed": 0,
+        "state_keys": [
+          "atom_encoder.lins.0.bias",
+          "atom_encoder.lins.0.weight",
+          "atom_encoder.lins.1.bias",
+          "atom_encoder.lins.1.weight",
+          "bond_encoder.lins.0.bias",
+          "bond_encoder.lins.0.weight",
+          "bond_encoder.lins.1.bias",
+          "bond_encoder.lins.1.weight",
+          "cont_mean",
+          "cont_scale",
+          "f.lins.0.bias",
+          "f.lins.0.weight",
+          "f.lins.1.bias",
+          "f.lins.1.weight",
+          "global_mean",
+          "global_scale",
+          "local.close_emb.weight",
+          "local.end_emb.weight",
+          "local.joint_proj.bias",
+          "local.joint_proj.weight",
+          "local.mlp.lins.0.bias",
+          "local.mlp.lins.0.weight",
+          "local.mlp.lins.1.bias",
+          "local.mlp.lins.1.weight",
+          "local.nbr_emb.weight",
+          "local.norm.bias",
+          "local.norm.weight",
+          "local.path_emb.weight",
+          "local.path_gate.weight",
+          "local.path_u.weight",
+          "local.path_v.weight",
+          "readout.fc1.bias",
+          "readout.fc1.weight",
+          "readout.fc2.bias",
+          "readout.fc2.weight",
+          "readout.heads.0.fc1.bias",
+          "readout.heads.0.fc1.weight",
+          "readout.heads.0.fc2.bias",
+          "readout.heads.0.fc2.weight",
+          "readout.heads.1.fc1.bias",
+          "readout.heads.1.fc1.weight",
+          "readout.heads.1.fc2.bias",
+          "readout.heads.1.fc2.weight",
+          "readout.heads.2.fc1.bias",
+          "readout.heads.2.fc1.weight",
+          "readout.heads.2.fc2.bias",
+          "readout.heads.2.fc2.weight",
+          "readout.heads.3.fc1.bias",
+          "readout.heads.3.fc1.weight",
+          "readout.heads.3.fc2.bias",
+          "readout.heads.3.fc2.weight",
+          "rho.lins.0.bias",
+          "rho.lins.0.weight",
+          "rho.lins.1.bias",
+          "rho.lins.1.weight",
+          "scalar_mean",
+          "scalar_scale"
+        ],
+        "total_parameters": 994324,
+        "trunk_init_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+        "trunk_init_fingerprint_after_readout_init": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+        "width_audit": {
+          "all_match": true,
+          "checks": {
+            "atom_hidden": true,
+            "atom_out": true,
+            "bond_hidden": true,
+            "bond_out": true,
+            "f_out": true,
+            "f_width": true,
+            "local_hidden": true,
+            "local_input": true,
+            "local_norm": true,
+            "local_width": true,
+            "n_heads": true,
+            "pool_hidden": true,
+            "pool_in": true,
+            "readout_out": true,
+            "rho_hidden": true,
+            "rho_input": true,
+            "rho_out": true,
+            "scorer_hidden": true,
+            "scorer_in": true,
+            "stat_rank_end_emb": true,
+            "stat_rank_joint_proj": true,
+            "stat_rank_nbr_emb": true,
+            "stat_rank_path_emb": true,
+            "stat_rank_path_u": true,
+            "stat_rank_path_v": true
+          },
+          "expected": {
+            "atom_hidden": 256,
+            "atom_out": 192,
+            "bond_hidden": 320,
+            "bond_out": 192,
+            "local_hidden": 384,
+            "local_input": 849,
+            "local_width": 128,
+            "n_heads": 4,
+            "pool_hidden": 176,
+            "readout_out": 128,
+            "rho_hidden": 128,
+            "rho_input": 299,
+            "scorer_hidden": 64,
+            "stat_rank": 64
+          },
+          "observed": {
+            "atom_hidden": {
+              "in": 51,
+              "out": 256,
+              "params": 13312
+            },
+            "atom_out": {
+              "in": 256,
+              "out": 192,
+              "params": 49344
+            },
+            "bond_hidden": {
+              "in": 589,
+              "out": 320,
+              "params": 188800
+            },
+            "bond_out": {
+              "in": 320,
+              "out": 192,
+              "params": 61632
+            },
+            "f": [
+              {
+                "in": 128,
+                "out": 128,
+                "params": 16512
+              },
+              {
+                "in": 128,
+                "out": 128,
+                "params": 16512
+              }
+            ],
+            "local_hidden": {
+              "in": 849,
+              "out": 384,
+              "params": 326400
+            },
+            "local_input": {
+              "expected_from_widths": 849,
+              "layout": {
+                "a": [
+                  0,
+                  192
+                ],
+                "atom_scalar": [
+                  840,
+                  849
+                ],
+                "b_sum": [
+                  192,
+                  384
+                ],
+                "s1_joint": [
+                  384,
+                  448
+                ],
+                "s2_closure": [
+                  640,
+                  648
+                ],
+                "s2_content": [
+                  648,
+                  840
+                ],
+                "s2_end": [
+                  512,
+                  576
+                ],
+                "s2_joint": [
+                  576,
+                  640
+                ],
+                "s2_type": [
+                  448,
+                  512
+                ]
+              },
+              "observed": 849
+            },
+            "local_norm": 128,
+            "local_width": {
+              "in": 384,
+              "out": 128,
+              "params": 49280
+            },
+            "n_heads": 4,
+            "pool_hidden": {
+              "in": 512,
+              "out": 176,
+              "params": 90288
+            },
+            "readout_out": {
+              "in": 176,
+              "out": 128,
+              "params": 22656
+            },
+            "rho_hidden": {
+              "in": 299,
+              "out": 128,
+              "params": 38400
+            },
+            "rho_input": 299,
+            "rho_out": {
+              "in": 128,
+              "out": 128,
+              "params": 16512
+            },
+            "scorer_hidden": [
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              },
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              },
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              },
+              {
+                "in": 128,
+                "out": 64,
+                "params": 8256
+              }
+            ],
+            "scorer_out": [
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              },
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              },
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              },
+              {
+                "in": 64,
+                "out": 1,
+                "params": 65
+              }
+            ],
+            "stat_rank": {
+              "close_emb": [
+                2,
+                8
+              ],
+              "end_emb": [
+                80,
+                64
+              ],
+              "joint_proj": {
+                "in": 64,
+                "out": 64,
+                "params": 4160
+              },
+              "nbr_emb": [
+                80,
+                64
+              ],
+              "path_emb": [
+                400,
+                64
+              ],
+              "path_gate": [
+                400,
+                1
+              ],
+              "path_u": [
+                400,
+                64
+              ],
+              "path_v": [
+                80,
+                64
+              ]
+            }
+          }
+        },
+        "widths": {
+          "atom_hidden": 256,
+          "atom_out": 192,
+          "bond_hidden": 320,
+          "bond_out": 192,
+          "local_hidden": 384,
+          "n_heads": 4,
+          "n_out": 128,
+          "pool_hidden": 176,
+          "rho_hidden": 128,
+          "scorer_hidden": 64,
+          "stat_rank": 64,
+          "width": 128
+        }
+      },
+      "base_parameters": 994324,
+      "base_state_sha256": "6a3df38f00a5a4754c310a82d4ad5f71d7f89e3392f1c914aacc4113a3d6f53b",
+      "base_trunk_init_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+      "expected_base_parameters": 994324,
+      "expected_new_parameters": 24208,
+      "expected_total_parameters": 1018532,
+      "global_rng_unchanged": true,
+      "init_rule": "torch.manual_seed(0) -> historical W2 seed-0 build (bs_model.build_model) -> new modules constructed under torch.random.fork_rng -> base state copied bitwise -> new tensors re-initialised from a private generator seed*1000003+offset; the S3 output layer (and the FFN's last Linear) are zero, so epoch-0 logits == W2 logits",
+      "model": "S3",
+      "model_name": "LCRC-S3",
+      "model_state_sha256": "a850ac855cc38858cfc0bfa90d2e4d81c27be11ee3af373a37099d9277a90722",
+      "n_state_tensors": 67,
+      "new_module_init": {
+        "embedding_std": 0.14433756729740646,
+        "global_rng_unchanged": true,
+        "kind": "kaiming_linear_we + normal_0_inv_sqrt_dim_embeddings + zero_out",
+        "out_is_zero": true,
+        "private_generator_seed": 901,
+        "shapes": {
+          "e_dist": [
+            3,
+            48
+          ],
+          "e_mid1": [
+            16,
+            48
+          ],
+          "out": [
+            128,
+            97
+          ],
+          "we": [
+            48,
+            192
+          ]
+        }
+      },
+      "new_parameter_inventory": {
+        "s3_branch.e_bond1.weight": {
+          "numel": 240,
+          "shape": [
+            5,
+            48
+          ]
+        },
+        "s3_branch.e_bond2.weight": {
+          "numel": 240,
+          "shape": [
+            5,
+            48
+          ]
+        },
+        "s3_branch.e_bond3.weight": {
+          "numel": 240,
+          "shape": [
+            5,
+            48
+          ]
+        },
+        "s3_branch.e_dist.weight": {
+          "numel": 144,
+          "shape": [
+            3,
+            48
+          ]
+        },
+        "s3_branch.e_mid1.weight": {
+          "numel": 768,
+          "shape": [
+            16,
+            48
+          ]
+        },
+        "s3_branch.e_mid2.weight": {
+          "numel": 768,
+          "shape": [
+            16,
+            48
+          ]
+        },
+        "s3_branch.out.bias": {
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "s3_branch.out.weight": {
+          "numel": 12416,
+          "shape": [
+            128,
+            97
+          ]
+        },
+        "s3_branch.we.bias": {
+          "numel": 48,
+          "shape": [
+            48
+          ]
+        },
+        "s3_branch.we.weight": {
+          "numel": 9216,
+          "shape": [
+            48,
+            192
+          ]
+        }
+      },
+      "new_parameters": 24208,
+      "new_state_keys": [
+        "s3_branch.e_bond1.weight",
+        "s3_branch.e_bond2.weight",
+        "s3_branch.e_bond3.weight",
+        "s3_branch.e_dist.weight",
+        "s3_branch.e_mid1.weight",
+        "s3_branch.e_mid2.weight",
+        "s3_branch.out.bias",
+        "s3_branch.out.weight",
+        "s3_branch.we.bias",
+        "s3_branch.we.weight"
+      ],
+      "original_w2_subset": {
+        "all_bitwise_equal": true,
+        "n_differing": 0,
+        "n_tensors": 57
+      },
+      "parameter_check": "exact",
+      "parameter_gap": -77,
+      "parameter_gap_fraction": 0.003180766688697951,
+      "parameter_tensors": 61,
+      "role": "explicit_one_shot_three_hop_residual",
+      "seed": 0,
+      "state_keys": [
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.1.bias",
+        "atom_encoder.lins.1.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.1.bias",
+        "bond_encoder.lins.1.weight",
+        "cont_mean",
+        "cont_scale",
+        "f.lins.0.bias",
+        "f.lins.0.weight",
+        "f.lins.1.bias",
+        "f.lins.1.weight",
+        "global_mean",
+        "global_scale",
+        "local.close_emb.weight",
+        "local.end_emb.weight",
+        "local.joint_proj.bias",
+        "local.joint_proj.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.1.bias",
+        "local.mlp.lins.1.weight",
+        "local.nbr_emb.weight",
+        "local.norm.bias",
+        "local.norm.weight",
+        "local.path_emb.weight",
+        "local.path_gate.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "readout.fc1.bias",
+        "readout.fc1.weight",
+        "readout.fc2.bias",
+        "readout.fc2.weight",
+        "readout.heads.0.fc1.bias",
+        "readout.heads.0.fc1.weight",
+        "readout.heads.0.fc2.bias",
+        "readout.heads.0.fc2.weight",
+        "readout.heads.1.fc1.bias",
+        "readout.heads.1.fc1.weight",
+        "readout.heads.1.fc2.bias",
+        "readout.heads.1.fc2.weight",
+        "readout.heads.2.fc1.bias",
+        "readout.heads.2.fc1.weight",
+        "readout.heads.2.fc2.bias",
+        "readout.heads.2.fc2.weight",
+        "readout.heads.3.fc1.bias",
+        "readout.heads.3.fc1.weight",
+        "readout.heads.3.fc2.bias",
+        "readout.heads.3.fc2.weight",
+        "rho.lins.0.bias",
+        "rho.lins.0.weight",
+        "rho.lins.1.bias",
+        "rho.lins.1.weight",
+        "s3_branch.e_bond1.weight",
+        "s3_branch.e_bond2.weight",
+        "s3_branch.e_bond3.weight",
+        "s3_branch.e_dist.weight",
+        "s3_branch.e_mid1.weight",
+        "s3_branch.e_mid2.weight",
+        "s3_branch.out.bias",
+        "s3_branch.out.weight",
+        "s3_branch.we.bias",
+        "s3_branch.we.weight",
+        "scalar_mean",
+        "scalar_scale"
+      ],
+      "total_parameters": 1018532,
+      "widths": {
+        "atom_hidden": 256,
+        "atom_out": 192,
+        "bond_hidden": 320,
+        "bond_out": 192,
+        "local_hidden": 384,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 176,
+        "rho_hidden": 128,
+        "scorer_hidden": 64,
+        "stat_rank": 64,
+        "width": 128
+      }
+    }
+  },
+  "protocol_id": "lcrc-pcba-s3-v1",
+  "round_id": "lcrc-pcba-s3-v1",
+  "rows": 32,
+  "s3_branch_reads_only_static_atom_embedding_and_s3": {
+    "identical": true,
+    "keys_offered_in_minimal_call": [
+      "s3_bond1",
+      "s3_bond2",
+      "s3_bond3",
+      "s3_dist",
+      "s3_mid1_type",
+      "s3_mid2_type",
+      "s3_path_atom",
+      "s3_path_end"
+    ],
+    "max_abs_diff": 0.0
+  },
+  "seconds": 4.216711368993856,
+  "test_evaluated": false,
+  "zero_branch_equals_w2": {
+    "branch_effect_max_abs_diff": 0.0,
+    "max_abs_diff": 0.0,
+    "pass": true
+  }
+}
