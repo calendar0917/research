@@ -1230,11 +1230,14 @@ def _permute_batch(batch: Mapping[str, Any], *, seed: int) -> tuple[dict[str, An
     import torch
     import bs_model as BSM
 
-    out, p = BSM.permute_atoms(batch, seed=int(seed))
     device = batch["s3_path_atom"].device
+    # the inherited permuter indexes with CPU tensors, so run it on a CPU copy
+    cpu = {k: (v.cpu() if torch.is_tensor(v) else v) for k, v in batch.items()}
+    out_cpu, p = BSM.permute_atoms(cpu, seed=int(seed))
     p = p.to(device)
     p_inv = torch.empty_like(p)
     p_inv[p] = torch.arange(p.numel(), dtype=torch.long, device=device)
+    out = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in out_cpu.items()}
     for key in ("s3_path_atom", "s3_path_end"):
         value = out[key]
         out[key] = p_inv[value] if value.numel() else value
