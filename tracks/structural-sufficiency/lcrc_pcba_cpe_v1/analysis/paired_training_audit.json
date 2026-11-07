@@ -1,0 +1,390 @@
+{
+  "all_passed": true,
+  "base_state_sha256": {
+    "P": "6a3df38f00a5a4754c310a82d4ad5f71d7f89e3392f1c914aacc4113a3d6f53b",
+    "S": "6a3df38f00a5a4754c310a82d4ad5f71d7f89e3392f1c914aacc4113a3d6f53b",
+    "historical_W2": null,
+    "historical_W2_note": "the historical W2 run.json does not record a full base-state SHA-256; the bitwise subset equality is proved in analysis/initialization_parity.json and the trunk init fingerprints are compared here"
+  },
+  "batch_plan": {
+    "expected_global": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+    "expected_prefix": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+    "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+    "prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58"
+  },
+  "checks": {
+    "both_completed_40_epochs": true,
+    "epoch0_ap_parity": true,
+    "epoch1_rng_equal": true,
+    "same_base_state_hash": true,
+    "same_batch_plan": true,
+    "same_consumed_prefix": true,
+    "same_eval_cadence": true,
+    "same_full_trunk_fingerprint_as_historical_w2": true,
+    "same_parameters": true,
+    "same_recipe": true,
+    "same_seed": true,
+    "same_trunk_fingerprint_as_historical_w2": true,
+    "test_never_evaluated": true,
+    "train_valid_rows_disjoint": true
+  },
+  "diagnostics_present": [
+    "P",
+    "S"
+  ],
+  "epoch0_validation_ap": {
+    "P": 0.02906293531943749,
+    "S": 0.029063139633475343,
+    "W2_replay": 0.029063331894071648,
+    "W2_replay_source": "historical W2 run.json epoch0_diagnostic (not re-run in this round)",
+    "max_abs_diff": 3.9657463415943006e-07,
+    "tolerance": 0.0001,
+    "within_tolerance": true
+  },
+  "init_fingerprints": {
+    "P": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+    "S": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+    "frozen": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+    "full": {
+      "P": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db",
+      "S": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db",
+      "frozen": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db",
+      "historical_W2": "109756bd24b2ab8589012031e3cf0b0389b0d275227b35044e9381a45c00a5db"
+    },
+    "historical_W2": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d"
+  },
+  "model_state_sha256": {
+    "P": "f37e3e17b41659186b179b2ecb714d6df439d7070e1354bd79cbf5b825f549df",
+    "S": "f37e3e17b41659186b179b2ecb714d6df439d7070e1354bd79cbf5b825f549df"
+  },
+  "new_module_init": {
+    "P": {
+      "alphas_zero": true,
+      "call_order": [
+        "linear_A.weight",
+        "linear_A.bias",
+        "linear_B.weight",
+        "linear_B.bias",
+        "alpha_* = 0"
+      ],
+      "global_rng_unchanged": true,
+      "kind": "standard_torch_linear_uniform_from_private_generator",
+      "linear_A_shape": [
+        128,
+        128
+      ],
+      "linear_B_shape": [
+        128,
+        128
+      ],
+      "private_generator_seed": 37
+    },
+    "S": {
+      "alphas_zero": true,
+      "call_order": [
+        "linear_A.weight",
+        "linear_A.bias",
+        "linear_B.weight",
+        "linear_B.bias",
+        "alpha_* = 0"
+      ],
+      "global_rng_unchanged": true,
+      "kind": "standard_torch_linear_uniform_from_private_generator",
+      "linear_A_shape": [
+        128,
+        128
+      ],
+      "linear_B_shape": [
+        128,
+        128
+      ],
+      "private_generator_seed": 37
+    }
+  },
+  "recipe": {
+    "P": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "base_model": "W2",
+      "base_parameters": 994324,
+      "batch_size": 128,
+      "dropout": 0.1,
+      "early_stopping": false,
+      "end_lr": 1e-05,
+      "epochs": 40,
+      "eval_cadence": 1,
+      "eval_epochs": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
+      ],
+      "evidence_width": 128,
+      "gradient_clip": 5.0,
+      "init_rule": "build the historical W2 seed-0 initial state with bs_model.build_model('W2', seed=0); copy every original W2 tensor bitwise; linear_A/linear_B use the standard PyTorch Linear uniform initialisation from a private CPU generator with seed 37 (identical call order in P and S); alpha_A = alpha_B = alpha_pair = 0; global torch RNG unchanged",
+      "learning_rate": 0.0003,
+      "loss": "masked BCEWithLogitsLoss over observed entries only",
+      "lr_schedule": {
+        "formula": "steps 0..2737 linear 3e-5->3e-4; then 1e-5+(3e-4-1e-5)*0.5*(1+cos(pi*(s-2738)/(109520-2738)))",
+        "post_warmup_first": 0.0003,
+        "step0": 3.0098612125639153e-05,
+        "step10e": 0.00026353405848480966,
+        "step20e": 0.0001608385613158652,
+        "step40e": 1e-05,
+        "steps_per_epoch": 2738,
+        "total_steps_40_epochs": 109520,
+        "warmup_last": 0.0003
+      },
+      "model": "P",
+      "model_name": "LCRC-W2-CrossAtomPredictiveEvidence",
+      "new_module": {
+        "alpha_A": [
+          128
+        ],
+        "alpha_B": [
+          128
+        ],
+        "alpha_pair": [
+          128
+        ],
+        "linear_A": [
+          128,
+          128
+        ],
+        "linear_B": [
+          128,
+          128
+        ],
+        "statistic": "pair_cross = (sum_A*sum_B - sum_AB) / (n*(n-1))"
+      },
+      "new_parameters": 33408,
+      "optimizer": "AdamW",
+      "pair_mode": "cross",
+      "parameters": 1027732,
+      "precision": "fp32",
+      "role": "cross_atom_second_order_evidence",
+      "round": "lcrc-pcba-cpe-v1",
+      "scheduler": "1-epoch linear warmup then per-step cosine over the 40-epoch horizon",
+      "seed": 0,
+      "test_policy": "official Test targets are NaN in the label artifact and are never indexed",
+      "warmup_epochs": 1.0,
+      "warmup_start_lr": 3e-05,
+      "weight_decay": 0.001,
+      "widths": {
+        "atom_hidden": 256,
+        "atom_out": 192,
+        "bond_hidden": 320,
+        "bond_out": 192,
+        "local_hidden": 384,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 176,
+        "rho_hidden": 128,
+        "scorer_hidden": 64,
+        "stat_rank": 64,
+        "width": 128
+      }
+    },
+    "S": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "base_model": "W2",
+      "base_parameters": 994324,
+      "batch_size": 128,
+      "dropout": 0.1,
+      "early_stopping": false,
+      "end_lr": 1e-05,
+      "epochs": 40,
+      "eval_cadence": 1,
+      "eval_epochs": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40
+      ],
+      "evidence_width": 128,
+      "gradient_clip": 5.0,
+      "init_rule": "build the historical W2 seed-0 initial state with bs_model.build_model('W2', seed=0); copy every original W2 tensor bitwise; linear_A/linear_B use the standard PyTorch Linear uniform initialisation from a private CPU generator with seed 37 (identical call order in P and S); alpha_A = alpha_B = alpha_pair = 0; global torch RNG unchanged",
+      "learning_rate": 0.0003,
+      "loss": "masked BCEWithLogitsLoss over observed entries only",
+      "lr_schedule": {
+        "formula": "steps 0..2737 linear 3e-5->3e-4; then 1e-5+(3e-4-1e-5)*0.5*(1+cos(pi*(s-2738)/(109520-2738)))",
+        "post_warmup_first": 0.0003,
+        "step0": 3.0098612125639153e-05,
+        "step10e": 0.00026353405848480966,
+        "step20e": 0.0001608385613158652,
+        "step40e": 1e-05,
+        "steps_per_epoch": 2738,
+        "total_steps_40_epochs": 109520,
+        "warmup_last": 0.0003
+      },
+      "model": "S",
+      "model_name": "LCRC-W2-SameAtomPredictiveEvidence",
+      "new_module": {
+        "alpha_A": [
+          128
+        ],
+        "alpha_B": [
+          128
+        ],
+        "alpha_pair": [
+          128
+        ],
+        "linear_A": [
+          128,
+          128
+        ],
+        "linear_B": [
+          128,
+          128
+        ],
+        "statistic": "pair_self = sum_AB / n"
+      },
+      "new_parameters": 33408,
+      "optimizer": "AdamW",
+      "pair_mode": "self",
+      "parameters": 1027732,
+      "precision": "fp32",
+      "role": "same_atom_second_order_control",
+      "round": "lcrc-pcba-cpe-v1",
+      "scheduler": "1-epoch linear warmup then per-step cosine over the 40-epoch horizon",
+      "seed": 0,
+      "test_policy": "official Test targets are NaN in the label artifact and are never indexed",
+      "warmup_epochs": 1.0,
+      "warmup_start_lr": 3e-05,
+      "weight_decay": 0.001,
+      "widths": {
+        "atom_hidden": 256,
+        "atom_out": 192,
+        "bond_hidden": 320,
+        "bond_out": 192,
+        "local_hidden": 384,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 176,
+        "rho_hidden": 128,
+        "scorer_hidden": 64,
+        "stat_rank": 64,
+        "width": 128
+      }
+    }
+  },
+  "rng": {
+    "P_end": {
+      "combined_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
+      "numpy_sha256": "8d880a0cee918de58a27298a223a2eac943649a3de9067710718d65d05563079",
+      "python_random_sha256": "908f96a0315aa4af805679793bc4df6e7956e7c5c1fb29a84d4feaa2fca4a91c",
+      "torch_cpu_sha256": "abbbb9b5bb7ea7b23900c9a0f70274851376626424066831fac8b443826dc062",
+      "torch_cuda_sha256": [
+        "901f0e917302583676089c513d1054b42ffd1f7c18e8804d1938f582973567f2"
+      ]
+    },
+    "P_start": {
+      "combined_sha256": "681a4f7b74eec5ef2b23f4f964299121bd55a784aa0bf79e0c641c1e0069ec6a",
+      "numpy_sha256": "8d880a0cee918de58a27298a223a2eac943649a3de9067710718d65d05563079",
+      "python_random_sha256": "908f96a0315aa4af805679793bc4df6e7956e7c5c1fb29a84d4feaa2fca4a91c",
+      "torch_cpu_sha256": "abbbb9b5bb7ea7b23900c9a0f70274851376626424066831fac8b443826dc062",
+      "torch_cuda_sha256": [
+        "9169dc2b32a7f80a090f1dd7ee141b2c7133edf2da137c21aff99ad98563f3de"
+      ]
+    },
+    "S_end": {
+      "combined_sha256": "0fc5a073c1e7286dbd8f60b9c9463404558f260256f2cd530173e0d0599e7c5a",
+      "numpy_sha256": "8d880a0cee918de58a27298a223a2eac943649a3de9067710718d65d05563079",
+      "python_random_sha256": "908f96a0315aa4af805679793bc4df6e7956e7c5c1fb29a84d4feaa2fca4a91c",
+      "torch_cpu_sha256": "abbbb9b5bb7ea7b23900c9a0f70274851376626424066831fac8b443826dc062",
+      "torch_cuda_sha256": [
+        "901f0e917302583676089c513d1054b42ffd1f7c18e8804d1938f582973567f2"
+      ]
+    },
+    "S_start": {
+      "combined_sha256": "681a4f7b74eec5ef2b23f4f964299121bd55a784aa0bf79e0c641c1e0069ec6a",
+      "numpy_sha256": "8d880a0cee918de58a27298a223a2eac943649a3de9067710718d65d05563079",
+      "python_random_sha256": "908f96a0315aa4af805679793bc4df6e7956e7c5c1fb29a84d4feaa2fca4a91c",
+      "torch_cpu_sha256": "abbbb9b5bb7ea7b23900c9a0f70274851376626424066831fac8b443826dc062",
+      "torch_cuda_sha256": [
+        "9169dc2b32a7f80a090f1dd7ee141b2c7133edf2da137c21aff99ad98563f3de"
+      ]
+    }
+  },
+  "round_id": "lcrc-pcba-cpe-v1",
+  "schema": "lcrc-pcba-cpe-paired-training-audit-v1"
+}
