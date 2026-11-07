@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -396,44 +397,83 @@ def protocol_conformance(runs: Mapping[str, Mapping[str, Any]]) -> dict[str, Any
 # ---------------------------------------------------------------------------
 
 
+def _job_seconds(job: Mapping[str, Any] | None) -> float:
+    """Wall-clock span of an rr job, from its start/complete stamps."""
+    if not job:
+        return 0.0
+    for key in ("elapsed", "duration", "gpu_seconds"):
+        val = job.get(key)
+        if isinstance(val, (int, float)) and val:
+            return float(val)
+    try:
+        t0 = datetime.fromisoformat(str(job["started_at"]))
+        t1 = datetime.fromisoformat(str(job["completed_at"]))
+    except Exception:
+        return 0.0
+    return max(0.0, (t1 - t0).total_seconds())
+
+
 def build_ledger(analysis: Path, runs: Mapping[str, Mapping[str, Any]], extra: Mapping[str, Any]) -> dict[str, Any]:
-    entries: list[dict[str, Any]] = []
-    rr = extra.get("rr_jobs")
-    rr_by_exp: dict[str, list[dict[str, Any]]] = {}
-    if rr:
-        for job in rr.get("jobs", []):
-            rr_by_exp.setdefault(str(job.get("experiment")), []).append(job)
-    rr_by_exp = {k: sorted(v, key=lambda j: str(j.get("created_at"))) for k, v in rr_by_exp.items()}
+    """Charge every GPU job this round actually executed.
 
-    def rr_match(experiment: str) -> dict[str, Any] | None:
-        jobs = rr_by_exp.get(experiment, [])
-        for job in jobs:
-            if job.get("state") == "completed":
-                return job
-        return jobs[-1] if jobs else None
+    Formal runs are charged from their own in-job wall clock (`run.json:gpu_hours`),
+    which is what the protocol's budget measures. Everything else (GPU preflight,
+    audits, the cost probe, abandoned launches) is charged from the rr job stamps,
+    so an interrupted or repeated attempt is never free.
+    """
+    rr = extra.get("rr_jobs") or {}
+    jobs = [j for j in rr.get("jobs", []) if str(j.get("experiment", "")).startswith("bs-")]
+    jobs.sort(key=lambda j: str(j.get("created_at") or j.get("started_at") or ""))
 
-    probe = extra.get("probe") or {}
-    preflight_seconds = float(probe.get("seconds") or 0.0)
-    audit_job = rr_match("bs-audit")
-    audit_elapsed = float((audit_job or {}).get("elapsed") or 0.0)
-    # charge whichever is larger: the job's own wall clock (warm-up, data load,
-    # all three audit modes) or the probe's measured span.
-    audit_hours = max(audit_elapsed, preflight_seconds) / 3600.0
-    entries.append(
-        {
-            "item": "pretraining_audit_and_cost_probe",
-            "experiment": "bs-audit",
-            "rr_run_id": None if audit_job is None else audit_job.get("run_id"),
-            "rr_elapsed_seconds": audit_elapsed,
-            "probe_mode_seconds": preflight_seconds,
-            "gpu_hours": audit_hours,
-            "source": "rr jobs:bs-audit elapsed (model + a0-replay + eval-probe), cross-checked against evaluation_cost_probe.json:seconds",
-            "counted_as": "preflight",
+    formal_experiments = {f"bs-{key.lower()}" for key in C.MODEL_ORDER}
+    overhead: list[dict[str, Any]] = []
+    abandoned: list[dict[str, Any]] = []
+    for job in jobs:
+        experiment = str(job.get("experiment"))
+        if experiment in formal_experiments and job.get("state") == "completed":
+            continue  # charged from run.json below
+        span = _job_seconds(job)
+        record = {
+            "experiment": experiment,
+            "rr_run_id": job.get("run_id"),
+            "rr_state": job.get("state"),
+            "rr_pool": job.get("pool"),
+            "rr_cuda_visible_devices": job.get("cuda_visible_devices"),
+            "rr_started_at": job.get("started_at"),
+            "rr_completed_at": job.get("completed_at"),
+            "seconds": span,
+            "gpu_hours": span / 3600.0,
+            "exit_code": job.get("exit_code"),
         }
-    )
+        if job.get("state") in ("failed", "cancelled", "lost"):
+            record["reason"] = (
+                "abandoned: launched with a shell pipeline that would have swallowed the live "
+                "epoch log; cancelled 4 min in and relaunched cleanly"
+                if job.get("state") == "cancelled"
+                else "launch rejected by the harness (argv passed as one string)"
+            )
+            abandoned.append(record)
+        else:
+            overhead.append(record)
+
+    entries: list[dict[str, Any]] = []
+    if overhead:
+        entries.append(
+            {
+                "item": "preflight_audits_and_cost_probe",
+                "experiments": sorted({r["experiment"] for r in overhead}),
+                "jobs": overhead,
+                "gpu_hours": float(sum(r["gpu_hours"] for r in overhead)),
+                "source": "rr jobs:started_at..completed_at for every completed bs-* job that is not a formal run",
+                "counted_as": "preflight",
+            }
+        )
     for key in C.MODEL_ORDER:
         run = runs[key]
-        job = rr_match(f"bs-{key.lower()}")
+        matching = [
+            j for j in jobs if str(j.get("experiment")) == f"bs-{key.lower()}" and j.get("state") == "completed"
+        ]
+        job = matching[-1] if matching else None
         entries.append(
             {
                 "item": f"{key}_formal_40_epoch",
@@ -449,23 +489,27 @@ def build_ledger(analysis: Path, runs: Mapping[str, Mapping[str, Any]], extra: M
                 "gpu_hours": float(run["gpu_hours"]),
                 "status": run["status"],
                 "epochs_run": int(run["epochs_run"]),
-                "source": "runs/%s/run.json:gpu_hours" % key,
+                "epoch_seconds_mean": float(run["epoch_seconds_mean"]),
+                "git_commit": run.get("git_commit"),
+                "source": f"runs/{key}/run.json:gpu_hours (wall clock measured inside the job)",
             }
         )
     total = float(sum(e["gpu_hours"] for e in entries))
-    failures = extra.get("failed_attempts") or []
+    failed_hours = float(sum(r["gpu_hours"] for r in abandoned))
     ledger = {
         "captured_utc": C.utcnow(),
         "entries": entries,
-        "failed_attempts": failures,
-        "failed_attempt_gpu_hours": float(sum(float(f.get("gpu_hours", 0.0)) for f in failures)),
-        "total_gpu_hours_including_failures": total + float(sum(float(f.get("gpu_hours", 0.0)) for f in failures)),
+        "abandoned_attempts": abandoned,
+        "failed_attempt_gpu_hours": failed_hours,
+        "total_gpu_hours": total,
+        "total_gpu_hours_including_failures": total + failed_hours,
         "budget": dict(C.BUDGET),
         "budget_status": None,
         "note": (
             "GPU-hours are per-run wall clock measured inside the job (gpu_hours in run.json), "
-            "which is what the budget charges. See scheduling.json for whether the two formal "
-            "runs overlapped or ran serially, and why."
+            "which is what the budget charges. Overhead jobs are charged from their rr job "
+            "stamps so no attempt is free. See analysis/gpu0_occupancy.json for the "
+            "scheduling decision and the occupancy samples behind it."
         ),
     }
     spend = ledger["total_gpu_hours_including_failures"]
@@ -697,10 +741,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         "eval_cadence": dict(C.EVAL_CADENCE),
         "budget": {
             "total_gpu_hours": ledger["total_gpu_hours_including_failures"],
+            "formal_gpu_hours": ledger["total_gpu_hours"],
             "status": ledger["budget_status"],
             "target": C.BUDGET["gpu_target_hours"],
             "hard_cap": C.BUDGET["gpu_hard_hours"],
-            "failed_retries": len(ledger["failed_attempts"]),
+            "failed_retries": len(ledger["abandoned_attempts"]),
         },
         "answers": comparison["answers"],
         "conclusions": conclusion_text(comparison, labels),

@@ -1,0 +1,152 @@
+{
+  "abandoned_attempts": [
+    {
+      "exit_code": 2,
+      "experiment": "bs-preflight",
+      "gpu_hours": 0.0005555555555555556,
+      "reason": "launch rejected by the harness (argv passed as one string)",
+      "rr_completed_at": "2026-11-07T17:12:41+08:00",
+      "rr_cuda_visible_devices": null,
+      "rr_pool": "res-local",
+      "rr_run_id": "bs-preflight-20261107-171236-f55af706",
+      "rr_started_at": "2026-11-07T17:12:39+08:00",
+      "rr_state": "failed",
+      "seconds": 2.0
+    },
+    {
+      "exit_code": 143,
+      "experiment": "bs-w3",
+      "gpu_hours": 0.059722222222222225,
+      "reason": "abandoned: launched with a shell pipeline that would have swallowed the live epoch log; cancelled 4 min in and relaunched cleanly",
+      "rr_completed_at": "2026-11-07T17:36:17+08:00",
+      "rr_cuda_visible_devices": "1",
+      "rr_pool": "res-gpu1",
+      "rr_run_id": "bs-w3-20261107-173238-d739dcd5",
+      "rr_started_at": "2026-11-07T17:32:42+08:00",
+      "rr_state": "cancelled",
+      "seconds": 215.0
+    }
+  ],
+  "budget": {
+    "gpu_hard_hours": 12.0,
+    "gpu_target_hours": 8.0,
+    "max_concurrent_gpus": 2
+  },
+  "budget_status": "WITHIN_TARGET",
+  "captured_utc": "2026-11-07T12:38:27Z",
+  "entries": [
+    {
+      "counted_as": "preflight",
+      "experiments": [
+        "bs-audit",
+        "bs-gpu0-sample",
+        "bs-preflight"
+      ],
+      "gpu_hours": 0.06194444444444444,
+      "item": "preflight_audits_and_cost_probe",
+      "jobs": [
+        {
+          "exit_code": 0,
+          "experiment": "bs-preflight",
+          "gpu_hours": 0.001388888888888889,
+          "rr_completed_at": "2026-11-07T17:13:07+08:00",
+          "rr_cuda_visible_devices": null,
+          "rr_pool": "res-local",
+          "rr_run_id": "bs-preflight-20261107-171300-8f59632b",
+          "rr_started_at": "2026-11-07T17:13:02+08:00",
+          "rr_state": "completed",
+          "seconds": 5.0
+        },
+        {
+          "exit_code": 0,
+          "experiment": "bs-gpu0-sample",
+          "gpu_hours": 0.0175,
+          "rr_completed_at": "2026-11-07T17:16:41+08:00",
+          "rr_cuda_visible_devices": null,
+          "rr_pool": "res-local",
+          "rr_run_id": "bs-gpu0-sample-20261107-171535-90b84cf2",
+          "rr_started_at": "2026-11-07T17:15:38+08:00",
+          "rr_state": "completed",
+          "seconds": 63.0
+        },
+        {
+          "exit_code": 0,
+          "experiment": "bs-audit",
+          "gpu_hours": 0.014444444444444444,
+          "rr_completed_at": "2026-11-07T17:18:55+08:00",
+          "rr_cuda_visible_devices": "1",
+          "rr_pool": "res-gpu1",
+          "rr_run_id": "bs-audit-20261107-171801-d3eaa1b8",
+          "rr_started_at": "2026-11-07T17:18:03+08:00",
+          "rr_state": "completed",
+          "seconds": 52.0
+        },
+        {
+          "exit_code": 0,
+          "experiment": "bs-audit",
+          "gpu_hours": 0.014444444444444444,
+          "rr_completed_at": "2026-11-07T17:24:32+08:00",
+          "rr_cuda_visible_devices": "1",
+          "rr_pool": "res-gpu1",
+          "rr_run_id": "bs-audit-20261107-172337-b05622fe",
+          "rr_started_at": "2026-11-07T17:23:40+08:00",
+          "rr_state": "completed",
+          "seconds": 52.0
+        },
+        {
+          "exit_code": 0,
+          "experiment": "bs-audit",
+          "gpu_hours": 0.014166666666666666,
+          "rr_completed_at": "2026-11-07T17:30:48+08:00",
+          "rr_cuda_visible_devices": "1",
+          "rr_pool": "res-gpu1",
+          "rr_run_id": "bs-audit-20261107-172954-d8df3f46",
+          "rr_started_at": "2026-11-07T17:29:57+08:00",
+          "rr_state": "completed",
+          "seconds": 51.0
+        }
+      ],
+      "source": "rr jobs:started_at..completed_at for every completed bs-* job that is not a formal run"
+    },
+    {
+      "epoch_seconds_mean": 124.85945256503764,
+      "epochs_run": 40,
+      "git_commit": "27f5d66c7cce6df49083c8ddaf585e588c1c1ec1",
+      "gpu_hours": 1.3949014246219305,
+      "item": "W2_formal_40_epoch",
+      "model": "W2",
+      "parameters": 994324,
+      "rr_completed_at": "2026-11-07T20:29:19+08:00",
+      "rr_cuda_visible_devices": "1",
+      "rr_pool": "res-gpu1",
+      "rr_run_id": "bs-w2-20261107-190526-9b482834",
+      "rr_started_at": "2026-11-07T19:05:28+08:00",
+      "rr_state": "completed",
+      "scale": 2,
+      "source": "runs/W2/run.json:gpu_hours (wall clock measured inside the job)",
+      "status": "COMPLETED"
+    },
+    {
+      "epoch_seconds_mean": 124.11777447547065,
+      "epochs_run": 40,
+      "git_commit": "dc4b053ca59333793c85628ab5854fbfa15b0f67",
+      "gpu_hours": 1.3879844001950954,
+      "item": "W3_formal_40_epoch",
+      "model": "W3",
+      "parameters": 2120844,
+      "rr_completed_at": "2026-11-07T18:59:54+08:00",
+      "rr_cuda_visible_devices": "1",
+      "rr_pool": "res-gpu1",
+      "rr_run_id": "bs-w3-20261107-173626-f67a9d1f",
+      "rr_started_at": "2026-11-07T17:36:28+08:00",
+      "rr_state": "completed",
+      "scale": 3,
+      "source": "runs/W3/run.json:gpu_hours (wall clock measured inside the job)",
+      "status": "COMPLETED"
+    }
+  ],
+  "failed_attempt_gpu_hours": 0.06027777777777778,
+  "note": "GPU-hours are per-run wall clock measured inside the job (gpu_hours in run.json), which is what the budget charges. Overhead jobs are charged from their rr job stamps so no attempt is free. See analysis/gpu0_occupancy.json for the scheduling decision and the occupancy samples behind it.",
+  "total_gpu_hours": 2.8448302692614704,
+  "total_gpu_hours_including_failures": 2.9051080470392483
+}

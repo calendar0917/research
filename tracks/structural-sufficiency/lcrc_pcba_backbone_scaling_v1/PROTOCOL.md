@@ -357,3 +357,4 @@ combination arms; no length extension.
 |---|---|---|---|
 | 1 | 2026-11-08 | §4 items 2 and 8: record the CUDA tolerance alongside the CPU-exact requirement (1e-4 for the cross-implementation logits comparison, observed 3.8e-5; 2e-5 for the post-`local` re-run, observed 1.9e-6) | clarification of the same claim, fixed before any formal step; CUDA `index_add_` is not bitwise stable. The primary evidence for item 2 is the CPU bitwise equality (0.0) and the 8.5e-7 AP agreement |
 | 2 | 2026-11-08 | §6.1 resolved cadence = every epoch (1..40) | deterministic output of the frozen 15 % rule: both models 7.6 % / 8.2 % of a projected epoch |
+| 3 | 2026-11-08 | §5 applied: GPU0 not shared, both runs serial on `res-gpu1` | not a rule change — the co-tenancy clause "no sustained full-load contention" failed (GPU0 at 100 % in 6/6 samples over 60 s from an external job); see `analysis/gpu0_occupancy.json` |
