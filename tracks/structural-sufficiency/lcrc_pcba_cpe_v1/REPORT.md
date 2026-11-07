@@ -180,9 +180,10 @@ recipe is on the same order as everything this round set out to measure.
 
 **No.** `P` = 0.2608530, Δ = **−0.001014**. The pre-registered bands put
 `|Δ| < 0.002` in the "no clear band", so this is not a regression call either;
-it is a null. For scale: the `W2` epoch-to-epoch standard deviation over the last ten epochs is 5.9e-4, so a
-−1.0e-3 endpoint difference is inside run-to-run wobble —
-and, importantly, it is **not** evidence of harm, only absence of gain.
+it is a null. For scale: the `W2` epoch-to-epoch standard deviation over the
+last ten epochs is 5.9e-4, so a −1.0e-3 endpoint difference is inside
+run-to-run wobble — and, importantly, it is **not** evidence of harm, only
+absence of gain.
 
 ## 7. Does `P` beat the same-atom control `S`?
 
