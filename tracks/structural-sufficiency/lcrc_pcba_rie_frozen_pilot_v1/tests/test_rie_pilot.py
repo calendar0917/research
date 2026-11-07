@@ -221,6 +221,62 @@ def _two_motif_case(distance: int):
     return n_atoms, edges, motifs
 
 
+def _chain_structure(*, n_atoms: int, motifs, row: int):
+    """A path graph with ``n_atoms`` atoms and the given motifs."""
+    edges = [(i, i + 1) for i in range(int(n_atoms) - 1)]
+    return F.molecule_structure(n_atoms=n_atoms, edges=edges, motifs=motifs, official_row_id=row)
+
+
+def test_chunked_split_structures_match_single_molecule_features():
+    """Merging chunk structures must keep motif pointers global and aligned."""
+    specs = [
+        (6, [(0, (0,)), (1, (0, 5))]),
+        (5, [(0, (1,)), (5, (0, 3))]),
+        (7, [(2, (0, 3, 6)), (0, (2,))]),
+        (4, [(0, (0,)), (0, (3,))]),
+    ]
+    structs = [_chain_structure(n_atoms=n, motifs=m, row=row) for row, (n, m) in enumerate(specs)]
+    total_atoms = int(sum(n for n, _ in specs))
+    h = np.random.default_rng(11).standard_normal((total_atoms, C.WIDTH)).astype(np.float32)
+
+    chunks = [
+        F.concat_structures(structs[0:2], rows=np.asarray([0, 1])),
+        F.concat_structures(structs[2:3], rows=np.asarray([2])),
+        F.concat_structures(structs[3:4], rows=np.asarray([3])),
+    ]
+    merged = F.merge_structures(chunks)
+
+    # the pointer array must be exactly n_motifs+1 long: one entry per motif, no
+    # duplicated chunk boundaries (which silently mis-slice motif atoms)
+    assert merged["motif_atom_ptr"].size == int(merged["motif_len"].size) + 1
+    assert np.array_equal(
+        merged["motif_atom_ptr"], np.concatenate([[0], np.cumsum(merged["motif_len"])])
+    )
+    assert np.array_equal(merged["motif_ptr"], np.concatenate([[0], np.cumsum(merged["n_motifs"])]))
+    assert np.array_equal(merged["pair_ptr"], np.concatenate([[0], np.cumsum(merged["n_pairs"])]))
+    assert int(merged["pair_a"].max(initial=0)) < int(merged["motif_ptr"][-1])
+
+    offsets = np.concatenate([[0], np.cumsum([n for n, _ in specs])])[:-1]
+    positions = np.asarray([1, 3])
+    gathered = F.gather_batch(merged, positions, np.asarray([specs[p][0] for p in positions]))
+    # the relation kernel takes the batch's own atom states (molecule order)
+    batch_h = np.concatenate([h[offsets[p] : offsets[p] + specs[p][0]] for p in positions.tolist()])
+    got, counts = F.batch_relation_features(batch_h, gathered, which="real")
+    assert np.isfinite(got).all()
+    assert got.shape == (positions.size, C.N_BINS, C.PAIR_FEATURE_DIM)
+    for slot, row in enumerate(positions.tolist()):
+        n_atoms, motifs = specs[row]
+        ref = F.molecule_relation_features(
+            h[offsets[row] : offsets[row] + n_atoms],
+            motifs,
+            n_atoms=n_atoms,
+            edges=[(i, i + 1) for i in range(n_atoms - 1)],
+            official_row_id=row,
+        )
+        assert np.allclose(got[slot], ref["real"], atol=1e-6)
+        assert counts[slot].tolist() == ref["bin_counts_real"].tolist()
+
+
 def test_relation_features_are_zero_without_eligible_pairs():
     h = np.random.default_rng(1).standard_normal((4, C.WIDTH)).astype(np.float32)
     n_atoms, edges, motifs = _two_motif_case(distance=2)  # distance 2 -> dropped

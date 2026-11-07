@@ -324,7 +324,8 @@ def merge_structures(chunks: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         motif_ptr[molecule_off : molecule_off + cm + 1] = local_motif_ptr + motif_off
         pair_ptr[molecule_off : molecule_off + cm + 1] = local_pair_ptr + pair_off
         local_atom_ptr = np.asarray(chunk["motif_atom_ptr"], dtype=np.int64)
-        motif_atom_ptr_parts.append(local_atom_ptr + motif_atom_off)
+        # drop each chunk's trailing boundary: it is re-added once at the end
+        motif_atom_ptr_parts.append(local_atom_ptr[:-1] + motif_atom_off)
         for key in STRUCT_ARRAY_KEYS:
             block = np.asarray(chunk[key])
             if key in ("pair_a", "pair_b"):
@@ -345,7 +346,9 @@ def merge_structures(chunks: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "rows": np.concatenate(rows),
         "motif_ptr": motif_ptr,
         "pair_ptr": pair_ptr,
-        "motif_atom_ptr": np.concatenate(motif_atom_ptr_parts) if motif_atom_ptr_parts else np.zeros(1, np.int64),
+        "motif_atom_ptr": np.concatenate(
+            motif_atom_ptr_parts + [np.asarray([motif_atom_off], dtype=np.int64)]
+        ),
         "parse_failed": np.concatenate(parse_failed),
         "n_motifs": np.concatenate(n_motifs),
         "n_pairs": np.concatenate(n_pairs),
