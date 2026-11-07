@@ -180,8 +180,8 @@ recipe is on the same order as everything this round set out to measure.
 
 **No.** `P` = 0.2608530, Δ = **−0.001014**. The pre-registered bands put
 `|Δ| < 0.002` in the "no clear band", so this is not a regression call either;
-it is a null. For scale: the `W2` epoch-to-epoch standard deviation over epochs
-30–40 is 5.9e-4, so a −1.0e-3 endpoint difference is inside run-to-run wobble —
+it is a null. For scale: the `W2` epoch-to-epoch standard deviation over the last ten epochs is 5.9e-4, so a
+−1.0e-3 endpoint difference is inside run-to-run wobble —
 and, importantly, it is **not** evidence of harm, only absence of gain.
 
 ## 7. Does `P` beat the same-atom control `S`?
@@ -316,10 +316,10 @@ epoch 30, `P`/`S` no worse than `W2`. No sign of pair-gate instability.
 
 `P` and `S` differ in speed by 0.84% — pure run-to-run noise on a shared box
 (same code path, same tensor shapes). The whole second-order reduction is
-`O(n_atoms)` with ~4 extra kernel launches; the 3% wall-clock cost is dominated
-by the two 128×128 linears over ~26 atoms per molecule, not by the pair algebra.
-Memory is essentially free: the statistics are scalars, and nothing of size
-`n_atoms²` is ever materialised.
+`O(n_atoms)` with a handful of extra elementwise kernels; the measured 3% is
+consistent with the two 128×128 linears over ~26 atoms per molecule dominating
+that branch, not with the pair algebra, and nothing of size `n_atoms²` is ever
+materialised.
 
 **Budget.** `analysis/gpu_ledger.json`:
 
