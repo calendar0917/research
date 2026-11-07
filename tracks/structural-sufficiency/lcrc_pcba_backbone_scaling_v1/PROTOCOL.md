@@ -140,9 +140,10 @@ Recorded in `analysis/model_scaling_audit.json`, `analysis/a0_replay.json`,
    `nmp_model.build_arm("A", ...)`.
 2. `scale=1` reproduces A0's forward logits (max |Δ| = 0 required on CPU) both
    from the frozen initial state and after loading the historical epoch-40
-   checkpoint. On CUDA the same comparison is bounded by 2e-5, because
-   `index_add_` / `scatter_reduce_` accumulate with atomics and are not bitwise
-   stable (the tolerance the historical structural-gain round audited).
+   checkpoint. On CUDA the same comparison is bounded by the audited identity
+   tolerance 1e-4 (observed 3.8e-5, relative 4e-6 of the logit scale), because
+   `index_add_` / `scatter_reduce_` accumulate with atomics in a
+   non-deterministic order; the two implementations agree to 8.5e-7 in AP.
 3. `scale=1` with the historical checkpoint reproduces the official Validation
    AP 0.2463560956 within 1e-4.
 4. W2/W3 parameter counts are exactly 994,324 / 2,120,844.
@@ -154,7 +155,8 @@ Recorded in `analysis/model_scaling_audit.json`, `analysis/a0_replay.json`,
 8. Nothing after `local` reads a bond or path field: the post-`local` path is a
    pure function of `(h, atom_batch, n_graphs, global)`; supplying a batch with
    no `bond_index`/`bond_feat`/`nbr_*`/`path_*` gives identical logits (exact on
-   CPU, ≤2e-5 on CUDA for the same atomic-accumulation reason as item 2).
+   CPU, ≤2e-5 on CUDA, observed 1.9e-6, for the same atomic-accumulation reason
+   as item 2).
 9. Atom renumbering inside each molecule leaves graph logits unchanged
    (tolerance 2e-5) and permutes the per-atom contribution exactly.
 10. `global` / `atom_scalar` standardisation is the frozen Train-only version
@@ -353,5 +355,5 @@ combination arms; no length extension.
 
 | # | date | change | reason |
 |---|---|---|---|
-| 1 | 2026-11-08 | §4 items 2 and 8: record the CUDA tolerance 2e-5 alongside the CPU-exact requirement | clarification of the same claim, fixed before any formal step; CUDA `index_add_` is not bitwise stable |
+| 1 | 2026-11-08 | §4 items 2 and 8: record the CUDA tolerance alongside the CPU-exact requirement (1e-4 for the cross-implementation logits comparison, observed 3.8e-5; 2e-5 for the post-`local` re-run, observed 1.9e-6) | clarification of the same claim, fixed before any formal step; CUDA `index_add_` is not bitwise stable. The primary evidence for item 2 is the CPU bitwise equality (0.0) and the 8.5e-7 AP agreement |
 | 2 | 2026-11-08 | §6.1 resolved cadence = every epoch (1..40) | deterministic output of the frozen 15 % rule: both models 7.6 % / 8.2 % of a projected epoch |

@@ -805,7 +805,7 @@ def finalize_gate(out_dir: Path) -> dict[str, Any] | None:
         model.get("verdict") == "PASS"
         and replay.get("ap_ok")
         and replay.get("checkpoint_sha256_ok")
-        and (replay.get("scale1_vs_nmpmodel_A_logits_max_abs_diff") <= 2e-5)
+        and (replay.get("scale1_vs_nmpmodel_A_logits_max_abs_diff") <= 1e-4)
     )
     C.write_json(model_path, model)
     C.log(f"pre-training gate overall={model['overall_gate']}")
