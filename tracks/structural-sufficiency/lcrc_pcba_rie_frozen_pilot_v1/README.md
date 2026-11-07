@@ -34,34 +34,35 @@ rr doctor res
 rr deploy res --pool res-gpu1          # 绑定 host+pool+commit 的部署标记
 ```
 
-固定六个 job，全部在同一个 commit 上执行（因此只需部署一次）：
+固定六个 job，全部用同一个 commit 的代码（`--pool res-gpu1`，GPU0 不参与）：
 
 ```bash
 R=tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1
 
 # 1) CPU：motif / 物理图距离 / SHUFFLE bin 静态结构 + 1024 分子计时探针
 #    rdkit 来自 pyproject 的 lipo 组（res 在线，从已提交的 uv.lock 安装）
-rr run res rie-structures --result $R/runs --result $R/analysis -- \
+rr run res --pool res-gpu1 rie-structures --result $R/runs --result $R/analysis -- \
   bash -c 'uv sync --frozen --group lipo -q && python $R/code/rie_extract.py --stage structures --workers 12 --chunk-size 2048'
 
 # 2) GPU1：唯一一次冻结 A 前向 + REAL/SHUFFLE 关系特征 + RMS 归一化
-rr run res rie-features --result $R/runs --result $R/analysis -- \
+rr run res --pool res-gpu1 rie-features --result $R/runs --result $R/analysis -- \
   bash -c 'python $R/code/rie_extract.py --stage features'
 
-# 3) GPU1：CPU 审计 + 单 batch 行对应抽查
-rr run res rie-audit --result $R/runs --result $R/analysis -- \
-  bash -c 'python $R/code/rie_audit.py --with-gpu-spotcheck'
+# 3) GPU1：smoke（CPython/GPU 数值 + 冻结身份）+ CPU 审计 + 单 batch 行对应抽查
+#    `rr deploy` 的 uv sync 只装默认组，所以需要 rdkit 的 job 自己再装一次（幂等）
+rr run res --pool res-gpu1 rie-audit --result $R/runs --result $R/analysis -- \
+  bash -c 'uv sync --frozen --group lipo -q && python $R/code/rie_extract.py --stage smoke && python $R/code/rie_audit.py --with-gpu-spotcheck'
 
 # 4) GPU1：head 预检（门槛 13–16、20）
-rr run res rie-train-preflight --result $R/runs --result $R/analysis -- \
-  bash -c 'python $R/code/rie_train.py --stage preflight'
+rr run res --pool res-gpu1 rie-train-preflight --result $R/runs --result $R/analysis -- \
+  bash -c 'uv sync --frozen --group lipo -q && python $R/code/rie_train.py --stage preflight'
 
 # 5) GPU1：REAL / SHUFFLE 配对正式 8 epoch（epoch 0/2/4/8）
-rr run res rie-train --result $R/runs --result $R/analysis -- \
-  bash -c 'python $R/code/rie_train.py --stage formal'
+rr run res --pool res-gpu1 rie-train --result $R/runs --result $R/analysis -- \
+  bash -c 'uv sync --frozen --group lipo -q && python $R/code/rie_train.py --stage formal'
 
 # 6) CPU：epoch8 比较、逐任务 CSV、分层统计、GPU ledger、冻结判定
-rr run res rie-compare --result $R/analysis -- \
+rr run res --pool res-gpu1 rie-compare --result $R/analysis -- \
   bash -c 'python $R/code/rie_compare.py'
 ```
 
