@@ -314,7 +314,16 @@ def lr_audit() -> dict[str, Any]:
 #: Filled from ``analysis/evaluation_cost_probe.json`` before the first formal
 #: step (see PROTOCOL.md section 6).  The *rule* below is frozen; only the
 #: resolved cadence is a measurement.
-EVAL_CADENCE: dict[str, Any] = {"every": 1, "resolved": False, "source": "protocol_default"}
+EVAL_CADENCE: dict[str, Any] = {
+    "every": 1,
+    "resolved": True,
+    "source": "analysis/evaluation_cost_probe.json (bs-audit run d3eaa1b8, 2026-11-08)",
+    "validation_fraction_of_projected_epoch": {"W2": 0.07610288976530026, "W3": 0.08157214214693549},
+    "threshold_fraction_of_projected_epoch": 0.15,
+    "probe_validation_seconds": {"W2": 5.986, "W3": 6.0678},
+    "probe_projected_epoch_seconds": {"W2": 78.6564, "W3": 74.3851},
+    "projected_total_gpu_hours": 1.8611781578592774,
+}
 
 
 def set_eval_cadence(every: int, *, source: str) -> dict[str, Any]:

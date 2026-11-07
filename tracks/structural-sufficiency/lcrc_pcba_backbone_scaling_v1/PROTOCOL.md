@@ -140,7 +140,9 @@ Recorded in `analysis/model_scaling_audit.json`, `analysis/a0_replay.json`,
    `nmp_model.build_arm("A", ...)`.
 2. `scale=1` reproduces A0's forward logits (max |Δ| = 0 required on CPU) both
    from the frozen initial state and after loading the historical epoch-40
-   checkpoint.
+   checkpoint. On CUDA the same comparison is bounded by 2e-5, because
+   `index_add_` / `scatter_reduce_` accumulate with atomics and are not bitwise
+   stable (the tolerance the historical structural-gain round audited).
 3. `scale=1` with the historical checkpoint reproduces the official Validation
    AP 0.2463560956 within 1e-4.
 4. W2/W3 parameter counts are exactly 994,324 / 2,120,844.
@@ -151,7 +153,8 @@ Recorded in `analysis/model_scaling_audit.json`, `analysis/a0_replay.json`,
    (forward-hook counts).
 8. Nothing after `local` reads a bond or path field: the post-`local` path is a
    pure function of `(h, atom_batch, n_graphs, global)`; supplying a batch with
-   no `bond_index`/`bond_feat`/`nbr_*`/`path_*` gives identical logits.
+   no `bond_index`/`bond_feat`/`nbr_*`/`path_*` gives identical logits (exact on
+   CPU, ≤2e-5 on CUDA for the same atomic-accumulation reason as item 2).
 9. Atom renumbering inside each molecule leaves graph logits unchanged
    (tolerance 2e-5) and permutes the per-atom contribution exactly.
 10. `global` / `atom_scalar` standardisation is the frozen Train-only version
@@ -218,8 +221,22 @@ The cadence is one value for both models; it is written into §6.1 below and int
 ### 6.1 Resolved cadence
 
 ```
-RESOLVED: every epoch (1..40)   [pending measurement]
+RESOLVED: every epoch (1, 2, ..., 40)
 ```
+
+Measured on `res` GPU1 (idle) by `bs-audit` run `bs-audit-20261107-171801-d3eaa1b8`
+(`analysis/evaluation_cost_probe.json`):
+
+| model | step p50 | projected epoch | full Validation pass | fraction | decision |
+|---|---:|---:|---:|---:|---|
+| W2 | 28.73 ms | 78.66 s | 5.99 s | 7.61 % | ≤ 15 % |
+| W3 | 27.17 ms | 74.39 s | 6.07 s | 8.16 % | ≤ 15 % |
+
+Both models are below the 15 % threshold, so the frozen rule selects **every
+epoch** for both. Projected cost of the two formal runs: 1.86 GPU-hours
+(W2 0.95, W3 0.91), inside the 8-hour target.
+
+Measured peak training memory: W2 158 MB, W3 236 MB allocated.
 
 ### 6.2 Evaluation discipline
 
@@ -336,4 +353,5 @@ combination arms; no length extension.
 
 | # | date | change | reason |
 |---|---|---|---|
-| 1 | (to be filled) | §6.1 resolved cadence | deterministic output of the frozen 15 % rule after the cost probe |
+| 1 | 2026-11-08 | §4 items 2 and 8: record the CUDA tolerance 2e-5 alongside the CPU-exact requirement | clarification of the same claim, fixed before any formal step; CUDA `index_add_` is not bitwise stable |
+| 2 | 2026-11-08 | §6.1 resolved cadence = every epoch (1..40) | deterministic output of the frozen 15 % rule: both models 7.6 % / 8.2 % of a projected epoch |

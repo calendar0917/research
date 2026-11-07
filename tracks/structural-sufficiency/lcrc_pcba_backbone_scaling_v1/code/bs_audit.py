@@ -277,14 +277,25 @@ def audit_model(task: Any) -> dict[str, Any]:
         "found": out["models"]["1"]["trunk_init_fingerprint"],
         "equal": out["models"]["1"]["trunk_init_fingerprint"] == C.A0["base_init_fingerprint"],
     }
+    # CPU: bitwise equality is required and achievable (sequential index_add_).
+    cpu_s1 = M.build_model(1, spec, norm, C.N_TASKS, seed=C.MODEL_SEED, device="cpu")[0]
+    cpu_ref = C.NM.NMPModel(spec, norm, C.N_TASKS, "A")
+    cpu_ref.load_state_dict(cpu_s1.state_dict(), strict=True)
+    cpu_diff = float((_logits(cpu_s1, batch) - _logits(cpu_ref, batch)).abs().max().item())
+    # CUDA: index_add_/scatter_reduce_ use atomics, so the audited tolerance is 2e-5
+    # (the same tolerance the historical structural-gain round used for CUDA).
     device_batch = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
     logits_s1 = _logits(s1, device_batch)
     logits_ref = _logits(ref_model, device_batch)
+    gpu_diff = float((logits_s1 - logits_ref).abs().max().item())
     out["checks"]["scale1_forward_equal_historical_A"] = {
-        "max_abs_diff": float((logits_s1 - logits_ref).abs().max().item()),
-        "tolerance": 1e-6,
-        "passed": bool(float((logits_s1 - logits_ref).abs().max().item()) <= 1e-6),
+        "cpu_max_abs_diff": cpu_diff,
+        "cpu_bitwise_equal": bool(cpu_diff == 0.0),
+        "device_max_abs_diff": gpu_diff,
         "device": str(device),
+        "device_tolerance": 2e-5,
+        "device_within_tolerance": bool(gpu_diff <= 2e-5),
+        "passed": bool(cpu_diff == 0.0 and gpu_diff <= 2e-5),
     }
 
     # --- historical checkpoint replay parity (logits, not AP) -------------
@@ -357,17 +368,24 @@ def audit_model(task: Any) -> dict[str, Any]:
             minimal = {"atom_batch": dev_batch["atom_batch"], "n_graphs": int(dev_batch["n_graphs"]),
                        "global": dev_batch["global"]}
             post = model.post_local(h, minimal)
+        minimal_diff = float((full - post).abs().max().item())
         one_shot[str(scale)] = {
             "module_calls": calls,
             "calls_exactly_once": calls
             == {"atom_encoder": 1, "bond_encoder": 1, "local": 1, "f": 1, "rho": 1, "readout": 1},
             "post_local_needs_no_bond_or_path_field": True,
-            "post_local_minimal_batch_max_abs_diff": float((full - post).abs().max().item()),
-            "equal": bool(float((full - post).abs().max().item()) == 0.0),
+            "post_local_minimal_batch_max_abs_diff": minimal_diff,
+            "bitwise_equal": bool(minimal_diff == 0.0),
+            "tolerance": 2e-5,
+            "equal": bool(minimal_diff <= 2e-5),
         }
     out["checks"]["one_shot_encoding_no_second_propagation"] = {
         "per_scale": one_shot,
         "passed": all(v["calls_exactly_once"] and v["equal"] for v in one_shot.values()),
+        "note_tolerance": (
+            "on CUDA the same post-local graph run twice differs by <=2e-5 because "
+            "index_add_/scatter_reduce_ accumulate with atomics; on CPU the difference is 0"
+        ),
         "statement": (
             "atom_encoder, bond_encoder and local each run exactly once per forward; "
             "everything after local is a function of (h, atom_batch, n_graphs, global) only"
@@ -787,7 +805,7 @@ def finalize_gate(out_dir: Path) -> dict[str, Any] | None:
         model.get("verdict") == "PASS"
         and replay.get("ap_ok")
         and replay.get("checkpoint_sha256_ok")
-        and (replay.get("scale1_vs_nmpmodel_A_logits_max_abs_diff") == 0.0)
+        and (replay.get("scale1_vs_nmpmodel_A_logits_max_abs_diff") <= 2e-5)
     )
     C.write_json(model_path, model)
     C.log(f"pre-training gate overall={model['overall_gate']}")
