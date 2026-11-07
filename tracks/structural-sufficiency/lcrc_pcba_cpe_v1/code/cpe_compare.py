@@ -110,6 +110,31 @@ def _summary(deltas: np.ndarray, mask: np.ndarray | None = None) -> dict[str, An
     }
 
 
+def _rankdata(values: np.ndarray) -> np.ndarray:
+    """Average ranks (ties share the mean rank), so Spearman is tie-aware."""
+    a = np.asarray(values, dtype=np.float64)
+    order = np.argsort(a, kind="mergesort")
+    ranks = np.empty(a.size, dtype=np.float64)
+    sorted_a = a[order]
+    i = 0
+    while i < a.size:
+        j = i
+        while j + 1 < a.size and sorted_a[j + 1] == sorted_a[i]:
+            j += 1
+        ranks[order[i : j + 1]] = 0.5 * (i + j) + 1.0
+        i = j + 1
+    return ranks
+
+
+def _spearman(x: np.ndarray, y: np.ndarray) -> float:
+    if x.size < 3:
+        return float("nan")
+    rx, ry = _rankdata(x), _rankdata(y)
+    if rx.std() == 0 or ry.std() == 0:
+        return float("nan")
+    return float(np.corrcoef(rx, ry)[0, 1])
+
+
 def _concentration(deltas: np.ndarray) -> dict[str, float]:
     d = np.asarray(deltas, dtype=np.float64)
     d = d[np.isfinite(d)]
@@ -682,11 +707,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "support_5_19": _summary(arr["d_pw"], mid),
                 "support_lt5": _summary(arr["d_pw"], low),
                 "concentration": _concentration(arr["d_pw"][scored]),
-                "spearman_delta_vs_support": float(
-                    np.corrcoef(
-                        np.argsort(np.argsort(arr["d_pw"][scored])),
-                        np.argsort(np.argsort(arr["pos"][scored].astype(np.float64))),
-                    )[0, 1]
+                "spearman_delta_vs_support": _spearman(
+                    arr["d_pw"][scored], arr["pos"][scored].astype(np.float64)
                 ),
             },
             "S_minus_W2": {
