@@ -370,7 +370,7 @@ hash needed to identify them is committed in the analysis artifacts.
 
 | date | change | reason |
 |---|---|---|
-| — | none | the protocol is unamended at freeze time |
+| 2026-11-08 | **A1** (`96738887`): two GPU audit modes repaired; no scientific parameter, protocol constant or model definition changed | the first GPU audit job aborted the `architecture` mode on a CPU/CUDA index mismatch in the *audit helper* (the model was fine) and the `cost` mode on building the W2 reference through the S3/F factory. Both are instrumentation bugs found before any training step; the audit job was re-run with the same protocol. Also housekeeping only: a stale untracked `lcrc_pcba_cpe_v1/analysis/` directory on the remote compute copy was removed so the frozen commit could be deployed (its differing `audit_summary.json` was captured in the `s3-keep-cpe` job log first). |
 
 Post-freeze entries may only record (a) measured GPU timings, (b) an
 infrastructure failure and its re-run with the same commit and the same
