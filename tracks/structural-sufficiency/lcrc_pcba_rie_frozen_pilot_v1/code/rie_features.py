@@ -372,7 +372,10 @@ def save_structures(struct: Mapping[str, Any], path: Any) -> dict[str, Any]:
 
 def load_structures(path: Any) -> dict[str, Any]:
     with np.load(path, allow_pickle=False) as payload:
-        return {k: payload[k] for k in payload.files}
+        struct = {k: payload[k] for k in payload.files}
+    # ``n_molecules`` is a plain int in memory; .npz only stores ndarrays
+    struct["n_molecules"] = int(np.asarray(struct["rows"]).size)
+    return struct
 
 
 # ---------------------------------------------------------------------------
