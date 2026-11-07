@@ -471,6 +471,65 @@ def test_order_plan_is_deterministic_and_a_permutation():
 # ---------------------------------------------------------------------------
 
 
+def _shuffle_payload(n_molecules: int):
+    """Two molecules with pairs (one multi-bin, one single-bin) plus empty rows."""
+    bins = np.asarray([0, 0, 2, 2, 1, 1], dtype=np.int8)
+    shuffled = np.asarray([0, 2, 0, 2, 1, 1], dtype=np.int8)
+    pair_ptr = np.zeros(n_molecules + 1, dtype=np.int64)
+    pair_ptr[1] = 4
+    pair_ptr[2] = 6
+    pair_ptr[2:] = 6
+    bin_counts = np.zeros((n_molecules, C.N_BINS), dtype=np.int64)
+    for i in range(min(2, n_molecules)):
+        chunk = bins[pair_ptr[i] : pair_ptr[i + 1]]
+        bin_counts[i] = np.bincount(chunk, minlength=3)
+    real = np.zeros((n_molecules, C.N_BINS, C.PAIR_FEATURE_DIM), dtype=np.float32)
+    shuf = np.zeros_like(real)
+    if n_molecules >= 1:
+        real[0] = 1.0
+        shuf[0] = 2.0
+    if n_molecules >= 2:
+        real[1] = 3.0
+        shuf[1] = 3.0
+    struct = {
+        "n_molecules": int(n_molecules),
+        "rows": np.arange(n_molecules, dtype=np.int64),
+        "pair_ptr": pair_ptr,
+        "pair_bin": bins,
+        "pair_bin_shuffle": shuffled,
+        "bin_counts": bin_counts,
+    }
+    return struct, real, shuf
+
+
+def test_audit_shuffle_gate_on_synthetic_payloads(tmp_path):
+    """The SHUFFLE gate must accept preserved counts and enforce the 15% floor."""
+    AU = pytest.importorskip("rie_audit")
+
+    def _run(n_molecules: int):
+        struct, real, shuf = _shuffle_payload(n_molecules)
+        files = {}
+        for split in ("train", "valid"):
+            np.save(tmp_path / f"{split}_real.npy", real)
+            np.save(tmp_path / f"{split}_shuffle.npy", shuf)
+            files[f"{split}_real"] = tmp_path / f"{split}_real.npy"
+            files[f"{split}_shuffle"] = tmp_path / f"{split}_shuffle.npy"
+        payloads = {"train": struct, "valid": struct}
+        return AU.audit_shuffle(payloads, files)
+
+    out = _run(3)  # 1 of 3 rows intervened -> above the 15% floor
+    assert out["preservation_passed"] is True
+    assert out["intervention_passed"] is True
+    assert out["valid"]["fraction_REAL_ne_SHUFFLE_tensor"] == pytest.approx(1 / 3)
+    assert out["valid"]["tensor_change_implies_multiple_bins"] is True
+    assert out["valid"]["bin_counts_per_molecule_preserved"] is True
+    assert out["valid"]["row_correspondence"]["zero_tensor_iff_no_eligible_pair"] is True
+
+    weak = _run(12)  # same intervention diluted over 12 rows -> 8.3% < 15%
+    assert weak["preservation_passed"] is True
+    assert weak["intervention_passed"] is False
+
+
 def test_decision_rule_labels():
     import rie_compare as CMP
 

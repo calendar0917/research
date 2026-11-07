@@ -365,7 +365,7 @@ def audit_shuffle(payloads: Mapping[str, Mapping[str, Any]], feature_files: Mapp
             out[s]["pair_counts_per_bin_preserved_under_shuffle"]
             and out[s]["global_bin_multiset_preserved"]
             and out[s]["tensor_change_implies_multiple_bins"]
-            and out[s]["zero_tensor_iff_no_eligible_pair"]
+            and out[s]["row_correspondence"]["zero_tensor_iff_no_eligible_pair"]
             for s in ("train", "valid")
         )
     )
