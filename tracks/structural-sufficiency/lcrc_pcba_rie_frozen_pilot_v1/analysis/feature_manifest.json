@@ -1,0 +1,327 @@
+{
+  "all_passed": true,
+  "created_utc": "2026-11-07T06:02:28Z",
+  "device": "cuda",
+  "environment": {
+    "autocast_enabled": false,
+    "cuda_available": true,
+    "cuda_device_capability": [
+      8,
+      0
+    ],
+    "cuda_device_count": 1,
+    "cuda_device_index": 0,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cuda_device_total_memory_bytes": 42285268992,
+    "cuda_visible_devices": "1",
+    "cudnn_allow_tf32": true,
+    "deterministic_algorithms": false,
+    "float32_matmul_precision": "highest",
+    "git_commit": "ed11f7dbdc4f1c61dbfa9a148cd9bb6a3af72cb0",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "matmul_allow_tf32": false,
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "feature_health_sampled": {
+    "train_real": {
+      "abs_max": 139.29788208007812,
+      "abs_mean": 0.665512324762532,
+      "dim": 495,
+      "inf_count": 0,
+      "n_nonzero_columns": 495,
+      "n_zero_columns": 0,
+      "nan_count": 0,
+      "nonzero_threshold": 1e-12,
+      "rows": 20609,
+      "zero_columns": [],
+      "zero_row_fraction": 0.0031054393711485275
+    },
+    "train_shuffle": {
+      "abs_max": 140.6900177001953,
+      "abs_mean": 0.6482589376187645,
+      "dim": 495,
+      "inf_count": 0,
+      "n_nonzero_columns": 495,
+      "n_zero_columns": 0,
+      "nan_count": 0,
+      "nonzero_threshold": 1e-12,
+      "rows": 20609,
+      "zero_columns": [],
+      "zero_row_fraction": 0.0031054393711485275
+    },
+    "valid_real": {
+      "abs_max": 403.3077392578125,
+      "abs_mean": 0.690948759261175,
+      "dim": 495,
+      "inf_count": 0,
+      "n_nonzero_columns": 495,
+      "n_zero_columns": 0,
+      "nan_count": 0,
+      "nonzero_threshold": 1e-12,
+      "rows": 21897,
+      "zero_columns": [],
+      "zero_row_fraction": 0.0028314380965429055
+    },
+    "valid_shuffle": {
+      "abs_max": 403.3077392578125,
+      "abs_mean": 0.6705100690048643,
+      "dim": 495,
+      "inf_count": 0,
+      "n_nonzero_columns": 495,
+      "n_zero_columns": 0,
+      "nan_count": 0,
+      "nonzero_threshold": 1e-12,
+      "rows": 21897,
+      "zero_columns": [],
+      "zero_row_fraction": 0.0028314380965429055
+    }
+  },
+  "finite_violations": 0,
+  "forward_seconds_total": 34.76270572002977,
+  "frozen_parameter_digest_after": "c48a103af6d7bb3b9f6cfeaaf8f1609db4d012435c7368f9c2e2b5e06698d7e6",
+  "frozen_parameter_digest_before": "c48a103af6d7bb3b9f6cfeaaf8f1609db4d012435c7368f9c2e2b5e06698d7e6",
+  "frozen_parameter_gates": {
+    "no_gradients": true,
+    "parameters_unchanged": true,
+    "requires_grad_all_false": true,
+    "still_eval": true
+  },
+  "gates": {
+    "all_finite": true,
+    "checkpoint_bitwise_load": true,
+    "frozen_parameters_unchanged": true,
+    "intervention_fraction_above_floor": true,
+    "logits_identity": true,
+    "official_vs_independent_train": true,
+    "official_vs_independent_valid": true,
+    "rms_fit_rows_is_train": true,
+    "rows_match_official_split": true,
+    "shuffle_preserves_bin_counts": true,
+    "source_checkpoint_identity": true,
+    "test_isolation": true,
+    "valid_ap_reproduced": true
+  },
+  "git_commit": "ed11f7dbdc4f1c61dbfa9a148cd9bb6a3af72cb0",
+  "gpu_hours": 0.047848124211110794,
+  "gpu_peak": {
+    "peak_allocated_bytes": 132070400,
+    "peak_reserved_bytes": 199229440
+  },
+  "gpu_seconds": 172.25324510782957,
+  "max_abs_logits_identity_residual": 0.0,
+  "min_intervention_fraction": 0.15,
+  "model": {
+    "build_audit": {
+      "base_parameter_elements": 245184,
+      "new_parameter_count": 42460,
+      "total_parameter_count": 287644,
+      "variant": "C1 + attention_pool"
+    },
+    "dtype": "torch.float32",
+    "gates": {
+      "bitwise_state_dict": true,
+      "frozen_eval": true,
+      "mode_is_attention_pool": true,
+      "parameters_287644": true
+    },
+    "mode": "attention_pool",
+    "model_eval": true,
+    "parameter_fingerprint": "c48a103af6d7bb3b9f6cfeaaf8f1609db4d012435c7368f9c2e2b5e06698d7e6",
+    "parameters": 287644,
+    "parameters_expected": 287644,
+    "reference_info_variant": "C1",
+    "requires_grad_any": false,
+    "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/checkpoint_epoch40.pt",
+    "source_sha256": "f110935a6055f3c087f9d0b40580506a512cdeb09f6af67a56bde787cc93a437",
+    "state_dict_bitwise_equal_to_checkpoint": true,
+    "state_dict_tensors": 57,
+    "strict_load_missing": [],
+    "strict_load_unexpected": [],
+    "variant": "C1 + attention_pool"
+  },
+  "normalisation": {
+    "audit": {
+      "definition": "rms_k = sqrt(mean over REAL Train rows of S_k**2), per flattened (bin, feature) column; no mean centering",
+      "dim": 495,
+      "fit_split": "real_train_only",
+      "floor_epsilon": 0.0001,
+      "floor_scale": 1.0,
+      "floored_columns": [],
+      "n_floored_columns": 0,
+      "n_rows_fit": 350343,
+      "rms_max": 8.09583037971726,
+      "rms_median": 2.583525435417407,
+      "rms_min": 0.007513272085525251,
+      "scale_sha256": "25684391c5a76cbe248f621956a4386dcb52c8e6bcf4edc4b6fc077f0104de41",
+      "source": "REAL Train relation features only (SHUFFLE and Validation reuse the same scale)",
+      "valid_used": false
+    },
+    "fit_split": "real_train_only",
+    "kind": "per-column RMS (no mean centering)",
+    "scale_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/relation_rms_scale.npy",
+    "seconds": 17.323533073998988,
+    "shared_by_real_and_shuffle": true,
+    "shared_by_train_and_valid": true
+  },
+  "protocol_id": "lcrc-pcba-rie-frozen-pilot-v1",
+  "round_id": "lcrc-pcba-rie-frozen-pilot-v1",
+  "scaled_files": {
+    "train_real": {
+      "normalized_file_sha256": "d5a95a9913fe1bff8071cda89b7aa5452a9998ca0c5b9586220276eefcf30c61",
+      "normalized_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/train_relation.npy",
+      "raw_file_sha256": "1aa2afbef38c4a4da90773922f8aa09cc5acff2a4f4318c0694752eae3530f0b",
+      "raw_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/train_relation_raw.npy"
+    },
+    "train_shuffle": {
+      "normalized_file_sha256": "7befb49dd5cc2a0445c9eb4207828032071246c95b11c56e0acbe248edcee977",
+      "normalized_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/train_relation_shuffle.npy",
+      "raw_file_sha256": "07d1004f604ca37ca46017e619f2e558e9d6bc5f080d8191abcbb498cd9fe216",
+      "raw_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/train_relation_shuffle_raw.npy"
+    },
+    "valid_real": {
+      "normalized_file_sha256": "41122be88ade9ef5cb703fc98058fdd22411d729006735cf8b5a1cb3e0f5fa39",
+      "normalized_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/valid_relation.npy",
+      "raw_file_sha256": "82de4c3a3cb1bba7c0f30123033125e3244ff30de2be43bfaf7a794200a4efe5",
+      "raw_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/valid_relation_raw.npy"
+    },
+    "valid_shuffle": {
+      "normalized_file_sha256": "d7efa9b6f2a50371c146bddc6d4dc0dac3b10cb1eb7299cae0c62fa29fb17407",
+      "normalized_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/valid_relation_shuffle.npy",
+      "raw_file_sha256": "adc9bcc587d77fb01154bcc3b05febdcbca2f9cb7066ae69881cf4391acff8e5",
+      "raw_path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/features/valid_relation_shuffle_raw.npy"
+    }
+  },
+  "schema": "lcrc-pcba-rie-feature-manifest-v1",
+  "shapes": {
+    "base_logits": [
+      350343,
+      128
+    ],
+    "base_logits_valid": [
+      43793,
+      128
+    ],
+    "relation": [
+      350343,
+      3,
+      165
+    ],
+    "relation_valid": [
+      43793,
+      3,
+      165
+    ]
+  },
+  "source_checkpoint": {
+    "anchor": {
+      "AP_A": 0.24635609609821457,
+      "AP_A_instruction": 0.2463560956,
+      "tolerance": 0.0001
+    },
+    "checks": {
+      "arm": true,
+      "epoch_is_40": true,
+      "file_exists": true,
+      "global_step_is_109520": true,
+      "kind": true,
+      "model_audit_base_parameters": true,
+      "model_audit_new_parameters": true,
+      "model_audit_parameters": true,
+      "n_outputs_128": true,
+      "round": true,
+      "run_registry_ap_matches": true,
+      "schema": true,
+      "seed_is_zero": true,
+      "sha256_matches_frozen": true,
+      "state_dict_tensor_count": true,
+      "stored_valid_ap_matches_anchor": true,
+      "stored_valid_ap_matches_instruction": true,
+      "stored_valid_bce_present": true,
+      "test_not_evaluated_in_source": true,
+      "variant_is_original_A": true
+    },
+    "failed_checks": [],
+    "file_sha256": "f110935a6055f3c087f9d0b40580506a512cdeb09f6af67a56bde787cc93a437",
+    "frozen_sha256": "f110935a6055f3c087f9d0b40580506a512cdeb09f6af67a56bde787cc93a437",
+    "passed": true,
+    "path": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/checkpoint_epoch40.pt",
+    "payload": {
+      "arm": "A",
+      "checkpoint_kind": "phaseC_epoch40",
+      "epoch": 40,
+      "git_commit": "b1b917dc4f72d9815b8f00813a11d95db3868298",
+      "global_step": 109520,
+      "n_outputs": 128,
+      "round_id": "lcrc-pcba-no-mp-sprint-v1",
+      "schema": "lcrc-pcba-no-mp-checkpoint-v1",
+      "seed": 0,
+      "test_evaluated": false,
+      "valid_ap": 0.24635609609821457,
+      "valid_report_summary": {
+        "ap": 0.24635609609821457,
+        "n_tasks_scored": 127,
+        "n_tasks_with_observed_labels": 128,
+        "valid_bce": 0.04577261283603607,
+        "valid_logits_sha256": "7d1b6042485e1493bad4912d8915ccf3b2eeada87eb351a14d6f46345a145c51",
+        "valid_probs_sha256": "77ebfa995e9d72893bfc2001773c7f3edbecf6b1ac34ec4e302e7438234b46c1"
+      },
+      "variant": "C1 + attention_pool"
+    },
+    "registry": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/run.json",
+    "registry_valid_ap_epoch40": 0.24635609609821457
+  },
+  "splits": {
+    "train": {
+      "base_logits_sha256": "c03f55d9f829cee9f0888cee154f4862219da64ca04a3b55b8e548978b17aff6",
+      "forward_seconds": 30.353860766626894,
+      "labels_sha256": "b272c66bd30e38857b122da3ec89462039c98e47464728d67ce054108415d761",
+      "molecules_per_second": 3267.3550468368435,
+      "observed_entries": 27162842,
+      "relation_raw_sha256": "d2fda18709d095f2e4cef82f49516f99f59da362ba31f2514bb66dbe5df43ec2",
+      "relation_shuffle_raw_sha256": "5777998396e291fcc82869f6459d696681ac43f538a3b3706ccc3680287dcbca",
+      "rows": 350343,
+      "rows_sha256": "16169ef35ce1812eac577af939fa0416e79c670c015ecf5aa7b848a25d412dd9",
+      "seconds": 107.22526171104982
+    },
+    "valid": {
+      "base_logits_sha256": "8f7297eb4c47f9d971ee3191a81220c48ff44cacf0c225492c6c5ed5d2f8868b",
+      "forward_seconds": 4.408844953402877,
+      "labels_sha256": "f84719d3e64a4f0718b0a7693499942a0429947daaf143c5151e9bda1df3c585",
+      "molecules_per_second": 2528.3702890242193,
+      "observed_entries": 3477656,
+      "relation_raw_sha256": "53976f9c06c4418fcc00bc7eccd2208d4af002a19142ac67eefb7a011f277045",
+      "relation_shuffle_raw_sha256": "3cba6e016835737e9494b97f42383b49f60fc243b63459e8de4a455f4aaac524",
+      "rows": 43793,
+      "rows_sha256": "fcad7abd938cf3328b6761cd78c8170cf6bd389bef4b6d1f94b5ed0b4aec21ed",
+      "seconds": 17.32064333697781
+    }
+  },
+  "structures": {
+    "train": {
+      "file_sha256": "92b16511be2e1b1861e95dadb7aae6f5bf35eee08fb368048ecaa865925211c6",
+      "path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/structures/train_structures.npz",
+      "rows_sha256": "16169ef35ce1812eac577af939fa0416e79c670c015ecf5aa7b848a25d412dd9"
+    },
+    "valid": {
+      "file_sha256": "86b9a04efafcb987521fe5bef7a4ad234f9f4e8ec18dc94fd50a2409be814620",
+      "path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/structures/valid_structures.npz",
+      "rows_sha256": "fcad7abd938cf3328b6761cd78c8170cf6bd389bef4b6d1f94b5ed0b4aec21ed"
+    }
+  },
+  "test_evaluated": false,
+  "test_isolation": {
+    "official_test_rows": 43793,
+    "test_finite_labels": 0,
+    "test_metrics_computed": 0,
+    "test_predictions_saved": false,
+    "test_rows_never_indexed_by_this_round": true,
+    "train_test_overlap": 0,
+    "train_valid_overlap": 0,
+    "valid_test_overlap": 0
+  },
+  "valid_real_ne_shuffle_fraction": 0.9696983536181581
+}

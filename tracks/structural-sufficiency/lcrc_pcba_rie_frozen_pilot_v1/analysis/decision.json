@@ -1,0 +1,79 @@
+{
+  "artifacts": {
+    "checkpoint_replay": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/checkpoint_replay.json",
+    "comparison": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/epoch8_comparison.json",
+    "feature_manifest": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/feature_manifest.json",
+    "gpu_ledger": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/gpu_ledger.json",
+    "motif_coverage": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/motif_coverage.json",
+    "paired_initialization": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/paired_initialization.json",
+    "per_task_deltas": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/per_task_deltas.csv",
+    "relation_invariance_audit": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/relation_invariance_audit.json",
+    "shuffle_control_audit": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/analysis/shuffle_control_audit.json"
+  },
+  "created_utc": "2026-11-07T06:51:59Z",
+  "git_commit": "71db82d57538177bf64668a6fe3d1c2e27b2864e",
+  "guidance": "This label is a resource decision, not a significance test. Even PROMISING_RELATION_SIGNAL only means a full joint-training round is worth considering; it is NOT started here.",
+  "interpretation": {
+    "proposition_1_REAL_beats_A": true,
+    "proposition_2_REAL_beats_SHUFFLE": true,
+    "proposition_3_advantage_on_well_supported_assays": false,
+    "readout_useful_but_relation_not_implicated": false,
+    "statement": "Three separate propositions are reported: (1) REAL > A, (2) REAL > SHUFFLE, (3) the REAL-over-A advantage also holds on assays with >= 20 Validation positives. Only a consistent pattern justifies a full LCRC-RIE joint-training round; this round never starts one. A large D_base with a small D_ctrl means the tiny supervised readout may be useful but there is no evidence that the gain comes from true motif-distance relations."
+  },
+  "label": "NO_RELATION_SIGNAL",
+  "metrics": {
+    "AP_A": 0.24635530075836476,
+    "AP_REAL": 0.2469585546544593,
+    "AP_SHUFFLE": 0.24544763013209256,
+    "D_SHUFFLE_minus_A": -0.0009076706262722001,
+    "D_base": 0.00060325389609453,
+    "D_ctrl": 0.00151092452236673,
+    "D_ge20": 0.000549066150596941,
+    "ge20_tasks": 107,
+    "improved_ge20_tasks": 54,
+    "n_tasks_improved_REAL_vs_A": 66,
+    "n_tasks_improved_REAL_vs_SHUFFLE": 85,
+    "n_tasks_scored": 127
+  },
+  "next_round_authorised": false,
+  "preconditions": {
+    "all_eval_epochs_present": true,
+    "both_arms_completed_8_epochs": true,
+    "feature_gates_passed": true,
+    "invariance_audit_passed": true,
+    "no_test_access": true,
+    "paired_initialization_passed": true,
+    "shuffle_audit_passed": true,
+    "source_checkpoint_reproduced": true,
+    "within_gpu_budget": true
+  },
+  "promising_checks": {
+    "D_base_ge_0.005": false,
+    "D_ctrl_ge_0.003": false,
+    "D_ge20_ge_0.003": false,
+    "improved_ge20_tasks_ge_60": false
+  },
+  "reasons": [
+    "D_base_ge_0.005",
+    "D_ctrl_ge_0.003",
+    "D_ge20_ge_0.003",
+    "improved_ge20_tasks_ge_60"
+  ],
+  "round_id": "lcrc-pcba-rie-frozen-pilot-v1",
+  "schema": "lcrc-pcba-rie-decision-v1",
+  "test_evaluated": false,
+  "thresholds": {
+    "min_intervention_fraction": 0.15,
+    "promising": {
+      "d_base_min": 0.005,
+      "d_ctrl_min": 0.003,
+      "d_ge20_min": 0.003,
+      "improved_ge20_min": 60,
+      "label": "PROMISING_RELATION_SIGNAL"
+    },
+    "weak": {
+      "d_base_min": 0.002,
+      "label": "WEAK_OR_MIXED_SIGNAL"
+    }
+  }
+}

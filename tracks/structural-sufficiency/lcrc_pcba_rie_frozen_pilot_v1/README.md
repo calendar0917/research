@@ -21,7 +21,7 @@ code/rie_model.py      8,784 参数的 RelationHead（共享投影 + 任务权�
 code/rie_train.py      preflight(门槛 13–16,20) + formal(REAL/SHUFFLE 配对 8 epoch)
 code/rie_compare.py    epoch8 比较、逐任务 CSV、分层统计、GPU ledger、冻结判定
 code/rie_audit.py      门槛 3–12,17–19 的 CPU 审计 + 可选 GPU 单 batch 行对应抽查
-tests/test_rie_pilot.py  CPU-only 26 项单元测试
+tests/test_rie_pilot.py  CPU-only 28 项单元测试
 analysis/              冻结产物（JSON / CSV，入库）
 runs/                  structures / features / heads / smoke（git-ignored）
 ```
@@ -88,7 +88,7 @@ structures  ->  features  ->  audit(+gpu spotcheck)  ->  train --stage preflight
 uv run pytest -q tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/tests/test_rie_pilot.py
 ```
 
-26 项，约 1 秒，CPU-only。测试需要 `torch`（默认 `ksvd` 组）与 `rdkit`（`lipo` 组），
+28 项，约 1 秒，CPU-only。测试需要 `torch`（默认 `ksvd` 组）与 `rdkit`（`lipo` 组），
 因此**不在** GitHub CI 的 fresh-clone-safe allowlist 内（allowlist 用 torch-free 最小环境）。
 
 ## 判定标签

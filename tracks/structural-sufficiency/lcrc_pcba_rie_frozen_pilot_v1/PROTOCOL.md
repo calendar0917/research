@@ -406,7 +406,7 @@ README.md
 REPORT.md
 code/rie_common.py   rie_motifs.py   rie_features.py   rie_extract.py
 code/rie_model.py    rie_train.py    rie_compare.py    rie_audit.py
-tests/               （CPU-only，26 项）
+tests/               （CPU-only 单元测试，28 项）
 analysis/checkpoint_replay.json
 analysis/motif_coverage.json
 analysis/relation_invariance_audit.json

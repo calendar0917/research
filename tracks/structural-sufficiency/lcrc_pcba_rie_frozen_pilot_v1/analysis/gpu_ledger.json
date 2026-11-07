@@ -1,0 +1,79 @@
+{
+  "budget": {
+    "gpu_hours_hard": 1.0,
+    "gpu_hours_target": 0.5
+  },
+  "cpu_entries": {
+    "audit": {
+      "note": "measured in the audit job log; CPU only",
+      "seconds": null
+    },
+    "structure_build": {
+      "seconds_full": 190.24387637991458,
+      "timing_probe": {
+        "extrapolation": {
+          "molecules_train_plus_valid": 394136,
+          "parallel_hours": 0.6796564644145736,
+          "parallel_workers": 12,
+          "serial_hours": 0.6751624116002394
+        },
+        "parallel_seconds": 6.3569062212482095,
+        "peak_rss_total_mb": 2655.55859375,
+        "serial_seconds": 6.314872820861638
+      }
+    }
+  },
+  "created_utc": "2026-11-07T06:51:59Z",
+  "device": "cuda",
+  "entries": {
+    "extraction": {
+      "forward_seconds": 34.76270572002977,
+      "gpu_hours": 0.047848124211110794,
+      "gpu_peak": {
+        "peak_allocated_bytes": 132070400,
+        "peak_reserved_bytes": 199229440
+      },
+      "molecules": 394136
+    },
+    "head_training_REAL": {
+      "gpu_hours": 0.022094465390804948,
+      "gpu_peak": {
+        "peak_allocated_bytes": 59931136,
+        "peak_reserved_bytes": 83886080
+      },
+      "total_seconds": 79.54007540689781,
+      "train_seconds": 15.219044745434076
+    },
+    "head_training_SHUFFLE": {
+      "gpu_hours": 0.02115114811859611,
+      "gpu_peak": {
+        "peak_allocated_bytes": 59931136,
+        "peak_reserved_bytes": 83886080
+      },
+      "total_seconds": 76.144133226946,
+      "train_seconds": 13.180957299657166
+    },
+    "paired_validation_evaluation": {
+      "gpu_hours": 0.04345933688869182,
+      "note": "REAL + SHUFFLE formally trained back to back in one job"
+    },
+    "smoke": {
+      "gpu_hours": 8.069359167065058e-05,
+      "gpu_peak": {
+        "peak_allocated_bytes": 18544128,
+        "peak_reserved_bytes": 25165824
+      },
+      "rows": 8
+    }
+  },
+  "git_commit": "71db82d57538177bf64668a6fe3d1c2e27b2864e",
+  "round_id": "lcrc-pcba-rie-frozen-pilot-v1",
+  "schema": "lcrc-pcba-rie-gpu-ledger-v1",
+  "test_evaluated": false,
+  "totals": {
+    "gpu_hours_note": "the paired training stages ran sequentially in one GPU1 job; the sum of the measured stage wall times is the conservative upper bound",
+    "gpu_hours_sum_of_stages": 0.0911744313121825,
+    "within_hard_cap": true,
+    "within_target": true
+  }
+}

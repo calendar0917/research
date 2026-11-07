@@ -1,0 +1,47 @@
+{
+  "base_logits_max_abs_diff_vs_cache": 1.1444091796875e-05,
+  "batch_index": 0,
+  "bin_counts_match_structure": true,
+  "device": "cuda",
+  "model": {
+    "build_audit": {
+      "base_parameter_elements": 245184,
+      "new_parameter_count": 42460,
+      "total_parameter_count": 287644,
+      "variant": "C1 + attention_pool"
+    },
+    "dtype": "torch.float32",
+    "gates": {
+      "bitwise_state_dict": true,
+      "frozen_eval": true,
+      "mode_is_attention_pool": true,
+      "parameters_287644": true
+    },
+    "mode": "attention_pool",
+    "model_eval": true,
+    "parameter_fingerprint": "c48a103af6d7bb3b9f6cfeaaf8f1609db4d012435c7368f9c2e2b5e06698d7e6",
+    "parameters": 287644,
+    "parameters_expected": 287644,
+    "reference_info_variant": "C1",
+    "requires_grad_any": false,
+    "source_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/runs/phaseC_seed0_A/checkpoint_epoch40.pt",
+    "source_sha256": "f110935a6055f3c087f9d0b40580506a512cdeb09f6af67a56bde787cc93a437",
+    "state_dict_bitwise_equal_to_checkpoint": true,
+    "state_dict_tensors": 57,
+    "strict_load_missing": [],
+    "strict_load_unexpected": [],
+    "variant": "C1 + attention_pool"
+  },
+  "note": "CUDA atomic index_add_ in the frozen encoder means the same rows re-extracted in a fresh batch can differ by ~1e-6; the gate is a tolerance gate, not bitwise",
+  "passed": true,
+  "real_relation_bitwise_equal": false,
+  "real_relation_max_abs_diff_vs_cache": 2.384185791015625e-06,
+  "row_range": [
+    0,
+    512
+  ],
+  "rows": 512,
+  "shuffle_relation_bitwise_equal": false,
+  "shuffle_relation_max_abs_diff_vs_cache": 3.337860107421875e-06,
+  "tolerance": 1e-05
+}

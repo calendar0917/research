@@ -1,0 +1,570 @@
+{
+  "all_passed": true,
+  "created_utc": "2026-11-07T05:58:04Z",
+  "distance_definition": {
+    "bins": [
+      {
+        "bin": 0,
+        "max_distance": 4,
+        "min_distance": 3
+      },
+      {
+        "bin": 1,
+        "max_distance": 6,
+        "min_distance": 5
+      },
+      {
+        "bin": 2,
+        "max_distance": null,
+        "min_distance": 7
+      }
+    ],
+    "cross_component_pairs": "excluded (never treated as a long distance)",
+    "min_pair_distance": 3,
+    "policy": "min physical bond-graph shortest-path distance over all atom pairs of the two motifs; pairs with distance < 3 or in different connected components are dropped",
+    "shuffle": {
+      "breaks": "which motif pair carries which distance bin",
+      "preserves": [
+        "motif set",
+        "motif pairs",
+        "pair features",
+        "per-bin pair counts"
+      ],
+      "rng": "numpy SeedSequence(entropy=int(sha256(tag|row_id),16), spawn_key=(0,)) -> PCG64",
+      "seed": 0,
+      "tag": "rie-distance-shuffle-v1"
+    }
+  },
+  "environment": {
+    "autocast_enabled": false,
+    "cuda_available": true,
+    "cuda_device_capability": [
+      8,
+      0
+    ],
+    "cuda_device_count": 1,
+    "cuda_device_index": 0,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cuda_device_total_memory_bytes": 42285268992,
+    "cuda_visible_devices": "1",
+    "cudnn_allow_tf32": true,
+    "deterministic_algorithms": false,
+    "float32_matmul_precision": "highest",
+    "git_commit": "ed11f7dbdc4f1c61dbfa9a148cd9bb6a3af72cb0",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "matmul_allow_tf32": false,
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "failures": [
+    {
+      "official_row_id": 5823,
+      "reason": "Chem.MolFromSmiles returned None (strict sanitisation failed)",
+      "smiles": "CC(=O)O[AlH3]OC(C)=O",
+      "split": "train"
+    },
+    {
+      "official_row_id": 303198,
+      "reason": "Chem.MolFromSmiles returned None (strict sanitisation failed)",
+      "smiles": "CCCCO[AlH3](OCCCC)OCCCC",
+      "split": "train"
+    }
+  ],
+  "feature_definition": {
+    "base_features_fdef": "/home/hxy/cy/research/.venv/lib/python3.12/site-packages/rdkit/Data/BaseFeatures.fdef",
+    "base_features_fdef_sha256": "766f9790513f8f94c67ec6d1c8b6d5bede59b81f6da8c2081f57e49fb28d9784",
+    "dedupe_rule": "same (family_id, sorted atom indices) kept once; families may share atoms",
+    "excluded_rdkit_families": [
+      "LumpedHydrophobe",
+      "ZnBinder"
+    ],
+    "families": [
+      {
+        "id": 0,
+        "name": "Donor",
+        "smarts": null,
+        "source": "rdkit_ChemicalFeatures"
+      },
+      {
+        "id": 1,
+        "name": "Acceptor",
+        "smarts": null,
+        "source": "rdkit_ChemicalFeatures"
+      },
+      {
+        "id": 2,
+        "name": "Aromatic",
+        "smarts": null,
+        "source": "rdkit_ChemicalFeatures"
+      },
+      {
+        "id": 3,
+        "name": "PosIonizable",
+        "smarts": null,
+        "source": "rdkit_ChemicalFeatures"
+      },
+      {
+        "id": 4,
+        "name": "NegIonizable",
+        "smarts": null,
+        "source": "rdkit_ChemicalFeatures"
+      },
+      {
+        "id": 5,
+        "name": "Hydrophobe",
+        "smarts": null,
+        "source": "rdkit_ChemicalFeatures"
+      },
+      {
+        "id": 6,
+        "name": "Carbonyl",
+        "smarts": "[CX3]=[OX1]",
+        "source": "smarts"
+      },
+      {
+        "id": 7,
+        "name": "Halogen",
+        "smarts": "[F,Cl,Br,I]",
+        "source": "smarts"
+      }
+    ],
+    "family_pair_columns": 36,
+    "n_families": 8,
+    "no_hashed_vocabulary": true,
+    "rdkit_version": "2026.09.1",
+    "smarts": {
+      "Carbonyl": "[CX3]=[OX1]",
+      "Halogen": "[F,Cl,Br,I]"
+    }
+  },
+  "git_commit": "ed11f7dbdc4f1c61dbfa9a148cd9bb6a3af72cb0",
+  "n_parse_failures": 2,
+  "rdkit_reliable_timing_probe": true,
+  "round_id": "lcrc-pcba-rie-frozen-pilot-v1",
+  "schema": "lcrc-pcba-rie-motif-coverage-v1",
+  "stage": "structures",
+  "structures_fingerprint": {
+    "train": {
+      "arrays": {
+        "bin_counts": {
+          "dtype": "int64",
+          "sha256": "4748be5fb883f3379faf14fcaff0d10b476189505a552d55db48192e643b31e8",
+          "shape": [
+            350343,
+            3
+          ]
+        },
+        "motif_atom_ptr": {
+          "dtype": "int64",
+          "sha256": "abca3eead76247cf6ecf7f9a074c244fe8174f548c60a391d0099c76a332ae92",
+          "shape": [
+            4461189
+          ]
+        },
+        "motif_atoms": {
+          "dtype": "int64",
+          "sha256": "4be5fb1f7a88b2f066d822eabbe2777dd8acada27546da3ef385883414b3507c",
+          "shape": [
+            8876491
+          ]
+        },
+        "motif_family": {
+          "dtype": "int8",
+          "sha256": "6bf38000457677f92f3e62c44434bcdd5f2fcc40b1787e0f662ba154eefade5b",
+          "shape": [
+            4461188
+          ]
+        },
+        "motif_len": {
+          "dtype": "int64",
+          "sha256": "6679d7300eeb1fa540aa5d4dfee79ba6541f99655b69b6f1404210dd90554e38",
+          "shape": [
+            4461188
+          ]
+        },
+        "motif_ptr": {
+          "dtype": "int64",
+          "sha256": "ee4be544e5efb31e81685ec240492119404c98d7eda6033c857d408160275c78",
+          "shape": [
+            350344
+          ]
+        },
+        "n_atoms": {
+          "dtype": "int64",
+          "sha256": "e33c30b449caf37ea2a059ffcbcfe696f5018c8016c7e068a92c186a440e4d6d",
+          "shape": [
+            350343
+          ]
+        },
+        "n_motifs": {
+          "dtype": "int32",
+          "sha256": "97ec8c7e5afa88f7f35d98c246bd56f714aab7b032223fffb0e6f66f35779565",
+          "shape": [
+            350343
+          ]
+        },
+        "n_pairs": {
+          "dtype": "int32",
+          "sha256": "e658064bfec9d015eda4df2ff63f05397ce5714e6455d4c4a2ada7b89d6a72af",
+          "shape": [
+            350343
+          ]
+        },
+        "pair_a": {
+          "dtype": "int64",
+          "sha256": "0cb51b82b64e5afa79ed1037a08ad8148bada02f976aec408e9e84392fb95b66",
+          "shape": [
+            20918875
+          ]
+        },
+        "pair_b": {
+          "dtype": "int64",
+          "sha256": "3148e9161191b301e12f0058666830e8985af028d5d2ac9f649a1fe8085eecc2",
+          "shape": [
+            20918875
+          ]
+        },
+        "pair_bin": {
+          "dtype": "int8",
+          "sha256": "e31d991fd0fe93ab50f4513919845bfa710db48d3508f6f575a2b352cd795391",
+          "shape": [
+            20918875
+          ]
+        },
+        "pair_bin_shuffle": {
+          "dtype": "int8",
+          "sha256": "0d6d8a21a11532d709e83f28777ac30c41feb06873432410893be8c7c0efcfd1",
+          "shape": [
+            20918875
+          ]
+        },
+        "pair_distance": {
+          "dtype": "int32",
+          "sha256": "6ac62b074b11f6acfce1df1f0d417fb753cde0d1eb5b19e9fcff3e49e9e85dd0",
+          "shape": [
+            20918875
+          ]
+        },
+        "pair_famidx": {
+          "dtype": "int8",
+          "sha256": "9ee574829cce642769790283754fda05a6becb7eda2a754a47fac3e186e0879e",
+          "shape": [
+            20918875
+          ]
+        },
+        "pair_ptr": {
+          "dtype": "int64",
+          "sha256": "e88953a838f71321f733cadb55fdd7a397633641f597154d89b2af9dfe6c237e",
+          "shape": [
+            350344
+          ]
+        },
+        "parse_failed": {
+          "dtype": "bool",
+          "sha256": "0e36920e350f219f4aa741a7c9aa6f33477d73aacc80ba05921f8fe770b4727f",
+          "shape": [
+            350343
+          ]
+        },
+        "rows": {
+          "dtype": "int64",
+          "sha256": "e7c8df4decb4c15adf4e2bad1259de83e892751cbeb735acfea7df6a4d3373dd",
+          "shape": [
+            350343
+          ]
+        }
+      },
+      "build_seconds": 163.39557009283453,
+      "build_workers": 12,
+      "file_sha256": "92b16511be2e1b1861e95dadb7aae6f5bf35eee08fb368048ecaa865925211c6",
+      "molecules": 350343,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/structures/train_structures.npz"
+    },
+    "valid": {
+      "arrays": {
+        "bin_counts": {
+          "dtype": "int64",
+          "sha256": "d33cb568ec07fa393b8f02ed4ed39fbff61c3fc00a8f8dff939c54a72191c341",
+          "shape": [
+            43793,
+            3
+          ]
+        },
+        "motif_atom_ptr": {
+          "dtype": "int64",
+          "sha256": "9db17889ee41bc2f467a5a0048692dc5f50ef650eee607b645b72f9da8ecb8e8",
+          "shape": [
+            576809
+          ]
+        },
+        "motif_atoms": {
+          "dtype": "int64",
+          "sha256": "726bcad18fa1a30a326e916adccf8313b152981816208bcd2acf8b3809b99d45",
+          "shape": [
+            1141578
+          ]
+        },
+        "motif_family": {
+          "dtype": "int8",
+          "sha256": "5f4052257987b79b75de5612e9bf5cb9709b9b0004fb56a25084cb49cb5768ee",
+          "shape": [
+            576808
+          ]
+        },
+        "motif_len": {
+          "dtype": "int64",
+          "sha256": "fcf0087f9050d34ec0950430471e91dec86e51a14cf5f96aedb32cfcc5d5b3ed",
+          "shape": [
+            576808
+          ]
+        },
+        "motif_ptr": {
+          "dtype": "int64",
+          "sha256": "320a0dcacfb3cfcb33d44adc2ed4333f0d247bf875d706f004333ae728cc4e48",
+          "shape": [
+            43794
+          ]
+        },
+        "n_atoms": {
+          "dtype": "int64",
+          "sha256": "937ab44810ba2775a1bed4d755a0f31757ea846d3121ae4b3582b0d2114b7e7d",
+          "shape": [
+            43793
+          ]
+        },
+        "n_motifs": {
+          "dtype": "int32",
+          "sha256": "44098fab6b0a7a0763a53ca964efdd35d55f6b8ad99de0d19466e49bc511347b",
+          "shape": [
+            43793
+          ]
+        },
+        "n_pairs": {
+          "dtype": "int32",
+          "sha256": "625c16a1552d55667dd00090fdcaa890909547ad67e38c7cd5d8e5cce6cd3c36",
+          "shape": [
+            43793
+          ]
+        },
+        "pair_a": {
+          "dtype": "int64",
+          "sha256": "126dbb3a173ed644490059fc9c6c3d3a78180747a5be843f031c7f828f7193d6",
+          "shape": [
+            3326408
+          ]
+        },
+        "pair_b": {
+          "dtype": "int64",
+          "sha256": "84e8926ed866a28623a1770364149fac1c186a418f5786da552d2bf370f7d934",
+          "shape": [
+            3326408
+          ]
+        },
+        "pair_bin": {
+          "dtype": "int8",
+          "sha256": "83e6bf6f832a7463bc8d5c472fa38b4e096c687a7272c48d009c50048677a5f6",
+          "shape": [
+            3326408
+          ]
+        },
+        "pair_bin_shuffle": {
+          "dtype": "int8",
+          "sha256": "f107b3d4f66e84f813cc80c4fe5a307a0f08a1fbd560f5ac9d05da82f10c6bb9",
+          "shape": [
+            3326408
+          ]
+        },
+        "pair_distance": {
+          "dtype": "int32",
+          "sha256": "1ee126b4a4e758e96412270f97b347ccae3a8e8a2f629c03317ba677630e9e5e",
+          "shape": [
+            3326408
+          ]
+        },
+        "pair_famidx": {
+          "dtype": "int8",
+          "sha256": "b3e6276815a199813d5ca84e0b6dfb94d262f07cb849ddb06e9c24cd791c23b7",
+          "shape": [
+            3326408
+          ]
+        },
+        "pair_ptr": {
+          "dtype": "int64",
+          "sha256": "0b7bf5a249795f0bf115da5e20a9d6612cd8ee2a3dd3bc5d3753e82c34d8d968",
+          "shape": [
+            43794
+          ]
+        },
+        "parse_failed": {
+          "dtype": "bool",
+          "sha256": "d7083d63d3032ac1d6490038195ac79b012a59be2299e3e17136a10cf7e0f93a",
+          "shape": [
+            43793
+          ]
+        },
+        "rows": {
+          "dtype": "int64",
+          "sha256": "f93ef6f51af75a12363e0f67cb4a19ac436eb789dda846367ea03f4a0a8d90d3",
+          "shape": [
+            43793
+          ]
+        }
+      },
+      "build_seconds": 26.84830628708005,
+      "build_workers": 12,
+      "file_sha256": "86b9a04efafcb987521fe5bef7a4ad234f9f4e8ec18dc94fd50a2409be814620",
+      "molecules": 43793,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_rie_frozen_pilot_v1/runs/structures/valid_structures.npz"
+    }
+  },
+  "timing_probe": {
+    "determinism_detail": {
+      "identical": true,
+      "mismatched_arrays": [],
+      "n_arrays": 18
+    },
+    "extrapolation": {
+      "molecules_train_plus_valid": 394136,
+      "parallel_hours": 0.6796564644145736,
+      "parallel_workers": 12,
+      "serial_hours": 0.6751624116002394
+    },
+    "molecules": 1024,
+    "parallel_seconds": 6.3569062212482095,
+    "parallel_seconds_per_molecule": 0.006207916231687705,
+    "parallel_speedup": 0.993387758301975,
+    "parallel_workers": 12,
+    "peak_rss_after_kb": 2719292,
+    "peak_rss_before_kb": 2719292,
+    "peak_rss_delta_mb": 0.0,
+    "peak_rss_total_mb": 2655.55859375,
+    "rows": [
+      0,
+      1,
+      2,
+      3,
+      5
+    ],
+    "serial_seconds": 6.314872820861638,
+    "serial_seconds_per_molecule": 0.006166867989122693,
+    "serial_vs_parallel_structure_identical": true
+  },
+  "train": {
+    "fraction_REAL_ne_SHUFFLE_structure_level": 0.976089146921731,
+    "fraction_with_eligible_pairs": 0.9969487045552501,
+    "fraction_with_multiple_distance_bins": 0.9781671105174072,
+    "fraction_zero_pair_molecules": 0.003051295444749859,
+    "molecule_family_coverage": {
+      "Acceptor": 0.9830280610715785,
+      "Aromatic": 0.9765601139454763,
+      "Carbonyl": 0.7787511096268513,
+      "Donor": 0.8773344979063376,
+      "Halogen": 0.34684295105082735,
+      "Hydrophobe": 0.9657335810905313,
+      "NegIonizable": 0.05009091090731083,
+      "PosIonizable": 0.19321350790511013
+    },
+    "molecules_REAL_ne_SHUFFLE_structure_level": 341966,
+    "molecules_with_any_eligible_pair": 349274,
+    "molecules_with_any_motif": 350309,
+    "molecules_with_multiple_distance_bins": 342694,
+    "motif_family_counts": {
+      "Acceptor": 1276416,
+      "Aromatic": 808203,
+      "Carbonyl": 423978,
+      "Donor": 553012,
+      "Halogen": 185299,
+      "Hydrophobe": 1118235,
+      "NegIonizable": 19555,
+      "PosIonizable": 76490
+    },
+    "motifs_per_molecule_max": 249,
+    "motifs_per_molecule_mean": 12.733772331686376,
+    "motifs_total": 4461188,
+    "pair_bin_counts": {
+      "bin0_3_4": 6393715,
+      "bin1_5_6": 5590121,
+      "bin2_7_inf": 8935039
+    },
+    "pair_count_per_molecule_bin_max": {
+      "bin0": 648,
+      "bin1": 841,
+      "bin2": 28954
+    },
+    "pair_count_per_molecule_bin_mean": {
+      "bin0": 18.24987226803447,
+      "bin1": 15.95613727118852,
+      "bin2": 25.503689241686004
+    },
+    "pairs_per_molecule_max": 30443,
+    "pairs_per_molecule_mean": 59.709698780908994,
+    "pairs_total": 20918875,
+    "parse_failed_molecules": 2,
+    "parse_failed_rows": [
+      4385,
+      239569
+    ],
+    "rows": 350343,
+    "rows_sha256": "16169ef35ce1812eac577af939fa0416e79c670c015ecf5aa7b848a25d412dd9",
+    "split": "train"
+  },
+  "valid": {
+    "fraction_REAL_ne_SHUFFLE_structure_level": 0.9697211883177677,
+    "fraction_with_eligible_pairs": 0.9967803073550567,
+    "fraction_with_multiple_distance_bins": 0.9722786746740346,
+    "fraction_zero_pair_molecules": 0.0032196926449432556,
+    "molecule_family_coverage": {
+      "Acceptor": 0.9808416870276071,
+      "Aromatic": 0.9575046240266709,
+      "Carbonyl": 0.7640718836343708,
+      "Donor": 0.8690886671385838,
+      "Halogen": 0.2030004795286918,
+      "Hydrophobe": 0.9554495010618135,
+      "NegIonizable": 0.03639851117758546,
+      "PosIonizable": 0.25389902495832667
+    },
+    "molecules_REAL_ne_SHUFFLE_structure_level": 42467,
+    "molecules_with_any_eligible_pair": 43652,
+    "molecules_with_any_motif": 43790,
+    "molecules_with_multiple_distance_bins": 42579,
+    "motif_family_counts": {
+      "Acceptor": 164418,
+      "Aromatic": 103966,
+      "Carbonyl": 55683,
+      "Donor": 78153,
+      "Halogen": 13579,
+      "Hydrophobe": 145615,
+      "NegIonizable": 2062,
+      "PosIonizable": 13332
+    },
+    "motifs_per_molecule_max": 261,
+    "motifs_per_molecule_mean": 13.17123741237184,
+    "motifs_total": 576808,
+    "pair_bin_counts": {
+      "bin0_3_4": 880339,
+      "bin1_5_6": 759730,
+      "bin2_7_inf": 1686339
+    },
+    "pair_count_per_molecule_bin_max": {
+      "bin0": 684,
+      "bin1": 852,
+      "bin2": 31947
+    },
+    "pair_count_per_molecule_bin_mean": {
+      "bin0": 20.10227661955107,
+      "bin1": 17.348206334345672,
+      "bin2": 38.50704450482954
+    },
+    "pairs_per_molecule_max": 33483,
+    "pairs_per_molecule_mean": 75.95752745872628,
+    "pairs_total": 3326408,
+    "parse_failed_molecules": 0,
+    "parse_failed_rows": [],
+    "rows": 43793,
+    "rows_sha256": "fcad7abd938cf3328b6761cd78c8170cf6bd389bef4b6d1f94b5ed0b4aec21ed",
+    "split": "valid"
+  }
+}
