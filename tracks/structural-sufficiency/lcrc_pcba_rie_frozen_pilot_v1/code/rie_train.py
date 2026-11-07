@@ -114,15 +114,19 @@ def verify_feature_cache() -> dict[str, Any]:
             }
     for split in ("train", "valid"):
         path = FEATURES / f"{split}_base_logits.npy"
+        # the manifest records content hashes for activations/labels, file hashes for
+        # the (large) normalised relation arrays
         observed[f"{split}_base_logits"] = {
-            "file_sha256": C.sha256_file(path),
+            "array_sha256": C.sha256_array(np.load(path, mmap_mode="r")),
             "expected": manifest["splits"][split]["base_logits_sha256"],
         }
     for key, path in (("train_labels", FEATURES / "train_labels.npy"), ("valid_labels", FEATURES / "valid_labels.npy")):
         split = key.split("_")[0]
-        observed[key] = {"file_sha256": C.sha256_array(np.load(path)), "expected": manifest["splits"][split]["labels_sha256"]}
+        observed[key] = {"array_sha256": C.sha256_array(np.load(path)), "expected": manifest["splits"][split]["labels_sha256"]}
     mismatched = [
-        k for k, v in observed.items() if v["file_sha256"] != v["expected"]
+        k
+        for k, v in observed.items()
+        if v.get("file_sha256", v.get("array_sha256")) != v["expected"]
     ]
     if mismatched:
         raise RuntimeError(f"feature cache hashes drifted: {mismatched}")
@@ -586,12 +590,22 @@ def stage_preflight(device: torch.device) -> dict[str, Any]:
     steps = 3
     grad_report: dict[str, Any] = {}
     reload_report: dict[str, Any] = {}
+    opt_audit: dict[str, Any] = {}
+    first_batch: dict[str, Any] = {}
     for arm, head, relation in (("real", head_real, train_relation), ("shuffle", head_shuffle, train_shuffle)):
         head.train()
         optimizer = build_optimizer(head)
+        opt_audit[arm] = optimizer_audit(optimizer)
         rows_epoch = np.asarray(plan[0], dtype=np.int64)
+        full_batches = int(rows_epoch.size) // int(C.BATCH_SIZE)
+        if full_batches < 1:
+            raise RuntimeError("preflight needs at least one full batch")
         for step in range(steps):
-            rows = rows_epoch[step * int(C.BATCH_SIZE) : (step + 1) * int(C.BATCH_SIZE)]
+            # always a full batch (a short Train split must not yield empty updates)
+            start = (step % full_batches) * int(C.BATCH_SIZE)
+            rows = rows_epoch[start : start + int(C.BATCH_SIZE)]
+            if step == 0:
+                first_batch[arm] = C.sha256_int64(rows)
             rel = torch.from_numpy(np.ascontiguousarray(relation[rows], dtype=np.float32)).to(device)
             base = torch.from_numpy(np.ascontiguousarray(train_base[rows], dtype=np.float32)).to(device)
             y = torch.from_numpy(np.ascontiguousarray(train_labels[rows], dtype=np.float32)).to(device)
@@ -628,8 +642,26 @@ def stage_preflight(device: torch.device) -> dict[str, Any]:
         }
 
     # identical first-batch rows and identical recipe for both arms
-    recipe_equal = True
-    plan_equal = True
+    recipe_equal = opt_audit["real"] == opt_audit["shuffle"]
+    plan_equal = bool(first_batch["real"] == first_batch["shuffle"])
+    step0_all_nonzero = all(
+        v["present"] and v["finite"] and v["nonzero"]
+        for arm in ("real", "shuffle")
+        for key, v in grad_report[f"{arm}_step0"].items()
+        if not key.startswith("shared")
+    )
+    later_all_nonzero = all(
+        v["present"] and v["finite"] and v["nonzero"]
+        for arm in ("real", "shuffle")
+        for step in range(1, steps)
+        for key, v in grad_report[f"{arm}_step{step}"].items()
+    )
+    shared_zero_step0 = all(
+        not v["nonzero"]
+        for arm in ("real", "shuffle")
+        for key, v in grad_report[f"{arm}_step0"].items()
+        if key.startswith("shared")
+    )
     gates = {
         "feature_cache_certified": True,
         "head_parameters_8784_both_arms": bool(param_counts["real"] == param_counts["shuffle"] == C.HEAD_PARAMETERS),
@@ -640,14 +672,17 @@ def stage_preflight(device: torch.device) -> dict[str, Any]:
         "epoch0_delta_exactly_zero": bool(
             epoch0["real"]["max_abs_delta"] == 0.0 and epoch0["shuffle"]["max_abs_delta"] == 0.0
         ),
-        "gradients_finite_and_nonzero_both_arms": bool(
+        "gradients_finite_both_arms": bool(
             all(
-                v["present"] and v["finite"] and v["nonzero"]
+                v["present"] and v["finite"]
                 for arm in ("real", "shuffle")
                 for step in range(steps)
-                for key, v in grad_report[f"{arm}_step{step}"].items()
+                for v in grad_report[f"{arm}_step{step}"].values()
             )
         ),
+        "task_weight_gradient_nonzero_at_step0": bool(step0_all_nonzero),
+        "all_gradients_nonzero_after_step0": bool(later_all_nonzero),
+        "shared_projection_gradient_zero_at_step0": bool(shared_zero_step0),
         "save_reload_equivalent": bool(
             reload_report["real"]["bitwise_equal_after_reload"] and reload_report["shuffle"]["bitwise_equal_after_reload"]
         ),
@@ -685,7 +720,9 @@ def stage_preflight(device: torch.device) -> dict[str, Any]:
         "gradient_reach": grad_report,
         "save_reload": reload_report,
         "recipe": dict(C.RECIPE),
-        "recipe_identical_for_both_arms": recipe_equal,
+        "recipe_identical_for_both_arms": bool(recipe_equal),
+        "optimizer_audit": opt_audit,
+        "first_batch_rows_sha256": first_batch,
         "gates": {k: bool(v) for k, v in gates.items()},
         "all_passed": bool(all(gates.values())),
         "test_evaluated": False,
