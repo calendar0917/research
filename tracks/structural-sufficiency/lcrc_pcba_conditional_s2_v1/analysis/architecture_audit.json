@@ -1,0 +1,226 @@
+{
+  "captured_utc": "2026-11-07T13:35:30Z",
+  "checks": {
+    "C2": true,
+    "F": true,
+    "label_nan_mask_correct": true,
+    "official_test_untouched": true,
+    "path_codes_in_frozen_vocabulary": true
+  },
+  "commit": "c4bb21bb54387cba1fb6d96513b96b6043973f64",
+  "host_facts": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cuda_capability": [
+      [
+        8,
+        0
+      ]
+    ],
+    "cudnn": 90100,
+    "git": {
+      "branch": "main",
+      "commit": "c4bb21bb54387cba1fb6d96513b96b6043973f64",
+      "dirty": false,
+      "dirty_files": []
+    },
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "label_mask": {
+    "manual_two_entry_mean": 0.5762470569250595,
+    "masked_bce_loss": 0.5762470364570618,
+    "matches_manual": true,
+    "matches_torch_observed_only": true,
+    "nan_entries": 2,
+    "nan_positions_in_labels_are_masked": true,
+    "observed_entries": 2,
+    "torch_observed_only_bce": 0.5762470364570618
+  },
+  "mode": "architecture",
+  "models": {
+    "C2": {
+      "atom_encoder_calls": 1,
+      "atom_renumbering_max_abs_logit_diff": 2.86102294921875e-06,
+      "batch_immutable": true,
+      "batch_tensors_mutated": [],
+      "bond_encoder_calls": 1,
+      "call_counts_one_forward": {
+        "atom_encoder": 1,
+        "bond_encoder": 1,
+        "dropout": 1,
+        "f": 1,
+        "local": 1,
+        "new_module": 0,
+        "path_cond_ec": 1,
+        "path_cond_ee": 1,
+        "readout": 1,
+        "rho": 1
+      },
+      "checks": {
+        "atom_renumbering_invariant": true,
+        "batch_not_mutated": true,
+        "forward_finite": true,
+        "gate_shape_is_paths_by_192": true,
+        "new_module_called_once": true,
+        "no_extra_normalisation_or_attention": true,
+        "one_atom_and_bond_encode": true,
+        "one_dropout_call": true,
+        "one_local_call": true,
+        "path_gate_preserved": true,
+        "post_local_needs_no_structure": true
+      },
+      "dropout_calls": 1,
+      "f_calls": 1,
+      "forward_finite": true,
+      "gate_parameters": {
+        "ec_shape": [
+          400,
+          16
+        ],
+        "ee_shape": [
+          80,
+          16
+        ],
+        "has_conditional_gate": true,
+        "path_gate_initial_ones": true,
+        "path_gate_present": true,
+        "path_gate_shape": [
+          400,
+          1
+        ],
+        "v_shape": [
+          16,
+          192
+        ]
+      },
+      "gate_shape_on_batch": [
+        5194,
+        192
+      ],
+      "local_calls": 1,
+      "model_name": "LCRC-W2-ConditionalS2",
+      "n_paths_in_batch": 5194,
+      "new_module_calls": 1,
+      "new_module_types": [
+        "Embedding"
+      ],
+      "new_parameters": 10752,
+      "new_state_keys": [
+        "local.path_cond_v",
+        "local.path_cond_ec.weight",
+        "local.path_cond_ee.weight"
+      ],
+      "path_cond_ec_calls": 1,
+      "path_cond_ee_calls": 1,
+      "post_local_without_structure_max_abs_diff": 2.86102294921875e-06,
+      "readout_calls": 1,
+      "rho_calls": 1,
+      "total_parameters": 1005076
+    },
+    "F": {
+      "atom_encoder_calls": 1,
+      "atom_renumbering_max_abs_logit_diff": 3.814697265625e-06,
+      "batch_immutable": true,
+      "batch_tensors_mutated": [],
+      "bond_encoder_calls": 1,
+      "call_counts_one_forward": {
+        "atom_encoder": 1,
+        "bond_encoder": 1,
+        "dropout": 1,
+        "f": 1,
+        "local": 1,
+        "new_module": 1,
+        "path_cond_ec": 0,
+        "path_cond_ee": 0,
+        "readout": 1,
+        "rho": 1
+      },
+      "checks": {
+        "atom_renumbering_invariant": true,
+        "batch_not_mutated": true,
+        "ffn_is_norm_fc1_fc2": true,
+        "forward_finite": true,
+        "new_module_called_once": true,
+        "one_atom_and_bond_encode": true,
+        "one_dropout_call": true,
+        "one_local_call": true,
+        "post_local_needs_no_structure": true
+      },
+      "dropout_calls": 1,
+      "f_calls": 1,
+      "forward_finite": true,
+      "gate_parameters": {
+        "ec_shape": null,
+        "ee_shape": null,
+        "has_conditional_gate": false,
+        "path_gate_initial_ones": true,
+        "path_gate_present": true,
+        "path_gate_shape": [
+          400,
+          1
+        ],
+        "v_shape": null
+      },
+      "gate_shape_on_batch": null,
+      "local_calls": 1,
+      "model_name": "LCRC-W2-LocalResidualFFN",
+      "n_paths_in_batch": 5194,
+      "new_module_calls": 1,
+      "new_module_types": [
+        "LayerNorm",
+        "Linear",
+        "LocalResidualFFN"
+      ],
+      "new_parameters": 10664,
+      "new_state_keys": [
+        "ffn.norm.weight",
+        "ffn.norm.bias",
+        "ffn.fc1.weight",
+        "ffn.fc1.bias",
+        "ffn.fc2.weight",
+        "ffn.fc2.bias"
+      ],
+      "path_cond_ec_calls": 0,
+      "path_cond_ee_calls": 0,
+      "post_local_without_structure_max_abs_diff": 2.86102294921875e-06,
+      "readout_calls": 1,
+      "rho_calls": 1,
+      "total_parameters": 1004988
+    }
+  },
+  "path_vocabulary": {
+    "cache_meta_n_s2_paths": 34369144,
+    "n_atoms_total": 11373137,
+    "n_nbr_codes": 80,
+    "n_path_codes": 400,
+    "n_paths": 34369144,
+    "path_cat_in_range": true,
+    "path_cat_max": 393,
+    "path_cat_min": 0,
+    "path_count_matches_meta": true,
+    "path_end63_in_range": true,
+    "path_end63_max": 78,
+    "path_end63_min": 0,
+    "path_end_in_atom_range": true,
+    "path_end_max": 331,
+    "path_end_min": 0,
+    "path_ptr_length": 11373138
+  },
+  "protocol_id": "lcrc-pcba-conditional-s2-v1",
+  "round_id": "lcrc-pcba-conditional-s2-v1",
+  "schema": "lcrc-pcba-conditional-s2-audit-v1",
+  "test_isolation": {
+    "code_path_reads_test_rows": false,
+    "official_test_rows": 43793,
+    "test_evaluated": false,
+    "test_labels_all_nan": true
+  },
+  "verdict": "OK"
+}

@@ -360,3 +360,4 @@ real recovery path.
 | # | date | change | reason |
 |---|---|---|---|
 | 1 | 2026-11-08 | Initial freeze | before any formal step |
+| 2 | 2026-11-08 | §9 applied: GPU0 not shared, both formal runs serial on `res-gpu1` | not a rule change — the co-tenancy clause failed: GPU0 was at 100 % utilisation in 6/6 fresh samples (external pid 3841932), while 24,222 MiB remained free. See `analysis/gpu_sampling.json` and `analysis/gpu_occupancy_samples.csv`. C2 21:39→23:13 CST, F 23:16→00:36 CST. |
