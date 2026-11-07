@@ -1,0 +1,179 @@
+{
+  "audit_mode": "profile",
+  "batches": {
+    "128": {
+      "distinct_ops": 280,
+      "n_atoms": 3293,
+      "n_paths": 12658,
+      "rows": 128,
+      "top_ops": [
+        {
+          "calls_per_step": 1.0,
+          "key": "Optimizer.step#AdamW.step",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 3.282613200000001
+        },
+        {
+          "calls_per_step": 13.0,
+          "key": "aten::embedding_dense_backward",
+          "self_cpu_ms_per_step": 1.661332400000117,
+          "self_cuda_ms_per_step": 2.637125199999905
+        },
+        {
+          "calls_per_step": 116.0,
+          "key": "void at_cuda_detail::cub::DeviceRadixSortOnesweepKernel<at_cuda_detail::cub::DeviceRadixSortPolicy<long, at::cuda::cub::detail::OpaqueType<8>, unsigned long long>::Policy900, false, long, at::cuda::cub::detail::OpaqueType<8>, unsigned long long, int, int, at_cuda_detail::cub::detail::identity_decomposer_t>(int*, int*, unsigned long long*, unsigned long long const*, long*, long const*, at::cuda::cub::detail::OpaqueType<8>*, at::cuda::cub::detail::OpaqueType<8> const*, int, int, int, at_cuda_detail::cub::detail::identity_decomposer_t)",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 1.419123999999964
+        },
+        {
+          "calls_per_step": 45.0,
+          "key": "aten::mm",
+          "self_cpu_ms_per_step": 1.57358019999994,
+          "self_cuda_ms_per_step": 1.3196539999999854
+        },
+        {
+          "calls_per_step": 23.0,
+          "key": "aten::addmm",
+          "self_cpu_ms_per_step": 2.4320423999999754,
+          "self_cuda_ms_per_step": 0.8671400000000081
+        },
+        {
+          "calls_per_step": 13.0,
+          "key": "void at::native::(anonymous namespace)::sum_and_scatter<float, long>(long const*, float*, long, long const*, long const*, at::AccumulateType<float, true>::type const*, long const*, long const*, long, long)",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.5568147999999535
+        },
+        {
+          "calls_per_step": 4.0,
+          "key": "ampere_sgemm_32x128_tn",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.42327300000000073
+        },
+        {
+          "calls_per_step": 9.0,
+          "key": "ampere_sgemm_32x32_sliced1x4_nt",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.35950319999997155
+        },
+        {
+          "calls_per_step": 29.0,
+          "key": "aten::sum",
+          "self_cpu_ms_per_step": 0.8464158000000632,
+          "self_cuda_ms_per_step": 0.3522644000000161
+        },
+        {
+          "calls_per_step": 7.0,
+          "key": "aten::_index_put_impl_",
+          "self_cpu_ms_per_step": 0.46937559999997175,
+          "self_cuda_ms_per_step": 0.3502237999999626
+        },
+        {
+          "calls_per_step": 3.0,
+          "key": "ampere_sgemm_128x32_nn",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.33220739999998916
+        },
+        {
+          "calls_per_step": 171.0,
+          "key": "Memset (Device)",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.33166300000002774
+        }
+      ],
+      "total_cuda_time_ms_per_step": 18.738683599999746,
+      "total_op_calls_per_step": 5607.4
+    },
+    "8": {
+      "distinct_ops": 266,
+      "n_atoms": 189,
+      "n_paths": 762,
+      "rows": 8,
+      "top_ops": [
+        {
+          "calls_per_step": 1.0,
+          "key": "Optimizer.step#AdamW.step",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 2.079309199999996
+        },
+        {
+          "calls_per_step": 13.0,
+          "key": "aten::embedding_dense_backward",
+          "self_cpu_ms_per_step": 0.18477240000001258,
+          "self_cuda_ms_per_step": 0.6510575999999899
+        },
+        {
+          "calls_per_step": 13.0,
+          "key": "void at::native::(anonymous namespace)::embedding_backward_feature_kernel<float, float, long>(long const*, float const*, float*, int, long, int)",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.6510575999999899
+        },
+        {
+          "calls_per_step": 45.0,
+          "key": "aten::mm",
+          "self_cpu_ms_per_step": 1.5739961999999854,
+          "self_cuda_ms_per_step": 0.40665920000008043
+        },
+        {
+          "calls_per_step": 23.0,
+          "key": "aten::addmm",
+          "self_cpu_ms_per_step": 1.7146043999999958,
+          "self_cuda_ms_per_step": 0.3097045999999726
+        },
+        {
+          "calls_per_step": 15.0,
+          "key": "ampere_sgemm_32x32_sliced1x4_tn",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.22608780000000406
+        },
+        {
+          "calls_per_step": 29.0,
+          "key": "aten::sum",
+          "self_cpu_ms_per_step": 0.8420424000000082,
+          "self_cuda_ms_per_step": 0.21979640000001638
+        },
+        {
+          "calls_per_step": 19.0,
+          "key": "void at::native::reduce_kernel<128, 4, at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, float, 4> >(at::native::ReduceOp<float, at::native::func_wrapper_t<float, at::native::sum_functor<float, float, float>::operator()(at::TensorIterator&)::{lambda(float, float)#1}>, unsigned int, float, 4>)",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.1674502000000044
+        },
+        {
+          "calls_per_step": 14.0,
+          "key": "ampere_sgemm_32x32_sliced1x4_nn",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.14606880000004457
+        },
+        {
+          "calls_per_step": 27.0,
+          "key": "aten::index_select",
+          "self_cpu_ms_per_step": 0.6073967999999552,
+          "self_cuda_ms_per_step": 0.1318857999999942
+        },
+        {
+          "calls_per_step": 42.0,
+          "key": "aten::mul",
+          "self_cpu_ms_per_step": 0.9203339999999746,
+          "self_cuda_ms_per_step": 0.13075160000000943
+        },
+        {
+          "calls_per_step": 24.0,
+          "key": "void at::native::(anonymous namespace)::indexSelectLargeIndex<float, long, unsigned int, 2, 2, -2, true>(at::cuda::detail::TensorInfo<float, unsigned int>, at::cuda::detail::TensorInfo<float const, unsigned int>, at::cuda::detail::TensorInfo<long const, unsigned int>, int, int, unsigned int, unsigned int, long)",
+          "self_cpu_ms_per_step": 0.0,
+          "self_cuda_ms_per_step": 0.11623779999999388
+        }
+      ],
+      "total_cuda_time_ms_per_step": 8.362841199999977,
+      "total_op_calls_per_step": 4158.4
+    }
+  },
+  "created_utc": "2026-11-07T22:05:44Z",
+  "device": "cuda",
+  "no_per_path_python_loop": true,
+  "op_count_ratio_128_over_8": 1.3484513274336283,
+  "path_count_ratio_128_over_8": 16.611548556430446,
+  "protocol_id": "lcrc-pcba-s3-v1",
+  "round_id": "lcrc-pcba-s3-v1",
+  "seconds": 9.459822983946651,
+  "statement": "The number of dispatched operators per training step is (nearly) independent of the number of S3 paths, while the path count grows with batch size: the S3 branch is tensorised (gather + index_add_ + two Linears), not a per-path Python loop.",
+  "test_evaluated": false
+}

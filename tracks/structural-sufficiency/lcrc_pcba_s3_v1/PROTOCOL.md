@@ -304,7 +304,22 @@ floating-point summation, so the recorded tolerance is `2e-5` (observed
 * budget: target **≤ 6 GPU-hours**, hard cap **≤ 10 GPU-hours**, charged per
   job from the run records (`analysis/gpu_ledger.json`);
 * an epoch-cost probe (`gpu_cost_probe.json`) measures a 20-step training
-  window per arm and projects the epoch time before the formal runs start;
+  window per arm and projects the epoch time before the formal runs start.
+
+The measured probe (A100-SXM4-40GB, `a100-2`, CUDA_VISIBLE_DEVICES=1, commit
+`6fd2c899`, 5 warm-up + 20 measured steps of the real loop):
+
+| arm | step p50 | projected epoch | ratio vs historical W2 epoch (124.86 s) | Validation pass | peak allocated | projected 40-epoch run |
+|---|---:|---:|---:|---:|---:|---:|
+| W2 (rebuilt reference) | 28.5 ms | 78.0 s | 0.62 | 5.8 s | 151 MiB | 0.93 h |
+| `S3` | 36.6 ms | 100.2 s | **0.80** | 6.3 s | 161 MiB | 1.18 h |
+| `F` | 30.4 ms | 83.2 s | 0.67 | 5.7 s | 162 MiB | 0.99 h |
+
+The epoch gate (S3 ≤ 2.5 × W2) passes with margin, on the historical epoch time
+(0.80×) and on the same-host ratio (100.2 / 78.0 = **1.28×**). Projected cost of
+both formal runs together: **2.17 GPU-hours**. GPU0 was occupied by an external
+process for the whole window, so both arms are serialised on `res-gpu1`
+(protocol §9 fallback); the budget is unaffected.
 * the formal jobs are watchdogged (soft/hard wall-clock) and are crash-visible:
   a failure leaves `run.json` with `status=FAILED`.
 
