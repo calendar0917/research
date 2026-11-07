@@ -231,8 +231,8 @@ recipe.
 | W3 | 124.12 s | 41.6 ms | 23.77 | 4,613.1 | 294.3 | 331 MB | 1.3880 |
 | A0 (historical) | 119.14 s | — | 23.51 | — | — | — | 0.6629 |
 
-Widening from 288 k → 2.1 M parameters (7.4×) costs **0 % steps/s** at this
-batch size: the epoch is data-loader bound (23.6 batches/s of 128 graphs), not
+Widening from 288 k → 2.1 M parameters (7.4×) changes throughput by **< 1 %**
+(23.51 → 23.56 → 23.77 steps/s) at this batch size: the epoch is data-loader bound (23.6 batches/s of 128 graphs), not
 GPU bound. Peak training memory is 331 MB at 3×, which is why co-tenancy on
 GPU0 would have been technically possible on the memory axis alone.
 
@@ -309,7 +309,7 @@ code; the later commit changed only analysis-side code.
 | GPU occupancy at launch | `analysis/gpu_preflight.json`, `analysis/gpu0_occupancy.json`, `gpu0_occupancy_samples.csv` |
 | per-model epoch-40 records | `analysis/w2_epoch40.json`, `analysis/w3_epoch40.json` |
 | comparison + labels | `analysis/scale_comparison.json`, `analysis/decision.json` |
-| per-task table | `analysis/per_task_deltas.csv` (127 tasks × 4 AP columns + deltas) |
+| per-task table | `analysis/per_task_deltas.csv` (128 rows, 127 scorable: 4 AP columns + 3 deltas each) |
 | resource ledger | `analysis/gpu_ledger.json` |
 | raw job records | `analysis/rr_jobs.json` |
 | run directories | `runs/W2/`, `runs/W3/` (git-ignored, pulled) |
