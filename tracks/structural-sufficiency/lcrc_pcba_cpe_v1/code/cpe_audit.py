@@ -1041,6 +1041,73 @@ def _predict(model: torch.nn.Module, task: Any, rows: np.ndarray, device: torch.
     return C.PC.predict_logits(model, task.cache, rows, device, batch_size=batch_size)
 
 
+def _residual_accumulator(model: torch.nn.Module, task: Any, rows: np.ndarray, device: torch.device, batch_size: int = 256) -> dict[str, Any]:
+    """Full-split mean absolute main / pair / total evidence residual.
+
+    Runs one extra eval-mode forward pass per batch and accumulates sums only;
+    no per-row tensor is kept, so memory stays flat.
+    """
+    was_training = model.training
+    model.eval()
+    rows = np.asarray(rows, dtype=np.int64)
+    acc = {
+        "n_graphs": 0,
+        "n_entries": 0,
+        "main_abs_sum": 0.0,
+        "pair_abs_sum": 0.0,
+        "residual_abs_sum": 0.0,
+        "base_abs_sum": 0.0,
+        "cross_abs_sum": 0.0,
+        "self_abs_sum": 0.0,
+        "pair_abs_max": 0.0,
+        "residual_abs_max": 0.0,
+        "finite": True,
+        "per_task_pair_abs_sum": None,
+    }
+    try:
+        with torch.no_grad():
+            for start in range(0, rows.size, int(batch_size)):
+                chunk = rows[start : start + int(batch_size)]
+                batch = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in C.PC.collate(task.cache, chunk.tolist()).items()}
+                _logits, aux = model(batch, return_aux=True)
+                ev = aux["evidence"]
+                main = ev["main_effect_residual"].detach().float()
+                pair = ev["pair_residual"].detach().float()
+                resid = ev["residual"].detach().float()
+                base = aux["base_logits"].detach().float()
+                cross = ev["pair_cross"].detach().float()
+                self_ = ev["pair_self"].detach().float()
+                acc["n_graphs"] += int(main.shape[0])
+                acc["n_entries"] += int(main.numel())
+                acc["main_abs_sum"] += float(main.abs().sum().item())
+                acc["pair_abs_sum"] += float(pair.abs().sum().item())
+                acc["residual_abs_sum"] += float(resid.abs().sum().item())
+                acc["base_abs_sum"] += float(base.abs().sum().item())
+                acc["cross_abs_sum"] += float(cross.abs().sum().item())
+                acc["self_abs_sum"] += float(self_.abs().sum().item())
+                acc["pair_abs_max"] = max(acc["pair_abs_max"], float(pair.abs().max().item()))
+                acc["residual_abs_max"] = max(acc["residual_abs_max"], float(resid.abs().max().item()))
+                acc["finite"] = acc["finite"] and bool(
+                    torch.isfinite(resid).all().item() and torch.isfinite(aux["logits"]).all().item()
+                )
+    finally:
+        model.train(was_training)
+    n = max(acc["n_entries"], 1)
+    return {
+        "n_graphs": acc["n_graphs"],
+        "n_entries": acc["n_entries"],
+        "main_effect_residual_abs_mean": acc["main_abs_sum"] / n,
+        "pair_residual_abs_mean": acc["pair_abs_sum"] / n,
+        "residual_abs_mean": acc["residual_abs_sum"] / n,
+        "base_logits_abs_mean": acc["base_abs_sum"] / n,
+        "pair_cross_abs_mean": acc["cross_abs_sum"] / n,
+        "pair_self_abs_mean": acc["self_abs_sum"] / n,
+        "pair_residual_abs_max": acc["pair_abs_max"],
+        "residual_abs_max": acc["residual_abs_max"],
+        "finite": bool(acc["finite"]),
+    }
+
+
 def audit_mechanism(task: Any, out_dir: Path, device: torch.device, *, runs_root: Path | None = None) -> dict[str, Any]:
     runs_root = Path(runs_root) if runs_root is not None else C.RUNS
     rows = C.diagnostic_valid_rows(task)
@@ -1067,10 +1134,12 @@ def audit_mechanism(task: Any, out_dir: Path, device: torch.device, *, runs_root
             "run_dir": C.track_rel(run_dir),
             "checkpoint": C.track_rel(ckpt_path),
             "checkpoint_sha256": C.sha256_file(ckpt_path),
-            "checkpoint_recorded_sha256": payload.get("valid_ap"),
+            "checkpoint_valid_ap": payload.get("valid_ap"),
             "epoch": int(payload["epoch"]),
             "pair_mode": payload.get("pair_mode"),
             "parameters": int(payload["parameters"]),
+            "git_commit": payload.get("git_commit"),
+            "git_state": payload.get("git_state"),
         }
 
         # 1-4. alpha norms / residual magnitudes on the fixed Training batch
@@ -1137,25 +1206,51 @@ def audit_mechanism(task: Any, out_dir: Path, device: torch.device, *, runs_root
         }
         model.train(was_training)
 
-        # 6. AP on the fixed 256 molecules + full 256-molecule ablation
+        # 6. AP on the fixed 256 molecules + the full official Validation split
         full_logits = _predict(model, task, rows, device)
         record["fixed_validation_ap"] = report_from_logits(full_logits, y)
+        all_rows = np.asarray(task.valid_rows, dtype=np.int64)
+        all_y = np.asarray(task.labels[all_rows])
+        record["full_validation_residuals"] = _residual_accumulator(model, task, all_rows, device)
+        all_logits = _predict(model, task, all_rows, device)
+        record["full_validation"] = report_from_logits(all_logits, all_y)
         if key == "P":
             saved = model.evidence.alpha_pair.detach().clone()
             with torch.no_grad():
                 model.evidence.alpha_pair.zero_()
             ablated_logits = _predict(model, task, rows, device)
+            ablated_all = _predict(model, task, all_rows, device)
             with torch.no_grad():
                 model.evidence.alpha_pair.copy_(saved)
+            abl_report = report_from_logits(ablated_logits, y)
+            abl_all = report_from_logits(ablated_all, all_y)
             record["ablation_alpha_pair_zero"] = {
-                "ap_full": float(record["fixed_validation_ap"]["ap"]),
-                "ap_without_pair": float(report_from_logits(ablated_logits, y)["ap"]),
-                "ap_delta_full_minus_ablated": float(
-                    float(record["fixed_validation_ap"]["ap"]) - float(report_from_logits(ablated_logits, y)["ap"])
-                ),
-                "logits_abs_max_diff": float(np.abs(full_logits - ablated_logits).max()),
-                "logits_abs_mean_diff": float(np.abs(full_logits - ablated_logits).mean()),
-                "molecules_changed": int((np.abs(full_logits - ablated_logits) > 0).sum()),
+                "fixed_256": {
+                    "ap_full": float(record["fixed_validation_ap"]["ap"]),
+                    "ap_without_pair": float(abl_report["ap"]),
+                    "ap_delta_full_minus_ablated": float(
+                        float(record["fixed_validation_ap"]["ap"]) - float(abl_report["ap"])
+                    ),
+                    "logits_abs_max_diff": float(np.abs(full_logits - ablated_logits).max()),
+                    "logits_abs_mean_diff": float(np.abs(full_logits - ablated_logits).mean()),
+                    "molecules_changed": int((np.abs(full_logits - ablated_logits) > 0).sum()),
+                },
+                "full_official_validation": {
+                    "n_rows": int(all_rows.size),
+                    "ap_full": float(record["full_validation"]["ap"]),
+                    "ap_without_pair": float(abl_all["ap"]),
+                    "ap_delta_full_minus_ablated": float(
+                        float(record["full_validation"]["ap"]) - float(abl_all["ap"])
+                    ),
+                    "valid_bce_full": float(record["full_validation"]["valid_bce"]),
+                    "valid_bce_without_pair": float(abl_all["valid_bce"]),
+                    "logits_abs_max_diff": float(np.abs(all_logits - ablated_all).max()),
+                    "logits_abs_mean_diff": float(np.abs(all_logits - ablated_all).mean()),
+                    "entries_changed": int((np.abs(all_logits - ablated_all) > 0).sum()),
+                    "fraction_entries_changed": float((np.abs(all_logits - ablated_all) > 0).mean()),
+                    "ablated_logits_sha256": abl_all["valid_logits_sha256"],
+                },
+                "note": "diagnostic only; never used to select a configuration or checkpoint",
             }
         out["models"][key] = record
         del model
@@ -1177,10 +1272,19 @@ def audit_mechanism(task: Any, out_dir: Path, device: torch.device, *, runs_root
         "P_pair_coefficient_learnt": out["models"]["P"]["alpha"]["pair_l2"] > 0.0,
         "S_pair_coefficient_learnt": out["models"]["S"]["alpha"]["pair_l2"] > 0.0,
         "P_main_effect_learnt": out["models"]["P"]["alpha"]["A_l2"] > 0.0 and out["models"]["P"]["alpha"]["B_l2"] > 0.0,
-        "P_pair_residual_nonzero": out["models"]["P"]["fixed_validation_diagnostic"]["pair_residual_abs_mean"] > 0.0,
-        "P_residual_finite": bool(out["models"]["P"]["fixed_validation_diagnostic"]["finite"]),
-        "S_residual_finite": bool(out["models"]["S"]["fixed_validation_diagnostic"]["finite"]),
+        "P_pair_residual_nonzero": out["models"]["P"]["full_validation_residuals"]["pair_residual_abs_mean"] > 0.0,
+        "S_pair_residual_nonzero": out["models"]["S"]["full_validation_residuals"]["pair_residual_abs_mean"] > 0.0,
+        "P_residual_finite": bool(out["models"]["P"]["full_validation_residuals"]["finite"]),
+        "S_residual_finite": bool(out["models"]["S"]["full_validation_residuals"]["finite"]),
         "P_ablation_ran": "ablation_alpha_pair_zero" in out["models"]["P"],
+        "P_full_validation_ap_reproduces_run": abs(
+            out["models"]["P"]["full_validation"]["ap"] - float(C.read_json(C.RUNS / "P" / "run.json")["fixed_epoch_reports"]["40"]["ap"])
+        )
+        <= 1e-4,
+        "S_full_validation_ap_reproduces_run": abs(
+            out["models"]["S"]["full_validation"]["ap"] - float(C.read_json(C.RUNS / "S" / "run.json")["fixed_epoch_reports"]["40"]["ap"])
+        )
+        <= 1e-4,
     }
     out["checks"] = checks
     out["all_passed"] = bool(all(checks.values()))
