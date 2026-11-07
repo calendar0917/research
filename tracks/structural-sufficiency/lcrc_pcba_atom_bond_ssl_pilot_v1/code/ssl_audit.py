@@ -242,7 +242,7 @@ def check_no_forbidden_fields(
     bond_inputs = _move(pb.bond_view, device)
     ids = pb.atom_ids.to(device)
     bids = pb.bond_ids.to(device)
-    gen = torch.Generator().manual_seed(4242)
+    gen = torch.Generator(device=device).manual_seed(4242)
     extra = dict(inputs)
     extra["atom_type"] = torch.randint(
         0, C.N_ATOM_CLASSES, (inputs["atom_feat"].shape[0],), generator=gen, device=device
