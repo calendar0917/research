@@ -405,17 +405,23 @@ def stage_smoke(device: torch.device) -> dict[str, Any]:
             "contrib_finite": bool(torch.isfinite(aux["contrib"]).all()),
             "rho_finite": bool(torch.isfinite(aux["rho"]).all()),
         }
-        # CPU/GPU numeric smoke of the new head: finite forward/backward, non-zero
-        # grad on both new parameter tensors, no gradient on the frozen encoder.
-        torch.manual_seed(0)
-        head = __import__("rie_model").build_head(device=device)
-        relation = torch.randn(int(rows.size), C.N_BINS, C.PAIR_FEATURE_DIM, device=device)
-        y = torch.randint(0, 2, (int(rows.size), C.N_TASKS), device=device).to(torch.float32)
+        h_cpu = h.detach().cpu().numpy()
+        base_np = logits.detach().cpu().numpy()
+    # The head smoke must run outside inference_mode: tensors built inside it are
+    # inference tensors and cannot be used in an autograd graph.
+    torch.manual_seed(0)
+    head = __import__("rie_model").build_head(device=device)
+    relation = torch.randn(int(rows.size), C.N_BINS, C.PAIR_FEATURE_DIM, device=device)
+    base = torch.from_numpy(base_np).to(device)
+    y = torch.randint(0, 2, (int(rows.size), C.N_TASKS), device=device).to(torch.float32)
+
+    def _head_grads() -> tuple[dict[str, Any], float]:
+        head.zero_grad(set_to_none=True)
         delta = head(relation)
-        loss = torch.nn.functional.binary_cross_entropy_with_logits(logits + delta, y)
-        loss += C.RECIPE["l1_coefficient"] * head.task_weight.weight.abs().mean()
-        loss.backward()
-        grad_report = {
+        batch_loss = torch.nn.functional.binary_cross_entropy_with_logits(base + delta, y)
+        batch_loss = batch_loss + C.RECIPE["l1_coefficient"] * head.task_weight.weight.abs().mean()
+        batch_loss.backward()
+        report = {
             name: {
                 "finite": bool(torch.isfinite(p.grad).all()),
                 "abs_max": float(p.grad.abs().max().item()),
@@ -423,8 +429,20 @@ def stage_smoke(device: torch.device) -> dict[str, Any]:
             }
             for name, p in head.named_parameters()
         }
-        frozen_grad = any(p.grad is not None for p in model.parameters())
-        h_cpu = h.detach().cpu().numpy()
+        return report, float(batch_loss.detach().cpu().item())
+
+    grad_report, loss_value = _head_grads()
+    # At the frozen zero-residual initialisation the task weights are exactly zero,
+    # so the shared projection's first gradient is exactly zero by construction.
+    shared_zero_at_init = all(
+        not v["nonzero"] for k, v in grad_report.items() if k.startswith("shared")
+    )
+    with torch.no_grad():
+        for param in head.parameters():
+            if param.grad is not None:
+                param.add_(param.grad, alpha=-0.05)
+    grad_report_after_step, _ = _head_grads()
+    frozen_grad = any(p.grad is not None for p in model.parameters())
     if device.type == "cuda":
         torch.cuda.synchronize(device)
     seconds = float(time.perf_counter() - t0)
@@ -435,7 +453,14 @@ def stage_smoke(device: torch.device) -> dict[str, Any]:
         "bitwise_state_dict": bool(model_audit["gates"]["bitwise_state_dict"]),
         "all_values_finite": all(finite.values()),
         "logits_identity_contrib_plus_rho_plus_residual": bool(max_identity == 0.0),
-        "head_gradients_finite_and_nonzero": all(v["finite"] and v["nonzero"] for v in grad_report.values()),
+        "head_gradients_finite": all(
+            v["finite"] for v in list(grad_report.values()) + list(grad_report_after_step.values())
+        ),
+        "task_weight_gradient_nonzero_at_init": bool(grad_report["task_weight.weight"]["nonzero"]),
+        "head_gradients_nonzero_after_one_step": all(
+            v["nonzero"] for v in grad_report_after_step.values()
+        ),
+        "shared_projection_gradient_zero_at_init": bool(shared_zero_at_init),
         "frozen_encoder_has_no_grad": not bool(frozen_grad),
         "parameters_unchanged": after["parameter_fingerprint"] == before["parameter_fingerprint"],
         "no_grad_on_frozen_parameters": not any(p.grad is not None for p in model.parameters()),
@@ -454,8 +479,14 @@ def stage_smoke(device: torch.device) -> dict[str, Any]:
         "rows": [int(r) for r in rows.tolist()],
         "head": {
             "parameters": int(sum(p.numel() for p in head.parameters())),
-            "gradients": grad_report,
-            "loss": float(loss.detach().cpu().item()),
+            "gradients_at_init": grad_report,
+            "gradients_after_one_sign_step": grad_report_after_step,
+            "loss_at_init": loss_value,
+            "zero_residual_note": (
+                "task_weight starts at exactly zero, so d(loss)/d(shared_projection) is zero at "
+                "step 0; after the first parameter step the shared projection receives a non-zero "
+                "gradient (checked above). This is the intended zero-residual design, not a bug."
+            ),
         },
         "finite": finite,
         "max_abs_logits_identity_residual": max_identity,
