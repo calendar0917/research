@@ -1231,13 +1231,13 @@ def _permute_batch(batch: Mapping[str, Any], *, seed: int) -> tuple[dict[str, An
     import bs_model as BSM
 
     out, p = BSM.permute_atoms(batch, seed=int(seed))
+    device = batch["s3_path_atom"].device
+    p = p.to(device)
     p_inv = torch.empty_like(p)
-    p_inv[p] = torch.arange(p.numel(), dtype=torch.long)
+    p_inv[p] = torch.arange(p.numel(), dtype=torch.long, device=device)
     for key in ("s3_path_atom", "s3_path_end"):
         value = out[key]
         out[key] = p_inv[value] if value.numel() else value
-    out = dict(out)
-    # permute_atoms drops unknown keys from the returned copy? it clones all keys
     for key in ("s3_mid1_type", "s3_mid2_type", "s3_bond1", "s3_bond2", "s3_bond3", "s3_dist"):
         out[key] = batch[key]
     return out, p
@@ -1546,7 +1546,11 @@ def _timing_probe(task: Any, key: str, device: Any, *, warmup: int, steps: int) 
 
     plan = C.BC.SD.make_plan40(task, seed=int(C.SEED))
     C.seed_everything(int(C.SEED))
-    model, audit = M.build_model(key, task.spec, task.norm, C.N_TASKS, seed=int(C.SEED), device=device)
+    if key == C.BASE_MODEL_KEY:
+        model, audit = BSM.build_model(C.BASE_MODEL_KEY, task.spec, task.norm, C.N_TASKS, seed=int(C.SEED), device=device)
+        audit = dict(audit, new_parameters=0)
+    else:
+        model, audit = M.build_model(key, task.spec, task.norm, C.N_TASKS, seed=int(C.SEED), device=device)
     opt, _ = BSM.make_optimizer(model)
     stager = PinnedStager(device, depth=2)
     clip = float(C.RECIPE["gradient_clip"])
@@ -1612,9 +1616,13 @@ def _timing_probe(task: Any, key: str, device: Any, *, warmup: int, steps: int) 
 
 def _validation_timing(task: Any, key: str, device: Any) -> dict[str, Any]:
     import torch
+    import bs_model as BSM
     import s3_model as M
 
-    model, _ = M.build_model(key, task.spec, task.norm, C.N_TASKS, seed=int(C.SEED), device=device)
+    if key == C.BASE_MODEL_KEY:
+        model, _ = BSM.build_model(C.BASE_MODEL_KEY, task.spec, task.norm, C.N_TASKS, seed=int(C.SEED), device=device)
+    else:
+        model, _ = M.build_model(key, task.spec, task.norm, C.N_TASKS, seed=int(C.SEED), device=device)
     model.eval()
     rows = np.asarray(task.valid_rows, dtype=np.int64)
     t0 = time.perf_counter()
