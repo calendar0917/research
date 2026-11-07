@@ -1,0 +1,43 @@
+{
+  "bands": [
+    {
+      "label": "PROMISING_SINGLE_SEED",
+      "min_delta": 0.005
+    },
+    {
+      "label": "WEAK_SIGNAL",
+      "min_delta": 0.002
+    },
+    {
+      "label": "NO_CLEAR_GAIN",
+      "min_delta": -0.002
+    },
+    {
+      "label": "NEGATIVE_TRANSFER",
+      "max_delta": -0.002
+    }
+  ],
+  "caveats": [
+    "no same-round A0 run: implementation/environment drift cannot be excluded",
+    "SSL pretraining adds compute, so any gain cannot be attributed to self-supervision alone",
+    "a well-learned pretext with no validation gain is a valid negative transfer result",
+    "the historical Test-facing A0 number is not a target of this round",
+    "the exploratory bands are resource-allocation labels, not significance tests"
+  ],
+  "comparison_is_paired": false,
+  "decision_label": "NO_CLEAR_GAIN",
+  "delta_ap40": -0.0006300348068665473,
+  "historical_a0_validation_ap40": 0.24635609609821457,
+  "model_name": "A_SSL_INIT_S0",
+  "pretext_gate": {
+    "label": "PRETEXT_LEARNED",
+    "min_prior_ce_margin_nats": 0.05,
+    "passed": true,
+    "rule": "probe atom CE <= SSL-fit atom prior CE - 0.05 nats AND probe bond CE <= SSL-fit bond prior CE - 0.05 nats AND both encoders moved away from the seed-0 scratch state"
+  },
+  "round_id": "lcrc-pcba-atom-bond-ssl-pilot-v1",
+  "schema": "lcrc-pcba-atom-bond-ssl-decision-v1",
+  "seed": 0,
+  "test_evaluated": false,
+  "validation_ap40": 0.24572606129134802
+}

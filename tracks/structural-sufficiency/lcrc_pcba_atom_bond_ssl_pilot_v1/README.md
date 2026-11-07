@@ -19,12 +19,46 @@ and the pretext heads are discarded before fine-tuning.
 
 ## Status
 
-| stage | state |
-|-------|-------|
-| code, tests, pre-GPU audit | complete (31 tests, 12/12 audit checks pass on CPU) |
-| SSL pretrain (10,000 updates) | see `analysis/pretrain_run.json` |
-| 40-epoch fine-tune | see `analysis/supervised_epoch40.json` |
-| decision | see `analysis/decision.json` and [`REPORT.md`](REPORT.md) |
+Completed. One pretrain (10,000 updates) and one 40-epoch fine-tune, seed 0,
+both on `res-gpu1` (A100-SXM4-40GB) at run commit `d7b4be8e9eb1`.
+
+| stage | result |
+|-------|--------|
+| unit tests | 31 passed (local CPU) |
+| mask/leakage/no-MP audit | 13/13 checks passed, `all_passed = true` (GPU + smoke) |
+| SSL pretrain | 10,000/10,000 updates, gate `PRETEXT_LEARNED`, 0.103 GPU-h |
+| fine-tune | 40/40 epochs, 109,520 steps, 1.398 GPU-h |
+| **epoch-40 Validation macro AP** | **0.2457260613** (historical A0 `0.2463560961`) |
+| **Delta AP40** | **-0.0006300348** → `NO_CLEAR_GAIN` |
+| total GPU hours | 1.515 of the 5 h target / 7 h hard cap |
+
+## Results (this round)
+
+* **Pretext is genuinely learned.** Probe CE at update 10,000 is `0.3290` nats
+  for atoms (class-marginal prior `1.5086`) and `0.0894` nats for bonds (prior
+  `0.9224`), i.e. `+1.18` / `+0.83` nats below the prior, with 88.2 % atom and
+  97.1 % bond accuracy on 4,096 held-out Train molecules. Both encoders moved
+  (relative L2 `1.81`); 8/8 encoder tensors were transferred and every
+  non-transferred module stayed bitwise equal to the historical seed-0 init.
+* **Downstream AP**: epoch 10/20/30/40 Validation AP =
+  `0.220824` / `0.239928` / `0.245305` / `0.245726`. Train AP40 `0.430647`,
+  Train BCE `0.030328`, Valid BCE `0.045627`, Train−Valid AP gap `0.184921`
+  (historical A0 gap `0.173301`), so the SSL init fits Train slightly harder
+  while ending marginally lower on Validation.
+* **Breadth**: 66 of 127 scored tasks improved, 61 regressed, median per-task
+  delta `+0.0007` with task-level moves from `-0.2226` to `+0.1878` — the
+  aggregate is a wash of offsetting task changes, not a uniform shift. The
+  `≥20`-positive stratum moves `+0.0018` on average, `5–19` moves `-0.0103`,
+  `<5` moves `-0.0436`.
+* **Interpretation**: no clear gain from this SSL initialisation at seed 0.
+  The pretext is learnable and the transfer is exact, but the 40-epoch
+  validation endpoint is statistically indistinguishable from the historical
+  scratch A0 within the pre-registered `NO_CLEAR_GAIN` band. Because there is
+  no same-round A0 and pretraining adds compute, this is a null result, not
+  evidence that self-supervision is neutral.
+
+Full numbers and tables: [`REPORT.md`](REPORT.md). Frozen definitions:
+[`PROTOCOL.md`](PROTOCOL.md).
 
 ## Layout
 

@@ -28,7 +28,7 @@ HISTORICAL_PER_TASK = (
     C.NMP_SPRINT / "runs" / "phaseC_seed0_A" / "per_task_ap.csv"
 )
 HISTORICAL_EPOCH = 40
-SURPORT_BUCKETS = (
+SUPPORT_BUCKETS = (
     ("support_ge20", 20, None),
     ("support_5_19", 5, 20),
     ("support_lt5", None, 5),
@@ -309,7 +309,7 @@ def build_supervised(
     label = C.decision_label(delta)
     train_eval = supervised.get("train_eval_final") or {}
     buckets = {
-        name: _bucket_stats(compared, lo, hi) for name, lo, hi in SURPORT_BUCKETS
+        name: _bucket_stats(compared, lo, hi) for name, lo, hi in SUPPORT_BUCKETS
     }
     scored = [r for r in compared if r["ap"] is not None]
     summary = {
@@ -350,7 +350,7 @@ def build_supervised(
         "delta_ap40_vs_historical_a0": delta,
         "decision_label": label,
         "train_eval_final": {
-            "ap40": train_eval.get("ap"),
+            "ap": train_eval.get("ap"),
             "bce": train_eval.get("bce"),
             "epoch": train_eval.get("epoch"),
             "evaluated_rows": train_eval.get("evaluated_rows"),
@@ -508,7 +508,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--analysis-dir", default=str(C.ANALYSIS))
     parser.add_argument("--runs-dir", default=str(C.RUNS))
     parser.add_argument("--skip-data-audit", action="store_true")
-    parser.add_argument("--extras", default=None, help="JSON list of extra GPU ledger entries")
+    parser.add_argument(
+        "--extras",
+        default=None,
+        help="JSON list of extra GPU ledger entries (default: analysis/gpu_ledger_extras.json)",
+    )
     args = parser.parse_args(argv)
 
     analysis = Path(args.analysis_dir)
@@ -584,7 +588,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     C.write_json(analysis / "run_registry.json", build_registry(pretrain, supervised, audit))
 
-    extras = [] if args.extras is None else _read_json(Path(args.extras))
+    extras_path = Path(args.extras) if args.extras else analysis / "gpu_ledger_extras.json"
+    extras = _read_json(extras_path) if extras_path.exists() else []
     C.write_json(analysis / "gpu_ledger.json", build_ledger(pretrain, supervised, extras))
 
     C.log(

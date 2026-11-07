@@ -236,7 +236,7 @@ def render(analysis: Path, out: Path) -> Path:
                 ["non-transferred tensors == historical seed-0", str(transfer.get("non_transferred_tensors_are_historical_seed0"))],
                 ["pretext heads transferred", str(transfer.get("pretext_heads_present"))],
                 ["SSL optimizer state transferred", str(transfer.get("ssl_optimizer_state_transferred"))],
-                ["state-dict keys unchanged", str(transfer.get("state_dict_unchanged"))],
+                ["state-dict keys unchanged", str(transfer.get("state_dict_keys_unchanged"))],
                 ["inference parameters", _int(transfer.get("inference_parameters"))],
                 ["forward probe", str((transfer.get("shape_probe") or {}).get("logits_shape"))],
                 ["SSL updates used", _int(transfer.get("ssl_updates"))],
@@ -345,7 +345,8 @@ def render(analysis: Path, out: Path) -> Path:
                     _int(stats.get("n_improved")),
                     _int(stats.get("n_regressed")),
                 ]
-                for name, stats in buckets.items()
+                for name in ("support_ge20", "support_5_19", "support_lt5")
+                for stats in [buckets.get(name) or {}]
             ],
         )
     )
@@ -385,7 +386,11 @@ def render(analysis: Path, out: Path) -> Path:
     add(
         "Breadth note: "
         + (
-            f"{_int(summ.get('n_improved'))}/{_int(summ.get('n_tasks_scored'))} tasks improved. "
+            f"{_int(summ.get('n_improved'))}/{_int(summ.get('n_tasks_scored'))} tasks improved and "
+            f"{_int(summ.get('n_regressed'))} regressed, with a median delta of "
+            f"{_signed(summ.get('median_delta'))} but task-level moves from "
+            f"{_signed(summ.get('min_delta'))} to {_signed(summ.get('max_delta'))}: the aggregate "
+            "delta is a wash of offsetting per-task changes, not a uniform shift. "
             if summ
             else ""
         )
@@ -406,7 +411,7 @@ def render(analysis: Path, out: Path) -> Path:
             ["item", "value"],
             [
                 ["parameters", _int(sup.get("parameter_count"))],
-                ["forward FLOPs (128 molecules)", _int(flops.get("flops")) if flops.get("flops") else "—"],
+                ["forward FLOPs (128 molecules)", f"{_int(flops.get('forward_flops'))} ({flops.get('counter')})"],
                 ["pretrain GPU hours", _f(pre.get("gpu_hours"), 4)],
                 ["supervised GPU hours", _f(sup.get("gpu_hours"), 4)],
                 ["total GPU hours", _f(ledger.get("total_gpu_hours"), 4)],
@@ -448,6 +453,13 @@ def render(analysis: Path, out: Path) -> Path:
                 ["mask/leakage audit all_passed", str(audit.get("all_passed"))],
                 ["audit checks", ", ".join(c["name"] for c in audit.get("checks", []))],
                 ["run registry Test evaluated", str((registry.get("rfcs") or {}).get("test_evaluated"))],
+                [
+                    "supervised labels",
+                    "official Train/Valid targets only; Test rows are NaN in the frozen artifact "
+                    "and asserted NaN at load, never indexed",
+                ],
+                ["supervised test_policy", sup.get("test_policy") or "—"],
+                ["run record Test evaluated", str(sup.get("test_evaluated"))],
             ],
         )
     )

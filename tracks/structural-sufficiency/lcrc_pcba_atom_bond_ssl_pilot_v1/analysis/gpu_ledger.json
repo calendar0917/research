@@ -1,0 +1,71 @@
+{
+  "budget_hard_gpu_hours": 7.0,
+  "budget_target_gpu_hours": 5.0,
+  "extras": [
+    {
+      "finished_utc": "2026-11-07T09:12:45+08:00",
+      "gpu_hours": 0.0016666667,
+      "gpu_seconds": 6.0,
+      "name": "gpu-state-ssl",
+      "note": "nvidia-smi probe: GPU0 externally occupied (16 GiB, 100%), GPU1 idle -> res-gpu1 chosen",
+      "stage": "preflight",
+      "started_utc": "2026-11-07T09:12:39+08:00",
+      "status": "completed"
+    },
+    {
+      "finished_utc": "2026-11-07T09:13:33+08:00",
+      "gpu_hours": 0.0036111111,
+      "gpu_seconds": 13.0,
+      "name": "ssl-audit (cuda generator bug)",
+      "note": "failed attempt, counted per protocol",
+      "stage": "preflight",
+      "started_utc": "2026-11-07T09:13:20+08:00",
+      "status": "failed"
+    },
+    {
+      "finished_utc": "2026-11-07T09:15:55+08:00",
+      "gpu_hours": 0.0041666667,
+      "gpu_seconds": 15.0,
+      "name": "ssl-audit (injection tolerance)",
+      "note": "failed attempt, counted per protocol",
+      "stage": "preflight",
+      "started_utc": "2026-11-07T09:15:40+08:00",
+      "status": "failed"
+    },
+    {
+      "finished_utc": "2026-11-07T09:18:54+08:00",
+      "gpu_hours": 0.0041666667,
+      "gpu_seconds": 15.0,
+      "name": "ssl-audit (final, 13/13 checks)",
+      "note": "GPU smoke of 20 pretrain steps used for the budget projection",
+      "stage": "preflight",
+      "started_utc": "2026-11-07T09:18:39+08:00",
+      "status": "completed"
+    }
+  ],
+  "note": "includes preflight, failed attempts and the two formal runs",
+  "round_id": "lcrc-pcba-atom-bond-ssl-pilot-v1",
+  "runs": [
+    {
+      "device": "NVIDIA A100-SXM4-40GB",
+      "gpu_hours": 0.10344577089715232,
+      "gpu_seconds": 372.40477522974834,
+      "hostname": "a100-2",
+      "stage": "pretrain",
+      "status": "COMPLETED"
+    },
+    {
+      "device": "NVIDIA A100-SXM4-40GB",
+      "gpu_hours": 1.397999564593839,
+      "gpu_seconds": 5032.79843253782,
+      "hostname": "a100-2",
+      "stage": "supervised",
+      "status": "COMPLETED"
+    }
+  ],
+  "schema": "lcrc-pcba-atom-bond-ssl-gpu-ledger-v1",
+  "total_gpu_hours": 1.5150564466909913,
+  "training_gpu_hours": 1.5014453354909914,
+  "within_hard_cap": true,
+  "within_target": true
+}

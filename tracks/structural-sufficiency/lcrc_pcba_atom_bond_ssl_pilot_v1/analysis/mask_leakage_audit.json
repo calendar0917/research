@@ -1,0 +1,659 @@
+{
+  "all_passed": true,
+  "audit_seconds": 10.610824880190194,
+  "checks": [
+    {
+      "name": "loader_label_isolation",
+      "norm_stage_label_artifact_opened": false,
+      "norm_stage_opened_paths": [
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_scalar.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/global.npy"
+      ],
+      "note": "ssl_common.py records the label path only so the runtime audit can prove it was never opened; no pretraining file reads it.  atom_scalar/global are opened only to reproduce the frozen Train-only normalisation used by the seed-0 builder, never as a pretext network input.",
+      "passed": true,
+      "source_static_check": {
+        "banned_tokens": [
+          "pcba_labels_trainvalid.npy",
+          "pcba_labels",
+          "labels_trainvalid"
+        ],
+        "files_checked": [
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_atom_bond_ssl_pilot_v1/code/ssl_data.py",
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_atom_bond_ssl_pilot_v1/code/ssl_model.py",
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_atom_bond_ssl_pilot_v1/code/ssl_pretrain.py"
+        ],
+        "loader_primitives": [
+          "np.load(",
+          "torch.load(",
+          "open(",
+          "load_task(",
+          "Path("
+        ],
+        "mentions": {
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_atom_bond_ssl_pilot_v1/code/ssl_data.py": [
+            "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_atom_bond_ssl_pilot_v1/code/ssl_data.py:142: banned = (C.LABEL_ARTIFACT_NAME, \"pcba_labels\", \"labels_trainvalid\")"
+          ]
+        },
+        "note": "ssl_common.py names the artifact path only so that the runtime path audit can prove it was never opened; no pretraining file loads it.",
+        "offenders": {},
+        "passed": true
+      },
+      "structure_loader_forbidden_array_files_opened": [],
+      "structure_loader_label_artifact_opened": false,
+      "structure_loader_opened_paths": [
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_feat.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_ptr.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_type.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_feat.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_index.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_ptr.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_type.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/gids.npy"
+      ]
+    },
+    {
+      "checks": {
+        "fit_all_train": true,
+        "no_test_rows": true,
+        "no_valid_rows": true,
+        "probe_all_train": true,
+        "probe_fit_disjoint": true,
+        "probe_size_4096": true,
+        "union_is_train": true
+      },
+      "fit_rows_sha256": "0d4b37bbaaff9c413ddbed8a00ace2ade8e4ce9189c1f3a9d784b0287c291f1d",
+      "name": "row_partition",
+      "passed": true,
+      "probe_rows_sha256": "407bea3ce886108bf1ee158c466b03a453c54a52167ddd202475b8ec250a84f7"
+    },
+    {
+      "checks": {
+        "bond_model_input_keys": [
+          "atom_feat",
+          "bond_feat",
+          "bond_index"
+        ],
+        "model_input_keys": [
+          "atom_feat",
+          "bond_feat",
+          "bond_index"
+        ],
+        "no_target_key": true,
+        "only_allowed_keys": true,
+        "visible_inputs_unchanged_after_wiping_targets": true
+      },
+      "name": "targets_not_in_input",
+      "passed": true,
+      "target_shapes": {
+        "atom_targets": [
+          515
+        ],
+        "bond_targets": [
+          544
+        ]
+      }
+    },
+    {
+      "masked_atoms": 515,
+      "masked_rows_are_exactly_zero": true,
+      "name": "atom_view_visibility_invariance",
+      "passed": true,
+      "visible_input_bitwise_identical_after_perturb_and_remask": true
+    },
+    {
+      "checks": {
+        "masked_bond_rows_are_zero": true,
+        "masked_bonds": 544,
+        "masked_endpoint_rows_are_zero": true,
+        "visible_atoms_bitwise_identical": true,
+        "visible_bonds_bitwise_identical": true
+      },
+      "name": "bond_view_visibility_invariance",
+      "passed": true
+    },
+    {
+      "forbidden_cache_arrays_never_opened": {
+        "atom_scalar": false,
+        "global": false,
+        "nbr_code": false,
+        "nbr_ptr": false,
+        "path_cat": false,
+        "path_closure": false,
+        "path_end": false,
+        "path_end63": false,
+        "path_ptr": false
+      },
+      "injected_but_ignored_keys": [
+        "atom_scalar",
+        "atom_type",
+        "bond_type",
+        "global",
+        "nbr_code"
+      ],
+      "max_abs_diff_after_injecting_forbidden_tensors": {
+        "atom_ctx": 2.9802322387695312e-08,
+        "atom_logits": 7.450580596923828e-09,
+        "bond_ctx": 5.960464477539063e-08,
+        "bond_logits": 7.450580596923828e-09
+      },
+      "model_reads_only": [
+        "atom_feat",
+        "bond_feat",
+        "bond_index"
+      ],
+      "name": "no_forbidden_fields",
+      "note": "the structure collate does not materialise S1/S2/global/scalar tensors; even when they are injected into the batch dict the encoder output is unchanged up to the intrinsic re-run noise of the same inputs (CUDA index_add is not bitwise stable)",
+      "passed": true,
+      "rerun_noise_same_inputs": {
+        "atom_ctx": 1.4901161193847656e-08,
+        "atom_logits": 7.450580596923828e-09,
+        "bond_ctx": 5.960464477539063e-08,
+        "bond_logits": 7.450580596923828e-09
+      },
+      "structure_collate_materialises_forbidden_tensors": false,
+      "tolerance": 1e-07
+    },
+    {
+      "atom_ce_base": 2.7902705669403076,
+      "atom_ce_renumbered": 2.7902705669403076,
+      "masked_atoms_in_molecule_0": 3,
+      "max_abs_atom_context_diff": 2.9802322387695312e-08,
+      "max_abs_atom_logit_diff": 1.4901161193847656e-08,
+      "molecule_atoms": 20,
+      "name": "atom_renumbering",
+      "note": "index_add summation order changes with the permutation, so equality is numerical",
+      "passed": true,
+      "tolerance": 5e-05
+    },
+    {
+      "max_abs_bond_context_diff": 5.960464477539063e-08,
+      "max_abs_bond_logit_diff": 1.1175870895385742e-08,
+      "name": "bond_endpoint_swap",
+      "passed": true,
+      "tolerance": 1e-05
+    },
+    {
+      "masked_atom": 4,
+      "max_abs_atom_context_diff": 0.0,
+      "message_passing_modules": [],
+      "name": "no_message_passing",
+      "note": "one atom encode + one bond encode per masked view, incidence means only",
+      "passed": true,
+      "perturbed_distance2_atom": 1,
+      "static_encode_calls_per_forward": 2.0,
+      "static_encode_calls_total_two_forwards": 4
+    },
+    {
+      "losses": [
+        4.394652366638184,
+        4.304769039154053,
+        4.2032060623168945
+      ],
+      "name": "gradients_reach_all_groups",
+      "note": "a group only needs a non-zero gradient on at least one of the steps",
+      "passed": true,
+      "steps": 3,
+      "trainable_groups": {
+        "atom_encoder": {
+          "all_steps_nonzero": true,
+          "any_nonzero": true,
+          "finite": true,
+          "grad_norms": [
+            0.14330685188081704,
+            0.15342476579186387,
+            0.21581162131748963
+          ]
+        },
+        "atom_head": {
+          "all_steps_nonzero": true,
+          "any_nonzero": true,
+          "finite": true,
+          "grad_norms": [
+            0.5670596115354093,
+            0.5250054208075285,
+            0.5450542373962417
+          ]
+        },
+        "bond_encoder": {
+          "all_steps_nonzero": true,
+          "any_nonzero": true,
+          "finite": true,
+          "grad_norms": [
+            0.11702922207061246,
+            0.12562908176390855,
+            0.17155481972094844
+          ]
+        },
+        "bond_head": {
+          "all_steps_nonzero": true,
+          "any_nonzero": true,
+          "finite": true,
+          "grad_norms": [
+            0.5745804027892432,
+            0.5401582969602464,
+            0.5692371645772676
+          ]
+        }
+      }
+    },
+    {
+      "base_parameter_elements": 245184,
+      "c1_local_input_dim": 433,
+      "c1_rho_input_dim": 171,
+      "expected_parameter_count": 287644,
+      "name": "original_a_geometry",
+      "new_parameter_count": 42460,
+      "parameter_count": 287644,
+      "passed": true,
+      "pretext_heads_in_downstream_model": [],
+      "state_dict_key_count": 57,
+      "widths": {
+        "atom_encoder.lins.0.weight": [
+          128,
+          51
+        ],
+        "atom_encoder.lins.1.weight": [
+          96,
+          128
+        ],
+        "bond_encoder.lins.0.weight": [
+          160,
+          301
+        ],
+        "bond_encoder.lins.1.weight": [
+          96,
+          160
+        ],
+        "readout.fc1.weight": [
+          88,
+          256
+        ],
+        "readout.fc2.weight": [
+          128,
+          88
+        ]
+      },
+      "zero_residual_at_init": true
+    },
+    {
+      "atom_mask_count_is_frozen_15pct": true,
+      "bond_mask_count_is_frozen_15pct": true,
+      "encoder_checkpoint_roundtrip": true,
+      "every_molecule_masks_at_least_one_atom": true,
+      "name": "reproducibility",
+      "new_visit_changes_the_mask": true,
+      "no_bond_molecule_skips_bond_targets": "molecules with zero bonds get an empty bond mask",
+      "order_plan_matches_historical": true,
+      "passed": true,
+      "same_visit_bitwise_identical_views": true,
+      "same_visit_identical_targets": true
+    },
+    {
+      "device": "cuda",
+      "gpu_peak_allocated_bytes": 75706880,
+      "grad_norm_max": 4.248263835906982,
+      "grad_norm_min": 0.9273454546928406,
+      "loss_first": 4.087708473205566,
+      "loss_last": 2.1953787803649902,
+      "name": "gpu_smoke",
+      "passed": true,
+      "projected_pretrain_seconds": 354.7163400799036,
+      "step_ms_mean": 36.4148557651788,
+      "step_ms_p50": 35.47163400799036,
+      "step_ms_p90": 39.94936537928879,
+      "steps": 20
+    }
+  ],
+  "class_priors": {
+    "atom": {
+      "class_names": [
+        "B",
+        "Br",
+        "C",
+        "C_aromatic",
+        "Cl",
+        "F",
+        "I",
+        "N",
+        "N_aromatic",
+        "O",
+        "O_aromatic",
+        "P",
+        "S",
+        "S_aromatic",
+        "Si",
+        "UNK"
+      ],
+      "counts": [
+        76,
+        18445,
+        2550535,
+        3926563,
+        71568,
+        92756,
+        373,
+        599363,
+        385378,
+        1012179,
+        51881,
+        1554,
+        135434,
+        49908,
+        67,
+        258
+      ],
+      "entropy_nats": 1.5085792129958515,
+      "frequencies": [
+        8.542840885766705e-06,
+        0.002073325001815354,
+        0.2866949299813024,
+        0.4413684596965628,
+        0.008044658375165152,
+        0.010426312489476007,
+        4.1927363820933965e-05,
+        0.0673718781817867,
+        0.04331872282730265,
+        0.11377479138045339,
+        0.00583172536834819,
+        0.00017467861495370343,
+        0.015223567270038527,
+        0.005609948722721641,
+        7.531188675610122e-06,
+        2.9000696691155396e-05
+      ],
+      "majority_class": 3,
+      "majority_fraction": 0.4413684596965628,
+      "n": 8896338,
+      "prior_ce_nats": 1.5085792129958515
+    },
+    "bond": {
+      "class_names": [
+        "SINGLE",
+        "DOUBLE",
+        "TRIPLE",
+        "AROMATIC",
+        "UNK"
+      ],
+      "counts": [
+        4317267,
+        743695,
+        15194,
+        4518770,
+        0
+      ],
+      "entropy_nats": 0.9223934689433274,
+      "frequencies": [
+        0.4499531314780333,
+        0.07750919600630583,
+        0.0015835453030070268,
+        0.47095412721265384,
+        0.0
+      ],
+      "majority_class": 3,
+      "majority_fraction": 0.47095412721265384,
+      "n": 9594926,
+      "prior_ce_nats": 0.9223934689433274
+    },
+    "fit_rows": 346247,
+    "source": "SSL-fit molecules only (Train minus Probe)"
+  },
+  "created_utc": "2026-11-07T01:18:53Z",
+  "data_audit": {
+    "cache": {
+      "bytes": 4740359231,
+      "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+      "file_count": 23,
+      "format": "npy-directory-v1-readonly-mmap",
+      "manifest_bytes": 4740359231,
+      "manifest_cache_sha256": "caad3e90dd76d1f1483d2a01501eba23413072a7b5a2fc4b62780c315aa59035",
+      "manifest_file_count": 23,
+      "meta": {
+        "created_utc": "2026-11-05T06:40:41Z",
+        "dataset": "ogbg-molpcba",
+        "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+        "feature_spec_name": "lipo_v1",
+        "fields": [
+          "atom_feat",
+          "atom_ptr",
+          "atom_scalar",
+          "atom_type",
+          "bond_feat",
+          "bond_index",
+          "bond_ptr",
+          "bond_type",
+          "global",
+          "n_components",
+          "n_junctions",
+          "n_ring_systems",
+          "nbr_code",
+          "nbr_ptr",
+          "path_cat",
+          "path_closure",
+          "path_end",
+          "path_end63",
+          "path_ptr"
+        ],
+        "format": "npy-directory-v1",
+        "labels_present": false,
+        "n_atoms_total": 11373137,
+        "n_bonds_total": 12309186,
+        "n_molecules": 437929,
+        "n_s1_codes": 24618372,
+        "n_s2_paths": 34369144,
+        "n_shards": 110,
+        "source": "official OGB mapping/mol.csv.gz -> frozen lipo_v1 adapter",
+        "split": "all"
+      },
+      "path": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1"
+    },
+    "dataset": "ogbg-molpcba",
+    "feature_spec": {
+      "atom_feat_dim": 51,
+      "atom_type_names": [
+        "B",
+        "Br",
+        "C",
+        "C_aromatic",
+        "Cl",
+        "F",
+        "I",
+        "N",
+        "N_aromatic",
+        "O",
+        "O_aromatic",
+        "P",
+        "S",
+        "S_aromatic",
+        "Si",
+        "UNK"
+      ],
+      "bond_feat_dim": 13,
+      "bond_type_names": [
+        "SINGLE",
+        "DOUBLE",
+        "TRIPLE",
+        "AROMATIC",
+        "UNK"
+      ],
+      "hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+      "n_atom_types": 16,
+      "n_bond_types": 5,
+      "name": "lipo_v1"
+    },
+    "forbidden_cache_arrays_never_opened": [
+      "atom_scalar",
+      "global",
+      "nbr_code",
+      "nbr_ptr",
+      "path_cat",
+      "path_end",
+      "path_end63",
+      "path_ptr",
+      "path_closure",
+      "n_components",
+      "n_junctions",
+      "n_ring_systems"
+    ],
+    "label_artifact_opened": false,
+    "label_artifact_path_recorded_for_audit_only": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/analysis/pcba_labels_trainvalid.npy",
+    "labels_read": false,
+    "loader_file_access": {
+      "forbidden_array_files_opened": [],
+      "instrumented": "builtins.open + numpy.load",
+      "label_artifact_name": "pcba_labels_trainvalid.npy",
+      "label_artifact_open_calls": [],
+      "label_artifact_opened": false,
+      "n_open_calls": 32,
+      "n_unique_paths": 8,
+      "unique_paths": [
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_feat.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_ptr.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_type.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_feat.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_index.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_ptr.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/bond_type.npy",
+        "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/gids.npy"
+      ]
+    },
+    "norm_stage": {
+      "file_access": {
+        "forbidden_array_files_opened": [
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_scalar.npy",
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/global.npy"
+        ],
+        "instrumented": "builtins.open + numpy.load",
+        "label_artifact_name": "pcba_labels_trainvalid.npy",
+        "label_artifact_open_calls": [],
+        "label_artifact_opened": false,
+        "n_open_calls": 8,
+        "n_unique_paths": 2,
+        "unique_paths": [
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/atom_scalar.npy",
+          "/home/hxy/cy/research/tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1/global.npy"
+        ]
+      },
+      "fit_rows": 350343,
+      "fit_rows_sha256": "0ead9336175fcc61235d4cdde19e6919cdab86a44b33a361156b5a7a223ec95c",
+      "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+      "purpose": "seed-0 LCRC model builder only (buffers); never a pretext network input"
+    },
+    "probe": {
+      "first_rows": [
+        237,
+        357,
+        379,
+        722,
+        861,
+        911,
+        1003,
+        1080
+      ],
+      "n": 4096,
+      "rows_sha256": "407bea3ce886108bf1ee158c466b03a453c54a52167ddd202475b8ec250a84f7",
+      "rule": "sorted by SHA256(\"pcba-ssl-probe-v1|\" + decimal molecule row id)",
+      "used_for_parameter_updates": false,
+      "visit_index": 0
+    },
+    "round_id": "lcrc-pcba-atom-bond-ssl-pilot-v1",
+    "schema": "lcrc-pcba-atom-bond-ssl-data-audit-v1",
+    "split": {
+      "partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f",
+      "sizes": {
+        "test": 43793,
+        "train": 350343,
+        "valid": 43793
+      },
+      "test_rows_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+      "train_row_max": 437928,
+      "train_row_min": 0,
+      "train_rows_sha256": "16169ef35ce1812eac577af939fa0416e79c670c015ecf5aa7b848a25d412dd9",
+      "valid_rows_sha256": "fcad7abd938cf3328b6761cd78c8170cf6bd389bef4b6d1f94b5ed0b4aec21ed"
+    },
+    "ssl_fit": {
+      "all_rows_are_official_train": true,
+      "intersection_with_test": 0,
+      "intersection_with_valid": 0,
+      "n": 346247,
+      "rows_sha256": "0d4b37bbaaff9c413ddbed8a00ace2ade8e4ce9189c1f3a9d784b0287c291f1d",
+      "subset_counts": {
+        "atoms": 8896338,
+        "bonds": 9594926
+      }
+    },
+    "test_structure_used_in_pretraining": false,
+    "valid_structure_used_in_pretraining": false
+  },
+  "device": "cuda",
+  "environment": {
+    "autocast_enabled": false,
+    "cuda_available": true,
+    "cuda_device_capability": [
+      8,
+      0
+    ],
+    "cuda_device_count": 1,
+    "cuda_device_index": 0,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cuda_device_total_memory_bytes": 42285268992,
+    "cuda_visible_devices": "1",
+    "cudnn_allow_tf32": true,
+    "deterministic_algorithms": false,
+    "float32_matmul_precision": "highest",
+    "git_commit": "d7b4be8e9eb1120ac6bccbf9b5007e700209c6f0",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "matmul_allow_tf32": false,
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "git_commit": "d7b4be8e9eb1120ac6bccbf9b5007e700209c6f0",
+  "pretext_model": {
+    "atom_encoder_parameters": 19040,
+    "atom_head_classes": 16,
+    "atom_head_hidden": 160,
+    "atom_head_input": 288,
+    "attention_modules": [],
+    "bond_encoder_parameters": 63776,
+    "bond_head_classes": 5,
+    "bond_head_hidden": 160,
+    "bond_head_input": 480,
+    "does_not_read": [
+      "atom_type",
+      "bond_type",
+      "atom_scalar",
+      "global",
+      "nbr_code",
+      "path_cat",
+      "path_end",
+      "path_closure",
+      "n_components",
+      "n_junctions",
+      "n_ring_systems"
+    ],
+    "downstream_parameters_of_scratch_A": 287644,
+    "dropout_modules": [],
+    "encoder_fingerprint": "68a165bb575dcfcf1797e58e75547ef6e6306124dfcec8e7418aa16a181f2176",
+    "encoder_parameters": 82816,
+    "encoder_state_matches_seed0_scratch": true,
+    "head_init": {
+      "encoder_state_unchanged": true,
+      "global_rng_unchanged": true,
+      "linear_layers_initialised": 4,
+      "private_generator_seed": 20261108
+    },
+    "historical_seed0_encoder_fingerprint": "68a165bb575dcfcf1797e58e75547ef6e6306124dfcec8e7418aa16a181f2176",
+    "iterative_message_passing_modules": [],
+    "reads": [
+      "atom_feat",
+      "bond_feat",
+      "bond_index"
+    ],
+    "total_pretext_parameters": 209397
+  },
+  "round_id": "lcrc-pcba-atom-bond-ssl-pilot-v1",
+  "schema": "lcrc-pcba-atom-bond-ssl-mask-leakage-audit-v1",
+  "test_evaluated": false
+}
