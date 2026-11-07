@@ -1,0 +1,1484 @@
+{
+  "a0_replay": {
+    "abs_delta_vs_recorded": 2.0950272409114845e-06,
+    "ap_ok": true,
+    "checkpoint_sha256_ok": true,
+    "historical_ap40_recorded": 0.24635609609821457,
+    "per_task_max_abs_delta_vs_recorded": 0.00024669739716809413,
+    "scale1_replay_ap": 0.24635819112545548,
+    "scale1_vs_nmpmodel_A_ap_delta": 3.4891990703944664e-06,
+    "scale1_vs_nmpmodel_A_logits_max_abs_diff": 6.866455078125e-05
+  },
+  "captured_utc": "2026-11-07T09:30:05Z",
+  "checks": {
+    "atom_renumbering_invariance": {
+      "note": "graph logits are invariant; the per-atom contribution follows the permutation",
+      "passed": true,
+      "per_scale": {
+        "1": {
+          "attribution_max_abs_diff": 1.7881393432617188e-07,
+          "logits_max_abs": 8.613858222961426,
+          "logits_max_abs_diff": 1.430511474609375e-06,
+          "passed": true,
+          "tolerance": 2e-05
+        },
+        "2": {
+          "attribution_max_abs_diff": 2.086162567138672e-07,
+          "logits_max_abs": 11.191361427307129,
+          "logits_max_abs_diff": 1.9073486328125e-06,
+          "passed": true,
+          "tolerance": 2e-05
+        },
+        "3": {
+          "attribution_max_abs_diff": 2.384185791015625e-07,
+          "logits_max_abs": 9.125408172607422,
+          "logits_max_abs_diff": 1.430511474609375e-06,
+          "passed": true,
+          "tolerance": 2e-05
+        }
+      }
+    },
+    "batch_order_plan": {
+      "epochs": 40,
+      "equal": true,
+      "expected": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+      "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+      "steps_per_epoch": 2738
+    },
+    "forward_backward_health": {
+      "note": "readout.heads.*.fc2.bias has a structurally zero gradient: a constant per-head score shift does not change the per-molecule softmax. Historical fact.",
+      "passed": true,
+      "per_scale": {
+        "1": {
+          "all_finite_and_gradients_ok": true,
+          "grad_norms": [
+            8.103342056274414,
+            7.81814432144165,
+            7.6073126792907715
+          ],
+          "gradients_present": true,
+          "known_structural_zero_gradients": [
+            "readout.heads.0.fc2.bias"
+          ],
+          "logits_finite": true,
+          "loss_finite": true,
+          "loss_first": 1.3813663721084595,
+          "losses": [
+            1.3813663721084595,
+            1.324308156967163,
+            1.2733722925186157
+          ],
+          "missing_gradients": [],
+          "n_parameters": 287644,
+          "unexpected_zero_gradients": [],
+          "zero_gradients": [
+            "readout.heads.0.fc2.bias"
+          ]
+        },
+        "2": {
+          "all_finite_and_gradients_ok": true,
+          "grad_norms": [
+            12.214314460754395,
+            11.398045539855957,
+            10.788389205932617
+          ],
+          "gradients_present": true,
+          "known_structural_zero_gradients": [],
+          "logits_finite": true,
+          "loss_finite": true,
+          "loss_first": 1.467880368232727,
+          "losses": [
+            1.467880368232727,
+            1.3445627689361572,
+            1.270025610923767
+          ],
+          "missing_gradients": [],
+          "n_parameters": 994324,
+          "unexpected_zero_gradients": [],
+          "zero_gradients": []
+        },
+        "3": {
+          "all_finite_and_gradients_ok": true,
+          "grad_norms": [
+            9.615612030029297,
+            8.997145652770996,
+            8.130979537963867
+          ],
+          "gradients_present": true,
+          "known_structural_zero_gradients": [
+            "readout.heads.3.fc2.bias"
+          ],
+          "logits_finite": true,
+          "loss_finite": true,
+          "loss_first": 1.2556434869766235,
+          "losses": [
+            1.2556434869766235,
+            1.1264430284500122,
+            1.026408076286316
+          ],
+          "missing_gradients": [],
+          "n_parameters": 2120844,
+          "unexpected_zero_gradients": [],
+          "zero_gradients": [
+            "readout.heads.3.fc2.bias"
+          ]
+        }
+      }
+    },
+    "normalisation_identity": {
+      "all_scales_equal_historical_checkpoint": true,
+      "cont_buffers_empty": true,
+      "expected_norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+      "fit_rows": 350343,
+      "fit_split": "train_only",
+      "matches_frozen_source": true,
+      "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+      "per_scale": {
+        "1": true,
+        "2": true,
+        "3": true
+      },
+      "train_only": true,
+      "valid_or_test_used": false
+    },
+    "official_test_untouched": {
+      "finite_test_labels": 0,
+      "passed": true,
+      "test_evaluated": false,
+      "test_rows": 43793,
+      "train_rows": 350343,
+      "valid_rows": 43793
+    },
+    "one_shot_encoding_no_second_propagation": {
+      "note_tolerance": "on CUDA the same post-local graph run twice differs by <=2e-5 because index_add_/scatter_reduce_ accumulate with atomics; on CPU the difference is 0",
+      "passed": true,
+      "per_scale": {
+        "1": {
+          "bitwise_equal": false,
+          "calls_exactly_once": true,
+          "equal": true,
+          "module_calls": {
+            "atom_encoder": 1,
+            "bond_encoder": 1,
+            "f": 1,
+            "local": 1,
+            "readout": 1,
+            "rho": 1
+          },
+          "post_local_minimal_batch_max_abs_diff": 9.5367431640625e-07,
+          "post_local_needs_no_bond_or_path_field": true,
+          "tolerance": 2e-05
+        },
+        "2": {
+          "bitwise_equal": false,
+          "calls_exactly_once": true,
+          "equal": true,
+          "module_calls": {
+            "atom_encoder": 1,
+            "bond_encoder": 1,
+            "f": 1,
+            "local": 1,
+            "readout": 1,
+            "rho": 1
+          },
+          "post_local_minimal_batch_max_abs_diff": 1.9073486328125e-06,
+          "post_local_needs_no_bond_or_path_field": true,
+          "tolerance": 2e-05
+        },
+        "3": {
+          "bitwise_equal": false,
+          "calls_exactly_once": true,
+          "equal": true,
+          "module_calls": {
+            "atom_encoder": 1,
+            "bond_encoder": 1,
+            "f": 1,
+            "local": 1,
+            "readout": 1,
+            "rho": 1
+          },
+          "post_local_minimal_batch_max_abs_diff": 1.9073486328125e-06,
+          "post_local_needs_no_bond_or_path_field": true,
+          "tolerance": 2e-05
+        }
+      },
+      "statement": "atom_encoder, bond_encoder and local each run exactly once per forward; everything after local is a function of (h, atom_batch, n_graphs, global) only"
+    },
+    "s1_s2_inputs_identical": {
+      "batch": {
+        "atom_feat_dim": 51,
+        "atom_scalar_dim": 9,
+        "bond_feat_dim": 13,
+        "close_emb_vocab": [
+          2,
+          8
+        ],
+        "global_dim": 42,
+        "max_nbr_code": 68,
+        "max_path_cat": 343,
+        "n_atoms": 157,
+        "n_bonds": 168,
+        "n_molecules": 8,
+        "n_nbr_codes": 80,
+        "n_path_codes": 400,
+        "n_s1_codes": 336,
+        "n_s2_paths": 468
+      },
+      "embedding_vocab_not_scaled": true,
+      "local_block_names_identical": true,
+      "local_blocks": {
+        "scale1": [
+          "a",
+          "atom_scalar",
+          "b_sum",
+          "s1_joint",
+          "s2_closure",
+          "s2_content",
+          "s2_end",
+          "s2_joint",
+          "s2_type"
+        ],
+        "scale2": [
+          "a",
+          "atom_scalar",
+          "b_sum",
+          "s1_joint",
+          "s2_closure",
+          "s2_content",
+          "s2_end",
+          "s2_joint",
+          "s2_type"
+        ],
+        "scale3": [
+          "a",
+          "atom_scalar",
+          "b_sum",
+          "s1_joint",
+          "s2_closure",
+          "s2_content",
+          "s2_end",
+          "s2_joint",
+          "s2_type"
+        ]
+      },
+      "matches_protocol_inputs": true
+    },
+    "scale1_forward_equal_historical_A": {
+      "cpu_bitwise_equal": true,
+      "cpu_max_abs_diff": 0.0,
+      "device": "cuda",
+      "device_max_abs_diff": 1.430511474609375e-06,
+      "device_tolerance": 2e-05,
+      "device_within_tolerance": true,
+      "passed": true
+    },
+    "scale1_historical_checkpoint_forward_equal": {
+      "max_abs_diff": 0.0,
+      "missing_keys": [],
+      "passed": true,
+      "tolerance": 1e-06,
+      "unexpected_keys": []
+    },
+    "scale1_init_state_bitwise_equal_historical_A": {
+      "all_equal": true,
+      "differing": {},
+      "keys_only_a": [],
+      "keys_only_b": [],
+      "n_differing": 0,
+      "n_keys_a": 57,
+      "n_keys_b": 57,
+      "n_shared": 57
+    },
+    "scale1_state_keys_equal_historical_A": {
+      "equal": true,
+      "n_base_parameters": 245184,
+      "n_keys": 57,
+      "n_parameters_historical": 287644,
+      "n_parameters_ours": 287644,
+      "n_readout_parameters": 42460
+    },
+    "scale1_trunk_fingerprint_matches_recorded_A": {
+      "equal": true,
+      "expected": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "found": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3"
+    }
+  },
+  "commit": "dc4b053ca59333793c85628ab5854fbfa15b0f67",
+  "constants": {
+    "inherited_source": {
+      "cache_sha256": "caad3e90dd76d1f1483d2a01501eba23413072a7b5a2fc4b62780c315aa59035",
+      "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+      "label_artifact_sha256": "5c3b5fbe642d80113522832fe01090097b860010868c59f8696bc247d5027d01",
+      "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+      "round": "lcrc-pcba-lr-probe-v1",
+      "split_partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f"
+    },
+    "lr_audit": {
+      "formula": "steps 0..2737 linear 3e-5->3e-4; then 1e-5+(3e-4-1e-5)*0.5*(1+cos(pi*(s-2738)/(109520-2738)))",
+      "post_warmup_first": 0.0003,
+      "step0": 3.0098612125639153e-05,
+      "step10e": 0.00026353405848480966,
+      "step20e": 0.0001608385613158652,
+      "step40e": 1e-05,
+      "steps_per_epoch": 2738,
+      "total_steps_40_epochs": 109520,
+      "warmup_last": 0.0003
+    },
+    "lr_first_applied_step": 3.0098612125639153e-05,
+    "lr_first_step_ok": true,
+    "lr_matches_inherited_sg_common": true,
+    "lr_mismatch_examples": [],
+    "lr_monotone_non_increasing_after_warmup": true,
+    "lr_step40e_ok": true,
+    "lr_warmup_last_ok": true,
+    "lr_warmup_start_constant_ok": true,
+    "recipe_expected": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "batch_size": 128,
+      "dropout": 0.1,
+      "early_stopping": false,
+      "end_lr": 1e-05,
+      "epochs": 40,
+      "gradient_clip": 5.0,
+      "learning_rate": 0.0003,
+      "optimizer": "AdamW",
+      "precision": "fp32",
+      "warmup_epochs": 1.0,
+      "warmup_start_lr": 3e-05,
+      "weight_decay": 0.001
+    },
+    "recipe_mismatches": {},
+    "recipe_ok": true,
+    "size_mismatches": {},
+    "sizes": {
+      "steps_per_epoch": 2738,
+      "test": 43793,
+      "total_steps": 109520,
+      "train": 350343,
+      "valid": 43793
+    },
+    "sizes_ok": true,
+    "test_policy": "official Test labels are NaN in the label artifact; no path indexes them"
+  },
+  "host_facts": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cuda_capability": [
+      [
+        8,
+        0
+      ]
+    ],
+    "cudnn": 90100,
+    "git": {
+      "branch": "main",
+      "commit": "dc4b053ca59333793c85628ab5854fbfa15b0f67",
+      "dirty": true,
+      "dirty_files": [
+        "?? tracks/structural-sufficiency/lcrc_pcba_backbone_scaling_v1/analysis/"
+      ]
+    },
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "mode": "model",
+  "models": {
+    "1": {
+      "base_parameters": 245184,
+      "epoch0_logits_finite": true,
+      "epoch0_logits_shape": [
+        8,
+        128
+      ],
+      "expected_parameters": 287644,
+      "init": {
+        "global_rng_unchanged": true,
+        "linear_layers_initialised": 10,
+        "private_generator_seed": 17,
+        "readout_output_zeroed": true
+      },
+      "module_breakdown": {
+        "atom_encoder": 19040,
+        "bond_encoder": 63776,
+        "drop": 0,
+        "f": 12480,
+        "local": 130560,
+        "readout": 42460,
+        "rho": 19328,
+        "total": 287644
+      },
+      "n_state_tensors": 57,
+      "parameter_check": "exact",
+      "readout_parameters": 42460,
+      "scale": 1,
+      "state_keys": [
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.1.bias",
+        "atom_encoder.lins.1.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.1.bias",
+        "bond_encoder.lins.1.weight",
+        "cont_mean",
+        "cont_scale",
+        "f.lins.0.bias",
+        "f.lins.0.weight",
+        "f.lins.1.bias",
+        "f.lins.1.weight",
+        "global_mean",
+        "global_scale",
+        "local.close_emb.weight",
+        "local.end_emb.weight",
+        "local.joint_proj.bias",
+        "local.joint_proj.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.1.bias",
+        "local.mlp.lins.1.weight",
+        "local.nbr_emb.weight",
+        "local.norm.bias",
+        "local.norm.weight",
+        "local.path_emb.weight",
+        "local.path_gate.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "readout.fc1.bias",
+        "readout.fc1.weight",
+        "readout.fc2.bias",
+        "readout.fc2.weight",
+        "readout.heads.0.fc1.bias",
+        "readout.heads.0.fc1.weight",
+        "readout.heads.0.fc2.bias",
+        "readout.heads.0.fc2.weight",
+        "readout.heads.1.fc1.bias",
+        "readout.heads.1.fc1.weight",
+        "readout.heads.1.fc2.bias",
+        "readout.heads.1.fc2.weight",
+        "readout.heads.2.fc1.bias",
+        "readout.heads.2.fc1.weight",
+        "readout.heads.2.fc2.bias",
+        "readout.heads.2.fc2.weight",
+        "readout.heads.3.fc1.bias",
+        "readout.heads.3.fc1.weight",
+        "readout.heads.3.fc2.bias",
+        "readout.heads.3.fc2.weight",
+        "rho.lins.0.bias",
+        "rho.lins.0.weight",
+        "rho.lins.1.bias",
+        "rho.lins.1.weight",
+        "scalar_mean",
+        "scalar_scale"
+      ],
+      "total_parameters": 287644,
+      "trunk_init_fingerprint": "1b1f1ad35ab33f4107bc600166fce838d5e16ff5def2348743c73c0211dcf7c3",
+      "width_audit": {
+        "all_match": true,
+        "checks": {
+          "atom_hidden": true,
+          "atom_out": true,
+          "bond_hidden": true,
+          "bond_out": true,
+          "f_out": true,
+          "f_width": true,
+          "local_hidden": true,
+          "local_input": true,
+          "local_norm": true,
+          "local_width": true,
+          "n_heads": true,
+          "pool_hidden": true,
+          "pool_in": true,
+          "readout_out": true,
+          "rho_hidden": true,
+          "rho_input": true,
+          "rho_out": true,
+          "scorer_hidden": true,
+          "scorer_in": true,
+          "stat_rank_end_emb": true,
+          "stat_rank_joint_proj": true,
+          "stat_rank_nbr_emb": true,
+          "stat_rank_path_emb": true,
+          "stat_rank_path_u": true,
+          "stat_rank_path_v": true
+        },
+        "expected": {
+          "atom_hidden": 128,
+          "atom_out": 96,
+          "bond_hidden": 160,
+          "bond_out": 96,
+          "local_hidden": 192,
+          "local_input": 433,
+          "local_width": 64,
+          "n_heads": 4,
+          "pool_hidden": 88,
+          "readout_out": 128,
+          "rho_hidden": 64,
+          "rho_input": 171,
+          "scorer_hidden": 32,
+          "stat_rank": 32
+        },
+        "observed": {
+          "atom_hidden": {
+            "in": 51,
+            "out": 128,
+            "params": 6656
+          },
+          "atom_out": {
+            "in": 128,
+            "out": 96,
+            "params": 12384
+          },
+          "bond_hidden": {
+            "in": 301,
+            "out": 160,
+            "params": 48320
+          },
+          "bond_out": {
+            "in": 160,
+            "out": 96,
+            "params": 15456
+          },
+          "f": [
+            {
+              "in": 64,
+              "out": 64,
+              "params": 4160
+            },
+            {
+              "in": 64,
+              "out": 128,
+              "params": 8320
+            }
+          ],
+          "local_hidden": {
+            "in": 433,
+            "out": 192,
+            "params": 83328
+          },
+          "local_input": {
+            "expected_from_widths": 433,
+            "layout": {
+              "a": [
+                0,
+                96
+              ],
+              "atom_scalar": [
+                424,
+                433
+              ],
+              "b_sum": [
+                96,
+                192
+              ],
+              "s1_joint": [
+                192,
+                224
+              ],
+              "s2_closure": [
+                320,
+                328
+              ],
+              "s2_content": [
+                328,
+                424
+              ],
+              "s2_end": [
+                256,
+                288
+              ],
+              "s2_joint": [
+                288,
+                320
+              ],
+              "s2_type": [
+                224,
+                256
+              ]
+            },
+            "observed": 433
+          },
+          "local_norm": 64,
+          "local_width": {
+            "in": 192,
+            "out": 64,
+            "params": 12352
+          },
+          "n_heads": 4,
+          "pool_hidden": {
+            "in": 256,
+            "out": 88,
+            "params": 22616
+          },
+          "readout_out": {
+            "in": 88,
+            "out": 128,
+            "params": 11392
+          },
+          "rho_hidden": {
+            "in": 171,
+            "out": 64,
+            "params": 11008
+          },
+          "rho_input": 171,
+          "rho_out": {
+            "in": 64,
+            "out": 128,
+            "params": 8320
+          },
+          "scorer_hidden": [
+            {
+              "in": 64,
+              "out": 32,
+              "params": 2080
+            },
+            {
+              "in": 64,
+              "out": 32,
+              "params": 2080
+            },
+            {
+              "in": 64,
+              "out": 32,
+              "params": 2080
+            },
+            {
+              "in": 64,
+              "out": 32,
+              "params": 2080
+            }
+          ],
+          "scorer_out": [
+            {
+              "in": 32,
+              "out": 1,
+              "params": 33
+            },
+            {
+              "in": 32,
+              "out": 1,
+              "params": 33
+            },
+            {
+              "in": 32,
+              "out": 1,
+              "params": 33
+            },
+            {
+              "in": 32,
+              "out": 1,
+              "params": 33
+            }
+          ],
+          "stat_rank": {
+            "close_emb": [
+              2,
+              8
+            ],
+            "end_emb": [
+              80,
+              32
+            ],
+            "joint_proj": {
+              "in": 32,
+              "out": 32,
+              "params": 1056
+            },
+            "nbr_emb": [
+              80,
+              32
+            ],
+            "path_emb": [
+              400,
+              32
+            ],
+            "path_gate": [
+              400,
+              1
+            ],
+            "path_u": [
+              400,
+              32
+            ],
+            "path_v": [
+              80,
+              32
+            ]
+          }
+        }
+      },
+      "widths": {
+        "atom_hidden": 128,
+        "atom_out": 96,
+        "bond_hidden": 160,
+        "bond_out": 96,
+        "local_hidden": 192,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 88,
+        "rho_hidden": 64,
+        "scorer_hidden": 32,
+        "stat_rank": 32,
+        "width": 64
+      }
+    },
+    "2": {
+      "base_parameters": 848096,
+      "epoch0_logits_finite": true,
+      "epoch0_logits_shape": [
+        8,
+        128
+      ],
+      "expected_parameters": 994324,
+      "init": {
+        "global_rng_unchanged": true,
+        "linear_layers_initialised": 10,
+        "private_generator_seed": 17,
+        "readout_output_zeroed": true
+      },
+      "module_breakdown": {
+        "atom_encoder": 62656,
+        "bond_encoder": 250432,
+        "drop": 0,
+        "f": 33024,
+        "local": 447072,
+        "readout": 146228,
+        "rho": 54912,
+        "total": 994324
+      },
+      "n_state_tensors": 57,
+      "parameter_check": "exact",
+      "readout_parameters": 146228,
+      "scale": 2,
+      "state_keys": [
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.1.bias",
+        "atom_encoder.lins.1.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.1.bias",
+        "bond_encoder.lins.1.weight",
+        "cont_mean",
+        "cont_scale",
+        "f.lins.0.bias",
+        "f.lins.0.weight",
+        "f.lins.1.bias",
+        "f.lins.1.weight",
+        "global_mean",
+        "global_scale",
+        "local.close_emb.weight",
+        "local.end_emb.weight",
+        "local.joint_proj.bias",
+        "local.joint_proj.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.1.bias",
+        "local.mlp.lins.1.weight",
+        "local.nbr_emb.weight",
+        "local.norm.bias",
+        "local.norm.weight",
+        "local.path_emb.weight",
+        "local.path_gate.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "readout.fc1.bias",
+        "readout.fc1.weight",
+        "readout.fc2.bias",
+        "readout.fc2.weight",
+        "readout.heads.0.fc1.bias",
+        "readout.heads.0.fc1.weight",
+        "readout.heads.0.fc2.bias",
+        "readout.heads.0.fc2.weight",
+        "readout.heads.1.fc1.bias",
+        "readout.heads.1.fc1.weight",
+        "readout.heads.1.fc2.bias",
+        "readout.heads.1.fc2.weight",
+        "readout.heads.2.fc1.bias",
+        "readout.heads.2.fc1.weight",
+        "readout.heads.2.fc2.bias",
+        "readout.heads.2.fc2.weight",
+        "readout.heads.3.fc1.bias",
+        "readout.heads.3.fc1.weight",
+        "readout.heads.3.fc2.bias",
+        "readout.heads.3.fc2.weight",
+        "rho.lins.0.bias",
+        "rho.lins.0.weight",
+        "rho.lins.1.bias",
+        "rho.lins.1.weight",
+        "scalar_mean",
+        "scalar_scale"
+      ],
+      "total_parameters": 994324,
+      "trunk_init_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+      "width_audit": {
+        "all_match": true,
+        "checks": {
+          "atom_hidden": true,
+          "atom_out": true,
+          "bond_hidden": true,
+          "bond_out": true,
+          "f_out": true,
+          "f_width": true,
+          "local_hidden": true,
+          "local_input": true,
+          "local_norm": true,
+          "local_width": true,
+          "n_heads": true,
+          "pool_hidden": true,
+          "pool_in": true,
+          "readout_out": true,
+          "rho_hidden": true,
+          "rho_input": true,
+          "rho_out": true,
+          "scorer_hidden": true,
+          "scorer_in": true,
+          "stat_rank_end_emb": true,
+          "stat_rank_joint_proj": true,
+          "stat_rank_nbr_emb": true,
+          "stat_rank_path_emb": true,
+          "stat_rank_path_u": true,
+          "stat_rank_path_v": true
+        },
+        "expected": {
+          "atom_hidden": 256,
+          "atom_out": 192,
+          "bond_hidden": 320,
+          "bond_out": 192,
+          "local_hidden": 384,
+          "local_input": 849,
+          "local_width": 128,
+          "n_heads": 4,
+          "pool_hidden": 176,
+          "readout_out": 128,
+          "rho_hidden": 128,
+          "rho_input": 299,
+          "scorer_hidden": 64,
+          "stat_rank": 64
+        },
+        "observed": {
+          "atom_hidden": {
+            "in": 51,
+            "out": 256,
+            "params": 13312
+          },
+          "atom_out": {
+            "in": 256,
+            "out": 192,
+            "params": 49344
+          },
+          "bond_hidden": {
+            "in": 589,
+            "out": 320,
+            "params": 188800
+          },
+          "bond_out": {
+            "in": 320,
+            "out": 192,
+            "params": 61632
+          },
+          "f": [
+            {
+              "in": 128,
+              "out": 128,
+              "params": 16512
+            },
+            {
+              "in": 128,
+              "out": 128,
+              "params": 16512
+            }
+          ],
+          "local_hidden": {
+            "in": 849,
+            "out": 384,
+            "params": 326400
+          },
+          "local_input": {
+            "expected_from_widths": 849,
+            "layout": {
+              "a": [
+                0,
+                192
+              ],
+              "atom_scalar": [
+                840,
+                849
+              ],
+              "b_sum": [
+                192,
+                384
+              ],
+              "s1_joint": [
+                384,
+                448
+              ],
+              "s2_closure": [
+                640,
+                648
+              ],
+              "s2_content": [
+                648,
+                840
+              ],
+              "s2_end": [
+                512,
+                576
+              ],
+              "s2_joint": [
+                576,
+                640
+              ],
+              "s2_type": [
+                448,
+                512
+              ]
+            },
+            "observed": 849
+          },
+          "local_norm": 128,
+          "local_width": {
+            "in": 384,
+            "out": 128,
+            "params": 49280
+          },
+          "n_heads": 4,
+          "pool_hidden": {
+            "in": 512,
+            "out": 176,
+            "params": 90288
+          },
+          "readout_out": {
+            "in": 176,
+            "out": 128,
+            "params": 22656
+          },
+          "rho_hidden": {
+            "in": 299,
+            "out": 128,
+            "params": 38400
+          },
+          "rho_input": 299,
+          "rho_out": {
+            "in": 128,
+            "out": 128,
+            "params": 16512
+          },
+          "scorer_hidden": [
+            {
+              "in": 128,
+              "out": 64,
+              "params": 8256
+            },
+            {
+              "in": 128,
+              "out": 64,
+              "params": 8256
+            },
+            {
+              "in": 128,
+              "out": 64,
+              "params": 8256
+            },
+            {
+              "in": 128,
+              "out": 64,
+              "params": 8256
+            }
+          ],
+          "scorer_out": [
+            {
+              "in": 64,
+              "out": 1,
+              "params": 65
+            },
+            {
+              "in": 64,
+              "out": 1,
+              "params": 65
+            },
+            {
+              "in": 64,
+              "out": 1,
+              "params": 65
+            },
+            {
+              "in": 64,
+              "out": 1,
+              "params": 65
+            }
+          ],
+          "stat_rank": {
+            "close_emb": [
+              2,
+              8
+            ],
+            "end_emb": [
+              80,
+              64
+            ],
+            "joint_proj": {
+              "in": 64,
+              "out": 64,
+              "params": 4160
+            },
+            "nbr_emb": [
+              80,
+              64
+            ],
+            "path_emb": [
+              400,
+              64
+            ],
+            "path_gate": [
+              400,
+              1
+            ],
+            "path_u": [
+              400,
+              64
+            ],
+            "path_v": [
+              80,
+              64
+            ]
+          }
+        }
+      },
+      "widths": {
+        "atom_hidden": 256,
+        "atom_out": 192,
+        "bond_hidden": 320,
+        "bond_out": 192,
+        "local_hidden": 384,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 176,
+        "rho_hidden": 128,
+        "scorer_hidden": 64,
+        "stat_rank": 64,
+        "width": 128
+      }
+    },
+    "3": {
+      "base_parameters": 1809408,
+      "epoch0_logits_finite": true,
+      "epoch0_logits_shape": [
+        8,
+        128
+      ],
+      "expected_parameters": 2120844,
+      "init": {
+        "global_rng_unchanged": true,
+        "linear_layers_initialised": 10,
+        "private_generator_seed": 17,
+        "readout_output_zeroed": true
+      },
+      "module_breakdown": {
+        "atom_encoder": 130848,
+        "bond_encoder": 559968,
+        "drop": 0,
+        "f": 61760,
+        "local": 949952,
+        "readout": 311436,
+        "rho": 106880,
+        "total": 2120844
+      },
+      "n_state_tensors": 57,
+      "parameter_check": "exact",
+      "readout_parameters": 311436,
+      "scale": 3,
+      "state_keys": [
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.1.bias",
+        "atom_encoder.lins.1.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.1.bias",
+        "bond_encoder.lins.1.weight",
+        "cont_mean",
+        "cont_scale",
+        "f.lins.0.bias",
+        "f.lins.0.weight",
+        "f.lins.1.bias",
+        "f.lins.1.weight",
+        "global_mean",
+        "global_scale",
+        "local.close_emb.weight",
+        "local.end_emb.weight",
+        "local.joint_proj.bias",
+        "local.joint_proj.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.1.bias",
+        "local.mlp.lins.1.weight",
+        "local.nbr_emb.weight",
+        "local.norm.bias",
+        "local.norm.weight",
+        "local.path_emb.weight",
+        "local.path_gate.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "readout.fc1.bias",
+        "readout.fc1.weight",
+        "readout.fc2.bias",
+        "readout.fc2.weight",
+        "readout.heads.0.fc1.bias",
+        "readout.heads.0.fc1.weight",
+        "readout.heads.0.fc2.bias",
+        "readout.heads.0.fc2.weight",
+        "readout.heads.1.fc1.bias",
+        "readout.heads.1.fc1.weight",
+        "readout.heads.1.fc2.bias",
+        "readout.heads.1.fc2.weight",
+        "readout.heads.2.fc1.bias",
+        "readout.heads.2.fc1.weight",
+        "readout.heads.2.fc2.bias",
+        "readout.heads.2.fc2.weight",
+        "readout.heads.3.fc1.bias",
+        "readout.heads.3.fc1.weight",
+        "readout.heads.3.fc2.bias",
+        "readout.heads.3.fc2.weight",
+        "rho.lins.0.bias",
+        "rho.lins.0.weight",
+        "rho.lins.1.bias",
+        "rho.lins.1.weight",
+        "scalar_mean",
+        "scalar_scale"
+      ],
+      "total_parameters": 2120844,
+      "trunk_init_fingerprint": "275f00b77afd16c548930637d14545dbaf3b30ea52ea535e527f11fb835deabf",
+      "width_audit": {
+        "all_match": true,
+        "checks": {
+          "atom_hidden": true,
+          "atom_out": true,
+          "bond_hidden": true,
+          "bond_out": true,
+          "f_out": true,
+          "f_width": true,
+          "local_hidden": true,
+          "local_input": true,
+          "local_norm": true,
+          "local_width": true,
+          "n_heads": true,
+          "pool_hidden": true,
+          "pool_in": true,
+          "readout_out": true,
+          "rho_hidden": true,
+          "rho_input": true,
+          "rho_out": true,
+          "scorer_hidden": true,
+          "scorer_in": true,
+          "stat_rank_end_emb": true,
+          "stat_rank_joint_proj": true,
+          "stat_rank_nbr_emb": true,
+          "stat_rank_path_emb": true,
+          "stat_rank_path_u": true,
+          "stat_rank_path_v": true
+        },
+        "expected": {
+          "atom_hidden": 384,
+          "atom_out": 288,
+          "bond_hidden": 480,
+          "bond_out": 288,
+          "local_hidden": 576,
+          "local_input": 1265,
+          "local_width": 192,
+          "n_heads": 4,
+          "pool_hidden": 264,
+          "readout_out": 128,
+          "rho_hidden": 192,
+          "rho_input": 427,
+          "scorer_hidden": 96,
+          "stat_rank": 96
+        },
+        "observed": {
+          "atom_hidden": {
+            "in": 51,
+            "out": 384,
+            "params": 19968
+          },
+          "atom_out": {
+            "in": 384,
+            "out": 288,
+            "params": 110880
+          },
+          "bond_hidden": {
+            "in": 877,
+            "out": 480,
+            "params": 421440
+          },
+          "bond_out": {
+            "in": 480,
+            "out": 288,
+            "params": 138528
+          },
+          "f": [
+            {
+              "in": 192,
+              "out": 192,
+              "params": 37056
+            },
+            {
+              "in": 192,
+              "out": 128,
+              "params": 24704
+            }
+          ],
+          "local_hidden": {
+            "in": 1265,
+            "out": 576,
+            "params": 729216
+          },
+          "local_input": {
+            "expected_from_widths": 1265,
+            "layout": {
+              "a": [
+                0,
+                288
+              ],
+              "atom_scalar": [
+                1256,
+                1265
+              ],
+              "b_sum": [
+                288,
+                576
+              ],
+              "s1_joint": [
+                576,
+                672
+              ],
+              "s2_closure": [
+                960,
+                968
+              ],
+              "s2_content": [
+                968,
+                1256
+              ],
+              "s2_end": [
+                768,
+                864
+              ],
+              "s2_joint": [
+                864,
+                960
+              ],
+              "s2_type": [
+                672,
+                768
+              ]
+            },
+            "observed": 1265
+          },
+          "local_norm": 192,
+          "local_width": {
+            "in": 576,
+            "out": 192,
+            "params": 110784
+          },
+          "n_heads": 4,
+          "pool_hidden": {
+            "in": 768,
+            "out": 264,
+            "params": 203016
+          },
+          "readout_out": {
+            "in": 264,
+            "out": 128,
+            "params": 33920
+          },
+          "rho_hidden": {
+            "in": 427,
+            "out": 192,
+            "params": 82176
+          },
+          "rho_input": 427,
+          "rho_out": {
+            "in": 192,
+            "out": 128,
+            "params": 24704
+          },
+          "scorer_hidden": [
+            {
+              "in": 192,
+              "out": 96,
+              "params": 18528
+            },
+            {
+              "in": 192,
+              "out": 96,
+              "params": 18528
+            },
+            {
+              "in": 192,
+              "out": 96,
+              "params": 18528
+            },
+            {
+              "in": 192,
+              "out": 96,
+              "params": 18528
+            }
+          ],
+          "scorer_out": [
+            {
+              "in": 96,
+              "out": 1,
+              "params": 97
+            },
+            {
+              "in": 96,
+              "out": 1,
+              "params": 97
+            },
+            {
+              "in": 96,
+              "out": 1,
+              "params": 97
+            },
+            {
+              "in": 96,
+              "out": 1,
+              "params": 97
+            }
+          ],
+          "stat_rank": {
+            "close_emb": [
+              2,
+              8
+            ],
+            "end_emb": [
+              80,
+              96
+            ],
+            "joint_proj": {
+              "in": 96,
+              "out": 96,
+              "params": 9312
+            },
+            "nbr_emb": [
+              80,
+              96
+            ],
+            "path_emb": [
+              400,
+              96
+            ],
+            "path_gate": [
+              400,
+              1
+            ],
+            "path_u": [
+              400,
+              96
+            ],
+            "path_v": [
+              80,
+              96
+            ]
+          }
+        }
+      },
+      "widths": {
+        "atom_hidden": 384,
+        "atom_out": 288,
+        "bond_hidden": 480,
+        "bond_out": 288,
+        "local_hidden": 576,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 264,
+        "rho_hidden": 192,
+        "scorer_hidden": 96,
+        "stat_rank": 96,
+        "width": 192
+      }
+    }
+  },
+  "occupancy": {
+    "captured_utc": "2026-11-07T09:30:05Z",
+    "cuda_available": true,
+    "cuda_visible_devices": "1",
+    "device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "nvidia_smi_compute_apps": "3841932, python3, 16082 MiB\n2742427, /home/hxy/cy/research/.venv/bin/python3, 414 MiB",
+    "nvidia_smi_gpus": "0, GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, NVIDIA A100-SXM4-40GB, 40960 MiB, 16105 MiB, 24222 MiB, 100 %, 100 %, 53, 550.163.01\n1, GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, NVIDIA A100-SXM4-40GB, 40960 MiB, 437 MiB, 39890 MiB, 0 %, 0 %, 30, 550.163.01",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "visible_device_mem_get_info": {
+      "free_bytes": 41827565568,
+      "total_bytes": 42285268992,
+      "used_bytes": 457703424
+    }
+  },
+  "overall_gate": true,
+  "seconds": 8.991969548165798,
+  "verdict": "PASS",
+  "width_table": {
+    "atom_hidden": {
+      "1": 128,
+      "2": 256,
+      "3": 384
+    },
+    "atom_out": {
+      "1": 96,
+      "2": 192,
+      "3": 288
+    },
+    "bond_hidden": {
+      "1": 160,
+      "2": 320,
+      "3": 480
+    },
+    "bond_out": {
+      "1": 96,
+      "2": 192,
+      "3": 288
+    },
+    "local_hidden": {
+      "1": 192,
+      "2": 384,
+      "3": 576
+    },
+    "pool_hidden": {
+      "1": 88,
+      "2": 176,
+      "3": 264
+    },
+    "rho_hidden": {
+      "1": 64,
+      "2": 128,
+      "3": 192
+    },
+    "scorer_hidden": {
+      "1": 32,
+      "2": 64,
+      "3": 96
+    },
+    "stat_rank": {
+      "1": 32,
+      "2": 64,
+      "3": 96
+    },
+    "width": {
+      "1": 64,
+      "2": 128,
+      "3": 192
+    }
+  }
+}

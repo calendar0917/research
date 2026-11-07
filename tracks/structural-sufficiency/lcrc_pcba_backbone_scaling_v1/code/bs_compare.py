@@ -414,13 +414,20 @@ def build_ledger(analysis: Path, runs: Mapping[str, Mapping[str, Any]], extra: M
 
     probe = extra.get("probe") or {}
     preflight_seconds = float(probe.get("seconds") or 0.0)
+    audit_job = rr_match("bs-audit")
+    audit_elapsed = float((audit_job or {}).get("elapsed") or 0.0)
+    # charge whichever is larger: the job's own wall clock (warm-up, data load,
+    # all three audit modes) or the probe's measured span.
+    audit_hours = max(audit_elapsed, preflight_seconds) / 3600.0
     entries.append(
         {
             "item": "pretraining_audit_and_cost_probe",
             "experiment": "bs-audit",
-            "rr_run_id": (rr_by_exp.get("bs-audit") or [{}])[-1].get("run_id") if rr_by_exp.get("bs-audit") else None,
-            "gpu_hours": preflight_seconds / 3600.0,
-            "source": "analysis/evaluation_cost_probe.json:seconds (includes model + a0-replay + eval-probe)",
+            "rr_run_id": None if audit_job is None else audit_job.get("run_id"),
+            "rr_elapsed_seconds": audit_elapsed,
+            "probe_mode_seconds": preflight_seconds,
+            "gpu_hours": audit_hours,
+            "source": "rr jobs:bs-audit elapsed (model + a0-replay + eval-probe), cross-checked against evaluation_cost_probe.json:seconds",
             "counted_as": "preflight",
         }
     )
@@ -457,7 +464,8 @@ def build_ledger(analysis: Path, runs: Mapping[str, Mapping[str, Any]], extra: M
         "budget_status": None,
         "note": (
             "GPU-hours are per-run wall clock measured inside the job (gpu_hours in run.json), "
-            "which is what the budget charges; the two formal runs overlapped on separate GPUs."
+            "which is what the budget charges. See scheduling.json for whether the two formal "
+            "runs overlapped or ran serially, and why."
         ),
     }
     spend = ledger["total_gpu_hours_including_failures"]

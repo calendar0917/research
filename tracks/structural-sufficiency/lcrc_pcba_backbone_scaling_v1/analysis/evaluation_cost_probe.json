@@ -1,0 +1,170 @@
+{
+  "batch_size": 128,
+  "captured_utc": "2026-11-07T09:30:32Z",
+  "device": "cuda",
+  "host_facts": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cuda_capability": [
+      [
+        8,
+        0
+      ]
+    ],
+    "cudnn": 90100,
+    "git": {
+      "branch": "main",
+      "commit": "dc4b053ca59333793c85628ab5854fbfa15b0f67",
+      "dirty": true,
+      "dirty_files": [
+        "?? tracks/structural-sufficiency/lcrc_pcba_backbone_scaling_v1/analysis/"
+      ]
+    },
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "mode": "eval-probe",
+  "models": {
+    "W2": {
+      "gpu_peak_allocated_bytes": 158232576,
+      "gpu_peak_reserved_bytes": 255852544,
+      "parameters": 994324,
+      "probe_valid_ap": 0.02601335352018243,
+      "probe_valid_bce": 0.27447435734047804,
+      "projected_epoch_seconds": 78.21304260194302,
+      "scale": 2,
+      "step_ms_mean": 29.428744067748386,
+      "step_ms_p50": 28.56575697660446,
+      "steps_per_second": 35.00694908309296,
+      "train_eval_projected_seconds": 48.16237242008013,
+      "validation_forward_seconds": 4.4350673533044755,
+      "validation_fraction_of_epoch": 0.07697327116088208,
+      "validation_metric_seconds": 1.5852463832125068,
+      "validation_seconds": 6.020313736516982
+    },
+    "W3": {
+      "gpu_peak_allocated_bytes": 236281856,
+      "gpu_peak_reserved_bytes": 501219328,
+      "parameters": 2120844,
+      "probe_valid_ap": 0.02624378698559424,
+      "probe_valid_bce": 0.11928650521475306,
+      "projected_epoch_seconds": 74.77018825057894,
+      "scale": 3,
+      "step_ms_mean": 27.474734575177234,
+      "step_ms_p50": 27.308322954922915,
+      "steps_per_second": 36.6188726290762,
+      "train_eval_projected_seconds": 49.525182405228605,
+      "validation_forward_seconds": 4.619779876898974,
+      "validation_fraction_of_epoch": 0.0827959059051044,
+      "validation_metric_seconds": 1.5708855940029025,
+      "validation_seconds": 6.190665470901877
+    }
+  },
+  "occupancy": {
+    "captured_utc": "2026-11-07T09:30:32Z",
+    "cuda_available": true,
+    "cuda_visible_devices": "1",
+    "device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "nvidia_smi_compute_apps": "3841932, python3, 16082 MiB\n2742427, /home/hxy/cy/research/.venv/bin/python3, 622 MiB",
+    "nvidia_smi_gpus": "0, GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, NVIDIA A100-SXM4-40GB, 40960 MiB, 16105 MiB, 24222 MiB, 100 %, 100 %, 53, 550.163.01\n1, GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, NVIDIA A100-SXM4-40GB, 40960 MiB, 645 MiB, 39682 MiB, 0 %, 0 %, 31, 550.163.01",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "visible_device_mem_get_info": {
+      "free_bytes": 41609461760,
+      "total_bytes": 42285268992,
+      "used_bytes": 675807232
+    }
+  },
+  "probe_train_steps": 30,
+  "probe_warmup_steps": 5,
+  "projection": {
+    "budget_label": "OK",
+    "hard_gpu_hours": 12.0,
+    "note": "projection excludes preflight already spent; excludes co-tenancy slowdown on a shared GPU",
+    "per_model_gpu_hours": {
+      "W2": 0.9493046183217999,
+      "W3": 0.9133220364623503
+    },
+    "per_model_seconds": {
+      "W2": 3417.49662595848,
+      "W3": 3287.959331264461
+    },
+    "target_gpu_hours": 8.0,
+    "total_gpu_hours": 1.8626266547841503,
+    "within_hard_cap": true,
+    "within_target": true
+  },
+  "resolution": {
+    "all_below_threshold": true,
+    "n_evaluations_per_model": 40,
+    "resolved_eval_epochs": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40
+    ],
+    "resolved_eval_every": 1,
+    "threshold": 0.15,
+    "validation_fraction_of_epoch": {
+      "W2": 0.07697327116088208,
+      "W3": 0.0827959059051044
+    }
+  },
+  "rule": {
+    "cadence_applies_to_both_models": true,
+    "cadence_if_all_cheap": 1,
+    "cadence_if_any_expensive": 2,
+    "optional_diagnostic_epoch0": true,
+    "primary_epoch": 40,
+    "threshold_fraction_of_projected_epoch": 0.15
+  },
+  "seconds": 21.594434070866555,
+  "steps_per_epoch": 2738,
+  "valid_batch_size": 256,
+  "valid_rows": 43793
+}

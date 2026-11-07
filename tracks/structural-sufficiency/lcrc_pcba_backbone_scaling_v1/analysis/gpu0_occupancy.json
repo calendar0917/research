@@ -1,0 +1,83 @@
+{
+ "captured_utc": "2026-11-07T17:16:41Z",
+ "source_run": "bs-gpu0-sample-20261107-171535-90b84cf2 (res-local, read-only)",
+ "sampling": {
+  "interval_seconds": 10,
+  "samples_per_gpu": 6
+ },
+ "gpu0": {
+  "mem_used_mib": [
+   16105,
+   16105,
+   16105,
+   16105,
+   16105,
+   16105
+  ],
+  "mem_free_mib": [
+   24222,
+   24222,
+   24222,
+   24222,
+   24222,
+   24222
+  ],
+  "utilization_pct": [
+   100,
+   100,
+   100,
+   100,
+   100,
+   100
+  ],
+  "mean_utilization_pct": 100.0,
+  "min_utilization_pct": 100,
+  "sustained_full_load": true,
+  "compute_apps": [
+   {
+    "pid": 3841932,
+    "process": "python3",
+    "cmdline": "train.py --conv_type nobatch",
+    "used_memory_mib": 16082,
+    "elapsed": "2-18:50:43",
+    "owner": "external (not this round)"
+   }
+  ]
+ },
+ "gpu1": {
+  "mem_used_mib": [
+   17,
+   17,
+   17,
+   17,
+   17,
+   17
+  ],
+  "mem_free_mib": [
+   40310,
+   40310,
+   40310,
+   40310,
+   40310,
+   40310
+  ],
+  "utilization_pct": [
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "mean_utilization_pct": 0.0,
+  "sustained_full_load": false,
+  "compute_apps": []
+ },
+ "decision": "serial_on_gpu1",
+ "rule": "PROTOCOL section 5: co-tenancy on GPU0 requires free memory with margin AND no sustained full-load contention AND passing diagnostics",
+ "reason": "GPU0 has 24.2 GiB free (enough for a 236 MB model) but shows 100% SM utilization at every one of the 6 samples over 60 s, i.e. sustained full-load contention from an external 2-day-old training job. The second clause of the co-tenancy rule fails, so W2 is not scheduled on GPU0; both formal runs execute serially on the idle GPU1.",
+ "planned_sequence": [
+  "W3 on GPU1 (first)",
+  "W2 re-check GPU0 at W3 completion; GPU1 serial if still busy"
+ ]
+}
