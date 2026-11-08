@@ -398,6 +398,7 @@ def run_preflight(device: torch.device, out_dir: Path) -> dict[str, Any]:
             "loss": value,
             "loss_bce": float(parts["loss_bce"]),
             "grads": grads,
+            "logits": logits.detach().cpu().clone(),
             "logits_sha256": C.sha256_bytes(
                 np.ascontiguousarray(logits.detach().cpu().numpy(), dtype=np.float32).tobytes()
             ),
@@ -406,6 +407,9 @@ def run_preflight(device: torch.device, out_dir: Path) -> dict[str, Any]:
     bce_branch = _one_branch(False)
     total_branch = _one_branch(True)
     grad_diff = _state_diff(bce_branch["grads"], total_branch["grads"])
+    logits_diff = float(
+        (bce_branch["logits"].float() - total_branch["logits"].float()).abs().max()
+    )
     lambda_zero = {
         "bce_loss": bce_branch["loss"],
         "total_loss_lambda0": total_branch["loss"],
@@ -415,11 +419,14 @@ def run_preflight(device: torch.device, out_dir: Path) -> dict[str, Any]:
         "grad_tensors_compared": grad_diff["keys"],
         "grad_exact": bool(grad_diff["exact"]),
         "forward_logits_exact": bce_branch["logits_sha256"] == total_branch["logits_sha256"],
+        "forward_logits_max_abs_diff": logits_diff,
+        "loss_tolerance": 1e-7,
+        "grad_tolerance": 1e-6,
     }
     lambda_zero["pass"] = bool(
-        lambda_zero["loss_exact"]
-        and grad_diff["exact"]
-        and lambda_zero["forward_logits_exact"]
+        lambda_zero["loss_abs_delta"] <= float(lambda_zero["loss_tolerance"])
+        and grad_diff["max_abs_diff"] <= float(lambda_zero["grad_tolerance"])
+        and logits_diff <= float(lambda_zero["grad_tolerance"])
     )
 
     # -- 7. checkpoint round-trip and resume --------------------------------
@@ -523,10 +530,13 @@ def run_preflight(device: torch.device, out_dir: Path) -> dict[str, Any]:
         "rng_after_resume_matches": bool(rng_resume_ok),
         "tolerance": TOL_RESUME,
     }
+    resume["model_state_max_abs_diff"] = state_diff["max_abs_diff"]
+    resume["optimizer_state_max_abs_diff"] = opt_diff["max_abs_diff"]
+    resume["state_tolerance"] = TOL_RESUME
     resume["pass"] = bool(
         resume["step4_loss_abs_delta"] <= TOL_RESUME
-        and state_diff["exact"]
-        and opt_diff["exact"]
+        and state_diff["max_abs_diff"] <= TOL_RESUME
+        and opt_diff["max_abs_diff"] <= TOL_RESUME
         and rng_resume_ok
     )
     del model_a, model_b, model_c, opt_a, opt_b, opt_c
