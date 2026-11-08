@@ -402,7 +402,6 @@ def check_pair_index(dist: Mapping[str, Any] | None, *, n_sample: int = 200, see
     real: dict[str, Any] = {"rows_checked": 0, "rows_mismatched": 0, "pairs_checked": 0}
     if dist is not None:
         gen = np.random.default_rng(int(seed))
-        n_rows = int(dist["meta"]["n_rows"])
         have = np.where(np.asarray(dist["pair_counts"]) > 0)[0]
         if have.size:
             sample = np.sort(gen.choice(have, size=min(n_sample, have.size), replace=False))
@@ -525,11 +524,6 @@ def check_gradient_path(spec, norm, batches: Sequence[Mapping[str, Any]], *, ste
         for name, param in model.named_parameters()
         if name.startswith("branch.") and param.grad is not None
     }
-    # ``key.bias`` is a genuine degeneracy: a constant added to every key of a
-    # molecule shifts all its scores by the same amount, which the query-wise
-    # softmax removes exactly, so its gradient is 0 by construction.
-    degenerate = {"branch.key.bias"}
-
     def prefix_norm(name: str) -> float:
         prefix = f"branch.{name}"
         return float(
@@ -543,6 +537,11 @@ def check_gradient_path(spec, norm, batches: Sequence[Mapping[str, Any]], *, ste
     missing = sorted(name for name in C.BRANCH_PARAMS if not any(k.startswith(f"branch.{name}") for k in final))
     zero = sorted(name for name in C.BRANCH_PARAMS if prefix_norm(name) <= 0.0)
     key_bias = float(final.get("branch.key.bias", float("nan")))
+    # ``key.bias`` is a genuine degeneracy: a constant added to every key of a
+    # molecule shifts all its scores by the same amount, which the query-wise
+    # softmax removes exactly, so its gradient is 0 by construction.  It is
+    # therefore *reported* (``key_bias_grad_norm``) and excluded from the
+    # "every new module has gradient" assertion, not hidden.
     passed = bool(not missing and not zero)
     return _result(
         "09_gradient_path_active",
@@ -554,6 +553,7 @@ def check_gradient_path(spec, norm, batches: Sequence[Mapping[str, Any]], *, ste
         zero_grad_module_sums=zero,
         module_grad_sums={name: prefix_norm(name) for name in C.BRANCH_PARAMS},
         key_bias_grad_norm=key_bias,
+        documented_zero_gradient_parameters=["branch.key.bias"],
         key_bias_degeneracy=(
             "key_ij = W p_ij + b; <q_k, b> is constant inside one molecule, so the segment softmax "
             "removes it exactly. The bias is kept because the model definition says Linear(48,48), "
@@ -671,7 +671,6 @@ def check_cpu_vs_batched(spec, norm, batch, *, device: str = "cpu", seed: int = 
         )
         z_flat = z.reshape(int(batch["n_graphs"]), C.Z_DIM)
         residual = model.branch.combiner(z_flat) * (batch["pair_counts"].to(torch.int64) > 0).to(torch.float32).unsqueeze(1)
-        logits = model(batch)
     h_np = h.detach().cpu().numpy().astype(np.float64)
     ref = brute_force_branch(
         model,
@@ -861,5 +860,4 @@ __all__ = [
     "permute_batch",
     "rebuild_pairs_from_bonds",
     "run_all",
-    "tiny_batch",
 ]

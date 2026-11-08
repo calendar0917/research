@@ -259,13 +259,14 @@ def build() -> dict[str, Any]:
     if run and run.get("train_eval_final"):
         train_ap = float(run["train_eval_final"]["ap"])
         e40 = run["fixed_epoch_reports"].get(str(C.TOTAL_EPOCHS), {})
-        best = run["fixed_epoch_reports"].get(str(run["best_epoch"]), {})
+        best_rep = run["fixed_epoch_reports"].get(str(run["best_epoch"]), {})
         gaps["PW"] = {
             "train_ap_epoch40": _r(train_ap),
             "train_bce_epoch40": _r(run["train_eval_final"]["bce"]),
             "valid_ap_epoch40": _r(e40.get("ap")),
             "valid_ap_best": _r(run.get("best_valid_ap")),
             "valid_bce_epoch40": _r(e40.get("valid_bce")),
+            "valid_bce_best": _r(best_rep.get("valid_bce")),
             "train_minus_valid_ap": _r(train_ap - float(e40.get("ap", float("nan")))),
             "valid_minus_test_best": _r(models["PW_best_valid"]["valid_ap"] - models["PW_best_valid"]["test_ap_official"]),
         }

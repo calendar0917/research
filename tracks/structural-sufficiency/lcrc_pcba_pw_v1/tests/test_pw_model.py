@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import math
 
-import numpy as np
 import pytest
 import torch
 
 import pw_common as C
 import pw_model as M
-from conftest import TINY_GRAPHS, synthetic_batch
+
 
 
 def test_parameter_arithmetic_matches_the_definition():
