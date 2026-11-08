@@ -688,7 +688,13 @@ def run_parity() -> dict[str, Any]:
         "precision_fp32": sp["precision"] == "fp32",
         "loss_masked_bce": sp["recipe"]["loss"] == C.RECIPE["loss"] == s3["recipe"]["loss"],
         "no_early_stopping": sp["recipe"]["early_stopping"] is False,
-        "lr_starts_at_warmup": bool(abs(lrs[0] - 3e-5) < 1e-12),  # lr is read before the epoch's steps
+        # the curve stores the LR after each epoch's steps, so epoch 1 ends at the peak
+        "lr_epoch1_ends_at_peak": bool(abs(lrs[0] - 3e-4) < 1e-12),
+        "lr_warmup_starts_at_3e-5": bool(3e-5 <= float(C.lr_at(0)) < 3.02e-5),
+        "lr_warmup_reaches_peak_at_epoch_boundary": bool(
+            abs(float(C.lr_at(int(C.STEPS_PER_EPOCH))) - 3e-4) < 1e-12
+            and abs(float(C.lr_at(int(C.STEPS_PER_EPOCH) - 1)) - 3e-4) < 1e-5
+        ),
         "lr_monotone_down_after_warmup": bool(all(lrs[i] >= lrs[i + 1] for i in range(2740, len(lrs) - 1))),
         "lr_final_near_1e-5": bool(abs(lrs[-1] - 1e-5) < 2e-7),
         "same_selection_rule": sp["selection_rule"] == s3["selection_rule"],
