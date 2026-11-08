@@ -151,31 +151,74 @@ def check_init(spec, norm, *, seed: int = C.SEED, device: str = "cpu") -> dict[s
 
 
 def check_zero_init_forward(spec, norm, batch, *, seed: int = C.SEED, device: str = "cpu") -> dict[str, Any]:
-    base, _ = BSM.build_model(C.BASE_MODEL_KEY, spec, norm, C.N_TASKS, seed=int(seed), device=device)
+    """Zero-initialised readout must leave the W2 logits untouched.
+
+    Two claims, checked separately because they have different failure modes:
+
+    * the branch residual is *exactly* zero, on every device (a bitwise claim);
+    * the full logits equal the W2 logits.  On CUDA the inherited trunk
+      accumulates segment sums with atomics, so two independent forward calls can
+      differ by a few ULPs (~1e-6 absolute at logit scale ~20).  The CPU pass is
+      therefore the bitwise reference; the device pass uses a relative tolerance.
+    """
+    host_batch = {k: (v.detach().cpu() if torch.is_tensor(v) else v) for k, v in batch.items()}
+    results: dict[str, Any] = {}
+    passed = True
+    base, _ = BSM.build_model(C.BASE_MODEL_KEY, spec, norm, C.N_TASKS, seed=int(seed), device="cpu")
     base.eval()
     with torch.no_grad():
-        ref = base(batch)
-    results = {}
-    passed = True
+        ref_cpu = base(host_batch)
+    ref_scale_cpu = float(ref_cpu.abs().max().item())
     for key in C.MODEL_ORDER:
-        model, _ = M.build_model(key, spec, norm, C.N_TASKS, seed=int(seed), device=device)
+        model, _ = M.build_model(key, spec, norm, C.N_TASKS, seed=int(seed), device="cpu")
         model.eval()
         with torch.no_grad():
-            logits, aux = model(batch, return_aux=True)
-            zeroed = model(batch, residual_zero=True)
+            logits, aux = model(host_batch, return_aux=True)
+            zeroed = model(host_batch, residual_zero=True)
         resid_max = float(aux["residual_logits"].abs().max().item())
-        d_zero = float((logits - ref).abs().max().item())
-        d_flag = float((zeroed - ref).abs().max().item())
-        scale = float(ref.abs().max().item())
+        d_zero = float((logits - ref_cpu).abs().max().item())
+        d_flag = float((zeroed - ref_cpu).abs().max().item())
         ok = d_zero == 0.0 and d_flag == 0.0 and resid_max == 0.0
         passed &= bool(ok)
         results[key] = {
-            "max_abs_diff": d_zero,
-            "max_abs_diff_residual_zero_path": d_flag,
-            "residual_max_abs": resid_max,
-            "reference_max_abs": scale,
-            "exact": bool(ok),
+            "cpu_max_abs_diff": d_zero,
+            "cpu_max_abs_diff_residual_zero_path": d_flag,
+            "cpu_residual_max_abs": resid_max,
+            "cpu_reference_max_abs": ref_scale_cpu,
+            "cpu_bitwise_exact": bool(ok),
         }
+    if str(device) != "cpu":
+        dev = torch.device(device)
+        dev_batch = {k: (v.to(dev) if torch.is_tensor(v) else v) for k, v in batch.items()}
+        base_dev, _ = BSM.build_model(C.BASE_MODEL_KEY, spec, norm, C.N_TASKS, seed=int(seed), device=dev)
+        base_dev.eval()
+        with torch.no_grad():
+            ref_dev = base_dev(dev_batch)
+        dev_scale = float(ref_dev.abs().max().item())
+        for key in C.MODEL_ORDER:
+            model, _ = M.build_model(key, spec, norm, C.N_TASKS, seed=int(seed), device=dev)
+            model.eval()
+            with torch.no_grad():
+                logits, aux = model(dev_batch, return_aux=True)
+            resid_max = float(aux["residual_logits"].abs().max().item())
+            d = float((logits - ref_dev).abs().max().item())
+            rel = d / max(dev_scale, 1e-12)
+            ok = resid_max == 0.0 and rel <= 1e-6
+            passed &= bool(ok)
+            results[key].update(
+                {
+                    "device": str(dev),
+                    "device_max_abs_diff": d,
+                    "device_relative_diff": rel,
+                    "device_residual_max_abs": resid_max,
+                    "device_tolerance_relative": 1e-6,
+                    "device_ok": bool(ok),
+                }
+            )
+        results["_device_note"] = (
+            "CUDA segment-sum atomics make two independent forward passes differ by a few ULPs; "
+            "the branch residual itself is still exactly zero"
+        )
     return _result("03_zero_init_forward_equals_w2", passed, per_arm=results)
 
 

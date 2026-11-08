@@ -87,7 +87,7 @@ def test_zero_init_forward_equals_w2(spec, norm, tiny_batch):
     result = CHK.check_zero_init_forward(spec, norm, tiny_batch)
     assert result["passed"], result
     for key, detail in result["details"]["per_arm"].items():
-        assert detail["exact"] is True, (key, detail)
+        assert detail["cpu_bitwise_exact"] is True, (key, detail)
 
 
 # ---------------------------------------------------------------------------
