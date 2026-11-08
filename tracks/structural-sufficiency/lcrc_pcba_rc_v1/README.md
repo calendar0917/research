@@ -101,8 +101,9 @@ rr run res rc-test-freeze --pool res-gpu1 \
   -- uv run python tracks/structural-sufficiency/lcrc_pcba_rc_v1/code/rc_test.py freeze --device cuda
 
 # 2) 评分（校验封条后，通过继承的 cc_data 门读取官方 Test 标签）
-rr run res rc-test-score --pool res-local \
-  -- uv run python tracks/structural-sufficiency/lcrc_pcba_rc_v1/code/rc_test.py score
+#    远端 checkout 故意不带 data/ogb/*/raw/graph-label.csv.gz，所以这一步在本地跑：
+rr pull rc-test-freeze                      # 拉回冻结的 Test logits 与 manifest
+uv run python tracks/structural-sufficiency/lcrc_pcba_rc_v1/code/rc_test.py score
 ```
 
 产物：`analysis/test_predictions/*.npy`、`analysis/test_prediction_manifest.json`、
