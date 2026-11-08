@@ -1,0 +1,25 @@
+{
+  "schema": "lcrc-pcba-rc-gpu-schedule-v1",
+  "round_id": "lcrc-pcba-rc-v1",
+  "host": "res",
+  "created_utc": "2026-11-08T12:08:00Z",
+  "policy": "REAL is the priority arm and takes res-gpu1 (free). BLIND would use res-gpu0 only if that GPU is safe to share; existing processes are never killed or preempted.",
+  "observations": [
+    {
+      "captured_utc": "2026-11-08T11:36:00Z",
+      "nvidia_smi": "GPU0 pid 3841932 (foreign python3) 16082 MiB, utilization 100%; GPU1 idle (17 MiB, Xorg only)",
+      "decision": "REAL starts on res-gpu1 immediately"
+    },
+    {
+      "captured_utc": "2026-11-08T12:02:54Z",
+      "nvidia_smi": "GPU0 pid 3841932 16082 MiB, 24222 MiB free, utilization 100%; GPU1 our checks job 646 MiB",
+      "decision": "res-gpu0 is occupied by a foreign job at full utilization, so BLIND is not started concurrently; it is queued for res-gpu1 once REAL finishes"
+    }
+  ],
+  "final_plan": {
+    "REAL": "res-gpu1",
+    "BLIND": "res-gpu1 after REAL (sequential, exclusive GPU)",
+    "concurrent_parallel_run": false,
+    "reason": "GPU0 was busy with another user's job at 100% SM utilization for the whole window; sharing it would have degraded a foreign workload and contaminated the per-arm timing comparison. No process was touched."
+  }
+}
