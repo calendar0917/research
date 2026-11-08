@@ -98,10 +98,23 @@ def load_run_json(model_key: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def build_selection() -> dict[str, Any]:
-    """Freeze the best-Validation choice of every arm from its run.json."""
+def build_selection(
+    arms: Sequence[str] = MODEL_KEYS,
+    *,
+    out_path: Path = SELECTION_PATH,
+    interim: bool = False,
+) -> dict[str, Any]:
+    """Freeze the best-Validation choice of each available arm from its run.json.
+
+    ``arms`` only ever shrinks for the *interim* peek that scores the finished
+    arm before the other one exists; the recorded round result always uses the
+    default (both arms).
+    """
+    arms = tuple(arms)
+    if not arms or any(a not in MODEL_KEYS for a in arms):
+        raise KeyError(arms)
     models: dict[str, Any] = {}
-    for key in MODEL_KEYS:
+    for key in arms:
         run = load_run_json(key)
         if run.get("status") != "COMPLETED":
             raise RuntimeError(f"{key} run is not COMPLETED: {run.get('status')}")
@@ -135,6 +148,15 @@ def build_selection() -> dict[str, Any]:
         "test_read": False,
         "selection_uses_test": False,
         "selection_rule": "argmax official Validation AP over epochs 1..40 per arm (earliest wins ties)",
+        "arms_requested": list(arms),
+        "missing_arms": [k for k in MODEL_KEYS if k not in arms],
+        "interim_peek": bool(interim),
+        "interim_peek_reason": (
+            "interim Test read requested by the operator while the remaining arm was still "
+            "training; it selects nothing, changes no hyperparameter and no arm is retrained"
+        )
+        if interim
+        else None,
         "models": models,
         "w2_reference": {
             "best_epoch": int(C.W2["best_epoch"]),
@@ -149,7 +171,7 @@ def build_selection() -> dict[str, Any]:
             "gpu_hours": float(C.W2["gpu_hours"]),
         },
     }
-    C.write_json(SELECTION_PATH, selection)
+    C.write_json(out_path, selection)
     return selection
 
 
@@ -225,7 +247,7 @@ def candidate_models(selection: Mapping[str, Any]) -> dict[str, dict[str, Any]]:
     if bool(selection.get("selection_uses_test")):
         raise RuntimeError("selection manifest claims test-based selection")
     out: dict[str, dict[str, Any]] = {}
-    for key in MODEL_KEYS:
+    for key in selection.get("arms_requested", MODEL_KEYS):
         entry = selection["models"][key]
         out[f"{key}_best_valid"] = {
             "label": f"{key}_best_valid",
@@ -278,8 +300,11 @@ def run_freeze(
     device: torch.device,
     *,
     dist_cache: str = str(C.DIST_CACHE_DIR),
+    arms: Sequence[str] = MODEL_KEYS,
+    selection_path: Path = SELECTION_PATH,
+    interim: bool = False,
 ) -> int:
-    selection = build_selection()
+    selection = build_selection(arms, out_path=selection_path, interim=interim)
     task = D.load_task_gated()
     dist = D.load_cache(dist_cache)
     test_rows = np.asarray(task.test_rows, dtype=np.int64)
@@ -289,7 +314,7 @@ def run_freeze(
         raise RuntimeError("Test rows overlap Train/Valid")
     if np.isfinite(task.labels[test_rows]).any():
         raise RuntimeError("the training label artifact exposes Test targets")
-    for key in MODEL_KEYS:
+    for key in arms:
         run = load_run_json(key)
         if str(run.get("status")) != "COMPLETED":
             raise RuntimeError(f"{key} did not complete; refusing to freeze a Test prediction")
@@ -377,8 +402,11 @@ def run_freeze(
         "git_state": C.git_state(),
         "test_labels_read": False,
         "test_labels_read_before_freeze": False,
-        "selection_manifest": C.track_rel(SELECTION_PATH),
-        "selection_manifest_sha256": C.sha256_file(SELECTION_PATH),
+        "selection_manifest": C.track_rel(selection_path),
+        "selection_manifest_sha256": C.sha256_file(selection_path),
+        "arms_requested": list(arms),
+        "missing_arms": [k for k in MODEL_KEYS if k not in arms],
+        "interim_peek": bool(interim),
         "distance_cache": D.cache_identity(dist),
         "test_rows_path": C.track_rel(rows_path),
         "test_rows_sha256": rows_sha,
@@ -704,6 +732,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     fz.add_argument("--predictions-dir", default=str(PREDICTIONS))
     fz.add_argument("--device", default="cuda")
     fz.add_argument("--dist-cache", default=str(C.DIST_CACHE_DIR))
+    fz.add_argument(
+        "--arms",
+        default=",".join(MODEL_KEYS),
+        help="comma separated arms to freeze; a proper subset is an interim peek",
+    )
+    fz.add_argument("--selection", default=str(SELECTION_PATH))
+    fz.add_argument(
+        "--interim",
+        action="store_true",
+        help="record that this freeze is an interim peek, not the round result",
+    )
     sc = sub.add_parser("score")
     sc.add_argument("--freeze", default=str(FREEZE_PATH))
     sc.add_argument("--out", default=str(SCORES_PATH))
@@ -714,7 +753,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         device = torch.device(args.device)
         if device.type == "cuda" and not torch.cuda.is_available():
             raise RuntimeError("CUDA requested but not available")
-        return run_freeze(Path(args.out), Path(args.predictions_dir), device, dist_cache=args.dist_cache)
+        arms = tuple(a.strip() for a in str(args.arms).split(",") if a.strip())
+        return run_freeze(
+            Path(args.out),
+            Path(args.predictions_dir),
+            device,
+            dist_cache=args.dist_cache,
+            arms=arms,
+            selection_path=Path(args.selection),
+            interim=bool(args.interim) or arms != tuple(MODEL_KEYS),
+        )
     if args.mode == "score":
         return run_score(Path(args.freeze), Path(args.out), Path(args.per_task), Path(args.predictions_dir))
     raise KeyError(args.mode)
