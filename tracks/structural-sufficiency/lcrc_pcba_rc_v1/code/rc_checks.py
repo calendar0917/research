@@ -522,16 +522,17 @@ def brute_force_relation_input(
 
 def check_cpu_vs_batched(spec, norm, batch, *, device: str = "cpu", seed: int = C.SEED) -> dict[str, Any]:
     """The batched implementation must equal an explicit pair-by-pair enumeration."""
-    geom = REL.pair_geometry(batch)
+    host_batch = {k: (val.detach().cpu() if torch.is_tensor(val) else val) for k, val in batch.items()}
+    geom = REL.pair_geometry(host_batch)
     u = geom["u"]
     v = geom["v"]
     b = geom["bucket"]
     pairs = [(int(u[i]), int(v[i]), int(b[i])) for i in range(u.numel())]
-    counts = batch["atom_counts"].tolist()
+    counts = host_batch["atom_counts"].tolist()
     n_graphs = int(batch["n_graphs"])
-    atom_batch = batch["atom_batch"].to(torch.int64)
-    atom_counts = batch["atom_counts"].to(torch.int64)
-    R_cpu = random_roles(int(batch["atom_feat"].shape[0]), seed=seed)
+    atom_batch = host_batch["atom_batch"].to(torch.int64)
+    atom_counts = host_batch["atom_counts"].to(torch.int64)
+    R_cpu = random_roles(int(host_batch["atom_feat"].shape[0]), seed=seed)
     results: dict[str, Any] = {}
     passed = True
     for kind in ("real", "blind"):
