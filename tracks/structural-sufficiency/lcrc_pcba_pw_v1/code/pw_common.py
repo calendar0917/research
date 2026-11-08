@@ -196,7 +196,16 @@ MODEL_ORDER = (MODEL_KEY,)
 
 #: Fixed engineering decision bands (identical to the RC round so the two
 #: rounds are read with the same ruler; they are decision labels, not tests).
-DECISION_RULES = RCC.DECISION_RULES
+#: PW decision bands (PROTOCOL.md §7).  The thresholds are the RC round's, the
+#: labels are PW's own so a report can never confuse a PW verdict with an RC one.
+DECISION_RULES = {
+    "promising": {"label": "PROMISING_PW_SIGNAL", "delta_test_ap_min": 0.005},
+    "weak": {"label": "WEAK_PW_SIGNAL", "delta_test_ap_min": 0.002},
+    "none": {"label": "NO_CLEAR_PW_GAIN", "delta_test_ap_min": -0.002},
+    "regression": {"label": "PW_REGRESSION", "delta_test_ap_min": float("-inf")},
+}
+#: The inherited RC bands, kept for the cross-round consistency audit only.
+INHERITED_RC_DECISION_RULES = RCC.DECISION_RULES
 BUDGET = {
     "gpu_hard_hours": 3.0,
     "gpu_target_hours": 2.5,
@@ -306,6 +315,7 @@ __all__ = [
     "COMBINER_HIDDEN",
     "DATASET",
     "DECISION_RULES",
+    "INHERITED_RC_DECISION_RULES",
     "EXPECTED_PARAMETERS",
     "HIDDEN_WIDTH",
     "INIT_RULE",

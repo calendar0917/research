@@ -343,6 +343,7 @@ def build() -> dict[str, Any]:
         "rc_task_delta_analysis": rc.get("task_delta_analysis"),
         "decision": {
             "rule": "best-Validation Test AP delta against the strongest existing LCRC (W2 / RC-REAL / RC-BLIND)",
+            "threshold_consistency": _band_consistency(),
             "reference_model": strongest_reference,
             "reference_test_ap": _r(strongest_value),
             "pw_test_ap": _r(models[best_valid]["test_ap_official"]),
@@ -399,6 +400,16 @@ def _train_gap(payload: Mapping[str, Any]) -> dict[str, Any]:
         if train.get("ap") is not None and e40.get("ap") is not None
         else None,
     }
+
+
+def _band_consistency() -> dict[str, Any]:
+    """The PW bands must use exactly the RC thresholds (labels differ by design)."""
+    pairs = {}
+    for key in ("promising", "weak", "none"):
+        inherited = float(C.INHERITED_RC_DECISION_RULES[key]["delta_test_ap_min"])
+        current = float(C.DECISION_RULES[key]["delta_test_ap_min"])
+        pairs[key] = {"inherited": inherited, "pw": current, "equal": bool(inherited == current)}
+    return {"thresholds": pairs, "all_equal": bool(all(v["equal"] for v in pairs.values()))}
 
 
 def _decision(delta: float) -> dict[str, Any]:
