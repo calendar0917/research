@@ -1,0 +1,279 @@
+{
+  "baseline": {
+    "best_epoch": 24,
+    "best_valid_ap": 0.26527331610028143,
+    "checkpoint_sha256": "d86fe5e56e898d382acf66eb0533beb915f8ca39144c6c1c74e25e147667d2bd",
+    "name": "W2_best_valid_epoch24",
+    "parameters": 994324,
+    "test_ap": 0.2536164787414065,
+    "test_bce": 0.04858394826016791
+  },
+  "decision": {
+    "engineering_signal": false,
+    "high_support_count_ok": false,
+    "high_support_mean_ok": false,
+    "high_support_n_ok": true,
+    "label": "NO_CLEAR_GAIN",
+    "note": "This is a pre-registered resource decision, not a statistical significance test. The Test split is exposed; this is not a blind generalisation estimate.",
+    "rule": {
+      "high_support": "Test-positive >= 20 tasks: mean delta >= 0.002 and improved >= 60/108",
+      "labels": {
+        "EXPOSED_TEST_ONLY_SIGNAL": "test target met but Best Valid AP not above W2",
+        "NO_CLEAR_GAIN": "neither signal met",
+        "VALID_AND_TEST_GAIN": "test target met and Best Valid AP above W2",
+        "VALID_ONLY": "Best Valid AP above W2, Test target not met"
+      },
+      "test_target": "Test AP >= 0.256616",
+      "valid_improved": "Best Valid AP > W2 0.265273316"
+    },
+    "test_improved_vs_w2": false,
+    "test_target_met": false,
+    "valid_improved_vs_w2": false
+  },
+  "deltas": {
+    "test": -0.00342336667513371,
+    "test_bce": 0.00014583520064506694,
+    "valid": -0.00842914247067622
+  },
+  "descriptive_only": true,
+  "dominant_tasks": [
+    {
+      "delta": -0.25515604046476087,
+      "macro_delta_without_task": -0.0014254883117239218,
+      "share_of_sum_deltas": 0.5868791956813816,
+      "support_stratum": "test_5_19",
+      "task": 31,
+      "test_positive": 6
+    },
+    {
+      "delta": -0.16347927738438692,
+      "macro_delta_without_task": -0.0021530816695046672,
+      "share_of_sum_deltas": 0.37601534593171004,
+      "support_stratum": "test_lt5",
+      "task": 57,
+      "test_positive": 4
+    },
+    {
+      "delta": 0.08171022376590492,
+      "macro_delta_without_task": -0.004099030091332381,
+      "share_of_sum_deltas": -0.18794001629486343,
+      "support_stratum": "test_5_19",
+      "task": 77,
+      "test_positive": 10
+    },
+    {
+      "delta": -0.07778628526617776,
+      "macro_delta_without_task": -0.002833184781553946,
+      "share_of_sum_deltas": 0.17891464552006833,
+      "support_stratum": "test_5_19",
+      "task": 28,
+      "test_positive": 19
+    },
+    {
+      "delta": -0.06845664175819291,
+      "macro_delta_without_task": -0.002907229571299858,
+      "share_of_sum_deltas": 0.1574557230975895,
+      "support_stratum": "test_5_19",
+      "task": 108,
+      "test_positive": 7
+    }
+  ],
+  "engineering_signal": false,
+  "extra_training_time": {
+    "budget_hard_gpu_hours": 4.0,
+    "budget_target_gpu_hours": 2.5,
+    "delta_gpu_hours": 0.10727611562715733,
+    "ratio": 1.0769058757368701,
+    "toprank_epoch_seconds_mean": 134.5014657614869,
+    "toprank_gpu_hours": 1.5021775402490878,
+    "w2_gpu_hours": 1.3949014246219305,
+    "within_hard_cap": true,
+    "within_target": true
+  },
+  "generated_utc": "2026-11-08T10:19:34Z",
+  "git_commit": "b9f61e78e3015090092e19bdd3a7bd62a9df6a3b",
+  "high_support": {
+    "best_delta": 0.0448543340882831,
+    "contribution_to_macro_delta": 0.00016365913268158745,
+    "degraded": 49,
+    "improved": 59,
+    "mean_delta": 0.0001924510171348297,
+    "median_delta": 0.0010703662645524387,
+    "n_tasks": 108,
+    "name": "test_ge20",
+    "sum_delta": 0.020784709850561606,
+    "tied": 0,
+    "worst_delta": -0.060154227027514086
+  },
+  "label_stats": {
+    "test": {
+      "observed_entries": 3376672,
+      "positive_entries": 56698,
+      "positive_rate_observed": 0.016791088977549492,
+      "rows": 43793
+    },
+    "valid": {
+      "observed_entries": 3477656,
+      "positive_entries": 55964,
+      "positive_rate_observed": 0.016092448476790113,
+      "rows": 43793
+    }
+  },
+  "low_support": {
+    "contribution_to_macro_delta": -0.0035870258078152485,
+    "degraded": 9,
+    "dominant_tasks": [
+      {
+        "delta": -0.25515604046476087,
+        "macro_delta_without_task": -0.0014254883117239218,
+        "support_stratum": "test_5_19",
+        "task": 31,
+        "test_positive": 6
+      },
+      {
+        "delta": -0.16347927738438692,
+        "macro_delta_without_task": -0.0021530816695046672,
+        "support_stratum": "test_lt5",
+        "task": 57,
+        "test_positive": 4
+      },
+      {
+        "delta": 0.08171022376590492,
+        "macro_delta_without_task": -0.004099030091332381,
+        "support_stratum": "test_5_19",
+        "task": 77,
+        "test_positive": 10
+      },
+      {
+        "delta": -0.07778628526617776,
+        "macro_delta_without_task": -0.002833184781553946,
+        "support_stratum": "test_5_19",
+        "task": 28,
+        "test_positive": 19
+      },
+      {
+        "delta": -0.06845664175819291,
+        "macro_delta_without_task": -0.002907229571299858,
+        "support_stratum": "test_5_19",
+        "task": 108,
+        "test_positive": 7
+      }
+    ],
+    "improved": 10,
+    "mean_delta": -0.023976435662765083,
+    "n_tasks": 19,
+    "sum_delta": -0.4555522775925366
+  },
+  "round_id": "lcrc-pcba-toprank-v1",
+  "run": "tracks/structural-sufficiency/lcrc_pcba_toprank_v1/runs/TR1/run.json",
+  "run_sha256": "9a190dbc9bf9e4bad36297759f8382a69f24eec38ff6084f0e88ea42384e5028",
+  "schema": "lcrc-pcba-toprank-comparison-v1",
+  "selection": "tracks/structural-sufficiency/lcrc_pcba_toprank_v1/analysis/selected_checkpoint.json",
+  "selection_sha256": "55413b3a40af47e545e3a7b948b616eb3eaaee535b9cf2e8db6ad6a39d5f7d85",
+  "support_strata": {
+    "test_5_19": {
+      "best_delta": 0.08171022376590492,
+      "contribution_to_macro_delta": -0.002299787403213777,
+      "degraded": 8,
+      "improved": 10,
+      "mean_delta": -0.016226277789341645,
+      "median_delta": 0.00020102022817575064,
+      "n_tasks": 18,
+      "name": "test_5_19",
+      "sum_delta": -0.29207300020814964,
+      "tied": 0,
+      "worst_delta": -0.25515604046476087
+    },
+    "test_ge20": {
+      "best_delta": 0.0448543340882831,
+      "contribution_to_macro_delta": 0.00016365913268158745,
+      "degraded": 49,
+      "improved": 59,
+      "mean_delta": 0.0001924510171348297,
+      "median_delta": 0.0010703662645524387,
+      "n_tasks": 108,
+      "name": "test_ge20",
+      "sum_delta": 0.020784709850561606,
+      "tied": 0,
+      "worst_delta": -0.060154227027514086
+    },
+    "test_lt5": {
+      "best_delta": -0.16347927738438692,
+      "contribution_to_macro_delta": -0.0012872384046014717,
+      "degraded": 1,
+      "improved": 0,
+      "mean_delta": -0.16347927738438692,
+      "median_delta": -0.16347927738438692,
+      "n_tasks": 1,
+      "name": "test_lt5",
+      "sum_delta": -0.16347927738438692,
+      "tied": 0,
+      "worst_delta": -0.16347927738438692
+    }
+  },
+  "test_exposure_history": {
+    "blind_generalisation_estimate": false,
+    "exposed_by": "lcrc_pcba_continuation_recipe_v1 (2026-11-06) read the official Test labels after its own freeze",
+    "no_retraining_after_seeing_test": true,
+    "no_test_based_selection": true,
+    "reason": "the split has been read before and the result may influence the next architecture decision, so this is a benchmark of an already-exposed split, not an independent blind test",
+    "this_round_role": "EXPOSED_TEST_PERFORMANCE_BENCHMARK"
+  },
+  "test_per_task": {
+    "macro_delta_from_per_task": -0.0034233666751336614,
+    "scored_tasks": 127,
+    "tasks_degraded": 58,
+    "tasks_improved": 69,
+    "tasks_scored_both": 127
+  },
+  "test_role": "EXPOSED_TEST_PERFORMANCE_BENCHMARK",
+  "test_scores": "tracks/structural-sufficiency/lcrc_pcba_toprank_v1/analysis/test_scores.json",
+  "test_scores_sha256": "a5bf84e93ac38272fe88cb6b892f2331f1def5caf071a36449b357fe76c65ddf",
+  "toprank": {
+    "best_epoch": 33,
+    "best_valid_ap": 0.2568441736296052,
+    "calibration_sha256": "4c1a17246ae8d3394da33331cc8f3969be913d41d9afc6b9cdefc4b43e260abe",
+    "checkpoint_sha256": "bfbaa90cdadf5f64601fa767dc8847a14feb8208489170e6e56ca9b94bb4cb4f",
+    "epoch40_valid_ap": 0.2555413655898921,
+    "g_bce_median": 0.0008381133293016327,
+    "g_rank_median": 0.035331123104866934,
+    "lambda_clipped": false,
+    "lambda_rank": 0.005930418110500009,
+    "parameters": 994324,
+    "ratio_raw": 0.005930418110500009,
+    "test_ap": 0.2501931120662728,
+    "test_ap_independent": 0.25019311206627287,
+    "test_bce": 0.04872978346081298,
+    "train_ap40": 0.5742336557401084,
+    "train_bce40": 0.0252565239272636
+  },
+  "valid_test_direction": {
+    "compared_tasks": 127,
+    "correlation": {
+      "pearson_p": 0.025179433984174944,
+      "pearson_r": 0.19862732373249653,
+      "spearman_p": 0.05745441065450459,
+      "spearman_rho": 0.1690394169478815
+    },
+    "same_sign_tasks": 77,
+    "test_delta_mean": -0.0034233666751336614,
+    "valid_delta_mean": -0.008426693044999352
+  },
+  "w2_reference_reproduction": {
+    "checkpoint_sha256": "d86fe5e56e898d382acf66eb0533beb915f8ca39144c6c1c74e25e147667d2bd",
+    "epoch": 24,
+    "independent_ap_recomputed": 0.2536164787414066,
+    "independent_ap_recorded": 0.2536164787414066,
+    "logits_sha256": "13a55b2729a11ebcea9b9d9af4ee49759ec80736f7b632f141ef4fbfb6270d98",
+    "official_ap_recomputed": 0.2536164787414065,
+    "official_ap_recorded": 0.2536164787414065,
+    "reproduced_from_frozen_npy": true
+  },
+  "work_target": {
+    "high_support_improved_min": 60,
+    "high_support_mean_delta_min": 0.002,
+    "high_support_min_test_positives": 20,
+    "high_support_tasks_historical": 108,
+    "test_ap_min": 0.256616
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "fraction_abs_diff_gt_1e_5": 6.154665129130226e-05,
+  "fraction_abs_diff_gt_1e_5_percent": 0.006154665129130226,
+  "fraction_abs_diff_gt_1e_6": 0.12436169878747745,
+  "frozen_w2": {
+    "array_sha256": "46d6e0a066dd96d39394e5b3f0c1d5954f992ee6e2375f0a1c96de9713a5144d",
+    "file_sha256": "13a55b2729a11ebcea9b9d9af4ee49759ec80736f7b632f141ef4fbfb6270d98",
+    "path": "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_predictions/W2_best_valid_epoch24.npy"
+  },
+  "generated_utc": "2026-11-08T10:16:52Z",
+  "interpretation": "Same W2 checkpoint, same official Test rows, same feature spec/normalisation and batch size 256. 99.99% of logits agree within 7.7e-6; the maximum 6.87e-5 occurs in a handful of extreme logits. This is consistent with float32 accumulation/ordering differences between independent prediction runs, not a different model or data path. W2 scoring uses the frozen array, which reproduces the recorded Test AP exactly.",
+  "max_abs_diff": 6.866455078125e-05,
+  "mean_abs_diff": 6.101888880442461e-07,
+  "quantiles_abs_diff": {
+    "100": 6.866455078125e-05,
+    "50": 4.76837158203125e-07,
+    "90": 1.430511474609375e-06,
+    "99": 2.86102294921875e-06,
+    "99.9": 3.814697265625e-06,
+    "99.99": 7.62939453125e-06
+  },
+  "regenerated_w2_base_path": {
+    "array_sha256": "9c3c5e5742217f128231f1c41086e60b4dbc472619c835a7616e9aa7929cdddf",
+    "file_sha256": "184930ab68b0c3bd6105ccf919c0d7ebc0095bc6e4d576cc2caf91f32db85072",
+    "path": "tracks/structural-sufficiency/lcrc_pcba_toprank_v1/analysis/test_predictions/W2_best_valid_epoch24_reference.npy"
+  },
+  "round_id": "lcrc-pcba-toprank-v1",
+  "schema": "lcrc-pcba-toprank-w2-path-audit-v1",
+  "scoring_convention": "AP recomputed with tr_test._sigmoid (float32 probabilities), matching the frozen S3-SP score path.",
+  "source_manifest": "tracks/structural-sufficiency/lcrc_pcba_toprank_v1/analysis/test_prediction_manifest.json",
+  "test_ap_abs_delta": 1.1099595728647493e-06,
+  "test_ap_from_frozen_array": 0.2536164787414065,
+  "test_ap_from_regenerated_array": 0.25361536878183366,
+  "w2_test_ap_recorded": 0.2536164787414065
+}
