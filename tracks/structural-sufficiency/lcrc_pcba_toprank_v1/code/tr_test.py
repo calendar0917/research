@@ -253,7 +253,9 @@ def run_freeze(
         w2_reproduction.update(
             {
                 "frozen_npy_sha256": C.sha256_file(w2_frozen_path),
-                "frozen_npy_sha256_expected": C.sha256_bytes(
+                # The recorded round constant is the .npy file SHA, not the raw
+                # float32 buffer SHA; keep both for diagnostics.
+                "frozen_array_sha256": C.sha256_bytes(
                     np.ascontiguousarray(frozen, dtype=np.float32).tobytes()
                 ),
                 "rewritten_logits_sha256": current_w2["test_logits_sha256"],
@@ -261,6 +263,7 @@ def run_freeze(
                 "max_abs_diff": diff,
                 "bitwise_sha_match": current_w2["test_logits_sha256"] == C.W2["test_logits_sha256"],
                 "within_tolerance": bool(diff <= W2_LOGITS_TOLERANCE),
+                "within_tolerance_1e_4": bool(diff <= 1e-4),
             }
         )
     else:
@@ -456,8 +459,14 @@ def run_score(
         / "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_predictions/"
         "W2_best_valid_epoch24.npy"
     )
-    if _np_sha(w2_frozen) != C.W2["test_logits_sha256"]:
-        raise RuntimeError("frozen W2 Test prediction array SHA does not match the recorded value")
+    # ``C.W2["test_logits_sha256"]`` is the SHA256 of the frozen ``.npy`` file
+    # (the convention used by the S3-SP freeze), not of the raw float32 buffer.
+    if C.sha256_file(
+        C.REPO
+        / "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_predictions/"
+        "W2_best_valid_epoch24.npy"
+    ) != C.W2["test_logits_sha256"]:
+        raise RuntimeError("frozen W2 Test prediction file SHA does not match the recorded value")
     w2_official_recomputed = C.MET.official_ap(y_test, _sigmoid(w2_frozen))
     if abs(float(w2_official_recomputed["value"]) - float(w2_model["test_ap_official"])) > 1e-9:
         raise RuntimeError("frozen W2 Test AP does not reproduce")
