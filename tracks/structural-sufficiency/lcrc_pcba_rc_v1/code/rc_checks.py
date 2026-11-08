@@ -243,18 +243,17 @@ def check_no_cross_molecule(spec, norm, batch, *, seed: int = C.SEED, device: st
     off = batch["atom_off"].to(torch.int64).tolist()
     results = []
     passed = True
-    R_full = random_roles(int(batch["atom_feat"].shape[0]), device=device)
+    dev = batch["atom_feat"].device
+    R_full = random_roles(int(batch["atom_feat"].shape[0]), device=dev)
     with torch.no_grad():
         full = _relation_x(model, batch, R_full)
         for g in range(n_graphs):
             single = _clone_batch(batch)
             a0, a1 = int(off[g]), int(off[g]) + int(counts[g])
-            atom_sel = torch.arange(a0, a1)
-            remap = torch.full((int(batch["atom_feat"].shape[0]),), -1, dtype=torch.long)
-            remap[atom_sel] = torch.arange(a1 - a0)
-            single["atom_batch"] = torch.zeros(a1 - a0, dtype=torch.long)
-            single["atom_counts"] = torch.tensor([int(counts[g])], dtype=torch.long)
-            single["atom_off"] = torch.tensor([0], dtype=torch.long)
+            atom_sel = torch.arange(a0, a1, device=dev)
+            single["atom_batch"] = torch.zeros(a1 - a0, dtype=torch.long, device=dev)
+            single["atom_counts"] = torch.tensor([int(counts[g])], dtype=torch.long, device=dev)
+            single["atom_off"] = torch.tensor([0], dtype=torch.long, device=dev)
             single["n_graphs"] = 1
             for k in ("atom_feat", "atom_scalar", "atom_type"):
                 single[k] = batch[k][atom_sel]
@@ -263,7 +262,7 @@ def check_no_cross_molecule(spec, norm, batch, *, seed: int = C.SEED, device: st
             # pairs of this molecule only
             pair_off = int(torch.cumsum(batch["pair_counts"].to(torch.int64), 0)[g - 1]) if g else 0
             n_pairs = int(batch["pair_counts"][g])
-            single["pair_counts"] = torch.tensor([n_pairs], dtype=torch.long)
+            single["pair_counts"] = torch.tensor([n_pairs], dtype=torch.long, device=dev)
             single["pair_bucket"] = batch["pair_bucket"][pair_off : pair_off + n_pairs].clone()
             x_single = _relation_x(model, single, R_full[atom_sel])
             diff = float((x_single[0] - full[g]).abs().max().item())
@@ -443,7 +442,7 @@ def check_gradient_path(spec, norm, batches: Sequence[Mapping[str, Any]], *, ste
     trace = []
     for step in range(int(steps)):
         batch = batches[step % len(batches)]
-        y = torch.zeros((int(batch["n_graphs"]), C.N_TASKS))
+        y = torch.zeros((int(batch["n_graphs"]), C.N_TASKS), device=batch["atom_feat"].device)
         y[:, :] = float("nan")
         y[:, 0] = torch.randint(0, 2, (int(batch["n_graphs"]),)).float()
         y[:, 1] = 1.0
