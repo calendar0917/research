@@ -53,6 +53,7 @@ PROFILE_PATH = C.ANALYSIS / "profile.json"
 INFERENCE_PATH = C.ANALYSIS / "inference_timing.json"
 PAIR_BUILD_PATH = C.ANALYSIS / "pair_index_build.json"
 ENTROPY_PATH = C.ANALYSIS / "query_entropy.json"
+GPU_PATH = C.ANALYSIS / "gpu_schedule.json"
 
 
 def _abs_path(value: str) -> Path:
@@ -375,6 +376,94 @@ def _predict_plain_w2(model, task, rows: np.ndarray, device) -> np.ndarray:
 # ---------------------------------------------------------------------------
 
 
+def _nvidia_smi(query: str) -> list[list[str]]:
+    import subprocess
+
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", f"--query-{query}", "--format=csv,noheader,nounits"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+    except Exception as exc:  # noqa: BLE001  (diagnostic only)
+        return [[f"ERROR: {type(exc).__name__}: {exc}"]]
+    if out.returncode != 0:
+        return [[f"ERROR: exit {out.returncode}: {(out.stderr or '').strip()[:200]}"]]
+    return [[c.strip() for c in line.split(",")] for line in out.stdout.splitlines() if line.strip()]
+
+
+def cmd_gpu_schedule(args: argparse.Namespace) -> int:
+    """Record which GPU is free *before* claiming one, and the claim itself."""
+    gpus = _nvidia_smi("gpu=index,uuid,name,memory.total,memory.used,memory.free,utilization.gpu")
+    apps = _nvidia_smi("compute-apps=pid,gpu_uuid,process_name,used_memory")
+    by_uuid: dict[str, list[dict[str, Any]]] = {}
+    for row in apps:
+        if len(row) < 4 or row[0].startswith("ERROR"):
+            continue
+        by_uuid.setdefault(str(row[1]), []).append(
+            {"pid": row[0], "process_name": row[2], "used_memory_mib": row[3]}
+        )
+    table: list[dict[str, Any]] = []
+    for row in gpus:
+        if len(row) < 7 or row[0].startswith("ERROR"):
+            table.append({"raw": row})
+            continue
+        index, uuid = int(row[0]), str(row[1])
+        total_mib, used_mib, free_mib = int(row[3]), int(row[4]), int(row[5])
+        table.append(
+            {
+                "index": index,
+                "uuid": uuid,
+                "name": row[2],
+                "memory_total_mib": total_mib,
+                "memory_used_mib": used_mib,
+                "memory_free_mib": free_mib,
+                "utilization_gpu_percent": row[6],
+                "compute_apps": by_uuid.get(uuid, []),
+                "has_compute_apps": bool(by_uuid.get(uuid)),
+            }
+        )
+    # pool -> physical GPU mapping used by this round
+    gpu1 = next((g for g in table if g.get("index") == 1), None)
+    gpu0 = next((g for g in table if g.get("index") == 0), None)
+    gpu0_safe = bool(
+        gpu0
+        and not gpu0.get("has_compute_apps")
+        and int(gpu0.get("memory_used_mib", 10 ** 9)) < 1024
+    )
+    decision = {
+        "pw_training_pool": "res-gpu1",
+        "pw_training_gpu_index": 1,
+        "pw_training_gpu_idle_at_check": bool(gpu1 and not gpu1.get("has_compute_apps")),
+        "res_gpu0_pool_used": False,
+        "res_gpu0_safe_to_use": gpu0_safe,
+        "reason": (
+            "PW trains on res-gpu1 only after rc-blind released it. res-gpu0 is left alone: "
+            "it is only safe when it shows no compute processes and <1 GiB used, and even then "
+            "this round has no need for a second GPU."
+        ),
+        "no_preemption": True,
+    }
+    record = {
+        "schema": "lcrc-pcba-pw-gpu-schedule-v1",
+        "round_id": C.ROUND_ID,
+        "created_utc": C.utcnow(),
+        "git_commit": C.git_commit(),
+        "host_facts": C.host_facts(),
+        "gpu_occupancy": C.gpu_occupancy(),
+        "nvidia_smi_gpus": table,
+        "nvidia_smi_compute_apps_raw": apps,
+        "decision": decision,
+    }
+    C.write_json(GPU_PATH, record)
+    C.log(
+        f"gpu1 idle={decision['pw_training_gpu_idle_at_check']} gpu0 safe={gpu0_safe} -> {GPU_PATH}"
+    )
+    return 0
+
+
 @torch.no_grad()
 def cmd_query_entropy(args: argparse.Namespace) -> int:
     device = torch.device(args.device)
@@ -546,6 +635,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     inf.add_argument("--pair-cache", default=str(C.PAIR_CACHE_DIR))
     inf.add_argument("--rows", type=int, default=8192)
 
+    sub.add_parser("gpu")
+
     qe = sub.add_parser("query-entropy")
     qe.add_argument("--device", default="cuda")
     qe.add_argument("--pair-cache", default=str(C.PAIR_CACHE_DIR))
@@ -562,6 +653,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         return cmd_profile(args)
     if args.mode == "inference":
         return cmd_inference(args)
+    if args.mode == "gpu":
+        return cmd_gpu_schedule(args)
     if args.mode == "query-entropy":
         return cmd_query_entropy(args)
     raise KeyError(args.mode)

@@ -34,6 +34,18 @@ uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_audit.py bui
 
 ---
 
+## 1b. GPU 占用记录（领取 GPU 之前）
+
+```bash
+rr run res pw-gpu --pool res-local --result tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis \
+  -- uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_audit.py gpu
+```
+
+写 `analysis/gpu_schedule.json`：全部 GPU 的内存/利用率、逐 GPU 的 compute 进程、以及本轮
+「只用 gpu1、不动 gpu0」的判定。训练只用 `res-gpu1`，且必须在 `rc-blind` 释放之后。
+
+---
+
 ## 2. 训练前正确性检查（目标设备）
 
 ```bash
