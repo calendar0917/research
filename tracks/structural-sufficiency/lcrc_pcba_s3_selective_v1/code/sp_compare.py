@@ -56,6 +56,8 @@ S3_REF = {
     "best_epoch": int(C.S3["best_epoch"]),
     "best_valid_ap": float(C.S3["best_valid_ap"]),
     "ap40": float(C.S3["ap40"]),
+    "train_ap40": float(C.read_json(Path(C.S3["run_dir"]) / "run.json")["train_eval_final"]["ap"]),
+    "train_bce40": float(C.read_json(Path(C.S3["run_dir"]) / "run.json")["train_eval_final"]["bce"]),
     "gpu_hours": float(C.S3["gpu_hours"]),
     "epoch_seconds_mean": float(C.S3["epoch_seconds_mean"]),
     "checkpoint": C.track_rel(C.S3_CHECKPOINT_BEST),

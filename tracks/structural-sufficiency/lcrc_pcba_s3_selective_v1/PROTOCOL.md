@@ -240,6 +240,32 @@ Sixteen checks, of which 1–14 are CPU/GPU math+structure and 15–16 are run-l
 No structure-distinguishability study, no COUNT/ROOT ablation, no S4/S5, no
 second architecture.
 
+### 8.1 Measured (2026-11-08, `res-gpu1` A100-SXM4-40GB)
+
+| # | check | outcome |
+|---|---|---|
+| 1 | parameters | PASS — total 1,036,420, new 17,888 (`sum(p.numel())`) |
+| 2 | W2/S3 parity | PASS — `6a3df38f…`, `a850ac85…`, trunk `5f7101a8…` |
+| 3 | epoch-0 logits | PASS — max abs diff `2.86e-6` vs W2, `2.86e-6` vs S3 (tol `2e-5`) |
+| 4 | root-local softmax | PASS — max weight-sum error `3.6e-7` |
+| 5 | single-path root | PASS — delta exactly 0 |
+| 6 | empty root | PASS — residual 0 with a learned bias |
+| 7 | atom renumbering | PASS — `|Δlogit| ≤ 2e-5` |
+| 8 | batch isolation | PASS — 0 cross-molecule paths |
+| 9 | S3 semantics/counts | PASS |
+| 10 | query source | PASS — static `a` only |
+| 11 | call budget | PASS — 1/1/1/1/1/1/1 |
+| 12 | gradient flow | PASS — `out.*` at step 1, `q.*`,`k.*` by step 3 |
+| 13 | masked BCE / batch plan | PASS — `06f43729…b6f6` |
+| 14 | checkpoint round-trip | PASS — state, step, RNG, logits |
+| 15 | no NaN/Inf | PASS — 109,520 steps, 14 clip events |
+| 16 | operator count | PASS — independent of path count |
+
+Records: `analysis/init_audit.json` (5.2 s),
+`analysis/architecture_audit.json` (2.0 s),
+`analysis/training_parity.json` (27 checks, all pass),
+`analysis/test_cache_build.json` (8 checks, all pass).
+
 ## 9. GPU budget
 
 | item | budget |
@@ -254,14 +280,17 @@ inference is counted. The CPU Test-cache preprocessing is recorded separately.
 If preflight shows the run cannot fit, report — do not shrink data, epochs or
 paths.
 
-Measured (filled after the run):
+Measured (2026-11-08):
 
 | item | value |
 |---|---|
-| GPU audit + smoke | |
-| SP training, 40 epochs | |
-| Test freeze (3 checkpoints, Validation replay + Test logits) | |
-| **total** | |
+| GPU audit + smoke | `0.0097` GPU-h (24 s job, 7.2 s of audited compute) |
+| SP training, 40 epochs | `1.9018` GPU-h (170.36 s/epoch, wall 1 h 54 min) |
+| Test freeze (3 checkpoints, Validation replay + Test logits) | `0.0125` GPU-h (45.1 s) |
+| **total** | **`1.9240` GPU-h** |
+| CPU: Test structure cache | 43,793 rows / 4,859,378 paths, 22.8 s (not counted) |
+
+Within the 3 h target and the 5 h cap. No preflight reduction was needed.
 
 ## 10. Decision rules (pre-registered)
 
@@ -312,3 +341,22 @@ second architecture or another ablation in this round.
 * (pre-run) `A3` — the uniform-attention equality `attn − mean == 0` is checked
   with a `1e-6` float32 tolerance for the same reason (a single-path root is
   checked for exact equality).
+* `A4` (before the parity audit ran, before any Test score existed) — the parity
+  check `lr_starts_at_warmup` was mis-transcribed: `train_curve.csv` stores the
+  LR **after** each epoch's steps, so epoch 1 ends exactly at the 3e-4 peak. The
+  check is now split into `lr_epoch1_ends_at_peak` (3e-4, exact),
+  `lr_warmup_starts_at_3e-5` and `lr_warmup_reaches_peak_at_epoch_boundary`,
+  computed from the frozen schedule. The audited property (3e-5 → 3e-4 warmup,
+  per-step cosine to 1e-5) is unchanged.
+* `A5` (procedural, before scoring) — the official Test labels exist only on the
+  local machine; the GPU host carries the derived Train+Valid label artifact and
+  the structural caches, not `data/ogb/ogbg_molpcba/raw/graph-label.csv.gz`. So
+  `sp_test.py freeze` (logits, GPU) and `sp_test.py score` (labels, local) are
+  separate steps, executed in that order, with the manifest's SHA-256 seal and
+  the selection-manifest hash re-verified by `score` before the label file is
+  opened. This tightens §7.3 rather than relaxing it.
+* `A6` (recorded, not changed) — `runs/SP/run.json` reports
+  `git_state.dirty=true` because the remote worktree held two pre-existing
+  untracked files from the S3 round
+  (`tracks/.../lcrc_pcba_s3_v1/analysis/{architecture,cost}_failed.json`). The
+  tracked tree was exactly at commit `79bf2304`; no tracked file differed.
