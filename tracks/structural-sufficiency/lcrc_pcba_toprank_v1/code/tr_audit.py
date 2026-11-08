@@ -420,13 +420,36 @@ def run_preflight(device: torch.device, out_dir: Path) -> dict[str, Any]:
         "grad_exact": bool(grad_diff["exact"]),
         "forward_logits_exact": bce_branch["logits_sha256"] == total_branch["logits_sha256"],
         "forward_logits_max_abs_diff": logits_diff,
-        "loss_tolerance": 1e-7,
-        "grad_tolerance": 1e-6,
+        "loss_tolerance": 1e-5,
+        "grad_tolerance": 1e-5,
+        "logits_tolerance": 1e-4,
+    }
+
+    # Same-logits check: isolate the objective from GPU scatter/reduction
+    # nondeterminism in the forward.  On the *same* logit tensor, lambda=0 must
+    # be bitwise the historical BCE value and gradient.
+    z_b = logits_first.detach().clone().requires_grad_(True)
+    bce_same = L.masked_bce_loss(z_b, first_y)
+    g_bce_same = torch.autograd.grad(bce_same, z_b)[0]
+    z_t = logits_first.detach().clone().requires_grad_(True)
+    total_same = L.total_loss(z_t, first_y, 0.0)
+    g_total_same = torch.autograd.grad(total_same, z_t)[0]
+    same_logits_grad = float((g_bce_same - g_total_same).abs().max())
+    lambda_zero["same_logits"] = {
+        "bce_loss": float(bce_same.detach()),
+        "total_loss_lambda0": float(total_same.detach()),
+        "loss_abs_delta": abs(float(bce_same.detach()) - float(total_same.detach())),
+        "grad_max_abs_diff": same_logits_grad,
+        "bitwise_exact": bool(
+            torch.equal(bce_same.detach(), total_same.detach())
+            and torch.equal(g_bce_same, g_total_same)
+        ),
     }
     lambda_zero["pass"] = bool(
-        lambda_zero["loss_abs_delta"] <= float(lambda_zero["loss_tolerance"])
+        lambda_zero["same_logits"]["bitwise_exact"]
+        and lambda_zero["loss_abs_delta"] <= float(lambda_zero["loss_tolerance"])
         and grad_diff["max_abs_diff"] <= float(lambda_zero["grad_tolerance"])
-        and logits_diff <= float(lambda_zero["grad_tolerance"])
+        and logits_diff <= float(lambda_zero["logits_tolerance"])
     )
 
     # -- 7. checkpoint round-trip and resume --------------------------------
