@@ -1,0 +1,106 @@
+{
+  "created_utc": "2026-11-08T16:36:45Z",
+  "decision": {
+    "no_preemption": true,
+    "pw_training_gpu_idle_at_check": true,
+    "pw_training_gpu_index": 1,
+    "pw_training_pool": "res-gpu1",
+    "reason": "PW trains on res-gpu1 only after rc-blind released it. res-gpu0 is left alone: it is only safe when it shows no compute processes and <1 GiB used, and even then this round has no need for a second GPU.",
+    "res_gpu0_pool_used": false,
+    "res_gpu0_safe_to_use": false
+  },
+  "git_commit": "365af2d24d488fb51fb56833e2d198f2f316b91d",
+  "gpu_occupancy": {
+    "captured_utc": "2026-11-08T16:36:45Z",
+    "cuda_available": true,
+    "cuda_visible_devices": null,
+    "device_count": 2,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB",
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "nvidia_smi_compute_apps": "3841932, python3, 16082 MiB\n209292, /home/hxy/cy/research/.venv/bin/python3, 414 MiB",
+    "nvidia_smi_gpus": "0, GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, NVIDIA A100-SXM4-40GB, 40960 MiB, 16525 MiB, 23803 MiB, 100 %, 100 %, 54, 550.163.01\n1, GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, NVIDIA A100-SXM4-40GB, 40960 MiB, 17 MiB, 40310 MiB, 0 %, 0 %, 30, 550.163.01",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "visible_device_mem_get_info": {
+      "free_bytes": 24958533632,
+      "total_bytes": 42285268992,
+      "used_bytes": 17326735360
+    }
+  },
+  "host_facts": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cuda_capability": [
+      [
+        8,
+        0
+      ],
+      [
+        8,
+        0
+      ]
+    ],
+    "cudnn": 90100,
+    "git": {
+      "branch": "main",
+      "commit": "365af2d24d488fb51fb56833e2d198f2f316b91d",
+      "dirty": true,
+      "dirty_files": [
+        "?? tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis/preflight.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/architecture_failed.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/cost_failed.json"
+      ]
+    },
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB",
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "nvidia_smi_compute_apps_raw": [
+    [
+      "3841932",
+      "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f",
+      "python3",
+      "16082"
+    ]
+  ],
+  "nvidia_smi_gpus": [
+    {
+      "compute_apps": [
+        {
+          "pid": "3841932",
+          "process_name": "python3",
+          "used_memory_mib": "16082"
+        }
+      ],
+      "has_compute_apps": true,
+      "index": 0,
+      "memory_free_mib": 24222,
+      "memory_total_mib": 40960,
+      "memory_used_mib": 16105,
+      "name": "NVIDIA A100-SXM4-40GB",
+      "utilization_gpu_percent": "100",
+      "uuid": "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f"
+    },
+    {
+      "compute_apps": [],
+      "has_compute_apps": false,
+      "index": 1,
+      "memory_free_mib": 40310,
+      "memory_total_mib": 40960,
+      "memory_used_mib": 17,
+      "name": "NVIDIA A100-SXM4-40GB",
+      "utilization_gpu_percent": "0",
+      "uuid": "GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d"
+    }
+  ],
+  "round_id": "lcrc-pcba-pw-v1",
+  "schema": "lcrc-pcba-pw-gpu-schedule-v1"
+}

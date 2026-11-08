@@ -1,0 +1,115 @@
+{
+  "batch_rows": [
+    128,
+    128,
+    128,
+    128
+  ],
+  "batches": 4,
+  "calibration": {
+    "factor": 1.5018144633791453,
+    "note": "The raw projection times only the training step loop (collate, pinned staging, label transfer and epoch-boundary synchronisation are outside it), so it under-predicts by this factor. The budget verdict uses the calibrated value.",
+    "pw_projection_gpu_hours_calibrated": 1.9573111070018878,
+    "pw_projection_gpu_hours_raw": 1.3032975475531485,
+    "w2_actual_gpu_hours": 1.3949014246219305,
+    "w2_projection_gpu_hours": 0.9288107543480065
+  },
+  "created_utc": "2026-11-08T16:37:01Z",
+  "cuda": "12.4",
+  "device": "cuda",
+  "device_name": "NVIDIA A100-SXM4-40GB",
+  "git_commit": "365af2d24d488fb51fb56833e2d198f2f316b91d",
+  "gpu_peak_allocated_bytes": 473789952,
+  "gpu_peak_reserved_bytes": 593494016,
+  "pairs_per_batch": [
+    42559,
+    40586,
+    42844,
+    43340
+  ],
+  "round_id": "lcrc-pcba-pw-v1",
+  "runs": {
+    "PW": {
+      "collate_cpu": {
+        "max_ms": 23.833410814404488,
+        "mean_ms": 16.883947644382715,
+        "min_ms": 14.152396935969591,
+        "n": 25,
+        "p50_ms": 16.770941205322742,
+        "p90_ms": 18.424049485474825,
+        "steps_per_second": 59.22785482770078
+      },
+      "measured_steps": 25,
+      "parameters": 1135092,
+      "projection": {
+        "budget_hard_hours": 3.0,
+        "budget_target_hours": 2.5,
+        "step_seconds_p50": 0.039261058904230595,
+        "total_gpu_hours": 1.3032975475531485,
+        "total_seconds": 4691.871171191335,
+        "train_eval_seconds": 60.0,
+        "train_seconds_40_epochs": 4299.871171191335,
+        "valid_seconds_40": 332.0,
+        "within_hard": true,
+        "within_target": true
+      },
+      "step": {
+        "max_ms": 49.798958003520966,
+        "mean_ms": 39.67980278655887,
+        "min_ms": 30.906497035175562,
+        "n": 25,
+        "p50_ms": 39.261058904230595,
+        "p90_ms": 45.02094015479088,
+        "steps_per_second": 25.20173815830405
+      },
+      "step_overhead_vs_w2": 0.45673473166305545,
+      "warmup_steps": 8
+    },
+    "W2": {
+      "collate_cpu": {
+        "max_ms": 18.372618593275547,
+        "mean_ms": 14.478336032480001,
+        "min_ms": 11.786145623773336,
+        "n": 25,
+        "p50_ms": 14.35858104377985,
+        "p90_ms": 16.190456319600344,
+        "steps_per_second": 69.068710503517
+      },
+      "measured_steps": 25,
+      "projection": {
+        "budget_hard_hours": 3.0,
+        "budget_target_hours": 2.5,
+        "step_seconds_p50": 0.026951412670314312,
+        "total_gpu_hours": 0.9288107543480065,
+        "total_seconds": 3343.7187156528234,
+        "train_eval_seconds": 60.0,
+        "train_seconds_40_epochs": 2951.7187156528234,
+        "valid_seconds_40": 332.0,
+        "within_hard": true,
+        "within_target": true
+      },
+      "step": {
+        "max_ms": 31.168565154075623,
+        "mean_ms": 26.467046700417995,
+        "min_ms": 22.215514909476042,
+        "n": 25,
+        "p50_ms": 26.951412670314312,
+        "p90_ms": 29.199537727981806,
+        "steps_per_second": 37.7828327927576
+      },
+      "step_overhead_vs_w2": 0.0,
+      "warmup_steps": 8
+    }
+  },
+  "schema": "lcrc-pcba-pw-profile-v1",
+  "steps": 25,
+  "threads": {
+    "omp_env": "8",
+    "torch": 8
+  },
+  "torch": "2.5.1+cu124",
+  "w2_reference_step_ms_p50": 26.951412670314312,
+  "warmup": 8,
+  "within_budget": true,
+  "within_budget_raw_projection": true
+}
