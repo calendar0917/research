@@ -146,9 +146,11 @@ total step time, which is why each arm took ~1.9 GPU-hours instead of 1.4.
 
 * **Does:** adding a one-shot, graph-level role×distance co-occurrence term to a frozen W2
   atom state moves official Test macro AP by +0.0023 (REAL) while the same capacity with the
-  binding removed moves it by −0.0021 (BLIND). The *ordering* REAL > W2 > BLIND holds on both
-  Validation and Test and at both selections, and the REAL − BLIND contrast (+0.0044 Test,
-  +0.0035 Valid) is what isolates the binding.
+  binding removed moves it by −0.0021 (BLIND). The *ordering* REAL > W2 > BLIND holds on
+  Validation and on Test at the best-Validation selection; at epoch 40 BLIND edges W2 by
+  +0.00035 (0.251336 vs 0.250985), so "capacity alone is neutral" is the fairer statement at
+  that endpoint. The REAL − BLIND contrast (+0.0044 Test, +0.0035 Valid) is what isolates the
+  binding.
 * **Does not:** establish a >0.005 gain, a statistically significant effect, or a general
   mechanism. One seed, an exposed Test set, and a headline that is a 10%-of-gross residual
   with two large negative task movers cannot support more than "weak, direction-consistent".
