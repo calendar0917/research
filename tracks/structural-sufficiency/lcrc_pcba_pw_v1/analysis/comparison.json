@@ -201,7 +201,7 @@
     "schema": "lcrc-pcba-pw-query-entropy-v1",
     "split": "official Validation rows"
   },
-  "created_utc": "2026-11-08T18:49:27Z",
+  "created_utc": "2026-11-08T18:55:30Z",
   "decision": {
     "bands": {
       "none": {
@@ -315,8 +315,32 @@
     }
   },
   "descriptive_only": true,
-  "git_commit": "8e1856a24d03bc3c2ac7b606d9955c9842ec4d58",
-  "inference": {},
+  "git_commit": "3ebbbe5d9210493fd5295487248b4841c9a95eba",
+  "inference": {
+    "batch_size": 256,
+    "created_utc": "2026-11-08T18:52:23Z",
+    "device_name": "NVIDIA A100-SXM4-40GB",
+    "git_commit": "3ebbbe5d9210493fd5295487248b4841c9a95eba",
+    "round_id": "lcrc-pcba-pw-v1",
+    "rows": 8192,
+    "runs": {
+      "PW": {
+        "milliseconds_per_1k_rows": 132.67601440247745,
+        "parameters": 1135092,
+        "relative_to_w2": 1.318106789122967,
+        "rows_per_second": 7537.157371689385,
+        "seconds": 1.0868819099850953
+      },
+      "W2": {
+        "milliseconds_per_1k_rows": 100.65649877333271,
+        "parameters": 994324,
+        "relative_to_w2": 1.0,
+        "rows_per_second": 9934.778302311997,
+        "seconds": 0.8245780379511416
+      }
+    },
+    "schema": "lcrc-pcba-pw-inference-timing-v1"
+  },
   "models": {
     "PW_best_valid": {
       "checkpoint_sha256": "6e7ddfef735e396e9a3857b9e9d70c5117c9220e8fb190efe19cfb0d2b819554",
@@ -1527,7 +1551,7 @@
   "round_id": "lcrc-pcba-pw-v1",
   "schema": "lcrc-pcba-pw-comparison-v1",
   "sources": {
-    "inference": null,
+    "inference": "tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis/inference_timing.json",
     "pw_per_task": "tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis/per_task_pw_test.csv",
     "pw_run": "tracks/structural-sufficiency/lcrc_pcba_pw_v1/runs/PW/run.json",
     "pw_scores": "tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis/test_scores.json",

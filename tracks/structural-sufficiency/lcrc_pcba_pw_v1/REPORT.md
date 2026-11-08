@@ -98,8 +98,11 @@ allocation **0.87 GiB**, `step_p50` 52–58 ms during training vs 26.95 ms for W
 profile harness.
 Pre-training profile predicted 1.957 GPU-h (raw 1.303 × 1.502 empirical factor calibrated on
 W2's real wall clock), so the run came in **7% under** its own calibrated projection and well
-under the 3.0 h hard cap. Inference cost per Test row is +45.7% in step time (profile p50
-39.26 ms vs 26.95 ms for W2), all of it in the pair gather + token projections.
+under the 3.0 h hard cap. Forward-only inference over Validation rows (batch 256, 8,192 rows)
+runs at **7,537 rows/s vs 9,935 rows/s for W2 = 1.32× the W2 wall time** (+31.8%), i.e. 132.7 ms
+vs 100.7 ms per 1,000 molecules; the training-step overhead is larger (+45.7%, profile p50
+39.26 ms vs 26.95 ms) because the pair gather and token projections dominate the backward pass
+more than the forward pass.
 
 ## 4. The 16-query attention entropy (inference-only diagnostic)
 
