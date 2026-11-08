@@ -285,7 +285,16 @@ def check_pair_symmetry(spec, norm, batch, *, seed: int = C.SEED, device: str = 
     token_diff = float((tok - tok_swapped).abs().max().item())
     logit_diff = float((logits - logits_swapped).abs().max().item())
     residual_norm = float((logits - base).abs().max().item())
-    passed = bool(torch.equal(tok, tok_swapped) and logit_diff == 0.0 and residual_norm > 0.0)
+    # The pair token must be *bitwise* symmetric on every device (it is: IEEE
+    # addition/multiplication are commutative and abs is even).  The logits go
+    # through the segment softmax and ``index_add``/``scatter_reduce``; on CUDA
+    # those use atomics, so the summation order -- and therefore the last bits of
+    # z -- can differ between two calls even when every input is identical.  The
+    # logit test is therefore exact on CPU and tolerance-bounded (1e-4) on CUDA,
+    # the same tolerance used for the W2-replay checks; the token test is exact
+    # everywhere and is the one that actually tests the definition.
+    tol = 0.0 if dev.type == "cpu" else 1e-4
+    passed = bool(torch.equal(tok, tok_swapped) and logit_diff <= tol and residual_norm > 0.0)
     return _result(
         "04_pair_token_exchange_symmetry",
         passed,
@@ -294,6 +303,11 @@ def check_pair_symmetry(spec, norm, batch, *, seed: int = C.SEED, device: str = 
         logit_max_abs_diff_under_swap=logit_diff,
         residual_max_abs_after_tail_perturbation=residual_norm,
         n_pairs=int(batch["pair_i"].numel()),
+        logit_tolerance=float(tol),
+        logit_tolerance_reason=(
+            "exact on CPU; 1e-4 on CUDA because index_add/scatter_reduce are atomic reductions whose "
+            "order changes the last bits of z between two otherwise identical calls"
+        ),
         note=(
             "the zero-initialised tail is replaced by a fixed small random tail (private generator, CPU) "
             "so the residual is non-zero and the exchange invariance is a real test, not a zero==zero one"

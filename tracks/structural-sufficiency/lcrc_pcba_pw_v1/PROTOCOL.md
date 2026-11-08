@@ -177,8 +177,10 @@ checkpoint、epoch-40 checkpoint、可续训 last checkpoint、optimizer 与 RNG
 2. zero-init 时 `logits` 与原始 W2 forward **逐位**相同（CPU），CUDA 上残差严格为 0、
    logits 相对误差 ≤ 1e-6；`residual_zero` 路径同样逐位相同；
 3. 任意合法原子重编号（含用置换后的 `bond_index` 重建 pair 索引）不改变预测（rel ≤ 1e-4）；
-4. pair token 在 `i <-> j` 交换下**逐位**不变；把尾部替换为非零固定随机权重后，
-   交换两个端点仍逐位不改变 logits；
+4. pair token 在 `i <-> j` 交换下**逐位**不变（所有设备）；把尾部替换为非零固定随机
+   权重后，交换两个端点不改变 logits——CPU 上要求逐位相等，CUDA 上允许 ≤1e-4，
+   因为 `index_add`/`scatter_reduce` 是原子累加，两次相同调用的求和顺序可以不同，
+   会改变 `z` 的末位；token 逐位相等是不放松的那一条；
 5. 不存在跨图 pair：`pair_counts`/`pair_graph` 自洽、`i<j`、两个端点在各自分子内、
    pair 不重复；把每个分子单独 collate 后重新打分，与该分子在 batch 中的 logits 一致；
 6. 不存在跨连通分量 pair：索引只在同分量内建；用独立 BFS 复算抽样行，
