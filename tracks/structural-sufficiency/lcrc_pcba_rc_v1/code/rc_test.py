@@ -583,14 +583,17 @@ def run_score(freeze_path: Path, out_path: Path, per_task_path: Path, prediction
             "tasks_scored_both": both,
         }
 
-    support_test = np.asarray(scored["REAL_best_valid"]["test_positive"], dtype=np.int64)
-    support_valid = np.asarray(scored["REAL_best_valid"]["valid_positive"], dtype=np.int64)
+    reference = "REAL_best_valid" if "REAL_best_valid" in scored else "W2_best_valid_epoch24"
+    support_test = np.asarray(scored[reference]["test_positive"], dtype=np.int64)
+    support_valid = np.asarray(scored[reference]["valid_positive"], dtype=np.int64)
     support_stats: dict[str, Any] = {}
     for tag, new, old in (
         ("REAL_minus_W2", "REAL_best_valid", "W2_best_valid_epoch24"),
         ("BLIND_minus_W2", "BLIND_best_valid", "W2_best_valid_epoch24"),
         ("REAL_minus_BLIND", "REAL_best_valid", "BLIND_best_valid"),
     ):
+        if new not in scored or old not in scored:
+            continue
         support_stats[f"test_ge20_{tag}"] = _stratified(
             scored[new]["test_per_task_ap"], scored[old]["test_per_task_ap"], support_test, min_support=20
         )
@@ -644,8 +647,10 @@ def run_score(freeze_path: Path, out_path: Path, per_task_path: Path, prediction
         "label_stats": label_stats,
         "n_test_rows": int(C.N_TEST),
         "n_tasks": int(C.N_TASKS),
-        "n_tasks_scored_test": int(scored["REAL_best_valid"]["n_tasks_scored"]),
-        "n_tasks_scored_valid": int(scored["REAL_best_valid"]["n_tasks_scored_valid"]),
+        "n_tasks_scored_test": int(scored[reference]["n_tasks_scored"]),
+        "n_tasks_scored_valid": int(scored[reference]["n_tasks_scored_valid"]),
+        "reference_model": reference,
+        "arms_scored": sorted({record["model"] for record in records.values()}),
         "test_label_masking": "NaN entries excluded per task; a task is scored only with both classes present",
         "standardisation": "Train-only normalisation inherited from the frozen cache; nothing refitted",
         "checkpoint_selection": "argmax official Validation AP over epochs 1..40, earliest wins ties; no Test score looked at",
@@ -689,7 +694,7 @@ def _write_per_task_csv(
         "valid_delta_REAL_minus_W2",
         "valid_delta_REAL_minus_BLIND",
     ]
-    ref = scored["REAL_best_valid"]
+    ref = scored["REAL_best_valid"] if "REAL_best_valid" in scored else scored["W2_best_valid_epoch24"]
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
@@ -710,15 +715,20 @@ def _write_per_task_csv(
             for label in order:
                 ap = scored[label]["test_per_task_ap"][t]
                 row[f"test_ap_{label}"] = "" if ap is None else float(ap)
-            r = scored["REAL_best_valid"]["test_per_task_ap"][t]
-            b = scored["BLIND_best_valid"]["test_per_task_ap"][t]
-            w = scored["W2_best_valid_epoch24"]["test_per_task_ap"][t]
+            def _ap(label: str, split: str, task: int) -> Any:
+                if label not in scored:
+                    return None
+                return scored[label][f"{split}_per_task_ap"][task]
+
+            r = _ap("REAL_best_valid", "test", t)
+            b = _ap("BLIND_best_valid", "test", t)
+            w = _ap("W2_best_valid_epoch24", "test", t)
             row["test_delta_REAL_minus_W2"] = "" if r is None or w is None else float(r - w)
             row["test_delta_BLIND_minus_W2"] = "" if b is None or w is None else float(b - w)
             row["test_delta_REAL_minus_BLIND"] = "" if r is None or b is None else float(r - b)
-            vr = scored["REAL_best_valid"]["valid_per_task_ap"][t]
-            vw = scored["W2_best_valid_epoch24"]["valid_per_task_ap"][t]
-            vb = scored["BLIND_best_valid"]["valid_per_task_ap"][t]
+            vr = _ap("REAL_best_valid", "valid", t)
+            vw = _ap("W2_best_valid_epoch24", "valid", t)
+            vb = _ap("BLIND_best_valid", "valid", t)
             row["valid_delta_REAL_minus_W2"] = "" if vr is None or vw is None else float(vr - vw)
             row["valid_delta_REAL_minus_BLIND"] = "" if vr is None or vb is None else float(vr - vb)
             writer.writerow(row)
