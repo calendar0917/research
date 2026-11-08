@@ -289,7 +289,33 @@ def cmd_profile(args: argparse.Namespace) -> int:
     for key, run in record["runs"].items():
         run["step_overhead_vs_w2"] = float(run["step"]["p50_ms"]) / base - 1.0
     record["w2_reference_step_ms_p50"] = base
-    record["within_budget"] = bool(record["runs"][C.MODEL_KEY]["projection"]["within_hard"])
+
+    # The raw projection only counts the measured step loop, so it is biased low.
+    # Calibrate against the *actual* historical W2 wall clock: the same projection
+    # applied to this host's W2 profile gives X hours, and W2 really took
+    # C.W2["gpu_hours"].  Apply that empirical factor to the PW projection, and
+    # use the calibrated number for the budget verdict (the conservative one).
+    w2_projection = float(record["runs"]["W2"]["projection"]["total_gpu_hours"])
+    w2_actual = float(C.W2["gpu_hours"])
+    factor = w2_actual / w2_projection if w2_projection > 0 else float("nan")
+    pw_raw = float(record["runs"][C.MODEL_KEY]["projection"]["total_gpu_hours"])
+    pw_calibrated = pw_raw * factor
+    record["calibration"] = {
+        "w2_projection_gpu_hours": w2_projection,
+        "w2_actual_gpu_hours": w2_actual,
+        "factor": factor,
+        "note": (
+            "The raw projection times only the training step loop (collate, pinned staging, "
+            "label transfer and epoch-boundary synchronisation are outside it), so it "
+            "under-predicts by this factor. The budget verdict uses the calibrated value."
+        ),
+        "pw_projection_gpu_hours_raw": pw_raw,
+        "pw_projection_gpu_hours_calibrated": pw_calibrated,
+    }
+    record["within_budget"] = bool(pw_calibrated <= float(C.BUDGET["gpu_hard_hours"]))
+    record["within_budget_raw_projection"] = bool(
+        pw_raw <= float(C.BUDGET["gpu_hard_hours"])
+    )
     C.write_json(PROFILE_PATH, record)
     for key, run in record["runs"].items():
         C.log(
@@ -298,6 +324,10 @@ def cmd_profile(args: argparse.Namespace) -> int:
             f"projected {run['projection']['total_gpu_hours']:.3f} GPU-h "
             f"(target {C.BUDGET['gpu_target_hours']}, hard {C.BUDGET['gpu_hard_hours']})"
         )
+    C.log(
+        f"[profile] calibrated PW projection {pw_calibrated:.3f} GPU-h "
+        f"(factor {factor:.3f} from W2 {w2_projection:.3f} predicted vs {w2_actual:.3f} actual)"
+    )
     return 0
 
 
