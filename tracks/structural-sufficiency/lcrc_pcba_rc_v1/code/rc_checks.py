@@ -194,7 +194,15 @@ def permute_batch_consistent(batch: Mapping[str, Any], *, seed: int = 20261109) 
 def check_permutation(spec, norm, batch, *, seed: int = C.SEED, device: str = "cpu") -> dict[str, Any]:
     results = {}
     passed = True
-    permuted, _p = permute_batch_consistent(batch)
+    # the inherited permutation helper indexes on the host, so permute on CPU
+    host_batch = {k: (v.detach().cpu() if torch.is_tensor(v) else v) for k, v in batch.items()}
+    host_permuted, _p = permute_batch_consistent(host_batch)
+    if str(device) != "cpu":
+        dev = torch.device(device)
+        batch = {k: (v.to(dev) if torch.is_tensor(v) else v) for k, v in host_batch.items()}
+        permuted = {k: (v.to(dev) if torch.is_tensor(v) else v) for k, v in host_permuted.items()}
+    else:
+        batch, permuted = host_batch, host_permuted
     for key in ("REAL", "BLIND"):
         model, _ = M.build_model(key, spec, norm, C.N_TASKS, seed=int(seed), device=device)
         model.eval()
