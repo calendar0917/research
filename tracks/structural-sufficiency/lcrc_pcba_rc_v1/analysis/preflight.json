@@ -211,15 +211,28 @@
             "cpu_max_abs_diff": 0.0,
             "cpu_max_abs_diff_residual_zero_path": 0.0,
             "cpu_reference_max_abs": 22.679126739501953,
-            "cpu_residual_max_abs": 0.0
+            "cpu_residual_max_abs": 0.0,
+            "device": "cuda",
+            "device_max_abs_diff": 9.5367431640625e-07,
+            "device_ok": true,
+            "device_relative_diff": 4.20507547563819e-08,
+            "device_residual_max_abs": 0.0,
+            "device_tolerance_relative": 1e-06
           },
           "REAL": {
             "cpu_bitwise_exact": true,
             "cpu_max_abs_diff": 0.0,
             "cpu_max_abs_diff_residual_zero_path": 0.0,
             "cpu_reference_max_abs": 22.679126739501953,
-            "cpu_residual_max_abs": 0.0
-          }
+            "cpu_residual_max_abs": 0.0,
+            "device": "cuda",
+            "device_max_abs_diff": 1.9073486328125e-06,
+            "device_ok": true,
+            "device_relative_diff": 8.41015095127638e-08,
+            "device_residual_max_abs": 0.0,
+            "device_tolerance_relative": 1e-06
+          },
+          "_device_note": "CUDA segment-sum atomics make two independent forward passes differ by a few ULPs; the branch residual itself is still exactly zero"
         }
       },
       "name": "03_zero_init_forward_equals_w2",
@@ -230,14 +243,14 @@
         "per_arm": {
           "BLIND": {
             "max_abs_diff": 1.9073486328125e-06,
-            "max_abs_reference": 22.679126739501953,
-            "relative": 8.410150243970048e-08,
+            "max_abs_reference": 22.67912483215332,
+            "relative": 8.41015095127638e-08,
             "tolerance": 0.0001
           },
           "REAL": {
             "max_abs_diff": 1.9073486328125e-06,
-            "max_abs_reference": 22.679126739501953,
-            "relative": 8.410150243970048e-08,
+            "max_abs_reference": 22.67912483215332,
+            "relative": 8.41015095127638e-08,
             "tolerance": 0.0001
           }
         }
@@ -257,19 +270,19 @@
           {
             "exact_tolerance": 1e-05,
             "graph": 1,
-            "max_abs_diff": 0.0,
+            "max_abs_diff": 2.384185791015625e-07,
             "pairs": 10
           },
           {
             "exact_tolerance": 1e-05,
             "graph": 2,
-            "max_abs_diff": 0.0,
+            "max_abs_diff": 3.5762786865234375e-07,
             "pairs": 15
           },
           {
             "exact_tolerance": 1e-05,
             "graph": 3,
-            "max_abs_diff": 0.0,
+            "max_abs_diff": 2.384185791015625e-07,
             "pairs": 15
           }
         ]
@@ -392,48 +405,48 @@
             "branch_grad_norm": {
               "branch.combiner.fc1.bias": 0.0,
               "branch.combiner.fc1.weight": 0.0,
-              "branch.combiner.fc2.bias": 0.022958436980843544,
-              "branch.combiner.fc2.weight": 0.0608542300760746,
+              "branch.combiner.fc2.bias": 0.022887563332915306,
+              "branch.combiner.fc2.weight": 0.06170715391635895,
               "branch.combiner.norm.bias": 0.0,
               "branch.combiner.norm.weight": 0.0,
               "branch.role_proj.bias": 0.0,
               "branch.role_proj.weight": 0.0,
-              "branch.task_bias": 0.022431734949350357,
+              "branch.task_bias": 0.02264566533267498,
               "branch.task_embedding": 0.0
             },
-            "loss": 2.0806775093078613,
+            "loss": 1.9035935401916504,
             "step": 0
           },
           {
             "branch_grad_norm": {
-              "branch.combiner.fc1.bias": 1.5843863366171718e-05,
-              "branch.combiner.fc1.weight": 0.00032336899312213063,
-              "branch.combiner.fc2.bias": 0.02200467884540558,
-              "branch.combiner.fc2.weight": 0.059787947684526443,
-              "branch.combiner.norm.bias": 1.0084463610837702e-05,
-              "branch.combiner.norm.weight": 2.950848465843592e-05,
-              "branch.role_proj.bias": 2.560384018579498e-05,
-              "branch.role_proj.weight": 0.0002026394213316962,
-              "branch.task_bias": 0.02238554134964943,
-              "branch.task_embedding": 7.712226215517148e-05
+              "branch.combiner.fc1.bias": 1.684899143583607e-05,
+              "branch.combiner.fc1.weight": 0.0003462801978457719,
+              "branch.combiner.fc2.bias": 0.02334361895918846,
+              "branch.combiner.fc2.weight": 0.06513013690710068,
+              "branch.combiner.norm.bias": 1.0635323633323424e-05,
+              "branch.combiner.norm.weight": 3.0633229471277446e-05,
+              "branch.role_proj.bias": 2.4463337467750534e-05,
+              "branch.role_proj.weight": 0.0001925940887304023,
+              "branch.task_bias": 0.0227303858846426,
+              "branch.task_embedding": 8.076845551840961e-05
             },
-            "loss": 1.3116220235824585,
+            "loss": 1.2885628938674927,
             "step": 1
           },
           {
             "branch_grad_norm": {
-              "branch.combiner.fc1.bias": 3.083605406573042e-05,
-              "branch.combiner.fc1.weight": 0.0006305216229520738,
-              "branch.combiner.fc2.bias": 0.021425822749733925,
-              "branch.combiner.fc2.weight": 0.06186102330684662,
-              "branch.combiner.norm.bias": 1.949865691130981e-05,
-              "branch.combiner.norm.weight": 5.445847273222171e-05,
-              "branch.role_proj.bias": 4.2144409235334024e-05,
-              "branch.role_proj.weight": 0.00032908329740166664,
-              "branch.task_bias": 0.022152438759803772,
-              "branch.task_embedding": 0.0001518361095804721
+              "branch.combiner.fc1.bias": 3.025162914127577e-05,
+              "branch.combiner.fc1.weight": 0.0006328586023300886,
+              "branch.combiner.fc2.bias": 0.0209677591919899,
+              "branch.combiner.fc2.weight": 0.06193694844841957,
+              "branch.combiner.norm.bias": 1.9185335986549035e-05,
+              "branch.combiner.norm.weight": 5.535619493457489e-05,
+              "branch.role_proj.bias": 4.5116525143384933e-05,
+              "branch.role_proj.weight": 0.00035460671642795205,
+              "branch.task_bias": 0.02202112041413784,
+              "branch.task_embedding": 0.00015496845298912376
             },
-            "loss": 0.75865238904953,
+            "loss": 0.8170194029808044,
             "step": 2
           }
         ]
@@ -450,8 +463,18 @@
             "tolerance": 1e-06
           },
           "cpu_real": {
-            "max_abs_diff": 7.357394595786104e-07,
-            "relative": 1.6114593341409662e-07,
+            "max_abs_diff": 2.59598473828504e-07,
+            "relative": 5.685876682749747e-08,
+            "tolerance": 1e-06
+          },
+          "gpu_blind": {
+            "max_abs_diff": 2.1767483238122054e-07,
+            "relative": 7.315533962766313e-08,
+            "tolerance": 1e-06
+          },
+          "gpu_real": {
+            "max_abs_diff": 2.59598473828504e-07,
+            "relative": 5.685876682749747e-08,
             "tolerance": 1e-06
           }
         }
@@ -485,12 +508,12 @@
         ],
         "every_epoch_is_a_train_permutation": true,
         "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
-        "independent_ap": 0.5670430102614632,
+        "independent_ap": 0.5485013179747573,
         "masked_bce_equals_manual": true,
-        "masked_bce_value": 0.8081759810447693,
-        "official_ap": 0.5670430102614633,
+        "masked_bce_value": 0.8107087016105652,
+        "official_ap": 0.5485013179747571,
         "official_source": "OGB official Evaluator(ogbg-molpcba)",
-        "official_vs_independent_abs_delta": 1.1102230246251565e-16,
+        "official_vs_independent_abs_delta": 2.220446049250313e-16,
         "order_plan_sha256_matches_w2": true,
         "split_partitions_disjoint": true,
         "test_labels_all_nan_in_training_artifact": true
@@ -499,34 +522,53 @@
       "passed": true
     }
   ],
-  "created_utc": "2026-11-08T12:01:14Z",
-  "device": "cpu",
+  "created_utc": "2026-11-08T12:02:54Z",
+  "device": "cuda",
   "distance_cache_available": true,
-  "git_commit": "2d8f26681ba6cfc236aa7c891ecb61ffc3df20fa",
+  "git_commit": "7c05374127b7731b1a9f84ed9583ab4d4d144eb1",
   "gpu_occupancy": {
-    "captured_utc": "2026-11-08T12:01:15Z",
-    "cuda_available": false,
-    "cuda_visible_devices": null,
-    "nvidia_smi_compute_apps": "unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'nvidia-smi'",
-    "nvidia_smi_gpus": "unavailable: FileNotFoundError: [Errno 2] No such file or directory: 'nvidia-smi'",
+    "captured_utc": "2026-11-08T12:02:54Z",
+    "cuda_available": true,
+    "cuda_visible_devices": "1",
+    "device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "nvidia_smi_compute_apps": "3841932, python3, 16082 MiB\n4111559, /home/hxy/cy/research/.venv/bin/python3, 646 MiB",
+    "nvidia_smi_gpus": "0, GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, NVIDIA A100-SXM4-40GB, 40960 MiB, 16105 MiB, 24222 MiB, 100 %, 100 %, 55, 550.163.01\n1, GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, NVIDIA A100-SXM4-40GB, 40960 MiB, 669 MiB, 39658 MiB, 0 %, 0 %, 31, 550.163.01",
     "torch": "2.5.1+cu124",
-    "torch_cuda": "12.4"
+    "torch_cuda": "12.4",
+    "visible_device_mem_get_info": {
+      "free_bytes": 41584295936,
+      "total_bytes": 42285268992,
+      "used_bytes": 700973056
+    }
   },
   "host_facts": {
-    "cpu_count": 16,
-    "cuda_available": false,
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cuda_capability": [
+      [
+        8,
+        0
+      ]
+    ],
     "cudnn": 90100,
     "git": {
       "branch": "main",
-      "commit": "2d8f26681ba6cfc236aa7c891ecb61ffc3df20fa",
+      "commit": "7c05374127b7731b1a9f84ed9583ab4d4d144eb1",
       "dirty": true,
       "dirty_files": [
-        "M tracks/structural-sufficiency/lcrc_pcba_rc_v1/code/rc_checks.py"
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/architecture_failed.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/cost_failed.json"
       ]
     },
-    "hostname": "main",
-    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
-    "python": "3.12.15",
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
     "torch": "2.5.1+cu124",
     "torch_cuda": "12.4"
   },
