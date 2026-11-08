@@ -76,14 +76,25 @@ rr run res pw-profile --pool res-gpu1 --result tracks/structural-sufficiency/lcr
 ## 4. 正式训练（单模型，seed 0，40 epochs）
 
 ```bash
-rr run res pw-v1 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis \
+rr run res pw-v1 --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_pcba_pw_v1/runs/PW \
   -- uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_train.py \
-     --device cuda --epochs 40 --seed 0 --pair-cache runs/pair_cache \
-     --out runs/PW --soft-seconds 9000 --hard-seconds 10800
+     --device cuda --epochs 40 --eval-every 1 --seed 0 \
+     --out-dir tracks/structural-sufficiency/lcrc_pcba_pw_v1/runs/PW \
+     --soft-seconds 9000 --hard-seconds 10800
 ```
 
-`runs/PW/` 下：`best_valid.pt`、`epoch40.pt`、`last.pt`、`run.json`（哈希、参数量、
-GPU-hour、环境、preflight SHA）、`train_curve.csv`、`per_task_ap.csv`、`training_order.json`。
+`--pair-cache` 默认已指向 `tracks/structural-sufficiency/lcrc_pcba_pw_v1/runs/pair_cache`
+（绝对路径），`--out-dir` 必须给仓库根目录相对或绝对路径。`--epochs < 40` 时训练器允许
+subset cache（冒烟用），40 epochs 时强制 `require_full`。
+
+`runs/` 被 gitignore（checkpoint 太大），因此训练记录同时复制到 `analysis/`：
+`training_record.json`（run.json 的摘要 + 40 epoch 曲线明细 + 全部 checkpoint/pair 索引哈希）、
+`training_curve.csv`、`training_per_task_ap.csv`（源的 SHA256 写在 record 里）。
+
+`runs/PW/` 下：`checkpoint_best.pt`（best-Validation，被选中）、`checkpoint_epoch40.pt`、
+`checkpoint_last.pt`（可断点续训）、`run.json`（哈希、参数量、GPU-hour、环境、pair 索引
+哈希）、`train_curve.csv`、`per_task_ap.csv`、`training_order.json`、
+`train_eval_epoch40.json`、`rng_state.pt`。
 
 ---
 
@@ -93,8 +104,9 @@ GPU-hour、环境、preflight SHA）、`train_curve.csv`、`per_task_ap.csv`、`
 rr run res pw-freeze --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis \
   -- uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_test.py freeze --device cuda
 
-rr run res pw-score --pool res-local --result tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis \
-  -- uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_test.py score
+# 打分在本地跑：远端 checkout 故意不带 data/ogb/*/raw/graph-label.csv.gz
+rr pull pw-freeze
+uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_test.py score
 ```
 
 `freeze` 只写 Test logits 与哈希（含 Validation AP 复算），不打开任何 Test 标签；
@@ -106,7 +118,9 @@ rr run res pw-score --pool res-local --result tracks/structural-sufficiency/lcrc
 ## 6. 注意力熵与对比表
 
 ```bash
-uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_audit.py query-entropy --device cuda
+rr run res pw-entropy --pool res-gpu1 --result tracks/structural-sufficiency/lcrc_pcba_pw_v1/analysis \
+  -- uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_audit.py query-entropy \
+     --device cuda --checkpoint tracks/structural-sufficiency/lcrc_pcba_pw_v1/runs/PW/checkpoint_best.pt
 uv run python tracks/structural-sufficiency/lcrc_pcba_pw_v1/code/pw_compare.py
 ```
 

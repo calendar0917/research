@@ -84,44 +84,56 @@ def _per_task_columns() -> dict[str, Any]:
     return out
 
 
-def _pair_stats(a: Sequence[Any], b: Sequence[Any], support: Sequence[float], *, min_support: int = 0) -> dict[str, Any]:
-    deltas: list[float] = []
-    improved = 0
-    for x, y, s in zip(a, b, support):
-        if x is None or y is None or float(s) < float(min_support):
+def _paired(
+    a: Sequence[Any], b: Sequence[Any], support: Sequence[float], *, lo: int = 0, hi: int | None = None
+) -> list[tuple[int, float]]:
+    """``(task_id, delta)`` for every task scored in both arms inside ``[lo, hi)``."""
+    out: list[tuple[int, float]] = []
+    for task, (x, y, s) in enumerate(zip(a, b, support)):
+        if x is None or y is None:
             continue
-        d = float(x) - float(y)
-        deltas.append(d)
-        improved += int(d > 0)
-    if not deltas:
+        if float(s) < float(lo) or (hi is not None and float(s) >= float(hi)):
+            continue
+        out.append((int(task), float(x) - float(y)))
+    return out
+
+
+def _summary(pairs: Sequence[tuple[int, float]]) -> dict[str, Any]:
+    if not pairs:
         return {"n_tasks": 0}
-    arr = np.asarray(deltas, dtype=np.float64)
+    tasks = [t for t, _ in pairs]
+    arr = np.asarray([d for _, d in pairs], dtype=np.float64)
     pos = arr[arr > 0]
     neg = arr[arr < 0]
-    order = np.argsort(-np.abs(arr), kind="stable")[:5]
-    abs_tasks = [int(i) for i in order]
+    abs_order = np.argsort(-np.abs(arr), kind="stable")[:5]
     pos_order = np.argsort(-arr, kind="stable")
-    top_pos = [int(i) for i in pos_order if arr[i] > 0][:5]
+    top_pos = [int(pos_order[i]) for i in range(arr.size) if arr[pos_order[i]] > 0][:5]
     return {
         "n_tasks": int(arr.size),
         "mean_delta": _r(arr.mean()),
         "median_delta": _r(float(np.median(arr))),
         "sum_delta": _r(arr.sum()),
-        "improved": int(improved),
+        "improved": int((arr > 0).sum()),
         "degraded": int((arr < 0).sum()),
-        "improved_fraction": _r(improved / arr.size),
+        "improved_fraction": _r(float((arr > 0).sum()) / arr.size),
         "sum_positive": _r(pos.sum()) if pos.size else 0.0,
         "sum_negative": _r(neg.sum()) if neg.size else 0.0,
-        "top5_positive_share_of_positive_mass": _r(pos.sum() and float(pos[np.argsort(-pos)[:5]].sum()) / float(pos.sum())),
-        "top5_absolute": [
-            {"task": int(t), "delta": _r(arr[t])} for t in abs_tasks
-        ],
-        "top5_absolute_net": _r(float(arr[abs_tasks].sum())),
-        "top5_absolute_share_of_net": _r(float(arr[abs_tasks].sum()) / float(arr.sum())) if float(arr.sum()) else None,
-        "top5_positive": [{"task": int(t), "delta": _r(arr[t])} for t in top_pos],
+        "top5_positive_share_of_positive_mass": _r(
+            float(pos[np.argsort(-pos)[:5]].sum()) / float(pos.sum()) if pos.size else None
+        ),
+        "top5_absolute": [{"task": tasks[int(i)], "delta": _r(arr[int(i)])} for i in abs_order],
+        "top5_absolute_net": _r(float(arr[abs_order].sum())),
+        "top5_absolute_share_of_net": _r(float(arr[abs_order].sum()) / float(arr.sum())) if float(arr.sum()) else None,
+        "top5_positive": [{"task": tasks[int(i)], "delta": _r(arr[int(i)])} for i in top_pos],
         "worst_delta": _r(arr.min()),
         "best_delta": _r(arr.max()),
+        "worst_task": tasks[int(np.argmin(arr))],
+        "best_task": tasks[int(np.argmax(arr))],
     }
+
+
+def _pair_stats(a: Sequence[Any], b: Sequence[Any], support: Sequence[float], *, min_support: int = 0) -> dict[str, Any]:
+    return _summary(_paired(a, b, support, lo=int(min_support)))
 
 
 def build() -> dict[str, Any]:
@@ -246,13 +258,13 @@ def build() -> dict[str, Any]:
             "available": True,
             "all_tasks": _pair_stats(col[a], col[b], support),
             "support_ge20": _pair_stats(col[a], col[b], support, min_support=20),
-            "support_5_19": _pair_stats(col[a], col[b], support, min_support=5),
+            "support_5_19": _pair_stats_band(col[a], col[b], support, lo=5, hi=20),
+            "support_lt5": _pair_stats_band(col[a], col[b], support, lo=0, hi=5),
+            "strata_note": (
+                "support_ge20 uses the >=20 filter, support_5_19 is the 5..19 band and "
+                "support_lt5 the 0..4 band; each is computed from the same per-task table"
+            ),
         }
-    # the ge5_lt20 stratum needs its own filter
-    for name, a, b in (("PW_minus_W2", "test_ap_PW_best_valid", "test_ap_W2_best_valid_epoch24"),):
-        if a in col and b in col:
-            upper = _pair_stats_band(col[a], col[b], support, lo=5, hi=20)
-            per_task_stats[name]["support_5_19"] = upper
 
     # ---- train / valid gap -------------------------------------------------
     gaps: dict[str, Any] = {}
@@ -363,28 +375,7 @@ def build() -> dict[str, Any]:
 def _pair_stats_band(
     a: Sequence[Any], b: Sequence[Any], support: Sequence[float], *, lo: int, hi: int
 ) -> dict[str, Any]:
-    deltas = []
-    improved = 0
-    for x, y, s in zip(a, b, support):
-        if x is None or y is None or not (lo <= float(s) < hi):
-            continue
-        d = float(x) - float(y)
-        deltas.append(d)
-        improved += int(d > 0)
-    if not deltas:
-        return {"n_tasks": 0}
-    arr = np.asarray(deltas, dtype=np.float64)
-    return {
-        "n_tasks": int(arr.size),
-        "mean_delta": _r(arr.mean()),
-        "median_delta": _r(float(np.median(arr))),
-        "sum_delta": _r(arr.sum()),
-        "improved": int(improved),
-        "degraded": int((arr < 0).sum()),
-        "improved_fraction": _r(improved / arr.size),
-        "worst_delta": _r(arr.min()),
-        "best_delta": _r(arr.max()),
-    }
+    return _summary(_paired(a, b, support, lo=int(lo), hi=int(hi)))
 
 
 def _train_gap(payload: Mapping[str, Any]) -> dict[str, Any]:

@@ -124,6 +124,14 @@ RC_PER_TASK = RC_ANALYSIS / "per_task_valid_test.csv"
 RC_PREDICTIONS = RC_ANALYSIS / "test_predictions"
 RC_TASK_DELTA = RC_ANALYSIS / "task_delta_analysis.json"
 
+#: Canonical analysis artefact paths for this round (single source of truth).
+PER_TASK_PATH = ANALYSIS / "per_task_pw_test.csv"
+SCORES_PATH = ANALYSIS / "test_scores.json"
+ENTROPY_PATH = ANALYSIS / "query_entropy.json"
+INFERENCE_PATH = ANALYSIS / "inference_timing.json"
+COMPARISON_PATH = ANALYSIS / "comparison.json"
+COMPARISON_TABLE_PATH = ANALYSIS / "comparison_table.csv"
+
 #: Official Test has been read before in this track; PW treats it as an
 #: *exposed engineering comparison set*, never as a model-selection signal.
 TEST_ROLE = "EXPOSED_TEST_ENGINEERING_COMPARISON_SET"
@@ -343,6 +351,12 @@ __all__ = [
     "RC_ROUND",
     "RC_SCORES",
     "RC_TASK_DELTA",
+    "COMPARISON_PATH",
+    "COMPARISON_TABLE_PATH",
+    "ENTROPY_PATH",
+    "INFERENCE_PATH",
+    "PER_TASK_PATH",
+    "SCORES_PATH",
     "RCC",
     "RD",
     "RECIPE",
