@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+from datetime import datetime
 import sys
 from pathlib import Path
 from typing import Any, Mapping, Sequence
@@ -587,43 +588,80 @@ def _training_parity(s3_run: Mapping[str, Any], f_run: Mapping[str, Any], *, s3:
     }
 
 
+def _job_seconds(job: Mapping[str, Any]) -> float | None:
+    for key in ("duration_seconds", "seconds", "elapsed"):
+        value = job.get(key)
+        if isinstance(value, (int, float)):
+            return float(value)
+    def _ts(key: str):
+        raw = job.get(key)
+        if not raw:
+            return None
+        text = str(raw).replace("Z", "+00:00")
+        try:
+            return datetime.fromisoformat(text)
+        except ValueError:
+            return None
+
+    start = _ts("started_at") or _ts("created_at")
+    finish = _ts("completed_at") or _ts("finished_at")
+    if start is None:
+        return None
+    finish = finish or datetime.now(tz=start.tzinfo)
+    return max(0.0, float((finish - start).total_seconds()))
+
+
 def _ledger(*, s3: Mapping[str, Any], f: Mapping[str, Any], rr_jobs: Path | None) -> dict[str, Any]:
     jobs: list[dict[str, Any]] = []
     if rr_jobs is not None and Path(rr_jobs).is_file():
         raw = json.loads(Path(rr_jobs).read_text(encoding="utf-8"))
         for job in raw.get("jobs", []):
+            experiment = str(job.get("experiment") or "")
+            pool = str(job.get("pool") or "")
+            seconds = _job_seconds(job)
             jobs.append(
                 {
-                    "experiment": job.get("experiment"),
+                    "experiment": experiment,
                     "run_id": job.get("run_id"),
-                    "pool": job.get("pool"),
+                    "pool": pool,
                     "state": job.get("state"),
                     "commit": job.get("commit"),
-                    "created": job.get("created"),
-                    "finished": job.get("finished"),
-                    "seconds": job.get("duration_seconds") or job.get("seconds"),
+                    "gpu_count": job.get("gpu_count"),
+                    "cuda_visible_devices": job.get("cuda_visible_devices"),
+                    "created_at": job.get("created_at"),
+                    "started_at": job.get("started_at"),
+                    "completed_at": job.get("completed_at"),
+                    "exit_code": job.get("exit_code"),
+                    "seconds": seconds,
+                    "gpu": bool(pool.startswith("res-gpu")),
+                    "kind": (
+                        "formal_run"
+                        if experiment in ("s3-S3", "s3-F")
+                        else "gpu_audit"
+                        if pool.startswith("res-gpu")
+                        else "cpu_housekeeping"
+                    ),
                 }
             )
-    formal = {
-        "S3": float(s3["gpu_hours"]),
-        "F": float(f["gpu_hours"]),
-    }
-    audit_hours = 0.0
-    for job in jobs:
-        if job["experiment"] and str(job["experiment"]).startswith("s3-") and not str(job["experiment"]).startswith(("s3-s3", "s3-f")):
-            secs = job.get("seconds")
-            if isinstance(secs, (int, float)):
-                audit_hours += float(secs) / 3600.0
+    formal = {"S3": float(s3["gpu_hours"]), "F": float(f["gpu_hours"])}
+    audit_hours = sum(float(j["seconds"] or 0.0) / 3600.0 for j in jobs if j["kind"] == "gpu_audit")
+    housekeeping = [j for j in jobs if j["kind"] == "cpu_housekeeping"]
     total = sum(formal.values()) + audit_hours
+    budget = dict(C.BUDGET)
     return {
-        "formal_runs": formal,
-        "audit_jobs_gpu_hours": float(audit_hours),
+        "formal_runs_gpu_hours": formal,
+        "gpu_audit_hours": float(audit_hours),
         "total_gpu_hours": float(total),
-        "budget": dict(C.BUDGET),
-        "within_target": bool(total <= float(C.BUDGET["gpu_target_hours"])),
-        "within_hard_cap": bool(total <= float(C.BUDGET["gpu_hard_hours"])),
+        "budget": budget,
+        "within_target": bool(total <= float(budget["gpu_target_hours"])),
+        "within_hard_cap": bool(total <= float(budget["gpu_hard_hours"])),
         "jobs": jobs,
-        "note": "wall-clock GPU-hours are charged from the run records; failed or abandoned jobs are included",
+        "cpu_housekeeping_jobs": len(housekeeping),
+        "charged_jobs": [j for j in jobs if j["kind"] != "cpu_housekeeping"],
+        "note": (
+            "formal-run hours are the trainer's own wall-clock GPU records; audit hours are job "
+            "wall-clock on a res-gpu pool; CPU-only housekeeping is listed but not charged"
+        ),
     }
 
 

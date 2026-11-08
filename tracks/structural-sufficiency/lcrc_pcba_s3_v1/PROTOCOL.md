@@ -386,6 +386,9 @@ hash needed to identify them is committed in the analysis artifacts.
 | date | change | reason |
 |---|---|---|
 | 2026-11-08 | **A1** (`96738887`): two GPU audit modes repaired; no scientific parameter, protocol constant or model definition changed | the first GPU audit job aborted the `architecture` mode on a CPU/CUDA index mismatch in the *audit helper* (the model was fine) and the `cost` mode on building the W2 reference through the S3/F factory. Both are instrumentation bugs found before any training step; the audit job was re-run with the same protocol. Also housekeeping only: a stale untracked `lcrc_pcba_cpe_v1/analysis/` directory on the remote compute copy was removed so the frozen commit could be deployed (its differing `audit_summary.json` was captured in the `s3-keep-cpe` job log first). |
+| 2026-11-08 | **A2** (`6fd2c899`): the atom-renumbering audit runs the inherited permuter on a CPU copy | the inherited `bs_model.permute_atoms` indexes with CPU tensors and therefore cannot be handed a CUDA batch. Audit helper only; the model, the S3 definition and the recipe are untouched. Pre-training. |
+| 2026-11-08 | **T1**: §9 filled with the measured probe and the real epoch times | §9 explicitly permits writing measured GPU timings after the freeze; no threshold changed. |
+| 2026-11-08 | **A3** (post-run, analysis only): `s3_compare.py` reads the `rr jobs --json` schema (`started_at`/`completed_at`) when building the GPU ledger | the ledger is bookkeeping; no metric, no decision rule and no comparison changed. |
 
 Post-freeze entries may only record (a) measured GPU timings, (b) an
 infrastructure failure and its re-run with the same commit and the same

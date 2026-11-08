@@ -1,0 +1,66 @@
+{
+  "best_epochs": {
+    "F": 29,
+    "S3": 29,
+    "W2": 24
+  },
+  "best_valid_ap": {
+    "F": 0.2640242484202662,
+    "S3": 0.271489039695166,
+    "W2": 0.2652728864647026
+  },
+  "d_best_f": -0.0012486380444363676,
+  "d_best_s3": 0.006216153230463428,
+  "d_mech": 0.007464791274899796,
+  "epoch40": {
+    "D_epoch40_F": -0.0015304889655848308,
+    "D_epoch40_S3": 0.005853873804825216
+  },
+  "epoch40_ap": {
+    "F": 0.2603367581517355,
+    "S3": 0.26772112092214556,
+    "W2": 0.26186724711732035
+  },
+  "interpretation": "S3 shows a structural-extension signal worth confirming on the current official Validation split; this is not evidence of improved generalisation.",
+  "label": "PROMISING_S3_SIGNAL",
+  "next_step_if_not_promising": "stop the S3 hypothesis and return to W2 supervision / representation / generalisation mechanisms; do not add S4/S5, multi-hop interactions or bigger ranks",
+  "next_step_if_promising": "train-only scaffold-grouped development split/folds, retraining W2 and S3 from scratch under the same best-validation epoch rule (NOT executed in this round)",
+  "per_task_csv_sha256": "b4a3debe3e0c52381a8845c03aef8f5ec5b64b2d3868121a3a707d8d3c8d715a",
+  "promising_conditions": {
+    "d_best_s3": 0.006216153230463428,
+    "d_best_s3_min": 0.005,
+    "d_best_s3_pass": true,
+    "d_mech": 0.007464791274899796,
+    "d_mech_min": 0.003,
+    "d_mech_pass": true,
+    "improved_support_ge20": 75,
+    "improved_support_ge20_min": 60,
+    "improved_support_ge20_pass": true,
+    "mean_delta_support_ge20": 0.005733010210665106,
+    "mean_delta_support_ge20_min": 0.003,
+    "mean_delta_support_ge20_pass": true
+  },
+  "round_id": "lcrc-pcba-s3-v1",
+  "rule_order": [
+    "PROMISING_S3_SIGNAL (all four conditions)",
+    "REGRESSION (d_best_s3 <= -0.002)",
+    "NO_CLEAR_GAIN (d_best_s3 < +0.002 and no broad high-support benefit)",
+    "CAPACITY_ONLY (F also improves and S3 - F <= +0.003)",
+    "WEAK_OR_MIXED (remaining case)"
+  ],
+  "task_distribution": {
+    "improved": 84,
+    "mean_delta": 0.006216153230463666,
+    "median_delta": 0.005460370636348577,
+    "regressed": 43,
+    "support_ge20": {
+      "improved": 75,
+      "mean_delta": 0.005733010210665106,
+      "median_delta": 0.005631542900253361,
+      "n": 107
+    },
+    "top10_positive_share": 0.5020941632562889
+  },
+  "test_accessed": false,
+  "thresholds_are_research_priorities_not_significance_tests": true
+}
