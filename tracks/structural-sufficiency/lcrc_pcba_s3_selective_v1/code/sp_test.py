@@ -221,6 +221,84 @@ def candidate_models(*, selection_path: Path = SELECTION_PATH) -> dict[str, dict
 # ---------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------
+# label-free Test structure cache
+# ---------------------------------------------------------------------------
+
+TEST_CACHE_RECORD = C.ANALYSIS / "test_cache_build.json"
+
+
+def run_build_cache(out_dir: Path, *, device: torch.device | None = None) -> dict[str, Any]:
+    """Enumerate S3 three-hop paths for the official Test rows. Structure only.
+
+    Labels are never touched: the labels file is not opened, and the resulting
+    cache declares ``labels_present=false`` / ``training_scope=false``.  The
+    frozen Train+Valid cache is opened read-only and re-hashed before/after.
+    """
+    del device  # CPU preprocessing; the enumeration is pure numpy
+    task = C.load_task_gated()
+    train_meta = C.read_json(Path(C.S3_TRAIN_CACHE_DIR) / "meta.json")
+    train_sha_before = C.sha256_file(Path(C.S3_TRAIN_CACHE_DIR) / "meta.json")
+    t0 = time.perf_counter()
+    meta = C.build_s3_test_cache(task, out_dir)
+    seconds = time.perf_counter() - t0
+    train_sha_after = C.sha256_file(Path(C.S3_TRAIN_CACHE_DIR) / "meta.json")
+    if train_sha_before != train_sha_after:
+        raise RuntimeError("the frozen Train+Valid cache changed during the Test cache build")
+    if train_meta.get("test_rows_present") not in (False, 0):
+        raise RuntimeError("the frozen Train+Valid cache claims to contain Test rows")
+    cache = C.load_s3_test_cache(out_dir)
+    checks = {
+        "rows_are_the_official_test_rows": bool(
+            np.array_equal(np.sort(np.asarray(cache["rows"], np.int64)), np.sort(np.asarray(task.test_rows, np.int64)))
+        ),
+        "no_train_or_valid_row": bool(
+            int(cache["row_index"][np.asarray(task.train_rows, np.int64)].max()) < 0
+            and int(cache["row_index"][np.asarray(task.valid_rows, np.int64)].max()) < 0
+        ),
+        "labels_absent": bool(cache["meta"]["labels_present"] is False),
+        "training_scope_false": bool(cache["meta"]["training_scope"] is False),
+        "row_path_count_consistent": bool(
+            int(cache["meta"]["n_paths"]) == int(np.asarray(cache["s3_row_paths"]).sum())
+        ),
+        "atom_bookkeeping_consistent": bool(
+            int(cache["row_atom_ptr"][-1]) == int(np.asarray(cache["s3_atom_ptr"]).shape[0]) - 1
+        ),
+        "feature_spec_matches_frozen": bool(cache["meta"]["feature_spec_hash"] == C.SOURCE["feature_spec_hash"]),
+        "split_partition_matches_frozen": bool(
+            cache["meta"]["split_partition_sha256"] == C.SOURCE["split_partition_sha256"]
+        ),
+    }
+    audit = {
+        **{k: meta[k] for k in ("n_rows", "n_paths", "n_atoms", "dist_counts", "build_seconds", "field_sha256", "rows_sha256")},
+        "checks": checks,
+        "all_pass": bool(all(checks.values())),
+    }
+    if not audit["all_pass"]:
+        raise RuntimeError(f"Test structure cache failed its invariants: {checks}")
+    record = {
+        "schema": "lcrc-pcba-s3-selective-test-cache-build-v1",
+        "round_id": C.ROUND_ID,
+        "created_utc": C.utcnow(),
+        "git_commit": C.git_commit(),
+        "out_dir": C.track_rel(out_dir),
+        "cpu_seconds": float(seconds),
+        "scope": "official Test rows only",
+        "labels_read": False,
+        "training_cache_sha256_before": train_sha_before,
+        "training_cache_sha256_after": train_sha_after,
+        "training_cache_untouched": True,
+        "training_cache_test_rows_present": bool(train_meta.get("test_rows_present")),
+        "audit": audit,
+    }
+    C.write_json(TEST_CACHE_RECORD, record)
+    C.log(
+        f"[build-cache] {C.track_rel(out_dir)} rows={audit['n_rows']} paths={audit['n_paths']} "
+        f"cpu_seconds={seconds:.1f} all_pass={audit['all_pass']}"
+    )
+    return record
+
+
 def run_freeze(
     selection_path: Path,
     out_path: Path,
@@ -642,6 +720,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     fz.add_argument("--out", default=str(FREEZE_PATH))
     fz.add_argument("--predictions-dir", default=str(PREDICTIONS))
     fz.add_argument("--device", default="cuda")
+    bc = sub.add_parser("build-cache")
+    bc.add_argument("--out", default=str(C.S3_TEST_CACHE_DIR))
     sc = sub.add_parser("score")
     sc.add_argument("--freeze", default=str(FREEZE_PATH))
     sc.add_argument("--out", default=str(SCORES_PATH))
@@ -653,6 +733,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         if device.type == "cuda" and not torch.cuda.is_available():
             raise RuntimeError("CUDA requested but not available")
         return run_freeze(Path(args.selection), Path(args.out), Path(args.predictions_dir), device)
+    if args.mode == "build-cache":
+        return 0 if run_build_cache(Path(args.out))["audit"]["all_pass"] else 4
     if args.mode == "score":
         return run_score(Path(args.freeze), Path(args.out), Path(args.per_task), Path(args.predictions_dir))
     raise KeyError(args.mode)
