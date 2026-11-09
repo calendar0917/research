@@ -63,6 +63,9 @@ Test positives ≥20 tasks: **108**; 5–19: 18; <5: 1; scored: 127.
 | high_support_improved | 76 | — |
 | high_support_tasks | 108 | — |
 | high_support_mean_delta | 0.010866 | — |
+| common_improved | 75 | — |
+| common_tasks | 106 | — |
+| common_mean_delta | 0.010624 | — |
 | low_support_mean_delta | -0.155968 | — |
 | dynamic_branch_used | True | — |
 | Rtotal_valid | 0.939014 | — |

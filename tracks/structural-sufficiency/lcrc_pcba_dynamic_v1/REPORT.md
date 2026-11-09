@@ -194,12 +194,14 @@ Total new-tensor gradient norm falls 4.52 (step 1) → 4.03 (step 3) → 1.67
 the loss drops from 1.881 to 0.063. `bond_proj.weight` itself carries 7.5e-3 at
 step 10 and 2.9e-3 at epoch 40 — small in absolute terms, but non-zero and
 stable, so the shared projection never falls into a dead state.
+
 The branch is therefore **not** `DYNAMIC_BRANCH_SUPPRESSED` in any sense the
 protocol allows: the updates are two orders of magnitude away from "numerically
 ~zero" (Rtotal 0.94, and R1/R2 alone are 0.65/0.53), every new tensor receives
-gradient, and Rtotal keeps *growing* through epoch 40 — training moves toward
-more, not less, message exchange. Per the protocol, Rtotal is a usage indicator
-only and is never cited as evidence of predictive ability.
+gradient, and Rtotal is still rising at epoch 40 (1.082, up from 0.939 at the
+best-Valid checkpoint) — training moves toward more, not less, message exchange.
+Per the protocol, Rtotal is a usage indicator only and is never cited as evidence
+of predictive ability.
 
 ### 5. Post-training Validation-only interventions (frozen best-Valid checkpoint)
 
@@ -212,7 +214,8 @@ out-of-distribution inputs.
 | `message_off` (message term = 0) | **0.114931** | **−0.160133** | +0.0299 | 0.475 | 4 / 127 |
 | `message_shuffle` (within-molecule `src` permutation; `dst` multiplicity, `h0`, bond features and every W2 static input unchanged) | **0.175790** | **−0.099274** | +0.0066 | 0.232 | 7 / 127 |
 
-At epoch 40 the same pattern holds (0.268791 → 0.104043 off / 0.161251 shuffle).
+At epoch 40 the same pattern holds (0.268791 → 0.104043 off / 0.161251 shuffle),
+so the dependence is a property of the trained solution and not of one checkpoint.
 Two facts follow: (i) the trained model depends on the message path on
 essentially every task (123/127 and 120/127 tasks get worse under the two
 interventions), and (ii) the *correspondence* matters, not merely the presence of
@@ -228,12 +231,18 @@ causal proof of an independent message-passing generalisation gain.
 
 Train BCE improves strictly and is better than W2 at every one of the 40 epochs
 (epoch 1: 0.060564 vs 0.061794; epoch 40: **0.023577** vs 0.026289), and train
-macro AP at epoch 40 is **0.654260** vs W2's 0.581875. Validation BCE, however,
-is slightly *worse* at epoch 40 (**0.048017** vs 0.046538). The gain is therefore
-purely a ranking gain, not a calibration or regularisation artefact — the same
-signature the historical structural-gain round reported (AP up strongly, BCE
-nearly flat). It also means W2-DYNAMIC is better at ordering positives without
-being better calibrated, so downstream use would need recalibration.
+macro AP at epoch 40 is **0.654260** vs W2's 0.581875 (both on all 350,343 Train
+rows). Validation BCE, however, is slightly *worse* at epoch 40 (**0.048017** vs
+0.046538). The gain is therefore purely a ranking gain, not a calibration or
+regularisation artefact — the same signature the historical structural-gain round
+reported (AP up strongly, BCE nearly flat). It also means W2-DYNAMIC is better at
+ordering positives without being better calibrated, so downstream use would need
+recalibration.
+
+Because the model fits Train better *and* ranks Validation/Test better, the
+Train–Validation AP gap widens from 0.320 (W2) to 0.385 (0.654260 vs 0.268791).
+So the added parameters are not simply being spent on generalisation-friendly
+regularisation; they buy memorisation and macro-AP ranking at the same time.
 
 The same holds on Test (BCE 0.049109 for W2-DYNAMIC vs 0.048584 for W2, 0.049581
 for RC-REAL, while Test AP is +0.0086 / +0.0063). AP and BCE therefore move in

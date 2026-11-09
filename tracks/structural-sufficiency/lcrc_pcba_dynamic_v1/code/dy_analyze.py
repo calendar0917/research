@@ -141,6 +141,7 @@ def decide(comparison: Mapping[str, Any]) -> dict[str, Any]:
     rules = C.DECISION_RULES
     best = comparison["headline"]
     high = comparison["test_high_support"]
+    common = comparison["test_common_validation_and_test_ge20"]
     low_like = comparison["test_low_support"]
     usage = comparison["dynamic_usage"]
     used = bool(usage["dynamic_branch_used"])
@@ -148,7 +149,9 @@ def decide(comparison: Mapping[str, Any]) -> dict[str, Any]:
     delta_valid = float(best["delta_valid_best"])
     checks = {
         "delta_test_ge_0.010": delta_test >= rules["strong"]["delta_test_min"],
-        "improved_high_support_ge_70": int(high["improved"]) >= rules["strong"]["improved_high_support_min"],
+        # the pre-registered wording is ">= 70 of the 106 common high-support tasks"
+        "improved_high_support_ge_70": int(common["improved"])
+        >= rules["strong"]["improved_high_support_min"],
         "high_support_mean_ge_0.006": (high.get("mean_delta") or -1.0)
         >= rules["strong"]["high_support_mean_delta_min"],
         "validation_direction_positive": delta_valid > 0.0,
@@ -186,6 +189,9 @@ def decide(comparison: Mapping[str, Any]) -> dict[str, Any]:
             "high_support_improved": int(high["improved"]),
             "high_support_tasks": int(high["n_tasks"]),
             "high_support_mean_delta": high.get("mean_delta"),
+            "common_improved": int(common["improved"]),
+            "common_tasks": int(common["n_tasks"]),
+            "common_mean_delta": common.get("mean_delta"),
             "low_support_mean_delta": low_like.get("mean_delta"),
             "dynamic_branch_used": bool(used),
             "Rtotal_valid": usage["valid_best"]["Rtotal"],

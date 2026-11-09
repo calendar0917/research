@@ -14,6 +14,29 @@ initialisation plus two `MessageFFN(128→256→128)` layers driven by a shared
 132,352 + 1,792). No STATIC control, no W2 retraining, no extra seed, no
 hyper-parameter tuning.
 
+Outcome
+-------
+
+| | W2 | RC-REAL | **W2-DYNAMIC** |
+|---|---:|---:|---:|
+| Parameters | 994,324 | 1,051,022 | **1,128,468** |
+| Best Valid AP | 0.265273 | 0.267718 | **0.275067** (ep 25) |
+| Test AP at best-Valid | 0.253617 | 0.255941 | **0.262226** |
+| Valid@40 / Test@40 | 0.261867 / 0.250986 | 0.266950 / 0.256167 | 0.268791 / 0.260136 |
+| GPU-hours | 1.3949 | 1.9186 | 1.7340 |
+
+Δ Test = **+0.008609** vs W2 and **+0.006285** vs RC-REAL; 76/108 high-support
+Test tasks improve (mean +0.010866); the single <5-positive task reduces the
+macro by −0.0012; the dynamic branch is used (R1 0.645 / R2 0.529 / Rtotal 0.939,
+all 14 new tensors receive gradient from step 3, `message_off` −0.1601 and
+within-molecule `src` shuffle −0.0993 Validation AP on the frozen checkpoint).
+
+Pre-registered decision: **`POSSIBLE_DYNAMIC_SIGNAL`** — the holistic ΔTest of
++0.0086 misses the +0.010 `STRONG_DYNAMIC_SIGNAL` line while every other STRONG
+condition holds. See `REPORT.md` for the interpretation boundaries (no
+capacity-matched STATIC control; the effect is not separated from added
+parameters or from the wider receptive field).
+
 Files
 -----
 
@@ -26,7 +49,7 @@ Files
 | `code/dy_train.py` | the single formal 40-epoch run (frozen W2 order plan, per-epoch R1/R2/Rtotal, gradient statistics) |
 | `code/dy_mechanism.py` | post-training Validation-only `message-off` / `message-shuffle` interventions |
 | `code/dy_test.py` | Test-logit freeze (`freeze`) and the post-freeze official scoring pass (`score`) |
-| `code/dy_analyze.py` | local comparison table, support strata, per-task structure, decision label |
+| `code/dy_analyze.py` | local comparison table, support strata, per-task structure, robustness decomposition, decision label |
 | `tests/` | 24 CPU correctness tests |
 | `analysis/` | preflight, mechanism, freeze manifest, Test scores, per-task deltas, comparison, report tables |
 | `REPORT.md` | observed / interpretation / decision |
