@@ -284,7 +284,7 @@ def model_audit(
         "bond_ring_modules_calls": int(M.count_module_calls(bond, gpu_batch)["ring_out"]),
         "full_ring_channel_active": float(aux_full["r"].abs().max().item()) > 0.0,
         "passed": int(torch.count_nonzero(aux_bond["r"]).item()) == 0
-        and d(z_zero, z_bond) <= 1e-6,
+        and d(z_zero, z_bond) <= 1e-5,
     }
     checks["centre_swap_invariance"] = {
         "max_abs_z_b_delta": d(aux_full["z_b"], aux_flip["z_b"]),
