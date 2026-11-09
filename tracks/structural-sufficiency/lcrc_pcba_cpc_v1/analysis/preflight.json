@@ -1,0 +1,1294 @@
+{
+  "all_ok": true,
+  "architecture": {
+    "all_ok": true,
+    "atom_renumbering_max_abs_logit_diff": 1.9073486328125e-06,
+    "bond_direction_max_abs_logit_diff": 1.9073486328125e-06,
+    "checks": {
+      "atom_encoder_once": true,
+      "atom_renumbering_invariant": true,
+      "bond_direction_invariant": true,
+      "bond_encoder_once": true,
+      "branch_finite": true,
+      "cpc_once": true,
+      "cpc_reads_same_h0": true,
+      "drop_once": true,
+      "f_once": true,
+      "local_once": true,
+      "molecule_isolation": true,
+      "pairing_shuffle_changes_logits": true,
+      "pairing_shuffle_isolated": true,
+      "post_local_once": true,
+      "post_local_reads_h_cpc": true,
+      "readout_once": true,
+      "remote_endpoint_changes_root_delta": true,
+      "rho_once": true,
+      "zero_path_delta_exactly_zero": true
+    },
+    "cpc_forward_calls": 1,
+    "cpc_input_h0_equal_drop_local": true,
+    "cpc_input_h0_max_abs_diff": 7.152557373046875e-07,
+    "module_calls": {
+      "atom_encoder": 1,
+      "bond_encoder": 1,
+      "cpc": 1,
+      "drop": 1,
+      "f": 1,
+      "local": 1,
+      "readout": 1,
+      "rho": 1
+    },
+    "molecule_isolation_logit_diff_molecule0": 1.9073486328125e-06,
+    "molecule_isolation_logit_diff_molecule1": 0.9155271053314209,
+    "pairing_shuffle_isolation": {
+      "bond_endpoints_match_path": false,
+      "bonds_same_molecule": true,
+      "cross_molecule": 0,
+      "isolated": true,
+      "max_end": 197,
+      "max_middle": 197,
+      "max_path_atom": 197,
+      "n_atoms": 198,
+      "n_paths": 582
+    },
+    "pairing_shuffle_logit_max_abs_diff": 0.0014019012451171875,
+    "post_local_calls": 1,
+    "remote_endpoint_root_delta_max_abs_diff": 0.009303256869316101
+  },
+  "cache": {
+    "build_seconds": 77.30589443538338,
+    "bytes": 658409864,
+    "definition": {
+      "aggregation": "sum_p gate_p * z_p / max(count_root, 1), one root scatter",
+      "base_model": "W2",
+      "bond_dim": 16,
+      "context_dim": 64,
+      "delta_input": 65,
+      "delta_output": 128,
+      "enumeration": "complete; no sampling, truncation, dedup or shortest-path filter",
+      "gate": "independent sigmoid gate per path, never a cross-path softmax",
+      "gate_input": 96,
+      "init_rule": "historical bs_model.build_model('W2', seed=0) state loaded bitwise; CPC constructed inside torch.random.fork_rng and re-initialised from a private generator seed*1_000_003+1001; the Output Linear(65,128) weight and bias are zeroed, so epoch-0 logits == historical untrained W2 logits",
+      "name": "LCRC-CPC",
+      "path": "rooted simple two-bond path (i, j, k), i != j, j != k, i != k",
+      "path_fields": [
+        "cpc_ptr",
+        "cpc_middle",
+        "cpc_end",
+        "cpc_bond_ij",
+        "cpc_bond_jk"
+      ],
+      "path_scope": "every root, every middle in N(i), every endpoint in N(j) except i",
+      "role_dim": 32,
+      "root": "implicit, path_atom from cpc_ptr",
+      "second_propagation": "none; h_cpc is never read by CPC and post_local runs once",
+      "token_hidden": 96,
+      "token_input": 192,
+      "token_out": 64,
+      "zero_path": "delta[i] = 0 exactly (the final Linear bias cannot leak)"
+    },
+    "enumeration_schema_version": "rooted-two-bond-simple-path-v1",
+    "field_sha256": {
+      "cpc_bond_ij": "df5b0519b0dc155e73c21f6c797ad00094616b1253963d2957e5140cafe3170d",
+      "cpc_bond_jk": "b5582916df4fab7892619291553f25d241bc9aadd0a81a4bbdff04e74fe97a53",
+      "cpc_end": "f100fa8be1892ff4963bdf5ceb8d1f1270769e8a41367eb8d8a7cc30241b918c",
+      "cpc_middle": "437674fccf64ff9b0a5cab1945467fe401b30b660426b83a22d812fa58a15ada",
+      "cpc_ptr": "4e46cb3f59d05b12b90411f9c3d9f52eed0230dc29e2a790eab3e9f32d82d7be",
+      "row_atom_ptr": "34ccf1e1bb914dcb2e5e7ebf05f6719584fbb82c47dc19c8904ce621224045b9",
+      "row_bond_ptr": "43d66d6e8bcb2cb2d012ee4894d5bf885847d6353ae3f4084c72ecfe94163275",
+      "row_n_atoms": "80c8a13be4713a76c3df400ff2b7096e5d5f5e1e852c3c781dee0f7c79f98627",
+      "row_n_bonds": "9584d9ba6fcac330ad9088f47f8fb89d0c5e911b3b2554f22cb8bf2e5d9bfb20",
+      "rows": "13ff48c10da67ae366f863684614b892ec3c7c13cbbc1279a874969a43cb60e3"
+    },
+    "labels_present": false,
+    "meta_sha256": "b4290667aabb98fbe466c63ef8aa51306dfbf6ac2a46af28548de79b06207565",
+    "n_paths": 34369144,
+    "n_rows": 437929,
+    "path": "tracks/structural-sufficiency/lcrc_pcba_cpc_v1/runs/cpc_cache",
+    "present": true,
+    "rows_sha256": "85b8d38b10293ddd5f431c6feae3aa9c22ec56f19a3a2367c4da2c170d9c1642",
+    "test_labels_present": false
+  },
+  "cost": {
+    "budget_hard_hours": 3.5,
+    "budget_target_hours": 2.8,
+    "device": "cuda",
+    "device_name": "NVIDIA A100-SXM4-40GB",
+    "gpu_peak_allocated_bytes": 210361344,
+    "gpu_peak_reserved_bytes": 232783872,
+    "gradient_audit": {
+      "1": {
+        "loss": 1.8809994459152222,
+        "lr": 3.0098612125639153e-05,
+        "new_grad_total_norm": 0.6647045960554574,
+        "new_grads": {
+          "cpc.bond_proj.bias": 0.0,
+          "cpc.bond_proj.weight": 0.0,
+          "cpc.end_proj.bias": 0.0,
+          "cpc.end_proj.weight": 0.0,
+          "cpc.gate.bias": 0.0,
+          "cpc.gate.weight": 0.0,
+          "cpc.middle_proj.bias": 0.0,
+          "cpc.middle_proj.weight": 0.0,
+          "cpc.norm.bias": 0.0,
+          "cpc.norm.weight": 0.0,
+          "cpc.out.bias": 0.3930796980857849,
+          "cpc.out.weight": 0.5360229015350342,
+          "cpc.path1.bias": 0.0,
+          "cpc.path1.weight": 0.0,
+          "cpc.path2.bias": 0.0,
+          "cpc.path2.weight": 0.0,
+          "cpc.root_proj.bias": 0.0,
+          "cpc.root_proj.weight": 0.0
+        },
+        "nonzero_new_tensors": [
+          "cpc.out.bias",
+          "cpc.out.weight"
+        ],
+        "w2_grad_total_norm": 16.663699629090605,
+        "zero_or_none_new_tensors": [
+          "cpc.bond_proj.bias",
+          "cpc.bond_proj.weight",
+          "cpc.end_proj.bias",
+          "cpc.end_proj.weight",
+          "cpc.gate.bias",
+          "cpc.gate.weight",
+          "cpc.middle_proj.bias",
+          "cpc.middle_proj.weight",
+          "cpc.norm.bias",
+          "cpc.norm.weight",
+          "cpc.path1.bias",
+          "cpc.path1.weight",
+          "cpc.path2.bias",
+          "cpc.path2.weight",
+          "cpc.root_proj.bias",
+          "cpc.root_proj.weight"
+        ]
+      },
+      "10": {
+        "loss": 0.8815833330154419,
+        "lr": 3.098612125639153e-05,
+        "new_grad_total_norm": 0.26622300390040554,
+        "new_grads": {
+          "cpc.bond_proj.bias": 2.2812057068222202e-05,
+          "cpc.bond_proj.weight": 1.14726144602173e-05,
+          "cpc.end_proj.bias": 2.3026688722893596e-05,
+          "cpc.end_proj.weight": 0.00018187410023529083,
+          "cpc.gate.bias": 0.00013504500384442508,
+          "cpc.gate.weight": 0.00014824596291873604,
+          "cpc.middle_proj.bias": 2.127772859239485e-05,
+          "cpc.middle_proj.weight": 0.000173097854712978,
+          "cpc.norm.bias": 2.8004977139062248e-05,
+          "cpc.norm.weight": 2.1409179680631496e-05,
+          "cpc.out.bias": 0.15748614072799683,
+          "cpc.out.weight": 0.2146437019109726,
+          "cpc.path1.bias": 0.00017061464313883334,
+          "cpc.path1.weight": 0.00038585392758250237,
+          "cpc.path2.bias": 0.0006290017045103014,
+          "cpc.path2.weight": 0.0003109757963102311,
+          "cpc.root_proj.bias": 4.2095824028365314e-05,
+          "cpc.root_proj.weight": 0.0003259875229559839
+        },
+        "nonzero_new_tensors": [
+          "cpc.bond_proj.bias",
+          "cpc.bond_proj.weight",
+          "cpc.end_proj.bias",
+          "cpc.end_proj.weight",
+          "cpc.gate.bias",
+          "cpc.gate.weight",
+          "cpc.middle_proj.bias",
+          "cpc.middle_proj.weight",
+          "cpc.norm.bias",
+          "cpc.norm.weight",
+          "cpc.out.bias",
+          "cpc.out.weight",
+          "cpc.path1.bias",
+          "cpc.path1.weight",
+          "cpc.path2.bias",
+          "cpc.path2.weight",
+          "cpc.root_proj.bias",
+          "cpc.root_proj.weight"
+        ],
+        "w2_grad_total_norm": 7.435629897889489,
+        "zero_or_none_new_tensors": []
+      },
+      "100": {
+        "loss": 0.06999900192022324,
+        "lr": 3.9861212563915264e-05,
+        "new_grad_total_norm": 0.015687109064089027,
+        "new_grads": {
+          "cpc.bond_proj.bias": 1.3436408153211232e-05,
+          "cpc.bond_proj.weight": 1.0154062692890875e-05,
+          "cpc.end_proj.bias": 1.957814492925536e-05,
+          "cpc.end_proj.weight": 0.00018883116717915982,
+          "cpc.gate.bias": 8.361221989616752e-05,
+          "cpc.gate.weight": 0.00017856805061455816,
+          "cpc.middle_proj.bias": 1.8452186850481667e-05,
+          "cpc.middle_proj.weight": 0.00017932297487277538,
+          "cpc.norm.bias": 2.93970024358714e-05,
+          "cpc.norm.weight": 3.0587885703425854e-05,
+          "cpc.out.bias": 0.009205110371112823,
+          "cpc.out.weight": 0.012687433511018753,
+          "cpc.path1.bias": 6.776675581932068e-05,
+          "cpc.path1.weight": 0.0002892675984185189,
+          "cpc.path2.bias": 0.00018287787679582834,
+          "cpc.path2.weight": 0.0002376794582232833,
+          "cpc.root_proj.bias": 3.1806863262318075e-05,
+          "cpc.root_proj.weight": 0.0003027382190339267
+        },
+        "nonzero_new_tensors": [
+          "cpc.bond_proj.bias",
+          "cpc.bond_proj.weight",
+          "cpc.end_proj.bias",
+          "cpc.end_proj.weight",
+          "cpc.gate.bias",
+          "cpc.gate.weight",
+          "cpc.middle_proj.bias",
+          "cpc.middle_proj.weight",
+          "cpc.norm.bias",
+          "cpc.norm.weight",
+          "cpc.out.bias",
+          "cpc.out.weight",
+          "cpc.path1.bias",
+          "cpc.path1.weight",
+          "cpc.path2.bias",
+          "cpc.path2.weight",
+          "cpc.root_proj.bias",
+          "cpc.root_proj.weight"
+        ],
+        "w2_grad_total_norm": 0.4033908049096754,
+        "zero_or_none_new_tensors": []
+      },
+      "3": {
+        "loss": 1.6206268072128296,
+        "lr": 3.0295836376917458e-05,
+        "new_grad_total_norm": 0.5964564441872612,
+        "new_grads": {
+          "cpc.bond_proj.bias": 1.3435895198199432e-05,
+          "cpc.bond_proj.weight": 6.584020866284845e-06,
+          "cpc.end_proj.bias": 1.3001368643017486e-05,
+          "cpc.end_proj.weight": 0.00010378760634921491,
+          "cpc.gate.bias": 7.483367517124861e-05,
+          "cpc.gate.weight": 9.16479984880425e-05,
+          "cpc.middle_proj.bias": 1.2913005775772035e-05,
+          "cpc.middle_proj.weight": 0.0001058434572769329,
+          "cpc.norm.bias": 1.6405350834247656e-05,
+          "cpc.norm.weight": 1.265984246856533e-05,
+          "cpc.out.bias": 0.35033106803894043,
+          "cpc.out.weight": 0.48272988200187683,
+          "cpc.path1.bias": 0.00010002527415053919,
+          "cpc.path1.weight": 0.00021056212426628917,
+          "cpc.path2.bias": 0.0003672389138955623,
+          "cpc.path2.weight": 0.00016758138372097164,
+          "cpc.root_proj.bias": 2.490169026714284e-05,
+          "cpc.root_proj.weight": 0.00019679675460793078
+        },
+        "nonzero_new_tensors": [
+          "cpc.bond_proj.bias",
+          "cpc.bond_proj.weight",
+          "cpc.end_proj.bias",
+          "cpc.end_proj.weight",
+          "cpc.gate.bias",
+          "cpc.gate.weight",
+          "cpc.middle_proj.bias",
+          "cpc.middle_proj.weight",
+          "cpc.norm.bias",
+          "cpc.norm.weight",
+          "cpc.out.bias",
+          "cpc.out.weight",
+          "cpc.path1.bias",
+          "cpc.path1.weight",
+          "cpc.path2.bias",
+          "cpc.path2.weight",
+          "cpc.root_proj.bias",
+          "cpc.root_proj.weight"
+        ],
+        "w2_grad_total_norm": 15.45862587202556,
+        "zero_or_none_new_tensors": []
+      }
+    },
+    "loss_first": 1.8809994459152222,
+    "loss_last": 0.06226925551891327,
+    "measured_steps": 100,
+    "model": "LCRC-CPC",
+    "parameter_audit_all_match": true,
+    "projected_40_epoch_gpu_hours": 1.861430572834696,
+    "step_ms_mean": 58.72217825613916,
+    "step_ms_p50": 58.72499197721481,
+    "step_ms_p90": 65.73980357497932,
+    "steps_per_second": 17.0293410376931,
+    "train_epoch_projected_seconds": 160.78902803361416,
+    "validation_2048_rows_seconds": 0.3151863031089306,
+    "validation_full_projected_seconds": 6.739723521508495,
+    "wall_seconds": 6.720554423052818,
+    "warmup_steps": 10,
+    "within_hard_cap": true,
+    "within_target": true
+  },
+  "created_utc": "2026-11-09T17:16:01Z",
+  "device": "cuda",
+  "environment": {
+    "autocast_enabled": false,
+    "cuda_available": true,
+    "cuda_device_capability": [
+      8,
+      0
+    ],
+    "cuda_device_count": 1,
+    "cuda_device_index": 0,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cuda_device_total_memory_bytes": 42285268992,
+    "cuda_visible_devices": "1",
+    "cudnn_allow_tf32": true,
+    "deterministic_algorithms": false,
+    "float32_matmul_precision": "highest",
+    "git_commit": "65d49252762db2b513561033f1aa7cea905bc57e",
+    "git_dirty": false,
+    "hostname": "a100-2",
+    "matmul_allow_tf32": false,
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "git_commit": "65d49252762db2b513561033f1aa7cea905bc57e",
+  "git_state": {
+    "branch": "main",
+    "commit": "65d49252762db2b513561033f1aa7cea905bc57e",
+    "dirty": true,
+    "dirty_files": [
+      "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/architecture_audit.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/audit_failed_preflight.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/gpu_profile.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/init_parity.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/preflight.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/structure_cache.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/witness.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/architecture_failed.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/cost_failed.json"
+    ]
+  },
+  "host_facts": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cuda_capability": [
+      [
+        8,
+        0
+      ]
+    ],
+    "cudnn": 90100,
+    "git": {
+      "branch": "main",
+      "commit": "65d49252762db2b513561033f1aa7cea905bc57e",
+      "dirty": true,
+      "dirty_files": [
+        "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/architecture_audit.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/audit_failed_preflight.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/gpu_profile.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/init_parity.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/preflight.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/structure_cache.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_cpc_v1/analysis/witness.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/architecture_failed.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/cost_failed.json"
+      ]
+    },
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "init": {
+    "all_new_tensors_zero_or_nonzero": {
+      "gate_weight_nonzero": true,
+      "output_bias_zero": true,
+      "output_weight_zero": true,
+      "path1_weight_nonzero": true
+    },
+    "all_ok": true,
+    "cpc_state_sha256": "6dfcf09d4082cc37f785b4fd7483ad049cb68fef56b9167015f2d337215df601",
+    "cpu_cuda_logits_max_abs_diff": 3.814697265625e-06,
+    "cpu_cuda_within_1e-4": true,
+    "epoch0_logits_cpu_exact": true,
+    "epoch0_logits_cuda_within_1e-4": true,
+    "epoch0_logits_max_abs_diff_cpu": 0.0,
+    "epoch0_logits_max_abs_diff_cuda": 1.9073486328125e-06,
+    "epoch0_logits_tolerance_cpu": 0.0,
+    "init": {
+      "expected_linear_layers": 8,
+      "global_rng_unchanged": true,
+      "layernorm_layers_initialised": 1,
+      "linear_layers_initialised": 8,
+      "output_zeroed": true,
+      "private_generator_seed": 1001
+    },
+    "parameters": {
+      "all_match": true,
+      "checks": {
+        "bond_projection": true,
+        "cpc": true,
+        "gate": true,
+        "norm": true,
+        "output": true,
+        "path_mlp_1": true,
+        "path_mlp_2": true,
+        "role_projections": true,
+        "total": true,
+        "w2_base": true,
+        "w2_readout": true,
+        "w2_total": true
+      },
+      "cpc_subgroups": {
+        "bond_projection": 3088,
+        "gate": 97,
+        "norm": 256,
+        "output": 8448,
+        "path_mlp_1": 18528,
+        "path_mlp_2": 6208,
+        "role_projections": 12384
+      },
+      "cpc_total": 49009,
+      "expected": {
+        "bond_projection": 3088,
+        "cpc_total": 49009,
+        "gate": 97,
+        "norm": 256,
+        "output": 8448,
+        "path_mlp_1": 18528,
+        "path_mlp_2": 6208,
+        "role_projections": 12384,
+        "total": 1043333,
+        "w2_base": 848096,
+        "w2_readout": 146228,
+        "w2_total": 994324
+      },
+      "groups": {
+        "cpc": 49009,
+        "w2_base": 848096,
+        "w2_readout": 146228
+      },
+      "n_parameter_tensors": 69,
+      "n_state_tensors": 75,
+      "per_tensor": {
+        "atom_encoder.lins.0.bias": {
+          "new": false,
+          "numel": 256,
+          "shape": [
+            256
+          ]
+        },
+        "atom_encoder.lins.0.weight": {
+          "new": false,
+          "numel": 13056,
+          "shape": [
+            256,
+            51
+          ]
+        },
+        "atom_encoder.lins.1.bias": {
+          "new": false,
+          "numel": 192,
+          "shape": [
+            192
+          ]
+        },
+        "atom_encoder.lins.1.weight": {
+          "new": false,
+          "numel": 49152,
+          "shape": [
+            192,
+            256
+          ]
+        },
+        "bond_encoder.lins.0.bias": {
+          "new": false,
+          "numel": 320,
+          "shape": [
+            320
+          ]
+        },
+        "bond_encoder.lins.0.weight": {
+          "new": false,
+          "numel": 188480,
+          "shape": [
+            320,
+            589
+          ]
+        },
+        "bond_encoder.lins.1.bias": {
+          "new": false,
+          "numel": 192,
+          "shape": [
+            192
+          ]
+        },
+        "bond_encoder.lins.1.weight": {
+          "new": false,
+          "numel": 61440,
+          "shape": [
+            192,
+            320
+          ]
+        },
+        "cpc.bond_proj.bias": {
+          "new": true,
+          "numel": 16,
+          "shape": [
+            16
+          ]
+        },
+        "cpc.bond_proj.weight": {
+          "new": true,
+          "numel": 3072,
+          "shape": [
+            16,
+            192
+          ]
+        },
+        "cpc.end_proj.bias": {
+          "new": true,
+          "numel": 32,
+          "shape": [
+            32
+          ]
+        },
+        "cpc.end_proj.weight": {
+          "new": true,
+          "numel": 4096,
+          "shape": [
+            32,
+            128
+          ]
+        },
+        "cpc.gate.bias": {
+          "new": true,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "cpc.gate.weight": {
+          "new": true,
+          "numel": 96,
+          "shape": [
+            1,
+            96
+          ]
+        },
+        "cpc.middle_proj.bias": {
+          "new": true,
+          "numel": 32,
+          "shape": [
+            32
+          ]
+        },
+        "cpc.middle_proj.weight": {
+          "new": true,
+          "numel": 4096,
+          "shape": [
+            32,
+            128
+          ]
+        },
+        "cpc.norm.bias": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "cpc.norm.weight": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "cpc.out.bias": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "cpc.out.weight": {
+          "new": true,
+          "numel": 8320,
+          "shape": [
+            128,
+            65
+          ]
+        },
+        "cpc.path1.bias": {
+          "new": true,
+          "numel": 96,
+          "shape": [
+            96
+          ]
+        },
+        "cpc.path1.weight": {
+          "new": true,
+          "numel": 18432,
+          "shape": [
+            96,
+            192
+          ]
+        },
+        "cpc.path2.bias": {
+          "new": true,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "cpc.path2.weight": {
+          "new": true,
+          "numel": 6144,
+          "shape": [
+            64,
+            96
+          ]
+        },
+        "cpc.root_proj.bias": {
+          "new": true,
+          "numel": 32,
+          "shape": [
+            32
+          ]
+        },
+        "cpc.root_proj.weight": {
+          "new": true,
+          "numel": 4096,
+          "shape": [
+            32,
+            128
+          ]
+        },
+        "f.lins.0.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "f.lins.0.weight": {
+          "new": false,
+          "numel": 16384,
+          "shape": [
+            128,
+            128
+          ]
+        },
+        "f.lins.1.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "f.lins.1.weight": {
+          "new": false,
+          "numel": 16384,
+          "shape": [
+            128,
+            128
+          ]
+        },
+        "local.close_emb.weight": {
+          "new": false,
+          "numel": 16,
+          "shape": [
+            2,
+            8
+          ]
+        },
+        "local.end_emb.weight": {
+          "new": false,
+          "numel": 5120,
+          "shape": [
+            80,
+            64
+          ]
+        },
+        "local.joint_proj.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "local.joint_proj.weight": {
+          "new": false,
+          "numel": 4096,
+          "shape": [
+            64,
+            64
+          ]
+        },
+        "local.mlp.lins.0.bias": {
+          "new": false,
+          "numel": 384,
+          "shape": [
+            384
+          ]
+        },
+        "local.mlp.lins.0.weight": {
+          "new": false,
+          "numel": 326016,
+          "shape": [
+            384,
+            849
+          ]
+        },
+        "local.mlp.lins.1.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "local.mlp.lins.1.weight": {
+          "new": false,
+          "numel": 49152,
+          "shape": [
+            128,
+            384
+          ]
+        },
+        "local.nbr_emb.weight": {
+          "new": false,
+          "numel": 5120,
+          "shape": [
+            80,
+            64
+          ]
+        },
+        "local.norm.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "local.norm.weight": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "local.path_emb.weight": {
+          "new": false,
+          "numel": 25600,
+          "shape": [
+            400,
+            64
+          ]
+        },
+        "local.path_gate.weight": {
+          "new": false,
+          "numel": 400,
+          "shape": [
+            400,
+            1
+          ]
+        },
+        "local.path_u.weight": {
+          "new": false,
+          "numel": 25600,
+          "shape": [
+            400,
+            64
+          ]
+        },
+        "local.path_v.weight": {
+          "new": false,
+          "numel": 5120,
+          "shape": [
+            80,
+            64
+          ]
+        },
+        "readout.fc1.bias": {
+          "new": false,
+          "numel": 176,
+          "shape": [
+            176
+          ]
+        },
+        "readout.fc1.weight": {
+          "new": false,
+          "numel": 90112,
+          "shape": [
+            176,
+            512
+          ]
+        },
+        "readout.fc2.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "readout.fc2.weight": {
+          "new": false,
+          "numel": 22528,
+          "shape": [
+            128,
+            176
+          ]
+        },
+        "readout.heads.0.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.0.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.0.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.0.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "readout.heads.1.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.1.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.1.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.1.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "readout.heads.2.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.2.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.2.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.2.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "readout.heads.3.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.3.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.3.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.3.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "rho.lins.0.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "rho.lins.0.weight": {
+          "new": false,
+          "numel": 38272,
+          "shape": [
+            128,
+            299
+          ]
+        },
+        "rho.lins.1.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "rho.lins.1.weight": {
+          "new": false,
+          "numel": 16384,
+          "shape": [
+            128,
+            128
+          ]
+        }
+      },
+      "total": 1043333
+    },
+    "w2_part_bitwise_equal_reference": {
+      "all_equal": true,
+      "n_tensors": 57,
+      "n_unequal": 0,
+      "per_tensor": {
+        "atom_encoder.lins.0.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "atom_encoder.lins.0.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "atom_encoder.lins.1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "atom_encoder.lins.1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "bond_encoder.lins.0.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "bond_encoder.lins.0.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "bond_encoder.lins.1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "bond_encoder.lins.1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "cont_mean": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "cont_scale": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "f.lins.0.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "f.lins.0.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "f.lins.1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "f.lins.1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "global_mean": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "global_scale": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.close_emb.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.end_emb.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.joint_proj.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.joint_proj.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.mlp.lins.0.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.mlp.lins.0.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.mlp.lins.1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.mlp.lins.1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.nbr_emb.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.norm.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.norm.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.path_emb.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.path_gate.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.path_u.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "local.path_v.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.fc1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.fc1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.fc2.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.fc2.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.0.fc1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.0.fc1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.0.fc2.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.0.fc2.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.1.fc1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.1.fc1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.1.fc2.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.1.fc2.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.2.fc1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.2.fc1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.2.fc2.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.2.fc2.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.3.fc1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.3.fc1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.3.fc2.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "readout.heads.3.fc2.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "rho.lins.0.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "rho.lins.0.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "rho.lins.1.bias": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "rho.lins.1.weight": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "scalar_mean": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        },
+        "scalar_scale": {
+          "equal": true,
+          "max_abs_diff": 0.0
+        }
+      }
+    },
+    "w2_trunk_fingerprint_matches_recorded_w2": true,
+    "w2_trunk_init_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d"
+  },
+  "round_id": "lcrc-pcba-cpc-v1",
+  "schema": "lcrc-pcba-cpc-preflight-v1",
+  "witness": {
+    "A_paths": [
+      [
+        0,
+        1,
+        3
+      ],
+      [
+        0,
+        2,
+        4
+      ]
+    ],
+    "B_paths": [
+      [
+        0,
+        1,
+        4
+      ],
+      [
+        0,
+        2,
+        3
+      ]
+    ],
+    "additive_reference_A": [
+      -12.889074325561523,
+      -0.438373327255249,
+      0.3565986156463623
+    ],
+    "additive_reference_B": [
+      -12.889074325561523,
+      -0.438373327255249,
+      0.3565986156463623
+    ],
+    "additive_reference_max_abs_diff": 0.0,
+    "all_ok": true,
+    "bond_embeddings_fixed": true,
+    "checks": {
+      "additive_reference_identical": true,
+      "cpc_contexts_different": true,
+      "cpc_outputs_different": true,
+      "same_bond_multiset": true,
+      "same_endpoint_multiset": true,
+      "same_middle_multiset": true,
+      "same_path_count": true,
+      "same_root_multiset": true
+    },
+    "cpc_context_max_abs_diff": 0.0020422078669071198,
+    "cpc_delta_max_abs_diff": 0.0010029375553131104,
+    "h0_fixed": true,
+    "multiset_equal": true,
+    "note": "This only proves that CPC can respond to a re-paired (j,k) association with identical atom/bond marginals and fixed h0. It does not prove that historical W2 has fixed h0 on real pairings."
+  }
+}
