@@ -122,8 +122,10 @@ def subset_stats(
     return out
 
 
-def extremes(rows: Sequence[Mapping[str, Any]], *, k: int = 5) -> dict[str, Any]:
-    ordered = sorted(rows, key=lambda r: r["delta"])
+def extremes(
+    rows: Sequence[Mapping[str, Any]], *, key: str = "delta_vs_w2", k: int = 5
+) -> dict[str, Any]:
+    ordered = sorted(rows, key=lambda r: r[key])
     return {
         "worst": ordered[: int(k)],
         "best": list(reversed(ordered[-int(k) :])),
@@ -388,7 +390,8 @@ def build(analysis_dir: Path) -> dict[str, Any]:
         "test_high_support_vs_rc": rc_high,
         "validation_high_support": subset_stats(d_valid, valid_high, n_scored_total=int(idx_v.size)),
         "validation_all_scored": subset_stats(d_valid, np.ones_like(valid_high), n_scored_total=int(idx_v.size)),
-        "extremes_vs_w2": extremes(rows, k=5),
+        "extremes_vs_w2": extremes(rows, key="delta_vs_w2", k=5),
+        "extremes_vs_rc": extremes(rows, key="delta_vs_rc", k=5),
         "per_task": rows,
         "low_support_dominance": {
             "lt5_sum_delta_share_of_total": float(
@@ -440,8 +443,110 @@ def build(analysis_dir: Path) -> dict[str, Any]:
             "W2": w2_curve_valid,
         },
     }
+    comparison["robustness"] = robustness_block(comparison)
+    comparison["robustness"]["validation_vs_test_per_task"] = _valid_test_agreement(
+        models[dyn_best_label]["valid_per_task_ap"],
+        models["W2_best_valid"]["valid_per_task_ap"],
+        models[dyn_best_label]["test_per_task_ap"],
+        models["W2_best_valid"]["test_per_task_ap"],
+        valid_pos_dyn_arr=np.asarray(dyn["best"]["valid_positive"], dtype=np.int64),
+    )
     comparison["decision"] = decide(comparison)
     return comparison
+
+
+def _valid_test_agreement(
+    valid_dyn: Sequence[Any],
+    valid_w2: Sequence[Any],
+    test_dyn: Sequence[Any],
+    test_w2: Sequence[Any],
+    *,
+    valid_pos_dyn_arr: np.ndarray,
+) -> dict[str, Any]:
+    """Do the Validation and Test per-task deltas point the same way?"""
+    vd: list[float] = []
+    td: list[float] = []
+    vp: list[int] = []
+    for t in range(C.N_TASKS):
+        a, b = valid_dyn[t], valid_w2[t]
+        c, d = test_dyn[t], test_w2[t]
+        if None in (a, b, c, d):
+            continue
+        vd.append(float(a) - float(b))
+        td.append(float(c) - float(d))
+        vp.append(int(valid_pos_dyn_arr[t]))
+    vd_a = np.asarray(vd, dtype=np.float64)
+    td_a = np.asarray(td, dtype=np.float64)
+    vp_a = np.asarray(vp, dtype=np.int64)
+    hi = vp_a >= SCORABLE_MIN_SUPPORT
+    return {
+        "n_tasks": int(vd_a.size),
+        "validation_improved": int((vd_a > 0).sum()),
+        "test_improved": int((td_a > 0).sum()),
+        "sign_agreement": float(((vd_a > 0) == (td_a > 0)).mean()),
+        "pearson": float(np.corrcoef(vd_a, td_a)[0, 1]),
+        "spearman": float(
+            np.corrcoef(
+                np.argsort(np.argsort(vd_a)).astype(np.float64),
+                np.argsort(np.argsort(td_a)).astype(np.float64),
+            )[0, 1]
+        ),
+        "validation_macro_delta": float(vd_a.mean()),
+        "test_macro_delta": float(td_a.mean()),
+        "validation_high_support_mean_delta": float(vd_a[hi].mean()),
+        "validation_high_support_improved": int((vd_a[hi] > 0).sum()),
+        "validation_high_support_tasks": int(hi.sum()),
+        "note": "descriptive agreement between the two splits, not a leakage or significance test",
+    }
+
+
+def robustness_block(comparison: Mapping[str, Any]) -> dict[str, Any]:
+    """Descriptive robustness of the macro-AP difference (no new inference).
+
+    Never a replacement for the official macro AP: it only says how much of the
+    measured difference is concentrated in a few tasks.
+    """
+    rows = list(comparison["per_task"])
+    d = np.asarray([r["delta_vs_w2"] for r in rows], dtype=np.float64)
+    pos = np.asarray([r["test_positive"] for r in rows], dtype=np.int64)
+    vd = np.asarray([r["valid_positive_dynamic"] for r in rows], dtype=np.int64)
+    vw = np.asarray([r["valid_positive_w2"] for r in rows], dtype=np.int64)
+    hi = pos >= SCORABLE_MIN_SUPPORT
+    common = hi & (vd >= SCORABLE_MIN_SUPPORT) & (vw >= SCORABLE_MIN_SUPPORT)
+    drop = {}
+    for k in (1, 3, 5, 10):
+        idx = np.argsort(-np.abs(d))[:k]
+        keep = np.setdiff1d(np.arange(d.size), idx)
+        drop[f"drop_top_abs_{k}"] = {
+            "macro_delta_remaining": float(d[keep].mean()),
+            "removed_tasks": [int(i) for i in idx.tolist()],
+            "removed_mean_delta": float(d[idx].mean()),
+        }
+    # Validation vs Test agreement of the per-task deltas
+    valid_ap_dyn = np.asarray(
+        [r["test_ap_dynamic_best"] for r in rows], dtype=np.float64
+    )  # placeholder, replaced below
+    del valid_ap_dyn
+    return {
+        "n_scored": int(d.size),
+        "macro_delta": float(d.mean()),
+        "macro_delta_high_support": float(d[hi].mean()),
+        "macro_delta_common_106": float(d[common].mean()),
+        "high_support_improve_gt_0.01": int(((d > 0.01) & hi).sum()),
+        "high_support_improve_gt_0.02": int(((d > 0.02) & hi).sum()),
+        "high_support_degrade_gt_0.01": int(((d < -0.01) & hi).sum()),
+        "high_support_degrade_gt_0.02": int(((d < -0.02) & hi).sum()),
+        "macro_sensitivity_drop_extremes": drop,
+        "single_low_support_task": {
+            "task": int(np.flatnonzero(pos < 5)[0]) if (pos < 5).any() else None,
+            "test_positive": int(pos[pos < 5][0]) if (pos < 5).any() else None,
+            "delta": float(d[pos < 5][0]) if (pos < 5).any() else None,
+        },
+        "note": (
+            "descriptive only. The official macro AP is the reported number; these "
+            "decompositions only show whether the difference is broad or a few-task artefact."
+        ),
+    }
 
 
 # ---------------------------------------------------------------------------

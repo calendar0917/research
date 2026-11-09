@@ -1,0 +1,90 @@
+{
+  "created_utc": "2026-11-09T14:54:53Z",
+  "git_commit": "ea7eec6bdac3edca5b00d2b41b54e7807915d57f",
+  "models": {
+    "W2-DYNAMIC": {
+      "best_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_dynamic_v1/runs/W2_DYNAMIC/checkpoint_best.pt",
+      "best_checkpoint_sha256": "da80e7f5460355cb68341029291c63b43e74629d195121bb409848bb28445343",
+      "best_epoch": 25,
+      "best_valid_ap": 0.2750671855066329,
+      "curve": "tracks/structural-sufficiency/lcrc_pcba_dynamic_v1/runs/W2_DYNAMIC/train_curve.csv",
+      "curve_sha256": "809acf9fda6b229bf9289c5444538f9eec2075f2ec3a83b248e31dd38e7e1bc6",
+      "epoch40_checkpoint": "tracks/structural-sufficiency/lcrc_pcba_dynamic_v1/runs/W2_DYNAMIC/checkpoint_epoch40.pt",
+      "epoch40_checkpoint_sha256": "a8f58c5142e1c50cf22f03524b369eac5cad6e3c216597ab9db6943e571fbcd6",
+      "gpu_hours": 1.734047997343328,
+      "model": "W2-DYNAMIC",
+      "parameters": 1128468,
+      "train_ap40": 0.6542595185290578,
+      "valid_ap_at_40": 0.26879111577186443
+    }
+  },
+  "references": {
+    "RC-REAL": {
+      "best_checkpoint_sha256": "5a94dc4b386fa13d0d74e0391e10dd61a97e37040e7c1301125c96cf5b4646b1",
+      "best_epoch": 33,
+      "best_valid_ap": 0.2677177024413342,
+      "parameters": 1051022,
+      "source_round": "lcrc-pcba-rc-v1",
+      "valid_ap_at_40": 0.26695028589805453
+    },
+    "W2": {
+      "best_checkpoint_sha256": "d86fe5e56e898d382acf66eb0533beb915f8ca39144c6c1c74e25e147667d2bd",
+      "best_epoch": 24,
+      "best_valid_ap": 0.26527331610028143,
+      "epoch40_checkpoint_sha256": "7fbdbd16f7b2077e77cdb85488bb2506f2e4ee98333d40fbcf7558074e26598a",
+      "parameters": 994324,
+      "source_round": "lcrc-pcba-backbone-scaling-v1",
+      "test_ap_40_brief": 0.250985,
+      "test_ap_best_brief": 0.2536164787414065,
+      "valid_ap_at_40": 0.26186691813350904
+    },
+    "frozen_test_logits": {
+      "RC_REAL_best_valid": {
+        "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/RC_REAL_best_valid.npy",
+        "sha256": "9a40636406223c286d78dc7414e603e87df1be95656ae935f02b3d273f829779",
+        "shape": [
+          43793,
+          128
+        ],
+        "source_round": "lcrc-pcba-boc-v1",
+        "verified": true
+      },
+      "RC_REAL_epoch40": {
+        "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/RC_REAL_epoch40.npy",
+        "sha256": "e10400103613f46ed891930bea382fe537f7613d6b8f76c5fcdacc792a710d6b",
+        "shape": [
+          43793,
+          128
+        ],
+        "source_round": "lcrc-pcba-boc-v1",
+        "verified": true
+      },
+      "W2_best_valid": {
+        "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/W2_best_valid.npy",
+        "sha256": "777397bb2e44aef2e2af11480e24c9efba40e835492285948da5f52a6848e7ff",
+        "shape": [
+          43793,
+          128
+        ],
+        "source_round": "lcrc-pcba-boc-v1",
+        "verified": true
+      },
+      "W2_epoch40": {
+        "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/W2_epoch40.npy",
+        "sha256": "341bcbbf48f7e2f10356b15428dbb4d9ae619fdb6bd82f84bd23fd8e52f20bcf",
+        "shape": [
+          43793,
+          128
+        ],
+        "source_round": "lcrc-pcba-boc-v1",
+        "verified": true
+      }
+    }
+  },
+  "round_id": "lcrc-pcba-dynamic-v1",
+  "schema": "lcrc-pcba-dynamic-selection-v1",
+  "selection_rule": "argmax official Validation AP over epochs 1..40 per model (earliest wins ties)",
+  "selection_uses_test": false,
+  "test_read": false,
+  "test_role": "EXPOSED_TEST_ENGINEERING_COMPARISON_SET"
+}

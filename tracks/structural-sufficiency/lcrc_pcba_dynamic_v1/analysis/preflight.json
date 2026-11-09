@@ -1,0 +1,1333 @@
+{
+  "captured_utc": "2026-11-09T13:02:03Z",
+  "constants": {
+    "checks": {
+      "batch_size": true,
+      "dataset": true,
+      "dropout": true,
+      "dynamic_widths": true,
+      "end_lr": true,
+      "epochs": true,
+      "grad_clip": true,
+      "loss_masked_bce": true,
+      "n_tasks": true,
+      "n_test": true,
+      "n_train": true,
+      "n_valid": true,
+      "peak_lr": true,
+      "plan_prefix_sha": true,
+      "plan_sha": true,
+      "precision_fp32": true,
+      "seed": true,
+      "single_param_group": true,
+      "steps_per_epoch": true,
+      "total_steps": true,
+      "warmup_epochs": true,
+      "warmup_start": true,
+      "weight_decay": true,
+      "widths_are_w2": true
+    },
+    "frozen_plan": {
+      "batch_size": 128,
+      "consumed40_prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+      "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+      "order_seed": 0,
+      "steps_per_epoch": 2738
+    },
+    "lr": {
+      "formula": "steps 0..2737 linear 3e-5->3e-4; then 1e-5+(3e-4-1e-5)*0.5*(1+cos(pi*(s-2738)/(109520-2738)))",
+      "post_warmup_first": 0.0003,
+      "single_parameter_group": true,
+      "step0": 3.0098612125639153e-05,
+      "step40e": 1e-05,
+      "steps_per_epoch": 2738,
+      "total_steps_40_epochs": 109520,
+      "warmup_last": 0.0003
+    },
+    "passed": true,
+    "plan_global_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+    "plan_prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+    "recipe": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "base_model": "W2",
+      "batch_plan": {
+        "batch_size": 128,
+        "consumed40_prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+        "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+        "order_seed": 0,
+        "steps_per_epoch": 2738
+      },
+      "batch_size": 128,
+      "dropout": 0.1,
+      "dynamic": {
+        "activation": "SiLU",
+        "aggregation": "index_add_ over dst, neighbours summed, no degree normalisation",
+        "attention_in_blocks": "none",
+        "base_model": "W2",
+        "dropout_calls": "exactly one (the inherited W2 drop after local)",
+        "extra_pooling_or_head": "none",
+        "graph_context": "none (the historical V context feedback is explicitly excluded)",
+        "hidden": 256,
+        "init_rule": "W2 part from bs_model.build_model('W2', seed=0); new modules from a private generator seed*1_000_003+17 (Linear U(+-1/sqrt(fan_in)), LayerNorm 1/0); both blocks' fc2 weight and bias zeroed; the global torch RNG is never advanced",
+        "layer2_input": "h1 (the layer-1 output), never h0",
+        "local_calls": "exactly one",
+        "message_feature": "bond_proj(concat(bond_feat, bond_feat)) with a single shared Linear(13,128)",
+        "message_source": "batch['bond_index'] (each physical bond once) expanded to both directions",
+        "n_layers": 2,
+        "name": "W2-DYNAMIC",
+        "norm": "LayerNorm(width) before the message sum (sg_model.MessageFFN)",
+        "residual": "h_next = h + fc2(SiLU(fc1(z + msg)))",
+        "width": 128
+      },
+      "early_stopping": false,
+      "end_lr": 1e-05,
+      "epochs": 40,
+      "eval_cadence": "every_epoch_official_validation_ap",
+      "gradient_clip": 5.0,
+      "init_rule": "W2 part from bs_model.build_model('W2', seed=0); new modules from a private generator seed*1_000_003+17 (Linear U(+-1/sqrt(fan_in)), LayerNorm 1/0); both blocks' fc2 weight and bias zeroed; the global torch RNG is never advanced",
+      "learning_rate": 0.0003,
+      "loss": "masked BCEWithLogitsLoss over observed entries only",
+      "lr_schedule": {
+        "formula": "steps 0..2737 linear 3e-5->3e-4; then 1e-5+(3e-4-1e-5)*0.5*(1+cos(pi*(s-2738)/(109520-2738)))",
+        "post_warmup_first": 0.0003,
+        "single_parameter_group": true,
+        "step0": 3.0098612125639153e-05,
+        "step40e": 1e-05,
+        "steps_per_epoch": 2738,
+        "total_steps_40_epochs": 109520,
+        "warmup_last": 0.0003
+      },
+      "model": "W2-DYNAMIC",
+      "optimizer": "AdamW",
+      "parameter_breakdown": {
+        "bond_proj": 1792,
+        "message_ffn_one": 66176,
+        "message_ffn_two": 132352,
+        "new_total": 134144,
+        "total": 1128468,
+        "w2_base": 848096,
+        "w2_readout": 146228,
+        "w2_total": 994324
+      },
+      "parameters": 1128468,
+      "precision": "fp32",
+      "role": "diagnostic_boundary_experiment_two_layer_real_bond_mp",
+      "round": "lcrc-pcba-dynamic-v1",
+      "scheduler": "1-epoch linear warmup then per-step cosine over the 40-epoch horizon",
+      "seed": 0,
+      "test_policy": "official Test targets are NaN in the training label artifact and are never indexed before the prediction freeze",
+      "warmup_epochs": 1.0,
+      "warmup_start_lr": 3e-05,
+      "weight_decay": 0.001,
+      "widths": {
+        "atom_hidden": 256,
+        "atom_out": 192,
+        "bond_hidden": 320,
+        "bond_out": 192,
+        "local_hidden": 384,
+        "n_heads": 4,
+        "n_out": 128,
+        "pool_hidden": 176,
+        "rho_hidden": 128,
+        "scorer_hidden": 64,
+        "stat_rank": 64,
+        "width": 128
+      }
+    }
+  },
+  "device": "cuda",
+  "gate_order": [
+    "model_identity",
+    "invariances",
+    "isolation",
+    "layer_inputs",
+    "chain_dependency",
+    "python_reference",
+    "zero_bond",
+    "no_new_inputs",
+    "inherited_protocol"
+  ],
+  "gates": {
+    "chain_dependency": {
+      "checks": {
+        "layer1_does_not_move_C": true,
+        "layer1_moves_B": true,
+        "layer2_moves_A": true,
+        "layer2_moves_C": true
+      },
+      "graph": "A--B--C (chain, 3 atoms, 2 real-style bond feature rows)",
+      "h1_B_change_from_h0_A_perturbation": 0.214890718460083,
+      "h1_C_change_from_h0_A_perturbation": 0.0,
+      "h2_A_change_from_h0_A_perturbation": 1.2234134674072266,
+      "h2_C_change_from_h0_A_perturbation": 0.02224445343017578,
+      "passed": true,
+      "weights": "non-degenerate deterministic test state (fc2 not zeroed)"
+    },
+    "inherited_protocol": {
+      "checks": {
+        "feature_spec_hash": true,
+        "label_artifact": true,
+        "labels_binary": true,
+        "masked_bce_ignores_nan": true,
+        "masked_bce_matches_numpy": true,
+        "masked_bce_matches_torch_masking": true,
+        "n_tasks_scored_valid": true,
+        "no_finite_labels_outside_train_valid": true,
+        "norm_fingerprint": true,
+        "norm_fit_on_train_only": true,
+        "split_partition": true,
+        "task_order_untouched": true,
+        "test_rows_all_nan": true,
+        "test_rows_official": true,
+        "train_rows_official": true,
+        "valid_rows_official": true
+      },
+      "finite_entries": {
+        "test": 0,
+        "train": 27162842,
+        "valid": 3477656
+      },
+      "masked_bce_unit_probe": {
+        "loss": 0.6931471824645996,
+        "manual": 0.6931471824645996,
+        "numpy": 0.6931471805599453
+      },
+      "passed": true,
+      "split_sizes": {
+        "test": 43793,
+        "train": 350343,
+        "valid": 43793
+      }
+    },
+    "invariances": {
+      "atom_renumbering": {
+        "max_abs_diff": 2.86102294921875e-06,
+        "permutation_checked": 208,
+        "tolerance": 0.0001
+      },
+      "checks": {
+        "atom_renumbering_invariant": true,
+        "edge_direction_flip_invariant": true
+      },
+      "edge_direction_flip": {
+        "max_abs_diff": 1.9073486328125e-06,
+        "n_bonds_flipped": 225,
+        "tolerance": 0.0001
+      },
+      "passed": true
+    },
+    "isolation": {
+      "checks": {
+        "both_directions": true,
+        "each_physical_bond_twice": true,
+        "edges_intra_molecule": true,
+        "other_molecule_h2_unchanged": true,
+        "other_molecule_logits_unchanged": true,
+        "perturbed_molecule_did_change": true
+      },
+      "edge_audit": {
+        "both_directions": true,
+        "checked": true,
+        "cross_molecule_edges": 0,
+        "each_physical_bond_twice": true,
+        "n_bonds": 63,
+        "n_directed": 126
+      },
+      "h0_other_molecule_max_abs_diff": 4.76837158203125e-07,
+      "h2_other_molecule_max_abs_diff": 4.76837158203125e-07,
+      "isolation_tolerance": 1e-05,
+      "logits_other_molecule_max_abs_diff": 1.9073486328125e-06,
+      "logits_perturbed_molecule_max_abs_diff": 4.635254859924316,
+      "passed": true
+    },
+    "layer_inputs": {
+      "block0_input_vs_h0_max_abs_diff": 0.0,
+      "block1_input_vs_h0_max_abs_diff": 1.8227570056915283,
+      "block1_input_vs_h1_max_abs_diff": 0.0,
+      "checks": {
+        "block0_input_is_h0": true,
+        "block1_input_differs_from_h0": true,
+        "block1_input_is_h1": true,
+        "h1_differs_from_h0": true,
+        "h2_differs_from_h1": true,
+        "message_nonzero_layer0": true,
+        "message_nonzero_layer1": true
+      },
+      "h1_vs_h0_max_abs_diff": 1.8227570056915283,
+      "h2_vs_h1_max_abs_diff": 1.6329960823059082,
+      "message_layer0_max_abs": 8.556156158447266,
+      "message_layer1_max_abs": 8.638504028320312,
+      "n_directed_edges": 202,
+      "note": "executed on a non-degenerate (non-zero fc2) test state, deterministic seed",
+      "passed": true
+    },
+    "model_identity": {
+      "checks": {
+        "epoch0_logits_equal_w2": true,
+        "epoch0_logits_finite": true,
+        "fc2_zeroed": true,
+        "init_global_rng_untouched": true,
+        "parameter_groups_exact": true,
+        "parameters_total_1128468": true,
+        "w2_part_bitwise_equal": true,
+        "w2_reference_parameter_count": true,
+        "w2_trunk_fingerprint_matches_w2_seed0": true
+      },
+      "device": "cuda",
+      "fc2_max_abs": {
+        "blocks.0.fc2.bias": 0.0,
+        "blocks.0.fc2.weight": 0.0,
+        "blocks.1.fc2.bias": 0.0,
+        "blocks.1.fc2.weight": 0.0
+      },
+      "logits_abs_max": 12.934700012207031,
+      "logits_max_abs_diff_vs_untrained_w2": 1.430511474609375e-06,
+      "logits_tolerance": 0.0001,
+      "parameter_groups": {
+        "blocks.0": 66176,
+        "blocks.1": 66176,
+        "bond_proj": 1792,
+        "w2_base": 848096,
+        "w2_readout": 146228
+      },
+      "passed": true,
+      "w2_part_per_tensor": {
+        "all_equal": true,
+        "n_tensors": 57,
+        "n_unequal": 0
+      }
+    },
+    "no_new_inputs": {
+      "checks": {
+        "dynamic_reads_no_extra_batch_field": true,
+        "same_field_set": true
+      },
+      "dynamic_fields_read": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ],
+      "extra_fields_read_by_dynamic": [],
+      "passed": true,
+      "w2_fields_read": [
+        "atom_batch",
+        "atom_feat",
+        "atom_scalar",
+        "bond_feat",
+        "bond_index",
+        "global",
+        "n_graphs",
+        "nbr_atom",
+        "nbr_code",
+        "path_atom",
+        "path_cat",
+        "path_closure",
+        "path_end",
+        "path_end63"
+      ]
+    },
+    "python_reference": {
+      "block0": {
+        "delta_abs_max": 0.6792274713516235,
+        "delta_max_abs_diff_vs_python": 1.684630622778016e-07,
+        "msg_max_abs_diff_vs_python": 4.4121792974749496e-07
+      },
+      "block1": {
+        "delta_abs_max": 0.9548724293708801,
+        "delta_max_abs_diff_vs_python": 1.995631974116563e-07,
+        "msg_max_abs_diff_vs_python": 4.4121792974749496e-07
+      },
+      "checks": {
+        "block0_delta_matches_python": true,
+        "block0_msg_matches_python": true,
+        "block1_delta_matches_python": true,
+        "block1_msg_matches_python": true
+      },
+      "note": "independent float64 numpy re-implementation of LayerNorm + sum aggregation + SiLU FFN",
+      "passed": true,
+      "tolerance": 2e-05
+    },
+    "zero_bond": {
+      "checks": {
+        "init_zero_residual_logits_finite": true,
+        "init_zero_residual_message_exactly_zero": true,
+        "nondegenerate_logits_finite": true,
+        "nondegenerate_message_exactly_zero": true
+      },
+      "init_zero_residual": {
+        "h2_finite": true,
+        "logits_abs_max": 2.1960113048553467,
+        "logits_finite": true,
+        "msg_max_abs": 0.0,
+        "n_directed_edges": 0
+      },
+      "nondegenerate": {
+        "h2_finite": true,
+        "logits_abs_max": 2.4385159015655518,
+        "logits_finite": true,
+        "msg_max_abs": 0.0,
+        "n_directed_edges": 0
+      },
+      "passed": true
+    }
+  },
+  "git_commit": "ea7eec6bdac3edca5b00d2b41b54e7807915d57f",
+  "git_state": {
+    "branch": "main",
+    "commit": "ea7eec6bdac3edca5b00d2b41b54e7807915d57f",
+    "dirty": true,
+    "dirty_files": [
+      "?? tracks/structural-sufficiency/lcrc_pcba_dynamic_v1/analysis/",
+      "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/architecture_failed.json",
+      "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/cost_failed.json"
+    ]
+  },
+  "gradient_and_profile": {
+    "audit_steps": [
+      1,
+      3,
+      10,
+      100
+    ],
+    "budget": {
+      "forbidden": [
+        "20-epoch training",
+        "fewer training samples",
+        "structural change to fit the budget",
+        "a second model in parallel"
+      ],
+      "gpu_hard_hours": 3.0,
+      "gpu_target_hours": 2.5,
+      "host": "res",
+      "max_concurrent_training_jobs": 1,
+      "preferred_pool": "res-gpu1",
+      "profile_real_batches": 100,
+      "profile_warmup_steps": 10
+    },
+    "checks": {
+      "all_new_tensors_receive_gradient": true,
+      "dynamic_branch_active_after_steps": true,
+      "gradients_nonzero_at_last_audited_step": true,
+      "losses_finite": true,
+      "projected_within_hard_budget": true
+    },
+    "dynamic_usage_after_audit_steps": {
+      "R1": 0.1774494277112056,
+      "R2": 0.17970585625540578,
+      "Rtotal": 0.38054969395101856,
+      "bond_proj_weight_norm": 6.545343399047852,
+      "cos_h0_h1": 0.9938514828681946,
+      "fc2_bias_norm": {
+        "blocks.0": 0.011824298650026321,
+        "blocks.1": 0.011753923259675503
+      },
+      "fc2_weight_norm": {
+        "blocks.0": 0.19428683817386627,
+        "blocks.1": 0.20043061673641205
+      },
+      "finite_fraction_h2": 1.0,
+      "finite_logits": true,
+      "logits_abs_max": 40.81690979003906,
+      "logits_shape": [
+        32,
+        128
+      ],
+      "n_atoms": 823,
+      "rms_h0": 1.001217246055603,
+      "rms_h1": 1.133898377418518,
+      "rms_h1_minus_h0": 0.17766542732715607,
+      "rms_h2": 1.29840087890625,
+      "rms_h2_minus_h0": 0.3810129165649414,
+      "rms_h2_minus_h1": 0.20376817882061005
+    },
+    "expected_new_tensors": [
+      "blocks.0.fc1.bias",
+      "blocks.0.fc1.weight",
+      "blocks.0.fc2.bias",
+      "blocks.0.fc2.weight",
+      "blocks.0.norm.bias",
+      "blocks.0.norm.weight",
+      "blocks.1.fc1.bias",
+      "blocks.1.fc1.weight",
+      "blocks.1.fc2.bias",
+      "blocks.1.fc2.weight",
+      "blocks.1.norm.bias",
+      "blocks.1.norm.weight",
+      "bond_proj.bias",
+      "bond_proj.weight"
+    ],
+    "gpu_peak_allocated_bytes": 208354304,
+    "note": "step 1 is expected to have structurally zero gradients for bond_proj and both fc1 (fc2.weight is zero-initialised); steps 3/10/100 must show non-zero gradients there",
+    "passed": true,
+    "per_step_summary": {
+      "1": {
+        "all_new_tensors_present": true,
+        "minimum_nonzero_norm": 0.3930796980857849,
+        "missing_new_tensors": [],
+        "nonzero_new_tensors": [
+          "blocks.0.fc2.bias",
+          "blocks.0.fc2.weight",
+          "blocks.1.fc2.bias",
+          "blocks.1.fc2.weight"
+        ],
+        "zero_new_tensors": [
+          "blocks.0.fc1.bias",
+          "blocks.0.fc1.weight",
+          "blocks.0.norm.bias",
+          "blocks.0.norm.weight",
+          "blocks.1.fc1.bias",
+          "blocks.1.fc1.weight",
+          "blocks.1.norm.bias",
+          "blocks.1.norm.weight",
+          "bond_proj.bias",
+          "bond_proj.weight"
+        ]
+      },
+      "10": {
+        "all_new_tensors_present": true,
+        "minimum_nonzero_norm": 0.0022287822794169188,
+        "missing_new_tensors": [],
+        "nonzero_new_tensors": [
+          "blocks.0.fc1.bias",
+          "blocks.0.fc1.weight",
+          "blocks.0.fc2.bias",
+          "blocks.0.fc2.weight",
+          "blocks.0.norm.bias",
+          "blocks.0.norm.weight",
+          "blocks.1.fc1.bias",
+          "blocks.1.fc1.weight",
+          "blocks.1.fc2.bias",
+          "blocks.1.fc2.weight",
+          "blocks.1.norm.bias",
+          "blocks.1.norm.weight",
+          "bond_proj.bias",
+          "bond_proj.weight"
+        ],
+        "zero_new_tensors": []
+      },
+      "100": {
+        "all_new_tensors_present": true,
+        "minimum_nonzero_norm": 0.00018081940652336925,
+        "missing_new_tensors": [],
+        "nonzero_new_tensors": [
+          "blocks.0.fc1.bias",
+          "blocks.0.fc1.weight",
+          "blocks.0.fc2.bias",
+          "blocks.0.fc2.weight",
+          "blocks.0.norm.bias",
+          "blocks.0.norm.weight",
+          "blocks.1.fc1.bias",
+          "blocks.1.fc1.weight",
+          "blocks.1.fc2.bias",
+          "blocks.1.fc2.weight",
+          "blocks.1.norm.bias",
+          "blocks.1.norm.weight",
+          "bond_proj.bias",
+          "bond_proj.weight"
+        ],
+        "zero_new_tensors": []
+      },
+      "3": {
+        "all_new_tensors_present": true,
+        "minimum_nonzero_norm": 0.0015572472475469112,
+        "missing_new_tensors": [],
+        "nonzero_new_tensors": [
+          "blocks.0.fc1.bias",
+          "blocks.0.fc1.weight",
+          "blocks.0.fc2.bias",
+          "blocks.0.fc2.weight",
+          "blocks.0.norm.bias",
+          "blocks.0.norm.weight",
+          "blocks.1.fc1.bias",
+          "blocks.1.fc1.weight",
+          "blocks.1.fc2.bias",
+          "blocks.1.fc2.weight",
+          "blocks.1.norm.bias",
+          "blocks.1.norm.weight",
+          "bond_proj.bias",
+          "bond_proj.weight"
+        ],
+        "zero_new_tensors": []
+      }
+    },
+    "projected_epoch_seconds": 108.71124062146991,
+    "projected_total_gpu_hours": 1.2079026735718879,
+    "snapshots": {
+      "1": {
+        "grad_norm_new_total": 4.520083476942525,
+        "grad_norm_w2_total": 16.663699163684644,
+        "loss": 1.8809994459152222,
+        "new_grad_norms": {
+          "blocks.0.fc1.bias": 0.0,
+          "blocks.0.fc1.weight": 0.0,
+          "blocks.0.fc2.bias": 0.3930796980857849,
+          "blocks.0.fc2.weight": 3.264211654663086,
+          "blocks.0.norm.bias": 0.0,
+          "blocks.0.norm.weight": 0.0,
+          "blocks.1.fc1.bias": 0.0,
+          "blocks.1.fc1.weight": 0.0,
+          "blocks.1.fc2.bias": 0.3930796980857849,
+          "blocks.1.fc2.weight": 3.076857805252075,
+          "blocks.1.norm.bias": 0.0,
+          "blocks.1.norm.weight": 0.0,
+          "bond_proj.bias": 0.0,
+          "bond_proj.weight": 0.0
+        },
+        "step": 1,
+        "total_grad_norm": 17.2658634185791
+      },
+      "10": {
+        "grad_norm_new_total": 1.673504077950901,
+        "grad_norm_w2_total": 6.755764794969722,
+        "loss": 0.8264039754867554,
+        "new_grad_norms": {
+          "blocks.0.fc1.bias": 0.0022404203191399574,
+          "blocks.0.fc1.weight": 0.03802500292658806,
+          "blocks.0.fc2.bias": 0.1406630426645279,
+          "blocks.0.fc2.weight": 1.196602463722229,
+          "blocks.0.norm.bias": 0.004694703966379166,
+          "blocks.0.norm.weight": 0.005254626274108887,
+          "blocks.1.fc1.bias": 0.0022287822794169188,
+          "blocks.1.fc1.weight": 0.037839241325855255,
+          "blocks.1.fc2.bias": 0.14092501997947693,
+          "blocks.1.fc2.weight": 1.1515477895736694,
+          "blocks.1.norm.bias": 0.003998960833996534,
+          "blocks.1.norm.weight": 0.004101923201233149,
+          "bond_proj.bias": 0.004799386020749807,
+          "bond_proj.weight": 0.007547331508249044
+        },
+        "step": 10,
+        "total_grad_norm": 6.959955215454102
+      },
+      "100": {
+        "grad_norm_new_total": 0.1401662004427044,
+        "grad_norm_w2_total": 0.3566173327767307,
+        "loss": 0.06300205737352371,
+        "new_grad_norms": {
+          "blocks.0.fc1.bias": 0.00018081940652336925,
+          "blocks.0.fc1.weight": 0.0036581074818968773,
+          "blocks.0.fc2.bias": 0.006737360265105963,
+          "blocks.0.fc2.weight": 0.09403836727142334,
+          "blocks.0.norm.bias": 0.0003968647215515375,
+          "blocks.0.norm.weight": 0.0005055853398516774,
+          "blocks.1.fc1.bias": 0.00019594693731050938,
+          "blocks.1.fc1.weight": 0.004137340467423201,
+          "blocks.1.fc2.bias": 0.006728820502758026,
+          "blocks.1.fc2.weight": 0.1033463329076767,
+          "blocks.1.norm.bias": 0.0004520303336903453,
+          "blocks.1.norm.weight": 0.0005511700292117894,
+          "bond_proj.bias": 0.0004936803597956896,
+          "bond_proj.weight": 0.0006921742460690439
+        },
+        "step": 100,
+        "total_grad_norm": 0.38317421078681946
+      },
+      "3": {
+        "grad_norm_new_total": 4.026698207135411,
+        "grad_norm_w2_total": 15.121497096405593,
+        "loss": 1.5885738134384155,
+        "new_grad_norms": {
+          "blocks.0.fc1.bias": 0.0015761499525979161,
+          "blocks.0.fc1.weight": 0.02753502130508423,
+          "blocks.0.fc2.bias": 0.3431457579135895,
+          "blocks.0.fc2.weight": 2.8943166732788086,
+          "blocks.0.norm.bias": 0.003315726527944207,
+          "blocks.0.norm.weight": 0.003985281568020582,
+          "blocks.1.fc1.bias": 0.0015572472475469112,
+          "blocks.1.fc1.weight": 0.027206579223275185,
+          "blocks.1.fc2.bias": 0.34350332617759705,
+          "blocks.1.fc2.weight": 2.756791353225708,
+          "blocks.1.norm.bias": 0.0027918056584894657,
+          "blocks.1.norm.weight": 0.0028918785974383354,
+          "bond_proj.bias": 0.0034023539628833532,
+          "bond_proj.weight": 0.005403060466051102
+        },
+        "step": 3,
+        "total_grad_norm": 15.64845085144043
+      }
+    },
+    "step_seconds": {
+      "max": 0.2804945781826973,
+      "mean_after_warmup": 0.037020854325965045,
+      "mean_all": 0.03934443041682243,
+      "min": 0.028730668127536774,
+      "p50_after_warmup": 0.035440633073449135
+    },
+    "steps_profiled": 100,
+    "validation_ap_after_audit_steps": 0.025967520312904568,
+    "validation_pass_seconds": 7.3481414769776165
+  },
+  "host_facts": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "cuda_capability": [
+      [
+        8,
+        0
+      ]
+    ],
+    "cudnn": 90100,
+    "git": {
+      "branch": "main",
+      "commit": "ea7eec6bdac3edca5b00d2b41b54e7807915d57f",
+      "dirty": true,
+      "dirty_files": [
+        "?? tracks/structural-sufficiency/lcrc_pcba_dynamic_v1/analysis/",
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/architecture_failed.json",
+        "?? tracks/structural-sufficiency/lcrc_pcba_s3_v1/analysis/cost_failed.json"
+      ]
+    },
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "model": {
+    "block_fingerprints": {
+      "blocks.0": "4e5ad4c49c8b7b8261c89283a58b5a84f2e5646b200e1854aa063d4928966c56",
+      "blocks.1": "23456ef2a5be640581204b3b2f09df36b923fc271792130d994b178aa01fc73a",
+      "bond_proj": "41ff19d93b504dac47c1f1f528491a5db564f567e6109f0819c9ed10375ffda0"
+    },
+    "init": {
+      "expected_layernorm_layers": 2,
+      "expected_linear_layers": 5,
+      "global_rng_unchanged": true,
+      "layernorm_layers_initialised": 2,
+      "linear_layers_initialised": 5,
+      "private_generator_seed": 17,
+      "residual_output_zeroed": true
+    },
+    "n_state_tensors": 71,
+    "parameters": {
+      "all_match": true,
+      "checks": {
+        "bond_proj": true,
+        "message_ffn_one": true,
+        "message_ffn_two": true,
+        "new_total": true,
+        "total": true,
+        "w2_base": true,
+        "w2_readout": true,
+        "w2_total": true
+      },
+      "expected": {
+        "bond_proj": 1792,
+        "message_ffn_one": 66176,
+        "message_ffn_two": 132352,
+        "new_total": 134144,
+        "total": 1128468,
+        "w2_base": 848096,
+        "w2_readout": 146228,
+        "w2_total": 994324
+      },
+      "groups": {
+        "blocks.0": 66176,
+        "blocks.1": 66176,
+        "bond_proj": 1792,
+        "w2_base": 848096,
+        "w2_readout": 146228
+      },
+      "n_parameter_tensors": 65,
+      "n_state_tensors": 71,
+      "new_total": 134144,
+      "per_tensor": {
+        "atom_encoder.lins.0.bias": {
+          "new": false,
+          "numel": 256,
+          "shape": [
+            256
+          ]
+        },
+        "atom_encoder.lins.0.weight": {
+          "new": false,
+          "numel": 13056,
+          "shape": [
+            256,
+            51
+          ]
+        },
+        "atom_encoder.lins.1.bias": {
+          "new": false,
+          "numel": 192,
+          "shape": [
+            192
+          ]
+        },
+        "atom_encoder.lins.1.weight": {
+          "new": false,
+          "numel": 49152,
+          "shape": [
+            192,
+            256
+          ]
+        },
+        "blocks.0.fc1.bias": {
+          "new": true,
+          "numel": 256,
+          "shape": [
+            256
+          ]
+        },
+        "blocks.0.fc1.weight": {
+          "new": true,
+          "numel": 32768,
+          "shape": [
+            256,
+            128
+          ]
+        },
+        "blocks.0.fc2.bias": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "blocks.0.fc2.weight": {
+          "new": true,
+          "numel": 32768,
+          "shape": [
+            128,
+            256
+          ]
+        },
+        "blocks.0.norm.bias": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "blocks.0.norm.weight": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "blocks.1.fc1.bias": {
+          "new": true,
+          "numel": 256,
+          "shape": [
+            256
+          ]
+        },
+        "blocks.1.fc1.weight": {
+          "new": true,
+          "numel": 32768,
+          "shape": [
+            256,
+            128
+          ]
+        },
+        "blocks.1.fc2.bias": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "blocks.1.fc2.weight": {
+          "new": true,
+          "numel": 32768,
+          "shape": [
+            128,
+            256
+          ]
+        },
+        "blocks.1.norm.bias": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "blocks.1.norm.weight": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "bond_encoder.lins.0.bias": {
+          "new": false,
+          "numel": 320,
+          "shape": [
+            320
+          ]
+        },
+        "bond_encoder.lins.0.weight": {
+          "new": false,
+          "numel": 188480,
+          "shape": [
+            320,
+            589
+          ]
+        },
+        "bond_encoder.lins.1.bias": {
+          "new": false,
+          "numel": 192,
+          "shape": [
+            192
+          ]
+        },
+        "bond_encoder.lins.1.weight": {
+          "new": false,
+          "numel": 61440,
+          "shape": [
+            192,
+            320
+          ]
+        },
+        "bond_proj.bias": {
+          "new": true,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "bond_proj.weight": {
+          "new": true,
+          "numel": 1664,
+          "shape": [
+            128,
+            13
+          ]
+        },
+        "f.lins.0.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "f.lins.0.weight": {
+          "new": false,
+          "numel": 16384,
+          "shape": [
+            128,
+            128
+          ]
+        },
+        "f.lins.1.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "f.lins.1.weight": {
+          "new": false,
+          "numel": 16384,
+          "shape": [
+            128,
+            128
+          ]
+        },
+        "local.close_emb.weight": {
+          "new": false,
+          "numel": 16,
+          "shape": [
+            2,
+            8
+          ]
+        },
+        "local.end_emb.weight": {
+          "new": false,
+          "numel": 5120,
+          "shape": [
+            80,
+            64
+          ]
+        },
+        "local.joint_proj.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "local.joint_proj.weight": {
+          "new": false,
+          "numel": 4096,
+          "shape": [
+            64,
+            64
+          ]
+        },
+        "local.mlp.lins.0.bias": {
+          "new": false,
+          "numel": 384,
+          "shape": [
+            384
+          ]
+        },
+        "local.mlp.lins.0.weight": {
+          "new": false,
+          "numel": 326016,
+          "shape": [
+            384,
+            849
+          ]
+        },
+        "local.mlp.lins.1.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "local.mlp.lins.1.weight": {
+          "new": false,
+          "numel": 49152,
+          "shape": [
+            128,
+            384
+          ]
+        },
+        "local.nbr_emb.weight": {
+          "new": false,
+          "numel": 5120,
+          "shape": [
+            80,
+            64
+          ]
+        },
+        "local.norm.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "local.norm.weight": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "local.path_emb.weight": {
+          "new": false,
+          "numel": 25600,
+          "shape": [
+            400,
+            64
+          ]
+        },
+        "local.path_gate.weight": {
+          "new": false,
+          "numel": 400,
+          "shape": [
+            400,
+            1
+          ]
+        },
+        "local.path_u.weight": {
+          "new": false,
+          "numel": 25600,
+          "shape": [
+            400,
+            64
+          ]
+        },
+        "local.path_v.weight": {
+          "new": false,
+          "numel": 5120,
+          "shape": [
+            80,
+            64
+          ]
+        },
+        "readout.fc1.bias": {
+          "new": false,
+          "numel": 176,
+          "shape": [
+            176
+          ]
+        },
+        "readout.fc1.weight": {
+          "new": false,
+          "numel": 90112,
+          "shape": [
+            176,
+            512
+          ]
+        },
+        "readout.fc2.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "readout.fc2.weight": {
+          "new": false,
+          "numel": 22528,
+          "shape": [
+            128,
+            176
+          ]
+        },
+        "readout.heads.0.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.0.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.0.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.0.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "readout.heads.1.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.1.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.1.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.1.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "readout.heads.2.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.2.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.2.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.2.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "readout.heads.3.fc1.bias": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            64
+          ]
+        },
+        "readout.heads.3.fc1.weight": {
+          "new": false,
+          "numel": 8192,
+          "shape": [
+            64,
+            128
+          ]
+        },
+        "readout.heads.3.fc2.bias": {
+          "new": false,
+          "numel": 1,
+          "shape": [
+            1
+          ]
+        },
+        "readout.heads.3.fc2.weight": {
+          "new": false,
+          "numel": 64,
+          "shape": [
+            1,
+            64
+          ]
+        },
+        "rho.lins.0.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "rho.lins.0.weight": {
+          "new": false,
+          "numel": 38272,
+          "shape": [
+            128,
+            299
+          ]
+        },
+        "rho.lins.1.bias": {
+          "new": false,
+          "numel": 128,
+          "shape": [
+            128
+          ]
+        },
+        "rho.lins.1.weight": {
+          "new": false,
+          "numel": 16384,
+          "shape": [
+            128,
+            128
+          ]
+        }
+      },
+      "total": 1128468,
+      "w2_total": 994324
+    },
+    "w2_part_bitwise_equal_reference": {
+      "all_equal": true,
+      "n_tensors": 57,
+      "n_unequal": 0
+    },
+    "w2_trunk_fingerprint_matches_recorded_w2": true,
+    "w2_trunk_init_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+    "widths": {
+      "atom_hidden": 256,
+      "atom_out": 192,
+      "bond_hidden": 320,
+      "bond_out": 192,
+      "local_hidden": 384,
+      "n_heads": 4,
+      "n_out": 128,
+      "pool_hidden": 176,
+      "rho_hidden": 128,
+      "scorer_hidden": 64,
+      "stat_rank": 64,
+      "width": 128
+    }
+  },
+  "occupancy": {
+    "captured_utc": "2026-11-09T13:02:03Z",
+    "cuda_available": true,
+    "cuda_visible_devices": "1",
+    "device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "nvidia_smi_compute_apps": "3841932, python3, 16082 MiB\n1117025, /home/hxy/cy/research/.venv/bin/python3, 414 MiB",
+    "nvidia_smi_gpus": "0, GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, NVIDIA A100-SXM4-40GB, 40960 MiB, 16105 MiB, 24222 MiB, 100 %, 100 %, 55, 550.163.01\n1, GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, NVIDIA A100-SXM4-40GB, 40960 MiB, 437 MiB, 39890 MiB, 3 %, 0 %, 31, 550.163.01",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "visible_device_mem_get_info": {
+      "free_bytes": 41827565568,
+      "total_bytes": 42285268992,
+      "used_bytes": 457703424
+    }
+  },
+  "passed": true,
+  "reference_logits": {
+    "RC_REAL_best_valid": {
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/RC_REAL_best_valid.npy",
+      "sha256": "9a40636406223c286d78dc7414e603e87df1be95656ae935f02b3d273f829779",
+      "shape": [
+        43793,
+        128
+      ],
+      "source_round": "lcrc-pcba-boc-v1",
+      "verified": true
+    },
+    "RC_REAL_epoch40": {
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/RC_REAL_epoch40.npy",
+      "sha256": "e10400103613f46ed891930bea382fe537f7613d6b8f76c5fcdacc792a710d6b",
+      "shape": [
+        43793,
+        128
+      ],
+      "source_round": "lcrc-pcba-boc-v1",
+      "verified": true
+    },
+    "W2_best_valid": {
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/W2_best_valid.npy",
+      "sha256": "777397bb2e44aef2e2af11480e24c9efba40e835492285948da5f52a6848e7ff",
+      "shape": [
+        43793,
+        128
+      ],
+      "source_round": "lcrc-pcba-boc-v1",
+      "verified": true
+    },
+    "W2_epoch40": {
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/W2_epoch40.npy",
+      "sha256": "341bcbbf48f7e2f10356b15428dbb4d9ae619fdb6bd82f84bd23fd8e52f20bcf",
+      "shape": [
+        43793,
+        128
+      ],
+      "source_round": "lcrc-pcba-boc-v1",
+      "verified": true
+    }
+  },
+  "round_id": "lcrc-pcba-dynamic-v1",
+  "schema": "lcrc-pcba-dynamic-preflight-v1",
+  "seconds": 23.119665978942066,
+  "tests_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+  "verdict": "PASS"
+}
