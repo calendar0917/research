@@ -39,8 +39,8 @@ _configure_imports()
 
 import torch  # noqa: E402
 
-import cc_data as CD  # noqa: E402
 import cpc_common as C  # noqa: E402
+import cc_data as CD  # noqa: E402
 import cpc_model as M  # noqa: E402
 import cpc_paths as P  # noqa: E402
 
