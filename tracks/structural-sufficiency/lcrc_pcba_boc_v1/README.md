@@ -58,7 +58,7 @@ uv run python code/boc_train.py --model BOND --device cuda \
   --out-dir runs/BOND --soft-seconds 18000 --hard-seconds 21600
 
 # 5. Validation-only checkpoint manifest
-uv run python -c 'import boc_test as T; T.build_selection()'
+PYTHONPATH=code uv run python -c 'import boc_test as T; T.build_selection()'
 
 # 6. freeze Test logits, then open labels once
 uv run python code/boc_test.py freeze --device cuda
