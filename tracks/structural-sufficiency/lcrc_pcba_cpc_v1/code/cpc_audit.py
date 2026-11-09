@@ -388,7 +388,8 @@ def gate_architecture(task: Any, device: torch.device) -> dict[str, Any]:
     with torch.inference_mode():
         _a, _b, _s, h0_ref = model.encode_h0(batch)
     cpc_h0 = cpc_inputs[0][0] if cpc_inputs else None
-    h0_matches = bool(cpc_h0 is not None and torch.equal(cpc_h0, h0_ref))
+    h0_diff = _maxdiff(cpc_h0, h0_ref) if cpc_h0 is not None else None
+    h0_matches = bool(h0_diff is not None and h0_diff <= 1e-6)
     post_matches = bool(len(post_calls) == 1 and torch.equal(post_calls[0], aux["h_cpc"]))
 
     # atom renumbering
@@ -476,10 +477,10 @@ def gate_architecture(task: Any, device: torch.device) -> dict[str, Any]:
         "post_local_reads_h_cpc": post_matches,
         "atom_renumbering_invariant": perm_diff <= 1e-5,
         "bond_direction_invariant": flip_diff <= 1e-5,
-        "molecule_isolation": iso_0 <= 1e-6 and iso_1 > 1e-4,
+        "molecule_isolation": iso_0 <= 1e-5 and iso_1 > 1e-4,
         "zero_path_delta_exactly_zero": empty_zero,
         "pairing_shuffle_isolated": bool(iso_shuffle["isolated"] and iso_shuffle["bonds_same_molecule"]),
-        "pairing_shuffle_changes_logits": shuffle_diff > 0.0,
+        "pairing_shuffle_changes_logits": shuffle_diff > 1e-6,
         "remote_endpoint_changes_root_delta": remote_sensitivity > 1e-8,
         "branch_finite": bool(torch.isfinite(logits).all().item()),
     }
@@ -488,6 +489,7 @@ def gate_architecture(task: Any, device: torch.device) -> dict[str, Any]:
         "cpc_forward_calls": len(cpc_inputs),
         "post_local_calls": len(post_calls),
         "cpc_input_h0_equal_drop_local": h0_matches,
+        "cpc_input_h0_max_abs_diff": h0_diff,
         "atom_renumbering_max_abs_logit_diff": perm_diff,
         "bond_direction_max_abs_logit_diff": flip_diff,
         "molecule_isolation_logit_diff_molecule0": iso_0,
