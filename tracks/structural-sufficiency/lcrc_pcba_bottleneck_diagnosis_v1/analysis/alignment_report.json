@@ -1,0 +1,127 @@
+{
+  "_freeze_row_ids": {
+    "boc": {
+      "dtype": "int64",
+      "equals_official_split_test": true,
+      "file_sha256": "136acbfea19153171469ebc45bb36bac2d95d7e44eda4dcecd4cdeae6cb7238a",
+      "int64_content_sha256": "83f5ee15fadaaf0499c21bc621a8bcd266f563571872df287915dba13d085e6c",
+      "matches_task_test_rows": true,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/test_row_ids.npy",
+      "shape": [
+        43793
+      ]
+    },
+    "note": "The historical manifests disagree on how the row-id hash field is computed: the int64-content hash is 83f5ee15..., while boc.test_rows_npy_sha256 and s3.test_rows_int64_sha256 record 9171aa54.... Both .npy files are byte-identical (136acbfe...) and equal the official scaffold split elementwise, so alignment is proven by file hash + values, not by the ambiguous manifest field.",
+    "recorded_manifest_fields": {
+      "boc_manifest_test_row_ids_sha256": null,
+      "boc_manifest_test_rows_npy_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+      "s3_manifest_test_rows_int64_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+      "s3_manifest_test_rows_npy_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62"
+    },
+    "s3": {
+      "dtype": "int64",
+      "equals_official_split_test": true,
+      "file_sha256": "136acbfea19153171469ebc45bb36bac2d95d7e44eda4dcecd4cdeae6cb7238a",
+      "int64_content_sha256": "83f5ee15fadaaf0499c21bc621a8bcd266f563571872df287915dba13d085e6c",
+      "matches_task_test_rows": true,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_predictions/test_row_ids.npy",
+      "shape": [
+        43793
+      ]
+    }
+  },
+  "checks": [
+    {
+      "check": "official split files equal the frozen task row arrays",
+      "evidence": {
+        "test": true,
+        "valid": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check": "historical Test row-id .npy files equal the official Test split",
+      "evidence": {
+        "boc": true,
+        "s3": true
+      },
+      "status": "PASS"
+    },
+    {
+      "check": "materialised Validation row ids equal the official Valid split",
+      "evidence": {
+        "n_rows": 43793
+      },
+      "status": "PASS"
+    },
+    {
+      "check": "all models: official test AP replays the frozen record within 1e-4",
+      "evidence": {
+        "BOC_BOND": 0.0,
+        "BOC_FULL": 0.0,
+        "RC_REAL": 0.0,
+        "S3": 0.0,
+        "W2": 0.0
+      },
+      "status": "PASS"
+    },
+    {
+      "check": "all models: replayed Validation AP matches the frozen record within 1e-4",
+      "evidence": {
+        "BOC_BOND": 1.3641104094075374e-06,
+        "BOC_FULL": 4.858246977879066e-06,
+        "RC_REAL": 1.4332577324416285e-06,
+        "S3": 1.6514836863601445e-06,
+        "W2": 5.044964131950547e-06
+      },
+      "status": "PASS"
+    },
+    {
+      "check": "official OGB AP equals independent sklearn AP on the same split",
+      "evidence": {
+        "BOC_BOND": {
+          "test": 5.551115123125783e-17,
+          "valid": 0.0
+        },
+        "BOC_FULL": {
+          "test": 0.0,
+          "valid": 5.551115123125783e-17
+        },
+        "RC_REAL": {
+          "test": 1.1102230246251565e-16,
+          "valid": 5.551115123125783e-17
+        },
+        "S3": {
+          "test": 0.0,
+          "valid": 0.0
+        },
+        "W2": {
+          "test": 5.551115123125783e-17,
+          "valid": 5.551115123125783e-17
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "check": "every model carries a VERIFIED_ARTIFACT identity chain (checkpoint SHA -> logits SHA)",
+      "evidence": {
+        "BOC_BOND": "VERIFIED_ARTIFACT",
+        "BOC_FULL": "VERIFIED_ARTIFACT",
+        "RC_REAL": "VERIFIED_ARTIFACT",
+        "S3": "VERIFIED_ARTIFACT",
+        "W2": "VERIFIED_ARTIFACT"
+      },
+      "status": "PASS"
+    }
+  ],
+  "created_utc": "2026-11-09T09:45:23Z",
+  "excluded_models": [],
+  "result_label": "POST_HOC_EXPOSED_TEST_DIAGNOSIS",
+  "round_id": "lcrc-pcba-bottleneck-diagnosis-v1",
+  "schema": "lcrc-pcba-bottleneck-diagnosis-alignment-v1",
+  "warnings": [
+    "historical manifests use an ambiguous row-id hash field (9171aa54...) that does not match the int64 bytes (83f5ee15...); alignment is proven from the .npy files instead",
+    "W2 Test logits were frozen twice by two rounds; the two files differ at the bit level (max |Δlogit| recorded) while official Test AP agrees to <1e-6",
+    "Validation logits are CPU replays and are not bitwise comparable to the historical GPU forward"
+  ]
+}

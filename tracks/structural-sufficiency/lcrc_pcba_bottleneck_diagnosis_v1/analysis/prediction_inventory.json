@@ -1,0 +1,490 @@
+{
+  "created_utc": "2026-11-09T09:45:23Z",
+  "data_identity": {
+    "boc_freeze_manifest": {
+      "bytes": 91459,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/analysis/test_prediction_manifest.json",
+      "role": "historical Test prediction freeze (boc-v1)",
+      "sha256": "673ac99dcee6c59a93dd23aeb6195f5e3bd66d23fc39f37c3aa0db6ff8d664b7"
+    },
+    "boc_selection_manifest": {
+      "bytes": 3921,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/analysis/selected_checkpoint.json",
+      "role": "historical best-Validation selection",
+      "sha256": "40e917f060430465a423f79af9795d1b09d3490c1b108e15def32fe5955c836e"
+    },
+    "mapping": {
+      "bytes": 14823097,
+      "path": "data/ogb/ogbg_molpcba/mapping/mol.csv.gz",
+      "role": "official MolPCBA mapping; smiles column only",
+      "sha256": "9331d63dc3e6c1793ac96163f45a2edb9c9f02cf040ef05cd4fea5bc1d8dd1a7"
+    },
+    "official_labels": {
+      "bytes": 5522896,
+      "path": "data/ogb/ogbg_molpcba/raw/graph-label.csv.gz",
+      "role": "official raw labels (Test read only through the inherited gate)",
+      "sha256": "ae9430cf3c2c7697c0318ef1a9f32d6536e4ade48e7e09a81da9ade9fb7bb7a2"
+    },
+    "s3_freeze_manifest": {
+      "bytes": 40594,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_prediction_manifest.json",
+      "role": "historical Test prediction freeze (s3-selective-v1)",
+      "sha256": "1a919fe9b19c6ba1e93a1cd54338f45d65e101e3aecd2baa58d844ba0a73f2e2"
+    },
+    "split_files": {
+      "test": {
+        "bytes": 103773,
+        "path": "data/ogb/ogbg_molpcba/split/scaffold/test.csv.gz",
+        "role": "official scaffold test row ids",
+        "sha256": "81b3022e11fccabb751e8261c9ee4ca0f35912bbb4534b89a4b5d4476f083fd8"
+      },
+      "train": {
+        "bytes": 776428,
+        "path": "data/ogb/ogbg_molpcba/split/scaffold/train.csv.gz",
+        "role": "official scaffold train row ids",
+        "sha256": "d0c117a0b524ccccf5f6fc9f8a08eac768a3d8074e9c89ccf3353860dda68613"
+      },
+      "valid": {
+        "bytes": 104776,
+        "path": "data/ogb/ogbg_molpcba/split/scaffold/valid.csv.gz",
+        "role": "official scaffold valid row ids",
+        "sha256": "f5585e37a88202c0d3348ed8f8db61d4ff6960adbde761bd17a5df07a92828c6"
+      }
+    },
+    "test_label_gate": {
+      "freeze_used": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/analysis/test_prediction_manifest.json",
+      "function": "cc_data.read_official_test_labels",
+      "observed_entries": 3376672,
+      "positive_entries": 56698,
+      "read_after_freeze": true,
+      "test_labels_sha256": "ae9430cf3c2c7697c0318ef1a9f32d6536e4ade48e7e09a81da9ade9fb7bb7a2",
+      "test_rows_sha256_int64": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+      "train_valid_alignment_verified": true
+    },
+    "valid_labels_source": "frozen Train/Valid label artifact (Test rows NaN)"
+  },
+  "duplicate_w2_freeze": {
+    "ap_difference": 3.84476639858633e-07,
+    "boc_freeze": {
+      "ap_official": 0.2536168632180464,
+      "file_sha256": "777397bb2e44aef2e2af11480e24c9efba40e835492285948da5f52a6848e7ff",
+      "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/W2_best_valid.npy"
+    },
+    "interpretation": "Same frozen W2 state_dict was re-run by two historical inference pipelines; the logits are not byte-identical (GPU float nondeterminism) but the official Test AP agrees to <1e-6. The primary analysis uses the boc-v1 freeze.",
+    "max_abs_logit_difference": 4.57763671875e-05,
+    "s3_freeze": {
+      "ap_official": 0.2536164787414065,
+      "file_sha256": "13a55b2729a11ebcea9b9d9af4ee49759ec80736f7b632f141ef4fbfb6270d98",
+      "path": "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_predictions/W2_best_valid_epoch24.npy"
+    }
+  },
+  "environment": {
+    "device_for_replay": "cpu",
+    "gpu_hours_used": 0.0,
+    "numpy": "2.1.3",
+    "ogb": "1.3.6",
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "sklearn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda_available": false
+  },
+  "gpu_hours_used": 0.0,
+  "label_stats": {
+    "test": {
+      "observed_entries": 3376672,
+      "positive_entries": 56698,
+      "rows": 43793
+    },
+    "valid": {
+      "observed_entries": 3477656,
+      "positive_entries": 55964,
+      "rows": 43793
+    }
+  },
+  "models": {
+    "BOC_BOND": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/BOND/checkpoint_best.pt",
+      "checkpoint_epoch": 30,
+      "checkpoint_global_step": 82140,
+      "checkpoint_payload_epoch": 30,
+      "checkpoint_sha256": "cd66b02f65d88c4b94f841d4dec2f5c6b772c882a3509dc4fd7456687b825218",
+      "display": "BOC-BOND",
+      "identity_status": "VERIFIED_ARTIFACT",
+      "label": "BOC_BOND",
+      "model_key": "BOND",
+      "role": "auxiliary",
+      "round": "lcrc-pcba-boc-v1",
+      "selection_rule": "best official Validation AP (no Test used)",
+      "test": {
+        "ap_abs_delta_official_vs_independent": 5.551115123125783e-17,
+        "ap_independent": 0.2516661959386811,
+        "ap_official": 0.25166619593868106,
+        "ap_recorded": 0.25166619593868106,
+        "ap_replay_abs_delta": 0.0,
+        "dtype": "float32",
+        "exists": true,
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/BOC_BOND_best_valid.npy",
+        "logits_sha256": "90722af67c09ead699daaa001cccdabeb5264b3a4b2378f70c115fea8a2d7993",
+        "n_tasks_scored": 127,
+        "needs_inference": false,
+        "rows_path": null,
+        "shape": [
+          43793,
+          128
+        ]
+      },
+      "valid": {
+        "ap_abs_delta_official_vs_independent": 0.0,
+        "ap_independent": 0.26990893019963647,
+        "ap_official": 0.26990893019963647,
+        "ap_recorded": 0.26990756608922706,
+        "ap_replay_abs_delta": 1.3641104094075374e-06,
+        "dtype": "float32",
+        "exists": true,
+        "inference_note": "historical rounds saved no Validation logits; one read-only CPU forward of the same frozen state_dict",
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/BOC_BOND.npy",
+        "logits_sha256": "2570395c961acc52c450799ad2112741c461d441d17ef596997f10ff5a66e8b0",
+        "max_abs_per_task_delta_vs_history": 0.00025306049708131995,
+        "n_tasks_per_task_delta_gt_1e4": 3,
+        "n_tasks_scored": 127,
+        "needs_inference": true,
+        "rows_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/valid_row_ids.npy",
+        "shape": [
+          43793,
+          128
+        ]
+      }
+    },
+    "BOC_FULL": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/FULL/checkpoint_best.pt",
+      "checkpoint_epoch": 29,
+      "checkpoint_global_step": 79402,
+      "checkpoint_payload_epoch": 29,
+      "checkpoint_sha256": "b6d7cde9fabd6a90e716bede83f9095ac01d2c29778c882744a3cc2352596246",
+      "display": "BOC-FULL",
+      "identity_status": "VERIFIED_ARTIFACT",
+      "label": "BOC_FULL",
+      "model_key": "FULL",
+      "role": "primary new architecture",
+      "round": "lcrc-pcba-boc-v1",
+      "selection_rule": "best official Validation AP (no Test used)",
+      "test": {
+        "ap_abs_delta_official_vs_independent": 0.0,
+        "ap_independent": 0.25414238787847127,
+        "ap_official": 0.25414238787847127,
+        "ap_recorded": 0.25414238787847127,
+        "ap_replay_abs_delta": 0.0,
+        "dtype": "float32",
+        "exists": true,
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/BOC_FULL_best_valid.npy",
+        "logits_sha256": "20d8c1437587885ec0d6c06cb4f04ae05668e95922dd3522b859e1826f9f6d81",
+        "n_tasks_scored": 127,
+        "needs_inference": false,
+        "rows_path": null,
+        "shape": [
+          43793,
+          128
+        ]
+      },
+      "valid": {
+        "ap_abs_delta_official_vs_independent": 5.551115123125783e-17,
+        "ap_independent": 0.2699545003557383,
+        "ap_official": 0.26995450035573837,
+        "ap_recorded": 0.2699496421087605,
+        "ap_replay_abs_delta": 4.858246977879066e-06,
+        "dtype": "float32",
+        "exists": true,
+        "inference_note": "historical rounds saved no Validation logits; one read-only CPU forward of the same frozen state_dict",
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/BOC_FULL.npy",
+        "logits_sha256": "daa57e3628468015cc06cd2637aeb8926f2b74668a140f5d913d08bc800b3802",
+        "max_abs_per_task_delta_vs_history": 0.00021395295345694176,
+        "n_tasks_per_task_delta_gt_1e4": 2,
+        "n_tasks_scored": 127,
+        "needs_inference": true,
+        "rows_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/valid_row_ids.npy",
+        "shape": [
+          43793,
+          128
+        ]
+      }
+    },
+    "RC_REAL": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_rc_v1/runs/REAL/checkpoint_best.pt",
+      "checkpoint_epoch": 33,
+      "checkpoint_global_step": 90354,
+      "checkpoint_payload_epoch": 33,
+      "checkpoint_sha256": "5a94dc4b386fa13d0d74e0391e10dd61a97e37040e7c1301125c96cf5b4646b1",
+      "display": "RC-REAL",
+      "identity_status": "VERIFIED_ARTIFACT",
+      "label": "RC_REAL",
+      "model_key": "RC-REAL",
+      "role": "primary new architecture",
+      "round": "lcrc-pcba-rc-v1",
+      "selection_rule": "best official Validation AP (no Test used)",
+      "test": {
+        "ap_abs_delta_official_vs_independent": 1.1102230246251565e-16,
+        "ap_independent": 0.2559409168065798,
+        "ap_official": 0.2559409168065797,
+        "ap_recorded": 0.2559409168065797,
+        "ap_replay_abs_delta": 0.0,
+        "dtype": "float32",
+        "exists": true,
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/RC_REAL_best_valid.npy",
+        "logits_sha256": "9a40636406223c286d78dc7414e603e87df1be95656ae935f02b3d273f829779",
+        "n_tasks_scored": 127,
+        "needs_inference": false,
+        "rows_path": null,
+        "shape": [
+          43793,
+          128
+        ]
+      },
+      "valid": {
+        "ap_abs_delta_official_vs_independent": 5.551115123125783e-17,
+        "ap_independent": 0.26771427384867763,
+        "ap_official": 0.2677142738486777,
+        "ap_recorded": 0.26771284059094524,
+        "ap_replay_abs_delta": 1.4332577324416285e-06,
+        "dtype": "float32",
+        "exists": true,
+        "inference_note": "historical rounds saved no Validation logits; one read-only CPU forward of the same frozen state_dict",
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/RC_REAL.npy",
+        "logits_sha256": "018d58660c8abe05d4ba3b9e6472cf2d4b3b35635f1aeb8243faa3718d1431dd",
+        "max_abs_per_task_delta_vs_history": 4.1600217053905375e-05,
+        "n_tasks_per_task_delta_gt_1e4": 0,
+        "n_tasks_scored": 127,
+        "needs_inference": true,
+        "rows_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/valid_row_ids.npy",
+        "shape": [
+          43793,
+          128
+        ]
+      }
+    },
+    "S3": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_s3_v1/runs/S3/checkpoint_best.pt",
+      "checkpoint_epoch": 29,
+      "checkpoint_global_step": 79402,
+      "checkpoint_payload_epoch": 29,
+      "checkpoint_sha256": "ad665168da562120321171f6042a97f746ae4ae7377bd8364fc8d6264af007d0",
+      "display": "S3",
+      "identity_status": "VERIFIED_ARTIFACT",
+      "label": "S3",
+      "model_key": "S3",
+      "role": "primary new architecture",
+      "round": "lcrc-pcba-s3-v1",
+      "selection_rule": "best official Validation AP (no Test used)",
+      "test": {
+        "ap_abs_delta_official_vs_independent": 0.0,
+        "ap_independent": 0.25063338202304364,
+        "ap_official": 0.25063338202304364,
+        "ap_recorded": 0.25063338202304364,
+        "ap_replay_abs_delta": 0.0,
+        "dtype": "float32",
+        "exists": true,
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_predictions/S3_best_valid_epoch29.npy",
+        "logits_sha256": "87caf486e89104a3aa8500821c8c4194a69b8e53e0ceca953a78069adf03099f",
+        "n_tasks_scored": 127,
+        "needs_inference": false,
+        "rows_path": null,
+        "shape": [
+          43793,
+          128
+        ]
+      },
+      "valid": {
+        "ap_abs_delta_official_vs_independent": 0.0,
+        "ap_independent": 0.2714881532227929,
+        "ap_official": 0.2714881532227929,
+        "ap_recorded": 0.27148650173910654,
+        "ap_replay_abs_delta": 1.6514836863601445e-06,
+        "dtype": "float32",
+        "exists": true,
+        "inference_note": "historical rounds saved no Validation logits; one read-only CPU forward of the same frozen state_dict",
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/S3.npy",
+        "logits_sha256": "46eb13b6b912e40155ffec5b1bbf2bcb2695a1f33fb3d7fa249cb7980e17cb0a",
+        "max_abs_per_task_delta_vs_history": 0.00013026472149352264,
+        "n_tasks_per_task_delta_gt_1e4": 2,
+        "n_tasks_scored": 127,
+        "needs_inference": true,
+        "rows_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/valid_row_ids.npy",
+        "shape": [
+          43793,
+          128
+        ]
+      }
+    },
+    "W2": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_pcba_backbone_scaling_v1/runs/W2/checkpoint_best.pt",
+      "checkpoint_epoch": 24,
+      "checkpoint_global_step": 65712,
+      "checkpoint_payload_epoch": 24,
+      "checkpoint_sha256": "d86fe5e56e898d382acf66eb0533beb915f8ca39144c6c1c74e25e147667d2bd",
+      "display": "W2",
+      "identity_status": "VERIFIED_ARTIFACT",
+      "label": "W2",
+      "model_key": "W2",
+      "role": "primary reference",
+      "round": "lcrc-pcba-backbone-scaling-v1",
+      "selection_rule": "best official Validation AP (no Test used)",
+      "test": {
+        "ap_abs_delta_official_vs_independent": 5.551115123125783e-17,
+        "ap_independent": 0.25361686321804644,
+        "ap_official": 0.2536168632180464,
+        "ap_recorded": 0.2536168632180464,
+        "ap_replay_abs_delta": 0.0,
+        "dtype": "float32",
+        "exists": true,
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/W2_best_valid.npy",
+        "logits_sha256": "777397bb2e44aef2e2af11480e24c9efba40e835492285948da5f52a6848e7ff",
+        "n_tasks_scored": 127,
+        "needs_inference": false,
+        "rows_path": null,
+        "shape": [
+          43793,
+          128
+        ]
+      },
+      "valid": {
+        "ap_abs_delta_official_vs_independent": 5.551115123125783e-17,
+        "ap_independent": 0.2652790724708103,
+        "ap_official": 0.26527907247081034,
+        "ap_recorded": 0.2652740275066784,
+        "ap_replay_abs_delta": 5.044964131950547e-06,
+        "dtype": "float32",
+        "exists": true,
+        "inference_note": "historical rounds saved no Validation logits; one read-only CPU forward of the same frozen state_dict",
+        "logits_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/W2.npy",
+        "logits_sha256": "31cec7a4256a70be5c54362928cae58853287b48b8ed046b3e72c7398fa96621",
+        "max_abs_per_task_delta_vs_history": 0.00025682292915110705,
+        "n_tasks_per_task_delta_gt_1e4": 1,
+        "n_tasks_scored": 127,
+        "needs_inference": true,
+        "rows_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/valid_row_ids.npy",
+        "shape": [
+          43793,
+          128
+        ]
+      }
+    }
+  },
+  "needs_inference": {
+    "test": [],
+    "valid": [
+      "W2",
+      "S3",
+      "RC_REAL",
+      "BOC_FULL",
+      "BOC_BOND"
+    ]
+  },
+  "pairs": {
+    "auxiliary": [
+      {
+        "a": "BOC_FULL",
+        "b": "RC_REAL",
+        "key": "BOC_FULL_minus_RC_REAL"
+      },
+      {
+        "a": "BOC_BOND",
+        "b": "BOC_FULL",
+        "key": "BOC_BOND_minus_BOC_FULL"
+      }
+    ],
+    "primary": [
+      {
+        "a": "S3",
+        "b": "W2",
+        "key": "S3_minus_W2"
+      },
+      {
+        "a": "RC_REAL",
+        "b": "W2",
+        "key": "RC_REAL_minus_W2"
+      },
+      {
+        "a": "BOC_FULL",
+        "b": "W2",
+        "key": "BOC_FULL_minus_W2"
+      }
+    ]
+  },
+  "result_label": "POST_HOC_EXPOSED_TEST_DIAGNOSIS",
+  "round_id": "lcrc-pcba-bottleneck-diagnosis-v1",
+  "row_alignment": {
+    "freeze_row_ids": {
+      "boc": {
+        "dtype": "int64",
+        "equals_official_split_test": true,
+        "file_sha256": "136acbfea19153171469ebc45bb36bac2d95d7e44eda4dcecd4cdeae6cb7238a",
+        "int64_content_sha256": "83f5ee15fadaaf0499c21bc621a8bcd266f563571872df287915dba13d085e6c",
+        "matches_task_test_rows": true,
+        "path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/test_row_ids.npy",
+        "shape": [
+          43793
+        ]
+      },
+      "note": "The historical manifests disagree on how the row-id hash field is computed: the int64-content hash is 83f5ee15..., while boc.test_rows_npy_sha256 and s3.test_rows_int64_sha256 record 9171aa54.... Both .npy files are byte-identical (136acbfe...) and equal the official scaffold split elementwise, so alignment is proven by file hash + values, not by the ambiguous manifest field.",
+      "recorded_manifest_fields": {
+        "boc_manifest_test_row_ids_sha256": null,
+        "boc_manifest_test_rows_npy_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+        "s3_manifest_test_rows_int64_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+        "s3_manifest_test_rows_npy_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62"
+      },
+      "s3": {
+        "dtype": "int64",
+        "equals_official_split_test": true,
+        "file_sha256": "136acbfea19153171469ebc45bb36bac2d95d7e44eda4dcecd4cdeae6cb7238a",
+        "int64_content_sha256": "83f5ee15fadaaf0499c21bc621a8bcd266f563571872df287915dba13d085e6c",
+        "matches_task_test_rows": true,
+        "path": "tracks/structural-sufficiency/lcrc_pcba_s3_selective_v1/analysis/test_predictions/test_row_ids.npy",
+        "shape": [
+          43793
+        ]
+      }
+    },
+    "splits": {
+      "test": {
+        "elementwise_equal": true,
+        "n_rows": 43793,
+        "official_file_rows_sha256_int64": "83f5ee15fadaaf0499c21bc621a8bcd266f563571872df287915dba13d085e6c",
+        "official_split_file": "data/ogb/ogbg_molpcba/split/scaffold/test.csv.gz",
+        "task_rows_sha256_int64": "83f5ee15fadaaf0499c21bc621a8bcd266f563571872df287915dba13d085e6c"
+      },
+      "valid": {
+        "elementwise_equal": true,
+        "materialised_rows_equal": true,
+        "materialised_rows_path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions/valid_row_ids.npy",
+        "n_rows": 43793,
+        "official_file_rows_sha256_int64": "d7ff5ba8b135960b8809b0bf8f60bf190e0d926a922fd0d226cb88c268e13b69",
+        "official_split_file": "data/ogb/ogbg_molpcba/split/scaffold/valid.csv.gz",
+        "task_rows_sha256_int64": "d7ff5ba8b135960b8809b0bf8f60bf190e0d926a922fd0d226cb88c268e13b69"
+      }
+    },
+    "test_predictions": {
+      "all_models_share_rows": true,
+      "rows_path": "tracks/structural-sufficiency/lcrc_pcba_boc_v1/runs/freeze/test_predictions/test_row_ids.npy"
+    },
+    "valid_predictions": {
+      "all_models_share_rows": true,
+      "path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/_local/valid_predictions",
+      "rows_file_sha256": "91cc4e88f4bed1b655f05e5d962129178ef7b01e3003932a1f3e19041d37d113",
+      "rows_sha256_int64": "d7ff5ba8b135960b8809b0bf8f60bf190e0d926a922fd0d226cb88c268e13b69"
+    }
+  },
+  "schema": "lcrc-pcba-bottleneck-diagnosis-inventory-v1",
+  "task_sets": {
+    "n": {
+      "ALL_test": 127,
+      "ALL_valid": 127,
+      "HIGH_SUPPORT": 106,
+      "LOW_SUPPORT_test": 19,
+      "TEST_HIGH_BUT_VALID_LOW_SUPPORT": 2,
+      "n_tasks": 128
+    },
+    "path": "tracks/structural-sufficiency/lcrc_pcba_bottleneck_diagnosis_v1/analysis/task_sets.json"
+  },
+  "test_role": "EXPOSED_TEST_ENGINEERING_COMPARISON_SET"
+}
