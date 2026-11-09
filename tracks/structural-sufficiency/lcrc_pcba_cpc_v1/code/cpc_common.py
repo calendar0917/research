@@ -179,7 +179,7 @@ RECOVERY = {
 BOC_FROZEN_PREDICTIONS = {
     "W2_best_valid": {
         "path": BOC_ROUND / "runs/freeze/test_predictions/W2_best_valid.npy",
-        "sha256": "777397bb2e44eaf2e2af11480e24c9efba40e835492285948da5f52a6848e7ff",
+        "sha256": "777397bb2e44aef2e2af11480e24c9efba40e835492285948da5f52a6848e7ff",
     },
     "W2_epoch40": {
         "path": BOC_ROUND / "runs/freeze/test_predictions/W2_epoch40.npy",
