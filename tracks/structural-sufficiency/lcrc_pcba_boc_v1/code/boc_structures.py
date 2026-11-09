@@ -22,6 +22,7 @@ embedding, bond embedding or network output is cached.
 
 from __future__ import annotations
 
+import json
 import time
 from array import array
 from pathlib import Path

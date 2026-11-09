@@ -837,7 +837,8 @@ def require_audits(struct: Mapping[str, Any]) -> dict[str, Any]:
     cache_sha = str(struct["meta"]["cache_sha256"])
     out: dict[str, Any] = {}
     for name in ("structure_audit.json", "model_audit.json"):
-        path = C.ANALYSIS / name
+        candidates = (C.RUNS / "audit" / name, C.ANALYSIS / name)
+        path = next((p for p in candidates if p.is_file()), candidates[-1])
         if not path.is_file():
             raise RuntimeError(f"pre-training audit missing: {path}")
         audit = C.read_json(path)
