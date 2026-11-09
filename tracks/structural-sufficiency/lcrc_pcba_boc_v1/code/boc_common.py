@@ -180,9 +180,9 @@ RC = {
     "ap40": 0.26695028589805453,
     "gpu_hours": 1.9185818754296957,
     "best_checkpoint": RC_ROUND / "runs" / "REAL" / "checkpoint_best.pt",
-    "best_checkpoint_sha256": "d3dcf2f9a8c00668bc9a6293f173d79ac36e59b7a67be7bfc6be30032e1d0b60",
+    "best_checkpoint_sha256": "5a94dc4b386fa13d0d74e0391e10dd61a97e37040e7c1301125c96cf5b4646b1",
     "epoch40_checkpoint": RC_ROUND / "runs" / "REAL" / "checkpoint_epoch40.pt",
-    "epoch40_checkpoint_sha256": "24b9ad19f28fbbcb51a7544b093e25cbed5961e48c8942c7ab30061a6e8ccd86",
+    "epoch40_checkpoint_sha256": "f0e3c87ffa531f1215a6ec215d5456e3970cd13f7647086db9b4e601c9217151",
     "test_ap_best": 0.25594109880999005,
     "test_ap_40": 0.2561664520457869,
 }
