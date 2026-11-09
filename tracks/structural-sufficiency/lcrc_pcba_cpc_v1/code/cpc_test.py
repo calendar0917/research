@@ -543,10 +543,13 @@ def run_score(*, freeze_path: Path, out_path: Path, predictions_dir: Path) -> in
     recovery_test_best = recovery(cpc_best["official_ap"], w2_best["official_ap"], dynamic_best["official_ap"])
     recovery_test_40 = recovery(cpc_40["official_ap"], w2_40["official_ap"], dynamic_40["official_ap"])
 
+    run = C.read_json(C.RUNS / "LCRC_CPC" / "run.json")
+    valid_best_report = run["fixed_epoch_reports"][str(int(run["best_epoch"]))]
     high_mask = [
         i
         for i in range(C.N_TASKS)
-        if int(cpc_best["positive"][i]) >= 20 and int(dynamic_best["positive"][i]) >= 20
+        if int(cpc_best["positive"][i]) >= 20
+        and int(valid_best_report["positive"][i]) >= 20
     ]
     if len(high_mask) != int(C.RECOVERY["high_support_tasks"]):
         raise RuntimeError(f"high-support task set has {len(high_mask)} tasks, expected 106")
