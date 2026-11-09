@@ -37,11 +37,13 @@ branch-usage condition are all met), the frozen decision rule labels the round
 ### 1. Headline comparison
 
 Official `ogb.graphproppred.Evaluator("ogbg-molpcba")` AP; the independent
-per-task sklearn recomputation agrees to **1.1e-16** on every model, so the
-aggregation path is verified, not assumed. W2 / RC-REAL numbers come from
-their already frozen BOC-round Test logits scored through the identical code
-(they differ from the historical brief values by 3.8e-7 and 1.8e-7 — metric
-code identity, not a new measurement).
+per-task sklearn recomputation agrees to **≤1.1e-16** on every model (5.6e-17 for
+W2), so the aggregation path is verified, not assumed. W2 / RC-REAL numbers are
+recomputed here from their already frozen BOC-round Test logits through the
+identical code and are **bit-identical on Test AP** (absolute difference 0.0) and
+within 8.1e-7 on Validation AP to the BOC-round recorded values — a metric-code
+identity check, not a new measurement. The rounded figures in the brief
+(0.253617 / 0.255941) are those same numbers to 6 dp.
 
 | Model | Params | Best Valid AP | Test AP best-Valid | Valid@40 | Test@40 | GPU-hour |
 |---|---:|---:|---:|---:|---:|---:|
@@ -70,7 +72,9 @@ late-epoch advantage (+0.004…+0.007) persists to the frozen endpoint.
 ### 2. Is the gain broad, or a few sparse tasks?
 
 Test positive-count strata (best-Valid checkpoints, 127 scored tasks; 108 tasks
-have ≥20 Test positives, 18 have 5–19, exactly **1** has <5):
+have ≥20 Test positives, 18 have 5–19, exactly **1** has <5). Task id 45 is
+excluded: it has **zero** labelled positives in Valid and Test, so no AP exists for
+any model and it never enters any macro average.
 
 | Stratum | n tasks | mean Δ | median Δ | improved | degraded | macro contribution |
 |---|---:|---:|---:|---:|---:|---:|
@@ -80,12 +84,21 @@ have ≥20 Test positives, 18 have 5–19, exactly **1** has <5):
 | all scored | 127 | +0.008609 | +0.009379 | 87 | 40 | +0.008609 |
 | Validation & Test both ≥ 20 | **106** | **+0.010624** | +0.011586 | **75** | 31 | +0.008867 |
 | Validation ≥ 20 (Validation AP) | 107 | +0.011262 | +0.007760 | 75 | 32 | +0.009488 |
+| all scored, **vs RC-REAL** | 127 | +0.006285 | +0.006336 | 79 | 48 | +0.006285 |
 
 Answer: **broad, and low-support tasks do not create the gain — they slightly
-suppress it.** The one <5-positive task (task 56, 4 Test positives, Δ = −0.156)
+suppress it.** The one <5-positive task (task 57, 4 Test positives, Δ = −0.156)
 contributes −0.00123 to the macro; without it the macro would be larger. The
 ≥20 stratum mean (+0.0109) is higher than the all-task macro (+0.0086), so the
-effect is strongest exactly where the estimate is most stable.
+effect is strongest exactly where the estimate is most stable. Against RC-REAL
+the same shape holds (79/127 improve, mean +0.0063, median +0.0063), so the
+result is not an artefact of which reference is used.
+
+The low-support dominance check is negative: `analysis/comparison.json` →
+`low_support_dominance` shows the sub-20-support tasks carrying only
++0.000597 − 0.001228 = **−0.00063** of the +0.008609 macro, while the ≥20 stratum
+carries +0.00924 (**107%** of the total). The single low-support task alone is
+−14.3% of the summed per-task delta and 4.7% of the summed |delta|.
 
 Distribution inside the high-support stratum: 57/108 tasks improve by > +0.01 and
 36/108 by > +0.02, against 14/108 degrading by > 0.01 and 9/108 by > 0.02. It is
@@ -96,10 +109,10 @@ number; this decomposition only shows concentration):
 
 | Removed | Tasks removed | Mean Δ of removed | Macro Δ remaining |
 |---|---|---:|---:|
-| |Δ| rank 1 | task 76 | +0.2676 | +0.006553 |
-| |Δ| ranks 1–3 | 76, 107, 56 | −0.0488 | **+0.009999** |
-| |Δ| ranks 1–5 | above + 31, 2 | −0.0177 | +0.009686 |
-| |Δ| ranks 1–10 | above + 61, 116, 109, 119, 9 | −0.0021 | +0.009527 |
+| abs-Δ rank 1 | 77 | +0.2676 | +0.006553 |
+| abs-Δ ranks 1–3 | 77, 108, 57 | −0.0488 | **+0.009999** |
+| abs-Δ ranks 1–5 | above + 31, 2 | −0.0177 | +0.009686 |
+| abs-Δ ranks 1–10 | above + 62, 117, 110, 120, 9 | −0.0021 | +0.009527 |
 
 Removing the three largest-magnitude tasks *raises* the macro delta (two of them
 are losses). No single task, and no group of tasks, carries the result.
@@ -120,8 +133,10 @@ task index; both splits shown):
 | −4 | 117 | 7 | 9 | −0.0818 | −0.1281 |
 | −5 | 120 | 11 | 13 | −0.0658 | +0.1652 |
 
-The extremes are concentrated in 6–11-positive tasks, on both sides. Per the
-brief, no architecture claim is made from any single one of them.
+The extremes are mostly sparse tasks (4–19 Test positives) on both sides; the
+exceptions are 110 and 9 on the positive side, where the improvement is
++0.056…+0.075 on 267 and 32 positives. Per the brief, no architecture claim is
+made from any single one of these tasks.
 
 ### 3. Validation / Test agreement
 
@@ -153,27 +168,38 @@ Full official Validation split, eval mode, best-Valid checkpoint:
 | **Rtotal** | **0.939014** | 1.063759 |
 | finite fraction of h2 | 1.000000 | 1.000000 |
 
-Per-epoch trajectory on the fixed 32-row diagnostic batch (both layers grow
-monotonically: R1 0.09 → 0.71, R2 0.09 → 0.61, Rtotal 0.18 → 1.08), `fc2`
-weight norm 0.85 → 11.71 for block 0, and `bond_proj` gradient norm stays
-≈ 1.1e-3 → 2.9e-3 over all 40 epochs. No epoch produced a non-finite logit or a
-non-finite h2; grad-norm clipping fired 13 times in 109,520 steps.
+Per-epoch trajectory on the fixed 32-row diagnostic batch: the update magnitude
+grows steadily over training (with small epoch-to-epoch dips, e.g. R1 0.6167 →
+0.6071 at epochs 21→22) from R1 0.0935 / R2 0.0885 / Rtotal 0.1788 at epoch 1 to
+R1 0.7122 / R2 0.6107 / Rtotal 1.0820 at epoch 40; `fc2` weight norm 0.85 → 11.71
+for block 0, and `bond_proj` gradient norm stays ≈ 1.1e-3 → 2.9e-3 over all 40
+epochs. No epoch produced a non-finite logit or a non-finite h2; grad-norm
+clipping fired 13 times in 109,520 steps.
 
 Gradient audit (real training steps, `analysis/preflight.json`):
 
 | Step | New tensors receiving non-zero gradient | Structurally zero |
 |---:|---|---|
-| 1 | `fc2.weight`, `fc2.bias` of both blocks only | `bond_proj.*`, both `fc1.*`, both `norm.*` |
-| 3 | **all 12** new tensors | none |
-| 10 | all 12 | none |
-| 100 | all 12 | none |
+| 1 | `fc2.weight`, `fc2.bias` of both blocks (4 of 14) | `bond_proj.*`, both `fc1.*`, both `norm.*` (10 of 14) |
+| 3 | **all 14** new tensors | none |
+| 10 | all 14 | none |
+| 100 | all 14 | none |
 
 This is exactly the predicted consequence of `fc2 = 0` initialisation: at step 1
 only the (zero) output layer can receive gradient, and from step 3 onward the
 gradient reaches `bond_proj`, both `fc1` and both `LayerNorm`s of both layers.
-The branch is therefore **not** `DYNAMIC_BRANCH_SUPPRESSED`; Rtotal = 0.94 ≫ the
-0.01 suppression threshold, and Rtotal keeps *growing* through epoch 40, i.e.
-training is moving toward more, not less, message exchange.
+Total new-tensor gradient norm falls 4.52 (step 1) → 4.03 (step 3) → 1.67
+(step 10) → 0.140 (step 100) against a W2-trunk norm of 16.66 → 15.12 → 6.76 →
+0.357, i.e. the new path holds a stable **20–28%** share of the total gradient as
+the loss drops from 1.881 to 0.063. `bond_proj.weight` itself carries 7.5e-3 at
+step 10 and 2.9e-3 at epoch 40 — small in absolute terms, but non-zero and
+stable, so the shared projection never falls into a dead state.
+The branch is therefore **not** `DYNAMIC_BRANCH_SUPPRESSED` in any sense the
+protocol allows: the updates are two orders of magnitude away from "numerically
+~zero" (Rtotal 0.94, and R1/R2 alone are 0.65/0.53), every new tensor receives
+gradient, and Rtotal keeps *growing* through epoch 40 — training moves toward
+more, not less, message exchange. Per the protocol, Rtotal is a usage indicator
+only and is never cited as evidence of predictive ability.
 
 ### 5. Post-training Validation-only interventions (frozen best-Valid checkpoint)
 
@@ -251,12 +277,18 @@ saturates.
 ### What cannot be excluded
 
 1. **Added capacity.** W2-DYNAMIC has +134,144 parameters (+13.5%) and two extra
-   non-linear layers. The historical structural-gain round found that two residual
-   FFN blocks *without* messages (arm F, +33,408 params) did **not** help at
-   epoch 12 on the small C1 base — evidence, but not proof, that capacity alone is
-   not the driver here. No capacity-matched STATIC arm was trained in this round,
-   so "the gain comes from the message mechanism" is not established; it is only
-   *consistent with* the evidence above.
+   non-linear layers. The closest capacity-controlled precedent in this repo is the
+   structural-gain sprint on the much smaller C1 base (245,184 params, warm-started
+   continuation to epoch 12): arm **F** = the same two pre-norm residual FFN blocks
+   per atom *without* messages (+33,408 params) gave Δ = **−0.000934** (51/127 tasks
+   improved, i.e. capacity and non-linearity alone bought nothing, slightly
+   negative), while arm **M** = F + directed physical-bond messages (+896 params,
+   capacity-matched to within 2.7%) gave Δ = **+0.003785** (81/127). That is real
+   evidence that message content, not block capacity, drove the gain there — but it
+   is a different base, a warm start and an epoch-12 comparison, so it does not
+   transfer automatically to a from-scratch 40-epoch width-128 model. No
+   capacity-matched STATIC arm was trained **in this round**, so "the gain comes
+   from the message mechanism" is supported, not established.
 2. **Longer-range reachability.** Two MP layers extend the effective receptive
    field of W2's local representation from 1 to 2 hops. This round cannot
    separate "more distant information becomes reachable" from "learned
@@ -302,13 +334,15 @@ strong. The subset evidence (high-support +0.0106…+0.0109, common-106 +0.0106)
 means the honest summary is "at the boundary of the STRONG band, evaluated on the
 holistic macro metric it falls just short".
 
-**Is it worth continuing?** Yes — this is the first round in the LCRC-PCBA line
-whose Validation *and* Test advantage over W2 survives the "is the mechanism
-really used" audit, and it is the largest Test AP of any LCRC-PCBA model measured
-so far on this comparison set (0.262226 vs 0.255941 for RC-REAL and 0.254142 for
-BOC-FULL). But the effect is currently indistinguishable from added capacity and
-from extended receptive range, so continuing is only justified **if the next step
-is a mechanism-isolating one**, not a bigger version of the same arm.
+**Is it worth continuing?** Yes — W2-DYNAMIC is the highest Test AP recorded so
+far on this comparison set (0.262226 vs 0.255941 for RC-REAL and 0.254142 for
+BOC-FULL), the Validation and Test directions agree, and a dedicated usage audit
+(gradient reach, layer-input capture, chain dependency, post-training
+interventions) confirms the added component is the one being exercised. That is
+more evidence than any previous LCRC-PCBA round carried for its positive arm. But
+the effect is currently not separated from added capacity or from extended
+receptive range, so continuing is only justified **if the next step is a
+mechanism-isolating one**, not a bigger version of the same arm.
 
 **What a confirmation round would have to include** (none of it started here):
 
@@ -363,10 +397,12 @@ free design choice: 0.86 Test AP points and a broad task-level improvement are
 available from two layers of genuine neighbour-state exchange on top of an
 otherwise unchanged W2, at +13.5% parameters and +24% training time
 (1.734 vs 1.395 GPU-hours). It does **not** mean LCRC should be replaced by a GNN.
-It means the specific question "does *iteration* buy anything once the one-shot
-S1/S2 chemistry is already encoded?" now has a positive, mechanism-verified answer
-in the 40-epoch MolPCBA budget, and that the follow-up should be a *mechanism
-isolation* (capacity-matched STATIC + one-layer arm), not a capacity expansion.
+It means the question "does *iteration* buy anything once the one-shot S1/S2
+chemistry is already encoded?" now has a positive, usage-verified answer inside
+the 40-epoch MolPCBA budget — with the caveat that two hops also widen the
+receptive field and add parameters, so "iteration" is not yet isolated from
+"one extra hop". The follow-up should therefore be a *mechanism isolation*
+(capacity-matched STATIC + one-layer arm), not a capacity expansion.
 
 **5. If it fails, what would that refute, and what would stay open?** The round
 did not fail, so this branch is counterfactual; recorded for the other outcome.
@@ -388,19 +424,24 @@ budget, not about whether the mechanism was active.
 ## Incidents, deviations and provenance
 
 1. **Isolation tolerance calibrated before any formal step** (commit `ea7eec6b`).
-   The first GPU gate attempt (`dyn-audit`, 41 s) failed the cross-molecule
-   isolation check at 1.9e-6 against a 1e-6 threshold. This is float32
-   `index_add` reduction-order noise on CUDA (the same molecule's logits are
-   bitwise unchanged on CPU and `h2` for the untouched molecule moved by 7.2e-7).
-   The tolerance was set to 1e-5, *justified by the measurement and recorded
-   before any training step*, and all nine gates then passed (`dyn-audit2`). No
-   model, data, LR, depth or decision rule changed; the failed 41 s allocation is
+   The first GPU gate attempt (`dyn-audit`, 32 s wall) failed the cross-molecule
+   isolation check at 1.9e-6 against a 1e-6 threshold. The measured effect is
+   float32 reduction-order noise, not a real dependency: with **0** cross-molecule
+   edges found, the untouched molecule's `h0` and `h2` move by 4.8e-7 and its
+   logits by 1.9e-6, versus 4.64 for the perturbed molecule's logits (a separation
+   of ~2.4e6), and the same check is exactly 0.0 on CPU. The tolerance was set to
+   1e-5, *justified by the measurement and recorded before any training step*; all
+   nine gates then passed (`dyn-audit2`) with the identical measured noise. No
+   model, data, LR, depth or decision rule changed; the failed 32 s allocation is
    charged in `analysis/gpu_ledger.json`.
 2. **No post-hoc change** to the model, widths, LR, dropout, weight decay, epoch
    count, batch plan, thresholds or checkpoint rule after any Validation or Test
-   number was seen. Two code fixes after the run were analysis-only: a wrong dict
-   key in the extreme-task helper (`dy_analyze.py`) and the addition of the
-   robustness block. Neither touches a model, a metric or a stored number.
+   number was seen. Three code changes after the run were analysis-only and touch
+   no model, metric or stored number: a wrong dict key in the extreme-task helper,
+   the addition of the robustness/decomposition block, and a task-id mapping fix
+   in that block (array positions were printed where official task ids were meant;
+   the corrected ids are 77/108/57/31/2/62/117/110/120/9 — see
+   `analysis/comparison.json` → `robustness`).
 3. **Provenance.** `run.json` records `git_commit = ea7eec6bdac3`, and
    `git_state.dirty_files` lists only **untracked output** — this round's
    `analysis/` directory and two pre-existing `lcrc_pcba_s3_v1/analysis/*failed.json`
@@ -422,16 +463,24 @@ budget, not about whether the mechanism was active.
    `cc_data.read_official_test_labels` gate. The official Test row-id hash
    `9171aa54…` is identical to the frozen BOC artifact, proving the same rows
    were scored. Nothing was retrained, reselected or tuned afterwards.
-6. **Budget.** Training 1.7340 GPU-hours (target ≤ 2.5, hard cap 3.0); the whole
-   round including the gates, the mechanism pass and the freeze is **1.7717
-   GPU-hours**. Peak allocated memory 235.6 MiB. One training job at a time; GPU0
-   was occupied by another user's process throughout and was never touched
-   (`res-gpu1` = `CUDA_VISIBLE_DEVICES=1` in every run).
-7. **Profile fidelity.** The 100-batch profile projected 1.2079 GPU-hours; the
-   realised 1.7340 is 44% higher because the projection's validation pass was
-   measured once rather than per epoch and because per-epoch step medians drifted
-   between 49 and 58 ms. The projection still bounded the budget by a wide
-   margin, so no implementation optimisation was needed.
+6. **Budget.** Training 1.7340 GPU-hours (target ≤ 2.5, hard cap 3.0); all five
+   allocations including the failed gate attempt total **1.7771 GPU-hours**
+   (`analysis/gpu_ledger.json`, with each entry's wall duration). Peak allocated
+   memory 235.6 MiB. One job at a time; GPU0 was occupied by another user's
+   process throughout and was never touched (`res-gpu1` =
+   `CUDA_VISIBLE_DEVICES=1` in every run).
+7. **Profile fidelity — the projection was optimistic by 44%.** The 100-batch
+   profile measured 37.0 ms/step (mean after 10 warmup steps, p50 35.4 ms) and
+   projected 108.7 s/epoch → **1.2079 GPU-hours**. The realised run averaged
+   **53.5 ms/step** (5,857.8 s train / 109,520 steps) and 1.7340 GPU-hours. The
+   44% gap is not explained by the validation pass (7.3 s/epoch, which the
+   projection did include); it is a step-time underestimation whose cause is not
+   established with one run — plausibly the first 100 batches of epoch 1 are not
+   representative of the epoch's size distribution, and/or co-tenant load on the
+   host changed between the profile and the run. The outcome is unaffected (the
+   projection bounded the budget by a wide margin and no optimisation was
+   needed), but a future preflight should profile batches sampled across an epoch
+   or measure one full epoch, and treat the 100-batch figure as a lower bound.
 
 ---
 

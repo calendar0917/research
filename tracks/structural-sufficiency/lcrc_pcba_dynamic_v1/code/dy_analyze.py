@@ -513,20 +513,16 @@ def robustness_block(comparison: Mapping[str, Any]) -> dict[str, Any]:
     vw = np.asarray([r["valid_positive_w2"] for r in rows], dtype=np.int64)
     hi = pos >= SCORABLE_MIN_SUPPORT
     common = hi & (vd >= SCORABLE_MIN_SUPPORT) & (vw >= SCORABLE_MIN_SUPPORT)
+    task_ids = np.asarray([int(r["task"]) for r in rows], dtype=np.int64)
     drop = {}
     for k in (1, 3, 5, 10):
         idx = np.argsort(-np.abs(d))[:k]
         keep = np.setdiff1d(np.arange(d.size), idx)
         drop[f"drop_top_abs_{k}"] = {
             "macro_delta_remaining": float(d[keep].mean()),
-            "removed_tasks": [int(i) for i in idx.tolist()],
+            "removed_tasks": [int(task_ids[i]) for i in idx.tolist()],
             "removed_mean_delta": float(d[idx].mean()),
         }
-    # Validation vs Test agreement of the per-task deltas
-    valid_ap_dyn = np.asarray(
-        [r["test_ap_dynamic_best"] for r in rows], dtype=np.float64
-    )  # placeholder, replaced below
-    del valid_ap_dyn
     return {
         "n_scored": int(d.size),
         "macro_delta": float(d.mean()),
@@ -537,8 +533,16 @@ def robustness_block(comparison: Mapping[str, Any]) -> dict[str, Any]:
         "high_support_degrade_gt_0.01": int(((d < -0.01) & hi).sum()),
         "high_support_degrade_gt_0.02": int(((d < -0.02) & hi).sum()),
         "macro_sensitivity_drop_extremes": drop,
+        "scored_task_ids": {
+            "n": int(task_ids.size),
+            "unscorable": sorted(set(range(C.N_TASKS)) - set(task_ids.tolist())),
+            "note": (
+                "a task is scored only if at least one labelled positive exists in "
+                "the split; the excluded id is never part of any macro average"
+            ),
+        },
         "single_low_support_task": {
-            "task": int(np.flatnonzero(pos < 5)[0]) if (pos < 5).any() else None,
+            "task": int(task_ids[pos < 5][0]) if (pos < 5).any() else None,
             "test_positive": int(pos[pos < 5][0]) if (pos < 5).any() else None,
             "delta": float(d[pos < 5][0]) if (pos < 5).any() else None,
         },

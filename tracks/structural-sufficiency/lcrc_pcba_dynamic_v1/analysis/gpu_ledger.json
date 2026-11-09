@@ -1,53 +1,60 @@
 {
+  "allocation": "one A100-SXM4-40GB, pool res-gpu1 = CUDA_VISIBLE_DEVICES=1",
   "budget": {
     "hard_cap_gpu_hours": 3.0,
     "target_gpu_hours": 2.5
   },
+  "charging_rule": "dyn-train uses run.json's measured gpu_hours (train+valid+setup); short stages are charged by wall duration from the rr run registry, which is an upper bound on device time",
+  "concurrency": "one job at a time; no second model was ever trained in parallel",
   "entries": [
     {
       "charged": true,
-      "gpu_hours": 0.006305555555555556,
-      "outcome": "FAILED on the isolation tolerance (1.9e-6 CUDA reduction-order noise vs a 1e-6 gate); no formal step ran",
-      "stage": "preflight gate attempt 1 (dyn-audit)"
+      "experiment": "dyn-audit",
+      "gpu_hours": 0.008889,
+      "state": "failed",
+      "wall_seconds": 32.0,
+      "what": "preflight gate attempt 1 - FAILED on the cross-molecule isolation tolerance (1.9e-6 CUDA reduction-order noise vs a 1e-6 gate); no formal step ran"
     },
     {
       "charged": true,
-      "gpu_hours": 0.006416666666666667,
-      "outcome": "PASS, projected 1.2079 GPU-hours for 40 epochs",
-      "stage": "preflight gates + gradient audit + 100-batch profile (dyn-audit2)"
+      "experiment": "dyn-audit2",
+      "gpu_hours": 0.009167,
+      "state": "completed",
+      "wall_seconds": 33.0,
+      "what": "preflight gates + gradient audit at steps 1/3/10/100 + 100-batch profile - PASS, projected 1.2079 GPU-hours"
     },
     {
       "charged": true,
-      "gpu_hours": 1.734,
-      "outcome": "COMPLETED, 109,520 optimizer steps",
-      "stage": "formal training W2-DYNAMIC seed 0, 40 epochs (dyn-train)"
+      "experiment": "dyn-train",
+      "gpu_hours": 1.734048,
+      "state": "completed",
+      "wall_seconds": 6253.0,
+      "what": "formal training W2-DYNAMIC seed 0, 40 epochs, 109,520 optimizer steps"
     },
     {
       "charged": true,
-      "gpu_hours": 0.015833333333333335,
-      "outcome": "2 checkpoints x real/off/shuffle",
-      "stage": "post-training Validation-only mechanism interventions (dyn-mechanism)"
+      "experiment": "dyn-mechanism",
+      "gpu_hours": 0.015833,
+      "state": "completed",
+      "wall_seconds": 57.0,
+      "what": "post-training Validation-only message_off / message_shuffle on 2 checkpoints"
     },
     {
       "charged": true,
-      "gpu_hours": 0.009166666666666667,
-      "outcome": "sealed, no Test label read",
-      "stage": "Test-logit freeze (dyn-freeze)"
-    },
-    {
-      "charged": true,
-      "gpu_hours": 0.0,
-      "outcome": "official Evaluator + independent sklearn AP",
-      "stage": "post-freeze scoring (CPU local)"
+      "experiment": "dyn-freeze",
+      "gpu_hours": 0.009167,
+      "state": "completed",
+      "wall_seconds": 33.0,
+      "what": "Test-logit freeze; sealed before any Test label was read"
     }
   ],
-  "gpu0_occupancy_during_round": "another user's python3 process, 16,082 MiB, 100% utilisation - GPU0 was never used",
-  "host": "res (a100-2), single idle A100, pool res-gpu1 (CUDA_VISIBLE_DEVICES=1)",
-  "note": "one training job at a time; no second model was started in parallel",
-  "peak_allocated_mib": 235.6,
+  "gpu0_occupancy_during_round": "another user's python3 process (~16.1 GiB, 100% utilisation) - GPU0 was never used by this round",
+  "host": "res (a100-2)",
+  "peak_allocated_mib": 224.7,
   "round_id": "lcrc-pcba-dynamic-v1",
   "schema": "lcrc-pcba-dynamic-gpu-ledger-v1",
-  "total_gpu_hours": 1.771722,
+  "source_registry": "rr jobs (timestamps as recorded by the runner)",
+  "total_gpu_hours": 1.777104,
   "within_hard_cap": true,
   "within_target": true
 }
