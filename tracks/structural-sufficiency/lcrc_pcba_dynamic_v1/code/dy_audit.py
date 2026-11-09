@@ -33,6 +33,11 @@ import dy_model as M  # noqa: E402
 import dy_train as T  # noqa: E402
 
 LOGIT_TOL = 1e-4
+#: Cross-molecule isolation tolerance.  On CUDA ``index_add_``/``scatter_reduce_``
+#: accumulate with atomics, so an independent molecule's logits move by the
+#: float32 reduction-order noise (~2e-6 measured, 0.0 on CPU).  Calibrated
+#: BEFORE the formal run, exactly like the historical structural-gain round.
+ISOLATION_TOL = 1e-5
 
 
 # ---------------------------------------------------------------------------
@@ -264,13 +269,14 @@ def gate_isolation(task: Any, model: M.W2DynamicModel, device: torch.device) -> 
         "edges_intra_molecule": bool(edges["checked"]),
         "both_directions": bool(edges["both_directions"]),
         "each_physical_bond_twice": bool(edges["each_physical_bond_twice"]),
-        "other_molecule_logits_unchanged": mol0 <= 1e-6,
-        "other_molecule_h2_unchanged": h2_diff <= 1e-6,
+        "other_molecule_logits_unchanged": mol0 <= ISOLATION_TOL,
+        "other_molecule_h2_unchanged": h2_diff <= ISOLATION_TOL,
         "perturbed_molecule_did_change": mol1 > 1e-3,
     }
     return {
         "edge_audit": edges,
         "logits_other_molecule_max_abs_diff": mol0,
+        "isolation_tolerance": ISOLATION_TOL,
         "logits_perturbed_molecule_max_abs_diff": mol1,
         "h0_other_molecule_max_abs_diff": h0_diff,
         "h2_other_molecule_max_abs_diff": h2_diff,
