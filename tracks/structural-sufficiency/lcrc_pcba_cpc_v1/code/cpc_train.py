@@ -177,7 +177,6 @@ def train_step(
     loss.backward()
     new_norm = group_norm(model, new=True)
     w2_norm = group_norm(model, new=False)
-    mod_grads = module_grad_norms(model)
     gnorm = float(torch.nn.utils.clip_grad_norm_(model.parameters(), clip))
     if not math.isfinite(gnorm):
         raise RuntimeError(f"non-finite gradient norm at step {global_step}")
@@ -187,7 +186,6 @@ def train_step(
         "grad_norm": gnorm,
         "lr": lr,
         "clipped": bool(gnorm > clip),
-        "module_grad_norms": mod_grads,
         "grad_norm_new_total": new_norm,
         "grad_norm_w2_total": w2_norm,
     }
@@ -294,6 +292,25 @@ def diagnostic_batch(task: Any, device: torch.device) -> dict[str, Any]:
     rows = [int(x) for x in task.valid_rows[: int(C.DIAG_VALID_ROWS)]]
     batch = P.collate_with_cpc(task, task.cpc, rows)
     return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in batch.items()}
+
+
+def diagnostic_module_grads(
+    model: torch.nn.Module, batch: Mapping[str, Any], y: torch.Tensor
+) -> dict[str, float]:
+    """One eval-mode backward on the fixed diagnostic batch, once per epoch."""
+    was_training = model.training
+    model.eval()
+    try:
+        logits = model(batch)
+        loss = C.MET.masked_bce_loss(logits, y)
+        model.zero_grad(set_to_none=True)
+        loss.backward()
+        grads = module_grad_norms(model)
+        model.zero_grad(set_to_none=True)
+        return grads
+    finally:
+        if was_training:
+            model.train()
 
 
 def scheduler_state(global_step: int, optimizer: torch.optim.Optimizer) -> dict[str, Any]:
@@ -615,7 +632,6 @@ def train(
         losses: list[float] = []
         step_times: list[float] = []
         grad_norms_total: list[float] = []
-        grad_acc: dict[str, list[float]] = {name: [] for name in MODULE_NAMES}
         new_total_epoch: list[float] = []
         w2_total_epoch: list[float] = []
         clip_events_epoch = 0
@@ -634,8 +650,6 @@ def train(
             clip_events_epoch += int(out["clipped"])
             new_total_epoch.append(float(out["grad_norm_new_total"]))
             w2_total_epoch.append(float(out["grad_norm_w2_total"]))
-            for name in MODULE_NAMES:
-                grad_acc[name].append(float(out["module_grad_norms"][name]))
             if device.type == "cuda":
                 torch.cuda.synchronize(device)
             step_times.append(float(time.perf_counter() - t0))
@@ -707,7 +721,12 @@ def train(
             }
         usage = M.usage_metrics(model, diag)
         weight_norms = module_weight_norms(model)
-        grad_means = {name: (float(np.mean(v)) if v else None) for name, v in grad_acc.items()}
+        diag_y = torch.as_tensor(
+            task.labels[[int(x) for x in task.valid_rows[: int(C.DIAG_VALID_ROWS)]]],
+            dtype=torch.float32,
+            device=device,
+        )
+        grad_means = diagnostic_module_grads(model, diag, diag_y)
         branch_history.append(
             {
                 "epoch": int(epoch),
