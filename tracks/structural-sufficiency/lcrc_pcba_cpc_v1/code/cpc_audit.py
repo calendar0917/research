@@ -171,12 +171,19 @@ def structural_small_graph_audit() -> dict[str, Any]:
 
 
 def _permute_atoms_with_paths(batch: Mapping[str, Any], *, seed: int = 20261110):
-    perm, p = C.permute_atoms(batch, seed=seed)
+    # The inherited permutation helper is a CPU operation.  Run it on a CPU
+    # copy, then move the permuted batch back to the caller's device.
+    devices = {v.device for v in batch.values() if torch.is_tensor(v)}
+    device = next(iter(devices)) if devices else torch.device("cpu")
+    cpu = {k: (v.cpu() if torch.is_tensor(v) else v) for k, v in batch.items()}
+    perm, p = C.permute_atoms(cpu, seed=seed)
     p_inv = torch.empty_like(p)
     p_inv[p] = torch.arange(p.numel(), dtype=torch.long)
     for key in ("cpc_path_atom", "cpc_middle", "cpc_end"):
         if key in perm and perm[key].numel():
             perm[key] = p_inv[perm[key]]
+    if device.type != "cpu":
+        perm = {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in perm.items()}
     return perm, p
 
 
@@ -427,8 +434,9 @@ def gate_architecture(task: Any, device: torch.device) -> dict[str, Any]:
         batch["cpc_path_atom"], batch["cpc_middle"], batch["cpc_end"], batch["cpc_bond_ij"], batch["cpc_bond_jk"], seed=0
     )
     iso_shuffle = P.check_batch_isolation(shuffled)
-    logits_shuffle = _logits(nondeg.to(device), shuffled)
-    logits_real_nondeg = _logits(nondeg, batch)
+    nondeg_device = nondeg.to(device)
+    logits_shuffle = _logits(nondeg_device, shuffled)
+    logits_real_nondeg = _logits(nondeg_device, batch)
     shuffle_diff = _maxdiff(logits_real_nondeg, logits_shuffle)
 
     # direct remote-endpoint dependence: changing only h0[k] changes delta[i]
@@ -444,13 +452,14 @@ def gate_architecture(task: Any, device: torch.device) -> dict[str, Any]:
         "cpc_bond_ij": b_ij,
         "cpc_bond_jk": b_jk,
     }
-    h_a = torch.zeros((3, C.WIDTH))
+    h_a = torch.zeros((3, C.WIDTH), device=device)
     h_b = h_a.clone()
     h_b[2, 0] = 1.0
-    b_syn = torch.zeros((2, C.BOND_WIDTH))
+    b_syn = torch.zeros((2, C.BOND_WIDTH), device=device)
+    one_path = {k: v.to(device) for k, v in one_path.items()}
     with torch.inference_mode():
-        d_a, _ = nondeg.cpc(h_a, b_syn, one_path)
-        d_b, _ = nondeg.cpc(h_b, b_syn, one_path)
+        d_a, _ = nondeg_device.cpc(h_a, b_syn, one_path)
+        d_b, _ = nondeg_device.cpc(h_b, b_syn, one_path)
     remote_sensitivity = float((d_a[0] - d_b[0]).abs().max().item())
 
     checks = {
