@@ -20,8 +20,8 @@ best-Validation, scores **0.254142** official Test AP.  That is
 
 `BOC-BOND` (ring content exactly zero) scores 0.251666, i.e. **−0.001951** vs
 W2.  The ring channel therefore adds +0.002476 Test AP over the separately
-trained BOND arm at best-Valid, but this does not lift the joint model above W2
-or RC-REAL, and it does not clear the engineering band.  At the fixed epoch-40
+trained BOND arm at best-Valid.  That lifts FULL just above W2 (+0.000526), but
+it remains below RC-REAL and below the no-evidence ceiling.  At the fixed epoch-40
 endpoint both arms are also below W2@40 (0.250986): FULL 0.250658, BOND 0.249054.
 The two arms exhausted the round's budget; no further arms were run.
 
@@ -124,8 +124,9 @@ Valid-only zeroing sensitivity (official Validation AP, best-Valid checkpoint):
 Zeroing the ring channel of the *trained FULL* model collapses Validation AP by
 0.0523; zeroing the bond channel collapses it by 0.0670.  Both channels are
 used.  A model trained from the start with ring zeros (BOND) compensates through
-the bond channel and reaches the same Validation level, but both learned
-solutions lose on Test relative to W2.  This rules out "the ring channel was
+the bond channel and reaches the same Validation level.  On Test, however, the
+BOND solution is below W2, and FULL is only +0.000526 above W2 — far below its
+Validation gain.  This rules out "the ring channel was
 inactive" and also shows that the joint representation is not a free
 improvement: the network can substitute one channel for the other on
 Validation, yet neither substitution transfers better.
@@ -183,8 +184,8 @@ Both pre-training audits passed and bind the same cache hash
   transferring, despite the ring channel being active and necessary for the
   trained FULL model.
 * The ring-system content adds +0.0025 Test over the separately trained BOND
-  arm, but both are below W2 and RC-REAL.  It is not enough to call a meaningful
-  improvement, and the absolute score is below the 0.258 no-evidence ceiling.
+  arm.  FULL therefore edges W2 by +0.0005, but it is below RC-REAL and the
+  absolute score is below the 0.258 no-evidence ceiling.
 * The Test split is already exposed and this is a single seed.  The per-task
   tails (task 31 −0.321, task 77 +0.175) show that the aggregate is not a stable
   task-level story.  These results are descriptive engineering evidence, not a
