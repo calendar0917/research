@@ -281,6 +281,10 @@ def run_decision(*, scores_path: Path, out_path: Path) -> int:
     # Common high-support set: >=20 positives in BOTH official Test and
     # Validation, exactly as pre-registered.
     valid_best_report = _per_task(run, int(run["best_epoch"]))
+    w2_run = C.read_json(C.W2_SEED0["run_json"])
+    dyn_run = C.read_json(C.DYNAMIC_ROUND / "runs/W2_DYNAMIC/run.json")
+    valid_w2_report = _per_task(w2_run, int(C.W2_SEED0["best_epoch"]))
+    valid_dyn_report = _per_task(dyn_run, int(C.DYNAMIC["best_epoch"]))
     high = [
         t
         for t in range(C.N_TASKS)
@@ -321,7 +325,17 @@ def run_decision(*, scores_path: Path, out_path: Path) -> int:
                 "stratum": "high_support" if t in high else "low_support",
                 "valid_positive_best_epoch": int(valid_best_report["positive"][t]),
                 "test_positive": int(cpc_best["positive"][t]),
-                "cpc_best_valid_ap": _per_task(run, int(run["best_epoch"]))["per_task_ap"][t],
+                "cpc_best_valid_ap": valid_best_report["per_task_ap"][t],
+                "w2_best_valid_ap": valid_w2_report["per_task_ap"][t],
+                "dynamic_best_valid_ap": valid_dyn_report["per_task_ap"][t],
+                "cpc_minus_w2_best_valid": None
+                if valid_best_report["per_task_ap"][t] is None
+                or valid_w2_report["per_task_ap"][t] is None
+                else float(valid_best_report["per_task_ap"][t] - valid_w2_report["per_task_ap"][t]),
+                "cpc_minus_dynamic_best_valid": None
+                if valid_best_report["per_task_ap"][t] is None
+                or valid_dyn_report["per_task_ap"][t] is None
+                else float(valid_best_report["per_task_ap"][t] - valid_dyn_report["per_task_ap"][t]),
                 "cpc_best_test_ap": cpc_best["per_task_ap"][t],
                 "cpc_40_test_ap": cpc_40["per_task_ap"][t],
                 "w2_best_test_ap": w2_best["per_task_ap"][t],
@@ -428,6 +442,20 @@ def run_decision(*, scores_path: Path, out_path: Path) -> int:
             "high_support": comparisons(high),
             "low_support": comparisons(low),
             "all_tasks": comparisons(list(range(C.N_TASKS))),
+        },
+        "validation_strata": {
+            "high_support": {
+                "cpc_best_minus_w2_best": strat(high, valid_best_report, valid_w2_report),
+                "cpc_best_minus_dynamic_best": strat(high, valid_best_report, valid_dyn_report),
+            },
+            "low_support": {
+                "cpc_best_minus_w2_best": strat(low, valid_best_report, valid_w2_report),
+                "cpc_best_minus_dynamic_best": strat(low, valid_best_report, valid_dyn_report),
+            },
+            "all_tasks": {
+                "cpc_best_minus_w2_best": strat(list(range(C.N_TASKS)), valid_best_report, valid_w2_report),
+                "cpc_best_minus_dynamic_best": strat(list(range(C.N_TASKS)), valid_best_report, valid_dyn_report),
+            },
         },
         "high_support_task_ids": [int(t) for t in high],
         "low_support_task_ids": [int(t) for t in low],

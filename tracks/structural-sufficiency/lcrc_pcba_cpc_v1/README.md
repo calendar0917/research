@@ -17,6 +17,7 @@ code/cpc_audit.py      structure audit + CPU/GPU preflight + non-additive witnes
 code/cpc_train.py      the one formal 40-epoch from-scratch training run
 code/cpc_test.py       pre-label Test freeze then the one gated Test score pass
 code/cpc_analyze.py    Validation-only mechanism interventions + decision/per-task
+code/cpc_uncertainty.py post-freeze task and molecule bootstrap intervals
 tests/                 path, bond, witness, renumbering, isolation, init, non-recursion
 analysis/              audit, profile, curve, branch usage, freeze, scores, decision
 runs/                  git-ignored checkpoints, logs and the 658 MB CPC path cache
@@ -76,10 +77,13 @@ uv run python code/cpc_analyze.py --mode mechanism --device cuda
 
 # Freeze Test logits (labels still NaN), then score once through the gated reader
 uv run python code/cpc_test.py --mode freeze --device cuda
-uv run python code/cpc_test.py --mode score
+uv run python code/cpc_test.py --mode score --device cpu
 
 # Per-task / support-stratified analysis and the one decision label
 uv run python code/cpc_analyze.py --mode decision
+
+# Descriptive task/molecule bootstrap intervals (no model changes)
+uv run python code/cpc_uncertainty.py --row-reps 300 --task-reps 20000
 ```
 
 Artifacts:
@@ -93,6 +97,9 @@ analysis/test_prediction_manifest.json  sealed Test logits, labels still unread
 analysis/test_scores.json           official + independent Test AP after the freeze
 analysis/per_task_analysis.json     per-task AP and support strata
 analysis/decision.json              pre-registered label and observed numbers
+analysis/uncertainty.json          task/molecule bootstrap intervals
+analysis/gpu_ledger.json           all remote jobs and GPU allocation
+analysis/report_tables.md          generated result tables
 runs/LCRC_CPC/train_curve.csv       per-epoch loss/AP/timing/branch usage
 runs/LCRC_CPC/branch_usage.json     per-epoch gate/token/path/gradient/weight stats
 ```
