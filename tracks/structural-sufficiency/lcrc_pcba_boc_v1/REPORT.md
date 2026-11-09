@@ -133,7 +133,10 @@ Validation, yet neither substitution transfers better.
 
 ## Compute and cost
 
-Formal runs (same commit, same frozen order plan, `res` A100-2, GPU1):
+Formal runs (same commit, same frozen order plan, `res` A100-2).  GPU0 was
+occupied throughout by an external 16.1 GB / 100% job, so BOND was not placed
+there; FULL ran on GPU1 and BOND followed on GPU1 after FULL finished.  No
+other user's job was disturbed.
 
 | arm | wall GPU h | epoch mean s | step p50 (formal) | peak reserved | clip events |
 |---|---:|---:|---:|---:|---:|
