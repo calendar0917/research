@@ -354,7 +354,14 @@ def run_freeze(
     arms: Sequence[str] = BOC_ARMS,
     selection_path: Path = SELECTION_PATH,
 ) -> int:
-    selection = build_selection(arms=arms, out_path=selection_path)
+    if Path(selection_path).is_file():
+        selection = C.read_json(Path(selection_path))
+        if selection.get("schema") != "lcrc-pcba-boc-selection-v1":
+            raise RuntimeError(f"selection manifest has wrong schema: {selection_path}")
+        if selection.get("test_read") is not False:
+            raise RuntimeError("selection manifest must be pre-Test")
+    else:
+        selection = build_selection(arms=arms, out_path=selection_path)
     task = C.BC.SD.load_task()
     struct = S.load_cache(struct_cache)
     if int(struct["meta"]["n_rows"]) != C.N_MOLECULES:
