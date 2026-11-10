@@ -44,7 +44,7 @@ import bs_model as BM  # noqa: E402  (frozen W3 constructor + width audit)
 import bs_train as BT  # noqa: E402  (the frozen training step)
 
 ANALYSIS = ROUND / "analysis"
-RUNS = ROUND / "runs"
+RUNS_DIR = ROUND / "runs"
 TESTS = ROUND / "tests"
 FIGURES = ANALYSIS / "figures"
 
@@ -229,7 +229,7 @@ LABEL_READ_CHUNK_ROWS = 20_000
 def run_dir(run_key: str) -> Path:
     if run_key not in RUNS:
         raise KeyError(run_key)
-    return RUNS / run_key
+    return RUNS_DIR / run_key
 
 
 def recipe_for_run(run_key: str) -> dict[str, Any]:
