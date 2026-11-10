@@ -803,11 +803,11 @@ def train(
         "best_epoch": None if best_epoch is None else int(best_epoch),
         "best_valid_mae_eV": None if best_epoch is None else float(best_mae),
         "final_epoch_valid_mae_eV": None
-        if str(int(epochs)) not in fixed_reports
-        else float(fixed_reports[str(int(epochs))]["mae_eV"]),
+        if int(epochs) not in fixed_reports
+        else float(fixed_reports[int(epochs)]["mae_eV"]),
         "final_epoch_monitor_mae_eV": None
-        if str(int(epochs)) not in monitor_reports
-        else float(monitor_reports[str(int(epochs))]["mae_eV"]),
+        if int(epochs) not in monitor_reports
+        else float(monitor_reports[int(epochs)]["mae_eV"]),
         "best_checkpoint": C.track_rel(best_path) if best_path.exists() else None,
         "best_checkpoint_sha256": best_checkpoint_sha or None,
         "primary_checkpoint": C.track_rel(final_path) if final_path.exists() else None,

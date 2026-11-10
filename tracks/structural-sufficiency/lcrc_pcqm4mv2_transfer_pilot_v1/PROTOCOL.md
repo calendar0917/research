@@ -221,3 +221,24 @@ architectures, hyper-parameter search, leaderboard submission, any Test MAE.
 - 2026-11-10 — protocol written. Measured dataset facts (§2) and the recipe
   (§8) come from `analysis/pcqm_data_audit.json` and the instruction; no formal
   model step had been taken.
+- 2026-11-10 — pre-training audits completed before any formal step: dataset
+  audit, subset plan, cache build/merge/manifest, norms + constant-median
+  baseline, cache verification (all gates `OK`), parsing/OOV audit with a
+  per-row fallback ledger (11 fallback rows, 0 failures), and the ≤10,000-
+  molecule GPU preflight (27/27 gates). Three implementation-only corrections
+  were made *before* the first formal step and are part of the frozen code:
+  (a) the official `PCQM4Mv2Evaluator` is imported on hosts without rdkit via a
+  placeholder for the unused `ogb.utils.smiles2graph` helper, (b) deterministic
+  torch settings are applied (cuDNN deterministic, TF32 off, deterministic
+  algorithms in warn-only mode), (c) the preflight compares checkpoint restores
+  bitwise on weights/optimiser state and within a float32 tolerance on values.
+  No recipe, data, metric or stopping rule changed.
+- 2026-11-11 — both formal runs finished at commit `93ae701f`, `status =
+  COMPLETED`, 40/40 epochs, `best_epoch = 40` in both. Measured GPU time
+  1.552 h + 5.162 h = **6.713 h** (target 6 h, hard cap 9 h; preflight projection
+  5.674 h). The soft target was exceeded; the rule that protects the design —
+  never shrink epochs, data or evaluation frequency — was honoured, and the
+  overshoot is reported in `REPORT.md` §7. Two reporting-only files were added
+  after the runs (`pq_analysis.py`, `pq_recheck.py`) plus one cosmetic payload
+  field fix in `pq_train.py`; no training-path computation differs. No full-data
+  run, no extra seed, no W3/DYNAMIC/CPC/RHIC arm, no Test-split use.

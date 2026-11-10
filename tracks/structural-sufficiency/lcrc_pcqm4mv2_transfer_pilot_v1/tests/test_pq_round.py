@@ -410,3 +410,91 @@ def test_evaluator_imports_without_rdkit():
     res = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=180)
     assert res.returncode == 0, res.stderr[-3000:]
     assert "OK" in res.stdout
+
+
+def test_analysis_aggregates_runs_and_reports_trends(monkeypatch, tmp_path):
+    """The report table must be derived from the recorded curves, not retyped."""
+    import csv
+
+    import pq_analysis as A
+
+    monkeypatch.setattr(C, "RUNS", tmp_path)
+    monkeypatch.setattr(C, "ANALYSIS", tmp_path / "analysis")
+    (tmp_path / "analysis").mkdir()
+    C.write_json(
+        tmp_path / "analysis" / "pcqm_constant_baseline.json",
+        {"valid_mae_eV": 0.98, "median_eV": 5.58},
+    )
+    spec = {
+        "PCQM_W2_300K": {"rows": 300_000, "maes": [0.40, 0.30, 0.25, 0.24]},
+        "PCQM_W2_1M": {"rows": 1_000_000, "maes": [0.35, 0.26, 0.22, 0.21]},
+    }
+    for run, info in spec.items():
+        run_dir = tmp_path / run
+        run_dir.mkdir()
+        rows = []
+        for i, mae in enumerate(info["maes"], start=1):
+            rows.append(
+                {
+                    "epoch": i,
+                    "evaluated": "True",
+                    "global_step": i * 10,
+                    "steps_per_epoch": 10,
+                    "learning_rate": 3e-4,
+                    "train_l1_z": 0.5 / i,
+                    "valid_mae_eV": mae,
+                    "valid_mae_eV_numpy": mae,
+                    "valid_mae_crosscheck_delta_eV": 0.0,
+                    "monitor_mae_eV": mae + 0.01,
+                    "epoch_train_seconds": 60.0,
+                    "epoch_valid_seconds": 5.0,
+                    "epoch_monitor_seconds": 1.0,
+                    "epoch_seconds": 66.0,
+                    "cumulative_seconds": 66.0 * i,
+                    "step_ms_p50": 50.0,
+                    "grad_norm_max": 3.0,
+                    "gradient_clip_events": 0,
+                }
+            )
+        with open(run_dir / "train_curve.csv", "w", encoding="utf-8", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
+            writer.writeheader()
+            writer.writerows(rows)
+        C.write_json(
+            run_dir / "run.json",
+            {
+                "status": "COMPLETED",
+                "run": run,
+                "train_size": info["rows"],
+                "epochs": 4,
+                "epochs_run": 4,
+                "steps_per_epoch": 10,
+                "steps_total": 40,
+                "global_steps_run": 40,
+                "parameters": 939_079,
+                "base_parameters": 815_330,
+                "readout_parameters": 123_749,
+                "best_epoch": 4,
+                "best_valid_mae_eV": min(info["maes"]),
+                "gpu_seconds": 3600.0,
+                "gpu_hours": 1.0,
+                "epoch_seconds_mean": 66.0,
+                "peak_rss_mb": 1200.0,
+                "git_commit": "test",
+                "device": "cuda",
+                "test_evaluated": False,
+                "data_isolation": {"valid_rows": 100, "monitor_rows": 20},
+            },
+        )
+    summary = A.build_summary()
+    a = summary["runs"]["PCQM_W2_300K"]
+    b = summary["runs"]["PCQM_W2_1M"]
+    assert a["train_rows"] == 300_000 and b["train_rows"] == 1_000_000
+    assert a["best_valid_mae_eV"] == pytest.approx(0.24)
+    assert b["valid_mae_at_last_epoch_eV"] == pytest.approx(0.21)
+    assert summary["improvement_300k_to_1m"]["best_valid_mae_delta_eV"] == pytest.approx(0.03)
+    assert a["trend_last10_valid"]["slope_eV_per_epoch"] < 0
+    table = A.table_markdown(summary)
+    assert "Constant median" in table and "LCRC-W2-300K" in table and "LCRC-W2-1M" in table
+    assert "0.2400" in table and "0.2100" in table
+    assert len(A.write_curves(summary["runs"]).read_text(encoding="utf-8").splitlines()) == 9
