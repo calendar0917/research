@@ -134,8 +134,14 @@ def run_smoke(
         # GPU hosts have no rdkit; the identical check is committed as the local
         # cache verification artifact, which is required to be green for both
         # caches before a formal step.
+        # The smoke caches are prefixes of the two full caches, whose
+        # verification artifacts carry the (identical) rebuild evidence.
+        evidence_tag = {
+            "pcqm_smoke_train": "pcqm_train1m",
+            "pcqm_smoke_valid": "pcqm_valid",
+        }
         for tag, name in ((train_tag, "train"), (valid_tag, "valid")):
-            path = C.ANALYSIS / f"{tag}_cache_verify.json"
+            path = C.ANALYSIS / f"{evidence_tag.get(tag, tag)}_cache_verify.json"
             payload_v = C.read_json(path) if path.exists() else {}
             local_verify_evidence[name] = {
                 "artifact": C.track_rel(path) if path.exists() else None,
