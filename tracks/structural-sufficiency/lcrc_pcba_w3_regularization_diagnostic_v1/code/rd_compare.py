@@ -91,6 +91,61 @@ def _slope(xs: Sequence[float], ys: Sequence[float]) -> float:
     return float(np.polyfit(np.asarray(xs, float), np.asarray(ys, float), 1)[0])
 
 
+def _ranks(values: Sequence[float]) -> np.ndarray:
+    arr = np.asarray(values, float)
+    order = np.argsort(arr, kind="mergesort")
+    ranks = np.empty(arr.size, float)
+    ranks[order] = np.arange(arr.size, dtype=float)
+    # average ties
+    sorted_vals = arr[order]
+    i = 0
+    while i < sorted_vals.size:
+        j = i
+        while j + 1 < sorted_vals.size and sorted_vals[j + 1] == sorted_vals[i]:
+            j += 1
+        if j > i:
+            ranks[order[i : j + 1]] = (i + j) / 2.0
+        i = j + 1
+    return ranks
+
+
+def _spearman(xs: Sequence[float], ys: Sequence[float]) -> float | None:
+    if len(xs) < 3:
+        return None
+    rx, ry = _ranks(xs), _ranks(ys)
+    rx = rx - rx.mean()
+    ry = ry - ry.mean()
+    denom = float(np.sqrt((rx * rx).sum() * (ry * ry).sum()))
+    if denom == 0.0:
+        return None
+    return float((rx * ry).sum() / denom)
+
+
+def lr_budget() -> dict[str, Any]:
+    """Total AdamW decay budget over the 40-epoch schedule (lr-summed)."""
+    steps = C.TOTAL_STEPS_40
+    total = float(sum(C.scheduled_lr(s, phase=3, kind="all") for s in range(steps)))
+    return {
+        "steps": steps,
+        "sum_lr": total,
+        "mean_lr": total / steps,
+        "decay_budget": {
+            key: {
+                "weight_decay": float(C.RUNS[key]["weight_decay"]),
+                "decay_sum": float(C.RUNS[key]["weight_decay"]) * total,
+                "multiplicative_shrink": float(np.exp(-float(C.RUNS[key]["weight_decay"]) * total)),
+                "percent_shrink": float(100.0 * (1.0 - np.exp(-float(C.RUNS[key]["weight_decay"]) * total))),
+            }
+            for key in C.RUN_ORDER
+        },
+        "historical_w3": {
+            "weight_decay": 1.0e-3,
+            "decay_sum": 1.0e-3 * total,
+            "percent_shrink": float(100.0 * (1.0 - np.exp(-1.0e-3 * total))),
+        },
+    }
+
+
 def load_run(run_key: str) -> dict[str, Any]:
     run_dir = C.run_dir(run_key)
     run = C.read_json(run_dir / "run.json")
@@ -277,6 +332,65 @@ def analyse_run(run_key: str, hist_test: Mapping[str, Any]) -> dict[str, Any]:
     }
     gap_own_best["gap_own"] = gap_own_best["train_macro_own"] - gap_own_best["valid_macro_own"]
 
+    def _gap(epoch: int) -> dict[str, Any]:
+        tr = data["task_ap"][(epoch, "train")]
+        va = data["task_ap"][(epoch, "valid")]
+        tr_tasks = [t for t in range(C.N_TASKS) if tr[t] is not None]
+        va_tasks = [t for t in range(C.N_TASKS) if va[t] is not None]
+        common_t = sorted(set(tr_tasks) & set(va_tasks))
+        own = {
+            "train_macro_own": _mean([tr[t] for t in tr_tasks]),
+            "valid_macro_own": _mean([va[t] for t in va_tasks]),
+            "n_train_scored": len(tr_tasks),
+            "n_valid_scored": len(va_tasks),
+        }
+        own["gap_own"] = own["train_macro_own"] - own["valid_macro_own"]
+        com = {
+            "n_common_tasks": len(common_t),
+            "train_macro_common": _mean([tr[t] for t in common_t]),
+            "valid_macro_common": _mean([va[t] for t in common_t]),
+        }
+        com["gap_common"] = com["train_macro_common"] - com["valid_macro_common"]
+        return {"own_scorable": own, "common_scorable": com}
+
+    gap_at_40 = _gap(40)
+
+    last10 = [e for e in epochs if e >= 31]
+    noise_floor = {}
+    for split in C.SPLITS:
+        vals = [series[split][e]["ap"] for e in last10]
+        diffs = np.diff([series[split][e]["ap"] for e in tail])
+        noise_floor[split] = {
+            "last10_mean": float(np.mean(vals)),
+            "last10_std": float(np.std(vals)),
+            "last10_range": float(max(vals) - min(vals)),
+            "step_diff_std_20_40": float(np.std(diffs)),
+        }
+
+    def _delta_vs_hist(epoch: int, split: str) -> dict[int, float]:
+        ours = data["task_ap"][(epoch, split)]
+        theirs = historical_valid_task_ap(epoch) if split == "valid" else None
+        if split == "valid" and theirs:
+            return {t: float(ours[t]) - float(theirs[t]) for t in range(C.N_TASKS) if ours[t] is not None and theirs[t] is not None}
+        return {}
+
+    spearman = {}
+    for label, epoch, split in (("valid_best", best_epoch, "valid"), ("valid_40", 40, "valid")):
+        deltas = _delta_vs_hist(epoch, split)
+        if deltas:
+            support_v = data["task_support"][(epoch, "valid")]["positive"]
+            spearman[label] = _spearman([float(support_v[t]) for t in deltas], list(deltas.values()))
+    if hist_test.get("available") and hist_test.get("best_epoch_task_ap"):
+        ours = data["task_ap"][(best_epoch, "test")]
+        theirs = hist_test["best_epoch_task_ap"]
+        deltas = {
+            t: float(ours[t]) - float(theirs[t])
+            for t in range(C.N_TASKS)
+            if ours[t] is not None and theirs[t] is not None
+        }
+        support_t = data["task_support"][(best_epoch, "test")]["positive"]
+        spearman["test_best"] = _spearman([float(support_t[t]) for t in deltas], list(deltas.values()))
+
     delta_best = s_best["valid"]["ap"] - C.AP_W3_BEST
     delta_40 = s_40["valid"]["ap"] - C.AP_W3_40
     delta_best_w2 = s_best["valid"]["ap"] - C.AP_W2_BEST
@@ -336,7 +450,11 @@ def analyse_run(run_key: str, hist_test: Mapping[str, Any]) -> dict[str, Any]:
         "delta_vs_w3": {"best": delta_best, "ap40": delta_40, "test_best": test_delta_best, "test_40": test_delta_40},
         "delta_vs_w2": {"best": delta_best_w2, "ap40": delta_40_w2},
         "train_ap_change_vs_w3_40": {"at_best": train_drop, "at_40": train_drop_40},
-        "gap": {"own_scorable_at_best": gap_own_best, "common_scorable_at_best": gap_common_best},
+        "gap": {
+            "own_scorable_at_best": gap_own_best,
+            "common_scorable_at_best": gap_common_best,
+            "at_epoch40": gap_at_40,
+        },
         "peak_persistence": {
             "epochs_above_historical_best": above,
             "n_epochs_above": len(above),
@@ -367,6 +485,9 @@ def analyse_run(run_key: str, hist_test: Mapping[str, Any]) -> dict[str, Any]:
             "valid_40": {"strata": strat_valid_40},
             "test_best": {"strata": strat_test_best},
         },
+        "noise_floor": noise_floor,
+        "spearman_delta_vs_support": spearman,
+        "lr_budget": lr_budget(),
         "metric_cross_check": {
             "max_abs_delta_official_vs_sklearn": max(
                 series[s][e]["ap_abs_delta"] for s in C.SPLITS for e in epochs
@@ -655,6 +776,21 @@ def main(argv: Sequence[str] | None = None) -> int:
             }
         )
 
+    historical_noise: dict[str, Any] = {"available": False}
+    hist_run_path = C.BS_RUNS / "W3" / "run.json"
+    if hist_run_path.is_file():
+        hist_run = C.read_json(hist_run_path)
+        w3 = hist_run.get("fixed_epoch_reports") or {}
+        vals = [float(w3[str(e)]["ap"]) for e in range(31, 41) if str(e) in w3]
+        if vals:
+            historical_noise = {
+                "available": True,
+                "source": C.track_rel(hist_run_path),
+                "valid_last10_mean": float(np.mean(vals)),
+                "valid_last10_std": float(np.std(vals)),
+                "valid_last10_range": float(max(vals) - min(vals)),
+            }
+
     comparison = {
         "schema": "lcrc-pcba-w3-regularization-comparison-v1",
         "round_id": C.ROUND_ID,
@@ -674,6 +810,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             },
         },
         "thresholds": dict(C.DECISION),
+        "historical_noise_floor": historical_noise,
         "runs": analysis,
         "table": comparison_rows,
         "curves": C.track_rel(out / "curves_epoch.csv"),

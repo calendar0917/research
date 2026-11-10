@@ -1,0 +1,67 @@
+{
+  "captured_utc": "2026-11-10T10:43:49Z",
+  "round_id": "lcrc-pcba-w3-regularization-diagnostic-v1",
+  "runs": {
+    "W3_DO20": {
+      "d_ap40_vs_w3": 0.001974392192948815,
+      "d_best_vs_w3": -0.0001727050399610297,
+      "label": "NO_CLEAR_GAIN",
+      "peak_persistence": {
+        "epochs_above_historical_best": [],
+        "first_epoch_above": null,
+        "last_epoch_above": null,
+        "longest_consecutive": 0,
+        "n_epochs_above": 0
+      },
+      "reasons": [
+        "d_best -0.0002, d_ap40 +0.0020",
+        "support>=20: mean delta +0.0025, 57/107 improved",
+        "Test at best-Valid epoch delta vs W3 best-Valid: +0.0059",
+        "both Validation differences are inside +/-0.002"
+      ],
+      "test_delta_best": 0.0058691727388886505,
+      "train_ap_40": 0.6635194671576382,
+      "train_ap_at_best": 0.5564740694758846
+    },
+    "W3_WD10": {
+      "d_ap40_vs_w3": 0.00021017554310015507,
+      "d_best_vs_w3": 0.0004650613816617466,
+      "label": "NO_CLEAR_GAIN",
+      "peak_persistence": {
+        "epochs_above_historical_best": [
+          19
+        ],
+        "first_epoch_above": 19,
+        "last_epoch_above": 19,
+        "longest_consecutive": 1,
+        "n_epochs_above": 1
+      },
+      "reasons": [
+        "d_best +0.0005, d_ap40 +0.0002",
+        "support>=20: mean delta +0.0015, 55/107 improved",
+        "Test at best-Valid epoch delta vs W3 best-Valid: +0.0022",
+        "both Validation differences are inside +/-0.002"
+      ],
+      "test_delta_best": 0.002232891829137884,
+      "train_ap_40": 0.6943250286934752,
+      "train_ap_at_best": 0.5759206509047162
+    }
+  },
+  "schema": "lcrc-pcba-w3-regularization-decision-v1",
+  "statistical_claim": "none; single seed, thresholds are direction/resource decisions",
+  "thresholds": {
+    "ap40_delta_min": 0.003,
+    "best_delta_min": 0.005,
+    "labels": [
+      "PROMISING_SINGLE_SEED_SIGNAL",
+      "FIT_SUPPRESSION_WITHOUT_GENERALIZATION_GAIN",
+      "PEAK_ONLY_OR_UNSTABLE_SIGNAL",
+      "NO_CLEAR_GAIN",
+      "MIXED_SIGNAL"
+    ],
+    "peak_narrow_epochs": 5,
+    "support_5_19_min_positive": 5,
+    "support_ge20_min_positive": 20,
+    "train_ap_suppression_delta": -0.05
+  }
+}

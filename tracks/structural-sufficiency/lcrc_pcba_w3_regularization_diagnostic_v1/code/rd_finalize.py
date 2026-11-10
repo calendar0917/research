@@ -96,6 +96,8 @@ def gpu_ledger(repo: Path = C.REPO, out: Path | None = None) -> dict[str, Any]:
             a = datetime.fromisoformat(started)
             b = datetime.fromisoformat(completed)
             seconds = max(0.0, (b - a).total_seconds())
+        pool = meta.get("pool") or ""
+        uses_gpu = not str(pool).startswith("res-local")
         entries.append(
             {
                 "experiment": meta.get("experiment"),
@@ -108,7 +110,8 @@ def gpu_ledger(repo: Path = C.REPO, out: Path | None = None) -> dict[str, Any]:
                 "started_at": started,
                 "completed_at": completed,
                 "wall_seconds": seconds,
-                "gpu_hours_charged": (seconds or 0.0) / 3600.0,
+                "uses_gpu": uses_gpu,
+                "gpu_hours_charged": ((seconds or 0.0) / 3600.0) if uses_gpu else 0.0,
             }
         )
     formal: dict[str, Any] = {}

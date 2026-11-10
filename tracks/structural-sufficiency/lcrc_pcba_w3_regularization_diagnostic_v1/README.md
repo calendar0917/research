@@ -59,13 +59,13 @@ uv run --no-sync python <round>/code/rd_audit.py \
 rr run res rd-smoke --pool res-gpu1 --result <round>/runs/audit -- \
   bash -c "uv run --no-sync python <round>/code/rd_audit.py --modes smoke --device cuda --out-dir <round>/runs/audit"
 
-# 3) the two formal runs (parallel on separate GPUs when GPU0 is free)
+# 3) the two formal runs (GPU0 was externally saturated, so both ran serially on GPU1)
 rr run res rd-w3-wd10 --pool res-gpu1 --result <round>/runs/W3_WD10 -- \
   bash -c "uv run --no-sync python <round>/code/rd_train.py --run W3_WD10 --seed 0 --device cuda \
-           --out-dir <round>/runs/W3_WD10 --soft-seconds 32000 --hard-seconds 36000"
-rr run res rd-w3-do20 --pool res-gpu0 --result <round>/runs/W3_DO20 -- \
+           --out-dir <round>/runs/W3_WD10 --soft-seconds 16000 --hard-seconds 18000"
+rr run res rd-w3-do20 --pool res-gpu1 --result <round>/runs/W3_DO20 -- \
   bash -c "uv run --no-sync python <round>/code/rd_train.py --run W3_DO20 --seed 0 --device cuda \
-           --out-dir <round>/runs/W3_DO20 --soft-seconds 32000 --hard-seconds 36000"
+           --out-dir <round>/runs/W3_DO20 --soft-seconds 16000 --hard-seconds 18000"
 
 # 4) pull and compare (local)
 rr pull rd-w3-wd10 && rr pull rd-w3-do20
@@ -78,4 +78,14 @@ never rerun.
 
 ## Result
 
-See [`REPORT.md`](REPORT.md) (written after the formal runs).
+Both runs completed 40/40 epochs with full three-split evaluation every epoch
+(`W3_WD10` 2.18 GPU-h, `W3_DO20` 1.96 GPU-h; 4.17 GPU-h total including the
+smoke, target was <= 10).
+
+| Model | Best epoch | Valid AP best | Valid AP@40 | Train AP@40 | Test AP@best | Label |
+|---|---:|---:|---:|---:|---:|---|
+| W3 historical | 25 | 0.263670 | 0.259004 | 0.705498 | 0.251822 | — |
+| W3_WD10 | 19 | 0.264135 (+0.00047) | 0.259214 (+0.00021) | 0.694325 | 0.254055 | `NO_CLEAR_GAIN` |
+| W3_DO20 | 19 | 0.263498 (-0.00017) | 0.260978 (+0.00197) | 0.663519 | 0.257691 | `NO_CLEAR_GAIN` |
+
+See [`REPORT.md`](REPORT.md) for the full analysis (Test is exploratory only).
