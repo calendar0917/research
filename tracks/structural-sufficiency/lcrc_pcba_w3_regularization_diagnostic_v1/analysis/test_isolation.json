@@ -1,0 +1,24 @@
+{
+  "captured_utc": "2026-11-10T05:59:08Z",
+  "checks": {
+    "evaluation_is_the_only_test_consumer": true,
+    "plan_rows_all_train": true,
+    "plan_rows_cover_train_once_per_epoch": true,
+    "plan_rows_never_test": true,
+    "plan_rows_never_valid": true,
+    "training_labels_are_nan_on_test_rows": true,
+    "training_never_indexes_test_rows": true,
+    "training_never_names_the_split_dict": true,
+    "training_reads_only_cache_and_labels": true
+  },
+  "evaluate_all_splits_reads_all_three_splits": true,
+  "mode": "test-isolation",
+  "passed": true,
+  "plan_rows": 14013720,
+  "run_epoch_source_lines": 52,
+  "run_epoch_task_attributes": [
+    "cache",
+    "labels"
+  ],
+  "statement": "Test labels are produced by rd_data.read_official_test_labels and consumed only by rd_data.evaluate_split; the training step builds its target from task.labels (Test rows NaN) indexed by plan rows that are a permutation of the official Train split."
+}
