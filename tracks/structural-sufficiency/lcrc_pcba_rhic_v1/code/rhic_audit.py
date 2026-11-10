@@ -787,8 +787,9 @@ def gate_init(task: Any, device: torch.device) -> dict[str, Any]:
 
 def permute_paths(batch: Mapping[str, Any], *, seed: int = 20261111) -> dict[str, Any]:
     n = int(batch["cpc_path_atom"].numel())
+    device = batch["cpc_path_atom"].device
     gen = torch.Generator().manual_seed(int(seed))
-    p = torch.randperm(n, generator=gen)
+    p = torch.randperm(n, generator=gen).to(device)
     out = {k: (v.clone() if torch.is_tensor(v) else v) for k, v in batch.items()}
     for key in ("cpc_path_atom", "cpc_middle", "cpc_end", "cpc_bond_ij", "cpc_bond_jk"):
         out[key] = batch[key].index_select(0, p)
@@ -800,11 +801,13 @@ def permute_bonds(batch: Mapping[str, Any], *, seed: int = 20261112) -> dict[str
     bi = batch["bond_index"]
     bond_batch = batch["bond_batch"]
     n_bonds = int(bi.shape[0])
+    device = bi.device
     gen = torch.Generator().manual_seed(int(seed))
-    m = torch.arange(n_bonds, dtype=torch.long)
-    for g in sorted(set(int(x) for x in bond_batch.tolist())):
+    m = torch.arange(n_bonds, dtype=torch.long, device=device)
+    for g in sorted(set(int(x) for x in bond_batch.detach().cpu().tolist())):
         ids = (bond_batch == g).nonzero(as_tuple=False).reshape(-1)
-        m[ids] = ids[torch.randperm(ids.numel(), generator=gen)]
+        perm = torch.randperm(ids.numel(), generator=gen).to(ids.device)
+        m[ids] = ids[perm]
     out = {k: (v.clone() if torch.is_tensor(v) else v) for k, v in batch.items()}
     for key in ("bond_index", "bond_feat", "bond_type", "bond_batch"):
         moved = torch.empty_like(batch[key])
