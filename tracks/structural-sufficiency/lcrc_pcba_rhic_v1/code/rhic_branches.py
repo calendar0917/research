@@ -342,7 +342,7 @@ def coverage_summary(structure: Mapping[str, np.ndarray], atom_mask: np.ndarray)
         "root_with_at_least_two_paths": frac(pc >= 2),
         "root_with_at_least_two_branches": frac(bc >= 2),
         "root_with_multi_path_branch": frac(mp >= 1),
-        "root_with_ge2_multi_path_branches": frac(mb >= 2),
+        "root_with_ge2_multi_path_branches": frac(mp >= 2),
         "root_with_at_least_two_paths_or_branches": frac((pc >= 2) | (bc >= 2)),
         "branches": int(bc.sum()),
         "branches_with_at_least_two_paths": int(mp.sum()),

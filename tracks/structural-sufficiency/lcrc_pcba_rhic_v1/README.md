@@ -134,14 +134,17 @@ prediction manifest, through `cc_data.read_official_test_labels`. Test is an
 exposed engineering comparison set, never a blind generalisation estimate and
 never a model-selection signal.
 
-## Status
+## Status (round complete)
 
 - [x] architecture, initialisation and parameter audit (CPU)
 - [x] structural audits A–E (structure: `all_ok=True`)
-- [x] CPU correctness suite (21 tests)
-- [x] CPU preflight (`all_ok=True`, epoch-0 parity 0.0)
-- [x] one-epoch end-to-end CPU dry run (temporary, not reported)
-- [ ] GPU preflight + 100-batch profile
-- [ ] formal 40-epoch run
-- [ ] Test freeze + single scoring pass
-- [ ] mechanism diagnostics + decision + `REPORT.md`
+- [x] CPU correctness suite (26 tests)
+- [x] GPU preflight (`all_ok=True`, epoch-0 CUDA parity 1.9e-6, 24/24 grads, 1.92 h projected)
+- [x] formal 40-epoch run: **COMPLETED**, best epoch 25, Valid **0.268734**, 1.918 GPU-h
+- [x] Test freeze + single post-freeze scoring pass: Test best **0.258416**
+- [x] mechanism diagnostics (real / delta-zero / branch shuffle) + decision
+- [x] `REPORT.md` — decision label **`NO_CLEAR_ADVANCE`**
+
+Bottom line: RHIC improves official Validation over CPC (+0.0028) but not Test
+(−0.0039); the hierarchical branch co-occurrence is demonstrably used, yet the
+extra capacity does not transfer across the official scaffold split.

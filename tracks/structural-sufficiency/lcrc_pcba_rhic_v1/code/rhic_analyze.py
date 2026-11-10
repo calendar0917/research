@@ -379,11 +379,16 @@ def run_decision(
         mechanism_valid=mechanism_valid,
     )
 
-    # per-task table with strata and support
-    strata = {
-        t: ("support_lt5" if int(rhic_best["observed"][t]) < 5 else "support_5_19" if int(rhic_best["observed"][t]) < 20 else "support_ge20")
-        for t in range(C.N_TASKS)
-    }
+    # per-task table with strata and support.  Strata use *positive* counts, not
+    # observed entries: every task has thousands of observed negatives.
+    valid_pos = run["task_counts"]["valid"]["positive"]
+    test_pos = rhic_best["positive"]
+
+    def _stratum(n: int) -> str:
+        return "support_lt5" if int(n) < 5 else "support_5_19" if int(n) < 20 else "support_ge20"
+
+    strata = {t: _stratum(int(valid_pos[t])) for t in range(C.N_TASKS)}
+    strata_test = {t: _stratum(int(test_pos[t])) for t in range(C.N_TASKS)}
     rows = []
     for t in range(C.N_TASKS):
         rows.append(
@@ -392,6 +397,7 @@ def run_decision(
                 "high_support": bool(t in C.HIGH_SUPPORT_SET),
                 "low_support": bool(t in C.LOW_SUPPORT_SET),
                 "stratum": strata[t],
+                "stratum_test": strata_test[t],
                 "test_observed": int(rhic_best["observed"][t]),
                 "test_positive": int(rhic_best["positive"][t]),
                 "valid_positive": int(run["task_counts"]["valid"]["positive"][t]),
@@ -407,16 +413,24 @@ def run_decision(
         )
     C.write_json(per_task_path, {"schema": "lcrc-pcba-rhic-per-task-v1", "tasks": rows})
 
-    by_stratum = {}
-    for name in ("support_lt5", "support_5_19", "support_ge20"):
-        ids = [r["task"] for r in rows if r["stratum"] == name]
-        by_stratum[name] = {
-            "tasks": len(ids),
-            "valid_ap_rhic": _set_mean(valid_per_task, ids),
-            "valid_ap_cpc": _set_mean(cpc_valid_per_task, ids),
-            "test_ap_rhic": _set_mean(rhic_best["per_task_ap"], ids),
-            "test_ap_cpc": _set_mean(cpc_best["per_task_ap"], ids),
-        }
+    def _stratum_table(key: str) -> dict[str, Any]:
+        out = {}
+        for name in ("support_lt5", "support_5_19", "support_ge20"):
+            ids = [r["task"] for r in rows if r[key] == name]
+            out[name] = {
+                "tasks": len(ids),
+                "tasks_scored_test": sum(
+                    1 for i in ids if rhic_best["per_task_ap"][i] is not None
+                ),
+                "valid_ap_rhic": _set_mean(valid_per_task, ids),
+                "valid_ap_cpc": _set_mean(cpc_valid_per_task, ids),
+                "test_ap_rhic": _set_mean(rhic_best["per_task_ap"], ids),
+                "test_ap_cpc": _set_mean(cpc_best["per_task_ap"], ids),
+            }
+        return out
+
+    by_stratum = _stratum_table("stratum")
+    by_stratum_test = _stratum_table("stratum_test")
 
     decision = {
         "schema": C.SCHEMA_DECISION,
@@ -501,6 +515,7 @@ def run_decision(
             },
         },
         "by_stratum": by_stratum,
+        "by_stratum_test": by_stratum_test,
         "per_task_artifact": C.track_rel(per_task_path),
         "test_scores": C.track_rel(scores_path),
         "test_scores_sha256": C.sha256_file(scores_path),
