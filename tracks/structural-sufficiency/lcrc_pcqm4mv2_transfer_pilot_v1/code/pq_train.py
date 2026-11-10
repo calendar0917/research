@@ -369,7 +369,7 @@ def _rng_hash_diffs(saved: Mapping[str, Any], now: Mapping[str, Any]) -> list[st
     """Per-generator RNG hash comparison (CUDA lists compared element-wise)."""
     diffs = [
         key
-        for key in ("python_random_sha256", "numpy_sha256", "torch_cpu_sha256")
+        for key in ("python_sha256", "numpy_sha256", "torch_cpu_sha256")
         if saved.get(key) != now.get(key)
     ]
     a = list(saved.get("torch_cuda_sha256") or [])
@@ -473,6 +473,7 @@ def train(
     if int(epochs) != int(C.RUNS_TABLE[run]["epochs"]) and not allow_partial_epochs:
         raise RuntimeError(f"formal run must use {C.RUNS_TABLE[run]['epochs']} epochs, got {epochs}")
     gpu_start = C.gpu_occupancy()
+    deterministic = C.apply_deterministic_settings()
 
     model, model_audit = M.build_model(task["spec"], task["norm"], seed=int(task["seed"]), device=device)
     optimizer, opt_audit = M.make_optimizer(model)
@@ -846,6 +847,7 @@ def train(
         "soft_seconds": float(soft_seconds),
         "hard_seconds": float(hard_seconds),
         "environment": C.environment(),
+        "deterministic_settings": deterministic,
         "host_facts": C.host_facts(),
         "gpu_occupancy_start": gpu_start,
         "git_commit": C.git_commit(),

@@ -487,7 +487,45 @@ def peak_rss_mb() -> float:
     return float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024.0
 
 
+def apply_deterministic_settings() -> dict[str, Any]:
+    """Ask torch for the most deterministic GPU path the stack supports.
+
+    cuBLAS needs a fixed workspace before CUDA is initialised, cuDNN and
+    cuBLAS heuristics are pinned, and deterministic algorithms are requested in
+    warn-only mode so an unsupported kernel cannot kill a 40-epoch run.  The
+    protocol pins the batch order, not bitwise GPU kernels; this only removes
+    gratuitous run-to-run variation and is recorded in every run payload.
+    """
+    import os
+
+    import torch
+
+    os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+    out: dict[str, Any] = {
+        "cublas_workspace_config": os.environ.get("CUBLAS_WORKSPACE_CONFIG"),
+        "cudnn_deterministic": True,
+        "cudnn_benchmark": False,
+        "cudnn_allow_tf32": False,
+        "matmul_allow_tf32": False,
+        "use_deterministic_algorithms": True,
+        "warn_only": True,
+    }
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    try:
+        torch.backends.cudnn.allow_tf32 = False
+        torch.backends.cuda.matmul.allow_tf32 = False
+    except Exception:  # noqa: BLE001 - flags differ across torch builds
+        out["tf32_flags_applied"] = False
+    try:
+        torch.use_deterministic_algorithms(True, warn_only=True)
+    except Exception as exc:  # noqa: BLE001 - older torch
+        out["use_deterministic_algorithms"] = f"unavailable: {type(exc).__name__}"
+    return out
+
+
 __all__ = [
+    "apply_deterministic_settings",
     "ANALYSIS",
     "BATCH_SIZE",
     "BS",
