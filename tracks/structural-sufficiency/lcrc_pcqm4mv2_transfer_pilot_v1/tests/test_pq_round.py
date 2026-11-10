@@ -364,12 +364,11 @@ def test_init_is_identical_for_two_builds(tmp_path):
 
 def test_official_and_numpy_mae_agree():
     import pq_train as T
-    from ogb.lsc import PCQM4Mv2Evaluator
 
     rng = np.random.default_rng(7)
     yt = rng.normal(5.5, 1.1, size=500)
     yp = yt + rng.normal(0, 0.2, size=500)
-    report = T.mae_report(PCQM4Mv2Evaluator(), yt, yp)
+    report = T.mae_report(D._evaluator(), yt, yp)
     assert report["mae_eV"] == pytest.approx(report["mae_eV_numpy"], abs=1e-12)
     assert report["crosscheck_delta_eV"] <= 1e-12
     assert report["n"] == 500
@@ -377,7 +376,37 @@ def test_official_and_numpy_mae_agree():
 
 def test_mae_report_rejects_non_finite():
     import pq_train as T
-    from ogb.lsc import PCQM4Mv2Evaluator
 
     with pytest.raises(ValueError):
-        T.mae_report(PCQM4Mv2Evaluator(), np.array([1.0, np.nan]), np.array([1.0, 2.0]))
+        T.mae_report(D._evaluator(), np.array([1.0, np.nan]), np.array([1.0, 2.0]))
+
+
+def test_evaluator_imports_without_rdkit():
+    """GPU hosts have no rdkit; the official evaluator must still import."""
+    import subprocess
+    import textwrap
+
+    code = textwrap.dedent(
+        f"""
+        import sys
+        class _Block:
+            def find_spec(self, name, path=None, target=None):
+                if name == "rdkit" or name.startswith("rdkit."):
+                    raise ImportError("rdkit blocked")
+                return None
+        sys.meta_path.insert(0, _Block())
+        sys.path.insert(0, {str(CODE)!r})
+        import ogb.utils
+        assert not hasattr(ogb.utils, "smiles2graph"), "rdkit block did not take effect"
+        import pq_data as D
+        ev = D._evaluator()
+        assert type(ev).__module__ == "ogb.lsc.pcqm4mv2", type(ev).__module__
+        import numpy as np
+        out = ev.eval({{"y_pred": np.array([1.0, 2.0]), "y_true": np.array([1.5, 2.0])}})["mae"]
+        assert abs(out - 0.25) < 1e-12, out
+        print("OK")
+        """
+    )
+    res = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=180)
+    assert res.returncode == 0, res.stderr[-3000:]
+    assert "OK" in res.stdout

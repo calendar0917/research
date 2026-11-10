@@ -464,6 +464,18 @@ def host_facts() -> dict[str, Any]:
         "cuda_available": bool(torch.cuda.is_available()),
         "git_commit": git_commit(),
     }
+    try:
+        import ogb
+
+        out["ogb"] = ogb.__version__
+    except Exception:  # noqa: BLE001 - provenance only
+        out["ogb"] = None
+    try:
+        import rdkit
+
+        out["rdkit"] = getattr(rdkit, "__version__", "unknown")
+    except Exception:  # noqa: BLE001 - absent on GPU-only hosts
+        out["rdkit"] = None
     if torch.cuda.is_available():
         out["gpu_names"] = [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]
     return out

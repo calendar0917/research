@@ -1041,9 +1041,35 @@ def load_task(run: str, *, verify_hashes: bool = True) -> dict[str, Any]:
     }
 
 
-def _evaluator():
-    from ogb.lsc import PCQM4Mv2Evaluator
+def _evaluator() -> Any:
+    """The official ``PCQM4Mv2Evaluator``, importable on hosts without rdkit.
 
+    ``ogb.lsc.pcqm4mv2`` imports ``ogb.utils.smiles2graph`` at module import time,
+    and ``ogb.utils`` only exports it when rdkit is installed.  The evaluator
+    itself never touches SMILES, so a placeholder is installed on hosts whose
+    environment has no rdkit; the imported class is the unmodified official one
+    (asserted below) and its metric is cross-checked against an independent
+    NumPy MAE on every evaluation.
+    """
+    import ogb
+    import ogb.utils
+
+    if not hasattr(ogb.utils, "smiles2graph"):
+
+        def _smiles2graph_unavailable(*_args: Any, **_kwargs: Any) -> Any:
+            raise ImportError(
+                "ogb.utils.smiles2graph requires rdkit, which this host does not have; "
+                "it is never called on the cached-feature path"
+            )
+
+        ogb.utils.smiles2graph = _smiles2graph_unavailable  # type: ignore[attr-defined]
+    from ogb.lsc.pcqm4mv2 import PCQM4Mv2Evaluator
+
+    if PCQM4Mv2Evaluator.__module__ != "ogb.lsc.pcqm4mv2":
+        raise RuntimeError(f"unexpected evaluator module {PCQM4Mv2Evaluator.__module__}")
+    version = tuple(int(x) for x in ogb.__version__.split(".")[:3] if x.isdigit())
+    if version < (1, 3, 2):
+        raise RuntimeError(f"ogb {ogb.__version__} < 1.3.2 is not supported for PCQM4Mv2")
     return PCQM4Mv2Evaluator()
 
 
