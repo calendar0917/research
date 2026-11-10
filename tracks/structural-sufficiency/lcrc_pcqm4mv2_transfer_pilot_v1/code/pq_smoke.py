@@ -189,11 +189,14 @@ def run_smoke(
     # ---- 3. forward, output shape, finiteness, renumbering -------------------
     stager = PinnedStager(device, depth=2)
     rows = np.arange(8, dtype=np.int64)
-    batch = stager.batch(D.collate(task["train_cache"], rows.tolist()))
+    batch_cpu = D.collate(task["train_cache"], rows.tolist())
+    batch = stager.batch(batch_cpu)
     model.eval()
     with torch.inference_mode():
         z_ref = M.predict_z(model, batch)
-    perm_batch, perm = M.permute_atoms(batch, seed=20261110)
+    # ``permute_atoms`` is a graph-level (CPU) relabelling in the pinned code.
+    perm_batch_cpu, perm = M.permute_atoms(batch_cpu, seed=20261110)
+    perm_batch = stager.batch(perm_batch_cpu)
     with torch.inference_mode():
         z_perm = M.predict_z(model, perm_batch)
     diff = float((z_ref - z_perm).abs().max())
