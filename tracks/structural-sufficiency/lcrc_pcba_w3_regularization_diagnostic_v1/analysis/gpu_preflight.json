@@ -1,0 +1,67 @@
+{
+ "schema": "lcrc-pcba-w3-regularization-gpu-preflight-v1",
+ "round_id": "lcrc-pcba-w3-regularization-diagnostic-v1",
+ "captured_utc": "2026-11-10T06:06:07Z",
+ "host": "res (a100-2), driver 550.163.01, torch 2.5.1+cu124",
+ "sampling": "6 samples x 10 s intervals, read-only nvidia-smi, no external process touched",
+ "gpus": {
+  "0": {
+   "name": "NVIDIA A100-SXM4-40GB",
+   "samples": 6,
+   "utilization_gpu_pct": [
+    100,
+    100,
+    100,
+    100,
+    100,
+    100
+   ],
+   "max_utilization_pct": 100,
+   "min_free_mib": 24222,
+   "memory_used_mib_max": 16105
+  },
+  "1": {
+   "name": "NVIDIA A100-SXM4-40GB",
+   "samples": 6,
+   "utilization_gpu_pct": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+   ],
+   "max_utilization_pct": 0,
+   "min_free_mib": 40310,
+   "memory_used_mib_max": 17
+  }
+ },
+ "compute_processes_observed": [
+  "3841932, python3, 16082 MiB",
+  "3841932, python3, 16082 MiB",
+  "3841932, python3, 16082 MiB",
+  "3841932, python3, 16082 MiB",
+  "3841932, python3, 16082 MiB",
+  "3841932, python3, 16082 MiB"
+ ],
+ "raw_samples": "tracks/structural-sufficiency/lcrc_pcba_w3_regularization_diagnostic_v1/analysis/gpu_occupancy_samples.txt",
+ "smoke_same_host": {
+  "peak_allocated_bytes": 374055424,
+  "peak_reserved_bytes": 899678208,
+  "projected_total_gpu_hours": 4.136280886911684,
+  "projected_epoch_seconds": 186.13263991102576,
+  "eval_fraction_of_epoch": 0.30898792422658955,
+  "path": "analysis/evaluation_cost_probe.json"
+ },
+ "decision": {
+  "gpu0_used": false,
+  "reason": "GPU0 was at 100 % utilisation in 6/6 samples over 60 s from an external 2-day-old job (pid 3841932, 16,082 MiB); the PROTOCOL section 8 co-tenancy rule requires no sustained full-load contention, so GPU0 is not shared",
+  "plan": "W3_WD10 and W3_DO20 run serially on res-gpu1; GPU0 is re-checked before the second run is launched",
+  "external_processes_modified": false
+ },
+ "budget": {
+  "gpu_target_hours": 10.0,
+  "gpu_hard_hours": 16.0,
+  "projected_total_gpu_hours": 4.136280886911684
+ }
+}
