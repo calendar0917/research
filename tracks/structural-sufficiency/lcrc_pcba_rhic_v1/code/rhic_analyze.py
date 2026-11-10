@@ -343,8 +343,17 @@ def run_decision(
     valid_best = float(run["best_valid_ap"])
     valid_40 = float(run["fixed_epoch_reports"]["40"]["ap"])
     valid_per_task = run["fixed_epoch_reports"][str(run["best_epoch"])]["per_task_ap"]
-    cpc_run = C.read_json(C.CPC["test_scores"].parent.parent / "runs/LCRC_CPC/run.json")
-    cpc_valid_per_task = cpc_run["fixed_epoch_reports"][str(cpc_run["best_epoch"])]["per_task_ap"]
+    reference_runs = {
+        "W2": C.REPO / C.W2_SEED0["run_json"],
+        "RC-REAL": C.REPO / "tracks/structural-sufficiency/lcrc_pcba_rc_v1/runs/REAL/run.json",
+        "CPC": C.CPC["test_scores"].parent.parent / "runs/LCRC_CPC/run.json",
+        "W2-DYNAMIC": C.REPO / "tracks/structural-sufficiency/lcrc_pcba_dynamic_v1/runs/W2_DYNAMIC/run.json",
+    }
+    reference_valid = {}
+    for name, path in reference_runs.items():
+        ref_run = C.read_json(path)
+        reference_valid[name] = ref_run["fixed_epoch_reports"][str(ref_run["best_epoch"])]["per_task_ap"]
+    cpc_valid_per_task = reference_valid["CPC"]
 
     high_valid_rhic = _set_mean(valid_per_task, high_ids)
     high_valid_cpc = _set_mean(cpc_valid_per_task, high_ids)
@@ -453,6 +462,10 @@ def run_decision(
             "high_support_valid_ap_rhic": high_valid_rhic,
             "high_support_valid_ap_cpc": high_valid_cpc,
             "high_support_valid_delta_vs_cpc": high_delta_valid,
+            "high_support_valid_ap_w2": _set_mean(reference_valid["W2"], high_ids),
+            "high_support_valid_ap_rc": _set_mean(reference_valid["RC-REAL"], high_ids),
+            "high_support_valid_ap_dynamic": _set_mean(reference_valid["W2-DYNAMIC"], high_ids),
+            "high_support_test_ap_rc": _set_mean(results["RC_REAL_best_valid"]["per_task_ap"], high_ids),
             "improved_high_support_tasks_test_vs_cpc": int(up_high),
             "degraded_high_support_tasks_test_vs_cpc": int(down_high),
             "improved_high_support_tasks_valid_vs_cpc": int(up_high_valid),
