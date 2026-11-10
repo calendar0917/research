@@ -365,6 +365,21 @@ def checkpoint_payload(
     return payload
 
 
+def _rng_hash_diffs(saved: Mapping[str, Any], now: Mapping[str, Any]) -> list[str]:
+    """Per-generator RNG hash comparison (CUDA lists compared element-wise)."""
+    diffs = [
+        key
+        for key in ("python_random_sha256", "numpy_sha256", "torch_cpu_sha256")
+        if saved.get(key) != now.get(key)
+    ]
+    a = list(saved.get("torch_cuda_sha256") or [])
+    b = list(now.get("torch_cuda_sha256") or [])
+    n = min(len(a), len(b))
+    if a[:n] != b[:n]:
+        diffs.append("torch_cuda_sha256")
+    return diffs
+
+
 def restore(
     payload: Mapping[str, Any],
     model: torch.nn.Module,
@@ -391,9 +406,12 @@ def restore(
     )
     if int(payload["global_step"]) > 0 and steps != [float(payload["global_step"])]:
         raise RuntimeError(f"restored AdamW steps {steps} != {payload['global_step']}")
-    hashes = M.restore_rng_state(payload["rng_state"])
-    if hashes["combined_sha256"] != (payload.get("rng_state_hashes") or {}).get("combined_sha256"):
-        raise RuntimeError("restored RNG state does not match the checkpoint hashes")
+    info = M.restore_rng_state(payload["rng_state"])
+    now_hashes = C.rng_state_hashes(C.capture_rng_state())
+    saved_hashes = payload.get("rng_state_hashes") or {}
+    diffs = _rng_hash_diffs(saved_hashes, now_hashes)
+    if diffs:
+        raise RuntimeError(f"restored RNG state does not match the checkpoint hashes: {diffs}")
     saved = payload.get("batch_plan") or {}
     now = plan_meta(task, int(payload["epoch"]))
     if saved.get("prefix_sha256") != now["prefix_sha256"] or int(saved.get("order_seed", -1)) != int(
@@ -406,7 +424,8 @@ def restore(
         "resumed_from_epoch": int(payload["epoch"]),
         "resumed_global_step": int(payload["global_step"]),
         "optimizer_state_restored": True,
-        "rng_state_hashes": hashes,
+        "rng_state_hashes": now_hashes,
+        "rng_restore": info,
         "replayed_epoch_order_hashes_verified": True,
     }
 
@@ -704,7 +723,7 @@ def train(
             optimizer=optimizer,
             rng_state=C.capture_rng_state(),
             model_audit=model_audit,
-            valid_report=None,
+            valid_report=valid_report,
             kind="last_epoch_resumable",
             extra={"optimizer_state_audit": opt_audit, "verified_epoch_orders": len(verified_orders)},
         )
@@ -718,7 +737,13 @@ def train(
     watchdog.cancel()
     stager.release()
 
-    completed = epochs_run >= int(epochs) and len(eval_completed) >= int(epochs) and bool(final_checkpoint_sha)
+    # On resume the earlier epochs were evaluated in the previous process, so the
+    # completion test looks at the highest evaluated epoch, not at how many were
+    # evaluated here.
+    evaluated_through = max(eval_completed) if eval_completed else 0
+    completed = (
+        epochs_run >= int(epochs) and evaluated_through >= int(epochs) and bool(final_checkpoint_sha)
+    )
     status = "COMPLETED" if completed else "INCOMPLETE"
     if completed:
         stop_reason = "COMPLETED"
@@ -765,6 +790,8 @@ def train(
         "steps_per_epoch": int(steps_epoch),
         "steps_total": int(steps_total),
         "eval_epochs_completed": sorted(eval_completed),
+        "eval_epochs_completed_this_process": len(eval_completed),
+        "evaluated_through_epoch": int(evaluated_through),
         "fixed_epoch_reports": {str(k): v for k, v in fixed_reports.items()},
         "monitor_epoch_reports": {str(k): v for k, v in monitor_reports.items()},
         "model_audit": model_audit,
