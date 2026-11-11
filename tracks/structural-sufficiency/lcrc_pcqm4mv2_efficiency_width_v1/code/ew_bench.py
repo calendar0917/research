@@ -97,18 +97,24 @@ def run_config(
         torch.cuda.synchronize(device)
 
     total_batches = int(warmup) + int(steps)
-    n_batches = min(total_batches, int(order.size) // int(batch_size))
-    rows_by_batch = [order[i * batch_size : (i + 1) * batch_size] for i in range(n_batches)]
+    if int(order.size) < total_batches * int(batch_size):
+        raise ValueError("row order is shorter than warmup+measured steps")
+    rows_warm = order[: int(warmup) * int(batch_size)]
+    rows_meas = order[int(warmup) * int(batch_size) : total_batches * int(batch_size)]
 
-    def _epoch() -> None:
+    def _window(window_rows: np.ndarray, *, start_step: int) -> list[float]:
         nonlocal global_step
         deferred = T.DeferredLog(check_interval=check_interval, clip=clip) if bool(impl["defer"]) else None
         block_start = time.perf_counter()
-        first_step = int(global_step)
+        first_step = int(start_step)
+        times: list[float] = []
         iterator = (
-            prefetcher.epoch(order[: n_batches * batch_size])
+            prefetcher.epoch(window_rows)
             if prefetcher is not None
-            else ((r, None, None) for r in rows_by_batch)
+            else (
+                (window_rows[i : i + batch_size], None, None)
+                for i in range(0, window_rows.size, batch_size)
+            )
         )
         for rows, raw, y_pref in iterator:
             if raw is None:
@@ -132,7 +138,7 @@ def run_config(
                 )
                 if device.type == "cuda":
                     torch.cuda.synchronize(device)
-                step_times.append(float(time.perf_counter() - t0))
+                times.append(float(time.perf_counter() - t0))
                 losses.append(float(out["loss"]))
                 grad_norms.append(float(out["grad_norm"]))
             else:
@@ -158,32 +164,35 @@ def run_config(
                 torch.cuda.synchronize(device)
             if deferred.pending():
                 deferred.flush(block_seconds=float(time.perf_counter() - block_start), first_step=first_step)
-            step_times.extend(deferred.block_step_ms)
+            times.extend(deferred.block_step_ms)
             losses.extend(deferred.losses)
             grad_norms.extend(deferred.grad_norms)
+        return times
 
     global_step = 0
-    step_times: list[float] = []
     losses: list[float] = []
     grad_norms: list[float] = []
     cpu0 = C.cpu_seconds()
     t_warm = time.perf_counter()
-    _epoch()  # includes warmup + measured steps; measured window is cut below
-    wall_all = float(time.perf_counter() - t_warm)
-    cpu_all = float(C.cpu_seconds() - cpu0)
+    _window(rows_warm, start_step=0)
+    warmup_wall = float(time.perf_counter() - t_warm)
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    cpu_warm = float(C.cpu_seconds() - cpu0)
+    # measured window
+    cpu1 = C.cpu_seconds()
+    t_meas = time.perf_counter()
+    step_times = _window(rows_meas, start_step=int(warmup))
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
+    measured_wall = float(time.perf_counter() - t_meas)
+    cpu_measured = float(C.cpu_seconds() - cpu1)
     if prefetcher is not None:
         prefetcher.close()
     stager.release()
 
-    measured_steps = max(n_batches - int(warmup), 1)
-    if len(step_times) >= measured_steps:
-        step_window = step_times[-measured_steps:]
-    else:  # pragma: no cover - defensive
-        step_window = step_times
-    # warmup wall: measure exactly with a second, separate run is avoided; the
-    # first `warmup` batches dominate, so subtract their step times.
-    measured_wall = float(sum(step_window) / 1e3)
-    molecules = measured_steps * int(batch_size)
+    measured_steps = max(len(step_times), 1)
+    molecules = int(rows_meas.size)
     result = {
         "implementation": implementation,
         "impl": impl,
@@ -191,17 +200,19 @@ def run_config(
         "scale": int(scale),
         "parameters": int(audit["total_parameters"]),
         "warmup_steps": int(warmup),
-        "measured_steps": int(measured_steps),
-        "wall_seconds_all": wall_all,
-        "wall_seconds_measured_from_step_times": measured_wall,
-        "steps_per_second": float(measured_steps / measured_wall) if measured_wall > 0 else None,
+        "measured_steps": int(len(step_times)),
+        "warmup_wall_seconds": warmup_wall,
+        "wall_seconds_all": warmup_wall + measured_wall,
+        "wall_seconds_measured": measured_wall,
+        "steps_per_second": float(len(step_times) / measured_wall) if measured_wall > 0 else None,
         "molecules_per_second": float(molecules / measured_wall) if measured_wall > 0 else None,
-        "step_ms": _stats(step_window),
-        "process_cpu_seconds_all": cpu_all,
-        "process_cpu_seconds_per_measured_step": float(cpu_all / max(measured_steps, 1)),
+        "step_ms": _stats(step_times),
+        "process_cpu_seconds_all": cpu_warm + cpu_measured,
+        "process_cpu_seconds_measured": cpu_measured,
+        "process_cpu_seconds_per_measured_step": float(cpu_measured / max(len(step_times), 1)),
         "final_loss": float(losses[-1]) if losses else None,
         "final_grad_norm": float(grad_norms[-1]) if grad_norms else None,
-        "loss_sha256_of_first_last": C.sha256_bytes(
+        "loss_first_last_sha256": C.sha256_bytes(
             (f"{losses[0]:.9g}|{losses[-1]:.9g}" if losses else "empty").encode()
         ),
         "state_fingerprint": C.PQ.BS.state_fingerprint(model.state_dict()),
