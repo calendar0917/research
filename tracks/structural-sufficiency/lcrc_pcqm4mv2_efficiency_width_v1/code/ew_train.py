@@ -654,7 +654,9 @@ def train(
             mean_losses = list(deferred.losses)
             grad_norms = list(deferred.grad_norms)
             clip_events_epoch = int(deferred.clip_events)
-            step_times = list(deferred.block_step_ms)
+            # DeferredLog reports block ms already; normalise to seconds so every
+            # downstream statistic multiplies by 1e3 exactly once.
+            step_times = [float(v) / 1e3 for v in deferred.block_step_ms]
             if len(deferred.n_per_step) != len(mean_losses):
                 raise RuntimeError("deferred per-step molecule counts are inconsistent")
             weighted = [(v, int(n)) for v, n in zip(mean_losses, deferred.n_per_step)]

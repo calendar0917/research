@@ -10,9 +10,9 @@ code path on the *real* 1M cache:
 3. E1 collation equals the frozen collation field-by-field (value, dtype,
    shape) on random real batches,
 4. forward equality on the identical batch dict for W1 / W2 / W3,
-5. **200 real training steps** frozen vs optimised on the real cache:
-   per-step loss and gradient norm, final weights and AdamW state, RNG state,
-   and fixed-sample predictions,
+5. **200 real training steps** frozen vs optimised (and frozen vs the adopted
+   E1 path) on the real cache: per-step loss and gradient norm, final weights
+   and AdamW state, RNG state, and fixed-sample predictions,
 6. checkpoint save -> restore -> continue: the restored run reproduces the
    uninterrupted run bitwise,
 7. atom renumbering invariance at every width,
@@ -103,8 +103,9 @@ def _run_frozen_window(
     device: torch.device,
     *,
     start_step: int,
+    collate_impl: str = "frozen",
 ) -> dict[str, Any]:
-    """Historical loop body: frozen collate, pinned staging, per-step sync."""
+    """Historical loop body: pinned staging, per-step sync (collate selectable)."""
     stager = PinnedStager(device, depth=2)
     losses: list[float] = []
     grad_norms: list[float] = []
@@ -113,7 +114,7 @@ def _run_frozen_window(
     for i in range(0, rows.size, C.BATCH_SIZE):
         chunk = rows[i : i + C.BATCH_SIZE]
         t0 = time.perf_counter()
-        batch = stager.batch(C.PQ_DATA.collate(task["train_cache"], chunk.tolist()))
+        batch = stager.batch(EC.collate_for(task["train_cache"], chunk.tolist(), implementation=str(collate_impl)))
         y = stager.labels(task["train_y_z"][chunk])
         out = C.PQ_TRAIN.train_step(
             model,
@@ -249,6 +250,17 @@ def _equivalence_gate(
     M.restore_rng_state(rng0)
     optimized = _run_optimized_window(task, model_opt, optimizer_opt, rows, device, start_step=0)
 
+    # the adopted implementation (E1 = vectorised collate only) through the
+    # exact same frozen step / staging / sync path
+    C.log(f"[verify] {label}: {steps} E1 (vectorised collate) steps ...")
+    C.seed_everything(0)
+    model_e1, _ = M.build_model(task["spec"], task["norm"], scale=scale, seed=0, device=device)
+    optimizer_e1, _ = M.make_optimizer(model_e1)
+    model_e1.load_state_dict(state0, strict=True)
+    optimizer_e1.load_state_dict(opt0)
+    M.restore_rng_state(rng0)
+    e1 = _run_frozen_window(task, model_e1, optimizer_e1, rows, device, start_step=0, collate_impl="fast")
+
     loss_delta = max(
         (abs(a - b) for a, b in zip(frozen["losses"], optimized["losses"])), default=float("inf")
     )
@@ -358,6 +370,28 @@ def _equivalence_gate(
         result["checkpoint"]["rng_before_continuation"] = C.rng_state_hashes(rng_before_cont)
         del state_before_cont, opt_before_cont
 
+    e1_loss_delta = max((abs(a - b) for a, b in zip(frozen["losses"], e1["losses"])), default=float("inf"))
+    e1_gnorm_delta = max((abs(a - b) for a, b in zip(frozen["grad_norms"], e1["grad_norms"])), default=float("inf"))
+    e1_weights_equal, e1_weight_delta = _state_equal(model_frozen.state_dict(), model_e1.state_dict())
+    e1_opt_equal = _optimizer_equal(optimizer_frozen.state_dict(), optimizer_e1.state_dict())
+    model_e1.eval()
+    with torch.inference_mode():
+        p_e1 = _fixed_sample_predictions(model_e1, task, device)
+    e1_pred_delta = float(np.max(np.abs(p_f - p_e1))) if p_f.size and p_e1.size else float("inf")
+    result["e1"] = {
+        "loss_max_abs_delta": float(e1_loss_delta),
+        "grad_norm_max_abs_delta": float(e1_gnorm_delta),
+        "weights_bitwise_equal": bool(e1_weights_equal),
+        "weights_max_abs_delta": float(e1_weight_delta),
+        "optimizer_state_bitwise_equal": bool(e1_opt_equal),
+        "fixed_sample_predictions_max_abs_delta": float(e1_pred_delta),
+        "step_ms_mean": float(np.mean(e1["step_ms"])),
+    }
+    gates["E1_losses_exact"] = bool(e1_loss_delta == 0.0 and len(e1["losses"]) == len(frozen["losses"]))
+    gates["E1_grad_norms_exact"] = bool(e1_gnorm_delta == 0.0)
+    gates["E1_weights_bitwise_equal"] = bool(e1_weights_equal)
+    gates["E1_optimizer_state_bitwise_equal"] = bool(e1_opt_equal)
+    gates["E1_predictions_equal"] = bool(e1_pred_delta <= C.GATES["fixed_sample_prediction_abs_tol"])
     result["gates"] = gates
     result["all_gates_pass"] = bool(all(gates.values()))
     # clean up the large objects before the next scale

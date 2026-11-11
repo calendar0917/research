@@ -87,6 +87,9 @@ MONITOR_SEED = int(PQ.MONITOR_SEED)  # 43
 N_MONITOR = int(PQ.N_MONITOR)  # 20,000
 RECIPE: dict[str, Any] = dict(PQ.RECIPE)
 TRAIN_ROWS = 1_000_000
+#: Official PCQM4Mv2 Train size (full-data projection only; never trained here).
+FULL_TRAIN_ROWS = 3_378_606
+
 STEPS_PER_EPOCH = int(PQ.steps_per_epoch(TRAIN_ROWS))
 TOTAL_STEPS = int(PQ.total_steps(TRAIN_ROWS))
 
