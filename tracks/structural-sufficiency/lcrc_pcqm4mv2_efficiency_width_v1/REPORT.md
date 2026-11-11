@@ -309,7 +309,9 @@ the GPU is mostly idle (≈7 % utilisation in the profiling window).
   * W3 best (epoch 39, 24.5 MB): SHA256 `f4175f141702b9cc10b23404c6689936fed0692aac32086489e0a4bf2492b5ac`;
     W3 last: `7b042fb7a56da9c5071454092635f71535ed49a24be397444b440ee950129e6d`.
   * W1 best (epoch 36, 3.2 MB): SHA256 `d33a6a6b032405e33e5821e839fc7a098dfdb60eec55c54565465f93e6e830da`;
-    W1 last: `2fa3b4db080e04827ac7ae6bacc2f5d4f2bc063ffe6056027bbccd3f84384602`.
+    W1 last: `2fa3b4db080e04827ac7ae6bacc2f5d4f2bc063ffe6056027bbccd3f84384602`;
+    W1 epoch-40 primary: `0692c9dda5c37b3e152413e5f0d1071d865c4333b1b140ac90ad34b4b43ea995`.
+  * W3 epoch-40 primary: `c67d8590f3c0c5446ac8761ce46b4d89d485ae54b468c721f3ac4562c051d7d1`.
 * Data: inherited caches, paths and SHA256 in
   `…/transfer_pilot_v1/analysis/pcqm_cache_manifest.json`
   (`train1m` tree `d8f24e86…`, `valid` tree `2c822540…`), labels
