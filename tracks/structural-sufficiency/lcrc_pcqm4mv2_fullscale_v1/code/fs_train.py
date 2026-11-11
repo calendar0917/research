@@ -16,6 +16,7 @@ import json
 import math
 import os
 import random
+import subprocess
 import sys
 import threading
 import time
@@ -884,6 +885,101 @@ def train(
 # ---------------------------------------------------------------------------
 
 
+def _meminfo() -> dict[str, int]:
+    out: dict[str, int] = {}
+    try:
+        with open("/proc/meminfo", encoding="utf-8") as fh:
+            for line in fh:
+                key, _, rest = line.partition(":")
+                if key in ("MemTotal", "MemAvailable", "Cached", "Dirty"):
+                    out[key] = int(rest.strip().split()[0]) * 1024
+    except OSError:
+        pass
+    return out
+
+
+def _gpu_sample() -> list[dict[str, Any]]:
+    try:
+        raw = subprocess.check_output(
+            [
+                "nvidia-smi",
+                "--query-gpu=index,utilization.gpu,memory.used,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            text=True,
+            timeout=10,
+            stderr=subprocess.DEVNULL,
+        ).strip()
+    except Exception:  # noqa: BLE001 - preflight only
+        return []
+    out = []
+    for line in raw.splitlines():
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) == 4:
+            out.append(
+                {
+                    "index": int(parts[0]),
+                    "util_pct": float(parts[1]),
+                    "mem_used_mib": float(parts[2]),
+                    "mem_total_mib": float(parts[3]),
+                }
+            )
+    return out
+
+
+class HostSampler:
+    """Background GPU / memory sampler for the throughput preflight."""
+
+    def __init__(self, interval: float = 2.0):
+        self.interval = float(interval)
+        self.samples: list[dict[str, Any]] = []
+        self._stop = threading.Event()
+        self._thread = threading.Thread(target=self._run, daemon=True)
+
+    def _run(self) -> None:
+        while not self._stop.wait(self.interval):
+            self.samples.append(
+                {
+                    "utc": time.time(),
+                    "gpus": _gpu_sample(),
+                    "meminfo": _meminfo(),
+                    "loadavg": list(os.getloadavg()),
+                }
+            )
+
+    def start(self) -> None:
+        self._thread.start()
+
+    def stop(self) -> dict[str, Any]:
+        self._stop.set()
+        self._thread.join(timeout=5)
+        gpus: dict[int, dict[str, Any]] = {}
+        for sample in self.samples:
+            for gpu in sample["gpus"]:
+                rec = gpus.setdefault(
+                    int(gpu["index"]), {"util": [], "mem_used_mib": [], "mem_total_mib": gpu["mem_total_mib"]}
+                )
+                rec["util"].append(float(gpu["util_pct"]))
+                rec["mem_used_mib"].append(float(gpu["mem_used_mib"]))
+        summary = {
+            "samples": len(self.samples),
+            "interval_seconds": self.interval,
+            "gpus": {
+                str(idx): {
+                    "util_mean_pct": float(np.mean(rec["util"])) if rec["util"] else None,
+                    "util_max_pct": float(np.max(rec["util"])) if rec["util"] else None,
+                    "mem_used_mean_mib": float(np.mean(rec["mem_used_mib"])) if rec["mem_used_mib"] else None,
+                    "mem_total_mib": float(rec["mem_total_mib"]),
+                }
+                for idx, rec in sorted(gpus.items())
+            },
+            "meminfo_start": self.samples[0]["meminfo"] if self.samples else _meminfo(),
+            "meminfo_end": _meminfo(),
+            "loadavg_end": list(os.getloadavg()),
+        }
+        return summary
+
+
 def bench(task: Mapping[str, Any], *, run: str, device: torch.device, steps: int, warmup: int, out: Path) -> dict[str, Any]:
     C.apply_deterministic_settings()
     C.seed_everything(int(task["seed"]))
@@ -897,6 +993,11 @@ def bench(task: Mapping[str, Any], *, run: str, device: torch.device, steps: int
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
         torch.cuda.synchronize(device)
+    import resource
+
+    cpu0 = resource.getrusage(resource.RUSAGE_SELF)
+    sampler = HostSampler(interval=2.0)
+    sampler.start()
     t0 = time.perf_counter()
     times: list[float] = []
     losses: list[float] = []
@@ -922,9 +1023,14 @@ def bench(task: Mapping[str, Any], *, run: str, device: torch.device, steps: int
             times.append(float(time.perf_counter() - t))
             losses.append(float(out_step["loss"]))
     wall = float(time.perf_counter() - t0)
+    host = sampler.stop()
+    cpu1 = resource.getrusage(resource.RUSAGE_SELF)
     stager.release()
     arr = np.asarray(times, dtype=np.float64)
     measured_steps = int(len(times))
+    cpu_seconds = float(
+        (cpu1.ru_utime - cpu0.ru_utime) + (cpu1.ru_stime - cpu0.ru_stime)
+    )
     payload = {
         "schema": "lcrc-pcqm4mv2-fullscale-bench-v1",
         "round_id": C.ROUND_ID,
@@ -948,6 +1054,9 @@ def bench(task: Mapping[str, Any], *, run: str, device: torch.device, steps: int
         "gpu_peak_allocated_bytes": int(torch.cuda.max_memory_allocated(device)) if device.type == "cuda" else 0,
         "gpu_peak_reserved_bytes": int(torch.cuda.max_memory_reserved(device)) if device.type == "cuda" else 0,
         "peak_rss_mb": C.peak_rss_mb(),
+        "cpu_seconds_process": cpu_seconds,
+        "cpu_cores_mean_process": float(cpu_seconds / wall) if wall > 0 else None,
+        "host_sampler": host,
         "gpu": C.gpu_occupancy(),
         "environment": C.environment(),
         "git_commit": C.git_commit(),

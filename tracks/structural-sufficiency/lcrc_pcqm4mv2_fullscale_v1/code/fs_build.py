@@ -335,7 +335,7 @@ def verify_prefix_control(*, full_dir: Path, old_dir: Path) -> dict[str, Any]:
         np.concatenate(
             [
                 np.arange(0, 5),
-                np.arange(n_old - 3, n_old + 3),
+                np.arange(n_old - 5, n_old),
                 rng.choice(n_old, size=20, replace=False),
             ]
         )
