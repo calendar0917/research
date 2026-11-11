@@ -353,7 +353,7 @@ def step_equivalence_gate(
     param_max = max(
         float((state_frozen[k].to(torch.float64) - state_ours[k].to(torch.float64)).abs().max())
         for k in state_frozen
-        if state_frozen[k].is_floating_point()
+        if state_frozen[k].is_floating_point() and state_frozen[k].numel()
     )
     same_params = all(bool(torch.equal(state_frozen[k], state_ours[k])) for k in state_frozen)
     same_opt = all(
