@@ -12,6 +12,7 @@ parsing is recorded per row in the parse ledger.
 from __future__ import annotations
 
 import argparse
+import json
 import multiprocessing as mp
 import time
 from concurrent.futures import ProcessPoolExecutor
@@ -401,9 +402,7 @@ def stage_merge(*, keep_shards: bool = False, reuse_cache: bool = False) -> dict
             shard_paths, spec, out_dir=full_dir, split="all", dataset=C.DATASET, tag="pcqm_train_full"
         )
     meta_path = full_dir / "meta.json"
-    import json as _json
-
-    meta = _json.loads(meta_path.read_text(encoding="utf-8"))
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
     meta.update(
         {
             "round_id": C.ROUND_ID,
