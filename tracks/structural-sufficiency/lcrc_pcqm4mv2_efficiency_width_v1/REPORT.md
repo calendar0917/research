@@ -58,7 +58,7 @@ essentially flat (W1/W3 on c06: 37.6 and 38.6 ms), MAE gain 0.0111 eV then
 Full-data 3.38M × 40 projection: **11.41 h** (W3), 11.11 h (W1), 17.23 h
 (historical frozen path) — projection only, not run.
 Code: W3 `6e9d58c`, W1 `3663e07`, historical W2 `93ae701f`; W2 checkpoint
-`e45316c2…`; W3/W1 checkpoint hashes in §9; GPU ledger **9.29 h** of 12 h
+`e45316c2…`; W3/W1 checkpoint hashes in §9; GPU ledger **9.15 h** of 12 h
 (§8); all commands in §9; curves in `analysis/curves.png` / `.csv`.
 
 ### Answers to the five required questions
