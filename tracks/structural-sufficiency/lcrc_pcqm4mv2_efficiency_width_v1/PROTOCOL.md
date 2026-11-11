@@ -233,3 +233,23 @@ recorded.
   step) is 3.3 h per 40-epoch 1M run plus ≈0.08 h evaluation; W3 + W1
   therefore fit inside the remaining budget with margin. W3 starts first;
   W1 is launched only after W3 completes and only if the ledger still allows.
+- 2026-11-11 — **execution-regime change forced by infrastructure.** At 11:54
+  the `res` host (a100-2) became unreachable: the jump host and ICMP still
+  worked, but TCP 22/6003 failed; the interruption persisted. The W3 run on
+  `res-gpu1` was stopped mid-training (last visible epoch 18 at 11:18; its
+  partial checkpoints remain on that host and are not used). To keep the
+  budgeted round moving, the formal runs were moved to `res-2` -> node `c06`
+  (A100-PCIE-40GB, driver 525.85.12, torch 2.5.1+cu124, Slurm pool
+  `res2-c06` pinned because `--nodelist=c05,c06` collapsed to the busy c05).
+  The 1M + Validation caches, labels, subset rows, monitor rows and the
+  historical W2 checkpoint were copied byte-exactly (cache tree hashes and the
+  W2 checkpoint SHA256 `e45316c2…ed0b1` re-verified on c06). All 19
+  correctness gates were re-run **in the new regime** (`analysis/verify_res2.json`,
+  status OK), including E1-vs-frozen bitwise equality over 200 steps at W2 and
+  W3 and the 200-step checkpoint/resume gate. W3 restarts from epoch 1 on
+  c06; W1 will follow on the same node. The changed regime is recorded for
+  every timing number: throughput comparisons across hosts are not made —
+  the controlled width-vs-speed measurement remains
+  `analysis/bench_scale{1,2,3}.json` (same host/conditions). MAE is
+  deterministic given the seed/order/labels and is compared across regimes
+  with that caveat stated in REPORT.md.
