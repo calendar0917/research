@@ -417,7 +417,7 @@ def stage_merge(*, keep_shards: bool = False, reuse_cache: bool = False) -> dict
             "merge_note": "meta rewritten after merge for round provenance; arrays untouched",
         }
     )
-    meta_path.write_text(_json.dumps(meta, indent=1, sort_keys=True), encoding="utf-8")
+    meta_path.write_text(json.dumps(meta, indent=1, sort_keys=True), encoding="utf-8")
     tree_sha = C.sha256_tree(full_dir)
     files = sorted(p for p in full_dir.glob("*") if p.is_file())
     prefix = verify_prefix_control(full_dir=full_dir, old_dir=C.PARENT_CACHE / "pcqm_train1m")
