@@ -1,0 +1,224 @@
+{
+  "aggregates": {
+    "E1": {
+      "gpu_peak_mb": 195.11572265625,
+      "label": "E1",
+      "molecules_per_second_max": 3461.6441976332217,
+      "molecules_per_second_median": 3377.7679295487133,
+      "molecules_per_second_min": 3293.8916614642053,
+      "molecules_per_second_spread_pct": 4.966372458614377,
+      "molecules_per_second_values": [
+        3461.6441976332217,
+        3293.8916614642053
+      ],
+      "process_cpu_seconds_per_step_median": 0.9295951450000002,
+      "rounds": 2,
+      "speedup_vs_frozen": null,
+      "step_ms_mean_median": 34.695011174771935,
+      "step_ms_mean_values": [
+        33.77390955109149,
+        35.61611279845238
+      ],
+      "step_ms_p50_median": 33.241488272324204,
+      "step_ms_p90_median": 42.27961166761816
+    }
+  },
+  "all_configs_same_weights": true,
+  "batch_size": 128,
+  "batch_size_probes": {},
+  "best_config": "E1",
+  "best_step_ms_mean": 34.695011174771935,
+  "configs": {
+    "E1": {
+      "impl": "E1"
+    },
+    "E1E2": {
+      "impl": "E1E2"
+    },
+    "E1E2E3c16": {
+      "check_interval": 16,
+      "impl": "E1E2E3"
+    },
+    "E1E2c16": {
+      "check_interval": 16,
+      "impl": "E1E2"
+    },
+    "E1E2c8": {
+      "check_interval": 8,
+      "impl": "E1E2"
+    },
+    "E1E3": {
+      "impl": "E1E3"
+    },
+    "E1_t1": {
+      "impl": "E1",
+      "threads": 1
+    },
+    "E2": {
+      "impl": "E2"
+    },
+    "E3": {
+      "impl": "E3"
+    },
+    "frozen": {
+      "impl": "frozen"
+    },
+    "frozen_t1": {
+      "impl": "frozen",
+      "threads": 1
+    }
+  },
+  "created_utc": "2026-11-11T01:42:11Z",
+  "device": "cuda",
+  "equivalence": {
+    "all_configs_and_rounds_same_weights": true,
+    "distinct_weight_hashes": [
+      "69de9ab2eb4f9ada413fa8e14c728727415b6ccbed299e0a341707c8a0efb3fd"
+    ],
+    "note": "each config/round starts from the same seed-0 state and consumes the same rows",
+    "per_config_hashes": {
+      "E1": [
+        "69de9ab2eb4f9ada413fa8e14c728727415b6ccbed299e0a341707c8a0efb3fd"
+      ]
+    }
+  },
+  "frozen_molecules_per_second_median": null,
+  "git_commit": "60fcb404b8fa287c34f0e6a540c964e650617346",
+  "git_dirty": false,
+  "gpu_occupancy": {
+    "captured_utc": "2026-11-11T01:42:11Z",
+    "cuda_available": true,
+    "cuda_visible_devices": "1",
+    "device_count": 1,
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "nvidia_smi_compute_apps": "3841932, python3, 16082 MiB\n695117, /snap/snapd-desktop-integration/391/usr/bin/snapd-desktop-integration, 13 MiB\n2561483, python, 786 MiB",
+    "nvidia_smi_gpus": "0, GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, NVIDIA A100-SXM4-40GB, 40960 MiB, 16133 MiB, 24195 MiB, 100 %, 100 %, 54, 550.163.01\n1, GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, NVIDIA A100-SXM4-40GB, 40960 MiB, 809 MiB, 39518 MiB, 21 %, 1 %, 31, 550.163.01",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "visible_device_mem_get_info": {
+      "free_bytes": 41437495296,
+      "total_bytes": 42285268992,
+      "used_bytes": 847773696
+    }
+  },
+  "host_facts": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "git_commit": "60fcb404b8fa287c34f0e6a540c964e650617346",
+    "gpu_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "hostname": "a100-2",
+    "ogb": "1.3.6",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "rdkit": null,
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "labels": [
+    "E1"
+  ],
+  "notes": [
+    "medians over interleaved rounds; the pilot single-pass numbers are in bench_pilot.json",
+    "every non-probe configuration must reach the same weights fingerprint",
+    "batch-256/512 probes are throughput investigations only; formal runs stay at 128",
+    "the process burns many CPU cores per step; t1 configurations use one ATen thread"
+  ],
+  "per_round": {
+    "E1": [
+      {
+        "batch_size": 128,
+        "check_interval": 0,
+        "final_grad_norm": 34.697669982910156,
+        "final_loss": 0.5188366770744324,
+        "gpu_peak_allocated_bytes": 204593664,
+        "gpu_peak_reserved_bytes": 241172480,
+        "impl": {
+          "check_interval": 0,
+          "collate": "fast",
+          "defer": false,
+          "prefetch": 0
+        },
+        "implementation": "E1",
+        "label": "E1",
+        "measured_steps": 100,
+        "molecules_per_second": 3461.6441976332217,
+        "optimizer_fingerprint": "b4a437bc38bddae8112f67e3314e06d9bf9ee58707723714d4e7ec2832516f10",
+        "parameters": 2038167,
+        "process_cpu_seconds_measured": 93.31218999999999,
+        "process_cpu_seconds_per_measured_step": 0.9331218999999998,
+        "process_cpu_seconds_warmup": 19.404779000000005,
+        "producer_counters": null,
+        "scale": 3,
+        "state_fingerprint": "18d0fca6d8638574744394d1b5fcd11cb32b0c1bbeeedcace2524f4f0d290a81",
+        "step_ms": {
+          "max": 49.90076087415218,
+          "mean": 33.77390955109149,
+          "min": 25.757115334272385,
+          "n": 100,
+          "p50": 33.09615608304739,
+          "p90": 39.76569273509086
+        },
+        "step_timing_mode": "per-step",
+        "steps_per_second": 27.044095294009544,
+        "threads": null,
+        "wall_seconds_measured": 3.6976648289710283,
+        "warmup_steps": 20,
+        "warmup_wall_seconds": 1.2140361326746643,
+        "weights_sha256": "69de9ab2eb4f9ada413fa8e14c728727415b6ccbed299e0a341707c8a0efb3fd"
+      },
+      {
+        "batch_size": 128,
+        "check_interval": 0,
+        "final_grad_norm": 34.697669982910156,
+        "final_loss": 0.5188366770744324,
+        "gpu_peak_allocated_bytes": 204593664,
+        "gpu_peak_reserved_bytes": 241172480,
+        "impl": {
+          "check_interval": 0,
+          "collate": "fast",
+          "defer": false,
+          "prefetch": 0
+        },
+        "implementation": "E1",
+        "label": "E1",
+        "measured_steps": 100,
+        "molecules_per_second": 3293.8916614642053,
+        "optimizer_fingerprint": "b4a437bc38bddae8112f67e3314e06d9bf9ee58707723714d4e7ec2832516f10",
+        "parameters": 2038167,
+        "process_cpu_seconds_measured": 92.60683900000004,
+        "process_cpu_seconds_per_measured_step": 0.9260683900000004,
+        "process_cpu_seconds_warmup": 17.348040999999995,
+        "producer_counters": null,
+        "scale": 3,
+        "state_fingerprint": "18d0fca6d8638574744394d1b5fcd11cb32b0c1bbeeedcace2524f4f0d290a81",
+        "step_ms": {
+          "max": 56.46784184500575,
+          "mean": 35.61611279845238,
+          "min": 25.91702016070485,
+          "n": 100,
+          "p50": 33.38682046160102,
+          "p90": 44.793530600145466
+        },
+        "step_timing_mode": "per-step",
+        "steps_per_second": 25.733528605189104,
+        "threads": null,
+        "wall_seconds_measured": 3.8859808747656643,
+        "warmup_steps": 20,
+        "warmup_wall_seconds": 0.7032862128689885,
+        "weights_sha256": "69de9ab2eb4f9ada413fa8e14c728727415b6ccbed299e0a341707c8a0efb3fd"
+      }
+    ]
+  },
+  "round_id": "lcrc-pcqm4mv2-efficiency-width-v1",
+  "rounds": 2,
+  "scale": 3,
+  "schema": "lcrc-pcqm4mv2-efficiency-bench-v1",
+  "speedup_best_vs_frozen": null,
+  "steps": 100,
+  "wall_seconds": 10.453555970918387,
+  "warmup_steps": 20
+}
