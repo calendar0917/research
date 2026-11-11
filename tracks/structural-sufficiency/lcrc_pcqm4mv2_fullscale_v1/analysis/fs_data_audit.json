@@ -1,0 +1,347 @@
+{
+  "checks": {
+    "data_audit_ok": true,
+    "official_splits_partition_dataset": true,
+    "row_plan_ok": true,
+    "row_plan_sha_matches_parent": true,
+    "split_sizes_ok": true
+  },
+  "created_utc": "2026-11-11T13:42:16Z",
+  "data_audit": {
+    "created_utc": "2026-11-11T13:42:14Z",
+    "dataset": {
+      "dataset_folder": "data/ogb/pcqm4m-v2",
+      "n_total": 3746620,
+      "name": "pcqm4m-v2",
+      "ogb_root": "data/ogb",
+      "only_smiles": true,
+      "pretrained_weights_used": false,
+      "release_files": [
+        "RELEASE_v1.txt"
+      ],
+      "split_keys": [
+        "train",
+        "valid",
+        "test-dev",
+        "test-challenge"
+      ],
+      "uses_3d_geometry": false
+    },
+    "files": {
+      "pcqm4m-v2/raw/data.csv.gz": {
+        "bytes": 54822297,
+        "sha256": "ab89a4707d5e37f19c3b5e69d1c5cbb7fc1a9665d38783c0c89df6675f34286b"
+      },
+      "pcqm4m-v2/split_dict.pt": {
+        "bytes": 33714863,
+        "sha256": "d913e5541af6a6279abfe23ecf0fdbe4bc86785e1d8fc24a8f3ef422a01d3722"
+      }
+    },
+    "gates": {
+      "has_four_official_split_keys": true,
+      "no_row_appears_twice_inside_a_split": true,
+      "smiles_non_empty": true,
+      "splits_pairwise_disjoint": true,
+      "splits_partition_the_dataset": true,
+      "total_equals_sum_of_splits": true,
+      "train_labels_all_finite": true,
+      "valid_labels_all_finite": true
+    },
+    "git_commit": "cbd1387ab6d95028687baf5df4f249a03fa046eb",
+    "labels": {
+      "hidden_labels_read": false,
+      "hidden_labels_used": false,
+      "hidden_split_rows": {
+        "test-challenge": 147432,
+        "test-dev": 147037
+      },
+      "train": {
+        "max": 47.023994504905005,
+        "mean": 5.689459009220466,
+        "median": 5.58377621226,
+        "min": 0.3755171136899999,
+        "n": 3378606,
+        "n_finite": 3378606,
+        "n_non_finite": 0,
+        "q01": 3.1891743278600004,
+        "q05": 3.9592565247750007,
+        "q25": 4.911655001524999,
+        "q75": 6.372906378710001,
+        "q95": 7.76612929327,
+        "q99": 8.764787124605,
+        "std": 1.162139600854258,
+        "units": "eV"
+      },
+      "unit": "eV (DFT HOMO-LUMO gap at B3LYP/6-31G*)",
+      "valid": {
+        "max": 15.93498708528,
+        "mean": 5.445098528527628,
+        "median": 5.311662361760001,
+        "min": 0.7347073963500002,
+        "n": 73545,
+        "n_finite": 73545,
+        "n_non_finite": 0,
+        "q01": 2.9769255244699995,
+        "q05": 3.657210150720001,
+        "q25": 4.601445211955,
+        "q75": 6.103513666715,
+        "q95": 7.730754492705,
+        "q99": 8.98519934351,
+        "std": 1.2499656000340877,
+        "units": "eV"
+      }
+    },
+    "partition": {
+      "list_of_pairs_checked": [
+        [
+          "train",
+          "valid"
+        ],
+        [
+          "train",
+          "test-dev"
+        ],
+        [
+          "train",
+          "test-challenge"
+        ],
+        [
+          "valid",
+          "test-dev"
+        ],
+        [
+          "valid",
+          "test-challenge"
+        ],
+        [
+          "test-dev",
+          "test-challenge"
+        ]
+      ],
+      "pairwise_disjoint": true,
+      "union_is_full_range": true
+    },
+    "round_id": "lcrc-pcqm4mv2-transfer-pilot-v1",
+    "schema": "lcrc-pcqm4mv2-data-audit-v1",
+    "smiles": {
+      "n": 3746620,
+      "n_duplicate_strings": 171632,
+      "n_empty": 0,
+      "n_unique": 3574988
+    },
+    "split_sizes": {
+      "test-challenge": 147432,
+      "test-dev": 147037,
+      "train": 3378606,
+      "valid": 73545
+    },
+    "splits": {
+      "test-challenge": {
+        "in_range": true,
+        "index_sha256": "2cff092518ea17e41c2ea697e1ba2d747fac4ffd9551f7819a9434c7badc4077",
+        "max": 3746616,
+        "min": 3378615,
+        "n": 147432,
+        "sorted_ascending": true,
+        "unique": 147432
+      },
+      "test-dev": {
+        "in_range": true,
+        "index_sha256": "03918fd3cb8a80a2857dc610ce60a94d7e6d003815f75b05b2308ff5d14d5cfe",
+        "max": 3746619,
+        "min": 3378608,
+        "n": 147037,
+        "sorted_ascending": true,
+        "unique": 147037
+      },
+      "train": {
+        "in_range": true,
+        "index_sha256": "cf60a91cfba6242ba4fb9278bd445235ca553673d4e3f2c2845d740cc4b6e87d",
+        "max": 3378605,
+        "min": 0,
+        "n": 3378606,
+        "sorted_ascending": true,
+        "unique": 3378606
+      },
+      "valid": {
+        "in_range": true,
+        "index_sha256": "521f5cedad3e995d901940d86df36b4665ded9b52076f74d7d48583e39f10fa5",
+        "max": 3746612,
+        "min": 3378606,
+        "n": 73545,
+        "sorted_ascending": true,
+        "unique": 73545
+      }
+    },
+    "status": "OK"
+  },
+  "dataset": "pcqm4m-v2",
+  "git_commit": "cbd1387ab6d95028687baf5df4f249a03fa046eb",
+  "installed_dataset": {
+    "n_total_rows": 3746620,
+    "note": "the installed OGB data version is authoritative; no row is added or dropped to match a public web-page total",
+    "ogb_version": "1.3.6",
+    "raw_files": {
+      "pcqm4m-v2/raw/data.csv.gz": {
+        "bytes": 54822297,
+        "sha256": "ab89a4707d5e37f19c3b5e69d1c5cbb7fc1a9665d38783c0c89df6675f34286b"
+      },
+      "pcqm4m-v2/split_dict.pt": {
+        "bytes": 33714863,
+        "sha256": "d913e5541af6a6279abfe23ecf0fdbe4bc86785e1d8fc24a8f3ef422a01d3722"
+      }
+    },
+    "release_files": [
+      "RELEASE_v1.txt"
+    ]
+  },
+  "parent_subset_plan": {
+    "official_train_size": 3378606,
+    "permutation_rows_sha256_full": "81e7ec71665f8ffca32c630fbac14407aca872c49604544966b54595d2d7c7eb",
+    "round": "lcrc-pcqm4mv2-transfer-pilot-v1",
+    "sample_seed": 42,
+    "subset_1m_sha256": "b2d6f5236f9ceb9bfd4e5941dcf3bdfe7c3ac144d668ab8cfd5dbb2f2a65deac"
+  },
+  "round_id": "lcrc-pcqm4mv2-fullscale-v1",
+  "row_plan": {
+    "checks": {
+      "all_rows_in_official_train": true,
+      "no_test_challenge_overlap": true,
+      "no_test_dev_overlap": true,
+      "no_valid_overlap": true,
+      "prefix_equals_hist_1m_subset": true,
+      "set_equals_official_train": true,
+      "size_is_official_train": true,
+      "subset_prefix_sha_matches_parent_plan": true,
+      "unique_rows": true
+    },
+    "first_row": 1020737,
+    "hist_1m_rows_sha256": "b2d6f5236f9ceb9bfd4e5941dcf3bdfe7c3ac144d668ab8cfd5dbb2f2a65deac",
+    "last_row": 1648264,
+    "n_rows": 3378606,
+    "n_unique": 3378606,
+    "permutation_file": "tracks/structural-sufficiency/lcrc_pcqm4mv2_transfer_pilot_v1/cache/pcqm_permutation.npy",
+    "permutation_sha256": "815c24828a617288ff2e428458f2548901e3a5d76dc3da236d38fad30fc29a47",
+    "rows_sha256": "81e7ec71665f8ffca32c630fbac14407aca872c49604544966b54595d2d7c7eb",
+    "status": "OK",
+    "subset_rows_file": "tracks/structural-sufficiency/lcrc_pcqm4mv2_transfer_pilot_v1/cache/pcqm_subset_rows.npy",
+    "subset_rows_sha256": "a30bd9d9a38122661bf101009c27e32e1190bf9eca0b05257923027d0018d616"
+  },
+  "schema": "lcrc-pcqm4mv2-fullscale-data-audit-v1",
+  "split_identity": {
+    "dataset_files": {
+      "pcqm4m-v2/raw/data.csv.gz": {
+        "bytes": 54822297,
+        "sha256": "ab89a4707d5e37f19c3b5e69d1c5cbb7fc1a9665d38783c0c89df6675f34286b"
+      },
+      "pcqm4m-v2/split_dict.pt": {
+        "bytes": 33714863,
+        "sha256": "d913e5541af6a6279abfe23ecf0fdbe4bc86785e1d8fc24a8f3ef422a01d3722"
+      }
+    },
+    "dataset_n_total": 3746620,
+    "n_expected": {
+      "test-challenge": 147432,
+      "test-dev": 147037,
+      "train": 3378606,
+      "valid": 73545
+    },
+    "ogb_get_idx_split_matches_split_dict": true,
+    "ogb_split_evidence": {
+      "test-challenge": {
+        "in_range": true,
+        "index_sha256": "2cff092518ea17e41c2ea697e1ba2d747fac4ffd9551f7819a9434c7badc4077",
+        "max": 3746616,
+        "min": 3378615,
+        "n": 147432,
+        "sorted_ascending": true,
+        "unique": 147432
+      },
+      "test-dev": {
+        "in_range": true,
+        "index_sha256": "03918fd3cb8a80a2857dc610ce60a94d7e6d003815f75b05b2308ff5d14d5cfe",
+        "max": 3746619,
+        "min": 3378608,
+        "n": 147037,
+        "sorted_ascending": true,
+        "unique": 147037
+      },
+      "train": {
+        "in_range": true,
+        "index_sha256": "cf60a91cfba6242ba4fb9278bd445235ca553673d4e3f2c2845d740cc4b6e87d",
+        "max": 3378605,
+        "min": 0,
+        "n": 3378606,
+        "sorted_ascending": true,
+        "unique": 3378606
+      },
+      "valid": {
+        "in_range": true,
+        "index_sha256": "521f5cedad3e995d901940d86df36b4665ded9b52076f74d7d48583e39f10fa5",
+        "max": 3746612,
+        "min": 3378606,
+        "n": 73545,
+        "sorted_ascending": true,
+        "unique": 73545
+      }
+    },
+    "partition_ok": true,
+    "release_files": [
+      "RELEASE_v1.txt"
+    ],
+    "size_checks": {
+      "test-challenge": true,
+      "test-dev": true,
+      "train": true,
+      "valid": true
+    },
+    "split_dict": {
+      "bytes": 33714863,
+      "path": "data/ogb/pcqm4m-v2/split_dict.pt",
+      "sha256": "d913e5541af6a6279abfe23ecf0fdbe4bc86785e1d8fc24a8f3ef422a01d3722"
+    },
+    "splits": {
+      "test-challenge": {
+        "index_sha256": "2cff092518ea17e41c2ea697e1ba2d747fac4ffd9551f7819a9434c7badc4077",
+        "max": 3746616,
+        "min": 3378615,
+        "n": 147432,
+        "sorted_ascending": true,
+        "unique": 147432
+      },
+      "test-dev": {
+        "index_sha256": "03918fd3cb8a80a2857dc610ce60a94d7e6d003815f75b05b2308ff5d14d5cfe",
+        "max": 3746619,
+        "min": 3378608,
+        "n": 147037,
+        "sorted_ascending": true,
+        "unique": 147037
+      },
+      "train": {
+        "index_sha256": "cf60a91cfba6242ba4fb9278bd445235ca553673d4e3f2c2845d740cc4b6e87d",
+        "max": 3378605,
+        "min": 0,
+        "n": 3378606,
+        "sorted_ascending": true,
+        "unique": 3378606
+      },
+      "valid": {
+        "index_sha256": "521f5cedad3e995d901940d86df36b4665ded9b52076f74d7d48583e39f10fa5",
+        "max": 3746612,
+        "min": 3378606,
+        "n": 73545,
+        "sorted_ascending": true,
+        "unique": 73545
+      }
+    },
+    "status": "OK",
+    "total_rows": 3746620
+  },
+  "split_sizes": {
+    "test-challenge": 147432,
+    "test-dev": 147037,
+    "train": 3378606,
+    "valid": 73545
+  },
+  "status": "OK"
+}

@@ -320,7 +320,8 @@ def verify_prefix_control(*, full_dir: Path, old_dir: Path) -> dict[str, Any]:
     for name in VALUE_FIELDS:
         a = np.asarray(new[name])
         b = np.asarray(old[name])
-        same = bool(a.shape[: b.ndim] == b.shape and np.array_equal(a[tuple(slice(0, s) for s in b.shape)], b))
+        sliced = a[tuple(slice(0, s) for s in b.shape)]
+        same = bool(sliced.shape == b.shape and np.array_equal(sliced, b))
         fields[name] = {"shape": list(b.shape), "equal": same}
         ok = ok and same
     gids_same = bool(np.array_equal(np.asarray(new["gids"])[:n_old], np.asarray(old["gids"])))
@@ -368,22 +369,37 @@ def verify_prefix_control(*, full_dir: Path, old_dir: Path) -> dict[str, Any]:
     return report
 
 
-def stage_merge(*, keep_shards: bool = False) -> dict[str, Any]:
+def stage_merge(*, keep_shards: bool = False, reuse_cache: bool = False) -> dict[str, Any]:
     build = C.read_json(BUILD_SUMMARY)
     if build.get("status") != "OK":
         raise RuntimeError(f"build status {build.get('status')} != OK")
     spec = FS.load_spec(C.PARENT_ANALYSIS / "pcqm_spec.json")
     shard_paths = [C.REPO / s["path"] for s in build["shards"]]
-    missing = [str(p) for p in shard_paths if not p.is_file()]
-    if missing:
-        raise RuntimeError(f"missing shards: {missing[:3]} (+{max(0, len(missing) - 3)})")
     full_dir = C.CACHE / D.FULL_CACHE_NAME
     if full_dir == C.PARENT_CACHE / "pcqm_train1m":
         raise RuntimeError("refusing to write over the historical 1M cache")
-    C.log(f"[merge:full] {len(shard_paths)} shards -> {C.track_rel(full_dir)}")
-    merged = C.PQ_DATA.merge_shards(
-        shard_paths, spec, out_dir=full_dir, split="all", dataset=C.DATASET, tag="pcqm_train_full"
-    )
+    if reuse_cache:
+        if not (full_dir / "meta.json").is_file():
+            raise FileNotFoundError(f"no merged cache to reuse: {full_dir}")
+        meta = json.loads((full_dir / "meta.json").read_text(encoding="utf-8"))
+        merged = {
+            "n_molecules": int(meta["n_molecules"]),
+            "n_atoms_total": int(meta["n_atoms_total"]),
+            "n_bonds_total": int(meta["n_bonds_total"]),
+            "n_s1_codes": int(meta["n_s1_codes"]),
+            "n_s2_paths": int(meta["n_s2_paths"]),
+            "feature_spec_hash": str(meta["feature_spec_hash"]),
+            "merge_seconds": float(meta.get("merge_seconds", 0.0) or 0.0),
+        }
+        C.log(f"[merge:full] reusing existing merged cache {C.track_rel(full_dir)}")
+    else:
+        missing = [str(p) for p in shard_paths if not p.is_file()]
+        if missing:
+            raise RuntimeError(f"missing shards: {missing[:3]} (+{max(0, len(missing) - 3)})")
+        C.log(f"[merge:full] {len(shard_paths)} shards -> {C.track_rel(full_dir)}")
+        merged = C.PQ_DATA.merge_shards(
+            shard_paths, spec, out_dir=full_dir, split="all", dataset=C.DATASET, tag="pcqm_train_full"
+        )
     meta_path = full_dir / "meta.json"
     import json as _json
 
@@ -499,6 +515,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--workers", type=int, default=32)
     parser.add_argument("--chunk-size", type=int, default=4000)
     parser.add_argument("--keep-shards", action="store_true")
+    parser.add_argument("--reuse-cache", action="store_true", help="finalise an existing merged cache without re-merging")
     parser.add_argument("--no-verify-ogb", action="store_true")
     args = parser.parse_args(argv)
 
@@ -519,7 +536,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         C.log(f"[build] {summary['status']} {summary['n_rows_built']} rows in {summary['wall_seconds']:.1f}s")
     if args.stage in ("merge", "all"):
-        manifest = stage_merge(keep_shards=bool(args.keep_shards))
+        manifest = stage_merge(keep_shards=bool(args.keep_shards), reuse_cache=bool(args.reuse_cache))
         C.log(f"[merge] {manifest['status']} {manifest['cache_sha256'][:12]}")
     if args.stage in ("verify", "all"):
         full_dir = C.CACHE / D.FULL_CACHE_NAME
