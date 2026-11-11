@@ -443,7 +443,7 @@ def train(
         limit_batches is None
         and not allow_partial_epochs
         and int(epochs) == int(C.RUNS_TABLE[run]["epochs"])
-        and implementation in ("optimized", "E1E2E3")
+        and implementation == C.FORMAL_IMPLEMENTATION
     )
     if limit_batches is not None:
         C.log(f"[{run}] GATED run: only {limit_batches} batches/epoch -> NOT a formal run")

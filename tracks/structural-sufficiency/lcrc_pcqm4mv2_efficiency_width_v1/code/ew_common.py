@@ -167,6 +167,13 @@ GATES: dict[str, Any] = {
 }
 
 #: Budget (A100 GPU-hours) of the whole new round, and of the profiling stage.
+#: Implementation adopted for the formal capacity runs.  Chosen *after* the
+#: interleaved benchmark (see analysis/bench.json and PROTOCOL.md section 9):
+#: E1 (vectorised collate) is the only change with a material, reproducible
+#: end-to-end gain; E2 (deferred host sync) and E3 (producer prefetch) were
+#: consistently slower than the frozen path on the shared host and are rejected.
+FORMAL_IMPLEMENTATION = "E1"
+
 BUDGET = {
     "round_hard_gpu_hours": 12.0,
     "profile_stage_gpu_hours": 0.75,
