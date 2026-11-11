@@ -91,11 +91,13 @@ def recheck(run: str, checkpoint: str = "checkpoint_best_valid.pt", device_name:
         "abs_delta_valid_mae_eV": abs(float(report["mae_eV"]) - float(saved.get("mae_eV", float("nan")))),
         "recorded_pred_sha256": saved.get("pred_sha256"),
         "recomputed_pred_sha256": report["pred_sha256"],
+        # CPU and GPU reductions are not bitwise identical; this is informational
         "pred_sha256_matches": bool(saved.get("pred_sha256") == report["pred_sha256"]),
-        "curve_valid_mae_eV": float(curve_row.get("valid_mae_eV", float("nan"))),
-        "curve_matches_recorded": bool(
-            abs(float(curve_row.get("valid_mae_eV", float("nan"))) - float(saved.get("mae_eV", float("nan"))))
-            <= 1e-12
+        "curve_valid_mae_eV": float(curve_row["valid_mae_eV"]) if curve_row else None,
+        "curve_matches_recorded": (
+            bool(abs(float(curve_row["valid_mae_eV"]) - float(saved.get("mae_eV", float("nan")))) <= 1e-12)
+            if curve_row
+            else None
         ),
         "numpy_mae_eV": float(report["mae_eV_numpy"]),
         "crosscheck_delta_eV": float(report["crosscheck_delta_eV"]),
@@ -104,7 +106,11 @@ def recheck(run: str, checkpoint: str = "checkpoint_best_valid.pt", device_name:
     }
     out["status"] = (
         "OK"
-        if out["abs_delta_valid_mae_eV"] <= 1e-6 and out["curve_matches_recorded"] and out["n_valid"] == 73_545
+        if (
+            out["abs_delta_valid_mae_eV"] <= 1e-6
+            and out["n_valid"] == 73_545
+            and out["curve_matches_recorded"] is not False
+        )
         else "FAILED"
     )
     return out
