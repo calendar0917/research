@@ -99,8 +99,8 @@ def restore_rng(state: Mapping[str, Any]) -> None:
     np.random.set_state(state["numpy"])
     torch.set_rng_state(state["torch_cpu"])
     cuda = state.get("torch_cuda")
-    if cuda:
-        torch.cuda.set_rng_state_all([s.cuda() if torch.is_tensor(s) else s for s in cuda])
+    if cuda and torch.cuda.is_available():
+        torch.cuda.set_rng_state_all([s.detach().cpu() if torch.is_tensor(s) else s for s in cuda])
 
 
 def rng_hashes() -> dict[str, Any]:
