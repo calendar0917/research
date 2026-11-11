@@ -31,8 +31,9 @@ at batch 128.
 Regimes: W2 on `res`/a100-2 (A100-SXM4-40GB, frozen code), W1/W3 on
 `res-2`/c06 (A100-PCIE-40GB, driver 525.85.12, torch 2.5.1+cu124, E1). MAE is
 deterministic given seed/order/labels; every W3 epoch that can be compared
-against the aborted `res` run (epochs 1–6, 9–11, 18) matched it bitwise, which
-supports the cross-host MAE comparison. **Throughput is never compared across hosts**: the
+against the aborted `res` run (**all 23 completed epochs**) matched it
+bitwise — including `valid_mae_eV` and `monitor_mae_eV` to the last digit —
+which supports the cross-host MAE comparison. **Throughput is never compared across hosts**: the
 controlled width-vs-speed measurement is the same-host
 `analysis/bench_scale{1,2,3}.json`.
 
@@ -68,7 +69,7 @@ Code: W3 `6e9d58c`, W1 `3663e07`, historical W2 `93ae701f`; W2 checkpoint
 2. **Full-run GPU-hours.** W3: **3.447 GPU-h** measured for 40 epochs on 1M;
    W1: **3.354 GPU-h**; historical W2 5.162 GPU-h. Whole round
    (profiling + gates + both new runs + the lost `res` attempt):
-   **9.29 GPU-h** of the 12 h hard budget.
+   **9.15 GPU-h** of the 12 h hard budget.
 3. **Is W1 redundant with W2?** **No.** W1's Valid@40 is 0.143362438 eV versus
    W2's 0.132310904 eV — +0.011052 eV (W1 worse), far outside the 0.005 eV
    band. Parameter count matters between 1× and 2×.
@@ -275,13 +276,13 @@ cache would add tens of minutes, not visible in the 1M measurement.
 | interleaved benchmark (11 configs × 3 rounds) | res-gpu1 | 0.058 | `analysis/bench.json` |
 | per-width timing (scale 1/2/3) | res-gpu1 | 0.010 | `analysis/bench_scale*.json` |
 | correctness gates on `res` | res-gpu1 | 0.032 | first run (pre-E1 gate) |
-| W3 attempt on `res` (aborted by host outage) | res-gpu1 | 2.17 | lost, not used |
+| W3 attempt on `res` (aborted by host outage) | res-gpu1 | 2.03 | lost, not used |
 | correctness gates on `res-2` (two runs) | c06 | 0.106 | 19/19 final |
 | **W3 formal, 40 epochs** | c06 | **3.447** | `runs/PCQM_W3_1M/run.json` |
 | **W1 formal, 40 epochs** | c06 | **3.354** | `runs/PCQM_W1_1M/run.json` |
-| **total** | | **9.29** | budget 12 h |
+| **total** | | **9.15** | budget 12 h |
 
-The lost 2.17 h is charged to the round: the outage was infrastructure, not a
+The lost 2.03 h is charged to the round: the outage was infrastructure, not a
 recipe change, and the rerun was necessary to keep a single complete W3 run.
 Even with it, the round stays inside the 12 h hard budget. GPU memory: 309 MB
 peak allocated for W3, 146 MB for W1, of 40 GB; process RSS ≈10.0 GB for both

@@ -253,3 +253,12 @@ recorded.
   `analysis/bench_scale{1,2,3}.json` (same host/conditions). MAE is
   deterministic given the seed/order/labels and is compared across regimes
   with that caveat stated in REPORT.md.
+- 2026-11-11 — post-run clarification of the outage record. `res` came back at
+  ~20:30 with a fresh boot; the partial W3 directory shows the process wrote
+  `checkpoint_last.pt` and the epoch-23 row at **11:45:44**, i.e. the machine
+  died then (SSH had already become unreliable). The lost attempt is therefore
+  charged **2.03 GPU-hours**, not 2.17, and it is not used. Comparing its curve
+  with the completed c06 run, **all 23 completed epochs are bitwise identical**
+  in `train_l1_z`, `valid_mae_eV` and `monitor_mae_eV`, strengthening the
+  cross-regime determinism statement; the final result still comes solely from
+  the completed c06 run.
