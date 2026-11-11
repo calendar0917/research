@@ -345,8 +345,11 @@ def decide(rows: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
         # "W1 redundant with W2" means W1 is not materially better AND not materially worse
         out["w1_redundant_with_w2"] = bool(abs(d12) < 0.005)
     else:
+        # W1 missing limits the redundancy question only; the width decision is
+        # W3 vs the historical W2 and does not depend on W1.
         out["reasons"].append("W1 not run (budget); redundancy of W1 with W2 unanswered")
-        out["status"] = "INCONCLUSIVE" if out["status"] == "PROMISING_WIDTH_SIGNAL" else out["status"]
+        out["w1_status"] = "MISSING"
+    out["w1_status"] = out.get("w1_status", "AVAILABLE" if w1.get("available") else "MISSING")
     return out
 
 
