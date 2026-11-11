@@ -605,7 +605,7 @@ def eval_and_checkpoint_overhead(
     t = time.perf_counter()
     payload = C.PQ_TRAIN.checkpoint_payload(
         task=task,
-        run="PROFILE_W2",
+        run="PCQM_W2_1M",
         epoch=0,
         global_step=0,
         model=model,
