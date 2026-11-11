@@ -235,10 +235,12 @@ def run_gates(
             )
             losses.append(float(out["loss"]))
             gnorms.append(float(out["grad_norm"]))
-        delta = max(
+        deltas = [
             float((v.detach().cpu().to(torch.float64) - before[k].to(torch.float64)).abs().max())
             for k, v in model.state_dict().items()
-        )
+            if v.numel() > 0
+        ]
+        delta = max(deltas) if deltas else 0.0
         finite[str(scale)] = {
             "steps": int(steps_finite),
             "loss_first": losses[0],
