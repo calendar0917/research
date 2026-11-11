@@ -320,6 +320,7 @@ def step_equivalence_gate(
 ) -> dict[str, Any]:
     """Instrumented step vs the frozen step from the same state, bitwise."""
     state0, opt0 = _clone_state(model, optimizer)
+    rng0 = C.PQ.capture_rng_state()
     frozen = C.PQ_TRAIN.train_step(
         model,
         optimizer,
@@ -334,6 +335,7 @@ def step_equivalence_gate(
 
     model.load_state_dict(state0, strict=True)
     optimizer.load_state_dict(opt0)
+    C.PQ.BS.restore_rng_state(rng0)
     host: dict[str, float] = {}
     ours = instrumented_step(
         model,
