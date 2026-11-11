@@ -194,3 +194,42 @@ recorded.
 - 2026-11-11 — protocol written before the first profiling step. Questions,
   implementations, gates, budget, run order and decision rule come from the
   execution instruction. No model step had been taken at this commit.
+- 2026-11-11 — stage-1 profiling completed (400 measured steps after 50
+  warm-up, cold and hot pass, commit `67256fb49e6f`; JSON:
+  `analysis/profile.json`). Hot-cache step-only time 33.77 ms (p50 32.80,
+  p90 41.54), end-to-end 2857.8 molecules/s; cold-cache 44.72 ms / 718.9
+  molecules/s. Host time is dominated by collate (hot 9.48 ms/batch, cold
+  131 ms) and kernel launches (36,462 launches over 30 steps; `cudaLaunchKernel`
+  391 s of the 1046 s profiler CPU window), not by GPU arithmetic. Explicit
+  synchronisations cost 0.03–0.06 ms/step; full Validation + monitor +
+  checkpoint evaluation costs 0.76 ms/step amortised (1.6–2.4 %). The process
+  uses ~8 cores on average and the GPU is the idle partner in the gap-free
+  stretches. These numbers set the stage-2 floor and the decision to prefer a
+  CPU-side fix.
+- 2026-11-11 — stage-2 implementation selection (before any formal capacity
+  run). A first single-pass benchmark was discarded as uninterpretable because
+  the same frozen configuration measured 36.4 ms in one window and 44.1 ms at
+  the end of the same session (shared-host drift). The retained benchmark
+  (`analysis/bench.json`) pre-touches every row, runs 11 configurations in
+  three rounds with alternating order, and reports medians: frozen 2759 mol/s;
+  **E1 3626 mol/s (1.31×)**; E1E3 3262; E1E2E3c16 3399; E1E2 2998; E1E2c8
+  2898; E1E2c16 2710; E2 2326; E3 1765; `frozen_t1` 2307; `E1_t1` 2334. All
+  configurations reached bitwise-identical weights. E2 (deferred sync) and E3
+  (producer thread) were *consistently slower* than the frozen path, and a
+  one-thread diagnostic also lost throughput; the block-flush interval sweep
+  (64/16/8) did not rescue E2. E1 is the only change with a material gain; its
+  mechanism is directly measured (frozen collate 9.5–10 ms vs 1.2–1.5 ms,
+  step time unchanged at ~32–35 ms), and the 1.31× ratio survives the ±10 %
+  host noise. **Adopted implementation: E1** (vectorised collate only; frozen
+  step, per-step synchronisation, order, loss, clip and optimizer untouched).
+  Batch-size probes (256: 5113 mol/s; 512: 13342 mol/s) are recorded for
+  information only and are not used in any formal run. Stage-1 + stage-2 GPU
+  time is ≈0.35 h, inside the 0.75 h allowance.
+- 2026-11-11 — pre-run budget check with per-width E1 timing
+  (`analysis/bench_scale{1,2,3}.json`, two rounds each, same cache):
+  259,831 / 939,079 / 2,038,167 parameters all take ≈33–36 ms per batch-128
+  step on this host; the step is launch-bound, so width costs almost no
+  throughput. Conservative projection at 38 ms/step (collate + staging +
+  step) is 3.3 h per 40-epoch 1M run plus ≈0.08 h evaluation; W3 + W1
+  therefore fit inside the remaining budget with margin. W3 starts first;
+  W1 is launched only after W3 completes and only if the ledger still allows.

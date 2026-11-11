@@ -272,7 +272,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--out", default=str(C.ANALYSIS / "summary.json"))
     args = parser.parse_args(argv)
     rows: dict[str, Any] = {}
-    hist_dir = C.PARENT / "runs" / C.HISTORICAL["run"]
+    hist_dir = C.OLD_ROUND / "runs" / C.HISTORICAL["run"]
     hist_curve = load_curve(hist_dir / "train_curve.csv")
     hist_meta = json.loads((hist_dir / "run.json").read_text(encoding="utf-8")) if (hist_dir / "run.json").exists() else {}
     rows["W2"] = summarize_run(C.HISTORICAL["run"], hist_curve, hist_meta)

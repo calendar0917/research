@@ -246,9 +246,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--skip-official-train", action="store_true")
     args = parser.parse_args(argv)
     device = torch.device(args.device)
-    task = DATA.load_task("PCQM_W2_1M", verify_hashes=False)
+    # the inherited frozen task (its run name is the historical one)
+    task = C.PQ_DATA.load_task("PCQM_W2_1M", verify_hashes=False)
     wanted: dict[str, Path] = {
-        "W2": C.PARENT / "runs" / C.HISTORICAL["run"] / "checkpoint_best_valid.pt",
+        "W2": C.OLD_ROUND / "runs" / C.HISTORICAL["run"] / "checkpoint_best_valid.pt",
         "W1": C.RUNS / "PCQM_W1_1M" / "checkpoint_best_valid.pt",
         "W3": C.RUNS / "PCQM_W3_1M" / "checkpoint_best_valid.pt",
     }
