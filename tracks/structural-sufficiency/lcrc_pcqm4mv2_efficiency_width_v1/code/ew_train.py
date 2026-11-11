@@ -54,6 +54,7 @@ IMPLEMENTATIONS: dict[str, dict[str, Any]] = {
     "E1": {"collate": "fast", "defer": False, "prefetch": 0, "check_interval": 0},
     "E2": {"collate": "frozen", "defer": True, "prefetch": 0, "check_interval": 64},
     "E3": {"collate": "frozen", "defer": False, "prefetch": 3, "check_interval": 0},
+    "E1E3": {"collate": "fast", "defer": False, "prefetch": 3, "check_interval": 0},
     "E1E2": {"collate": "fast", "defer": True, "prefetch": 0, "check_interval": 64},
     "E1E2E3": {"collate": "fast", "defer": True, "prefetch": 3, "check_interval": 64},
     "optimized": {"collate": "fast", "defer": True, "prefetch": 3, "check_interval": 64},
