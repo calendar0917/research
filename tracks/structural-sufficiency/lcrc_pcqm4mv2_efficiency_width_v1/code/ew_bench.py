@@ -344,9 +344,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             ),
             "gpu_peak_mb": float(statistics.median([r["gpu_peak_allocated_bytes"] for r in results])) / 2**20,
         }
-    frozen_med = aggregates["frozen"]["molecules_per_second_median"]
+    frozen_med = aggregates.get("frozen", {}).get("molecules_per_second_median")
     for label, agg in aggregates.items():
-        agg["speedup_vs_frozen"] = float(agg["molecules_per_second_median"] / frozen_med) if frozen_med else None
+        agg["speedup_vs_frozen"] = (
+            float(agg["molecules_per_second_median"] / frozen_med) if frozen_med else None
+        )
     fingerprints = {label: sorted({r["weights_sha256"] for r in results}) for label, results in rounds.items()}
     all_hashes = {h for hashes in fingerprints.values() for h in hashes}
     equivalence = {
@@ -409,7 +411,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "batch_size_probes": probes,
         "frozen_molecules_per_second_median": frozen_med,
         "best_config": best,
-        "speedup_best_vs_frozen": aggregates[best]["speedup_vs_frozen"],
+        "speedup_best_vs_frozen": aggregates[best]["speedup_vs_frozen"] if frozen_med else None,
         "best_step_ms_mean": aggregates[best]["step_ms_mean_median"],
         "all_configs_same_weights": bool(equivalence["all_configs_and_rounds_same_weights"]),
         "wall_seconds": float(time.perf_counter() - t0),
