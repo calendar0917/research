@@ -253,7 +253,11 @@ Official OGB submission (`PCQM4Mv2Evaluator.save_test_submission`, mode
 
 **No leaderboard upload was performed.** Official submission requires a user
 account and explicit authorisation; the Test-dev MAE remains
-`PENDING_OFFICIAL_EVALUATION`.
+`PENDING_OFFICIAL_EVALUATION`. Upload path (not executed, and not verified from
+this host): sign in to the official OGB-LSC / PCQM4Mv2 leaderboard portal with
+an OGB account, open the test-dev submission entry, upload
+`y_pred_pcqm4m-v2_test-dev.npz`, and record the returned submission id/status.
+Credentials and the upload itself require explicit user authorisation.
 
 ## 11. Reproduction
 
