@@ -1,0 +1,164 @@
+{
+ "batch_size": 128,
+ "bench_steps": 250,
+ "bench_warmup": 30,
+ "concurrent": {
+  "2": {
+   "cpu_cores_mean_process": 14.562378272965177,
+   "gpu": "cuda",
+   "gpu_peak_allocated_bytes": 149263872,
+   "host_gpu_util_mean_pct": {
+    "0": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 761.3333333333334,
+     "util_max_pct": 20.0,
+     "util_mean_pct": 18.666666666666668
+    },
+    "1": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 390.3333333333333,
+     "util_max_pct": 18.0,
+     "util_mean_pct": 5.833333333333333
+    }
+   },
+   "loadavg_end": [
+    68.87060546875,
+    58.84375,
+    54.99462890625
+   ],
+   "meminfo_end": {
+    "Cached": 59590438912,
+    "Dirty": 262144,
+    "MemAvailable": 472687312896,
+    "MemTotal": 540645257216
+   },
+   "molecules_per_second": 3047.823931920017,
+   "peak_rss_mb": 11405.28515625,
+   "run": "PCQM_W2_FULL",
+   "step_ms_mean": 41.99717662803596
+  },
+  "3": {
+   "cpu_cores_mean_process": 13.205448244899566,
+   "gpu": "cuda",
+   "gpu_peak_allocated_bytes": 201889792,
+   "host_gpu_util_mean_pct": {
+    "0": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 392.5,
+     "util_max_pct": 18.0,
+     "util_mean_pct": 5.833333333333333
+    },
+    "1": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 818.0,
+     "util_max_pct": 23.0,
+     "util_mean_pct": 19.5
+    }
+   },
+   "loadavg_end": [
+    71.84423828125,
+    59.626953125,
+    55.26904296875
+   ],
+   "meminfo_end": {
+    "Cached": 59568701440,
+    "Dirty": 299008,
+    "MemAvailable": 473913819136,
+    "MemTotal": 540645257216
+   },
+   "molecules_per_second": 2705.251116439417,
+   "peak_rss_mb": 11401.484375,
+   "run": "PCQM_W3_FULL",
+   "step_ms_mean": 47.31538570381235
+  }
+ },
+ "created_utc": "2026-11-11T22:50:00Z",
+ "decision": "CONCURRENT",
+ "decision_reason": "aggregate concurrent throughput 5753 mol/s vs 5964 mol/s standalone (-3.5%); W3 -11% but W2 +4%; GPU utilisation ~19-21% (CPU/page-cache bound), host load 55-72 from other tenants; concurrency not a significant efficiency loss and halves wall time; projected total 26.2 GPU-h is within measurement noise of the 26 GPU-h target and far below the 38 GPU-h hard ceiling",
+ "hard_ceiling_gpu_hours": 38.0,
+ "other_tenant_note": "res host loadavg 55-72 on 104 cores during preflight; our processes used 13-15 CPU cores each; this is external contention and is recorded, not hidden",
+ "projected_hours": {
+  "2": 12.317006331470665,
+  "3": 13.876740106876271
+ },
+ "projected_hours_serial": {
+  "2": 12.854926191384216,
+  "3": 12.333491995340937
+ },
+ "schema": "lcrc-pcqm4mv2-fullscale-preflight-v1",
+ "standalone": {
+  "2": {
+   "cpu_cores_mean_process": 14.525689222355975,
+   "gpu": "cuda",
+   "gpu_peak_allocated_bytes": 149263872,
+   "host_gpu_util_mean_pct": {
+    "0": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 761.3333333333334,
+     "util_max_pct": 21.0,
+     "util_mean_pct": 17.833333333333332
+    },
+    "1": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 23.0,
+     "util_max_pct": 0.0,
+     "util_mean_pct": 0.0
+    }
+   },
+   "loadavg_end": [
+    72.79150390625,
+    57.4501953125,
+    54.14990234375
+   ],
+   "meminfo_end": {
+    "Cached": 59562291200,
+    "Dirty": 450560,
+    "MemAvailable": 474147987456,
+    "MemTotal": 540645257216
+   },
+   "molecules_per_second": 2920.286441771033,
+   "peak_rss_mb": 11389.97265625,
+   "run": "PCQM_W2_FULL",
+   "step_ms_mean": 43.83131673972821
+  },
+  "3": {
+   "cpu_cores_mean_process": 15.218148393808177,
+   "gpu": "cuda",
+   "gpu_peak_allocated_bytes": 201889792,
+   "host_gpu_util_mean_pct": {
+    "0": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 23.0,
+     "util_max_pct": 0.0,
+     "util_mean_pct": 0.0
+    },
+    "1": {
+     "mem_total_mib": 40960.0,
+     "mem_used_mean_mib": 818.0,
+     "util_max_pct": 25.0,
+     "util_mean_pct": 21.166666666666668
+    }
+   },
+   "loadavg_end": [
+    59.13818359375,
+    55.6005859375,
+    53.75634765625
+   ],
+   "meminfo_end": {
+    "Cached": 59564261376,
+    "Dirty": 225280,
+    "MemAvailable": 474143776768,
+    "MemTotal": 540645257216
+   },
+   "molecules_per_second": 3043.7500329061463,
+   "peak_rss_mb": 11401.96875,
+   "run": "PCQM_W3_FULL",
+   "step_ms_mean": 42.05338763570762
+  }
+ },
+ "target_gpu_hours": 26.0,
+ "throughput_change_pct": {
+  "2": 4.3672938491485125,
+  "3": -11.121114178470615
+ }
+}
