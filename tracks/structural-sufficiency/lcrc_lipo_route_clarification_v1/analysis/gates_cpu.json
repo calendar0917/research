@@ -1,0 +1,391 @@
+{
+  "all_passed": true,
+  "code_hashes": {
+    "code/lr_common.py": "7a6b50fb8b3e2324605d2b07f5aa87e6b60f7960409a1dd5c2e1fb6acb69d003",
+    "code/lr_data.py": "b8429a1791c95521e528118eb7501f3e324a88272b04e4d5f2a918344221b614",
+    "code/lr_dose.py": "31ee09850f34914251e158f8bb5cb6d4c0c1f121e7e332343712682d1a87dba1",
+    "code/lr_gates.py": "2305ad1bde8364c68c2727469cc6fedb2365091df37b7da8821342fb2f37fddd",
+    "code/lr_models.py": "faabda8bc9ab478f6d3361b25d79bbc9cc79cd4cf4ca24a38c8913e16335eb45",
+    "code/lr_pairs.py": "a3a2d4659aa7d1c71edaa6e754ee133b67d0e31b922971255998b55cbc9f9bca",
+    "code/lr_prepare.py": "711a81076b7066133d27e2fb5f6ef89a6f9ff22ff0eb6f43424f7c1bc398779d",
+    "code/lr_queue.py": "cb620754d667278d9f9d688eaf0485e6afd6e248fb28b84404b2832013d584af",
+    "code/lr_split.py": "c08f1c37b948d0c1cd1654806286b68eb94320bb82f117116dd92d1015fc9c8e",
+    "code/lr_train.py": "199ec3d91f0448fe40055a1e9f5a6a5a42d68992060ef252d2592c2f5144a4cb",
+    "upstream:dissect_common": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+    "upstream:dissect_data": "dc1ed6a32f64463a48d1f3c7bec74a9932da39000f2da6e16a909abec04e06c2",
+    "upstream:dissect_model": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+    "upstream:dissect_source": "1b3dd8a96532b29f4adb1069edb86bbbe1d2355ff32338ec82a3a026c7a742e5",
+    "upstream:edit_common": "8d2039724bf306d2c71de54f1aef2a43831b84a97a2841732b3dac159afc4b6d",
+    "upstream:edit_data": "0420ea9942d648066cc381689318fc56aecbaccbd8e7735603ee3c5d9a233eef",
+    "upstream:feature_spec": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "upstream:lcrc_data": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "upstream:p0_structure": "01c15824715afe6f5ad4011db0ed3c20403176e5e3c734f0584376e4fe9ac833",
+    "upstream:pairs_csv": "98db43ec1f6f2d712d4ae59ed6a832a0860c54fec230a85ad5fcb303561ae356",
+    "upstream:s0_split": "5b96b82f368a1c17b5fc296881a41ac410d875b85ea96fa61f19c0f91cb09b61"
+  },
+  "created_utc": "2026-11-12T16:06:18Z",
+  "device": "cpu",
+  "environment": {
+    "cuda_available": false,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "gates": {
+    "10_losses_and_rng": {
+      "detail": {
+        "aux_forward_consumes_rng": false,
+        "losses": {
+          "N": {
+            "grad_norm": 0.18012544512748718,
+            "value": 1.9543452262878418
+          },
+          "R": {
+            "grad_norm": 0.1846158504486084,
+            "value": 2.0158565044403076
+          },
+          "W": {
+            "grad_norm": 0.13493022322654724,
+            "value": 2.0324394702911377
+          }
+        },
+        "mean_non_mmp_fraction_step0": 1.0,
+        "null_counts_equal_R": true,
+        "null_has_no_self_pair": true,
+        "train_forward_consumes_rng": true
+      },
+      "ok": true
+    },
+    "11_f_g_shapes": {
+      "detail": {
+        "f_input_dim": 2090,
+        "f_parameters": 207009,
+        "g_input_dim": 60,
+        "g_parameters": 251781,
+        "g_readout_initialised_from_c1": true,
+        "gine_layer_loop_max_abs_err": 1.4295744366066288e-08
+      },
+      "ok": true
+    },
+    "13_metric_equivalence": {
+      "detail": {
+        "diffs": {
+          "bias": 0.0,
+          "mae": 0.0,
+          "r2": 0.0,
+          "rmse": 0.0
+        },
+        "max_abs_diff": 0.0,
+        "upstream_sha256": "5b96b82f368a1c17b5fc296881a41ac410d875b85ea96fa61f19c0f91cb09b61",
+        "upstream_split_unmodified": true
+      },
+      "ok": true
+    },
+    "1_data_alignment": {
+      "detail": {
+        "coverage": {
+          "s0": true,
+          "s1": true,
+          "s2": true,
+          "sg": true
+        },
+        "fit_only_norm": true,
+        "n_fit": 2016,
+        "pair_isolation": {
+          "s0": true,
+          "s1": true,
+          "s2": true,
+          "sg": true
+        },
+        "s0_matches_upstream": true,
+        "target_mean": 2.1742261904761904,
+        "target_norm_fit_only": true,
+        "target_scale": 1.200602732405724,
+        "train_rows_sha256_ok": true
+      },
+      "ok": true
+    },
+    "2_b_equivalence": {
+      "detail": {
+        "device": "cpu",
+        "max_abs_diff": 0.0,
+        "parameters": 228674,
+        "params_ok": true,
+        "tol": 1e-06
+      },
+      "ok": true
+    },
+    "3_trainer_equivalence": {
+      "detail": {
+        "batch_order_probe_equal": true,
+        "n_keys": 35,
+        "new_best_period": 2,
+        "new_select_rmse": 1.1119021363502823,
+        "old_best_epoch": 2,
+        "old_select_rmse": 1.1119021363502823,
+        "old_trainer_seconds": 1.481403965037316,
+        "updates": 32,
+        "worst_key": "global_mean",
+        "worst_param_diff": 0.0
+      },
+      "ok": true
+    },
+    "4_sod_params_step0": {
+      "detail": {
+        "block_parameters": 50048,
+        "parameters": {
+          "B": 228674,
+          "D": 278722,
+          "O": 278722,
+          "S": 278722
+        },
+        "shared_state_equal": {
+          "D": true,
+          "O": true,
+          "S": true
+        },
+        "step0_max_abs_diff": {
+          "D": 0.0,
+          "O": 0.0,
+          "S": 0.0
+        },
+        "tol": 1e-06
+      },
+      "ok": true
+    },
+    "5_neighbour_operator": {
+      "detail": {
+        "graphs": [
+          "chain4",
+          "branch5",
+          "cycle5",
+          "isolated3",
+          "mixed"
+        ],
+        "max_abs_err_T": 3.8754927711437404e-08,
+        "max_abs_err_T2": 3.8754927711437404e-08,
+        "multi_component_leak": 0.0,
+        "note": "tolerance reflects float32 inverse-degree rounding",
+        "tol": 1e-06
+      },
+      "ok": true
+    },
+    "6_information_flow": {
+      "detail": {
+        "D_second_block_reads_h1": true,
+        "O_no_overflow": true,
+        "O_within_two_hops": true,
+        "S_local_only": true,
+        "delta_on_other_component": {
+          "D": 1.0852160113652076,
+          "O": 1.2170244669647499,
+          "S": 1.1792554691478478
+        },
+        "pattern": {
+          "D": [
+            [
+              1,
+              1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              1
+            ]
+          ],
+          "O": [
+            [
+              1,
+              1,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              1,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              1
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              1
+            ]
+          ],
+          "S": [
+            [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1,
+              0,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ]
+          ]
+        },
+        "perturbation": "non-uniform linspace(-1,1)",
+        "uniform_shift_annihilated_by_layernorm": true
+      },
+      "ok": true
+    },
+    "7_branch_gradients": {
+      "detail": {
+        "D": {
+          "dead": [],
+          "dead_block_params": [],
+          "n_dead": 0,
+          "wout_norm_after_3_steps": 0.05966232717037201
+        },
+        "O": {
+          "dead": [],
+          "dead_block_params": [],
+          "n_dead": 0,
+          "wout_norm_after_3_steps": 0.059528980404138565
+        },
+        "S": {
+          "dead": [],
+          "dead_block_params": [],
+          "n_dead": 0,
+          "wout_norm_after_3_steps": 0.05957310274243355
+        }
+      },
+      "ok": true
+    },
+    "8_permutation_batching": {
+      "detail": {
+        "atom_permutation_max_abs": 0.0,
+        "batch_vs_single_max_abs": 1.1920928955078125e-07,
+        "eval_determinism_max_abs": 0.0,
+        "n_atoms_permuted": 28
+      },
+      "ok": true
+    },
+    "9_pair_algebra": {
+      "detail": {
+        "constant_offset_cancels": true,
+        "identity_residual": 4.440892098500626e-16,
+        "r_equals_w_minus_cross": true,
+        "reverse_sign_ok": true,
+        "scale": 1.200602732405724,
+        "standardisation_scale_ok": true
+      },
+      "ok": true
+    }
+  },
+  "git_commit": "ecb28cf1789c4b7369ff1041ef6d2defe11865a7",
+  "rdkit": "2026.09.1",
+  "round": "lcrc-lipo-route-clarification-v1",
+  "schema": "lcrc-lipo-route-gates-v1"
+}
