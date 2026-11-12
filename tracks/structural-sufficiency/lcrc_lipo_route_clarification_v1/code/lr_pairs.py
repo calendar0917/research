@@ -27,7 +27,6 @@ import numpy as np
 
 import lr_common as C
 import lr_data as D
-import lr_split as S
 
 PLAN_DIR = C.ANALYSIS / "pair_plans"
 MAX_REPARTNER_ATTEMPTS = 128
@@ -59,10 +58,38 @@ class PairTable:
 _TABLE: PairTable | None = None
 
 
+def load_pairs() -> list[dict[str, Any]]:
+    """The frozen 509 real edit pairs (read-only, hash-verified)."""
+    path = C.PAIRS_CSV
+    if not path.exists():
+        raise SystemExit(f"frozen pair table {path} is missing")
+    if C.sha256_file(path) != C.PAIRS_CSV_SHA256:
+        raise ValueError("pairs.csv sha256 differs from the frozen value")
+    out = []
+    with open(path, newline="", encoding="utf-8") as fh:
+        import csv as _csv
+
+        for rec in _csv.DictReader(fh):
+            out.append({
+                "pair_id": str(rec["pair_id"]),
+                "row_a": int(rec["row_a"]),
+                "row_b": int(rec["row_b"]),
+                "class_id": str(rec["class_id"]),
+                "core_class": int(rec["core_class"]),
+                "core_heavy": int(rec["core_heavy"]),
+                "var_heavy_a": int(rec["var_heavy_a"]),
+                "var_heavy_b": int(rec["var_heavy_b"]),
+                "same_var_heavy": rec["same_var_heavy"] == "1",
+            })
+    if len(out) != 509:
+        raise ValueError(f"frozen pair table has {len(out)} pairs != 509")
+    return out
+
+
 def table() -> PairTable:
     global _TABLE
     if _TABLE is None:
-        _TABLE = PairTable(S.load_pairs())
+        _TABLE = PairTable(load_pairs())
     return _TABLE
 
 

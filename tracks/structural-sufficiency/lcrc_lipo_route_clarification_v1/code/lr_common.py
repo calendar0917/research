@@ -334,9 +334,12 @@ def env_info() -> dict[str, Any]:
 
 
 def rdkit_version() -> str:
-    from rdkit import rdBase
+    try:
+        from rdkit import rdBase
 
-    return str(rdBase.rdkitVersion)
+        return str(rdBase.rdkitVersion)
+    except Exception:
+        return "unavailable"
 
 
 def code_hashes() -> dict[str, str]:

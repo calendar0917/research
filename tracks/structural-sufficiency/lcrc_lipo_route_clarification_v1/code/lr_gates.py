@@ -22,7 +22,6 @@ import lr_models as LM
 import lr_pairs as P
 import lr_train as T
 
-from rdkit import Chem
 
 GATES: dict[str, Any] = {}
 

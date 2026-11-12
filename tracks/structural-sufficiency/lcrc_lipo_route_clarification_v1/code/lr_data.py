@@ -210,15 +210,20 @@ def build_all(rebuild: bool = False, splits: Sequence[str] = C.SPLITS + ("ft",))
     """
     spec = frozen_spec()
     src = source()
-    valid_rows = [int(r) for r in src["rows"]["valid"]]
-    train_rows = [int(r) for r in src["rows"]["train"]]
-    payload = RAW.load(verify=True)
-    all_rows = payload["rows"]["Lipophilicity"]
-    t0 = __import__("time").perf_counter()
+    missing = [s for s in splits for p in C.PARTITIONS
+               if (rows_by_partition(s).get(p) or []) and (rebuild or not cache_path(s, p).exists())]
     graphs: dict[int, Any] = {}
-    for row in train_rows + valid_rows:
-        graphs[int(row)] = _graph_for(all_rows[int(row)], int(row), spec, src["smiles"])
-    C.log(f"[cache] built {len(graphs)} molecular graphs in {__import__('time').perf_counter() - t0:.1f}s")
+    if missing:
+        valid_rows = [int(r) for r in src["rows"]["valid"]]
+        train_rows = [int(r) for r in src["rows"]["train"]]
+        payload = RAW.load(verify=True)
+        all_rows = payload["rows"]["Lipophilicity"]
+        t0 = __import__("time").perf_counter()
+        for row in train_rows + valid_rows:
+            graphs[int(row)] = _graph_for(all_rows[int(row)], int(row), spec, src["smiles"])
+        C.log(f"[cache] rebuilt {len(graphs)} molecular graphs in {__import__('time').perf_counter() - t0:.1f}s")
+    else:
+        C.log("[cache] all split caches present; no graph rebuild needed")
 
     manifest: dict[str, Any] = {"schema": "lcrc-lipo-route-cache-manifest-v1", "created_utc": C.utcnow(),
                                 "label_free": True, "feature_spec_hash": spec.hash(), "partitions": {}}
@@ -422,6 +427,14 @@ def build_fingerprint_caches(splits: Sequence[str] = C.SPLITS + ("ft",), *, rebu
     src = source()
     need = sorted({int(r) for s in splits for p in C.PARTITIONS for r in (rows_by_partition(s).get(p) or [])})
     todo = [p for p in splits if rebuild or not (C.CACHE / f"fp_{p}.npz").exists()]
+    if todo:
+        try:
+            import rdkit  # noqa: F401
+        except Exception as exc:  # pragma: no cover - remote has no rdkit
+            raise SystemExit(
+                "Morgan fingerprints must be built on a host with rdkit and copied into cache/; "
+                f"missing: {todo}"
+            ) from exc
     bits = morgan_bits(src["smiles"], need) if todo else {}
     manifest = {}
     for split in splits:
