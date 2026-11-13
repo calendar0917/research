@@ -1,0 +1,133 @@
+# Frozen experiment configuration.
+# Round: lcrc-lipo-edit-supervision-public122-s0-v1
+# Design date: 2026-11-13 (Asia/Shanghai)
+# This file mirrors code/common.py; the code constants are authoritative.
+
+protocol_id: lcrc-lipo-edit-supervision-public122-s0-v1
+track: tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1
+
+data:
+  upstream: https://github.com/shenwanxiang/ChemBench
+  upstream_commit: 0b10d4c1ac72b6929503694a5f60446824736391
+  task: Lipophilicity
+  split: random122
+  split_sizes: {train: 3360, valid: 420, test: 420}
+  n_molecules: 4200
+  label_column: exp
+  labels_used_for_parameters: train_only
+  checkpoint_selection: valid_only
+  test_usage: final scoring and post-hoc diagnosis only
+  files:
+    Lipop.csv.gz: 34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758
+    Lipop.random122.ind.pkl: bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d
+    raw_attributes_v1.json.gz: 1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be
+  split_row_sha256:
+    train: 4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96
+    valid: 31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365
+    test: a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93
+  feature_spec_hash: 7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee
+  input_widths: {atom_feat: 51, bond_feat: 13, atom_scalar: 9, global: 42, s1: 80, s2_path: 400}
+
+model:
+  variant: C1
+  name: NO_BOND_MEAN
+  parameters: 228674
+  construction: dissect_model.build_full_state(spec, train_norm, seed=0) -> remap_state("C1", full)
+  one_initial_weight_set_shared_by_all_four_arms: true
+
+pair_construction:
+  scope: all 4200 published structures
+  eligibility: single component, no explicit H, no canonical stereo tokens, all heavy atoms
+  cut: non-ring single bonds, FragmentOnBonds with one dummy
+  variable_fragment_heavy_atoms: [1, 4]
+  core_min_heavy_atoms: 10
+  core_min_fraction_of_parent: 0.75
+  core_identity: explicit labelled-graph isomorphism with attachment marker
+  core_node_label: [element, is_aromatic, formal_charge, total_H, is_attachment]
+  core_edge_label: [SINGLE, DOUBLE, TRIPLE, AROMATIC, OTHER]
+  one_definition_per_unordered_row_pair: [max core_heavy, core_smiles, variable fragments, cut indices]
+  direction: smaller canonical variable-fragment string is A
+  pair_id: p<min(row_a,row_b)>_<max(row_a,row_b)>
+  p_train: both endpoints in published Train3360
+  e_t: at least one Test endpoint
+  e_hh: Valid-Test union Test-Test
+  components_train: connected components of shared molecule / matched core / identical canonical molecule using Train molecules and P_train only
+  components_eval: same construction on all 4200 molecules and all pairs
+
+training:
+  seed: 0
+  epochs: 360
+  batch_size: 128
+  steps_per_epoch: 27
+  optimizer_steps: 9720
+  shuffle_generator_seed: 917000
+  schedule_numpy_seed: 20261113
+  model_rng_reset_after_init: [cpu: 0, cuda: 0]
+  optimizer: AdamW
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-3
+  lr: per_step_cosine
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  gradient_clip: 5.0
+  precision: fp32
+  amp: false
+  dropout: 0.10
+  dropout_location: final atom-level h before f and rho
+  early_stopping: false
+  soup_ema_swa: false
+  checkpoint_rule: lowest Valid420 RMSE in raw logD, strict improvement, tie keeps earlier epoch
+  auxiliary:
+    q_pairs_per_step: 32
+    lambda: 1.0
+    real_batch_sampling: uniform training component with replacement, then uniform real pair within component
+    auxiliary_forward_mode: model.eval() with autograd enabled, then restore model.train()
+    dedup: auxiliary endpoints deduplicated by row_id and sorted; one forward per step
+    arms:
+      A: loss_mol
+      R: loss_mol + lambda * mean[(e_b - e_a)^2 / 2]
+      W: loss_mol + lambda * mean[(e_a^2 + e_b^2) / 2]
+      N: loss_mol + lambda * mean[(e_v - e_u)^2 / 2]
+    identity: (e_b-e_a)^2/2 = (e_a^2+e_b^2)/2 - e_a*e_b
+    n_control:
+      tokens: 64 endpoint occurrences from the same real batch
+      pairing: shuffle all 64 tokens, adjacent pairs
+      forbidden_edges: [same row, same canonical structure, any P_train real edit edge]
+      max_shuffles_per_batch: 256
+      max_real_batch_redraws: 64
+      label_difference: recomputed as z_v - z_u
+    diagnostics_steps: [1, 28, 271, 2701]
+    diagnostic_records: [L_mol, L_aux, grad mol L2, grad aux L2, ratio, cosine, clip status]
+
+evaluation:
+  primary_performance: Test420 molecule RMSE in raw logD
+  performance_also: Train/Valid/Test RMSE and MAE
+  primary_edit: E_T component-equal pair-difference MAE
+  edit_also: [pair-equal MAE, pair-equal RMSE, zero-change mean |dy|]
+  subsets: [E_T_Train_Test, E_T_Valid_Test, E_T_Test_Test, E_HH, E_HH_seen_core, E_HH_unseen_core]
+  descriptive: [Train_Valid, Valid_Valid, Test with/without Train real-edit neighbour]
+  bootstrap: {method: paired component bootstrap, seed: 20261114, replicates: 1000}
+  impact_checks:
+    - remove A's worst E_T component, recompute R vs A/W/N edit gains
+    - remove A's worst Test molecule and associated E_T pairs, recompute main gains
+  cases: max improvement, max worsening, median improvement of R vs A on E_T (ties by pair_id)
+
+support_gates:
+  p_train_min_pairs: 100
+  p_train_min_pair_components: 30
+  e_t_min_pairs: 40
+  e_t_min_pair_components: 15
+  e_hh_low_support_below: {pairs: 40, components: 15}
+
+execution:
+  host: res
+  backend: process
+  pools: {wave1: [res-gpu0, res-gpu1], wave2: [res-gpu0, res-gpu1]}
+  wave1: {res-gpu0: A_s0, res-gpu1: R_s0}
+  wave2: {res-gpu0: N_s0, res-gpu1: W_s0}
+  ddp: false
+  max_round_training_processes_per_gpu: 1
+  smoke: four arms x 2 epochs in one job, separate outputs
+  budget: {soft_gpu_hours: 2.0, hard_gpu_hours: 4.0}
+  retry: one same-configuration infrastructure retry only; scientific bug requires rerun of all affected arms

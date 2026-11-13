@@ -1,0 +1,355 @@
+{
+  "components": {
+    "eval_largest_unit": 14,
+    "eval_units": 3727,
+    "train_cut_core_classes": 8027,
+    "train_largest_unit": 11,
+    "train_units": 3033
+  },
+  "core_classes": {
+    "n_classes_with_multiple_canonical_strings": 0,
+    "n_core_classes": 9884,
+    "n_isomorphism_checks": 1918,
+    "n_wl_buckets": 9884
+  },
+  "created_utc": "2026-11-13T00:32:03Z",
+  "eligibility": {
+    "counts": {
+      "cut:core_below_75pct": 13,
+      "cut:core_too_small": 104,
+      "cut:kept": 11802,
+      "cut:nonring_single_bonds": 24223,
+      "cut:var_too_large": 12304,
+      "eligible_molecules": 3014,
+      "excluded:not_single_connected_component": 1,
+      "excluded:stereochemistry": 1185
+    },
+    "excluded_reasons": {
+      "not_single_connected_component": 1,
+      "stereochemistry": 1185
+    },
+    "n_eligible": 3014,
+    "n_excluded": 1186,
+    "n_rows": 4200
+  },
+  "gates": {
+    "e_t_pair_components": {
+      "minimum": 15,
+      "pass": true,
+      "value": 59
+    },
+    "e_t_pairs": {
+      "minimum": 40,
+      "pass": true,
+      "value": 178
+    },
+    "p_train_pair_components": {
+      "minimum": 30,
+      "pass": true,
+      "value": 175
+    },
+    "p_train_pairs": {
+      "minimum": 100,
+      "pass": true,
+      "value": 501
+    }
+  },
+  "historical_regression_check": {
+    "available": true,
+    "explanation": "The historical 509-row table contains 501 unique unordered row pairs; 8 unordered pairs have two directed definitions because the old dedup key was the directed (row_a,row_b) after variable-fragment direction. The new protocol dedups the unordered row pair first and therefore reports 501 P_train pairs with the same 502 participating molecules. This is a dedup correction, not a relaxed filter.",
+    "new_p_train_molecules": 502,
+    "new_p_train_pairs": 501,
+    "old_duplicate_definitions": 8,
+    "old_duplicate_unordered_pairs": 8,
+    "old_pairs_csv_rows": 509,
+    "old_participating_molecules": 502,
+    "old_unique_set_equals_new_p_train": true,
+    "old_unique_unordered_pairs": 501,
+    "only_in_new": [],
+    "only_in_old": [],
+    "path": "tracks/structural-sufficiency/lcrc_local_edit_error_diagnosis_v1/analysis/pairs.csv"
+  },
+  "label_blind_pair_construction": true,
+  "low_support": {
+    "E_HH": true,
+    "E_HH_seen_core": true,
+    "E_HH_unseen_core": true
+  },
+  "notes": {
+    "E_HH": "Valid-Test union Test-Test; neither endpoint entered gradient training, but Valid selected checkpoints.",
+    "E_T": "At least one Test endpoint. The Train-Test core necessarily appears in Train; this measures edit response involving a Test molecule, not new-core generalization."
+  },
+  "pair_rules": {
+    "atom_label": "element, is_aromatic, formal_charge, total_H, is_attachment",
+    "bond_label": "SINGLE/DOUBLE/TRIPLE/AROMATIC/OTHER",
+    "candidate_generation": "Weisfeiler-Lehman refinement hash (bucketing only)",
+    "core_min_fraction_of_parent": 0.75,
+    "core_min_heavy_atoms": 10,
+    "cut": "non-ring single bonds only; RDKit FragmentOnBonds with one dummy (valence preserved)",
+    "definition_choice": "one unordered row-id pair -> maximum core_heavy, then core_smiles, then variable-fragment strings; final deterministic tie-break by cut indices",
+    "direction": "smaller canonical variable-fragment string is A, larger is B",
+    "eligibility": "single connected component; no explicit H atoms; canonical SMILES without @ / backslash stereo tokens; every atom is a heavy atom",
+    "evaluation_set": "E_T = real pairs with at least one Test endpoint; E_HH = Valid-Test union Test-Test",
+    "forbidden_pair": "identical complete canonical molecule, or identical variable fragment",
+    "identity_check": "explicit labelled-graph isomorphism with attachment-point marker",
+    "pair_id": "p<min(row_a,row_b):05d>_<max(row_a,row_b):05d>",
+    "training_set": "P_train = real pairs with both endpoints in the published Train 3360",
+    "variable_fragment_heavy_atoms": [
+      1,
+      4
+    ]
+  },
+  "pair_stats": {
+    "core_shared_candidates": 988,
+    "n_mapping_checks": 988,
+    "n_mapping_failures": 0,
+    "n_pairs": 823,
+    "superseded_definition": 165
+  },
+  "pairs_total": 823,
+  "protocol_id": "lcrc-lipo-edit-supervision-public122-s0-v1",
+  "rdkit": "2026.09.1",
+  "round_id": "lcrc-lipo-edit-supervision-public122-s0-v1",
+  "schema": "lcrc-lipo-edit-supervision-data-audit-v1",
+  "sets": {
+    "E_HH": {
+      "component_pairs_hist": {
+        "1": 22,
+        "3": 1,
+        "6": 1
+      },
+      "largest_component_molecules": 4,
+      "largest_component_molecules_share": 0.0784313725490196,
+      "largest_component_pairs": 6,
+      "largest_component_pairs_share": 0.1935483870967742,
+      "n_components": 24,
+      "n_molecules": 51,
+      "n_pairs": 31,
+      "n_transform_classes": 28
+    },
+    "E_HH_seen_core": {
+      "component_pairs_hist": {
+        "1": 16,
+        "3": 1,
+        "6": 1
+      },
+      "largest_component_molecules": 4,
+      "largest_component_molecules_share": 0.10256410256410256,
+      "largest_component_pairs": 6,
+      "largest_component_pairs_share": 0.24,
+      "n_components": 18,
+      "n_molecules": 39,
+      "n_pairs": 25,
+      "n_transform_classes": 24
+    },
+    "E_HH_unseen_core": {
+      "component_pairs_hist": {
+        "1": 6
+      },
+      "largest_component_molecules": 2,
+      "largest_component_molecules_share": 0.16666666666666666,
+      "largest_component_pairs": 1,
+      "largest_component_pairs_share": 0.16666666666666666,
+      "n_components": 6,
+      "n_molecules": 12,
+      "n_pairs": 6,
+      "n_transform_classes": 6
+    },
+    "E_T": {
+      "component_pairs_hist": {
+        "1": 32,
+        "2": 9,
+        "3": 7,
+        "4": 2,
+        "5": 1,
+        "6": 1,
+        "9": 3,
+        "11": 1,
+        "15": 1,
+        "17": 1,
+        "18": 1
+      },
+      "largest_component_molecules": 11,
+      "largest_component_molecules_share": 0.05527638190954774,
+      "largest_component_pairs": 18,
+      "largest_component_pairs_share": 0.10112359550561797,
+      "n_components": 59,
+      "n_molecules": 199,
+      "n_pairs": 178,
+      "n_transform_classes": 119
+    },
+    "E_T_Test_Test": {
+      "component_pairs_hist": {
+        "1": 9,
+        "3": 1
+      },
+      "largest_component_molecules": 3,
+      "largest_component_molecules_share": 0.14285714285714285,
+      "largest_component_pairs": 3,
+      "largest_component_pairs_share": 0.25,
+      "n_components": 10,
+      "n_molecules": 21,
+      "n_pairs": 12,
+      "n_transform_classes": 12
+    },
+    "E_T_Train_Test": {
+      "component_pairs_hist": {
+        "1": 34,
+        "2": 8,
+        "3": 4,
+        "5": 2,
+        "8": 2,
+        "9": 2,
+        "10": 1,
+        "15": 1,
+        "16": 1
+      },
+      "largest_component_molecules": 10,
+      "largest_component_molecules_share": 0.05649717514124294,
+      "largest_component_pairs": 16,
+      "largest_component_pairs_share": 0.10884353741496598,
+      "n_components": 55,
+      "n_molecules": 177,
+      "n_pairs": 147,
+      "n_transform_classes": 106
+    },
+    "E_T_Valid_Test": {
+      "component_pairs_hist": {
+        "1": 14,
+        "2": 1,
+        "3": 1
+      },
+      "largest_component_molecules": 4,
+      "largest_component_molecules_share": 0.11428571428571428,
+      "largest_component_pairs": 3,
+      "largest_component_pairs_share": 0.15789473684210525,
+      "n_components": 16,
+      "n_molecules": 35,
+      "n_pairs": 19,
+      "n_transform_classes": 18
+    },
+    "P_train": {
+      "component_pairs_hist": {
+        "1": 104,
+        "2": 11,
+        "3": 28,
+        "4": 5,
+        "5": 3,
+        "6": 8,
+        "7": 2,
+        "9": 3,
+        "10": 5,
+        "11": 1,
+        "17": 1,
+        "18": 1,
+        "23": 1,
+        "24": 2
+      },
+      "endpoint_coverage_train": 0.1494047619047619,
+      "largest_component_molecules": 11,
+      "largest_component_molecules_share": 0.021912350597609563,
+      "largest_component_pairs": 24,
+      "largest_component_pairs_share": 0.04790419161676647,
+      "n_components": 175,
+      "n_molecules": 502,
+      "n_pair_bearing_components": 175,
+      "n_pairs": 501,
+      "n_transform_classes": 206
+    },
+    "Train_Valid": {
+      "component_pairs_hist": {
+        "1": 24,
+        "2": 16,
+        "3": 10,
+        "4": 5,
+        "7": 3,
+        "12": 1
+      },
+      "largest_component_molecules": 13,
+      "largest_component_molecules_share": 0.0663265306122449,
+      "largest_component_pairs": 12,
+      "largest_component_pairs_share": 0.08633093525179857,
+      "n_components": 59,
+      "n_molecules": 196,
+      "n_pairs": 139,
+      "n_transform_classes": 96
+    },
+    "Valid_Valid": {
+      "component_pairs_hist": {
+        "1": 5
+      },
+      "largest_component_molecules": 2,
+      "largest_component_molecules_share": 0.2,
+      "largest_component_pairs": 1,
+      "largest_component_pairs_share": 0.2,
+      "n_components": 5,
+      "n_molecules": 10,
+      "n_pairs": 5,
+      "n_transform_classes": 5
+    }
+  },
+  "source": {
+    "csv_sha256": "34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758",
+    "label_column": "exp",
+    "n_molecules": 4200,
+    "paths": {
+      "csv": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz",
+      "raw": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/raw_attributes_v1.json.gz",
+      "split": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random122.ind.pkl"
+    },
+    "raw_artifact_sha256": "1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be",
+    "rdkit": "2026.09.1",
+    "source_commit": "0b10d4c1ac72b6929503694a5f60446824736391",
+    "split_file": "Lipop.random122.ind.pkl",
+    "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+    "split_rows_sha256": [
+      "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+      "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+      "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    ],
+    "split_sizes": [
+      3360,
+      420,
+      420
+    ]
+  },
+  "splits": {
+    "test": {
+      "n": 420,
+      "rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+    },
+    "train": {
+      "n": 3360,
+      "rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+    },
+    "valid": {
+      "n": 420,
+      "rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+    }
+  },
+  "status": "OK",
+  "verification": {
+    "all_attachment_points_mapped": true,
+    "all_core_mappings_verified": true,
+    "all_pair_endpoints_eligible": true,
+    "all_pair_endpoints_in_published_split": true,
+    "direction_var_string_order": true,
+    "n_cut_atoms_reconstruct_molecule": true,
+    "n_identical_complete_molecule_pairs_skipped": 0,
+    "n_mapping_checks": 988,
+    "n_mapping_failures": 0,
+    "n_pairs": 823,
+    "n_same_variable_fragment_pairs_skipped": 0,
+    "n_superseded_definitions": 165,
+    "pair_id_equals_sorted_rows": true,
+    "pair_id_unique": true,
+    "reverse_difference_sign_check": {
+      "max_abs_d_plus_reverse": 0.0,
+      "n_pairs": 823,
+      "note": "synthetic monotone row index, not a property target",
+      "pass": true,
+      "uses_target_values": false
+    },
+    "unordered_row_pair_unique": true
+  }
+}
