@@ -1,0 +1,133 @@
+# Frozen configuration — lcrc-lipo-oracle-task-relevance-public122-s0-v1
+# Declared before the first Part-B training.  Values are informative copies of the
+# constants frozen in code/round_common.py, code/oracle.py, code/train_task.py and
+# code/evaluate.py; the code is authoritative.
+
+round_id: lcrc-lipo-oracle-task-relevance-public122-s0-v1
+protocol_id: lcrc-lipo-oracle-task-relevance-public122-s0-v1
+source_round: lcrc-lipo-multi-motif-mechanism-public122-v1
+source_protocol_revision: "0273cad6"
+source_report_revision: "a5febe96"
+
+data:
+  dataset: ChemBench Lipophilicity
+  repeat: random122
+  source_commit: 0b10d4c1ac72b6929503694a5f60446824736391
+  csv_sha256: 34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758
+  split_file_sha256: bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d
+  raw_attribute_artifact_sha256: 1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be
+  split_sizes: {train: 3360, valid: 420, test: 420}
+  split_rows_sha256:
+    train: 4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96
+    valid: 31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365
+    test: a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93
+  label_column_exp: exp
+  feature_spec: lipo_v1 (AF51/BF13/scalar9/global42), reused unchanged
+  feature_norm: frozen checkpoint Train-only buffers (never refitted)
+  label_file_unchanged: true
+
+tasks:
+  wc_logp:
+    description: RDKit Wildman-Crippen logP (computational reference, NOT experimental logD)
+    call: "rdMolDescriptors.CalcCrippenDescriptors(mol, includeHs=True, force=True)[0]"
+    units: logP (dimensionless)
+  molwt:
+    description: RDKit average molecular weight (composition-invariant control)
+    call: "Descriptors.MolWt(mol)"
+    units: g/mol
+
+oracle_discipline:
+  rdkit_version_recorded: true
+  upgrade_forbidden: true
+  clear_computed_props: true
+  force_recompute: true
+  independent_reparse: "first 20 non-O views re-parsed from their new canonical SMILES"
+  keep_all_components: true
+  no_salt_strip_no_largest_fragment_no_protonation_change: true
+  molwt_rewire_delta_tol: 1.0e-8
+  wc_logp_change_tol: 1.0e-8
+  target_norm_source: "each task's Train ORIGINAL labels only"
+
+model:
+  variant: C1
+  variant_name: NO_BOND_MEAN
+  parameters: 228674
+  checkpoint: tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/runs/A_s0/best.pt
+  checkpoint_sha256: bdd670e8df5ee03ba28f2f4898e7fd137991a9fd23e9add91c08d8b6e0a1d6a7
+  state_hash_trained: 7d32221e0c3f482a16e2e170b7df1d4753ff4d7783cc2b5a3386b183a7941e36
+  init_state_hash: aac1e061176a93bd12b0e6a3f79e80eced2ff93f84eb72391dc819be59ebb83c
+  full_init_state_hash: 666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f
+  init_construction: build_full_state(spec, train_norm, seed=0) -> remap_state(C1)
+  fine_tune_from_logd_model: false
+
+recipe:   # identical to the executed A_s0 ordinary-MSE arm
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  weight_decay: 1.0e-3
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  batch_size: 128
+  dropout: 0.10
+  gradient_clip: 5.0
+  epochs: 360
+  steps_per_epoch: 27
+  total_optimizer_steps: 9720
+  scheduler: per_step_cosine
+  loss: MSE (standardised target)
+  shuffle_seed: 917000
+  checkpoint_rule: lowest_valid_rmse (strict improvement, ties keep the earlier epoch)
+  early_stopping: false
+  ema: false
+  swa: false
+  soup: false
+  amp: false
+
+training_isolation:
+  train_split: train (original molecules only)
+  valid_split: valid (original molecules only)
+  test_split: test (original molecules only)
+  rewire_labels_in_optimizer: false
+  rewire_labels_in_selection: false
+  other_task_labels: false
+  official_split_kept: true
+
+cf_evaluation:
+  scope: FULL
+  g_fixed_role: internal diagnostic only
+  main_cf: "O, T and K0 all absent from the Train original canonical set"
+  supplement: "full frozen queue (includes seen-structure pairs)"
+  weights: molecule -> instance -> control -> donor, original hierarchy
+  c_matched_subset: fixed secondary scope (original matching, not re-searched)
+
+statistics:
+  bootstrap_seed: 20261114
+  bootstrap_replicates: 5000
+  cluster: Bemis-Murcko scaffold, one shared multiplicity per split
+  primary_estimand: Test, main CF, FULL
+  valid_role: direction/scale check only (never merged with Test)
+  multiplicity: WC_LOGP 6 families x 1 quantity = 6 items; Bonferroni quantiles 0.05/12 and 11/12
+  no_sample: NA (never negative; multiplier not reduced)
+
+execution:
+  stage_a: local CPU (Part A clarifications + oracle tables; commit BEFORE training)
+  stage_b: res via rr — gpu0 WC_LOGP_s0, gpu1 MOLWT_s0, one process per card; res-2 unused
+  stage_c: local CPU (statistics, figures, report)
+  gpu_budget_hours: {planned: 0.2, soft: 0.5, hard: 1.0}
+  cpu_budget_minutes: {soft: 30}
+  formal_trainings: 2
+  seeds: [0]  # only the fixed bootstrap seed 20261114 otherwise
+
+stop_conditions:
+  - frozen source / checkpoint / norm / previous-round manifest missing or mismatched -> MISSING_SOURCE, stop (no new training)
+  - MolWt rewire delta > 1e-8 -> mapping/hydrogen/cache investigation, never graph deletion
+  - WC_LOGP unchanged for every rewire -> report and STOP Part B training (no third target)
+  - direct WC_LOGP / Crippen leak into the inputs -> stop and report
+  - non-finite first-batch loss/gradient -> stop and report
+  - after the two trainings / Part A / Part B analysis / report -> stop (no new property, structure, seed, PNA, dataset)
+
+decision_boundaries:
+  support_task_relevance: "WC_LOGP delta better than the no-change baseline AND MOLWT small response on composition-preserving rewires"
+  small_requires_scale_and_interval: true
+  never_claim: universal experimental-logD mechanism, new-molecule accuracy, causal chemistry, motif ranking,
+               zero-change from a signed mean, equivalence from a CI crossing zero

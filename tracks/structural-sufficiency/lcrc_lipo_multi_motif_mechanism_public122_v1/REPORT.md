@@ -213,3 +213,40 @@ Ranking uses `J_C` on the calibration queue, `G_FIXED`.
 Every number above is reproducible from the committed catalogues plus the two committed per-graph
 prediction files by `uv run python …/code/run.py --stages analysis,figures`. Tests:
 `uv run pytest -q …/tests` (10 passed).
+
+## 8. Post-facto clarifications (revision note; no stored number changed)
+
+Appended by the follow-up round `lcrc-lipo-oracle-task-relevance-public122-s0-v1`
+(protocol `0273cad6`, report `a5febe96` unchanged). These are **sourced
+clarifications** of the frozen numbers above; no definition, protocol or stored
+result is changed and the pre-registered verdicts stand. Sources: the committed
+`analysis/{pair_catalog,caliper_catalog,per_graph_predictions,per_graph_predictions_init,per_graph_internal,uncertainty,mechanism}.json|csv`
+of this directory (hashes in `lcrc_lipo_oracle_task_relevance_public122_s0_v1/analysis/partA_clarifications.json`).
+
+1. **Whose claim the strongest result covers.** The `amide` "supported" verdict is a
+   statement about the dose-calipered sub-population (Test: 62 molecules / 110 focal pairs;
+   21 % of the 533-pair main queue). It is not a statement about all amide-bearing Test
+   molecules, and the calibrated `rC`/`E` are dimensionless, not raw-logD `J`.
+2. **The 539 C links are structure links, not molecules.** Across all families there are
+   539 accepted focal-T→C links over fewer unique control views; per family/split they are
+   listed in `partA_clarifications.json::A1_coverage_and_claim_matrix`. No effect is
+   reweighted as if the links were independent samples.
+3. **Population change vs control change.** For each family the previous round's
+   `T−K0` (all pairs) and `T−C` (calibrated) contrasts are now also reported on the
+   *same* focal set (`RETAINED_K0`), so `ALL→RETAINED` (a population/edit change) is
+   separated from `K0→C` (a control change). The earlier text never merged them, and this
+   note confirms they must stay separate.
+4. **Scalar vs S2 is conditional, not standalone.** From the frozen eight cells,
+   `R3 = value(123)-value(12)` (conditional scalar recovery) and
+   `R2 = value(123)-value(13)` (conditional S2 recovery), in the F / H / L spaces, with
+   paired means, 95 % intervals and per-view absolute recovery, are in
+   `partA_clarifications.json::A3_conditional_recovery`. On the calibrated Test population
+   the standalone scalar recovery `R3` is small for every family (|point| <= 0.11) while the
+   conditional S2 recovery `R2` is large (H-space: amide +0.46, sulfonamide +0.55,
+   arylamine +0.64, aryl-ether +0.27, ester +0.16). The earlier "the scalar block is inert
+   everywhere" is therefore a statement about the *standalone* term; the interactions
+   (S1×S2 etc.) are not zero and the correct phrasing is "the standalone scalar term is
+   small, with non-zero interactions", not "scalar has no effect". The seven-term identity
+   is re-verified (max arithmetic residual 4.4e-16).
+5. **Sulfonate / empty cells.** `sulfonate` remains untested (no C, no Valid/Test rewire);
+   it is never a negative or an equivalence.
