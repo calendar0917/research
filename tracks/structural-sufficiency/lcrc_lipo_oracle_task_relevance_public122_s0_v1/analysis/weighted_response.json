@@ -1,0 +1,64 @@
+{
+  "checks": {
+    "delta_mae_ci95_reproduced_max_abs_gap": 0.0,
+    "delta_mae_matches_committed_all_cells": true,
+    "delta_mae_max_abs_gap_vs_committed": 0.0,
+    "flat_block_reproduced_max_abs_gap": 0.0,
+    "legacy_pooled_numbers_are_T_view_only": {
+      "molwt_test_POOLED_T_only_mean_abs_dpred": 1.8126763077143808,
+      "molwt_test_POOLED_mean_abs_dpred_TK_pairview": 1.3643959732417246,
+      "molwt_test_POOLED_mean_abs_dpred_molecule": 1.3293138552573134,
+      "note": "REPORT 3.3/3.4 quoted pooled Test mean |dpred| 0.246 / mean |dref| 0.241 / mean |dpred-dref| 0.072 and MolWt 1.81 g/mol; these are the T-view, pair-weighted means, not the T+K average and not molecule weighted",
+      "wc_logp_test_POOLED_T_only_mean_abs_dpred": 0.24619550741679297,
+      "wc_logp_test_POOLED_mean_abs_dpred_TK_pairview": 0.19135945089055464,
+      "wc_logp_test_POOLED_mean_abs_dpred_molecule": 0.1845571838191235
+    },
+    "molwt_identity_all_cells": true,
+    "molwt_identity_max_abs_gap": 0.0,
+    "wc_logp_identity_holds": false
+  },
+  "files": {
+    "weighted_response.csv": "c762f3e75c41165243bec414908ee2af5a45d9c4516d18be3cc2acdf79fdd7e0"
+  },
+  "generated_utc": "2026-11-13T13:35:33Z",
+  "git_commit": "697cf9d63aec7505da4492ab41080545e136d301",
+  "git_dirty": false,
+  "gpu_hours": 0.0,
+  "inputs": {
+    "partB_molwt_metrics.json": "85a11985c08f224c5cae13319c73e5a90c4fde2e7a0b0e051a602a626f82a949",
+    "partB_molwt_pairs.csv": "e988a7a7c663217e750ff6ef4666961d2d5c6150601654e604a53fb1fddd7893",
+    "partB_wc_logp_metrics.json": "72661375195d747c229469e008fee2594ea00e72f615e244c9a12ea8a54e17f7",
+    "partB_wc_logp_pairs.csv": "af16485005af27eb515eb0b4985f00484414b6f84d43600bec6178c8ed0bea5c"
+  },
+  "new_interventions": 0,
+  "new_model_inference": 0,
+  "new_training": 0,
+  "round_id": "lcrc-lipo-oracle-task-relevance-public122-s0-v1",
+  "tasks": {
+    "molwt": {
+      "cells": 12,
+      "original_graph_test_r2": 0.9905768193570665,
+      "original_graph_test_rmse": 10.082156201564137,
+      "target_norm": {
+        "mean": 383.3009288690477,
+        "scale": 108.29401611252482,
+        "source": "Train original labels only"
+      },
+      "units": "g/mol (average molecular weight)"
+    },
+    "wc_logp": {
+      "cells": 12,
+      "original_graph_test_r2": 0.9964278397481332,
+      "original_graph_test_rmse": 0.07808590846297742,
+      "target_norm": {
+        "mean": 3.273270815476192,
+        "scale": 1.3237809998347783,
+        "source": "Train original labels only"
+      },
+      "units": "logP (Wildman-Crippen, dimensionless)"
+    }
+  },
+  "weight_scheme_molecule": "molecule -> instance(center,target,control) -> control/donor; per pair the T and K views are averaged first (0.5*(|dpT|+|dpK|)); then instance mean, then molecule mean, then an unweighted mean over molecules",
+  "weight_scheme_pairview": "pair/view weighted: every (pair, view in {T,K0}) is one observation",
+  "why": "partB_*_metrics.json stores delta_mae (molecule->instance->control->donor) and abs_delta_pred.* (flattened T/K views) side by side; the two are not the same weighting.  This table states both explicitly and keeps the original numbers untouched."
+}
