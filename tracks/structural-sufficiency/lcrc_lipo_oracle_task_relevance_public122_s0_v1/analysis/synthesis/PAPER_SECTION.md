@@ -40,7 +40,7 @@ Test 上 62 个分子、110 个焦点对（分别约为该家族主队列的 38%
 该子群的端点差为 $J_C=0.146$，相对匹配对照的条件 S2 恢复 $R_2=+0.136$
 （95% 区间 [0.033, 0.233]），条件标量恢复 $R_3=+0.031$（[0.004, 0.056]）；
 真正的独立标量项 $g_3=-0.002$。偏好随训练出现（$E=+0.321$，相对同一初始化）。
-`[来源] partA_clarifications.json::A1、A2、A3；mechanism.json]`
+`[来源] partA_clarifications.json::A1、A2、A3；mechanism.json；源轮 uncertainty.json::primary_test.items.amide（rC / E）]`
 
 这一结论的适用范围必须写清楚：它是**相对对照**的无量纲陈述，不是原始 logD 幅度；
 它不覆盖所有含酰胺的分子；换到其他家族，结果**异质**——磺酰胺只有 $E$ 明确
@@ -123,7 +123,7 @@ in that sub-population is $J_C=0.146$; the conditional-S2 recovery against the m
 $R_2=+0.136$ (95% interval [0.033, 0.233]) and the conditional-scalar recovery is
 $R_3=+0.031$ ([0.004, 0.056]); the genuinely standalone scalar term is $g_3=-0.002$.
 The preference arises with training ($E=+0.321$ relative to the same initialisation).
-`[Source: partA_clarifications.json::A1, A2, A3; mechanism.json]`
+`[Source: partA_clarifications.json::A1, A2, A3; mechanism.json; source-round uncertainty.json::primary_test.items.amide for rC / E]`
 
 The scope must be stated with the result: it is a dimensionless, control-relative statement,
 not a raw logD magnitude; it does not cover all amide-bearing molecules; and other families are

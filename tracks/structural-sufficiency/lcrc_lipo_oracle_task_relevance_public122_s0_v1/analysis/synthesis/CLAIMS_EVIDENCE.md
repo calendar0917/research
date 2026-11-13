@@ -34,6 +34,7 @@
 | E13 | `../lcrc_lipo_amide_connected_rewire_public122_v1/REPORT.md` | AF51 差 0.0 仍移动的实测 |
 | E14 | `../lcrc_lipo_amide_dependency_public122_v1/REPORT.md` | 断键 → 越界（反例背景） |
 | E15 | `../lcrc_lipo_edit_supervision_public122_s0_v1/REPORT.md` | 真实编辑监督无联合收益（边界） |
+| E16 | `../lcrc_lipo_multi_motif_mechanism_public122_v1/analysis/uncertainty.json` | 源轮的 `rC_trained` / `E` 与 12 项 Bonferroni、`foreign_c_only`、`influence` |
 
 ---
 
@@ -42,7 +43,8 @@
 | # | 主张 | 直接证据 | 适用范围 | 尚未支持（证据缺口） |
 |---|---|---|---|---|
 | 1 | **显式局部结构统计可计算追溯**：C1 的预测完全由逐原子的显式统计签名 $\Sigma_v$ 与 `global42` 决定，改线可分解到「改变根集合 $U$」与池化项 | 计算式与签名定义见 `METHOD.md` §2–§3；`E12` `dissect_model.py::DissectLCRC.forward`（433 列 = a/b_sum/nbr/T/E/J/K/C/scal）；性质 1 的实测：`E11` `alias_pair_summary.{n_signature_multiset_equal,n_global42_equal,n_prediction_equal_within_tol}=5/5/5`，预测差 ≤3e-7；性质 2 的实测：`E10` TABLES.md（ΔL/Δρ/Δpred + `max Δ other f ≡ 0`，identity gap ≤5.8e-7） | 该冻结模型、该 `lipo_v1` 特征、该 checkpoint；用于**计算**追溯 | 不是**唯一化学归因**：$\Delta\rho$ 与 $\Delta q$ 同量级（+0.6393 vs +0.5203），无法分摊成原子贡献；签名不最小、不完整；签名不同的输入不保证模型能数值区分 |
-| 2 | **实验 logD 上的训练相关结构偏好**：在等剂量可匹配的酰胺子群内，模型相对匹配对照更偏向目标连接，且该偏好随训练出现 | `E1` A1：amide/Test 校准后 62 分子 / 110 对；`E1` A1 `claim_matrix`：$rC$=+0.164 [0.052,0.278]，$E$=+0.321；`E2` `three_tables_amide_test.RETAINED_C`（B 0.492 / D_C 0.173 / **J_C 0.146**）；`E1` A3：`R2_TminusC_H`=+0.13555 [0.03348,0.23318]，`R3_TminusC_H`=+0.03067 [0.00377,0.05634] | **仅**该子群（Test 21% 对 / 38% 分子覆盖）；仅 `A_s0` 这一个 checkpoint/seed；`G_FIXED` 与 `FULL` 要分开写 | 其他家族异质：磺酰胺仅 $E$ 明确、芳醚**反向**（−0.433）、芳胺 n=4 且 $E$ 为负、酯未成立、磺酸酯无 C 未检验；**不是**全部酰胺、**不是**全部官能团；改线分子**没有实验 logD 标签** |
+| 2 | **实验 logD 上的训练相关结构偏好**：在等剂量可匹配的酰胺子群内，模型相对匹配对照更偏向目标连接，且该偏好随训练出现 | `E1` A1：amide/Test 校准后 62 分子 / 110 对；`E16` `primary_test.items.amide`：
+  $rC$=+0.1638 [0.0518, 0.2779]，$E$=+0.3205（两者 `*_bonferroni_excludes_zero` 均为 true）；`E2` `three_tables_amide_test.RETAINED_C`（B 0.492 / D_C 0.173 / **J_C 0.146**）；`E1` A3：`R2_TminusC_H`=+0.13555 [0.03348,0.23318]，`R3_TminusC_H`=+0.03067 [0.00377,0.05634] | **仅**该子群（Test 21% 对 / 38% 分子覆盖）；仅 `A_s0` 这一个 checkpoint/seed；`G_FIXED` 与 `FULL` 要分开写 | 其他家族异质：磺酰胺仅 $E$ 明确、芳醚**反向**（−0.433）、芳胺 n=4 且 $E$ 为负、酯未成立、磺酸酯无 C 未检验；**不是**全部酰胺、**不是**全部官能团；改线分子**没有实验 logD 标签** |
 | 3 | **当前模型响应的内部路径**：该子群的端点差主要经由 typed-S2 通道及其与 S1 的交互，独立标量项很小 | `E9` `summary["test/calibration/amide"].H`：$g_2$=+0.1037、$g_3$=−0.0017、$\sum$=0.14602；`E1` A3 的 $R_2,R_3$ 与 `arithmetic_residual_max`=4.4e-16；`E10` `interventions.json`（`typed_s2_zero` mean|Δpred| 1.6774、`g_zero` 0.4736、`mean_h2_zero` 0.3353） | 同一冻结权重下的**条件性依赖**（八格是预定义输入分组） | 不是架构必要性（需重训）；不是 joint 算子独有优势（`B4/B5` 只是代数对照）；混合输入不是合法分子；$R_2/J_C$=92.8% **不能**写成「S2 独占 93%」 |
 | 4 | **跨家族的计算任务相关响应**：在 WC_LOGP 参照下，模型对同批改线的响应跟随目标的方向与幅度 | `E3` `family_stats.wc_logp/test/*`：gain amide +0.108 [0.094,0.124]、sulfonamide +0.116 [0.074,0.158]、aryl_ether +0.119 [0.094,0.144]、arylamine +0.314 [0.258,0.363]，四者 6 项 Bonferroni 区间不含 0；sign 0.952–0.990；$q$ 一致率 0.819–0.892；新图对自身 oracle 的 MAE 0.067–0.119；原图 Test R² 0.99643 | **新训练的** WC_LOGP 模型（seed 0）、main CF（1810 对，Test 844 / Valid 966）、`FULL` scope | 酯未解决（8 分子/46 对，+0.063 [−0.007,0.138]）；磺酸酯未检验；不是 logP/logD 测量；不能追认实验 logD 的化学机制；单 seed |
 | 5 | **不变量对照**：组成不变改线下参照变化严格为 0，而模型残留响应小且非零 | `E6` `checks.molwt_invariant_{pass,max_abs_delta}` = true / 0.0；`E4` `family_stats.molwt/test/*`；`E8` `weighted_response.csv`：分子权重 mean\|Δp\| 0.9045–1.9214 g/mol（0.0084–0.0177 σ，σ_train=108.294），Test POOLED 1.3293 g/mol = 0.01228 σ，且 **delta-MAE ≡ mean\|Δp\|（差 0.0）** | MolWt 这一个不变量任务；`FULL`；同一 1810 对 | **不是**精确不变性（最大个例 14.235 g/mol = 0.1315 σ，`sulfonamide:1275:1:0:d9-14` T 视图）；不从零均值/不显著推等价；不是真实化学机制 |
@@ -62,7 +64,9 @@
 **主张 2（logD 偏好）**
 
 - 三表必须分开引用；`RETAINED_C` 的 `J_C`=0.1460 只在「有 C 的 110 对」上成立。
-- $E>0$ 只表示「相对这一个初始化偏好上升」，与「$rC>0$」是两个命题（`E1` A1 分列）。
+- $E>0$ 只表示「相对这一个初始化偏好上升」，与「$rC>0$」是两个命题；源轮的
+  `E16` 里它们分列为 `E_positive` 与 `rC_trained_positive`（amide 两者皆 true，
+  arylamine 是 `rC_trained_positive=true` 而 `E_positive=false`）。
 - 残余均值接近 0 不构成等价结论（不改写为「模型对酰胺无响应」）。
 
 **主张 3（内部路径）**
