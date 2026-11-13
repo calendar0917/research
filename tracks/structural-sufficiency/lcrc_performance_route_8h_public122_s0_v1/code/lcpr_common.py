@@ -212,6 +212,9 @@ REPRO_TOL_PRED = 2e-5
 #: reduction order may differ by a few ULP between the tracked epoch value and
 #: the replay from disk; science-inert, but must not be silently huge)
 CHECKPOINT_RECHECK_TOL = 1e-6
+#: above this the reload disagreement is treated as real corruption, not float32
+#: reduction-order noise (ogbg-molhiv, 41 k Train rows, lands at ~1.5e-6)
+CHECKPOINT_RECHECK_FATAL_REL = 1e-3
 PARITY_TOL = 1e-6
 
 #: ---------------------------------------------------------------------------

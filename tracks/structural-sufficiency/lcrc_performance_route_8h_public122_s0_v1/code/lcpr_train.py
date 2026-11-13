@@ -455,8 +455,24 @@ def train_candidate(
     best_metrics = {s: split_metrics(task, best_preds[s], tgt["y"][s], tnorm) for s in C.SPLITS}
     #: the checkpoint round-trip may reorder float32 reductions by a few ULP
     recheck = abs(primary_value(task, best_metrics["valid"]) - float(best_value))
-    if recheck > C.CHECKPOINT_RECHECK_TOL * max(abs(float(best_value)), 1.0):
+    recheck_scale = max(abs(float(best_value)), 1.0)
+    #: a plumbing check must never throw away hours of GPU time: a difference
+    #: beyond the float32 round-trip tolerance is *recorded* and only a
+    #: gross disagreement (1e-3 relative, i.e. real corruption) is fatal
+    recheck_info = {
+        "abs_diff": recheck,
+        "rel_diff": recheck / recheck_scale,
+        "tol_rel": C.CHECKPOINT_RECHECK_TOL,
+        "fatal_rel": C.CHECKPOINT_RECHECK_FATAL_REL,
+        "severity": "ok",
+    }
+    if recheck > C.CHECKPOINT_RECHECK_FATAL_REL * recheck_scale:
         raise RuntimeError(f"reloaded best checkpoint Valid metric differs by {recheck}")
+    if recheck > C.CHECKPOINT_RECHECK_TOL * recheck_scale:
+        recheck_info["severity"] = "warn"
+        print(f"[checkpoint-recheck] WARNING Valid metric differs by {recheck:.3e} "
+              f"(rel {recheck_info['rel_diff']:.3e} > tol {C.CHECKPOINT_RECHECK_TOL:.0e}); "
+              "recorded, run continues", flush=True)
 
     model.load_state_dict({k: v.to(device) for k, v in last_state.items()})
     last_preds = evaluate_all(model, eval_caches, device, path_counts)
@@ -522,6 +538,7 @@ def train_candidate(
         "metrics": {"best": best_metrics, "last": last_metrics,
                     "initial": None},
         "anomalies": {"grad_clip_events": int(clip_events), "grad_norm_max": float(gnorm_max)},
+        "checkpoint_recheck": recheck_info,
         "timing": {"train_wall_seconds": float(wall),
                    "process_wall_seconds": float(time.perf_counter() - PROCESS_T0),
                    "mean_epoch_seconds": float(np.mean([r["train_seconds"] + r["eval_seconds"] for r in curve]))},

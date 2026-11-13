@@ -187,6 +187,9 @@ def collect_runs(root: Path | None = None) -> list[dict[str, Any]]:
         payload = _load_json(path)
         if payload.get("status") != "completed":
             continue
+        if payload.get("smoke"):
+            #: 2-epoch plumbing checks are not results and must never enter a table
+            continue
         meta = payload.get("model", {})
         rec = payload.get("recipe", {})
         row = {
@@ -587,9 +590,17 @@ def figure_error_distribution(ledger: Sequence[Mapping[str, Any]], path: Path,
 def figure_mechanism(mech: Mapping[str, Any], path: Path) -> None:
     plt = _mpl()
     s_block = mech.get("s_panel", {})
-    points = s_block.get("rows", [])
-    if not points:
+    rows = s_block.get("rows") or []
+    if not rows:
+        #: per-split blocks only exist for datasets whose support trace was
+        #: written per split; flatten them so the figure still shows row-level
+        #: sensitivity
+        for name, blk in (s_block.get("splits") or {}).items():
+            rows.extend(dict(r, split=name) for r in (blk.get("rows") or []))
+    if not rows:
         return
+
+    points = rows
     fig, ax = plt.subplots(1, 2, figsize=(7.6, 3.4), dpi=170)
     sup = [p["s2_support_mean"] for p in points]
     dj = [p["delta_j_norm"] for p in points]
@@ -877,7 +888,7 @@ def run_budget() -> dict[str, Any]:
         "gpu_hard_cap_hours": 16,
         "max_new_trainings": C.MAX_NEW_TRAININGS,
         "n_formal_trainings": len(rows),
-        "n_smoke_trainings": len([r for r in collect_runs() if r.get("smoke")]),
+        "n_smoke_trainings": len(list((C.RUNS / "smoke").rglob("train.json"))),
         "sum_isolated_train_wall_seconds": total_wall,
         "per_job": budget["jobs"],
         "note": ("GPU·h = wall x GPUs for every job that touched a GPU, including evaluation, "

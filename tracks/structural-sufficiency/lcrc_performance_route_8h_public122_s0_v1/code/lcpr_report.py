@@ -310,7 +310,9 @@ def _yes(fam: Mapping[str, Any], cand: str) -> str:
 
 def run(stage: str = "all") -> Path:
     text = build()
-    path = C.TRACK / "REPORT.md"
+    #: the round's REPORT.md is hand-written around the numbers; the generator
+    #: only refreshes the machine-readable tables next to it
+    path = C.ANALYSIS / "REPORT_auto.md"
     path.write_text(text, encoding="utf-8")
     C.log(f"[report] wrote {path.relative_to(C.TRACK)} ({len(text)} chars)")
     return path
