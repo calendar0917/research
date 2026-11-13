@@ -143,22 +143,25 @@ def evaluate() -> dict[str, Any]:
         )
 
     comparisons: dict[str, Any] = {}
+    # every pair is (new condition, comparison baseline); gain > 0 means the new
+    # condition is *better* than the baseline it is named against:
+    # gain = metric(baseline) - metric(new condition)
     pairs = list(C.MAIN_COMPARISONS) + ([C.NULL_COMPARISON] if "NULL3" in preds else [])
-    for ref, cand in pairs:
-        if ref not in preds or cand not in preds:
+    for new, base in pairs:
+        if new not in preds or base not in preds:
             continue
-        key = f"{cand}_vs_{ref}"
+        key = f"{new}_vs_{base}"
         entry: dict[str, Any] = {}
         for split in C.SPLITS:
             for metric in ("rmse", "mae"):
                 entry[f"{split}_{metric}"] = M.gain_summary(
-                    reference=ref,
-                    candidate=cand,
+                    reference=base,
+                    candidate=new,
                     metric=metric,
-                    point_reference=point[ref][split][metric],
-                    point_candidate=point[cand][split][metric],
-                    boots_reference=boot[split][ref][metric],
-                    boots_candidate=boot[split][cand][metric],
+                    point_reference=point[base][split][metric],
+                    point_candidate=point[new][split][metric],
+                    boots_reference=boot[split][base][metric],
+                    boots_candidate=boot[split][new][metric],
                 )
         comparisons[key] = entry
 
@@ -182,16 +185,15 @@ def evaluate() -> dict[str, Any]:
         "n_remaining": int(keep_test.sum()),
         "test_rmse": {arm: float(v["rmse"]) for arm, v in sens_test_rows.items()},
         "gains": {
-            key: float(sens_test_rows[ref]["rmse"] - sens_test_rows[cand]["rmse"])
-            for ref, cand in pairs
-            if ref in sens_test_rows and cand in sens_test_rows
-            for key in [f"{cand}_vs_{ref}"]
+            f"{new}_vs_{base}": float(sens_test_rows[base]["rmse"] - sens_test_rows[new]["rmse"])
+            for new, base in pairs
+            if new in sens_test_rows and base in sens_test_rows
         },
         "all_gains_positive": bool(
             all(
-                sens_test_rows[ref]["rmse"] - sens_test_rows[cand]["rmse"] > 0
-                for ref, cand in pairs
-                if ref in sens_test_rows and cand in sens_test_rows
+                sens_test_rows[base]["rmse"] - sens_test_rows[new]["rmse"] > 0
+                for new, base in pairs
+                if new in sens_test_rows and base in sens_test_rows
             )
         ),
     }
@@ -201,17 +203,16 @@ def evaluate() -> dict[str, Any]:
         "n_remaining": int(keep_valid.sum()),
         "valid_rmse": {arm: float(v["rmse"]) for arm, v in sens_valid_rows.items()},
         "gains": {
-            key: float(sens_valid_rows[ref]["rmse"] - sens_valid_rows[cand]["rmse"])
-            for ref, cand in pairs
-            if ref in sens_valid_rows and cand in sens_valid_rows
-            for key in [f"{cand}_vs_{ref}"]
+            f"{new}_vs_{base}": float(sens_valid_rows[base]["rmse"] - sens_valid_rows[new]["rmse"])
+            for new, base in pairs
+            if new in sens_valid_rows and base in sens_valid_rows
         },
     }
     last_gains = {}
-    for ref, cand in pairs:
-        if ref in last_point and cand in last_point:
-            last_gains[f"{cand}_vs_{ref}"] = {
-                split: float(last_point[ref][split]["rmse"] - last_point[cand][split]["rmse"]) for split in C.SPLITS
+    for new, base in pairs:
+        if new in last_point and base in last_point:
+            last_gains[f"{new}_vs_{base}"] = {
+                split: float(last_point[base][split]["rmse"] - last_point[new][split]["rmse"]) for split in C.SPLITS
             }
     sensitivity["last_epoch_360_revaluation"] = {
         "note": "reported for progress inspection only; never re-selects a checkpoint",
@@ -237,7 +238,7 @@ def evaluate() -> dict[str, Any]:
     )
 
     perf = {}
-    if "LOCAL3" in comparisons:
+    if "LOCAL3_vs_A" in comparisons:
         key = "LOCAL3_vs_A"
         test = comparisons[key]["test_rmse"]
         valid = comparisons[key]["valid_rmse"]
@@ -277,9 +278,20 @@ def evaluate() -> dict[str, Any]:
                 decisions["PERFORMANCE"] = "NEW_INFORMATION_INCREMENT_UNRESOLVED"
         else:
             decisions["PERFORMANCE"] = "PERFORMANCE_UNRESOLVED_THIS_RUN"
+        decisions["PERFORMANCE_DETAIL"] = {
+            "gain_convention": "gain = metric(baseline) - metric(candidate); > 0 means the candidate is better",
+            "test_gain": float(test["gain"]),
+            "valid_gain": float(valid["gain"]),
+            "valid_test_direction_consistent": direction_ok,
+            "test_ci_lower_gt_zero": bool(test["ci_lower_gt_zero"]),
+            "note": (
+                "the primary metric is Test; a Valid/Test sign disagreement is recorded as "
+                "unresolved and is not averaged away"
+            ),
+        }
     decisions["detailed"] = perf
 
-    if "NULL3" in comparisons:
+    if "LOCAL3_vs_NULL3" in comparisons:
         key = "LOCAL3_vs_NULL3"
         test = comparisons[key]["test_rmse"]
         valid = comparisons[key]["valid_rmse"]
