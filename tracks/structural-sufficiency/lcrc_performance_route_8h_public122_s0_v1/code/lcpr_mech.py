@@ -64,6 +64,9 @@ def panel_m(model, dataset: str = "Lipophilicity", *, masks: int = 256,
     for split, k in (("train", k_train), ("valid", k_valid), ("test", k_test)):
         cache = D.load_cache(dataset, split)
         rows = _fixed_rows(int(cache["n_molecules"]), k, salt=7)
+        import lcpr_analysis as A
+
+        y_true_all, _ = A.split_labels(dataset, split)
         batch = D.to_device(D.collate(cache, rows), dev)
         with _eval_mode(model):
             ev = model(batch, return_aux=True)
@@ -87,7 +90,7 @@ def panel_m(model, dataset: str = "Lipophilicity", *, masks: int = 256,
         mh2_c = mh2_clean.mean(dim=1)
         out["splits"][split] = {
             "rows": [int(r) for r in rows],
-            "y_true": np.asarray(cache["y"], dtype=float)[rows].tolist(),
+            "y_true": np.asarray(y_true_all, dtype=float)[rows].tolist(),
             "pred_eval": ev["y"].cpu().numpy().tolist(),
             "pred_mc_mean": mc_mean.cpu().numpy().tolist(),
             "pred_mc_std": torch.sqrt(mc_var).cpu().numpy().tolist(),
@@ -115,6 +118,8 @@ def panel_s(model, dataset: str = "Lipophilicity", *, k_valid: int = 64, k_test:
     alpha = 1 is the frozen FULL operator and alpha -> 0 the frozen marginal one.
     The model must be an S-family checkpoint (its ``local`` owns the buffers).
     """
+    import lcpr_analysis as A
+
     support = D.load_support(dataset)
     base_kappa = float(support["kappa"])
     dev = next(model.parameters()).device
@@ -122,14 +127,12 @@ def panel_s(model, dataset: str = "Lipophilicity", *, k_valid: int = 64, k_test:
     out: dict[str, Any] = {"alphas": [float(a) for a in alphas], "kappa": base_kappa,
                            "a_bar_k1": float(support["a_bar_k1"]),
                            "a_bar_k4": float(support["a_bar_k4"]), "splits": {}}
-    import lcpr_analysis as A
-
     s2_all = A.s2_support_by_molecule(dataset)
     for split, k in (("valid", k_valid), ("test", k_test)):
         cache = D.load_cache(dataset, split)
         rows = _fixed_rows(int(cache["n_molecules"]), k, salt=11)
         batch = D.to_device(D.collate(cache, rows, path_count=support["path_count"][split]), dev)
-        y_true = np.asarray(cache["y"], dtype=float)[rows]
+        y_true = np.asarray(A.split_labels(dataset, split)[0], dtype=float)[rows]
         ref = None
         per: dict[str, Any] = {}
         with _eval_mode(model):

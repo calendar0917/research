@@ -183,7 +183,7 @@ def _load_json(path: Path) -> Any:
 def collect_runs(root: Path | None = None) -> list[dict[str, Any]]:
     root = Path(root or C.RUNS)
     rows: list[dict[str, Any]] = []
-    for path in sorted(root.glob("*/*/train.json")):
+    for path in sorted(root.rglob("train.json")):
         payload = _load_json(path)
         if payload.get("status") != "completed":
             continue
@@ -226,6 +226,27 @@ def run_index(rows: Iterable[Mapping[str, Any]]) -> dict[tuple[str, str], Mappin
 def load_predictions(path: str | Path) -> dict[str, np.ndarray]:
     z = np.load(path, allow_pickle=False)
     return {k: np.asarray(z[k]) for k in z.files}
+
+
+def load_predictions_raw(dataset: str, path: str | Path) -> dict[str, np.ndarray]:
+    """Predictions decoded to the published target units (regression only)."""
+    import lcpr_data as D
+
+    z = load_predictions(path)
+    out: dict[str, np.ndarray] = {}
+    norm = None
+    if D.dataset_meta(dataset)["task"] == "regression":
+        norm = D.targets(dataset, include_test=False).get("target_norm")
+    for split in C.SPLITS:
+        y = np.asarray(z[f"{split}_y"], dtype=float)
+        p = np.asarray(z[f"{split}_pred_std"], dtype=float)
+        if norm is not None:
+            p = p * float(norm["scale"]) + float(norm["mean"])
+        out[f"{split}_y"] = y
+        out[f"{split}_pred"] = p
+        if f"{split}_rows" in z:
+            out[f"{split}_rows"] = np.asarray(z[f"{split}_rows"])
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -331,7 +352,7 @@ def s2_support_by_molecule(dataset: str) -> dict[str, np.ndarray]:
 def error_ledger(dataset: str, base_run: Mapping[str, Any],
                  arms: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
     """Per-row ledger on the aligned best-Valid rows (Test + Valid + Train)."""
-    base_pred = load_predictions(base_run["predictions"])
+    base_pred = load_predictions_raw(dataset, base_run["predictions"])
     cov = covariates(dataset)
     supp = s2_support_by_molecule(dataset)
     rows: list[dict[str, Any]] = []
@@ -341,7 +362,8 @@ def error_ledger(dataset: str, base_run: Mapping[str, Any],
         task = base_run["task"]
         eb = pb - y
         for arm in arms:
-            pa = np.asarray(load_predictions(arm["predictions"])[f"{split}_pred"], dtype=float)
+            pa = np.asarray(load_predictions_raw(dataset, arm["predictions"])[f"{split}_pred"],
+                            dtype=float)
             ea = pa - y
             for i in range(len(y)):
                 rec = {
@@ -587,3 +609,201 @@ def figure_route_matrix(transfer: Mapping[str, Any], path: Path) -> None:
     fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)
+
+
+# --------------------------------------------------------------------------- #
+# driver
+# --------------------------------------------------------------------------- #
+
+XFGB_REFERENCE = {
+    # frozen external reference, ECFP4+RDKit+XGBoost, Train-only fitting
+    # source: lcrc_molnet_benchmark_pilot_v2/analysis/baseline
+    "source": "lcrc_molnet_benchmark_pilot_v2/analysis/baseline (ECFP4 + RDKit descriptors + XGBoost, frozen config)",
+    "Lipophilicity": {"valid_rmse": 0.6532, "test_rmse": 0.6477, "valid_r2": 0.68, "test_r2": 0.71},
+    "ESOL": {"valid_rmse": 0.6425},
+    "BACE": {"valid_roc_auc": 0.7065},
+    "FreeSolv": {"valid_rmse": 1.1331},
+}
+
+
+def split_labels(dataset: str, split: str) -> tuple[np.ndarray, np.ndarray]:
+    """Published labels + SMILES for one split (the structure cache is label-free)."""
+    import lcpr_data as D
+
+    y = np.asarray(D.targets(dataset, include_test=True)["y"][split], dtype=float).reshape(-1)
+    cache = D.load_cache(dataset, split)
+    smiles = np.array(list(cache["smiles"]), dtype=object)
+    if len(y) != len(smiles):
+        raise ValueError(f"{dataset}/{split}: label and structure row counts differ")
+    return y, smiles
+
+
+_split_labels = split_labels
+
+
+def _cluster_index(dataset: str, split: str, task: str) -> tuple[np.ndarray, np.ndarray]:
+    y, smiles = _split_labels(dataset, split)
+    if task == "regression":
+        return y, scaffold_clusters(list(smiles))
+    return y, np.asarray(y > 0.5, dtype=np.int64)
+
+
+def run_core() -> dict[str, Any]:
+    rows = [r for r in collect_runs() if not r.get("smoke")]
+    C.write_json(C.ANALYSIS / "run_table.json", {"created_utc": C.utcnow(), "runs": rows})
+    cols = ["run", "candidate", "dataset", "task", "recipe", "epochs", "peak_lr", "weight_decay",
+            "parameters", "best_epoch", "wall_seconds", "mean_epoch_seconds", "commit", "seed"]
+    metric_cols: list[str] = []
+    for split in C.SPLITS:
+        for key in ("rmse", "mae", "r2", "roc_auc", "bce"):
+            if any(key in (r.get(split) or {}) for r in rows):
+                metric_cols.append(f"{split}_{key}")
+    lines = [",".join(cols + metric_cols + ["smoke"])]
+    for r in rows:
+        vals = [str(r.get(c, "")) for c in cols]
+        for mc in metric_cols:
+            split, key = mc.split("_", 1)
+            v = (r.get(split) or {}).get(key)
+            vals.append("" if v is None else f"{float(v):.6f}")
+        vals.append(str(r.get("smoke")))
+        lines.append(",".join(vals))
+    (C.ANALYSIS / "run_table.csv").write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    trace: dict[str, Any] = {"created_utc": C.utcnow(), "recipes": select_recipe(rows)}
+    winner = trace["recipes"].get("best")
+    trace["lipophilicity_base"] = f"C1_{winner}" if winner else None
+    if winner:
+        base_candidate = f"C1_{winner}"
+        fam = family_summary(rows, "Lipophilicity", base_candidate)
+        C.write_json(C.ANALYSIS / "family_summary.json", fam)
+        trace["families"] = {k: v["winner"] for k, v in fam.get("families", {}).items()}
+        trace["clear_families"] = fam.get("clear_families")
+        trace["promoted"] = fam.get("promoted")
+        trace["promoted_role"] = fam.get("promoted_role", "clear signal in >=1 family")
+
+        # paired bootstrap for every Lipophilicity arm against the base
+        idx = run_index(rows)
+        base = idx[(base_candidate, "Lipophilicity")]
+        comparisons: dict[str, Any] = {"base": base_candidate, "task": "regression",
+                                       "replicates": C.BOOTSTRAP_REPLICATES if hasattr(C, "BOOTSTRAP_REPLICATES") else 2000,
+                                       "seed": C.BOOTSTRAP_SEED, "splits": {}}
+        for split in ("valid", "test"):
+            y, index = _cluster_index("Lipophilicity", split, "regression")
+            control = np.asarray(load_predictions_raw("Lipophilicity", base["predictions"])[f"{split}_pred"], float)
+            for (cand, ds), rec in sorted(idx.items()):
+                if ds != "Lipophilicity" or cand == base_candidate:
+                    continue
+                cand_pred = np.asarray(load_predictions_raw("Lipophilicity", rec["predictions"])[f"{split}_pred"], float)
+                res = paired_bootstrap(control=control, candidate=cand_pred, kind="rmse",
+                                       index=index, y=y, replicates=2000, seed=C.BOOTSTRAP_SEED)
+                comparisons["splits"].setdefault(split, {})[cand] = res
+        C.write_json(C.ANALYSIS / "paired_comparisons.json", comparisons)
+    C.write_json(C.ANALYSIS / "selection_trace.json", trace)
+    return trace
+
+
+def run_ledger(base_candidate: str | None = None) -> dict[str, Any]:
+    rows = collect_runs()
+    idx = run_index(rows)
+    if base_candidate is None:
+        trace = json.loads((C.ANALYSIS / "selection_trace.json").read_text())
+        base_candidate = trace.get("lipophilicity_base")
+    if base_candidate is None or (base_candidate, "Lipophilicity") not in idx:
+        return {"status": "pending"}
+    base = idx[(base_candidate, "Lipophilicity")]
+    arms = [r for (c, d), r in sorted(idx.items())
+            if d == "Lipophilicity" and c != base_candidate]
+    ledger = error_ledger("Lipophilicity", base, arms)
+    import csv as _csv
+
+    path = C.ANALYSIS / "error_ledger.csv"
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        writer = _csv.DictWriter(fh, fieldnames=list(ledger[0]))
+        writer.writeheader()
+        writer.writerows(ledger)
+
+    pred = load_predictions_raw("Lipophilicity", base["predictions"])
+    tails = {s: tail_view(pred, s) for s in C.SPLITS}
+    summary: dict[str, Any] = {"base": base_candidate, "tails": {}, "tail_metrics": {}}
+    for s, tv in tails.items():
+        summary["tails"][s] = {"n": tv["n"], "top_row": tv["top_row"],
+                               "top_row_abs_error": tv["top_row_abs_error"]}
+        y = np.asarray(pred[f"{s}_y"], float)
+        pb = np.asarray(pred[f"{s}_pred"], float)
+        entry: dict[str, Any] = {}
+        for frac in C.TAIL_FRACTIONS:
+            drop = np.asarray(tv[f"exclude_top_{frac:g}"], dtype=np.int64)
+            keep = np.setdiff1d(np.arange(len(y)), drop)
+            entry[f"exclude_top_{frac:g}"] = {
+                "base_rmse": _rmse(pb[keep], y[keep]),
+                "n_kept": int(len(keep)),
+            }
+            for cand in summary.setdefault("_arms", []):
+                pass
+        summary["tail_metrics"][s] = entry
+    # per-arm tail metrics (same frozen row sets as the base)
+    arm_tail: dict[str, Any] = {}
+    for arm in arms:
+        ap = np.asarray(load_predictions_raw("Lipophilicity", arm["predictions"])["test_pred"], float)
+        y = np.asarray(pred["test_y"], float)
+        rec: dict[str, Any] = {"full_rmse": _rmse(ap, y), "base_full_rmse": _rmse(
+            np.asarray(pred["test_pred"], float), y)}
+        for frac in C.TAIL_FRACTIONS:
+            drop = np.asarray(tails["test"][f"exclude_top_{frac:g}"], dtype=np.int64)
+            keep = np.setdiff1d(np.arange(len(y)), drop)
+            rec[f"exclude_top_{frac:g}"] = {"arm_rmse": _rmse(ap[keep], y[keep]),
+                                            "n_kept": int(len(keep))}
+        arm_tail[arm["candidate"]] = rec
+    summary["arm_tail_test"] = arm_tail
+    summary.pop("_arms", None)
+    C.write_json(C.ANALYSIS / "tail_summary.json", summary)
+    return {"rows": len(ledger), "arms": len(arms)}
+
+
+def run_figures() -> dict[str, Any]:
+    rows = collect_runs()
+    trace_path = C.ANALYSIS / "selection_trace.json"
+    if not trace_path.exists():
+        return {"status": "pending"}
+    trace = json.loads(trace_path.read_text())
+    base_candidate = trace.get("lipophilicity_base")
+    fam_path = C.ANALYSIS / "family_summary.json"
+    fam = json.loads(fam_path.read_text()) if fam_path.exists() else {}
+    ref = {"xgboost_valid": XFGB_REFERENCE["Lipophilicity"]["valid_rmse"]}
+    idx = run_index(rows)
+    dmp = [r for (c, d), r in idx.items() if d == "Lipophilicity" and str(c).startswith("DMPNN")]
+    if dmp:
+        best = min(dmp, key=lambda r: r["valid"]["rmse"])
+        ref["dmpnn_valid"] = best["valid"]["rmse"]
+    fig_dir = C.ANALYSIS / "figures"
+    fig_dir.mkdir(parents=True, exist_ok=True)
+    figure_performance_cost(fam, fig_dir / "performance_cost.png", ref)
+    ledger_path = C.ANALYSIS / "error_ledger.csv"
+    if ledger_path.exists():
+        import csv as _csv
+
+        with open(ledger_path, encoding="utf-8") as fh:
+            ledger = list(_csv.DictReader(fh))
+        for rec in ledger:
+            rec["split"] = rec["split"]
+            rec["delta_abs_error"] = float(rec["delta_abs_error"])
+        cands = [c for c in (fam.get("promoted") or [])]
+        if not cands:
+            cands = sorted({r["candidate"] for r in ledger if r["split"] == "test"})[:3]
+        figure_error_distribution(ledger, fig_dir / "error_distribution.png", cands)
+    mech_path = C.ANALYSIS / "mechanism_summary.json"
+    if mech_path.exists():
+        figure_mechanism(json.loads(mech_path.read_text()), fig_dir / "mechanism_vs_gain.png")
+    return {"figures": sorted(p.name for p in fig_dir.glob("*.png"))}
+
+
+def run(stage: str = "all") -> dict[str, Any]:
+    out: dict[str, Any] = {"created_utc": C.utcnow(), "stage": stage}
+    if stage in ("core", "all"):
+        out["core"] = run_core()
+    if stage in ("ledger", "all"):
+        out["ledger"] = run_ledger()
+    if stage in ("figures", "all"):
+        out["figures"] = run_figures()
+    C.log(f"[analyze] {stage}: {str(out)[:400]}")
+    return out
