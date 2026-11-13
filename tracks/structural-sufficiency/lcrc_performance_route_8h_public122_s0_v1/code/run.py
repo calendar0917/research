@@ -165,9 +165,9 @@ def _smoke(datasets: Sequence[str], candidates: Sequence[str], device: str) -> d
             out["runs"][f"{cand}__{ds}"] = {
                 "train_json": C.track_rel(out_dir / "train.json"),
                 "metrics": payload["metrics"],
-                "params": payload["model"]["parameters"],
-                "shared_init_bitwise_equal": payload["model"]["shared_init_bitwise_equal"],
-                "curve_rows": payload["recipe"]["epochs_run"],
+                "params": (payload.get("model") or {}).get("parameters"),
+                "shared_init_bitwise_equal": (payload.get("model") or {}).get("shared_init_bitwise_equal"),
+                "curve_rows": (payload.get("recipe") or {}).get("epochs_run"),
             }
     C.write_json(C.ANALYSIS / "smoke.json", out)
     return out

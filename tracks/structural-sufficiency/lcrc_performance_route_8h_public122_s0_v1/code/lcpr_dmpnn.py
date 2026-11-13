@@ -229,6 +229,17 @@ class DMPNNReference(nn.Module):
         return self.predictor(g).reshape(-1)
 
 
+def load_feat(path: str | Path) -> dict[str, np.ndarray]:
+    """Materialise the feature archive once.
+
+    ``np.load`` on an ``.npz`` returns lazy members that re-decompress on *every*
+    ``__getitem__``; batching then costs seconds per call.  All arrays used here
+    are small (Lipophilicity: 1.6 MB), so they are loaded eagerly.
+    """
+    with np.load(path, allow_pickle=False) as z:
+        return {k: np.asarray(z[k]) for k in z.files}
+
+
 def _batch(feat: Mapping[str, np.ndarray], rows: Sequence[int], device) -> BatchMolGraph:
     """Batch a set of *global* row ids; handles arbitrary (non-contiguous) rows."""
     ap = np.asarray(feat["mol_atom_ptr"])
@@ -353,7 +364,7 @@ def train_dmpnn(*, candidate: str, dataset: str, device, out_dir: Path, smoke: b
         raise SystemExit("formal run requested on a dirty tracked worktree; commit first")
 
     feat_info = build_features(dataset)
-    feat = np.load(featurize_path(dataset), allow_pickle=False)
+    feat = load_feat(featurize_path(dataset))
     tgt = D.targets(dataset, include_test=True)
     tnorm = tgt["target_norm"]
     train_rows = np.asarray(tgt["rows"]["train"], np.int64)
