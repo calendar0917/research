@@ -1,0 +1,110 @@
+# Frozen experiment configuration.
+# Round: lcrc-performance-route-8h-public122-s0-v1
+# Design date: 2026-11-13 (Asia/Shanghai)
+# Mirrors code/lcpr_common.py (authoritative) and PROTOCOL.md.
+# Changing any scientific definition here after a run has started is a bug.
+
+protocol_id: lcrc-performance-route-8h-public122-s0-v1
+track: tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1
+
+budget:
+  wall_soft_hours: 8
+  wall_hard_hours: 8
+  gpu_soft_hours: 14
+  gpu_hard_hours: 16
+  max_new_trainings: 64
+  seeds: [0]
+  hosts: {res: [res-gpu0, res-gpu1]}
+  forbidden: [res-2, multiple seeds, new random splits, PCQM/PCBA large-scale training, 123/124 repeats]
+
+data:
+  feature_spec_hash: 7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee
+  input_widths: {atom_feat: 51, bond_feat: 13, atom_scalar: 9, global: 42, s1: 80, s2_path: 400}
+  structure_caches: lcrc_molnet_benchmark_pilot_v2/cache/<dataset>_<split>.pt (read-only, label-free)
+  datasets:
+    Lipophilicity: {task: regression, split: random122, sizes: [3360, 420, 420], primary: rmse, units: logD}
+    ESOL: {task: regression, split: random122, sizes: [902, 113, 113], primary: rmse, units: logmol_per_L}
+    BACE: {task: binary, split: scaffold122, sizes: [1210, 151, 152], primary: roc_auc}
+    FreeSolv: {task: regression, split: random122, sizes: [513, 64, 65], primary: rmse, units: kcal_per_mol}
+    ogbg-molhiv: {task: binary, split: ogb_official_scaffold, sizes: [32901, 4113, 4113], primary: roc_auc}
+  per_epoch_evaluation: [train_full, valid_full, test_full]
+  eval_mode: "model.eval() + no_grad, RNG and module mode saved/restored"
+  normalisation: Train-only for structure, target and auxiliary targets
+  test_usage: "DEVELOPMENT_TEST / TEST_USED_FOR_ROUTE_SELECTION; never selects an epoch"
+
+model:
+  C1: {variant: NO_BOND_MEAN, parameters: 228674, cfg: {width: 64, stat_rank: 32, local_hidden: 192, atom_hidden: 128, atom_out: 96, bond_hidden: 160, bond_out: 96, rho_hidden: 64}}
+  A0: {variant: FULL, parameters: 247106, role: mother model / historical bridge only}
+  init: "A0 FULL seed0 state -> remap_state(C1) for every C1-shaped arm; extensions private fork_rng"
+  dropout: {p: 0.10, location: final atom-level h, one call shared by f and rho}
+
+recipes:
+  shared: {optimizer: AdamW, betas: [0.9, 0.999], eps: 1.0e-8, min_lr: 1.0e-5, per_step_cosine: true,
+           clip: 5.0, batch_size: 128, epochs: 360, precision: fp32, ema_swa_soup: false,
+           early_stopping: false, shuffle_seed: 917000}
+  R0: {peak_lr: 3.0e-4, weight_decay: 1.0e-3}
+  R1: {peak_lr: 1.0e-3, weight_decay: 1.0e-3}
+  R2: {peak_lr: 3.0e-4, weight_decay: 1.0e-2}
+  R3: {peak_lr: 1.0e-3, weight_decay: 1.0e-2}
+  R*: "best Valid RMSE among the four C1 arms on Lipo; ties R0,R1,R2,R3; frozen before Stage B"
+  LONG: {epochs: 720, cosine_horizon: 720, from_scratch: true}
+  HIV: {epochs: 160, cosine_horizon: 160, early_stopping: false}
+  DMPNN: {batch_size: 64, optimizer: Adam, epochs: 100, warmup_epochs: 2, init_lr: 1.0e-4,
+          min_lr: 1.0e-4, decay: exponential_after_warmup, weight_decay: 0.0, clip: 5.0,
+          peaks: [3.0e-4, 1.0e-3]}
+
+candidates:
+  C1_R0: {kind: c1, family: VANILLA, recipe: R0}
+  C1_R1: {kind: c1, family: VANILLA, recipe: R1}
+  C1_R2: {kind: c1, family: VANILLA, recipe: R2}
+  C1_R3: {kind: c1, family: VANILLA, recipe: R3}
+  WIDE_LOCAL: {kind: wide_local, family: WIDE, recipe: "R*", local_hidden: 384}
+  LONG: {kind: c1, family: LONG, recipe: "R*", epochs: 720}
+  A0_R0: {kind: a0, family: BRIDGE, recipe: R0}
+  A0_CHEM8_CONTRIB_R0: {kind: a0_combo, family: BRIDGE, recipe: R0}
+  K_COMBO: {kind: k_combo, family: K, recipe: "R*"}
+  C1_CHEM8: {kind: k_chem8, family: K, recipe: "R*"}
+  C1_CONTRIB: {kind: k_contrib, family: K, recipe: "R*"}
+  M_UNBIASED: {kind: m_unbiased, family: M, recipe: "R*"}
+  M_CLEANPOOL: {kind: m_cleanpool, family: M, recipe: "R*"}
+  M_NODROP: {kind: m_nodrop, family: M, recipe: "R*", dropout: 0.0}
+  S_SELECT_K1: {kind: s_select, family: S, recipe: "R*", kappa_mult: 1.0}
+  S_UNIFORM_K1: {kind: s_uniform, family: S, recipe: "R*", kappa_mult: 1.0}
+  S_SELECT_K4: {kind: s_select, family: S, recipe: "R*", kappa_mult: 4.0}
+  S_UNIFORM_K4: {kind: s_uniform, family: S, recipe: "R*", kappa_mult: 4.0}
+  A_LOGP: {kind: a_logp, family: A, recipe: "R*", lambda: 0.1, aux: WC_LOGP}
+  A_MW: {kind: a_mw, family: A, recipe: "R*", lambda: 0.1, aux: MolWt}
+  A_SHUFFLE: {kind: a_shuffle, family: A, recipe: "R*", lambda: 0.1, aux: "WC_LOGP Train-row permutation, seed 90217"}
+  MP_CONTEXT: {kind: mp_context, family: CTX, recipe: "R*", trigger_only: true}
+  POOL_CONTEXT: {kind: pool_context, family: CTX, recipe: "R*", trigger_only: true}
+  DMPNN_LR3E4: {kind: dmpnn, family: DMPNN, recipe: D1}
+  DMPNN_LR1E3: {kind: dmpnn, family: DMPNN, recipe: D2}
+
+support_rule:
+  key: [path_cat, path_end63]
+  c_key: number of distinct Train molecules containing the key at least once
+  kappa: max(1, median over occupied keys of c)
+  kappa_strong: 4 * kappa
+  a_root: mean over paths rooted at r of c/(c+kappa); 1 if the root has no path
+  select: "J_r = J_marg_r + a_r*(J_full_r - J_marg_r)"
+  uniform: "same formula with a_r replaced by the Train-global mean a_bar(kappa)"
+  endpoints: {alpha_1: FULL, alpha_0: B5 marginal_bt2}
+  detached: false
+
+auxiliary_rule:
+  heads: {q_aux: [64, 64, 1] sum, rho_aux: [171, 64, 1]}
+  lambda: 0.1
+  dropout: none extra, same h and dropout mask as the main head
+  train_only: true
+  val_test_labels_untouched: true
+
+selection:
+  clear_signal: {test_rel_rmse_gain_min: 0.01, valid_rel_rmse_gain_min: -0.005, mae_degradation_max: 0.01}
+  family_ranking: [min(gain_valid, gain_test), mean_mae_gain, fewer_params, id]
+  max_transfer_families: 2
+  transfer_rule: {esol_rel_rmse_gain_min: 0.01, bace_auc_gain_min: 0.005, regression_reverse_max: 0.02, auc_reverse_max: 0.01}
+  context_trigger: {dmpnn_rel_rmse_advantage_min: 0.03}
+  bootstrap: {replicates: 2000, seed: 20261113, lipo: eval_component, other: scaffold_cluster, binary: stratified_row}
+  tail_fractions: [0.01, 0.05]
+
+figures: [performance_cost, error_distribution, mechanism_vs_gain, cross_task_route_matrix]
