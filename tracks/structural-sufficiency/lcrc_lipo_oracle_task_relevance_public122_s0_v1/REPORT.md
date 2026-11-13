@@ -213,3 +213,124 @@ universal chemistry mechanism for experimental logD, which still lacks rewire la
 small-n families, one checkpoint/one initialisation, and the non-zero (if small) MolWt movement.
 
 **Stop.** After this round: no third property, no seventh structure, no extra seed, no PNA, no large dataset.
+
+---
+
+## 6. Revision note — method formalisation and weighting integration (zero training, zero inference)
+
+Appended after the round closed, as a **non-destructive** note. No stored number, protocol,
+checkpoint or figure of §1–§5 is changed; nothing here re-trains, re-infers or re-intervenes.
+
+**New material** (all in `analysis/synthesis/`, plus one table and two scripts):
+
+| file | content |
+|---|---|
+| `analysis/synthesis/METHOD.md` | the C1 computation exactly as executed (incl. target de-standardisation), the verifiable local sufficient signature `S_v` (blocks A–F), the two derived properties with short proofs, the eight-cell intervention, dose control, parameter checks, task references and their differences |
+| `analysis/synthesis/CLAIMS_EVIDENCE.md` | the five fixed claim rows (claim / direct evidence / scope / not yet supported) + four generalisation boundaries, each linked to a concrete table, JSON field or code path |
+| `analysis/synthesis/WEIGHTING_NOTE.md` | the weighting and denominator note (molecule vs pair/view, pooled split/scope/dedup, 1810 vs 844, 62/110 vs 164/533, the MolWt arithmetic identity) |
+| `analysis/synthesis/MENTOR_BRIEF.md` | one-to-two-page Chinese brief: what changed in our understanding, what is closed, what cannot yet be claimed, what a stronger paper claim would need |
+| `analysis/synthesis/PAPER_SECTION.md` | Chinese and English results paragraphs with the boundaries and counter-examples inside the text |
+| `analysis/weighted_response.csv` + `.json` | the additional molecule-weighted response table (see below) |
+| `analysis/fig_method_flow.png` | method flow: real structure → explicit local statistics → frozen C1 forward → task references, with the traceability relation |
+| `analysis/fig_evidence_layers.png` | three-layer evidence chain (real structure → real input signature → model computation) with the task references and the three fixed counter-examples |
+| `code/weighted_response.py`, `code/method_figures.py` | the two new stages (`run.py --stages weighted,method_figures`) |
+
+### 6.1 Weighting, stated instead of implied
+
+`partB_*_metrics.json` carries two response statistics with **different weights**:
+`delta_mae`/`gain`/`baseline_zero_change` use `analysis.molecule_means`
+(molecule → instance → control → donor), while `abs_delta_pred.{mean,median,p95,max}`
+are computed from a flattened array of the T and K views of every selected pair.
+Both are legitimate; §1–§5 quoted the MolWt mean from the flattened array and the
+WC_LOGP gain from the hierarchical one without saying so.
+
+`analysis/weighted_response.csv` now states both side by side for every
+task × split × family (plus one `POOLED` row per task/split). The original files are
+untouched; the flat columns are recomputed and reproduce the committed ones exactly
+(`flat_block_reproduced_max_abs_gap = 0.0`), as do `delta_mae`
+(`delta_mae_max_abs_gap_vs_committed = 0.0`) and its bootstrap interval
+(`delta_mae_ci95_reproduced_max_abs_gap = 0.0`, i.e. the same frozen draws were reused).
+
+The MolWt arithmetic check passes in all 24 cells
+(`molwt_identity_all_cells = true`, max gap `0.0`): with `Δref ≡ 0`, the hierarchical
+delta-MAE **must** equal the molecule-weighted `mean|Δp|`. WC_LOGP does not satisfy it
+(`wc_logp_identity_holds = false`), which is the expected direction.
+
+Consequences for the text of §1–§5 (numbers themselves unchanged):
+
+| §1–§5 statement | status after the check | molecule-weighted value |
+|---|---|---|
+| §3.3 "Pooled over Test: mean\|Δpred\| = 0.246 vs mean\|Δref\| = 0.241, mean\|Δpred−Δref\| = 0.072" | **T-view only, pair-weighted**, previously unlabelled | 0.1846 / 0.1723 / 0.0557 (T+K pair/view: 0.1914 / 0.1845 / 0.0560) |
+| §3.4 "Pooled Test mean \|Δpred\| = 1.81 g/mol" | **T-view only, pair-weighted** | **1.3293 g/mol = 0.01228·σ_train** (σ_train = 108.294) |
+| §3.4 per-family mean \|Δpred\| 0.91–1.85 g/mol | pair/view | 0.9045–1.9214 g/mol = 0.0084–0.0177·σ_train |
+| §1 Q4 "≤ 0.054·std at p95 for every family" | **does not reproduce**: 0.0536 is aryl-ether's **max**/σ; the largest **p95**/σ is 0.0425 (sulfonamide) | molecule-weighted p95/σ ≤ 0.0269 |
+
+The worst individual case stays in the statistics (not trimmed): `sulfonamide:1275:1:0:d9-14`,
+T view, `|Δpred| = 14.2353 g/mol = 0.1315·σ_train`; the same family's molecule-weighted
+mean is 1.9214 g/mol.
+
+### 6.2 Run status, kept as it happened
+
+The `rr` job records are **not** rewritten. The honest layering is:
+
+1. **Training completed and checkpoints exist** — `runs/wc_logp/{best,last}.pt`,
+   `runs/molwt/{best,last}.pt`, `train.json`, `curve.csv` (revision `7bf4774f`).
+   Both `train.json` show the two target norms, 360 epochs, and the shared init/batch order.
+   Naming the location precisely: this round's `.gitignore` excludes `runs/`, so the checkpoints
+   and `train.json` live in the **local execution tree** and are not in Git. The committed
+   evidence for the same training is `analysis/partB_{wc_logp,molwt}_metrics.json`
+   (train/valid/test metrics recomputed in `evaluate`, with
+   `original_graph_metrics.crosscheck_vs_train_json.pass = true`, i.e. the committed numbers
+   reproduce `train.json` to ≤ 3.2e-6) plus `analysis/analysis_checks.json::shared_recipe`.
+2. **The remote `evaluate` stage failed** on host `res` because that torch environment has no
+   `rdkit`; evaluation is forward-only, so it was re-run locally on CPU (revision `7bf4774f`).
+   The failed job status is preserved rather than converted to `success`.
+3. **Local CPU evaluation completed** — `partB_{wc_logp,molwt}_{metrics,pairs,runtime}.json/csv`,
+   with `device: "cpu"` recorded in `partB_*_runtime.json`.
+4. The first `molwt` launch also aborted before any optimiser step (the pool `res-gpu1` already
+   narrows `CUDA_VISIBLE_DEVICES`, so `--device cuda:1` was invalid); it produced no output and
+   the affected part was re-run with `cuda:0`. This is an implementation error, not a
+   scientific re-tuning.
+
+**Corrected reproduction commands** (documentation only; nothing was launched for this note).
+Split training and evaluation so the remote host never needs RDKit, and use the pool's logical
+`cuda:0` on both cards:
+
+```bash
+# 1) remote, train only (one process per card; the pool already pins the card)
+rr run res --pool res-gpu0 --experiment lipo-oracle-wclogp-s0 \
+  --result tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/analysis \
+  --result tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/runs \
+  -- python tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/code/run.py \
+     --stages train --task wc_logp --device cuda:0
+rr run res --pool res-gpu1 --experiment lipo-oracle-molwt-s0 \
+  --result tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/analysis \
+  --result tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/runs \
+  -- python tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/code/run.py \
+     --stages train --task molwt --device cuda:0      # logical device inside the pool
+
+# 2) local CPU: evaluate, statistics, figures, and this note's material
+uv run python tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/code/run.py \
+  --stages evaluate --task wc_logp --device cpu
+uv run python tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/code/run.py \
+  --stages evaluate --task molwt --device cpu
+uv run python tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/code/run.py \
+  --stages analysis,figures
+uv run python tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/code/run.py \
+  --stages weighted,method_figures      # zero training, zero inference
+```
+
+The `sys.path` ordering fix that makes this round's `analysis.py`/`figures.py` shadow the
+source round's same-named modules is kept as committed in `round_common.py`; this note does not
+refactor it.
+
+### 6.3 What this note does not do
+
+No new training, no new model inference, no new intervention, no new seed/property/group/dataset/
+channel ablation/model comparison/probe/hyper-parameter search, **GPU = 0**, CPU ≈ 15 s
+(two stages). No PR, no unrelated work, and the user's untracked
+`lcrc_lipo_route_clarification_v1/code/lr_dispatch.py` was not touched.
+
+After this note the round is still **stopped**: the five claim rows of
+`analysis/synthesis/CLAIMS_EVIDENCE.md` are the maximum the current evidence supports, and every
+gap listed there needs a new experiment round (not a re-run of this one).

@@ -11,6 +11,10 @@ Examples::
 
     # Stage C (local CPU): statistics, figures
     uv run python tracks/.../code/run.py --stages analysis,figures
+
+    # Stage D (local CPU, zero training / zero inference): the method + weighted
+    # response material (this round's integration deliverable)
+    uv run python tracks/.../code/run.py --stages weighted,method_figures
 """
 
 from __future__ import annotations
@@ -22,7 +26,7 @@ from typing import Sequence
 
 import round_common as RC
 
-STAGES = ("partA", "oracle", "train", "evaluate", "analysis", "figures")
+STAGES = ("partA", "oracle", "train", "evaluate", "analysis", "figures", "weighted", "method_figures")
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -56,6 +60,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif stage == "analysis":
             import analysis
             rc = analysis.main([])
+        elif stage == "weighted":
+            import weighted_response
+            rc = weighted_response.main(["--splits", args.splits])
+        elif stage == "method_figures":
+            import method_figures
+            rc = method_figures.main([])
         else:
             import figures
             rc = figures.main([])

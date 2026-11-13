@@ -184,3 +184,69 @@ def test_coverage_never_calls_links_molecules():
     assert "c_links_all_families" in total
     assert total["c_links_all_families"] == 539
     assert total["c_unique_views_all_families"] < total["c_links_all_families"]
+
+
+# ---------------------------------------------------------------------------
+# weighted-response table (method/口径 integration): arithmetic, not new gates
+# ---------------------------------------------------------------------------
+
+
+def _weighted_rows() -> list[dict]:
+    return RC.read_csv(RC.NEW_ANALYSIS / "weighted_response.csv")
+
+
+def _as_bool(v) -> bool:
+    return str(v).strip() in ("1", "True", "true")
+
+
+def test_weighted_response_molwt_identity_and_committed_alignment():
+    """MolWt has Delta_ref == 0, so the hierarchical delta-MAE and the
+    molecule-weighted mean |Delta_pred| must be the same number; and the
+    recomputed delta-MAE must equal the committed metrics to machine precision.
+    """
+    rows = _weighted_rows()
+    assert rows, "weighted_response.csv is missing"
+    molwt = [r for r in rows if r["task"] == "molwt"]
+    assert molwt and all(_as_bool(r["check_molwt_identity"]) for r in molwt)
+    for r in molwt:
+        assert abs(float(r["abs_delta_pred_mean_mol"]) - float(r["delta_mae_mol"])) <= 1e-12
+    wc = [r for r in rows if r["task"] == "wc_logp"]
+    assert not any(_as_bool(r["check_molwt_identity"]) for r in wc), "WC_LOGP cannot satisfy the zero-reference identity"
+    # POOLED cells have no committed counterpart; every family cell must match
+    family_rows = [r for r in rows if r["family"] != "POOLED"]
+    assert family_rows and all(_as_bool(r["check_delta_mae_vs_committed"]) for r in family_rows)
+    pooled_rows = [r for r in rows if r["family"] == "POOLED"]
+    assert pooled_rows and all(str(r["check_delta_mae_vs_committed"]).strip() == "" for r in pooled_rows)
+
+
+def test_weighted_response_keeps_flat_and_molecule_weighting_separate():
+    """The flat (pair/view) description must be preserved and must not be
+    silently identical to the molecule-weighted one for WC_LOGP."""
+    rows = _weighted_rows()
+    for r in rows:
+        assert r["weight_scheme"].startswith("molecule -> instance")
+        assert "pair/view" in r["notes"] or "main CF" in r["notes"]
+    wc_test = [r for r in rows if r["task"] == "wc_logp" and r["split"] == "test"]
+    pooled = [r for r in wc_test if r["family"] == "POOLED"][0]
+    flat = float(pooled["abs_delta_pred_mean_pairview"])
+    mol = float(pooled["abs_delta_pred_mean_mol"])
+    t_only = float(pooled["abs_delta_pred_mean_T_pairview"])
+    assert mol < flat < t_only  # three different weightings, none overwritten
+    meta = RC.read_json(RC.NEW_ANALYSIS / "weighted_response.json")
+    assert meta["new_training"] == 0 and meta["new_model_inference"] == 0
+    assert meta["checks"]["flat_block_reproduced_max_abs_gap"] == 0.0
+    assert meta["checks"]["delta_mae_ci95_reproduced_max_abs_gap"] == 0.0
+
+
+def test_weighted_response_denominators_are_labelled():
+    """1810 is the Valid+Test main-CF pair count, not a Test molecule count;
+    the Test main queue is 844 pairs and molecules overlap across families."""
+    meta = RC.read_json(RC.NEW_ANALYSIS / "weighted_response.json")
+    legacy = meta["checks"]["legacy_pooled_numbers_are_T_view_only"]
+    assert 1.81 < legacy["molwt_test_POOLED_T_only_mean_abs_dpred"] < 1.82
+    assert 1.32 < legacy["molwt_test_POOLED_mean_abs_dpred_molecule"] < 1.34
+    rows = _weighted_rows()
+    test_pooled = [r for r in rows if r["task"] == "molwt" and r["split"] == "test" and r["family"] == "POOLED"][0]
+    assert int(test_pooled["n_pairs"]) == 844
+    assert "POOLED" in test_pooled["notes"]
+    assert "not the mean of family means" in test_pooled["notes"].lower() or "NOT the mean of family means" in test_pooled["notes"]
