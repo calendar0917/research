@@ -208,6 +208,10 @@ HIV_EPOCHS = 160
 
 EVAL_BATCH_SIZE = 4096
 REPRO_TOL_PRED = 2e-5
+#: relative tolerance for the "reloaded best checkpoint" self-check (float32
+#: reduction order may differ by a few ULP between the tracked epoch value and
+#: the replay from disk; science-inert, but must not be silently huge)
+CHECKPOINT_RECHECK_TOL = 1e-6
 PARITY_TOL = 1e-6
 
 #: ---------------------------------------------------------------------------

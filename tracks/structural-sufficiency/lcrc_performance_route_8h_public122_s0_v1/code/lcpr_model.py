@@ -190,6 +190,7 @@ class RouteLCRC(nn.Module):
         *,
         return_aux: bool = False,
         force_p_zero: bool = False,
+        h_override: torch.Tensor | None = None,
     ):
         n_graphs = int(batch["n_graphs"])
         atom_batch = batch["atom_batch"]
@@ -202,7 +203,9 @@ class RouteLCRC(nn.Module):
             h_clean = h_clean + self.W_out(F.silu(self.W_self(h_clean) + c_v))
 
         p = 0.0 if force_p_zero else self.dropout_p
-        if self.training and p > 0:
+        if h_override is not None:
+            d = h_override
+        elif self.training and p > 0:
             d = F.dropout(h_clean, p=p, training=True)
         else:
             d = h_clean

@@ -442,8 +442,9 @@ def train_candidate(
     model.load_state_dict({k: v.to(device) for k, v in best_state.items()})
     best_preds = evaluate_all(model, eval_caches, device, path_counts)
     best_metrics = {s: split_metrics(task, best_preds[s], tgt["y"][s], tnorm) for s in C.SPLITS}
+    #: the checkpoint round-trip may reorder float32 reductions by a few ULP
     recheck = abs(primary_value(task, best_metrics["valid"]) - float(best_value))
-    if recheck > 1e-9:
+    if recheck > C.CHECKPOINT_RECHECK_TOL * max(abs(float(best_value)), 1.0):
         raise RuntimeError(f"reloaded best checkpoint Valid metric differs by {recheck}")
 
     model.load_state_dict({k: v.to(device) for k, v in last_state.items()})
