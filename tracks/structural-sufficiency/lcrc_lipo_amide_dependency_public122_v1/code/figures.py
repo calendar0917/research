@@ -124,7 +124,7 @@ def draw_case(case: Mapping[str, Any], raw_row: Mapping[str, Any], out_path: Pat
         roles[n] = "N"
         roles[acyl] = "acylC"
 
-    fig, ax = plt.subplots(figsize=(9.6, 7.6), dpi=160)
+    fig, ax = plt.subplots(figsize=(10.4, 8.8), dpi=160)
     # highlighted bonds first (thick underlay)
     for pair, color in [(t, "#e02020") for t in targets] + [(k, "#2050e0") for k in controls]:
         p0, p1 = pos[pair[0]], pos[pair[1]]
@@ -159,21 +159,41 @@ def draw_case(case: Mapping[str, Any], raw_row: Mapping[str, Any], out_path: Pat
                 zorder=5,
             )
 
+    def _scope_values(scope: str, inst: Mapping[str, Any]) -> str:
+        b = inst["scopes"][scope]
+        return (
+            f"f(O)={b['pred_O']:+7.3f}  f(T)={b['pred_T']:+7.3f}  f(K)={b['pred_K']:+7.3f}   "
+            f"err O/T/K = {b['err_O']:.3f}/{b['err_T']:.3f}/{b['err_K']:.3f}"
+        )
+
+    inst_ids = set(case["instances_in_population"])
     lines = [
-        f"row {case['row_id']}   y = {case['y']:.3f} logD   (Test, MATCHED, FULL)",
-        f"f(O) = {case['instances'][0]['pred_O']:.3f}    f(T: cut c-N) = {case['instances'][0]['pred_T']:.3f}    "
-        f"f(K: cut c-acylC) = {case['instances'][0]['pred_K']:.3f}",
-        f"B = LT - L0 = {case['B']:.3f}    D = LT - LK = {case['D']:.3f}    "
-        f"({case['tag']}, D rank {case['D_rank']}/{case['n_molecules']})",
-        "red = target amide C-N bond (T),  blue = matched control C-C bond (K)",
+        f"row {case['row_id']}   y = {case['y']:.3f} logD   (Test, MATCHED, "
+        f"ranking scope {case['ranking_scope']})",
+    ]
+    for inst in case["instances"]:
+        used = "in loss" if inst["instance_id"] in inst_ids else "not in loss"
+        lines.append(f"instance {inst['instance_id']} ({used}, matched={inst['matched']})")
+        for scope in C.SCOPES:
+            tag = "FULL   " if scope == "FULL" else "G_FIXED"
+            lines.append(f"  {tag} {_scope_values(scope, inst)}")
+    full, gf = case["scopes"]["FULL"], case["scopes"]["G_FIXED"]
+    lines += [
+        f"molecule loss  FULL   : L0={full['L0']:.3f} LT={full['LT']:.3f} LK={full['LK']:.3f} "
+        f"B={full['B']:+.3f} D={full['D']:+.3f}",
+        f"molecule loss  G_FIXED: L0={gf['L0']:.3f} LT={gf['LT']:.3f} LK={gf['LK']:.3f} "
+        f"B={gf['B']:+.3f} D={gf['D']:+.3f}",
+        f"({case['tag']}, D rank {case['D_rank']}/{case['n_molecules']}; "
+        f"red = target amide C-N (T), blue = matched control C-C (K))",
+        "drawn from the measured molecule; masked graphs are not depicted as compounds",
     ]
     ax.text(
-        0.01,
-        -0.045,
+        0.005,
+        0.005,
         "\n".join(lines),
         transform=ax.transAxes,
-        fontsize=9.2,
-        va="top",
+        fontsize=8.4,
+        va="bottom",
         ha="left",
         family="monospace",
     )
@@ -181,7 +201,7 @@ def draw_case(case: Mapping[str, Any], raw_row: Mapping[str, Any], out_path: Pat
     ys = [p[1] for p in pos.values()]
     pad = 1.2
     ax.set_xlim(min(xs) - pad, max(xs) + pad)
-    ax.set_ylim(min(ys) - pad - 0.6, max(ys) + pad)
+    ax.set_ylim(min(ys) - pad - 2.4, max(ys) + pad)
     ax.set_aspect("equal")
     ax.axis("off")
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -198,8 +218,8 @@ def draw_case(case: Mapping[str, Any], raw_row: Mapping[str, Any], out_path: Pat
         "control_bonds": controls,
         "instances": case["instances"],
         "y": case["y"],
-        "B": case["B"],
-        "D": case["D"],
+        "ranking_scope": case["ranking_scope"],
+        "scopes": case["scopes"],
         "bond_styles": {f"{u}-{v}": _BOND_NAMES.get(int(k), "unknown") for (u, v), k in seen.items()},
     }
 

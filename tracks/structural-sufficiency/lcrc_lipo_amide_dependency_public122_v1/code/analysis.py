@@ -41,6 +41,42 @@ G_FIXED = "G_FIXED"
 # ---------------------------------------------------------------------------
 
 
+def inference_gate_summary(checks: Mapping[str, Any]) -> dict[str, Any]:
+    """Compact copy of the frozen-inference gates recorded by infer.py."""
+    baseline = checks.get("baseline", {}) or {}
+    state = checks.get("state_identity", {}) or {}
+    perm = checks.get("permutation", {}) or {}
+    per_split = {
+        split: {
+            "n": d.get("n"),
+            "rmse_raw": d.get("rmse_raw"),
+            "rmse_diff": d.get("rmse_diff"),
+            "mae_raw": d.get("mae_raw"),
+            "mae_diff": d.get("mae_diff"),
+            "max_abs_pred_diff_vs_reference": d.get("max_abs_pred_diff_vs_reference"),
+        }
+        for split, d in (baseline.get("per_split", {}) or {}).items()
+    }
+    return {
+        "pass": bool(checks.get("pass")),
+        "baseline_pass": bool(baseline.get("pass")),
+        "baseline_tolerance": baseline.get("tolerance"),
+        "baseline_per_split": per_split,
+        "permutation_pass": bool(perm.get("pass")),
+        "permutation_max_abs_pred_diff": max(
+            (float(m.get("max_abs_pred_diff", 0.0)) for m in perm.get("molecules", []) or []),
+            default=None,
+        ),
+        "state_hash_before": state.get("state_hash_before"),
+        "state_hash_after": state.get("state_hash_after"),
+        "norm_fingerprint_unchanged": state.get("norm_fingerprint_before")
+        == state.get("norm_fingerprint_after"),
+        "optimizer_created": state.get("optimizer_created"),
+        "backward_calls": state.get("backward_calls"),
+        "model_training_steps": state.get("model_training_steps"),
+    }
+
+
 def verify_protocol_inputs(analysis_dir: Path) -> dict[str, Any]:
     """The committed protocol inputs must be the bytes the inference consumed."""
     manifest = C.read_json(analysis_dir / "inputs_manifest.json")
@@ -417,61 +453,111 @@ def influence_checks(d: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def max_impact_case(
-    d: Mapping[str, Any],
-    *,
-    inst: Sequence[Mapping[str, Any]],
+def _instance_payload(
+    r: Mapping[str, Any],
+    rid: int,
     preds: Mapping[tuple[str, str], float],
     y: Mapping[int, float],
 ) -> dict[str, Any]:
+    scoped: dict[str, Any] = {}
+    # the O view is scope independent (FULL identical to G_FIXED, checked in infer.py)
+    po = float(preds[(f"{rid}:O", C.PRIMARY_SCOPE)])
+    for scope in C.SCOPES:
+        pt = float(preds[(str(r["view_t"]), scope)])
+        pk = float(preds[(str(r["view_k"]), scope)])
+        scoped[scope] = {
+            "pred_O": po,
+            "pred_T": pt,
+            "pred_K": pk,
+            "err_O": abs(po - float(y[rid])),
+            "err_T": abs(pt - float(y[rid])),
+            "err_K": abs(pk - float(y[rid])),
+        }
+    return {
+        "instance_id": str(r["instance_id"]),
+        "c": int(r["c"]),
+        "o": int(r["o"]),
+        "n": int(r["n"]),
+        "acyl_c": int(r["acyl_c"]),
+        "matched": int(r["matched"]),
+        "balanced": int(r["balanced"]),
+        "n_views_r": len(r["views_r"]),
+        "view_t": str(r["view_t"]),
+        "view_k": str(r["view_k"]),
+        "scopes": scoped,
+    }
+
+
+def _molecule_entry(
+    i: int,
+    *,
+    panels_by_scope: Mapping[str, Mapping[str, Any]],
+    pop_insts: Mapping[int, Sequence[Mapping[str, Any]]],
+    inst_by_row: Mapping[int, Sequence[Mapping[str, Any]]],
+    preds: Mapping[tuple[str, str], float],
+    y: Mapping[int, float],
+) -> dict[str, Any]:
+    rows = np.asarray(panels_by_scope[C.PRIMARY_SCOPE]["rows"], dtype=np.int64)
+    rid = int(rows[i])
+    scoped: dict[str, Any] = {}
+    for scope, d in panels_by_scope.items():
+        block = {
+            "L0": float(d["L0"][i]),
+            "LT": float(d["LT"][i]),
+            "LK": float(d["LK"][i]),
+            "B": float(d["B"][i]),
+            "D": float(d["D"][i]),
+        }
+        for k in ("LR", "B_R", "D_R"):
+            val = float(d[k][i])
+            block[k] = val if np.isfinite(val) else None
+        scoped[scope] = block
+    entry = {
+        "row_id": rid,
+        "y": float(y[rid]),
+        "n_population_instances": len(pop_insts.get(rid, [])),
+        "scopes": scoped,
+        "instances_in_population": [str(r["instance_id"]) for r in pop_insts.get(rid, [])],
+        "instances": [_instance_payload(r, rid, preds, y) for r in inst_by_row.get(rid, [])],
+    }
+    # convenience mirrors of the primary scope (kept so tables/figures degrade gracefully)
+    entry.update({k: scoped[C.PRIMARY_SCOPE][k] for k in ("L0", "LT", "LK", "B", "D")})
+    return entry
+
+
+def max_impact_case(
+    *,
+    panels_by_scope: Mapping[str, Mapping[str, Any]],
+    pop_insts: Mapping[int, Sequence[Mapping[str, Any]]],
+    inst_by_row: Mapping[int, Sequence[Mapping[str, Any]]],
+    preds: Mapping[tuple[str, str], float],
+    y: Mapping[int, float],
+    ranking_scope: str,
+) -> dict[str, Any]:
+    """Molecule with the largest |D| in ``ranking_scope`` (ties -> smallest row)."""
+    d = panels_by_scope[ranking_scope]
     rows = np.asarray(d["rows"], dtype=np.int64)
     D = np.asarray(d["D"], dtype=np.float64)
     order = sorted(range(rows.size), key=lambda i: (-abs(float(D[i])), int(rows[i])))
     i = order[0]
-    rid = int(rows[i])
-    insts = [r for r in inst if int(r["row_id"]) == rid]
-    view_rows = []
-    for r in insts:
-        view_rows.append(
-            {
-                "instance_id": str(r["instance_id"]),
-                "c": int(r["c"]),
-                "o": int(r["o"]),
-                "n": int(r["n"]),
-                "acyl_c": int(r["acyl_c"]),
-                "matched": int(r["matched"]),
-                "view_t": str(r["view_t"]),
-                "view_k": str(r["view_k"]),
-                "pred_O": float(preds[(f"{rid}:O", FULL)]),
-                "pred_T": float(preds[(str(r["view_t"]), FULL)]),
-                "pred_K": float(preds[(str(r["view_k"]), FULL)]),
-                "err_O": abs(float(preds[(f"{rid}:O", FULL)]) - float(y[rid])),
-                "err_T": abs(float(preds[(str(r["view_t"]), FULL)]) - float(y[rid])),
-                "err_K": abs(float(preds[(str(r["view_k"]), FULL)]) - float(y[rid])),
-            }
-        )
-    return {
-        "row_id": rid,
-        "y": float(y[rid]),
-        "L0": float(d["L0"][i]),
-        "LT": float(d["LT"][i]),
-        "LK": float(d["LK"][i]),
-        "B": float(d["B"][i]),
-        "D": float(d["D"][i]),
-        "n_instances": int(d["n_instances"][i]),
-        "instances": view_rows,
-    }
+    out = _molecule_entry(
+        i, panels_by_scope=panels_by_scope, pop_insts=pop_insts, inst_by_row=inst_by_row, preds=preds, y=y
+    )
+    out["ranking_scope"] = ranking_scope
+    return out
 
 
 def cases(
-    d: Mapping[str, Any],
+    panels_by_scope: Mapping[str, Mapping[str, Any]],
     *,
     inst: Sequence[Mapping[str, Any]],
+    population: str,
     preds: Mapping[tuple[str, str], float],
     y: Mapping[int, float],
     scaffold: Mapping[int, str],
 ) -> list[dict[str, Any]]:
-    """Median / max / min |D| (signed D median) cases of the main population."""
+    """Median / max / min signed-D molecules of the main population (primary scope)."""
+    d = panels_by_scope[C.PRIMARY_SCOPE]
     rows = np.asarray(d["rows"], dtype=np.int64)
     D = np.asarray(d["D"], dtype=np.float64)
     order = np.argsort(D, kind="stable")
@@ -481,6 +567,10 @@ def cases(
         ("max_D", int(np.argmax(D))),
         ("min_D", int(np.argmin(D))),
     ]
+    pop_insts = population_instances(inst, population)
+    inst_by_row: dict[int, list[Mapping[str, Any]]] = {}
+    for r in inst:
+        inst_by_row.setdefault(int(r["row_id"]), []).append(r)
     seen: set[int] = set()
     out: list[dict[str, Any]] = []
     for tag, i in cand:
@@ -488,41 +578,15 @@ def cases(
         if rid in seen:
             continue
         seen.add(rid)
-        insts = [r for r in inst if int(r["row_id"]) == rid]
-        out.append(
-            {
-                "tag": tag,
-                "row_id": rid,
-                "y": float(y[rid]),
-                "L0": float(d["L0"][i]),
-                "LT": float(d["LT"][i]),
-                "LK": float(d["LK"][i]),
-                "B": float(d["B"][i]),
-                "D": float(d["D"][i]),
-                "D_rank": int(np.where(order == i)[0][0]) + 1,
-                "n_molecules": int(rows.size),
-                "scaffold_key": scaffold.get(rid, ""),
-                "instances": [
-                    {
-                        "instance_id": str(r["instance_id"]),
-                        "c": int(r["c"]),
-                        "o": int(r["o"]),
-                        "n": int(r["n"]),
-                        "acyl_c": int(r["acyl_c"]),
-                        "matched": int(r["matched"]),
-                        "view_t": str(r["view_t"]),
-                        "view_k": str(r["view_k"]),
-                        "pred_O": float(preds[(f"{rid}:O", FULL)]),
-                        "pred_T": float(preds[(str(r["view_t"]), FULL)]),
-                        "pred_K": float(preds[(str(r["view_k"]), FULL)]),
-                        "err_O": abs(float(preds[(f"{rid}:O", FULL)]) - float(y[rid])),
-                        "err_T": abs(float(preds[(str(r["view_t"]), FULL)]) - float(y[rid])),
-                        "err_K": abs(float(preds[(str(r["view_k"]), FULL)]) - float(y[rid])),
-                    }
-                    for r in insts
-                ],
-            }
+        entry = _molecule_entry(
+            i, panels_by_scope=panels_by_scope, pop_insts=pop_insts, inst_by_row=inst_by_row, preds=preds, y=y
         )
+        entry["tag"] = tag
+        entry["D_rank"] = int(np.where(order == i)[0][0]) + 1
+        entry["n_molecules"] = int(rows.size)
+        entry["ranking_scope"] = C.PRIMARY_SCOPE
+        entry["scaffold_key"] = scaffold.get(rid, "")
+        out.append(entry)
     return out
 
 
@@ -626,11 +690,38 @@ def normalised_range_check(
                     "per_dim_max_excess": [float(x) for x in s_excess.max(axis=0)],
                 },
             }
-        out["per_split"][split] = {
+        # how far each global dimension moves when the bond is cut (same molecules)
+        rids = np.asarray([int(r["row_id"]) for _vid, _row, _k in entries])
+        o_index = {int(rid): j for j, (rid, k) in enumerate(zip(rids, kinds)) if k == "O"}
+        delta_rows = []
+        for j in np.flatnonzero(kinds == "cut"):
+            rid = int(rids[j])
+            if rid in o_index:
+                delta_rows.append(g[j] - g[o_index[rid]])
+        split_block: dict[str, Any] = {
             "view_cache_content_fingerprint": fp,
             "view_cache_fingerprint_matches_remote": bool(remote_fingerprints.get(split) in (None, fp)),
             "stats": stats,
         }
+        if delta_rows:
+            delta = np.vstack(delta_rows)
+            field_names = [f.name for f in spec.global_feature_fields]
+            mean_abs = np.abs(delta).mean(axis=0)
+            rank = np.argsort(-mean_abs)[: min(8, mean_abs.size)]
+            split_block["top_moving_global_dims"] = {
+                "n_pairs": int(delta.shape[0]),
+                "unit": "Train standard deviations of the frozen normalisation",
+                "dims": [
+                    {
+                        "index": int(i),
+                        "name": field_names[int(i)] if int(i) < len(field_names) else f"dim{i}",
+                        "mean_abs_change_sd": float(mean_abs[int(i)]),
+                        "mean_signed_change_sd": float(delta[:, int(i)].mean()),
+                    }
+                    for i in rank
+                ],
+            }
+        out["per_split"][split] = split_block
     return out
 
 
@@ -670,13 +761,7 @@ def main() -> int:
     uncertainty: dict[str, Any] = {
         "round_id": C.ROUND_ID,
         "protocol_inputs": verify_protocol_inputs(analysis_dir),
-        "inference_gates": {
-            "pass": bool(infer_checks.get("pass")),
-            "baseline_reproduction": infer_checks.get("baseline_reproduction"),
-            "permutation_check": infer_checks.get("permutation_check"),
-            "state_identity": infer_checks.get("state_identity"),
-            "zero_training": infer_checks.get("zero_training"),
-        },
+        "inference_gates": inference_gate_summary(infer_checks),
         "bootstrap_seed": C.BOOTSTRAP_SEED,
         "bootstrap_replicates": C.BOOTSTRAP_REPLICATES,
         "cluster_definition": "Bemis-Murcko scaffold (isomeric-flag-free canonical SMILES); "
@@ -767,21 +852,43 @@ def main() -> int:
                 "scopes": uncertainties,
             }
 
-    # ---- influence checks ----------------------------------------------
-    main_panel = panels[("MATCHED", "test", FULL)]
-    influence = influence_checks(main_panel)
-    influence["max_impact_case"] = max_impact_case(main_panel, inst=inst, preds=preds, y=y)
-    uncertainty["influence_main_MATCHED_test_FULL"] = influence
+    # ---- influence checks (fixed rule, applied to both frozen scopes) ----
+    main_panels = {scope: panels[("MATCHED", "test", scope)] for scope in C.SCOPES}
+    pop_insts = population_instances(inst, "MATCHED")
+    inst_by_row: dict[int, list[Mapping[str, Any]]] = {}
+    for r in inst:
+        inst_by_row.setdefault(int(r["row_id"]), []).append(r)
+    for scope in C.SCOPES:
+        influence = influence_checks(main_panels[scope])
+        influence["max_impact_case"] = max_impact_case(
+            panels_by_scope=main_panels,
+            pop_insts=pop_insts,
+            inst_by_row=inst_by_row,
+            preds=preds,
+            y=y,
+            ranking_scope=scope,
+        )
+        influence["ranking_scope"] = scope
+        uncertainty[f"influence_main_MATCHED_test_{scope}"] = influence
 
     # ---- case selection -------------------------------------------------
     case_rows = cases(
-        main_panel,
+        main_panels,
         inst=inst,
+        population="MATCHED",
         preds=preds,
         y=y,
         scaffold=scaffold,
     )
-    C.write_json(analysis_dir / "cases.json", {"main_population": "MATCHED/test/FULL", "cases": case_rows})
+    C.write_json(
+        analysis_dir / "cases.json",
+        {
+            "main_population": "MATCHED/test",
+            "ranking_scope": C.PRIMARY_SCOPE,
+            "note": "all instances of the molecule are listed; instances_in_population are the ones entering the loss",
+            "cases": case_rows,
+        },
+    )
 
     # ---- frozen normalisation range check --------------------------------
     raw_rows = C.load_raw_rows()["rows"]["Lipophilicity"]

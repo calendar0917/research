@@ -141,6 +141,7 @@ INFLUENCE_FRACTION = 0.05
 POPULATIONS = ("ALL", "MATCHED", "BALANCED", "R")
 MAIN_POPULATION = "MATCHED"
 SCOPES = ("FULL", "G_FIXED")
+PRIMARY_SCOPE = "FULL"
 VIEW_KINDS = ("O", "T", "K", "R")
 
 #: Instance-level structural rule constants (protocol section 3).
@@ -521,6 +522,7 @@ __all__ = [
     "POPULATIONS",
     "MAIN_POPULATION",
     "SCOPES",
+    "PRIMARY_SCOPE",
     "VIEW_KINDS",
     "MF_C_CLASS",
     "MF_AROMATIC_C_CLASS",
