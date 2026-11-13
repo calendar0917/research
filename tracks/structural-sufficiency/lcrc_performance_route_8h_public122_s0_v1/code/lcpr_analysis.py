@@ -542,9 +542,15 @@ def figure_performance_cost(summary: Mapping[str, Any], path: Path,
     ax[0].set_xlabel("Valid gain vs C1@R*  [%]")
     ax[0].set_ylabel("Test gain vs C1@R*  [%]")
     ax[0].set_title("(a) Valid and Test move against each other")
-    for label, key, colour in (("ECFP4+XGBoost", "xgboost", "#c53030"),
-                               ("D-MPNN", "dmpnn", "#2f855a")):
-        val = reference.get(key)
+    refs = [("ECFP4+XGBoost", reference.get("xgboost"), "#c53030")]
+    #: both D-MPNN learning-rate arms are reference coordinates: the Valid-best
+    #: and the Test-best one are the two ends of the same ambiguity, so plotting
+    #: only the Valid-selected one would hide the round's main finding
+    for tag, val in (reference.get("dmpnn_arms") or {}).items():
+        refs.append((f"D-MPNN {tag}", val, "#2f855a"))
+    if not (reference.get("dmpnn_arms")) and reference.get("dmpnn"):
+        refs.append(("D-MPNN", reference["dmpnn"], "#2f855a"))
+    for label, val, colour in refs:
         if not val or not reference.get("base_valid"):
             continue
         rx = (reference["base_valid"] - val["valid"]) / reference["base_valid"] * 100.0
@@ -833,6 +839,11 @@ def run_figures() -> dict[str, Any]:
     if dmp:
         dmpnn_best = min(dmp, key=lambda r: r["valid"]["rmse"])
         ref["dmpnn"] = {"valid": dmpnn_best["valid"]["rmse"], "test": dmpnn_best["test"]["rmse"]}
+        ref["dmpnn_arms"] = {
+            str(r["candidate"]).replace("DMPNN_", ""): {"valid": r["valid"]["rmse"],
+                                                       "test": r["test"]["rmse"]}
+            for r in dmp
+        }
     fig_dir = C.ANALYSIS / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
     figure_performance_cost(fam, fig_dir / "performance_cost.png", ref)
@@ -849,6 +860,11 @@ def run_figures() -> dict[str, Any]:
         winners = [(fam.get("families") or {}).get(f, {}).get("winner")
                    for f in (fam.get("promoted") or [])]
         cands = [c for c in winners if c]
+        #: the attribution arms of a promoted family are part of the story, so
+        #: they ride along in the error-distribution panel
+        for extra in ("C1_CHEM8", "C1_CONTRIB"):
+            if extra in {r["candidate"] for r in ledger if r["split"] == "test"}:
+                cands.append(extra)
         if not cands:
             cands = sorted({r["candidate"] for r in ledger if r["split"] == "test"})[:3]
         figure_error_distribution(ledger, fig_dir / "error_distribution.png", cands)

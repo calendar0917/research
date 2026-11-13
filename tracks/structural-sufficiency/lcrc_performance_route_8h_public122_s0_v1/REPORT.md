@@ -69,9 +69,9 @@ BACE（AUC）Valid +0.0121 但 Test −0.0029（一升一降）；FreeSolv Valid
 | A 配方筛选 | `C1_R0/R1/R2/R3` @ Lipophilicity | 4 |
 | B 家族与臂 | `WIDE_LOCAL`、`LONG`、`DMPNN_LR3E4`、`DMPNN_LR1E3`、`M_UNBIASED`、`M_CLEANPOOL`、`M_NODROP`、`S_SELECT_K1`、`S_UNIFORM_K1`、`S_SELECT_K4`、`S_UNIFORM_K4`、`A_LOGP`、`A_MW`、`A_SHUFFLE`、`K_COMBO` @ Lipophilicity | 15 |
 | C 桥接 | `A0_R0`、`A0_CHEM8_CONTRIB_R0` @ Lipophilicity | 2 |
-| D 归因 + 迁移 | `C1_CHEM8`、`C1_CONTRIB` @ Lipophilicity；`C1_R0/R1`、`K_COMBO` @ ESOL/BACE；`C1_R1`、`K_COMBO` @ FreeSolv | 10 |
-| E/F 迁移补点 | `K_COMBO_R1_T` @ ESOL、BACE（`R_task` 匹配） | 2 |
-| G 压力测试 | `C1_R1`、`K_COMBO` @ ogbg-molhiv（160 epoch） | 2 |
+| D 归因 | `C1_CHEM8`、`C1_CONTRIB` @ Lipophilicity（`K_COMBO` 的 2×2 拆分） | 2 |
+| E 迁移 | `C1_R0/R1` + `K_COMBO`（R0 与 `R_task`=R1 两种配方）@ ESOL、BACE；`C1_R1` + `K_COMBO` @ FreeSolv | 10 |
+| F 压力测试 | `C1_R1`、`K_COMBO` @ ogbg-molhiv（160 epoch，官方 scaffold） | 2 |
 
 冒烟（2 epoch，`runs/smoke/`）只用来验证插管成功，**不进任何表**。
 
@@ -106,7 +106,7 @@ BACE（AUC）Valid +0.0121 但 Test −0.0029（一升一降）；FreeSolv Valid
 | R3 | 0.6535 | **0.5670** | 0.3969 | 0.4123 |
 
 Valid 赢了 7.5 %，Test 倒退 0.8 %；Test 最好的 R3 在 Valid 上几乎与 R1 打平（0.6535 vs 0.6526）。
-**配方只解释了 Valid 侧 8 % 的方差，Test 侧 ≤2 %**，并且最好 Test 的配方并不是 Valid 选出来的那个。
+**配方只解释了 Valid 侧 8 % 的方差，Test 侧 ≤3 %**（R3 的 +2.90 %），并且最好 Test 的配方恰好不是 Valid 选出来的那个。
 
 ### 2.2 便宜的增容与加预算
 
@@ -232,7 +232,9 @@ Test 64 行有非零 ΔJ 的行）：
 
 ![mechanism](analysis/figures/mechanism_vs_gain.png)
 
-*图 2：左：J 块灵敏度 vs 行的 S2 键支撑度（对数轴）；右：|ΔJ| vs 平方误差变化——机制动得多 ≠ 误差降得多。*
+*图 2：左：J 块灵敏度 vs 行的 S2 键支撑度（对数轴）——注意 |ΔJ| 是**双峰**的（要么 0、要么 3–9），
+且在 6e3–3e4 的支撑度区间内没有趋势；右：|ΔJ| vs 平方误差变化——J 动得最多的那些行，误差变化反而最小
+（点集中在 |ΔJ|≈0 的竖线上，ΔSE 取值 ±2）。机制动得多 ≠ 误差降得多。*
 
 ### 3.3 机制 → 误差的链接表
 
@@ -357,6 +359,12 @@ HIV 的两个 run 是本轮最后完成的（每 epoch ~11–32 s，160 epoch）
 
 ---
 
+![error distribution](analysis/figures/error_distribution.png)
+
+*图 3：逐分子 |误差| 变化（`K_COMBO`、`C1_CHEM8`、`C1_CONTRIB` 相对基线，Test，负 = 更好）。
+三臂的中位数只移动 −0.005 ~ −0.017，5%/95% 分位是对称的 ±0.36 ~ ±0.47：**没有"少数行被救回来"的结构**，
+净增益来自均值 −0.013 ~ −0.019 的整体左移（改善行占比 51 % ~ 57 %）。*
+
 ## 6. 成本与实用性
 
 | 项 | `C1_R1` | `K_COMBO` | `DMPNN_LR3E4` |
@@ -390,7 +398,7 @@ HIV 的两个 run 是本轮最后完成的（每 epoch ~11–32 s，160 epoch）
 
 1. **单种子**。所有"增益"都是 seed 0 的单条轨迹；`K_COMBO` 的 p=0.069 在 420 行 Test 上本来就紧，
    多 seed 完全可能把它推到 0.2 或推到 0.02。本轮**不能**给出稳定性结论。
-2. **Valid/Test 反向是全轮的主旋律**（16 条臂里 9 条方向相反）。任何"按 Valid 选、报 Test"的流程
+2. **Valid/Test 反向是全轮的主旋律**（22 条臂里 **16 条**增益符号相反）。任何"按 Valid 选、报 Test"的流程
    在这套数据上都会系统性偏向过拟合的解；本轮冻结的 `min(gain_valid, gain_test)` 排序就是为了避免这一点，
    代价是几乎所有路线都被判为"不清晰"。
 3. **Test 参与了路线选择**（冻结规则允许，且已记录），因此 Test 数字是**乐观偏置**的，不能当留出集报。
@@ -450,7 +458,7 @@ uv run python code/run.py report
 | `analysis/mechanism_summary.json` | M/S 面板（256 次 mask、κ 扫描）与 link 表 |
 | `analysis/aux_head_eval.json` | aux 头对 WC_LOGP 的 R²（Q3 的关键否证） |
 | `analysis/tail_summary.json` | 尾部口径 |
-| `analysis/error_ledger.csv.gz` | 46 200 行逐分子误差账本（11 臂 × 3 split） |
+| `analysis/error_ledger.csv.gz` | 92 400 行逐分子误差账本（22 臂 × 3 split） |
 | `analysis/budget.json` | 计费 GPU·h、训练次数、每 job 明细 |
 | `analysis/run_table.{json,csv}` | 33 次正式训练的完整指标 |
 | `analysis/figures/*.png` | 图 1/2/3（性能-成本、机制-增益、误差分布） |
