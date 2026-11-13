@@ -7,7 +7,7 @@
 | 配置 | `configs/experiment.yaml`（与 `code/lcpr_common.py` 同源） |
 | 数据 | MoleculeNet Lipophilicity（ChemBench 发布的 `random122` 划分）、ESOL、BACE、FreeSolv、ogbg-molhiv（官方 scaffold） |
 | 训练种子 | 0（全部），无多 seed |
-| 预算消耗 | 33 次正式训练 + 20 次 2-epoch 冒烟；**2.51 A100·h**（软上限 14 / 硬上限 16） |
+| 预算消耗 | 35 次正式训练 + 20 次 2-epoch 冒烟；**4.53 A100·h**（软上限 14 / 硬上限 16） |
 | 结果标签 | `DEVELOPMENT_TEST` / `TEST_USED_FOR_ROUTE_SELECTION`（Test 只用于选路线，从不选 epoch） |
 | 性质 | 单种子、单轮；**不构成独立确认，也不构成跨 seed 稳定性证据** |
 
@@ -54,7 +54,8 @@ aux/main 梯度范数比 ≈ 0.23–0.26、余弦 ≈ +0.10；到第 4 个 epoch
 **Q4（增益是行级/任务特异，还是可迁移？）**
 `K_COMBO` 的增益**是 Lipophilicity 特异的**。同配方下 ESOL Valid −2.5 % / Test −1.1 %（都变差）；
 BACE（AUC）Valid +0.0121 但 Test −0.0029（一升一降）；FreeSolv Valid −8.3 % / Test +6.3 %
-（也是反向）；HIV（官方 scaffold）见 §5.3。行级上，`K_COMBO` 的 Test 增益**不是靠尾部**：去掉误差最大的
+（也是反向）；HIV（官方 scaffold，ROC-AUC）Valid +0.0005 / Test −0.0011——**打平，增益消失**。
+行级上，`K_COMBO` 的 Test 增益**不是靠尾部**：去掉误差最大的
 1 % 行后增益从 +4.57 % 变 +4.60 %，去掉 5 % 后 +4.94 %，`tail_only_gain=false`。
 配对 bootstrap（Test，2000 次、按分子簇重采样、seed 20261113）：K Δ=+0.0267，95 % CI
 [−0.0028, +0.0574]，p=0.069；Valid Δ=+0.0859，CI [−0.0048, +0.1934]，p=0.084——
@@ -64,7 +65,7 @@ BACE（AUC）Valid +0.0121 但 Test −0.0029（一升一降）；FreeSolv Valid
 
 ## 1. 本轮实际执行了什么
 
-### 1.1 训练清单（33 次正式 + 20 次冒烟）
+### 1.1 训练清单（35 次正式 + 20 次冒烟）
 
 | 阶段 | 内容 | 次数 |
 | --- | --- | --- |
@@ -182,8 +183,8 @@ Valid 打平、Test 领先 9.8 %。**"低配基线"这条路线的距离是负�
 | valid | 1.1113 | 1.0126 | −0.0312 | 0.0901 |
 | test | 1.1110 | 1.0082 | −0.0354 | 0.0909 |
 
-二阶矩在 inference（clean）时**低 10 %**，一阶矩几乎不动（±1 %）——解剖结论在三个 split 上逐位复现
-（这也说明它不是过拟合产物）。
+二阶矩在 inference（clean）时**低 10 %**，一阶矩几乎不动（±1 %）——解剖结论在三个 split 上
+数值一致（1.1110–1.1113），说明它是 dropout 的结构性后果，不是某个 split 的过拟合产物。
 
 三臂对照（都在 R1、都由 C1 初始化、参数完全相同）：
 
@@ -194,9 +195,11 @@ Valid 打平、Test 领先 9.8 %。**"低配基线"这条路线的距离是负�
 | `M_CLEANPOOL` | 用 dropout **之前**的干净表示池化（不加噪池化） | 0.7121 | 0.5781 | −9.11 % | +1.00 % |
 | `M_NODROP` | p=0 | 0.7239 | 0.5771 | −10.92 % | +1.17 % |
 
-**把偏差"修正"掉反而更差**，两个 split 都差。而**删掉 dropout**（不被偏差困扰）Test 略好、Valid 大差。
-说明这个 1.111 的偏移不是缺陷而是**有效的正则化方向**：它让 train-mode 表示比 inference 表示更"陡"，
-等价于一种噪声尺度上的课程；把它拉平等于削弱正则，Valid（更容易被拟合）先崩，Test 只拿到 1 % 的零头。
+**把偏差"修正"掉反而更差**（两个 split 都差）；**删掉 dropout**（从此不被偏差困扰）Valid 掉 10.9 %、
+Test 只涨 1.2 %。三种干预把 Valid 拉动了 2.7 % ~ 10.9 %，而 **Test 的响应始终在 ±4 % 内且方向不一致**。
+诚实的读法是：这个偏移既不是缺陷、也不是可兑现的余量——它主要影响**优化的动力学**（Valid 侧敏感），
+而 Test 侧根本不存在能靠"对齐二阶矩"拿到的空间；`M_UNBIASED` 的双负说明"让 train-mode 与
+inference-mode 更一致"这个方向本身是亏的。
 
 ### 3.2 S：低支撑 S2 联合项
 
@@ -216,8 +219,8 @@ Valid 打平、Test 领先 9.8 %。**"低配基线"这条路线的距离是负�
 在 K4 上甚至反了（每根 −3.22 % vs 全局 +2.40 %）。按冻结规则，`S_UNIFORM_K4` 的 Test +2.4 %
 被 Valid −1.17 % 挡住（要求 Valid ≥ −0.5 %），**不算清晰信号**。
 
-机制面板（`S_SELECT_K1` 权重，把冻结规则在推理时换成边缘化 α→0 与完全 α→1，
-Test 64 行有非零 ΔJ 的行）：
+机制面板（`S_SELECT_K1` 权重，把冻结规则在推理时换成边缘化 α→0 与完全 α→1；
+Test 上按哈希序固定抽样的 64 行，label-blind、不用 RNG）：
 
 | 量 | 值 |
 | --- | --- |
@@ -246,7 +249,7 @@ Test 64 行有非零 ΔJ 的行）：
 | `A_LOGP` | 51.7 % | −4.97 | −0.078 | +0.021 | +0.003 |
 | `M_CLEANPOOL` | 52.6 % | −2.85 | −0.041 | +0.001 | +0.039 |
 | `M_UNBIASED` | 47.6 % | +11.63 | −0.073 | −0.009 | −0.026 |
-| `S_SELECT_K1` | 51.9 % | −5.63 | — | — | — |
+| `S_SELECT_K1`（面板口径，64 行） | 51.9 % | −4.87 | −0.034 | +0.021 | +0.041 |
 
 **没有任何一条机制的误差变化与行的结构特征相关**（|corr| ≤ 0.08）。这正是"机制存在 ≠ 机制有用"的
 量化版本：这些效应在行间几乎是同质的，所以它们不是"在难行上救场"，只是整体平移了一个小量。
@@ -303,8 +306,9 @@ Test 上的排序是 **真目标 (+1.75 %) > 打乱 (+0.50 %) > MolWt (−3.81 %
 
 共享表示里**确实含有**能重构 WC_LOGP 的信息（R² 0.98），而主任务的 Test 只涨 1.75 %、Valid 掉 7 %。
 所以"计算任务结构目标是缺失的监督信号"这个假设被直接否证：信息已经在那里，加一个头只是多背了一个
-约束——**在 420 行 Valid 上，它买到的是正则化（Test 侧微正）与优化负担（Valid 侧明显负）的混合**，
-而且正则化效果还不如直接调 dropout（见 `M_NODROP` 与 `A_MW` 的对照）。
+约束——**在 420 行 Valid 上，它买到的是正则化（Test 侧微正）与优化负担（Valid 侧明显负）的混合**。
+Test 侧的 +1.75 % 是这一族里最大的（`M_CLEANPOOL` +1.00 %、`M_NODROP` +1.17 %），但**代价是 Valid 掉 7 %**，
+而同量级 Test 收益在 `M_NODROP` 上只要 Valid 掉 10.9 % 的另一种配方——没有一种成为性价比更高的正则化。
 
 ---
 
@@ -336,13 +340,17 @@ ESOL 两个 split 都更差，BACE Test 微降，FreeSolv 反向。**`K_COMBO` �
 
 ### 5.3 HIV（官方 scaffold，160 epoch 余弦，最强域偏移压力测试）
 
-| 任务 | 基线 `C1_R1` | `K_COMBO` | Δ |
+| 指标 | 基线 `C1_R1` | `K_COMBO` | Δ |
 | --- | --- | --- | --- |
-| ogbg-molhiv（RMSE↓） | 见 `analysis/run_table.csv` | 见 `analysis/run_table.csv` | 见 §5.4 |
+| Test ROC-AUC（↑，预注册指标） | **0.7458** | 0.7447 | −0.0011 |
+| Valid ROC-AUC（↑） | 0.8378 | **0.8383** | +0.0005 |
+| Test PR-AUC（↑，事后观察） | 0.2179 | **0.2639** | +0.0460（相对 +21 %） |
+| 训练墙钟（单卡） | 32.7 min | 121.1 min | 3.7× |
 
-HIV 的两个 run 是本轮最后完成的（每 epoch ~11–32 s，160 epoch），结果落在 `run_table.csv`
-与 `selection_trace.json` 之外（不属于任何 promotion 决策）。它们的用途只有一个：观察"在 scaffold
-划分 + 域偏移下，`K_COMBO` 的 Lipophilicity 增益是否连方向都保不住"。
+HIV 的两个 run 是本轮最后完成的（11–33 s/epoch × 160），不参与任何 promotion 决策。结论很清楚：
+**在 scaffold 划分 + 强域偏移下，`K_COMBO` 的 Lipophilicity 增益完全消失**（ROC-AUC 在 ±0.001 内打平）。
+唯一可见的差异是 PR-AUC +0.046（正例仅 3.2 % 时的排序质量），但它**不是预注册指标**，
+且与 ROC-AUC 的方向相反，只能作为"下一轮可以预注册的假设"，不能作为迁移证据。
 
 ### 5.4 路线判定
 
@@ -358,7 +366,7 @@ HIV 的两个 run 是本轮最后完成的（每 epoch ~11–32 s，160 epoch）
 | **K 家族（chem8 + 贡献残差）** | **保留并推荐下一轮** | 唯一双升；2×2 归因清楚；但仅 Test +4.6 %、p=0.069，需多 seed |
 | D-MPNN | **保留为参考坐标** | Test 最好（+7.35 %）但 Valid −12.8 %；配置选择在 420 行 Valid 上不可解 |
 | 组合路线（`K_COMBO` + D-MPNN 架构） | **未测**（超出本轮 8 h） | 需要新的时间预算 |
-| 迁移（ESOL/BACE/FreeSolv/HIV） | **已测，未通过** | §5.2 / §5.3 |
+| 迁移（ESOL/BACE/FreeSolv/HIV） | **已测，未通过** | §5.2 / §5.3：ESOL 双负、BACE 一升一降、FreeSolv 反向、HIV 打平 |
 
 ---
 
@@ -387,10 +395,10 @@ HIV 的两个 run 是本轮最后完成的（每 epoch ~11–32 s，160 epoch）
 
 | 项 | 值 | 上限 |
 | --- | --- | --- |
-| 正式训练次数 | 33 | 64 |
+| 正式训练次数 | 35 | 64 |
 | 冒烟训练次数 | 20 | （计入上式） |
-| 计费 GPU·h | **2.51** | 软 14 / 硬 16 |
-| 墙钟 | ~4 h 45 min（含本地准备、远程部署、分析、写作） | 8 h |
+| 计费 GPU·h | **4.53** | 软 14 / 硬 16 |
+| 墙钟 | ~5 h 55 min（含本地准备、远程部署、两次 HIV 重跑、分析与写作） | 8 h |
 
 计费口径：任何触碰 GPU 的 job（含评测、冒烟、失败与取消）都按 wall × GPU 数计；本地 CPU 的
 准备/面板/分析不计。明细在 `analysis/budget.json`（per-job）与 `analysis/queue_logs/*.jsonl`。
@@ -405,8 +413,8 @@ HIV 的两个 run 是本轮最后完成的（每 epoch ~11–32 s，160 epoch）
    在这套数据上都会系统性偏向过拟合的解；本轮冻结的 `min(gain_valid, gain_test)` 排序就是为了避免这一点，
    代价是几乎所有路线都被判为"不清晰"。
 3. **Test 参与了路线选择**（冻结规则允许，且已记录），因此 Test 数字是**乐观偏置**的，不能当留出集报。
-4. **HIV 只跑了 base 与 `K_COMBO` 两臂**，且不是 promotion 依据；不足以下"迁移失败"的强结论，
-   只能说"没有看到迁移"。
+4. **HIV 只跑了 base 与 `K_COMBO` 两臂**（各 1 个 seed），且不是 promotion 依据；PR-AUC 的 +0.046
+   是唯一"看起来有迁移"的信号但方向与 ROC-AUC 相反，不足以支撑结论。
 5. **`K_COMBO` 的 2×2 归因是单点**：`C1_CHEM8` / `C1_CONTRIB` 各一次训练，没有 seed 重复，
    "两个成分都要"这个结论的置信度等于单次训练之间的差异。
 6. `DMPNN_LR3E4` 的 1.3 min 训练墙钟提示它**没有跑到收敛**（best epoch 很早），它作为"参考坐标"是
@@ -426,7 +434,7 @@ HIV 的两个 run 是本轮最后完成的（每 epoch ~11–32 s，160 epoch）
 2. **`K_COMBO` 的 2×2 × 3 seed**（6 次训练）：确认"两个成分都要"不是单次训练的巧合。
 3. **`K_COMBO` + D-MPNN 骨干**（3 次训练）：把"结构侧通道"搬到真消息传递架构上，检验
    §2.5 的机制解释是否与架构无关。
-4. **Valid 集扩容 / 交叉验证的 Valid**（不训练，只重划分）：本轮 9/16 条臂方向相反，根因很可能是
+4. **Valid 集扩容 / 交叉验证的 Valid**（不训练，只重划分）：本轮 16/22 条臂方向相反，根因很可能是
    420 行 Valid 的分辨率不足；这是比任何模型改动都便宜的改进。
 5. 不建议再投入：配方搜索、增容、加预算、M/S/A 三族当前形式。
 
@@ -456,14 +464,14 @@ uv run python code/run.py report
 | 产物 | 内容 |
 | --- | --- |
 | `analysis/selection_trace.json` | 配方选择、家族胜者、promotion 与 Test 使用记录 |
-| `analysis/family_summary.json` | 16 条臂的 Valid/Test 增益、`min()` 排序、清晰信号判定 |
+| `analysis/family_summary.json` | 22 条臂的 Valid/Test 增益、`min()` 排序、清晰信号判定 |
 | `analysis/paired_comparisons.json` | 配对 bootstrap（2000 次、簇重采样、seed 20261113） |
 | `analysis/mechanism_summary.json` | M/S 面板（256 次 mask、κ 扫描）与 link 表 |
 | `analysis/aux_head_eval.json` | aux 头对 WC_LOGP 的 R²（Q3 的关键否证） |
 | `analysis/tail_summary.json` | 尾部口径 |
 | `analysis/error_ledger.csv.gz` | 92 400 行逐分子误差账本（22 臂 × 3 split） |
 | `analysis/budget.json` | 计费 GPU·h、训练次数、每 job 明细 |
-| `analysis/run_table.{json,csv}` | 33 次正式训练的完整指标 |
+| `analysis/run_table.{json,csv}` | 35 次正式训练的完整指标 |
 | `analysis/figures/*.png` | 图 1/2/3（性能-成本、机制-增益、误差分布） |
 | `runs/<candidate>__<dataset>/` | `train.json`、`curve.csv`、`diagnostics.json`、`predictions_*.npz`、`best.pt`（检出后 git-ignore） |
 
@@ -512,3 +520,4 @@ uv run python code/run.py report
 | BACE | `K_COMBO` | R0 | 98/360 | AUC 0.7854 | AUC 0.8255 | 234,731 | 14.0 min |
 | BACE | `K_COMBO_R1_T` | R1 | 152/360 | AUC 0.8017 | AUC 0.8306 | 234,731 | 5.6 min |
 | ogbg-molhiv | `C1_R1` | R1 | 23/160 | AUC 0.8378 | AUC 0.7458 | 228,674 | 32.7 min |
+| ogbg-molhiv | `K_COMBO` | R1 | 23/160 | AUC 0.8383 | AUC 0.7447 | 234,731 | 121.1 min |
