@@ -65,6 +65,13 @@ and an **exact epoch-1 dropout-RNG match** against the reused baseline trace on 
 same device (`rng_match = True` for both arms). Gradient clipping fires on ~50 % of
 steps, as in the baseline.
 
+The saved raw-unit predictions were re-checked independently: `train/valid/test_rows`
+equal the published split row ids in order, the stored labels equal the source labels,
+and a NumPy recomputation of RMSE from `predictions_best.npz` equals the `train.json`
+metrics and `results.csv` to <1e-12 for both arms (raw conversion applied exactly
+once). Source-file, split and feature-spec hashes for all of the above are listed in
+`PROTOCOL.md` §1.
+
 ## 3. Paired comparisons (label-free components, 1000 replicates, seed 20261114)
 
 `gain = metric(baseline) − metric(candidate)`; positive means the candidate is
