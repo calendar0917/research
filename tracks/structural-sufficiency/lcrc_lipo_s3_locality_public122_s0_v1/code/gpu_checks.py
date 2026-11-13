@@ -109,7 +109,9 @@ def run(device_name: str = "cuda") -> dict[str, Any]:
         "null3_forward": bool(null_check["forward_relative_to_scale"] <= 1e-5),
         "null3_gradient": bool(null_check["grad_max_abs_diff"] <= 1e-3),
         "not_mean_then_silu": bool(null_check["mean_then_silu_max_abs_diff"] > 1e-3),
-        "zero_correction_is_c1": bool(zero_check["zero_correction_max_abs_diff"] == 0.0),
+        # exact on CPU; on the GPU the two module instances may pick different
+        # cuBLAS kernels, so equality holds only to float32 reduction order
+        "zero_correction_is_c1": bool(zero_check["zero_correction_max_abs_diff"] <= 2e-6),
         "no_batch_leakage": bool(zero_check["single_vs_batch_abs_diff"] <= 1e-5),
         "init_hash_reproduced": bool(zero_check["init_state_hash_prefix_matches_baseline"]),
     }
