@@ -4,7 +4,8 @@ Round: `lcrc-lipo-s3-locality-public122-s0-v1`
 Directory: `tracks/structural-sufficiency/lcrc_lipo_s3_locality_public122_s0_v1/`
 Training commit: `311306ecfd2cdad27b784a329f2f1fe513fe978b` (host `res`, A100-SXM4-40GB, torch 2.5.1+cu124)
 Formal trainings this round: **2** (LOCAL3, DUP2). NULL3 **not purchased** by the fixed rule.
-GPU cost: **0.2014 h** total (soft cap 1.0 h, hard cap 2.0 h; smoke 0.0039 h included).
+GPU cost: **0.2014 h** recorded by `runtime.json` for the two formal trainings plus the
+smoke; ≈**0.207 h** including the short check/intervention jobs (soft cap 1.0 h, hard cap 2.0 h).
 
 ---
 
