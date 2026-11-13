@@ -1,0 +1,207 @@
+# Frozen configuration — lcrc-lipo-multi-motif-mechanism-public122-v1
+# Declared before the first formal inference run.  Values are informative copies of
+# the constants frozen in code/common.py, code/families.py, code/rewire.py,
+# code/doses.py and code/prepare.py; the code is authoritative.
+
+round_id: lcrc-lipo-multi-motif-mechanism-public122-v1
+protocol_id: lcrc-lipo-multi-motif-mechanism-public122-v1
+design_revision: 773373a0
+previous_protocol: lcrc-lipo-amide-connected-rewire-public122-v1
+previous_executed_revision: 64bb1c9fb309344a14cd8e4027ebecb39523f7c7
+replaces_unexecuted_plan: "amide singleton integration only (never executed; superseded by this round)"
+
+data:
+  dataset: ChemBench Lipophilicity
+  repeat: random122
+  source_commit: 0b10d4c1ac72b6929503694a5f60446824736391
+  csv_sha256: 34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758
+  split_file_sha256: bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d
+  raw_attribute_artifact_sha256: 1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be
+  split_sizes: {train: 3360, valid: 420, test: 420}
+  split_rows_sha256:
+    train: 4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96
+    valid: 31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365
+    test: a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93
+  label_column: exp
+  label_units: logD (raw)
+  reused_from: lcrc_lipo_amide_connected_rewire_public122_v1 (row_id, split, spec, feature norm, target mean/scale unchanged)
+  train_connected_component_census: {1: 3359, 4: 1}
+
+model:
+  variant: C1
+  variant_name: NO_BOND_MEAN
+  parameters: 228674
+  checkpoint: tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/runs/A_s0/best.pt
+  checkpoint_sha256: bdd670e8df5ee03ba28f2f4898e7fd137991a9fd23e9add91c08d8b6e0a1d6a7
+  state_hash_trained: 7d32221e0c3f482a16e2e170b7df1d4753ff4d7783cc2b5a3386b183a7941e36
+  state_hash_init: aac1e061176a93bd12b0e6a3f79e80eced2ff93f84eb72391dc819be59ebb83c
+  full_init_state_hash: 666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f
+  init_construction: build_full_state(spec, train_norm, seed=0) -> original remap_state mapping to C1
+  init_label: INIT_TRAINING_START (both recorded hashes reproduced exactly)
+  best_epoch: 244
+  feature_spec_hash: 7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee
+  normalisation: frozen Train-only buffers (never refitted)
+  reference_metrics: {test_rmse: 0.5761674771952362, test_mae: 0.4280564144318241}
+  reproduction_tolerance: 1.0e-5
+
+connection_families:   # frozen BEFORE any prediction; six cells of one panel
+  carbonyl:
+    amide:               {key: "C(=O)-N",      center: carbonyl_C, hetero: N, control: adjacent C}
+    ester:               {key: "C(=O)-O-C",    center: carbonyl_C, hetero: O with adjacent C}
+  sulfonyl:
+    sulfonamide:         {key: "S(=O)2-N",     center: S with two double O, hetero: N}
+    sulfonate:           {key: "S(=O)2-O-C",   center: S with two double O, hetero: O with adjacent C}
+  aromatic:
+    arylamine:           {key: "Ar-N-C_alkyl", target bond: aromatic C - N, hetero: N}
+    aryl_ether:          {key: "Ar-O-C_alkyl", target bond: aromatic C - O, hetero: O}
+  raw_vocabulary:
+    C_non_aromatic: 2
+    C_aromatic: 3
+    N_non_aromatic: 7
+    O: 9
+    S: 12
+    neutral_charge_bucket: 2
+    single_bond: 0
+    double_bond: 1
+    single_bond_stereo: 0
+  two_catalogues:
+    family_keys: global count (T: -1, K0: unchanged)
+    main_instances: additional rewirability constraints (target bond is a bridge, carbon control exists)
+  main_queue: single-component original graphs only (3359 Train, 420 Valid, 420 Test)
+
+donors:
+  allowed_atom_classes: [2, 3]      # this round uniformly allows aromatic carbon (pre-prediction change vs the amide pilot)
+  charge: 2
+  bond: {class: single, bridge: true, stereo: 0}
+  disjoint_from: [center, target, control]
+  selection: none (all lawful donors kept; no distance/label/prediction ranking)
+  unit_not_extra_sample: "a donor is an auxiliary bond, not an extra observation"
+
+views:
+  O: original raw row
+  T: delete (center,target) and (u,v); add the unique connected crossing; family count -1, target key disappears
+  K0: delete (center,control) and the same (u,v); add the unique connected crossing; count unchanged, target key holds
+  added_bonds: {class: single, stereo: 0}
+  invariants:
+    - O / T / K0 single component, unreachable-pair fraction 0, no duplicate bond, no self-loop
+    - atoms / bond count / bond-type totals / per-atom AF51 identical to O (atom-wise)
+    - exactly 2 physical bonds deleted and 2 added in every view
+    - T must make the target family key disappear and drop the family count by 1
+    - K0 must keep the target family key and the family count
+
+scopes:
+  FULL: whole graph re-encoded (global42 recomputed from the rewired graph)
+  G_FIXED: local input from the new graph, global42 fixed to the molecule's own O value
+  primary: G_FIXED (selectivity / internal path); FULL reported alongside
+
+range_support:
+  definition: per-dimension min/max of the raw global42 over the full Train split
+  tolerance: 1.0e-6
+  pair_rule: RANGE_SUPPORTED iff O and the paired T and K0 are all inside the range
+  main_queue: RANGE_SUPPORTED; all structurally/chemically legal views = fixed supplement (reported)
+
+dose_calibration:
+  purpose: separate "target-specific response" from "the model simply sees a bigger statistical perturbation"
+  observables: [d1n, d1b, d2j, d2c, d2k, d3, dr]   # weights/labels/predictions never used
+  d1n: sum over roots of L1 of the per-root nbr_code multiset
+  d1b: sum over roots of L1 of the per-root (AF51 bytes, BF13 bytes) multiset   # b_sum may change
+  d2j: per-root L1 of the joint (path_cat, path_end63) counts
+  d2c: per-root L1 of the (path_cat, AF51(endpoint) bytes) content counts
+  d2k: per-root L1 of the path_closure marginal
+  d3: sum over atoms of the Train-standardised scalar9 L1 norm
+  dr: number of roots with any S1 / S2 / scalar change
+  caliper: d1n, d1b, d2k exactly equal; d2j/d2c/d3/dr either all zero or all nonzero with T/C ratio in [0.8, 1.25]
+  c_pool: already-generated lawful T/K0 views of the SAME molecule (prediction-blind, structure only)
+  c_requirements: family global count unchanged, target key still holds, structural/chemical/range legal
+  c_dedupe: identical C view counts once, equal weight; the focal T itself is never a candidate
+  no_match: the competing explanation is NOT excluded for that family (never extrapolated, no-sample never = zero effect)
+
+parameter_states:
+  TRAINED: frozen A_s0
+  INIT: verified training start (hashes above); must reproduce the recorded initial state hash
+  fallback_label_if_unverified: INIT_TRAINING_START_UNVERIFIED
+  aT: "|pT - p0|"
+  aK: "|pK0 - p0|"
+  aC: "mean over C of |pC - p0|"
+  rC: "(aT - aC) / (aT + aC)"; denominator <= 1e-12 -> 0
+  rK: "(aT - aK) / (aT + aK)"; denominator <= 1e-12 -> 0
+  E: "rC_TRAINED - rC_INIT" on identical views, C set, weights, queue
+  raw_companions: {J_C: "aT - aC", J_K: "aT - aK"}
+  init_scope: G_FIXED only (same views, same global42 handling)
+
+internal_path:
+  model_state: TRAINED only
+  global42: fixed at the molecule's own O value in every cell
+  groups:
+    G1: all first-order aggregation blocks (b_sum; b_mean — empty for C1; s1_joint)
+    G2: all S2 blocks (s2_type, s2_end, s2_joint, s2_closure, s2_content)
+    G3: the nine atom-scalar columns
+  af51: always from O (atom-wise identical by construction)
+  injection: read-only forward_pre_hook on LocalMLP; weights / LayerNorm / readout / pooling / global / node count unchanged; dropout disabled
+  cells: all 8 subsets of {1,2,3}
+  endpoints: S=empty reproduces O; S=123 reproduces the real G_FIXED prediction (<= 1e-5)
+  decomposition: Mobius gamma(U) = sum_{S subset U} (-1)^(|U|-|S|) value(S); 3 single + 3 second-order + 1 third-order
+  identities: seven terms sum to the full-input change (<= 1e-5); T - K0 and T - mean C differences sum to J; L-space sums to D
+
+task_relevance:
+  J_K, J_C: response differences (label-free)
+  D_K, D_C: deviation differences against the ORIGINAL molecule's label
+  B: T vs O deviation
+  caveat: J does not use y; D and B are not "true prediction error of the new graphs"
+  natural_pairs:
+    source: lcrc_lipo_amide_dependency_public122_v1 analysis/pairs.csv (823 unique unordered MMP pairs)
+    new_mining: forbidden
+    selection: |Delta family count| == 1 (direction: more minus fewer); then a fixed cleaner subset
+               (the other five family counts both unchanged); both populations reported
+    groups: [Train-Train, has-Test-with-Train-endpoint, both-non-Train-with-Test, Valid-Valid]
+    metrics: Delta f / Delta y, MAE, sign agreement, zero-change baseline, Train same-class_id mean Delta y
+    uncertainty: by original eval_component (not pair count); LOW_SUPPORT kept
+  scaffold_strata: seen-in-Train vs unseen (structure only, pre-defined)
+
+statistics:
+  weights: molecule-equal; instance-equal inside a molecule; control-equal inside an instance;
+           donor-equal inside a control; C-equal inside a focal T
+  averaging_order: per-view loss / movement first; never average predictions before the loss
+  units: raw logD
+  primary_estimand: Test, calibration queue, G_FIXED
+  valid: pre-registered direction/range check only (never merged with Test)
+  cluster: original non-stereo Bemis-Murcko scaffold; empty scaffold -> full canonical non-isomeric SMILES
+  bootstrap: 5000 replicates, seed 20261114, whole scaffold clusters with replacement,
+             ONE shared multiplicity per split across family / scope / parameter state / mechanism term
+  ci: percentile 95 per item
+  multiplicity: family 6 x quantity 2 = 12 items; Bonferroni quantiles 0.05/(2*12) and 1 - 0.05/(2*12)
+  no_sample: NA (never negative; does not reduce the multiplier)
+  influence:
+    ranking: main calibrated TRAINED |J_C,m|, ties by row_id
+    drop: top 1 molecule; ceil(5% * n) molecules
+    recompute: rC, E, J_C (K0 queue reported separately on its own |J_K,m| ranking)
+
+execution:
+  stage_a: local CPU (structure, doses, caliper, range, freeze; commit BEFORE inference)
+  stage_b: res via rr — res-gpu0 TRAINED FULL/G_FIXED + internal path; res-gpu1 INIT G_FIXED
+           one process per card, res-2 unused
+  stage_c: local CPU (statistics, natural pairs, mechanism figures, report)
+  gpu_budget_hours: {planned: 0.2, soft: 0.5, hard: 1.0}
+  cpu_prep_budget_minutes: {soft: 30, hard: 90}
+  training: none (no optimizer, no backward, no probe, no new seed/variant, no label-shuffle, no dataset swap)
+  seeds: only the fixed cluster-bootstrap seed 20261114
+
+stop_conditions:
+  - frozen data / checkpoint / norm / previous-round manifest missing or mismatched -> MISSING_BASELINE, stop
+  - parameter-state hashes not reproduced -> INIT_TRAINING_START_UNVERIFIED (labelled), then stop re-verification
+  - AF51 identity / structural invariant / target-key-count failure -> investigate implementation
+  - O-view metric reproduction above 1e-5 -> stop
+  - caliper re-verification failure -> stop
+  - eight-cell endpoint identity above 1e-5 -> stop
+  - after the prescribed inference / analysis / report -> stop (no new family, no next round)
+
+decision_rule:
+  supported_for_a_family_requires:
+    - Test calibration queue, G_FIXED, rC_TRAINED 95% CI lower bound > 0
+    - Test calibration queue, G_FIXED, E 95% CI lower bound > 0
+    - Valid point estimates in the same direction (direction check, never padded)
+  partial: rC > 0 without E > 0  -> "trained-parameter independent / not training-related"
+  reversed: point estimate < 0    -> "the calibrated response does not favour the target pattern"
+  no_sample: NA -> "the competing explanation is not excluded for this family"
+  never: new-molecule accuracy claim, causal chemical effect, motif-beats-other-motifs ranking,
+         joint in-distribution claim, per-family CI overdrawn as 12-way simultaneous without Bonferroni
