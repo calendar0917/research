@@ -187,19 +187,21 @@ def _curve_best_epoch(path: Path, task: str) -> int | None:
     import csv as _csv
 
     key = "valid_rmse" if task == "regression" else "valid_roc_auc"
+    #: minimise this: RMSE as-is, AUC negated
+    sign = 1.0 if task == "regression" else -1.0
     try:
         with path.open("r", encoding="utf-8") as fh:
             rows = list(_csv.DictReader(fh))
     except OSError:
         return None
-    best, best_epoch = -math.inf, None
+    best, best_epoch = math.inf, None
     for row in rows:
         try:
-            value = float(row[key])
+            score = sign * float(row[key])
         except (KeyError, TypeError, ValueError):
             continue
-        if value > best:  # every metric here is "higher is better" in the curve
-            best, best_epoch = value, int(float(row["epoch"]))
+        if score < best:  # strict improvement, ties keep the earlier epoch
+            best, best_epoch = score, int(float(row["epoch"]))
     return best_epoch
 
 
@@ -232,7 +234,13 @@ def collect_runs(root: Path | None = None) -> list[dict[str, Any]]:
             "valid": payload["metrics"]["best"]["valid"],
             "test": payload["metrics"]["best"]["test"],
             "train": payload["metrics"]["best"]["train"],
-            "wall_seconds": (payload.get("timing") or {}).get("process_wall_seconds"),
+            #: process wall can include queue/launch overhead (e.g. a 1-min run
+            #: recorded as 58 min), so the honest compute cost is train_wall,
+            #: which is the sum of the per-epoch train+eval seconds
+            "wall_seconds": (payload.get("timing") or {}).get("train_wall_seconds")
+                            or (payload.get("timing") or {}).get("process_wall_seconds"),
+            "process_wall_seconds": (payload.get("timing") or {}).get("process_wall_seconds"),
+
             "gpu_hours": (payload.get("timing") or {}).get("gpu_hours_charged"),
             "device": (payload.get("environment") or {}).get("device")
                       or (payload.get("gpu") or {}).get("device"),

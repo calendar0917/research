@@ -378,30 +378,44 @@ HIV 的两个 run 是本轮最后完成的（11–33 s/epoch × 160），不参�
 
 ## 6. 成本与实用性
 
-| 项 | `C1_R1` | `K_COMBO` | `DMPNN_LR3E4` |
-| --- | --- | --- | --- |
-| 参数 | 228 674 | 234 731 | 318 301 |
-| 训练墙钟（单 A100，含每 epoch 全量评测） | 6.5 min | 52.8 min | 1.3 min（3e-4 峰值的短程解）／58.1 min（1e-3） |
-| 单次 Test 推理（CPU，batch 128，10 warmup + 5 重复） | **0.0234 s** | 同量级 | 0.1562 s（6.7×） |
-| 缓存体积（Train/Valid/Test） | 39.9 / 5.0 / 4.9 MB | 同 | 同 |
+成本口径必须先说清楚，否则数字会被误读。本轮每个 epoch 都按协议评测 Train/Valid/Test 全量，
+`curve.csv` 里逐 epoch 记录了 `train_seconds` 与 `eval_seconds`；**把两者相加**才是"训练 + 三曲线"的真实成本。
+`train.json` 里的 `process_wall_seconds` 对部分 job 包含排队/进程开销（例如 `DMPNN_LR1E3` 记了 58.1 min，
+但逐 epoch 累计只有 1.0 min），因此下表用 curve 口径。
 
-`K_COMBO` 的 8×训练墙钟增长来自收敛更慢（best epoch 更晚），不是每 epoch 更贵；
-若只按 Valid 早停、不做每 epoch 全量评测，墙钟可压到 ~1/3。D-MPNN 的推理成本高 6.7×，
-在 420 行的 Test 上换来 7.35 % 的 RMSE——是否值得取决于下游批次规模，本轮不做建议。
+| 项 | `C1_R1` | `K_COMBO` | `C1_CONTRIB` | `S_SELECT_K1` | `LONG` | `DMPNN_LR3E4` |
+| --- | --- | --- | --- | --- | --- | --- |
+| 参数 | 228 674 | 234 731 | 233 707 | 228 674 | 228 674 | 318 301 |
+| 训练（360/720/100 epoch） | 4.3 min | 5.1 min | 5.2 min | 6.0 min | 8.4 min | 1.1 min |
+| 每 epoch 三 split 全量评测 | 2.2 min | 2.1 min | 2.9 min | 4.1 min | 4.1 min | （未单列） |
+| **合计** | **6.5 min** | **7.2 min（+11 %）** | 8.1 min | 10.1 min | 12.5 min | ~1.1 min |
+| 单次 Test 推理（CPU，batch 128） | **0.0234 s** | 同量级 | 同量级 | 同量级 | 同量级 | 0.1562 s（6.7×） |
+| 缓存（Train/Valid/Test） | 39.9 / 5.0 / 4.9 MB | 同 | 同 | 同 | 同 | 同 |
 
----
+`K_COMBO` 的计算代价几乎可以忽略（+0.7 min / +11 %），因为它的增益来自**通道与残差**而不是
+更贵的聚合；真正贵的两族是 `S_*`（每 epoch 多 1.4–1.9 min 的评测，因为要逐行算支撑度收缩）与
+`LONG`（两倍 epoch）。D-MPNN 的**训练**反而最便宜（1.1 min/100 epoch），但推理贵 6.7×，
+并换来一个 Test 更好 / Valid 更差的解（§2.4）——它的成本优势不影响本轮的结论，因为它的 Valid
+不可用。
 
 ## 7. 预算与运行时
 
 | 项 | 值 | 上限 |
 | --- | --- | --- |
-| 正式训练次数 | 35 | 64 |
+| 正式训练次数（含 2 次失败/取消的尝试共 37 次） | 35 | 64 |
 | 冒烟训练次数 | 20 | （计入上式） |
-| 计费 GPU·h | **4.53** | 软 14 / 硬 16 |
-| 墙钟 | ~5 h 55 min（含本地准备、远程部署、两次 HIV 重跑、分析与写作） | 8 h |
+| 计费 GPU·h | **4.53**（另有 1 次主动取消的 HIV 重跑 ≈0.28，实际 ≈4.8） | 软 14 / 硬 16 |
+| 墙钟 | ~6 h（含本地准备、远程部署、两次 HIV 重跑、分析与写作） | 8 h |
 
-计费口径：任何触碰 GPU 的 job（含评测、冒烟、失败与取消）都按 wall × GPU 数计；本地 CPU 的
-准备/面板/分析不计。明细在 `analysis/budget.json`（per-job）与 `analysis/queue_logs/*.jsonl`。
+计费口径：任何触碰 GPU 的 job（含评测、冒烟、失败与取消）都按 **进程墙钟 × GPU 数** 计——这是保守上界，
+因为部分 job 的进程墙钟含排队/启动开销（§6），按 curve 口径的实际训练+评测合计约 4.0 GPU·h。
+本地 CPU 的准备/面板/分析不计。明细在 `analysis/budget.json`（per-job，31 条记录，含 6 条 failed）。
+
+本轮有两次非科学性的运行损失，都记录在案：① `C1_R1@ogbg-molhiv` 第一次跑完 160 epoch 后，
+**检查点重载自检**发现 Valid 指标差 1.53e-6（略超当时 1e-6 的 float32 往返容差）而抛错、丢掉整条轨迹
+（0.56 GPU·h）；修复后该自检改为"记录并继续"，只在相对差 >1e-3 时才判为真损坏；② 第一版 `K_COMBO@HIV`
+在修复前启动，17 分钟后主动取消并重跑（0.28 GPU·h）。这份自检本身是对的（它抓到了真实的
+float32 归约顺序问题），只是不应该以丢弃两小时计算为代价。
 
 ---
 
@@ -417,8 +431,9 @@ HIV 的两个 run 是本轮最后完成的（11–33 s/epoch × 160），不参�
    是唯一"看起来有迁移"的信号但方向与 ROC-AUC 相反，不足以支撑结论。
 5. **`K_COMBO` 的 2×2 归因是单点**：`C1_CHEM8` / `C1_CONTRIB` 各一次训练，没有 seed 重复，
    "两个成分都要"这个结论的置信度等于单次训练之间的差异。
-6. `DMPNN_LR3E4` 的 1.3 min 训练墙钟提示它**没有跑到收敛**（best epoch 很早），它作为"参考坐标"是
-   偏保守的下界；真正的 D-MPNN 上限本轮没有测。
+6. D-MPNN 只跑了两个学习率、各 1 次，且 `DMPNN_LR3E4` 的评测耗时没有单列在 curve 里；
+   它是"一个像样的 D-MPNN 实现"的**单点坐标**，不是 chemprop 的最优配置，不能当作 D-MPNN 的上限。
+   两个学习率给出的 Valid/Test 排序相反（§2.4），这条路线真正的"距离"本轮没能定下来。
 7. 本轮有两个只改簿记的 commit（registry 里新增 transfer 别名、`git_dirty()` 作用域收窄到
    `code/ configs/ PROTOCOL.md`）落在某个队列执行期间；`git diff` 确认它们只动 `lcpr_common.py`
    的追加块，模型/数据/训练路径逐字节未变（`code_hashes` 见各 run 的 `train.json`）。
@@ -486,38 +501,38 @@ uv run python code/run.py report
 
 | 数据集 | 候选 | 配方 | epoch (best/total) | Valid | Test | 参数 | 墙钟 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Lipophilicity | `A0_CHEM8_CONTRIB_R0` | R0 | 10/360 | RMSE 0.6854 | RMSE 0.5756 | 253,163 | 7.9 min |
-| Lipophilicity | `A0_R0` | R0 | 10/360 | RMSE 0.6995 | RMSE 0.5801 | 247,106 | 13.1 min |
-| Lipophilicity | `A_LOGP` | R1 | 1/360 | RMSE 0.6990 | RMSE 0.5737 | 243,972 | 59.9 min |
-| Lipophilicity | `A_MW` | R1 | 1/360 | RMSE 0.7188 | RMSE 0.6062 | 243,972 | 49.4 min |
-| Lipophilicity | `A_SHUFFLE` | R1 | 1/360 | RMSE 0.6695 | RMSE 0.5810 | 243,972 | 56.9 min |
-| Lipophilicity | `C1_CHEM8` | R1 | 1/360 | RMSE 0.6539 | RMSE 0.5660 | 229,698 | 21.7 min |
-| Lipophilicity | `C1_CONTRIB` | R1 | 1/360 | RMSE 0.5376 | RMSE 0.6063 | 233,707 | 29.9 min |
-| Lipophilicity | `C1_R0` | R0 | 1/360 | RMSE 0.7054 | RMSE 0.5795 | 228,674 | 6.4 min |
-| Lipophilicity | `C1_R1` | R1 | 1/360 | RMSE 0.6526 | RMSE 0.5839 | 228,674 | 6.5 min |
-| Lipophilicity | `C1_R2` | R2 | 1/360 | RMSE 0.6933 | RMSE 0.5730 | 228,674 | 6.5 min |
-| Lipophilicity | `C1_R3` | R3 | 1/360 | RMSE 0.6535 | RMSE 0.5670 | 228,674 | 13.0 min |
-| Lipophilicity | `DMPNN_LR1E3` | None | 2/100 | RMSE 0.6530 | RMSE 0.6112 | 318,301 | 58.1 min |
-| Lipophilicity | `DMPNN_LR3E4` | None | 1/100 | RMSE 0.7365 | RMSE 0.5410 | 318,301 | 1.3 min |
-| Lipophilicity | `K_COMBO` | R1 | 1/360 | RMSE 0.5667 | RMSE 0.5573 | 234,731 | 52.8 min |
-| Lipophilicity | `LONG` | R1 | 1/720 | RMSE 0.6021 | RMSE 0.6108 | 228,674 | 26.7 min |
-| Lipophilicity | `M_CLEANPOOL` | R1 | 1/360 | RMSE 0.7121 | RMSE 0.5781 | 228,674 | 39.3 min |
-| Lipophilicity | `M_NODROP` | R1 | 1/360 | RMSE 0.7239 | RMSE 0.5771 | 228,674 | 45.6 min |
-| Lipophilicity | `M_UNBIASED` | R1 | 1/360 | RMSE 0.6706 | RMSE 0.6072 | 228,674 | 33.0 min |
-| Lipophilicity | `S_SELECT_K1` | R1 | 1/360 | RMSE 0.6657 | RMSE 0.5739 | 228,674 | 11.5 min |
-| Lipophilicity | `S_SELECT_K4` | R1 | 1/360 | RMSE 0.7016 | RMSE 0.6028 | 228,674 | 31.4 min |
-| Lipophilicity | `S_UNIFORM_K1` | R1 | 1/360 | RMSE 0.6701 | RMSE 0.5824 | 228,674 | 21.0 min |
-| Lipophilicity | `S_UNIFORM_K4` | R1 | 1/360 | RMSE 0.6602 | RMSE 0.5699 | 228,674 | 41.8 min |
-| Lipophilicity | `WIDE_LOCAL` | R1 | 6/360 | RMSE 0.7089 | RMSE 0.5898 | 324,290 | 14.2 min |
-| ESOL | `C1_R0` | R0 | 1/360 | RMSE 0.5661 | RMSE 0.5409 | 228,674 | 1.6 min |
-| ESOL | `C1_R1` | R1 | 1/360 | RMSE 0.5383 | RMSE 0.5305 | 228,674 | 1.6 min |
-| ESOL | `K_COMBO` | R0 | 4/360 | RMSE 0.5534 | RMSE 0.5544 | 234,731 | 10.3 min |
-| ESOL | `K_COMBO_R1_T` | R1 | 1/360 | RMSE 0.5516 | RMSE 0.5362 | 234,731 | 1.8 min |
-| FreeSolv | `C1_R1` | R1 | 1/360 | RMSE 0.7523 | RMSE 0.9097 | 228,674 | 30.7 min |
-| FreeSolv | `K_COMBO` | R1 | 1/360 | RMSE 0.8150 | RMSE 0.8520 | 234,731 | 31.5 min |
-| BACE | `C1_R0` | R0 | 98/360 | AUC 0.7788 | AUC 0.8322 | 228,674 | 5.0 min |
-| BACE | `C1_R1` | R1 | 70/360 | AUC 0.7896 | AUC 0.8335 | 228,674 | 8.5 min |
-| BACE | `K_COMBO` | R0 | 98/360 | AUC 0.7854 | AUC 0.8255 | 234,731 | 14.0 min |
-| BACE | `K_COMBO_R1_T` | R1 | 152/360 | AUC 0.8017 | AUC 0.8306 | 234,731 | 5.6 min |
-| ogbg-molhiv | `C1_R1` | R1 | 23/160 | AUC 0.8378 | AUC 0.7458 | 228,674 | 32.7 min |
-| ogbg-molhiv | `K_COMBO` | R1 | 23/160 | AUC 0.8383 | AUC 0.7447 | 234,731 | 121.1 min |
+| Lipophilicity | `A0_CHEM8_CONTRIB_R0` | R0 | 244/360 | RMSE 0.6854 | RMSE 0.5756 | 253,163 | 7.9 min |
+| Lipophilicity | `A0_R0` | R0 | 321/360 | RMSE 0.6995 | RMSE 0.5801 | 247,106 | 6.6 min |
+| Lipophilicity | `A_LOGP` | R1 | 216/360 | RMSE 0.6990 | RMSE 0.5737 | 243,972 | 7.1 min |
+| Lipophilicity | `A_MW` | R1 | 237/360 | RMSE 0.7188 | RMSE 0.6062 | 243,972 | 7.6 min |
+| Lipophilicity | `A_SHUFFLE` | R1 | 161/360 | RMSE 0.6695 | RMSE 0.5810 | 243,972 | 7.5 min |
+| Lipophilicity | `C1_CHEM8` | R1 | 206/360 | RMSE 0.6539 | RMSE 0.5660 | 229,698 | 7.7 min |
+| Lipophilicity | `C1_CONTRIB` | R1 | 206/360 | RMSE 0.5376 | RMSE 0.6063 | 233,707 | 8.1 min |
+| Lipophilicity | `C1_R0` | R0 | 244/360 | RMSE 0.7054 | RMSE 0.5795 | 228,674 | 6.4 min |
+| Lipophilicity | `C1_R1` | R1 | 187/360 | RMSE 0.6526 | RMSE 0.5839 | 228,674 | 6.5 min |
+| Lipophilicity | `C1_R2` | R2 | 189/360 | RMSE 0.6933 | RMSE 0.5730 | 228,674 | 6.5 min |
+| Lipophilicity | `C1_R3` | R3 | 161/360 | RMSE 0.6535 | RMSE 0.5670 | 228,674 | 6.5 min |
+| Lipophilicity | `DMPNN_LR1E3` | None | 59/100 | RMSE 0.6530 | RMSE 0.6112 | 318,301 | 1.2 min |
+| Lipophilicity | `DMPNN_LR3E4` | None | 64/100 | RMSE 0.7365 | RMSE 0.5410 | 318,301 | 1.3 min |
+| Lipophilicity | `K_COMBO` | R1 | 90/360 | RMSE 0.5667 | RMSE 0.5573 | 234,731 | 7.2 min |
+| Lipophilicity | `LONG` | R1 | 370/720 | RMSE 0.6021 | RMSE 0.6108 | 228,674 | 12.5 min |
+| Lipophilicity | `M_CLEANPOOL` | R1 | 139/360 | RMSE 0.7121 | RMSE 0.5781 | 228,674 | 6.3 min |
+| Lipophilicity | `M_NODROP` | R1 | 86/360 | RMSE 0.7239 | RMSE 0.5771 | 228,674 | 6.2 min |
+| Lipophilicity | `M_UNBIASED` | R1 | 221/360 | RMSE 0.6706 | RMSE 0.6072 | 228,674 | 6.3 min |
+| Lipophilicity | `S_SELECT_K1` | R1 | 227/360 | RMSE 0.6657 | RMSE 0.5739 | 228,674 | 10.2 min |
+| Lipophilicity | `S_SELECT_K4` | R1 | 183/360 | RMSE 0.7016 | RMSE 0.6028 | 228,674 | 10.4 min |
+| Lipophilicity | `S_UNIFORM_K1` | R1 | 291/360 | RMSE 0.6701 | RMSE 0.5824 | 228,674 | 9.5 min |
+| Lipophilicity | `S_UNIFORM_K4` | R1 | 258/360 | RMSE 0.6602 | RMSE 0.5699 | 228,674 | 10.3 min |
+| Lipophilicity | `WIDE_LOCAL` | R1 | 126/360 | RMSE 0.7089 | RMSE 0.5898 | 324,290 | 6.3 min |
+| ESOL | `C1_R0` | R0 | 187/360 | RMSE 0.5661 | RMSE 0.5409 | 228,674 | 1.6 min |
+| ESOL | `C1_R1` | R1 | 136/360 | RMSE 0.5383 | RMSE 0.5305 | 228,674 | 1.6 min |
+| ESOL | `K_COMBO` | R0 | 135/360 | RMSE 0.5534 | RMSE 0.5544 | 234,731 | 1.8 min |
+| ESOL | `K_COMBO_R1_T` | R1 | 187/360 | RMSE 0.5516 | RMSE 0.5362 | 234,731 | 1.7 min |
+| FreeSolv | `C1_R1` | R1 | 145/360 | RMSE 0.7523 | RMSE 0.9097 | 228,674 | 0.8 min |
+| FreeSolv | `K_COMBO` | R1 | 145/360 | RMSE 0.8150 | RMSE 0.8520 | 234,731 | 0.8 min |
+| BACE | `C1_R0` | R0 | 98/360 | AUC 0.7788 | AUC 0.8322 | 228,674 | 3.4 min |
+| BACE | `C1_R1` | R1 | 70/360 | AUC 0.7896 | AUC 0.8335 | 228,674 | 3.4 min |
+| BACE | `K_COMBO` | R0 | 98/360 | AUC 0.7854 | AUC 0.8255 | 234,731 | 3.7 min |
+| BACE | `K_COMBO_R1_T` | R1 | 152/360 | AUC 0.8017 | AUC 0.8306 | 234,731 | 3.8 min |
+| ogbg-molhiv | `C1_R1` | R1 | 23/160 | AUC 0.8378 | AUC 0.7458 | 228,674 | 32.6 min |
+| ogbg-molhiv | `K_COMBO` | R1 | 23/160 | AUC 0.8383 | AUC 0.7447 | 234,731 | 88.2 min |
