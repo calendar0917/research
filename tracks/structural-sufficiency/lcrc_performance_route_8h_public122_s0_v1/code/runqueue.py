@@ -47,7 +47,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("jobs", nargs="+")
     args = ap.parse_args(argv)
 
-    log_path = C.ANALYSIS / f"queue_{args.purpose}.jsonl"
+    log_path = C.ANALYSIS / "queue_logs" / f"queue_{args.purpose}.jsonl"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     device = torch.device(args.device)
     if device.type == "cuda" and not torch.cuda.is_available():
