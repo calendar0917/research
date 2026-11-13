@@ -241,8 +241,15 @@ such cells and NULL3 would coincide with LOCAL3 there.
 GPU·h charged from process wall time: LOCAL3 0.0943, DUP2 0.1032, smoke 0.0039 →
 `runtime.json` records **0.2014 h**; the three short check/intervention jobs add
 ≈0.006 h of wall time, so the round's real total is ≈**0.207 h**. Both figures are
-inside the 1.0 h soft cap and the 2.0 h hard cap. One round job per card, one parallel round, no retries were needed and no
-other task on `res` was touched. `res-2` was not used.
+inside the 1.0 h soft cap and the 2.0 h hard cap. One round job per card, one parallel round, no formal-run retry was needed
+and no other task on `res` was touched. `res-2` was not used.
+
+Pre-Stage-I setup failures, recorded for completeness: one `s3-smoke` invocation died
+immediately on a shell path typo (no GPU time), and two `s3-gpuchecks` invocations
+died on my own generator-device and float32-tolerance mistakes (≈8 s GPU each) before
+Stage I started. Both were implementation errors in the *check* script, fixed and
+re-run before any formal training; no formal-run number was produced, replaced or
+retried.
 
 ## 10. What this supports, and what it does not
 
