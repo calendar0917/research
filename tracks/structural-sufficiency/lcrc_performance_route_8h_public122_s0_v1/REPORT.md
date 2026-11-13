@@ -7,7 +7,7 @@
 | 配置 | `configs/experiment.yaml`（与 `code/lcpr_common.py` 同源） |
 | 数据 | MoleculeNet Lipophilicity（ChemBench 发布的 `random122` 划分）、ESOL、BACE、FreeSolv、ogbg-molhiv（官方 scaffold） |
 | 训练种子 | 0（全部），无多 seed |
-| 预算消耗 | 35 次正式训练 + 20 次 2-epoch 冒烟；**4.53 A100·h**（软上限 14 / 硬上限 16） |
+| 预算消耗 | 35 次正式训练 + 20 次 2-epoch 冒烟；**4.5–5.2 A100·h**（软上限 14 / 硬上限 16） |
 | 结果标签 | `DEVELOPMENT_TEST` / `TEST_USED_FOR_ROUTE_SELECTION`（Test 只用于选路线，从不选 epoch） |
 | 性质 | 单种子、单轮；**不构成独立确认，也不构成跨 seed 稳定性证据** |
 
@@ -404,11 +404,12 @@ HIV 的两个 run 是本轮最后完成的（11–33 s/epoch × 160），不参�
 | --- | --- | --- |
 | 正式训练次数（含 2 次失败/取消的尝试共 37 次） | 35 | 64 |
 | 冒烟训练次数 | 20 | （计入上式） |
-| 计费 GPU·h | **4.53**（另有 1 次主动取消的 HIV 重跑 ≈0.28，实际 ≈4.8） | 软 14 / 硬 16 |
+| 计费 GPU·h | **4.5 – 5.2**（进程墙钟口径 4.53；逐 epoch 训练+评测累计 5.16） | 软 14 / 硬 16 |
 | 墙钟 | ~6 h（含本地准备、远程部署、两次 HIV 重跑、分析与写作） | 8 h |
 
 计费口径：任何触碰 GPU 的 job（含评测、冒烟、失败与取消）都按 **进程墙钟 × GPU 数** 计——这是保守上界，
-因为部分 job 的进程墙钟含排队/启动开销（§6），按 curve 口径的实际训练+评测合计约 4.0 GPU·h。
+因为部分 job 的进程墙钟含排队/启动开销（§6）；反过来，按逐 epoch `train_seconds + eval_seconds`
+累计 35 次正式训练得到 5.16 GPU·h。两个口径都远低于软上限，取区间表述。
 本地 CPU 的准备/面板/分析不计。明细在 `analysis/budget.json`（per-job，31 条记录，含 6 条 failed）。
 
 本轮有两次非科学性的运行损失，都记录在案：① `C1_R1@ogbg-molhiv` 第一次跑完 160 epoch 后，
