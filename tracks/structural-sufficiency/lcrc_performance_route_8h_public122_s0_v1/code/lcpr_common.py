@@ -390,11 +390,23 @@ def git_commit() -> str:
         return ""
 
 
+CODE_PATHS = ("code", "configs", "PROTOCOL.md")
+
+
 def git_dirty() -> bool:
+    """Is any *science-critical* path modified relative to the commit?
+
+    Only code, configuration and the protocol are checked: the run/analysis
+    outputs under ``runs/`` and ``analysis/`` are written by the jobs themselves
+    (and by ``prepare``) and must not block a subsequent formal run on the same
+    checkout, which is shared by both GPUs.
+    """
+    rel = str(TRACK.relative_to(REPO))
     try:
         out = subprocess.check_output(
-            ["git", "status", "--porcelain", "--untracked-files=no"], cwd=REPO,
-            text=True, stderr=subprocess.DEVNULL,
+            ["git", "status", "--porcelain", "--untracked-files=no", "--",
+             *[f"{rel}/{p}" for p in CODE_PATHS]],
+            cwd=REPO, text=True, stderr=subprocess.DEVNULL,
         )
         return bool(out.strip())
     except Exception:  # pragma: no cover
