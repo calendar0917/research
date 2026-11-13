@@ -333,7 +333,12 @@ Test 侧的 +1.75 % 是这一族里最大的（`M_CLEANPOOL` +1.00 %、`M_NODROP
 | FreeSolv | R1 | 0.7523 / 0.9097 | 0.8150 / 0.8520 | −8.3 % | **+6.3 %** | 反向 |
 | Lipophilicity | R1 | 0.6526 / 0.5839 | 0.5667 / 0.5573 | +13.2 % | +4.6 % | 双升 |
 
-（格式：Valid / Test。ESOL/FreeSolv/Lipophilicity 为 RMSE 越低越好，BACE 为 AUC 越高越好。）
+（格式：Valid / Test。ESOL/FreeSolv/Lipophilicity 为 RMSE 越低越好，BACE 为 AUC 越高越好。
+`R_task` 按各任务自己的 Valid 选出：ESOL/FreeSolv 为 R1，BACE 也偏好 R1（Valid AUC 0.7896 vs R0 的 0.7788）。
+
+在 R0 上额外跑的一组（不用于判定，只核查"配方是否改变迁移结论"）：ESOL 上 `K_COMBO` 的 Valid
+0.5534 优于基线 0.5661（+2.2 %），但 Test 0.5544 差于 0.5409（−2.5 %）；BACE R0 上 Valid +0.0066、
+Test −0.0067。**两种配方下 Test 侧都是负的**，所以迁移失败的结论不依赖于 `R_task` 的选择。
 
 冻结的迁移规则（ESOL rel RMSE ≥1 % 或 BACE AUC ≥ +0.005，且无 >2 % / >0.01 的反向）**没有通过**：
 ESOL 两个 split 都更差，BACE Test 微降，FreeSolv 反向。**`K_COMBO` 的增益是任务特异的。**

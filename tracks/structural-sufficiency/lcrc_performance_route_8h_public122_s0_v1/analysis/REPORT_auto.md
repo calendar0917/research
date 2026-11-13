@@ -3,8 +3,8 @@
 > 本轮结论均为 `DEVELOPMENT_TEST` / `TEST_USED_FOR_ROUTE_SELECTION`：Test 全量参与每轮评估并参与路线筛选，因此不是独立确认，也不是跨种子稳定性证据。所有新训练 seed = 0，单种子。
 
 - 协议：`PROTOCOL.md`；冻结配置：`configs/experiment.yaml`；协议 ID `lcrc-performance-route-8h-public122-s0-v1`
-- 新训练次数（不含 ≤2 轮 smoke）：33
-- 计费 GPU 小时（wall × GPU，含评估/失败/取消）：2.51 A100·h（软上限 14.0，硬上限 16）
+- 新训练次数（不含 ≤2 轮 smoke）：35
+- 计费 GPU 小时（wall × GPU，含评估/失败/取消）：3.87 A100·h（软上限 14.0，硬上限 16）
 
 ## Q1 当前 C1 与简单基线 / 合理 D-MPNN 参考的距离，以及便宜改动能解释多少
 
@@ -56,9 +56,9 @@
 
 | split | mask/clean 二阶矩比 | MC 预测均值 − eval 均值 | MC 标准差均值 |
 |---|---|---|---|
-| test | 1.111 | -0.0354 | 0.0909 |
-| train | 1.111 | -0.0292 | 0.0905 |
-| valid | 1.111 | -0.0312 | 0.0901 |
+| test | 1.111 | -0.0343 | 0.0900 |
+| train | 1.111 | -0.0303 | 0.0910 |
+| valid | 1.111 | -0.0290 | 0.0907 |
 
 这是**同一份权重**下 256 个固定 mask 的蒙特卡洛统计：量出的是「训练期池化统计与 eval 期的系统性差别」，而不是网络学到了什么。
 
@@ -95,9 +95,11 @@
 | BACE | C1_R1 | R1 | 0.7896 | 0.8335 | 0.6526 |
 | ESOL | C1_R1 | R1 | 0.5383 | 0.5305 | 0.6526 |
 | FreeSolv | C1_R1 | R1 | 0.7523 | 0.9097 | 0.6526 |
+| ogbg-molhiv | C1_R1 | R1 | 0.8378 | 0.7458 | 0.6526 |
 | BACE | K_COMBO | R0 | 0.7854 | 0.8255 | 0.5667 |
 | ESOL | K_COMBO | R0 | 0.5534 | 0.5544 | 0.5667 |
 | FreeSolv | K_COMBO | R1 | 0.8150 | 0.8520 | 0.5667 |
+| ogbg-molhiv | K_COMBO | R1 | 0.8383 | 0.7447 | 0.5667 |
 | BACE | K_COMBO_R1_T | R1 | 0.8017 | 0.8306 |  |
 | ESOL | K_COMBO_R1_T | R1 | 0.5516 | 0.5362 |  |
 
@@ -193,14 +195,7 @@
 | 用途 | 任务 | 状态 | GPU·h | wall (s) |
 |---|---|---|---|---|
 | stageA_gpu0 | C1_R0:Lipophilicity | completed | 0.107 | 385 |
-| stageA_gpu0 | C1_R2:Lipophilicity | completed | 0.108 | 390 |
-| stageA_gpu0 | A0_R0:Lipophilicity | completed | 0.110 | 397 |
 | stageA_gpu1 | C1_R1:Lipophilicity | failed | 0.117 | 422 |
-| stageA_gpu1 | C1_R1:Lipophilicity | completed | 0.109 | 392 |
-| stageA_gpu1 | C1_R3:Lipophilicity | completed | 0.108 | 388 |
-| stageA_gpu1 | DMPNN_LR3E4:Lipophilicity | failed | 0.000 | 0 |
-| stageA_gpu1 | DMPNN_LR3E4:Lipophilicity | failed | 0.000 | 0 |
-| stageA_gpu1 | DMPNN_LR1E3:Lipophilicity | failed | 0.000 | 0 |
 | stageB_gpu0 | A0_CHEM8_CONTRIB_R0:Lipophilicity | completed | 0.132 | 475 |
 | stageB_gpu0 | WIDE_LOCAL:Lipophilicity | completed | 0.104 | 376 |
 | stageB_gpu1 | DMPNN_LR3E4:Lipophilicity | completed | 0.001 | 4 |
@@ -219,6 +214,6 @@
 | stageD_gpu1 | C1_R1:ogbg-molhiv | failed | 0.555 | 1998 |
 | stageF_gpu0 | K_COMBO_R1_T:ESOL | completed | 0.029 | 106 |
 | stageF_gpu0 | K_COMBO_R1_T:BACE | completed | 0.064 | 231 |
-| stageA_gpu0 | C1_R0:Lipophilicity | completed | 0.107 | 385 |
-| stageA_gpu1 | C1_R1:Lipophilicity | failed | 0.117 | 422 |
+| stageG_hiv | C1_R1:ogbg-molhiv | completed | 0.545 | 1963 |
+| stageG_hiv | K_COMBO:ogbg-molhiv | completed | 1.473 | 5302 |
 
