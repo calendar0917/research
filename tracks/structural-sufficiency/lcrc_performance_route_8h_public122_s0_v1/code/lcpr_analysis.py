@@ -457,6 +457,8 @@ def family_summary(rows: Iterable[Mapping[str, Any]], dataset: str,
             "recipe": rec["recipe"],
             "epochs": rec["epochs"],
             "gpu_hours": rec["gpu_hours"],
+            "wall_seconds": rec.get("wall_seconds"),
+            "mean_epoch_seconds": rec.get("mean_epoch_seconds"),
         }
         if task == "regression":
             entry["mae_gain_valid"] = float((base["valid"]["mae"] - rec["valid"]["mae"])
@@ -512,33 +514,48 @@ def _mpl():
     return plt
 
 
-def figure_performance_cost(summary: Mapping[str, Any], path: Path, reference: Mapping[str, float]) -> None:
+def figure_performance_cost(summary: Mapping[str, Any], path: Path,
+                            reference: Mapping[str, Any]) -> None:
+    """Panel (a): Valid gain vs Test gain; panel (b): Test gain vs cost.
+
+    The round's frozen ranking is ``min(gain_valid, gain_test)``, which collapses
+    to whichever split disagrees, so both gains are shown separately: the point of
+    the figure is that most routes move Valid and Test in *opposite* directions.
+    """
     plt = _mpl()
     arms = summary.get("arms", {})
     if not arms:
         return
-    fig, ax = plt.subplots(figsize=(6.4, 4.2), dpi=170)
-    names, gains, costs = [], [], []
-    for cand, e in sorted(arms.items(), key=lambda kv: -kv[1]["balanced"]):
-        names.append(cand)
-        gains.append(e["balanced"] * 100.0)
-        cost = e.get("gpu_hours")
-        costs.append(float(cost) if cost else 0.05)
-    ax.scatter(costs, gains, s=28, c="#2b6cb0", zorder=3)
-    for x, y, n in zip(costs, gains, names, strict=True):
-        ax.annotate(n, (x, y), fontsize=5.6, xytext=(3, 3), textcoords="offset points")
-    ax.axhline(0, color="#999", lw=0.8, ls=":")
-    if "xgboost_valid" in reference:
-        ax.axhline(reference["xgboost_valid"] * 100, color="#c53030", lw=0.9, ls="--")
-        ax.annotate("ECFP+XGBoost (Valid)", (max(costs) * 0.98, reference["xgboost_valid"] * 100),
-                    ha="right", va="bottom", fontsize=6, color="#c53030")
-    if "dmpnn_valid" in reference:
-        ax.axhline(reference["dmpnn_valid"] * 100, color="#2f855a", lw=0.9, ls="--")
-        ax.annotate("D-MPNN (Valid)", (max(costs) * 0.98, reference["dmpnn_valid"] * 100),
-                    ha="right", va="top", fontsize=6, color="#2f855a")
-    ax.set_xlabel("charged GPU hours (wall x GPUs)")
-    ax.set_ylabel("balanced gain vs C1@R*  [% relative RMSE]")
-    ax.set_title("Lipophilicity random122 — performance vs cost (seed 0, one recipe each)")
+    fig, ax = plt.subplots(1, 2, figsize=(9.4, 4.3), dpi=170)
+    names = list(arms)
+    gv = [arms[c]["gain_valid"] * 100.0 for c in names]
+    gt = [arms[c]["gain_test"] * 100.0 for c in names]
+    wall = [max(float(arms[c].get("wall_seconds") or 0.0) / 60.0, 0.1) for c in names]
+    ax[0].axhline(0, color="#999", lw=0.8, ls=":")
+    ax[0].axvline(0, color="#999", lw=0.8, ls=":")
+    ax[0].scatter(gv, gt, s=32, c="#2b6cb0", zorder=3)
+    for x, y, n in zip(gv, gt, names, strict=True):
+        ax[0].annotate(n, (x, y), fontsize=5.8, xytext=(4, 3), textcoords="offset points")
+    ax[0].set_xlabel("Valid gain vs C1@R*  [%]")
+    ax[0].set_ylabel("Test gain vs C1@R*  [%]")
+    ax[0].set_title("(a) Valid and Test move against each other")
+    for label, key, colour in (("ECFP4+XGBoost", "xgboost", "#c53030"),
+                               ("D-MPNN", "dmpnn", "#2f855a")):
+        val = reference.get(key)
+        if not val or not reference.get("base_valid"):
+            continue
+        rx = (reference["base_valid"] - val["valid"]) / reference["base_valid"] * 100.0
+        ry = (reference["base_test"] - val["test"]) / reference["base_test"] * 100.0
+        ax[0].scatter([rx], [ry], marker="*", s=170, c=colour, zorder=4)
+        ax[0].annotate(f"{label}\n(V {rx:+.1f}%, T {ry:+.1f}%)", (rx, ry), fontsize=6.0,
+                       color=colour, xytext=(5, -12), textcoords="offset points")
+    ax[1].axhline(0, color="#999", lw=0.8, ls=":")
+    ax[1].scatter(wall, gt, s=32, c="#2b6cb0", zorder=3)
+    for x, y, n in zip(wall, gt, names, strict=True):
+        ax[1].annotate(n, (x, y), fontsize=5.8, xytext=(4, 3), textcoords="offset points")
+    ax[1].set_xlabel("training wall time [min, one A100, incl. per-epoch eval]")
+    ax[1].set_ylabel("Test gain vs C1@R*  [%]")
+    ax[1].set_title("(b) Test gain vs cost")
     fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)
@@ -557,7 +574,7 @@ def figure_error_distribution(ledger: Sequence[Mapping[str, Any]], path: Path,
         if sub:
             data.append(sub)
             labels.append(cand)
-    ax.boxplot(data, labels=labels, showfliers=False, widths=0.55)
+    ax.boxplot(data, tick_labels=labels, showfliers=False, widths=0.55)
     ax.axhline(0, color="#999", lw=0.8, ls=":")
     ax.set_ylabel("per-row |error| change (arm − base)")
     ax.set_title("Test-row error redistribution (negative = better)")
@@ -575,17 +592,18 @@ def figure_mechanism(mech: Mapping[str, Any], path: Path) -> None:
         return
     fig, ax = plt.subplots(1, 2, figsize=(7.6, 3.4), dpi=170)
     sup = [p["s2_support_mean"] for p in points]
-    dq = [p["delta_q_norm"] for p in points]
-    ax[0].scatter(sup, dq, s=6, alpha=0.6, c="#2b6cb0")
+    dj = [p["delta_j_norm"] for p in points]
+    ds = [p["delta_se"] for p in points]
+    keep = [i for i, v in enumerate(sup) if v is not None]
+    ax[0].scatter([sup[i] for i in keep], [dj[i] for i in keep], s=8, alpha=0.7, c="#2b6cb0")
     ax[0].set_xscale("log")
     ax[0].set_xlabel("mean Train support of the row's S2 keys")
-    ax[0].set_ylabel("|Δq| under α = 0 → 1")
-    ax[0].set_title("J-block contraction sensitivity vs support")
-    ds = [p["delta_se"] for p in points]
-    ax[1].scatter(dq, ds, s=6, alpha=0.6, c="#c53030")
+    ax[0].set_ylabel("|ΔJ| rule → marginal")
+    ax[0].set_title("J-block sensitivity vs key support")
+    ax[1].scatter(dj, ds, s=8, alpha=0.7, c="#c53030")
     ax[1].axhline(0, color="#999", lw=0.8, ls=":")
-    ax[1].set_xlabel("|Δq| under α = 0 → 1")
-    ax[1].set_ylabel("Δ squared error (α = 0 par → full)")
+    ax[1].set_xlabel("|ΔJ| rule → marginal")
+    ax[1].set_ylabel("Δ squared error (marginal − rule)")
     ax[1].set_title("Does the mechanism move real error?")
     fig.tight_layout()
     fig.savefig(path)
@@ -725,11 +743,14 @@ def run_ledger(base_candidate: str | None = None) -> dict[str, Any]:
     ledger = error_ledger("Lipophilicity", base, arms)
     import csv as _csv
 
-    path = C.ANALYSIS / "error_ledger.csv"
-    with open(path, "w", newline="", encoding="utf-8") as fh:
+    import gzip
+
+    path = C.ANALYSIS / "error_ledger.csv.gz"
+    with gzip.open(path, "wt", newline="", encoding="utf-8") as fh:
         writer = _csv.DictWriter(fh, fieldnames=list(ledger[0]))
         writer.writeheader()
         writer.writerows(ledger)
+    (C.ANALYSIS / "error_ledger.csv").unlink(missing_ok=True)
 
     pred = load_predictions_raw("Lipophilicity", base["predictions"])
     tails = {s: tail_view(pred, s) for s in C.SPLITS}
@@ -752,16 +773,25 @@ def run_ledger(base_candidate: str | None = None) -> dict[str, Any]:
         summary["tail_metrics"][s] = entry
     # per-arm tail metrics (same frozen row sets as the base)
     arm_tail: dict[str, Any] = {}
+    y_test = np.asarray(pred["test_y"], float)
+    base_test = np.asarray(pred["test_pred"], float)
     for arm in arms:
         ap = np.asarray(load_predictions_raw("Lipophilicity", arm["predictions"])["test_pred"], float)
-        y = np.asarray(pred["test_y"], float)
-        rec: dict[str, Any] = {"full_rmse": _rmse(ap, y), "base_full_rmse": _rmse(
-            np.asarray(pred["test_pred"], float), y)}
+        rec: dict[str, Any] = {"full_rmse": _rmse(ap, y_test),
+                               "base_full_rmse": _rmse(base_test, y_test),
+                               "gain_full": float((_rmse(base_test, y_test) - _rmse(ap, y_test))
+                                                  / _rmse(base_test, y_test))}
         for frac in C.TAIL_FRACTIONS:
             drop = np.asarray(tails["test"][f"exclude_top_{frac:g}"], dtype=np.int64)
-            keep = np.setdiff1d(np.arange(len(y)), drop)
-            rec[f"exclude_top_{frac:g}"] = {"arm_rmse": _rmse(ap[keep], y[keep]),
-                                            "n_kept": int(len(keep))}
+            keep = np.setdiff1d(np.arange(len(y_test)), drop)
+            arm_v = _rmse(ap[keep], y_test[keep])
+            base_v = _rmse(base_test[keep], y_test[keep])
+            rec[f"exclude_top_{frac:g}"] = {
+                "arm_rmse": arm_v, "base_rmse_same_rows": base_v, "n_kept": int(len(keep)),
+                "gain": float((base_v - arm_v) / base_v),
+                "tail_only_gain": bool((base_v - arm_v) / base_v > 0.01
+                                       and rec["gain_full"] <= 0.0),
+            }
         arm_tail[arm["candidate"]] = rec
     summary["arm_tail_test"] = arm_tail
     summary.pop("_arms", None)
@@ -778,25 +808,36 @@ def run_figures() -> dict[str, Any]:
     base_candidate = trace.get("lipophilicity_base")
     fam_path = C.ANALYSIS / "family_summary.json"
     fam = json.loads(fam_path.read_text()) if fam_path.exists() else {}
-    ref = {"xgboost_valid": XFGB_REFERENCE["Lipophilicity"]["valid_rmse"]}
+    idx = run_index(rows)
+    base_rec = idx.get((base_candidate, "Lipophilicity"))
+    ref: dict[str, Any] = {
+        "base_valid": (base_rec or {}).get("valid", {}).get("rmse"),
+        "base_test": (base_rec or {}).get("test", {}).get("rmse"),
+        "xgboost": {"valid": XFGB_REFERENCE["Lipophilicity"]["valid_rmse"],
+                    "test": XFGB_REFERENCE["Lipophilicity"]["test_rmse"]},
+    }
     idx = run_index(rows)
     dmp = [r for (c, d), r in idx.items() if d == "Lipophilicity" and str(c).startswith("DMPNN")]
+    dmpnn_best = None
     if dmp:
-        best = min(dmp, key=lambda r: r["valid"]["rmse"])
-        ref["dmpnn_valid"] = best["valid"]["rmse"]
+        dmpnn_best = min(dmp, key=lambda r: r["valid"]["rmse"])
+        ref["dmpnn"] = {"valid": dmpnn_best["valid"]["rmse"], "test": dmpnn_best["test"]["rmse"]}
     fig_dir = C.ANALYSIS / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
     figure_performance_cost(fam, fig_dir / "performance_cost.png", ref)
-    ledger_path = C.ANALYSIS / "error_ledger.csv"
+    ledger_path = C.ANALYSIS / "error_ledger.csv.gz"
     if ledger_path.exists():
         import csv as _csv
+        import gzip
 
-        with open(ledger_path, encoding="utf-8") as fh:
+        with gzip.open(ledger_path, "rt", encoding="utf-8") as fh:
             ledger = list(_csv.DictReader(fh))
         for rec in ledger:
             rec["split"] = rec["split"]
             rec["delta_abs_error"] = float(rec["delta_abs_error"])
-        cands = [c for c in (fam.get("promoted") or [])]
+        winners = [(fam.get("families") or {}).get(f, {}).get("winner")
+                   for f in (fam.get("promoted") or [])]
+        cands = [c for c in winners if c]
         if not cands:
             cands = sorted({r["candidate"] for r in ledger if r["split"] == "test"})[:3]
         figure_error_distribution(ledger, fig_dir / "error_distribution.png", cands)

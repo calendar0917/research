@@ -234,9 +234,16 @@ def build() -> str:
     a("### 尾部分布（Lipo Test，行集合仅由基线误差定义）")
     a("")
     if tails.get("arm_tail_test"):
-        a(_table(["臂", "全量 RMSE", "去掉基线最大 1%", "去掉基线最大 5%"],
-                 [[c, _f(v["full_rmse"]), _f(v["exclude_top_1"]["arm_rmse"]),
-                   _f(v["exclude_top_5"]["arm_rmse"])] for c, v in tails["arm_tail_test"].items()]))
+        rows_tail = []
+        for c, v in tails["arm_tail_test"].items():
+            k1 = v.get("exclude_top_1") or v.get("exclude_top_0.01") or {}
+            k5 = v.get("exclude_top_5") or v.get("exclude_top_0.05") or {}
+            rows_tail.append([c, _f(v["full_rmse"]), _pct(v.get("gain_full")),
+                              _f(k1.get("arm_rmse")), _pct(k1.get("gain")),
+                              _f(k5.get("arm_rmse")), _pct(k5.get("gain")),
+                              "是" if (k1.get("tail_only_gain") or k5.get("tail_only_gain")) else "否"])
+        a(_table(["臂", "全量 RMSE", "全量增益", "去最大 1%", "增益 1%", "去最大 5%", "增益 5%", "仅尾部增益"],
+                 rows_tail))
         a("")
 
     a("## 配对 bootstrap（Lipo，2000 次，seed %s）" % C.BOOTSTRAP_SEED)
@@ -252,6 +259,26 @@ def build() -> str:
         a(_table(["split", "臂", "ΔRMSE（基线−臂，正=更好）", "95% CI", "p（双侧）", "簇数"], rr))
         a("")
         a("区间只条件于单种子与本轮的候选/配方/Test 筛选，不构成独立确认。")
+        a("")
+
+    bench = _load("bench.json", {}) or {}
+    if bench:
+        a("## 成本/实用性坐标（同一 Test 行集，batch 128，10 batch 预热 + 5 次重复）")
+        a("")
+        c1 = bench.get("c1_inference", {})
+        dm = bench.get("dmpnn_inference", {})
+        a(_table(["模型", "参数量", "Test 推理中位耗时 (s)", "范围 (s)", "训练 wall (min)"],
+                 [["C1（本轮基线）", _f(bench.get("parameters", {}).get("c1"), "{:.0f}"),
+                   _f(c1.get("median_seconds"), "{:.4f}"),
+                   f"[{_f(c1.get('min_seconds'), '{:.4f}')}, {_f(c1.get('max_seconds'), '{:.4f}')}]",
+                   _f(base.get("wall_seconds"), "{:.1f}") if base else ""],
+                  ["D-MPNN", _f(bench.get("parameters", {}).get("dmpnn"), "{:.0f}"),
+                   _f(dm.get("median_seconds"), "{:.4f}") if "median_seconds" in dm else dm.get("error", ""),
+                   f"[{_f(dm.get('min_seconds'), '{:.4f}')}, {_f(dm.get('max_seconds'), '{:.4f}')}]"
+                   if "median_seconds" in dm else "",
+                   _f((dmp_best or {}).get("wall_seconds"), "{:.1f}") if dmp_best else ""]]))
+        a("")
+        a("两个模型输入与配方不同，这只是**实用性坐标**，不是架构的受控比较。")
         a("")
 
     a("## 预算与运行时")
@@ -282,7 +309,7 @@ def _yes(fam: Mapping[str, Any], cand: str) -> str:
 
 def run(stage: str = "all") -> Path:
     text = build()
-    path = C.ROOT / "REPORT.md"
+    path = C.TRACK / "REPORT.md"
     path.write_text(text, encoding="utf-8")
-    C.log(f"[report] wrote {path.relative_to(C.ROOT)} ({len(text)} chars)")
+    C.log(f"[report] wrote {path.relative_to(C.TRACK)} ({len(text)} chars)")
     return path
