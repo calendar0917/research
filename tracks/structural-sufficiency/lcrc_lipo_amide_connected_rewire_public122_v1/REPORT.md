@@ -133,7 +133,8 @@ donor 规则（无排序、无距离过滤、不看标签/预测）：同分量�
 上一轮 `MATCHED` 子集里有 donor 的：Valid 35 分子 / 36 实例、Test 18 分子 / 18 实例（补充人群）。
 
 筛选漏斗（`analysis/prepare_checks.json`）：**3109/3109** 通过结构不变量（0 失败），**603/603**
-通过 RDKit 化学校验（Valid 332 + Test 271，0 拒绝），SMILES→raw 映射 **379/379 = identity**，
+通过 RDKit 化学校验（Valid 332 + Test 271，0 拒绝），379 个含实例的 Valid/Test 分子的 SMILES→raw
+映射 **全部为 identity（379/379，0 个需要图同构回退）**，
 **0/603** 视图落在 Train 逐维范围之外。因此本轮 `main` 人群 ≡ `struct_chem_all` 人群：**范围过滤
 是空操作**，主结论不是筛选出来的（这一点与上一轮相反，上一轮 FULL 需要缩到 MATCHED 才能读）。
 
