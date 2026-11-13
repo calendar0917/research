@@ -237,9 +237,10 @@ such cells and NULL3 would coincide with LOCAL3 there.
 | Stage I DUP2 | `s3-dup2` | res / res-gpu1 | `311306ec` | 367.6 s, exit 0 |
 | interventions | `s3-intervene` | res / res-gpu0 | `311306ec` | CPU-free GPU re-evaluation of the trained LOCAL3 |
 
-GPU·h charged from process wall time: LOCAL3 0.0943, DUP2 0.1032, smoke 0.0039,
-checks/interventions ≈ 0.0010 → **0.2014 h**, inside the 1.0 h soft cap and the 2.0 h
-hard cap. One round job per card, one parallel round, no retries were needed and no
+GPU·h charged from process wall time: LOCAL3 0.0943, DUP2 0.1032, smoke 0.0039 →
+`runtime.json` records **0.2014 h**; the three short check/intervention jobs add
+≈0.006 h of wall time, so the round's real total is ≈**0.207 h**. Both figures are
+inside the 1.0 h soft cap and the 2.0 h hard cap. One round job per card, one parallel round, no retries were needed and no
 other task on `res` was touched. `res-2` was not used.
 
 ## 10. What this supports, and what it does not
