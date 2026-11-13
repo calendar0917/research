@@ -27,11 +27,12 @@ import model as MD
 
 def check_null_field(model, batch, device) -> dict[str, Any]:
     n_atoms = int(batch["atom_feat"].shape[0])
-    gen = torch.Generator(device="cpu").manual_seed(4242)
-    h = torch.randn(n_atoms, 64, generator=gen).to(device)
+    gen = torch.Generator(device=device.type).manual_seed(4242)
+    h = torch.randn(n_atoms, 64, generator=gen, device=device)
     s = batch["s3"].clone().to(device)
     # a non-zero output projection, otherwise everything is identically zero
-    model.s3.W2.weight.data.normal_(0.0, 0.2, generator=torch.Generator().manual_seed(7))
+    out_gen = torch.Generator(device=device.type).manual_seed(7)
+    model.s3.W2.weight.data.normal_(0.0, 0.2, generator=out_gen)
     group = MD._group_key(batch)
 
     h1 = h.clone().requires_grad_(True)
