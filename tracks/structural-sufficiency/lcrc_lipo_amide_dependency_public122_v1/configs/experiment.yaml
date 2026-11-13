@@ -1,0 +1,156 @@
+# Frozen configuration - lcrc-lipo-amide-dependency-public122-v1
+# Declared before the first formal inference run; the scientific definitions are
+# not changed afterwards.  Values here are informative copies of the constants
+# frozen in code/common.py, code/motif.py and code/prepare.py.
+
+round_id: lcrc-lipo-amide-dependency-public122-v1
+protocol_id: lcrc-lipo-amide-dependency-public122-v1
+design_revision: 6f70d05fd883fb3ac66bc786c62739416710054a
+
+data:
+  dataset: ChemBench Lipophilicity
+  repeat: random122
+  source_commit: 0b10d4c1ac72b6929503694a5f60446824736391
+  csv: tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz
+  csv_sha256: 34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758
+  split_file: tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random122.ind.pkl
+  split_file_sha256: bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d
+  raw_attribute_artifact_sha256: 1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be
+  split_sizes: {train: 3360, valid: 420, test: 420}
+  split_rows_sha256:
+    train: 4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96
+    valid: 31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365
+    test: a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93
+  label_column: exp
+  label_units: logD (raw)
+  row_reordering: forbidden (published row order kept)
+  split_regeneration: forbidden
+
+model:
+  variant: C1
+  variant_name: NO_BOND_MEAN
+  parameters: 228674
+  checkpoint: tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/runs/A_s0/best.pt
+  checkpoint_sha256: bdd670e8df5ee03ba28f2f4898e7fd137991a9fd23e9add91c08d8b6e0a1d6a7
+  state_hash: 7d32221e0c3f482a16e2e170b7df1d4753ff4d7783cc2b5a3386b183a7941e36
+  best_epoch: 244
+  training_arm: A (ordinary molecule MSE only)
+  feature_spec_hash: 7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee
+  feature_spec: {atom_feat: 51, bond_feat: 13, atom_scalar: 9, global: 42, s1_codes: 80, s2_path_codes: 400}
+  normalisation: frozen Train-only buffers inside the checkpoint (never refitted)
+  reference_metrics:
+    valid_rmse: 0.7025358944353126
+    test_rmse: 0.5761674771952362
+    test_mae: 0.4280564144318241
+  reproduction_tolerance: 1.0e-5
+
+motif:
+  name: restricted amide link acyl_c - c(=O) - n
+  raw_vocabulary:
+    C_non_aromatic: 2
+    C_aromatic: 3
+    N_non_aromatic: 7
+    O: 9
+    neutral_charge_bucket: 2
+    single_bond: 0
+    double_bond: 1
+  required:
+    c: {atom_class: 2, charge: 2, atom_h: 0, degree: 3}
+    o: {atom_class: 9, charge: 2, atom_h: 0, degree: 1, bond: double}
+    n: {atom_class: 7, charge: 2, all_incident_bonds: single, degree_plus_h: 3, c_n_bond: [single, bridge]}
+    acyl_c: {atom_class: [2, 3], c_acyl_bond: [single, bridge]}
+    neighbours_of_c: exactly {o, n, acyl_c}
+  bridge_definition: Tarjan bridge of the original undirected physical graph
+  ring_atom_definition: atom with at least one incident non-bridge bond
+  matched: degree(n) == degree(acyl_c) and ring_atom(n) == ring_atom(acyl_c)
+  balanced: abs(n_side - acyl_side) <= 2 heavy atoms
+  allowed: N may itself sit in another ring; the cut bonds must not be ring bonds
+  forbidden: redefining the motif after seeing any prediction or effect
+
+populations:
+  ALL: molecules with >= 1 target instance (all instances used)
+  MATCHED: main analysis; only matched instances inside matched molecules
+  BALANCED: only instances with balanced cut-fragment sizes
+  R: instances with >= 1 remote control candidate
+  instance_leakage: an analysed molecule never mixes in non-qualifying instances
+  pre_registered_counts:
+    ALL: {train: [1438, 1657], valid: [194, 234], test: [185, 208]}
+    MATCHED: {train: [343, 354], valid: [52, 54], test: [42, 43]}
+    BALANCED_molecules: {train: 172, valid: 28, test: 23}
+    R_molecules: {valid: 49, test: 43}
+
+views:
+  O: original raw row (zero cuts)
+  T: delete the c-n physical bond only
+  K: delete the c-acyl_c physical bond only
+  R: delete one minimal-cost remote q-r C-N bridge
+  construction: copy label-free raw row -> remove both directed records -> n_components += 1
+                -> frozen raw-graph adapter -> frozen lipo_v1 feature builder
+  preserved: atoms, atom_class, atom_charge, atom_h, all other bonds, stereo, no new types
+  forbidden: SMILES re-parse for model input, atom deletion, H addition, capping, re-sanitise,
+             zeroing statistics columns, feeding the original cache for cut views
+
+scopes:
+  FULL: every input block (including global42) recomputed from the cut graph
+  G_FIXED: local inputs/scalars from the cut graph, raw global42 restored to the original
+           molecule's O.global42 before the frozen normalisation
+  both_scopes_reported: true
+  primary_scope: FULL
+
+statistics:
+  losses: raw logD absolute error per view, then averaged
+  main_quantities:
+    B: mean_m (LT_m - L0_m)
+    D: mean_m (LT_m - LK_m)
+    B_R: mean_m (LR_m - L0_m)
+    D_R: mean_m (LT_m - LR_m)
+  weights: molecule-equal; instance-equal inside a molecule; tied remote candidates equal
+  rmse: same weights on squared errors
+  cluster: Bemis-Murcko scaffold (non-isomeric canonical SMILES; empty scaffold -> molecule
+           canonical non-isomeric SMILES)
+  bootstrap: paired cluster bootstrap, 1000 replicates, seed 20261114, shared resample per
+             population across views/scopes, whole clusters resampled with replacement
+  ci: percentile 95 percent
+  influence:
+    drop_worst_single: largest abs(D_m), ties by smallest row_id
+    drop_worst_block: ceil(0.05 * n) largest abs(D_m), ties by row_id
+    always_report_worst_row: y, O/T/K predictions, all instances, structure
+  out_of_range: frozen normalised global42 / scalar9 vs full Train min/max per dimension
+
+natural_pairs:
+  source: tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/analysis/pairs.csv
+  reuse: the same 823 unique unordered MMP row pairs (no new mining)
+  selection: abs(n_target(a) - n_target(b)) == 1  (ALL instances, not MATCHED)
+  direction: more target instances minus fewer target instances
+  groups: {P_train: [38, 17], E_T: [21, 8], E_HH: [3, 3]}  # [pairs, eval_components]
+  metrics: mean abs(df - dy) pair-equal and component-equal, versus the zero-change |dy|
+  support: E_HH = LOW_SUPPORT; E_T = supplementary observation only
+
+execution:
+  host: res (compute), local host for analysis and figures
+  device: one A100 (res-gpu0/res-gpu1) or CPU if fast enough
+  gpu_budget_hours: {planned: 0.1, hard_cap: 0.5}
+  cpu_preprocessing_budget_minutes: 30
+  training: none (no optimizer, no backward, no probe, no new model, no new seed)
+  seeds: only the fixed atom-permutation RNG (20261114) of the protocol gate
+  allowed_reruns: implementation-error fixes only, recorded with the reason
+
+stop_conditions:
+  - frozen data / split / checkpoint hash mismatch -> MISSING_BASELINE, stop
+  - structural pre-count mismatch after a coding-error search -> stop the formal analysis
+  - reproduction difference above 1e-5 after model/split/denormalisation checks -> stop
+  - budget approach -> save finished artifacts, report the missing items, stop
+  - after the prescribed inference/analysis -> stop (no new motif, no next model round)
+
+decision_rule:
+  consistent_dependence_evidence: main FULL B and D 95 percent CI lower bounds > 0
+    AND Valid B/D point estimates in the same direction
+    AND G_FIXED B/D point estimates in the same direction
+    AND both fixed drop checks still give D > 0
+  not_supported: main B or D point estimate <= 0 -> "this protocol does not support the
+    structural-dependence claim" (not "the model never uses the amide")
+  direction_only: positive point estimate with an interval crossing zero
+  conclusion_sensitive: scope / Valid / influence checks disagree -> say so explicitly
+  never: upgrade to a general chemical mechanism, cross-seed stability, or causal effect
+  always_reported_alongside: supplementary controls, input distribution shift, natural-pair
+    low support
