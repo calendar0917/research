@@ -114,12 +114,14 @@ def panel_m(model, dataset: str = "Lipophilicity", *, masks: int = 256,
 
 @torch.no_grad()
 def panel_s(model, dataset: str = "Lipophilicity", *, k_valid: int = 64, k_test: int = 64,
-            alphas: Sequence[float] = (0.0, 0.25, 0.5, 0.75, 1.0)) -> dict[str, Any]:
-    """Support panel: per-row sensitivity of the J block to the frozen rule.
+            kappa_mults: Sequence[float] = (1e6, 4.0, 1.0, 0.1, 0.001)) -> dict[str, Any]:
+    """Support panel: per-row sensitivity of the J block to the support rule.
 
-    ``alpha`` is realised by scaling ``kappa`` (``a(c) = c/(c + kappa/alpha)``), so
-    alpha = 1 is the frozen FULL operator and alpha -> 0 the frozen marginal one.
-    The model must be an S-family checkpoint (its ``local`` owns the buffers).
+    The contraction strength is swept through ``kappa_eff = kappa * mult``:
+    ``mult = 1`` is the frozen rule the arm was trained with, ``mult -> inf`` is
+    the frozen marginal operator (B5, ``a -> 0``) and ``mult -> 0`` approaches the
+    FULL operator (``a -> 1``).  Every quantity is reported as a change against
+    ``mult = 1``, i.e. against the operator the checkpoint actually uses.
     """
     import lcpr_analysis as A
 
@@ -127,7 +129,7 @@ def panel_s(model, dataset: str = "Lipophilicity", *, k_valid: int = 64, k_test:
     base_kappa = float(support["kappa"])
     dev = next(model.parameters()).device
     jslice = _joint_slice(model)
-    out: dict[str, Any] = {"alphas": [float(a) for a in alphas], "kappa": base_kappa,
+    out: dict[str, Any] = {"kappa_mults": [float(m) for m in kappa_mults], "kappa": base_kappa,
                            "a_bar_k1": float(support["a_bar_k1"]),
                            "a_bar_k4": float(support["a_bar_k4"]), "splits": {}}
     s2_all = A.s2_support_by_molecule(dataset)
@@ -139,37 +141,44 @@ def panel_s(model, dataset: str = "Lipophilicity", *, k_valid: int = 64, k_test:
         ref = None
         per: dict[str, Any] = {}
         with _eval_mode(model):
-            for a in alphas:
-                model.local.shrink_kappa.fill_(float(base_kappa / a) if a > 0 else 1e12)
-                model.local.shrink_abar.fill_(float(support["a_bar_k1"]) if a > 0 else 0.0)
+            for mult in kappa_mults:
+                kappa_eff = float(base_kappa * float(mult))
+                model.local.shrink_kappa.fill_(min(kappa_eff, 1e12))
+                model.local.shrink_abar.fill_(float(support["a_bar_k1"]))
                 rec = model(batch, return_aux=True)
                 joint = rec["path_agg"][:, jslice]
-                per[f"{a:g}"] = {"pred": rec["y"].cpu().numpy(), "joint": joint.cpu().numpy()}
-                if a == 1.0:
-                    ref = per[f"{a:g}"]
+                per[f"{mult:g}"] = {"pred": rec["y"].cpu().numpy(), "joint": joint.cpu().numpy()}
+                if float(mult) == 1.0:
+                    ref = per[f"{mult:g}"]
         if ref is None:
-            raise ValueError("alphas must include 1.0")
+            raise ValueError("kappa_mults must include 1.0 (the frozen rule)")
         s2 = s2_all[split][np.asarray(rows)]
         recs = []
         for i in range(len(rows)):
-            d_j = np.linalg.norm(per["0"]["joint"][i] - ref["joint"][i])
-            d_p = float(per["0"]["pred"][i] - ref["pred"][i])
+            d_j = float(np.linalg.norm(per["1e+06"]["joint"][i] - ref["joint"][i]))
+            d_j_full = float(np.linalg.norm(per["0.001"]["joint"][i] - ref["joint"][i]))
+            d_p = float(per["1e+06"]["pred"][i] - ref["pred"][i])
             recs.append({
                 "row": int(rows[i]),
                 "s2_support_mean": float(s2[i, 0]) if np.isfinite(s2[i, 0]) else None,
                 "s2_support_min": float(s2[i, 1]) if np.isfinite(s2[i, 1]) else None,
-                "delta_j_norm": float(d_j),
+                "delta_j_norm": d_j,
+                "delta_j_norm_toward_full": d_j_full,
                 "delta_pred": d_p,
-                "delta_se": float((per["0"]["pred"][i] - y_true[i]) ** 2
+                "delta_se": float((per["1e+06"]["pred"][i] - y_true[i]) ** 2
                                   - (ref["pred"][i] - y_true[i]) ** 2),
-                "delta_pred_half": float(per["0.5"]["pred"][i] - ref["pred"][i]),
-                "abs_error_full": float(abs(ref["pred"][i] - y_true[i])),
+                "delta_se_toward_full": float((per["0.001"]["pred"][i] - y_true[i]) ** 2
+                                              - (ref["pred"][i] - y_true[i]) ** 2),
+                "delta_pred_marginal": d_p,
+                "abs_error_rule": float(abs(ref["pred"][i] - y_true[i])),
             })
         js = [r["delta_j_norm"] for r in recs]
         out["splits"][split] = {
             "rows": recs,
             "summary": {
                 "delta_j_norm_mean": float(np.mean(js)),
+                "delta_j_norm_toward_full_mean": float(np.mean([r["delta_j_norm_toward_full"] for r in recs])),
+                "delta_sse_toward_full": float(np.sum([r["delta_se_toward_full"] for r in recs])),
                 "delta_j_norm_zero_frac": float(np.mean(np.asarray(js) == 0.0)),
                 "delta_sse_alpha0_minus_1": float(np.sum([r["delta_se"] for r in recs])),
                 "delta_pred_abs_mean": float(np.mean([abs(r["delta_pred"]) for r in recs])),

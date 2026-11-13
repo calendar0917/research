@@ -1,58 +1,56 @@
 {
-  "created_utc": "2026-11-13T17:25:25Z",
+  "created_utc": "2026-11-13T16:28:30Z",
   "datasets": {
-    "FreeSolv": {
+    "BACE": {
       "perms": {
         "seed": 917000,
-        "sha256": "a783227171177907897cc75c296960acad8c04444734787eefd379d4a1864de7",
+        "sha256": "7f4e9466ea932a95b1f9a25236cff280efe2b2777e6cccf6550eb3d88de2207e",
         "shape": [
           720,
-          513
+          1210
         ]
       },
       "support": {
-        "a_bar": 0.9311889666590605,
-        "a_bar_k1": 0.9311889666590605,
-        "a_bar_k4": 0.8299963254403283,
+        "a_bar": 0.9414228176774372,
+        "a_bar_k1": 0.9414228176774372,
+        "a_bar_k4": 0.8469676845338725,
         "count_quantiles": {
-          "max": 1496.0,
-          "median": 13.0,
+          "max": 17425.0,
+          "median": 156.0,
           "min": 1.0,
-          "q25": 5.0,
-          "q75": 63.0
+          "q25": 21.5,
+          "q75": 615.5
         },
-        "dataset": "FreeSolv",
+        "dataset": "BACE",
         "identical_train_and_eval_rule": true,
-        "kappa": 13.0,
+        "kappa": 156.0,
         "label_free": true,
         "n_occupied_keys": 83,
-        "n_train_molecules": 513,
+        "n_train_molecules": 1210,
         "per_split_frac_count_le_1": {
-          "test": 0.0,
-          "train": 0.0003891807744697412,
-          "valid": 0.002932551319648094
+          "test": 5.9794307581918205e-05,
+          "train": 2.3721040562979362e-05,
+          "valid": 0.0
         },
         "per_split_paths": {
-          "test": 1632,
-          "train": 10278,
-          "valid": 1364
+          "test": 16724,
+          "train": 126470,
+          "valid": 16856
         }
       },
       "targets": {
-        "primary": "rmse",
-        "split_method": "random122",
+        "primary": "roc_auc",
+        "split_method": "scaffold122",
         "target_norm": {
-          "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
-          "mean": -3.8210136452241716,
-          "n": 513,
-          "scale": 3.844528141832502,
-          "source": "train_split_only"
+          "loss": "BCEWithLogits, no pos_weight, raw 0/1 labels",
+          "pos_weight": 1.0,
+          "train_positive_rate": 0.4256198347107438
         },
-        "task": "regression",
-        "units": "kcal/mol (hydration free energy)"
+        "task": "binary",
+        "units": "binary class (BACE-1 inhibition)"
       },
       "train_norm": {
-        "fingerprint": "1ce431c88c4c2bf191dcedcdd42e094d7856fbb5f816c770ccdd597d43e9274d",
+        "fingerprint": "3dadfb654ee99a67353b70e6c2a1a54fa82a38a2c817b57d4d689f3d8c70ff7d",
         "keys": [
           "global_mean",
           "global_scale",
@@ -61,52 +59,286 @@
         ]
       },
       "verify": {
-        "dataset": "FreeSolv",
+        "dataset": "BACE",
         "label_column": [
-          "expt"
+          "Class"
         ],
-        "n_total": 642,
+        "n_total": 1513,
         "rows_sha256": {
-          "test": "229542e89543781ab70caeb1fc2887272d69bc884d7a4f5e3e5420918211e4b7",
-          "train": "19074e5231c266bbe8b08022b9527229ac66a54c2c5d041d1b43d727764b0356",
-          "valid": "788218be78ee6fc58334a2e8433da578f25d2d7261c7332c3c7e6ab385cd3a16"
+          "test": "ea331b0b94e8191547951dbe385e701e3155419d4e9c724912f7f73e1ef99256",
+          "train": "5f36ea5e5ae6a8ebf451a831c4e41b944daa85ad66a0b92498dad282c60db51e",
+          "valid": "b44a8e9e69c9bb9a1a657f6ee0ca94a49e526d59256e54bca1fbc794cd81b23b"
         },
         "sizes": [
-          513,
-          64,
-          65
+          1210,
+          151,
+          152
+        ],
+        "split_method": "scaffold122",
+        "splits": {
+          "test": {
+            "cache_sha256": "483d53edea2e8f920958d05da1e6f894906a3f95f53d6138f8b6d33387ab0049",
+            "content_fingerprint": "fd56b7190998fc2eafb72ef23b72874c2a694f34fb07a91c93e0120d61dade47",
+            "labels_present": false,
+            "n_atoms": 5490,
+            "n_paths": 16724,
+            "rows_sha256": "ea331b0b94e8191547951dbe385e701e3155419d4e9c724912f7f73e1ef99256"
+          },
+          "train": {
+            "cache_sha256": "fc949cb3142b5b1be9cf36790e975f62413cb3374877eeeb2eea6011d1c70520",
+            "content_fingerprint": "3939fb6de3a6cd8190abca77c56ad384806f5853a006774d2aeffa3652e77f3a",
+            "labels_present": false,
+            "n_atoms": 40720,
+            "n_paths": 126470,
+            "rows_sha256": "5f36ea5e5ae6a8ebf451a831c4e41b944daa85ad66a0b92498dad282c60db51e"
+          },
+          "valid": {
+            "cache_sha256": "d369a94157b3bf1747cbf9a2dd384056a4813b4f85b2b2203f6223d44cd5dfea",
+            "content_fingerprint": "0ecd30b6a81fa6cc9bc5d3af6db63293a0a936fa46e1ad9f16daa0542d099867",
+            "labels_present": false,
+            "n_atoms": 5367,
+            "n_paths": 16856,
+            "rows_sha256": "b44a8e9e69c9bb9a1a657f6ee0ca94a49e526d59256e54bca1fbc794cd81b23b"
+          }
+        },
+        "task": "binary",
+        "units": "binary class (1 = active BACE-1 inhibitor)"
+      }
+    },
+    "ESOL": {
+      "perms": {
+        "seed": 917000,
+        "sha256": "51781a9d253ba9b5643bb310cec2bb84795e1323ad44c1d366d48f3a991b6ced",
+        "shape": [
+          720,
+          902
+        ]
+      },
+      "support": {
+        "a_bar": 0.9344776702261525,
+        "a_bar_k1": 0.9344776702261525,
+        "a_bar_k4": 0.8397989293707315,
+        "count_quantiles": {
+          "max": 4448.0,
+          "median": 35.0,
+          "min": 1.0,
+          "q25": 9.5,
+          "q75": 114.5
+        },
+        "dataset": "ESOL",
+        "identical_train_and_eval_rule": true,
+        "kappa": 35.0,
+        "label_free": true,
+        "n_occupied_keys": 103,
+        "n_train_molecules": 902,
+        "per_split_frac_count_le_1": {
+          "test": 0.0,
+          "train": 0.00020403404453771715,
+          "valid": 0.001610305958132045
+        },
+        "per_split_paths": {
+          "test": 4164,
+          "train": 34308,
+          "valid": 3726
+        }
+      },
+      "targets": {
+        "primary": "rmse",
+        "split_method": "random122",
+        "target_norm": {
+          "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+          "mean": -3.0955521064301554,
+          "n": 902,
+          "scale": 2.124043821148362,
+          "source": "train_split_only"
+        },
+        "task": "regression",
+        "units": "log mol/L (aqueous solubility)"
+      },
+      "train_norm": {
+        "fingerprint": "1524942c04236b1707b314d260d8c4439415401c10c9533a97901a8387e3adda",
+        "keys": [
+          "global_mean",
+          "global_scale",
+          "scalar_mean",
+          "scalar_scale"
+        ]
+      },
+      "verify": {
+        "dataset": "ESOL",
+        "label_column": [
+          "measured log solubility in mols per litre"
+        ],
+        "n_total": 1128,
+        "rows_sha256": {
+          "test": "fafa668780c336a6767ecef2938dd1886649689fc101b7614f59965e1204fe14",
+          "train": "b7459354f258ba805eb7a5012dde7a947c887d4e917dfbd2e0802e80742ece77",
+          "valid": "8fbc7db023f608b6b3646edb04728c2dfc6182487ea011b2e33d14111705cbb0"
+        },
+        "sizes": [
+          902,
+          113,
+          113
         ],
         "split_method": "random122",
         "splits": {
           "test": {
-            "cache_sha256": "97120148895d7d2ad6abd5485554e178ce78c2df87c33944fdc8e2e4098aa5ce",
-            "content_fingerprint": "4c0973896b80b3ab26a0dd100a4ec623bde873d2155b712f45e4adbc533d5a52",
+            "cache_sha256": "8e57c580894f93b9cd988fd9900bf1f81a55dbebf51d66443651736fb4113bac",
+            "content_fingerprint": "6c8e47a490a61f79326c1c33adbdb3b561ec2d847ed2f9d0983eb5403b5730b0",
             "labels_present": false,
-            "n_atoms": 651,
-            "n_paths": 1632,
-            "rows_sha256": "229542e89543781ab70caeb1fc2887272d69bc884d7a4f5e3e5420918211e4b7"
+            "n_atoms": 1491,
+            "n_paths": 4164,
+            "rows_sha256": "fafa668780c336a6767ecef2938dd1886649689fc101b7614f59965e1204fe14"
           },
           "train": {
-            "cache_sha256": "7aefc9348b641541777f56f499e190b47c1925ce5475db6aec593fd8a32d50aa",
-            "content_fingerprint": "bcf4f2d4018e4cd42439a62aec08babc96e68edb8894b7036ad2cd69d6b01a34",
+            "cache_sha256": "85bdb5a60c4d46e203e15ea93da2dece079a72da412175f5bf6374a7a9d911f3",
+            "content_fingerprint": "ab0e956df473bdae43243312c323f1bb6eb20b5691d80a66188ad37cc874580b",
             "labels_present": false,
-            "n_atoms": 4377,
-            "n_paths": 10278,
-            "rows_sha256": "19074e5231c266bbe8b08022b9527229ac66a54c2c5d041d1b43d727764b0356"
+            "n_atoms": 12114,
+            "n_paths": 34308,
+            "rows_sha256": "b7459354f258ba805eb7a5012dde7a947c887d4e917dfbd2e0802e80742ece77"
           },
           "valid": {
-            "cache_sha256": "b87248960ad8ecf5914bc3a629259a85bff824f842381e98fcd70e11315c8cda",
-            "content_fingerprint": "ba219a3ec37ef9e0403c81a7d522a888419e57e52d6a17f0674a5a659c910e58",
+            "cache_sha256": "32d66426a7b896db1c788fe5db063e1743b3fc0d781db6b008fcb96a46042261",
+            "content_fingerprint": "d13496e9bc8137a218bcc6d8f68110ada41e6cd487294857ff1f2ed2dc2d06e4",
             "labels_present": false,
-            "n_atoms": 572,
-            "n_paths": 1364,
-            "rows_sha256": "788218be78ee6fc58334a2e8433da578f25d2d7261c7332c3c7e6ab385cd3a16"
+            "n_atoms": 1386,
+            "n_paths": 3726,
+            "rows_sha256": "8fbc7db023f608b6b3646edb04728c2dfc6182487ea011b2e33d14111705cbb0"
           }
         },
         "task": "regression",
-        "units": "kcal/mol (experimental hydration free energy)"
+        "units": "logS (log10 mol/L, measured)"
+      }
+    },
+    "Lipophilicity": {
+      "perms": {
+        "seed": 917000,
+        "sha256": "682663843b88875c895fb85df553ceeb5cb4952c5a018f1c6eced23d5d85871f",
+        "shape": [
+          720,
+          3360
+        ]
+      },
+      "support": {
+        "path": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/cache/support_Lipophilicity.npz",
+        "reused": true
+      },
+      "targets": {
+        "primary": "rmse",
+        "split_method": "random122",
+        "target_norm": {
+          "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+          "mean": 2.176985119047619,
+          "n": 3360,
+          "scale": 1.2091154725538142,
+          "source": "train_split_only"
+        },
+        "task": "regression",
+        "units": "logD"
+      },
+      "train_norm": {
+        "fingerprint": "828a7f042d8e4c5c369aff013a0f154ec7be0ee3003fc2c1560e3adf4718895d",
+        "keys": [
+          "global_mean",
+          "global_scale",
+          "scalar_mean",
+          "scalar_scale"
+        ]
+      },
+      "verify": {
+        "dataset": "Lipophilicity",
+        "label_column": [
+          "exp"
+        ],
+        "n_total": 4200,
+        "rows_sha256": {
+          "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+        },
+        "sizes": [
+          3360,
+          420,
+          420
+        ],
+        "split_method": "random122",
+        "splits": {
+          "test": {
+            "cache_sha256": "fb3b796495261bbc59e78cdb99b70483c6f834631e95eb2dceab6de363549027",
+            "content_fingerprint": "f8bdb2806440f0a53ad3d89ec14545ebae7b8018ff489ed2d9f00c53e513579b",
+            "labels_present": false,
+            "n_atoms": 11240,
+            "n_paths": 34626,
+            "rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93"
+          },
+          "train": {
+            "cache_sha256": "53e52debb278dd8855c6ccdd4e22722f3eb85260484b2662820f8a37fa403d44",
+            "content_fingerprint": "d9a41ef2dd2f8ce8ebdd6bad2809bb604ad2b6c25f267a07e48e1db543f4148e",
+            "labels_present": false,
+            "n_atoms": 90863,
+            "n_paths": 279084,
+            "rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96"
+          },
+          "valid": {
+            "cache_sha256": "6c073af43e9e8b2a0a58c5e947dd98a5e837b7a2f027c44c6ec5aaf0a55c3206",
+            "content_fingerprint": "f1ec6415c20474fcb8b57807a4cb215f3231f9ab24bafad96e745977e4188340",
+            "labels_present": false,
+            "n_atoms": 11465,
+            "n_paths": 35284,
+            "rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+          }
+        },
+        "task": "regression",
+        "units": "logD (log10 octanol/water distribution coefficient, experimental)"
       }
     }
+  },
+  "dmpnn_features": {
+    "BACE": {
+      "dataset": "BACE",
+      "features": "chemprop-v2.2.1-native-72-14",
+      "n_atoms": 51577,
+      "n_edges": 111536,
+      "n_molecules": 1513,
+      "path": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/cache/dmpnn_BACE.npz",
+      "reused": false,
+      "sha256": "9c6cb4f3192d7ab4abc637705cc23e4e648caa5eb12f288f92e2a18eb163eaae"
+    },
+    "ESOL": {
+      "dataset": "ESOL",
+      "features": "chemprop-v2.2.1-native-72-14",
+      "n_atoms": 14991,
+      "n_edges": 30856,
+      "n_molecules": 1128,
+      "path": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/cache/dmpnn_ESOL.npz",
+      "reused": false,
+      "sha256": "84ab7723275fce5055acce6e37ae4bac305763c695bdc2de08f06ec9e5fb5aa8"
+    },
+    "Lipophilicity": {
+      "dataset": "Lipophilicity",
+      "features": "chemprop-v2.2.1-native-72-14",
+      "n_atoms": 113568,
+      "n_edges": 247798,
+      "n_molecules": 4200,
+      "path": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/cache/dmpnn_Lipophilicity.npz",
+      "reused": false,
+      "sha256": "b064a058a8dd9f3aefcd2171340bf6d3eb572a0c7e0c8ad7de17527c78cda398"
+    }
+  },
+  "dmpnn_featurizer": {
+    "atom_fdim": 72,
+    "bond_fdim": 14
+  },
+  "dmpnn_parity": {
+    "max_abs_grad_diff": 0.0,
+    "max_abs_output_diff": 0.0,
+    "n_atoms": 21,
+    "n_directed_edges": 40,
+    "n_graphs": 3,
+    "note": "Cross-check between the vendored chemprop v2.2.1 BondMessagePassing forward and an independent explicit per-edge implementation of the same pinned formulas at identical weights.",
+    "passed": true,
+    "tolerance": 1e-06
   },
   "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
   "schema": "lcrc-performance-route-prepare-v1"

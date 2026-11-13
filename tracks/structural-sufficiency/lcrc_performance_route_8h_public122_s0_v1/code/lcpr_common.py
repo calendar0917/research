@@ -285,6 +285,12 @@ TAIL_FRACTIONS = (0.01, 0.05)
 #: 7.2/7.7 fixed ordering of previously-unadvanced families for the
 #: remaining-budget sweep.
 FAMILY_ORDER = ("M", "S", "A", "K")
+#: families that may be *promoted* to a transfer test.  `VANILLA` is the recipe
+#: screen (the base lives in it), `BRIDGE` is the historical reference, `DMPNN`
+#: is the external reference and `CTX` is a 7.6 diagnostic -- none of them is a
+#: candidate route, so promoting them would compare the base with itself or with
+#: a different architecture class.
+PROMOTABLE_FAMILIES = ("M", "S", "A", "K", "WIDE", "LONG")
 MAX_TRANSFER_FAMILIES = 2
 
 #: analytic dropout fixture

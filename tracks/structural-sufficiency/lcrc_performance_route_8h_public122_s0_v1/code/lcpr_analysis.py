@@ -266,7 +266,6 @@ def covariates(dataset: str) -> dict[str, Any]:
     from rdkit import Chem, DataStructs
     from rdkit.Chem import rdFingerprintGenerator
 
-    cache = C.DD.PREP_DATA.load_cache(dataset) if hasattr(C.DD.PREP_DATA, "load_cache") else None
     import lcpr_data as D
 
     splits = {s: D.load_cache(dataset, s) for s in C.SPLITS}
@@ -321,11 +320,15 @@ def s2_support_by_molecule(dataset: str) -> dict[str, np.ndarray]:
     out: dict[str, np.ndarray] = {}
     for s in C.SPLITS:
         cache = D.load_cache(dataset, s)
-        pcat = torch.as_tensor(cache["path_cat"]).to(torch.int64)
-        pend = torch.as_tensor(cache["path_end63"]).to(torch.int64)
-        patom = torch.as_tensor(cache["path_atom"]).to(torch.int64)
+        pcat = torch.as_tensor(np.asarray(cache["path_cat"])).to(torch.int64)
+        pend = torch.as_tensor(np.asarray(cache["path_end63"])).to(torch.int64)
         n = int(cache["n_molecules"])
-        ptr = torch.as_tensor(cache["atom_ptr"]).to(torch.int64)
+        ptr = torch.as_tensor(np.asarray(cache["atom_ptr"])).to(torch.int64)
+        #: the root atom of every path: cache stores no ``path_atom``, but
+        #: ``path_ptr`` is the per-atom prefix sum of its rooted paths
+        pptr = np.asarray(cache["path_ptr"], dtype=np.int64)
+        path_atom = np.repeat(np.arange(len(pptr) - 1, dtype=np.int64), np.diff(pptr))
+        patom = torch.as_tensor(path_atom).to(torch.int64)
         flat = (pcat * n_codes + pend).numpy()
         pos = np.clip(np.searchsorted(flat_keys, flat), 0, max(len(counts) - 1, 0))
         ok = flat_keys[pos] == flat
@@ -477,15 +480,21 @@ def family_summary(rows: Iterable[Mapping[str, Any]], dataset: str,
                                               out["arms"][c]["parameters"] or 0, c))
         out["families"][fam] = {"candidates": cands, "winner": ranked[0]}
     clear = [f for f, v in out["families"].items()
-             if out["arms"][v["winner"]].get("clear_signal")]
+             if f in C.PROMOTABLE_FAMILIES and out["arms"][v["winner"]].get("clear_signal")]
     out["clear_families"] = sorted(clear, key=lambda f: (-out["arms"][out["families"][f]["winner"]]["balanced"], f))
     out["promoted"] = out["clear_families"][: C.MAX_TRANSFER_FAMILIES]
     if not out["promoted"]:
-        best = max(out["arms"], key=lambda c: (out["arms"][c]["balanced"],
-                                               -out["arms"][c]["parameters"] or 0))
-        out["promoted"] = out["arms"][best]["family"]
-        out["promoted_role"] = "diagnostic_transfer (no clear signal in any family)"
-        out["promoted"] = [out["promoted"]]
+        eligible = [c for c, e in out["arms"].items() if e["family"] in C.PROMOTABLE_FAMILIES]
+        if not eligible:
+            out["promoted"] = []
+            out["promoted_role"] = "nothing eligible yet"
+            return out
+        best = max(eligible, key=lambda c: (out["arms"][c]["balanced"],
+                                            -out["arms"][c]["parameters"] or 0))
+        out["promoted"] = [out["arms"][best]["family"]]
+        out["promoted_role"] = ("diagnostic_transfer (no family has a Lipo clear signal; "
+                               "the highest balanced arm is carried to the transfer tasks as a "
+                               "diagnostic, not as a confirmed route)")
     return out
 
 
@@ -805,5 +814,142 @@ def run(stage: str = "all") -> dict[str, Any]:
         out["ledger"] = run_ledger()
     if stage in ("figures", "all"):
         out["figures"] = run_figures()
+    if stage in ("mech", "all"):
+        out["mech"] = run_mech()
+    if stage in ("budget", "all"):
+        out["budget"] = run_budget()
     C.log(f"[analyze] {stage}: {str(out)[:400]}")
+    return out
+
+
+def run_budget() -> dict[str, Any]:
+    """GPU-hour accounting from the queue logs + run timing from train.json."""
+    import lcpr_report as R
+
+    budget = R.gpu_hours()
+    rows = [r for r in collect_runs() if not r.get("smoke")]
+    total_wall = float(sum((r.get("wall_seconds") or 0.0) for r in rows))
+    out = {
+        "created_utc": C.utcnow(),
+        "gpu_hours_charged_total": budget["total_gpu_hours"],
+        "gpu_soft_cap_hours": C.GPU_SOFT_CAP_HOURS,
+        "gpu_hard_cap_hours": 16,
+        "max_new_trainings": C.MAX_NEW_TRAININGS,
+        "n_formal_trainings": len(rows),
+        "n_smoke_trainings": len([r for r in collect_runs() if r.get("smoke")]),
+        "sum_isolated_train_wall_seconds": total_wall,
+        "per_job": budget["jobs"],
+        "note": ("GPU·h = wall x GPUs for every job that touched a GPU, including evaluation, "
+                 "smoke, failed and cancelled jobs.  CPU-only local work (preparation, panels, "
+                 "analysis) is not charged."),
+    }
+    C.write_json(C.ANALYSIS / "budget.json", out)
+    return out
+
+
+# --------------------------------------------------------------------------- #
+# mechanism panels + mechanism-to-error linkage
+# --------------------------------------------------------------------------- #
+
+
+def _load_trained(kind: str, candidate: str, dataset: str = "Lipophilicity"):
+    import torch
+
+    import lcpr_data as D
+    import lcpr_model as M
+    import lcpr_train as T
+
+    path = C.run_dir(candidate, dataset) / "best.pt"
+    if not path.exists():
+        return None
+    spec = D.frozen_spec()
+    norm = T._train_structure_norm(D.load_cache(dataset, "train"), spec)
+    model = M.build_model(spec, norm, kind)
+    state = torch.load(path, map_location="cpu", weights_only=False)
+    own = model.state_dict()
+    model.load_state_dict({k: v for k, v in state["state_dict"].items() if k in own}, strict=False)
+    model.eval()
+    return model
+
+
+def _pearson(a: np.ndarray, b: np.ndarray) -> float:
+    a = np.asarray(a, float)
+    b = np.asarray(b, float)
+    ok = np.isfinite(a) & np.isfinite(b)
+    if ok.sum() < 5:
+        return float("nan")
+    a, b = a[ok], b[ok]
+    if a.std() == 0 or b.std() == 0:
+        return float("nan")
+    return float(np.corrcoef(a, b)[0, 1])
+
+
+def _spearman(a: np.ndarray, b: np.ndarray) -> float:
+    from scipy.stats import spearmanr
+
+    a = np.asarray(a, float)
+    b = np.asarray(b, float)
+    ok = np.isfinite(a) & np.isfinite(b)
+    if ok.sum() < 5:
+        return float("nan")
+    return float(spearmanr(a[ok], b[ok]).statistic)
+
+
+def run_mech(s_candidate: str | None = None, m_masks: int = 256) -> dict[str, Any]:
+    """Panels M and S plus the link from mechanism movement to real error."""
+    import lcpr_mech as ME
+
+    out: dict[str, Any] = {"created_utc": C.utcnow()}
+    base_model = _load_trained("c1", "C1_R1")
+    if base_model is None:
+        return {"status": "pending_base_checkpoint"}
+    out["m_panel"] = ME.panel_m(base_model, masks=int(m_masks))
+    out["m_panel"]["model"] = "C1_R1"
+    if s_candidate is None:
+        s_candidates = [c for c in C.CANDIDATES if C.CANDIDATES[c]["kind"] == "s_select"]
+        s_candidate = next((c for c in ("S_SELECT_K1", "S_SELECT_K4") if (C.run_dir(c, "Lipophilicity") / "best.pt").exists()), None)
+    if s_candidate is not None:
+        model = _load_trained("s_select", s_candidate)
+        if model is not None:
+            out["s_panel"] = ME.panel_s(model)
+            out["s_panel"]["model"] = s_candidate
+
+    # link mechanism movement to real per-row error change
+    link: dict[str, Any] = {}
+    base_pred = load_predictions_raw("Lipophilicity", C.run_dir("C1_R1", "Lipophilicity") / "predictions_best.npz")
+    cov = covariates("Lipophilicity")
+    s2_supp = s2_support_by_molecule("Lipophilicity")
+    for cand, kind in ((s_candidate, "s_select"), ("M_UNBIASED", "m_unbiased"),
+                       ("M_CLEANPOOL", "m_cleanpool"), ("A_LOGP", "a_logp")):
+        if cand is None:
+            continue
+        p = C.run_dir(cand, "Lipophilicity") / "predictions_best.npz"
+        if not p.exists():
+            continue
+        arm = load_predictions_raw("Lipophilicity", p)
+        y = np.asarray(base_pred["test_y"], float)
+        d_se = ((np.asarray(arm["test_pred"], float) - y) ** 2
+                - (np.asarray(base_pred["test_pred"], float) - y) ** 2)
+        pts = None
+        if kind == "s_select" and "s_panel" in out:
+            pts = {r["row"]: r for r in out["s_panel"]["splits"]["test"]["rows"]}
+        entry = {
+            "delta_sse_total": float(np.sum(d_se)),
+            "delta_sse_mean": float(np.mean(d_se)),
+            "frac_rows_improved": float(np.mean(d_se < 0)),
+            "corr_dse_vs_s2_support": _spearman(d_se, s2_supp["test"][:, 0]),
+            "corr_dse_vs_max_tanimoto": _spearman(d_se, cov["test"]["max_tanimoto_to_train"]),
+            "corr_dse_vs_n_atoms": _spearman(d_se, cov["test"]["n_atoms"]),
+        }
+        if pts:
+            idx = np.array([i for i in range(len(y)) if i in pts])
+            if len(idx) > 5:
+                entry["panel_rows"] = int(len(idx))
+                entry["corr_dse_vs_delta_j"] = _spearman(
+                    d_se[idx], np.array([pts[int(i)]["delta_j_norm"] for i in idx]))
+                entry["corr_dse_vs_abs_delta_pred"] = _spearman(
+                    d_se[idx], np.array([abs(pts[int(i)]["delta_pred"]) for i in idx]))
+        link[cand] = entry
+    out["link"] = link
+    C.write_json(C.ANALYSIS / "mechanism_summary.json", out)
     return out
