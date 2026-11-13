@@ -68,10 +68,15 @@ NEW_TESTS = NEW_TRACK / "tests"
 NEW_RUNS = NEW_TRACK / "runs"
 NEW_CASES = NEW_ANALYSIS / "cases"
 
-# The frozen upstream modules must be importable by their own module names.
+# The frozen upstream modules must be importable by their own module names.  The
+# NEW_CODE directory must win so this round's own modules (analysis.py,
+# figures.py, ...) shadow any same-named source-round module.
 for _p in (str(SOURCE_CODE), str(NEW_CODE)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
+if sys.path[0] != str(NEW_CODE):
+    sys.path.remove(str(NEW_CODE))
+    sys.path.insert(0, str(NEW_CODE))
 
 import common as SC  # noqa: E402  (executed multi-motif common: frozen data/model plumbing)
 import chemcheck as CHEM  # noqa: E402
@@ -80,8 +85,24 @@ import families as FAM  # noqa: E402
 import rewire as R  # noqa: E402
 import feats as FEAT  # noqa: E402
 import doses as DOSES  # noqa: E402
-import analysis as AN  # noqa: E402  (frozen Part-A statistics helpers)
 import infer as INF  # noqa: E402  (frozen cache builder / structural re-verification)
+
+# The source round also has an ``analysis.py``; import it under a private name so
+# it never shadows this round's ``analysis`` stage module.
+def _load_source_analysis():
+    import importlib.util
+
+    name = "_lr_src_analysis"
+    if name in sys.modules:
+        return sys.modules[name]
+    spec = importlib.util.spec_from_file_location(name, SOURCE_CODE / "analysis.py")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+AN = _load_source_analysis()  # frozen Part-A statistics helpers
 
 # ---------------------------------------------------------------------------
 # two computational tasks

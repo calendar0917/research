@@ -55,10 +55,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             rc = evaluate.main(["--task", args.task, "--device", args.device, "--splits", args.splits] + (["--out-dir", args.out_dir] if args.out_dir else []))
         elif stage == "analysis":
             import analysis
-            rc = analysis.main()
+            rc = analysis.main([])
         else:
             import figures
-            rc = figures.main()
+            rc = figures.main([])
         if rc not in (0, None):
             RC.log(f"stage {stage} returned {rc}; stopping")
             return int(rc)
