@@ -91,7 +91,9 @@ def cache_only() -> int:
         raise C.DataMismatch("P_train pair-id hash differs from committed schedule manifest")
     canonical = P.canonical_smiles_map(summary_smiles := C.source_with_labels("none")["smiles"])
     caches = D.build_all_caches()
+    schedule_rebuilt = S.ensure_schedule(p_train, manifest)
     schedule_check = S.verify_against(manifest, p_train, canonical)
+    schedule_check["rebuilt_ignored_cache"] = bool(schedule_rebuilt)
     payload = {
         "schema": "lcrc-lipo-edit-supervision-prepare-v1",
         "round_id": C.ROUND_ID,

@@ -310,9 +310,46 @@ def verify_against(manifest: Mapping[str, Any], p_train: Sequence[Mapping[str, A
     return out
 
 
+def ensure_schedule(
+    p_train: Sequence[Mapping[str, Any]],
+    manifest: Mapping[str, Any],
+) -> bool:
+    """Rebuild the schedule only if the ignored cache is absent.
+
+    The committed manifest is the authority.  Rebuilding uses the committed
+    P_train pairs and the frozen seeds, then checks the four array hashes before
+    writing the cache.  Returns True iff a rebuild happened.
+    """
+    if SCHEDULE_NPZ.exists():
+        return False
+    built = build_schedule(p_train, write=False)
+    got = {
+        "real_pair_indices": built["manifest"]["real_pair_indices"]["sha256"],
+        "random_u": built["manifest"]["random_pair_rows"]["u_sha256"],
+        "random_v": built["manifest"]["random_pair_rows"]["v_sha256"],
+        "batch_perms": built["manifest"]["batch_order"]["sha256"],
+        "pair_ids": built["manifest"]["p_train"]["pair_ids_sha256"],
+    }
+    expected = {
+        "real_pair_indices": manifest["real_pair_indices"]["sha256"],
+        "random_u": manifest["random_pair_rows"]["u_sha256"],
+        "random_v": manifest["random_pair_rows"]["v_sha256"],
+        "batch_perms": manifest["batch_order"]["sha256"],
+        "pair_ids": manifest["p_train"]["pair_ids_sha256"],
+    }
+    bad = {k: (got[k], expected[k]) for k in expected if got[k] != expected[k]}
+    if bad:
+        raise ValueError(f"rebuilt schedule differs from committed manifest: {bad}")
+    C.CACHE.mkdir(parents=True, exist_ok=True)
+    np.savez_compressed(SCHEDULE_NPZ, **built["arrays"])
+    C.log("[schedule] rebuilt ignored cache from committed pairs; all four array hashes match")
+    return True
+
+
 __all__ = [
     "SCHEDULE_NPZ",
     "build_schedule",
+    "ensure_schedule",
     "load_schedule",
     "verify_against",
 ]
