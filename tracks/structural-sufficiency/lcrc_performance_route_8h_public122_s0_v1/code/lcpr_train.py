@@ -179,11 +179,16 @@ def resolve_recipe(name: str, *, recipe_override: str | None = None, epochs_over
     return recipe
 
 
-def resolve_epochs(cand: Mapping[str, Any], recipe: Mapping[str, Any], *, epochs_override: int | None) -> int:
+def resolve_epochs(cand: Mapping[str, Any], recipe: Mapping[str, Any], *,
+                   epochs_override: int | None, dataset: str | None = None) -> int:
     if epochs_override is not None:
         return int(epochs_override)
     if "epochs" in cand:
         return int(cand["epochs"])
+    if dataset == C.HIV:
+        #: PROTOCOL 7.3: the stress dataset gets a fixed 160-epoch cosine horizon so
+        #: that base and arm stay comparable and the pair fits in the budget
+        return int(C.HIV_EPOCHS)
     return int(recipe["epochs"])
 
 
@@ -218,7 +223,7 @@ def train_candidate(
                                out_dir=out_dir, smoke=smoke)
 
     recipe = resolve_recipe(cand["recipe"], recipe_override=recipe_name)
-    epochs = resolve_epochs(cand, recipe, epochs_override=epochs_override)
+    epochs = resolve_epochs(cand, recipe, epochs_override=epochs_override, dataset=dataset)
     if smoke and epochs > 2:
         epochs = 2
     if not smoke and C.git_dirty():

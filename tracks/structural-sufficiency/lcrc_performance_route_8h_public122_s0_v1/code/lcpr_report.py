@@ -193,7 +193,8 @@ def build() -> str:
         a("")
     if "s_panel" in mech:
         sp = mech["s_panel"].get("splits", {})
-        a(_table(["split", "ΔJ 平均", "J 完全不变的行占比", "α=0−1 的 SSE 变化", "|Δpred| 平均"],
+        a(_table(["split", "ΔJ 平均（规则→边缘）", "J 完全不变的行占比",
+                  "SSE 变化（规则→边缘）", "|Δpred| 平均"],
                  [[s, _f(v["summary"]["delta_j_norm_mean"], "{:.4f}"),
                    _f(v["summary"]["delta_j_norm_zero_frac"], "{:.3f}"),
                    _f(v["summary"]["delta_sse_alpha0_minus_1"], "{:+.4f}"),
