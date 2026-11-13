@@ -1,0 +1,201 @@
+# Frozen experiment configuration.
+# Round: lcrc-lipo-s3-locality-public122-s0-v1
+# Design date: 2026-11-13 (Asia/Shanghai)
+# This file mirrors code/common.py; the code constants are authoritative.
+
+protocol_id: lcrc-lipo-s3-locality-public122-s0-v1
+track: tracks/structural-sufficiency/lcrc_lipo_s3_locality_public122_s0_v1
+design_snapshot: f0814e859d9379a2f961c636dd24be0c2b3bc7cc
+
+data:
+  upstream: https://github.com/shenwanxiang/ChemBench
+  upstream_commit: 0b10d4c1ac72b6929503694a5f60446824736391
+  task: Lipophilicity
+  split: random122
+  split_sizes: {train: 3360, valid: 420, test: 420}
+  n_molecules: 4200
+  label_column: exp
+  labels_used_for_parameters: train_only
+  checkpoint_selection: valid_only
+  test_usage: final scoring and post-hoc diagnosis only
+  files:
+    Lipop.csv.gz: 34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758
+    Lipop.random122.ind.pkl: bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d
+    raw_attributes_v1.json.gz: 1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be
+  split_row_sha256:
+    train: 4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96
+    valid: 31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365
+    test: a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93
+  feature_spec_hash: 7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee
+  input_widths: {atom_feat: 51, bond_feat: 13, atom_scalar: 9, global: 42, local: 433, s1: 80, s2_path: 400, atom_type: 16}
+
+baseline:
+  role: reused ordinary C1 reference (Arm A), not retrained this round
+  round: tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1
+  arm_dir: runs/A_s0
+  variant: C1
+  name: NO_BOND_MEAN
+  parameters: 228674
+  best_epoch: 244
+  valid_rmse_raw: 0.7025358558198603
+  test_rmse_raw: 0.5761674771952362
+  init_state_hash_prefix: aac1e061
+
+model:
+  base_construction: dissect_model.build_full_state(spec, train_norm, seed=0) -> remap_state("C1", full)
+  one_base_initial_weight_set_shared_by_all_conditions: true
+  never_initialised_from_trained_A: true
+  corrector:
+    form: "psi(h,s) = W2 * SiLU(W_h h + W_s s + b1) + b2"
+    widths: {h: 64, s: 16, hidden: 32, out: 64}
+    parameters: 4704
+    init: {seed: 1, W_h/W_s/b1: fixed init, W2: zero, b2: zero}
+    insertion: after the original local LayerNorm, before the single original dropout
+    reads: [f, rho]  # on the same h'; g and original statistics unchanged
+    no_dropout_in_branch: true
+  total_parameters: 233378
+  arms:
+    LOCAL3: "h' = h + psi(h, s3_v)"
+    DUP2: "h' = h + psi(h, s2_v)"
+    NULL3: "h' = h + mean_{u in C(v)} psi(h_v, s3_u), C(v) = same molecule x same atom_type"
+  null3:
+    exact_mean_field: true
+    forbidden_shortcut: "psi(h, mean_u s3_u)"
+    grouping: [molecule, atom_type]
+    chunked: true
+    sampling: none
+    cross_molecule_mixing: false
+    degeneracy_accounting: fraction of roots with |C(v)| == 1 or identical s3 inside the cell
+
+features:
+  s3:
+    definition: "U3[v,t] = # distinct atoms at exact shortest-path distance 3 with atom_type t"
+    dim: 16
+    excludes: [distance 1, distance 2, unreachable atoms, the root itself, walk multiplicities]
+    kind: fixed structural pre-processing, weight-independent
+    transform: log1p
+    normalisation: {fit: train3360_all_atoms, ddof: 0, zero_variance_scale: 1}
+  s2:
+    definition: "U2[v,t] = # S2 path occurrences rooted at v with path_end63 // 5 == t"
+    dim: 16
+    keeps: [repeated endpoint occurrences, triangle closure occurrences]
+    is_function_of: existing S2 end marginal
+    kind: existing-information re-read control (not a capacity-only control)
+    transform: log1p
+    normalisation: {fit: train3360_all_atoms, ddof: 0, zero_variance_scale: 1}
+  signature:
+    blocks: [root_atom_feat+atom_scalar, incident_bond_multiset, nbr_code_multiset, (path_cat,path_end63)_multiset, (path_cat,end_atom_feat)_multiset, path_closure_multiset]
+    floats: canonical finite float32 bytes, signed zeros folded
+    integers: original type semantics
+    bucket_hash_role: candidate bucketing only, equality confirmed block-by-block
+    excluded_identities: [atom id, path_end index, molecule id, SMILES, split, label]
+
+p0:
+  device: cpu
+  forward: real eval forward of the reused A checkpoint
+  prediction_tolerance: 2.0e-5
+  gate:
+    pairs: 5
+    non_isomorphic_raw_graph: 5
+    signature_multiset_equal: 5
+    global42_equal: 5
+    a_prediction_equal: 5
+    u3_separated: 4
+    u2_separated: 0
+    unseparated_pair: [1467, 2674]
+  pre_screen_to_reverify: {molecules: 4200, atoms: 113568, root_signatures: 18122, local_groups: 87, full_groups: 86}
+  on_failure: PHENOMENON_NOT_REPRODUCED (no formal GPU training, no feature adjustment)
+
+training:
+  seed: 0
+  epochs: 360
+  batch_size: 128
+  drop_last: false
+  steps_per_epoch: 27
+  optimizer_steps: 9720
+  shuffle_generator_seed: 917000
+  schedule_numpy_seed: 20261113
+  model_rng_reset_after_init: {cpu: 0, cuda: 0}
+  optimizer: AdamW
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-3
+  lr: per_step_cosine
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  t_max: 9720
+  gradient_clip: 5.0
+  precision: fp32
+  amp: false
+  dropout: 0.10
+  dropout_calls_per_forward: 1
+  early_stopping: false
+  soup_ema_swa: false
+  checkpoint_rule: lowest Valid420 RMSE in raw logD, strict improvement, tie keeps earlier epoch
+  saves: [best, last]
+  auxiliary_loss: none
+  pair_loss: none
+  case_reweighting: none
+
+evaluation:
+  primary: Test420 molecule RMSE in raw logD
+  also: [Train RMSE/MAE, Valid RMSE/MAE, Test RMSE/MAE, best_epoch, parameters, gpu_hours]
+  gain_convention: "gain = metric(reference) - metric(candidate); positive = candidate better"
+  comparisons: [[LOCAL3, A], [LOCAL3, DUP2], [LOCAL3, NULL3]]
+  components: union-find of previous-round eval_component merged with this round's identical-full-input groups
+  components_used_for_training: false
+  bootstrap: {method: paired component bootstrap, numpy_generator_seed: 20261114, replicates: 1000, shared_draws: true}
+  sensitivities:
+    - remove A's largest Test squared-error row, recompute the Test comparisons
+    - remove A's largest Valid squared-error row, recompute the Valid comparison
+    - re-evaluate the primary metric at the shared final epoch 360 (no checkpoint re-selection)
+  cases: all five frozen pairs, per model
+  interventions_on_LOCAL3:
+    - correction_off
+    - null3_operator_with_LOCAL3_weights_and_norm
+  diagnostics: [correction vector norm, output projection grad norm, feature projection grad norm, NULL3 non-degenerate root fraction]
+
+stage2_purchase_rule:
+  all_required: true
+  conditions:
+    - LOCAL3 Test RMSE < A
+    - LOCAL3 Test RMSE < DUP2
+    - LOCAL3 Valid RMSE < A
+    - after removing A's largest Test squared-error molecule, LOCAL3 Test gain > 0 vs both A and DUP2
+  on_fail: NOT_PURCHASED_BY_FIXED_RULE
+  note: budget filter only, not a significance test
+
+decision_labels:
+  representation:
+    - C1_INPUT_ALIAS_VERIFIED
+    - S3_INPUT_SEPARATION_VERIFIED
+  performance:
+    - PERFORMANCE_UNRESOLVED_THIS_RUN
+    - NO_PREDICTIVE_GAIN_THIS_CONFIG
+    - NEW_INFORMATION_INCREMENT_UNRESOLVED
+    - S3_PREDICTIVE_SIGNAL_THIS_RUN
+  mechanism:
+    - ROOT_ALIGNMENT_SIGNAL_THIS_RUN
+    - ROOT_ALIGNMENT_UNRESOLVED
+    - FEATURE_AVAILABLE_NOT_USED
+  execution:
+    - PHENOMENON_NOT_REPRODUCED
+    - NOT_PURCHASED_BY_FIXED_RULE
+    - BUDGET_LIMITED
+    - EXECUTION_FAILED
+
+execution:
+  host: res
+  backend: process
+  slot: res-gpu0
+  paths:
+    stage1: {res-gpu0: LOCAL3_s0, res-gpu1: DUP2_s0}
+    stage2: {res-gpu0: NULL3_s0}
+  ddp: false
+  max_round_training_processes_per_gpu: 1
+  parallel_stages: 1
+  smoke: {arms: [LOCAL3, DUP2], epochs: 2, counts_toward_budget: true, enters_results: false}
+  null3_smoke_check: optimised mean field vs naive double loop, forward and gradient, small batch
+  budget: {soft_gpu_hours: 1.0, hard_gpu_hours: 2.0, includes: [smoke, inference, failures, retries]}
+  retry: one same-configuration infrastructure retry only; scientific bug requires rerun of all affected conditions
+  formality: committed revision + valid deployment, no --allow-dirty, no stale deployment
