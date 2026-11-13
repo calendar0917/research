@@ -107,18 +107,17 @@ def _draw_panel(ax, *, title: str, row: Mapping[str, Any], pos, roles, remove, a
         ax.plot([p0[0], p1[0]], [p0[1], p1[1]], color="#ff8c00", lw=4.0, zorder=3,
                 solid_capstyle="round", alpha=0.95)
     target_set = {tuple(sorted(p)) for p in target_bonds}
+    control_set = {tuple(sorted(p)) for p in control_bonds}
     for a, b in remove_set:
         p0, p1 = pos[a], pos[b]
-        is_target = tuple(sorted((a, b))) in target_set
-        ax.plot(
-            [p0[0], p1[0]],
-            [p0[1], p1[1]],
-            color="#d02020" if is_target else "#8a8a8a",
-            lw=2.4 if is_target else 1.8,
-            ls=(0, (3, 2.2)),
-            zorder=3,
-            alpha=0.95,
-        )
+        key = tuple(sorted((a, b)))
+        if key in target_set:
+            color, lw = "#d02020", 2.4
+        elif key in control_set:
+            color, lw = "#2040d0", 2.4
+        else:
+            color, lw = "#8a8a8a", 1.8
+        ax.plot([p0[0], p1[0]], [p0[1], p1[1]], color=color, lw=lw, ls=(0, (3, 2.2)), zorder=3, alpha=0.95)
     for idx, (x, y) in pos.items():
         element = ELEMENT_OF_CLASS.get(int(ac[idx]), "?")
         color = COLORS.get(element, "#444444")
@@ -234,8 +233,9 @@ def draw_case(case: Mapping[str, Any], raw_row: Mapping[str, Any], out_path: Pat
         f"ranking scope FULL)",
         f"instance {inst['instance_id']}   donor {donor['pair_id'].split(':')[-1]} (u={donor['donor_u']}, "
         f"v={donor['donor_v']})   T removes {donor['t_remove']} adds {donor['t_add']}",
-        f"K removes {donor['k_remove']} adds {donor['k_add']}   "
-        f"solid black = bonds of that graph, dashed grey = removed, orange = added",
+        f"K removes {donor['k_remove']} adds {donor['k_add']}",
+        "solid black = bonds of that graph; thick orange = added; dashed red = removed amide C-N; "
+        "dashed blue = removed control C-C; dashed grey = removed donor C-C",
     ]
     for scope in (C.PRIMARY_SCOPE, "G_FIXED"):
         s = case["scopes"][scope]
