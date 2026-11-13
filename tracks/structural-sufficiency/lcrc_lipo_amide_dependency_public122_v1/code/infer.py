@@ -418,13 +418,17 @@ def main(argv: Sequence[str] | None = None) -> int:
                 o_global[int(vid.split(":")[0])] = np.asarray(cache["global"][i], dtype=np.float32)
         C.log(f"{split}: predicting ...")
         preds = predict_views(model, cache, device=args.device, o_global=o_global, batch_size=args.batch_size)
-        # O-view G_FIXED must be numerically identical to FULL
+        # O-view G_FIXED must reproduce FULL: for an O view the G_FIXED path restores
+        # exactly its own raw global42, so any difference is GPU reduction/atomic
+        # non-determinism (identical inputs, different summation order).  The gate is
+        # therefore a tolerance gate, and the observed maximum is recorded.
         atom_counts = np.diff(np.asarray(cache["atom_ptr"]))
         bond_counts = np.diff(np.asarray(cache["bond_ptr"]))
-        o_pred_identical = True
+        o_mask = np.asarray([":O" in vid for vid, _row in entries], dtype=bool)
+        o_diffs = np.abs(preds["full"][o_mask] - preds["fixed"][o_mask]) if o_mask.any() else np.zeros(1)
+        o_max_diff = float(o_diffs.max())
+        o_pred_identical = bool(o_max_diff <= C.REPRO_TOL)
         for i, (vid, _row) in enumerate(entries):
-            if ":O" in vid and not np.array_equal(preds["full"][i], preds["fixed"][i]):
-                o_pred_identical = False
             for scope, arr in (("FULL", preds["full"]), ("G_FIXED", preds["fixed"])):
                 if ":O" in vid and scope == "G_FIXED":
                     continue
@@ -448,7 +452,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         checks["views"][split] = verify_view_cache(
             entries, cache, {"instances": instances, "rows": raw_rows}, spec
         )
-        checks["views"][split]["o_view_gfixed_equals_full"] = bool(o_pred_identical)
+        checks["views"][split]["o_view_n"] = int(o_mask.sum())
+        checks["views"][split]["o_view_max_abs_diff_full_vs_gfixed"] = o_max_diff
+        checks["views"][split]["o_view_tolerance"] = C.REPRO_TOL
+        checks["views"][split]["o_view_gfixed_equals_full_within_tol"] = bool(o_pred_identical)
         checks["views"][split]["pass"] = bool(checks["views"][split]["pass"] and o_pred_identical)
         timings[f"build_and_predict_{split}"] = float(time.perf_counter() - t0)
         C.log(f"{split}: done in {timings[f'build_and_predict_{split}']:.1f}s")
@@ -462,6 +469,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     checks["baseline"] = base
     checks["pass"] = bool(checks["pass"] and base["pass"])
+    # every per-split structural gate must survive into the top-level verdict
+    view_gates = {split: bool(blk.get("pass")) for split, blk in checks["views"].items()}
+    checks["view_gates"] = view_gates
+    checks["pass"] = bool(checks["pass"] and all(view_gates.values()))
     order_ok = True
     for split in ("valid", "test"):
         expected_rows = [int(r["row_id"]) for r in view_rows if r["split"] == split and int(r["cut_a"]) < 0]

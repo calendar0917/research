@@ -57,8 +57,21 @@ def inference_gate_summary(checks: Mapping[str, Any]) -> dict[str, Any]:
         }
         for split, d in (baseline.get("per_split", {}) or {}).items()
     }
+    views = checks.get("views", {}) or {}
     return {
         "pass": bool(checks.get("pass")),
+        "view_gates": checks.get("view_gates") or {s: bool(b.get("pass")) for s, b in views.items()},
+        "view_gates_detail": {
+            s: {
+                "n_views": b.get("n_views"),
+                "n_cut_views_checked": b.get("n_cut_views_checked"),
+                "bond_count_equal_O_minus_one": b.get("bond_count_equal_O_minus_one"),
+                "failures": b.get("failures"),
+                "o_view_max_abs_diff_full_vs_gfixed": b.get("o_view_max_abs_diff_full_vs_gfixed"),
+                "o_view_tolerance": b.get("o_view_tolerance"),
+            }
+            for s, b in views.items()
+        },
         "baseline_pass": bool(baseline.get("pass")),
         "baseline_tolerance": baseline.get("tolerance"),
         "baseline_per_split": per_split,
