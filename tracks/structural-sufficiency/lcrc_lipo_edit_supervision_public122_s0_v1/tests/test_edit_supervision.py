@@ -6,6 +6,7 @@ round audits; they check the exact pieces this round relies on.
 
 from __future__ import annotations
 
+import json
 import math
 import sys
 from pathlib import Path
@@ -92,6 +93,8 @@ def test_core_mapping_sample():
 
 
 def test_schedule_multiset_and_forbidden_edges():
+    if not S.SCHEDULE_NPZ.exists():
+        S.ensure_schedule(P.p_train(), C.read_json(C.ANALYSIS / "schedule_manifest.json"))
     loaded = S.load_schedule()
     arrays = loaded["arrays"]
     manifest = loaded["manifest"]
@@ -173,6 +176,44 @@ def test_component_equal_and_bootstrap_weighting():
     boots, comps, _, _ = M.bootstrap_test_rmse(rows, sq, replicates=2, rng=np.random.default_rng(0), index=idx)
     assert np.allclose(boots, [1.0, math.sqrt(51.0 / 4.0)])
     assert list(comps) == [0, 1, 2]
+
+
+def test_comparison_gain_direction_and_reference_arm():
+    """gain = reference - candidate; R_vs_A reference is A, candidate is R."""
+    import csv
+
+    import evaluate as E
+
+    assert abs(E._point_gain(0.8, 1.0)["gain"] + 0.2) < 1e-15
+    path = C.ANALYSIS / "comparisons.json"
+    if not path.exists():
+        pytest.skip("formal comparisons not produced yet")
+    comp = json.loads(path.read_text())
+    results = {row["arm"]: row for row in csv.DictReader(open(C.ANALYSIS / "results.csv"))}
+    table = {
+        "R_vs_A": ("A", "R", "test_rmse", "e_t_ce_mae"),
+        "R_vs_W": ("W", "R", "test_rmse", "e_t_ce_mae"),
+        "R_vs_N": ("N", "R", "test_rmse", "e_t_ce_mae"),
+    }
+    for label, (ref, cand, *metrics) in table.items():
+        for metric in metrics:
+            g = comp["comparisons"][label][metric]
+            assert abs(g["reference"] - float(results[ref][metric])) < 1e-12
+            assert abs(g["candidate"] - float(results[cand][metric])) < 1e-12
+            assert abs(g["gain"] - (g["reference"] - g["candidate"])) < 1e-12
+
+
+def test_train_diagnostics_endpoint_units_are_raw():
+    path = C.ANALYSIS / "diagnostics_correction.json"
+    if not path.exists():
+        pytest.skip("formal diagnostics correction not produced yet")
+    if not all((C.run_dir(arm) / "train_diagnostics.json").exists() for arm in C.ARMS):
+        pytest.skip("formal run artifacts are not present in this checkout")
+    for arm in C.ARMS:
+        td = C.read_json(C.run_dir(arm) / "train_diagnostics.json")
+        assert "units_correction" in td
+        assert td["best"]["endpoint_molecules"]["rmse"] < 2.0
+        assert td["best"]["nonpaired_molecules"]["rmse"] < 2.0
 
 
 def test_historical_regression_is_explained():

@@ -310,10 +310,11 @@ def main() -> int:
             )
         return out
 
+    # gain = control - R, so a positive gain means R is better (protocol section 8)
     comparisons = {
-        "R_vs_A": comparison("R", "A"),
-        "R_vs_W": comparison("R", "W"),
-        "R_vs_N": comparison("R", "N"),
+        "R_vs_A": comparison("A", "R"),
+        "R_vs_W": comparison("W", "R"),
+        "R_vs_N": comparison("N", "R"),
     }
 
     # ---- fixed impact checks ----------------------------------------------
@@ -325,13 +326,13 @@ def main() -> int:
         a: _strip_arrays(M.pair_metrics(loaded[a]["pred_by_row"], y_by_row, e_t_without_comp)) for a in arms
     }
     comp_removed_gains = {}
-    for ref, cand in (("R", "A"), ("R", "W"), ("R", "N")):
-        comp_removed_gains[f"{ref}_vs_{cand}"] = {
+    for label, ref, cand in (("R_vs_A", "A", "R"), ("R_vs_W", "W", "R"), ("R_vs_N", "N", "R")):
+        comp_removed_gains[label] = {
             "e_t_ce_mae": _point_gain(
                 comp_removed_metrics[ref]["ce_mae"], comp_removed_metrics[cand]["ce_mae"]
             ),
-            "n_pairs": comp_removed_metrics[ref]["n_pairs"],
-            "n_components": comp_removed_metrics[ref]["n_components"],
+            "n_pairs": comp_removed_metrics[cand]["n_pairs"],
+            "n_components": comp_removed_metrics[cand]["n_components"],
         }
 
     a_test_sq = {int(r): float((loaded["A"]["pred_by_row"][int(r)] - y_by_row[int(r)]) ** 2) for r in rows_by_split["test"]}
@@ -349,8 +350,8 @@ def main() -> int:
     row_removed_e_t = {a: _strip_arrays(M.pair_metrics(loaded[a]["pred_by_row"], y_by_row, e_t_without_row)) for a in arms}
     row_removed_e_hh = {a: _strip_arrays(M.pair_metrics(loaded[a]["pred_by_row"], y_by_row, e_hh_without_row)) for a in arms}
     row_removed_gains = {}
-    for ref, cand in (("R", "A"), ("R", "W"), ("R", "N")):
-        row_removed_gains[f"{ref}_vs_{cand}"] = {
+    for label, ref, cand in (("R_vs_A", "A", "R"), ("R_vs_W", "W", "R"), ("R_vs_N", "N", "R")):
+        row_removed_gains[label] = {
             "test_rmse": _point_gain(
                 row_removed_test[ref]["rmse"], row_removed_test[cand]["rmse"]
             ),
@@ -361,7 +362,7 @@ def main() -> int:
                 row_removed_e_hh[ref]["ce_mae"], row_removed_e_hh[cand]["ce_mae"]
             ),
             "n_test_rows": len(remaining_test_rows),
-            "n_e_t_pairs": row_removed_e_t[ref]["n_pairs"],
+            "n_e_t_pairs": row_removed_e_t[cand]["n_pairs"],
         }
 
     impact = {

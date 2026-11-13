@@ -462,14 +462,14 @@ def train_arm(
         "initial": {
             "train_all": init_train_metrics,
             "pair": {k: v for k, v in init_pair_metrics.items() if k != "arrays"},
-            "endpoint_molecules": M.regression_metrics(init_train_std[endpoint_idx], y_train[endpoint_idx]),
-            "nonpaired_molecules": M.regression_metrics(init_train_std[other_idx], y_train[other_idx]),
+            "endpoint_molecules": M.raw_metrics(init_train_std[endpoint_idx], y_train[endpoint_idx], target_norm),
+            "nonpaired_molecules": M.raw_metrics(init_train_std[other_idx], y_train[other_idx], target_norm),
         },
         "best": {
             "train_all": train_metrics,
             "pair": {k: v for k, v in best_pair_metrics.items() if k != "arrays"},
-            "endpoint_molecules": M.regression_metrics(train_std[endpoint_idx], y_train[endpoint_idx]),
-            "nonpaired_molecules": M.regression_metrics(train_std[other_idx], y_train[other_idx]),
+            "endpoint_molecules": M.raw_metrics(train_std[endpoint_idx], y_train[endpoint_idx], target_norm),
+            "nonpaired_molecules": M.raw_metrics(train_std[other_idx], y_train[other_idx], target_norm),
         },
         "pair_response_error_decreased": bool(
             best_pair_metrics["ce_mae"] < init_pair_metrics["ce_mae"]
