@@ -1,0 +1,182 @@
+# Frozen configuration — lcrc-lipo-amide-connected-rewire-public122-v1
+# Declared before the first formal inference run; the scientific definitions are
+# not changed afterwards.  Values here are informative copies of the constants
+# frozen in code/common.py, code/graphlib.py, code/rewire.py and code/prepare.py.
+
+round_id: lcrc-lipo-amide-connected-rewire-public122-v1
+protocol_id: lcrc-lipo-amide-connected-rewire-public122-v1
+design_revision: 0084daff
+previous_protocol: lcrc-lipo-amide-dependency-public122-v1
+previous_executed_revision: a0850d89ed2f4ddaf9ce92fe63affc874eb37a7a
+
+data:
+  dataset: ChemBench Lipophilicity
+  repeat: random122
+  source_commit: 0b10d4c1ac72b6929503694a5f60446824736391
+  csv: tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.csv.gz
+  csv_sha256: 34280f0adde234bcf477bd98878c9918c9ea51ed859c9efdc31917c6e5ecd758
+  split_file: tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v1/analysis/source/chembench/Lipop/Lipop.random122.ind.pkl
+  split_file_sha256: bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d
+  raw_attribute_artifact_sha256: 1127607de45e341c89ffc67db85714117831ec84b0845c75aaa11005489c51be
+  split_sizes: {train: 3360, valid: 420, test: 420}
+  split_rows_sha256:
+    train: 4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96
+    valid: 31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365
+    test: a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93
+  label_column: exp
+  label_units: logD (raw)
+  row_reordering: forbidden (published row order kept)
+  split_regeneration: forbidden
+  connected_component_census:
+    train: {1: 3359, 4: 1}      # near-constant, NOT identically constant
+    valid: {1: 420}
+    test: {1: 420}
+
+model:
+  variant: C1
+  variant_name: NO_BOND_MEAN
+  parameters: 228674
+  checkpoint: tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/runs/A_s0/best.pt
+  checkpoint_sha256: bdd670e8df5ee03ba28f2f4898e7fd137991a9fd23e9add91c08d8b6e0a1d6a7
+  state_hash: 7d32221e0c3f482a16e2e170b7df1d4753ff4d7783cc2b5a3386b183a7941e36
+  best_epoch: 244
+  training_arm: A (ordinary molecule MSE only)
+  feature_spec_hash: 7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee
+  feature_spec: {atom_feat: 51, bond_feat: 13, atom_scalar: 9, global: 42, s1_codes: 80, s2_path_codes: 400}
+  normalisation: frozen Train-only buffers inside the checkpoint (never refitted)
+  reference_metrics:
+    valid_rmse: 0.7025358944353126
+    test_rmse: 0.5761674771952362
+    test_mae: 0.4280564144318241
+  reproduction_tolerance: 1.0e-5
+  previous_round_predictions:
+    reference_o_predictions: tracks/structural-sufficiency/lcrc_lipo_amide_dependency_public122_v1/analysis/reference_o_predictions.csv
+    molecule_catalog: tracks/structural-sufficiency/lcrc_lipo_amide_dependency_public122_v1/analysis/molecule_catalog.csv
+    per_view_predictions: tracks/structural-sufficiency/lcrc_lipo_amide_dependency_public122_v1/analysis/per_view_predictions.csv
+
+motif:
+  name: restricted amide link acyl_c - c(=O) - n
+  definition: identical to the previous round (frozen; not redefined after any prediction)
+  raw_vocabulary:
+    C_non_aromatic: 2
+    C_aromatic: 3
+    N_non_aromatic: 7
+    O: 9
+    neutral_charge_bucket: 2
+    single_bond: 0
+    double_bond: 1
+    single_bond_no_stereo: 0
+  required:
+    c: {atom_class: 2, charge: 2, atom_h: 0, degree: 3}
+    o: {atom_class: 9, charge: 2, atom_h: 0, degree: 1, bond: double}
+    n: {atom_class: 7, charge: 2, all_incident_bonds: single, degree_plus_h: 3, c_n_bond: [single, bridge]}
+    acyl_c: {atom_class: [2, 3], c_acyl_bond: [single, bridge]}
+    neighbours_of_c: exactly {o, n, acyl_c}
+  matched_requirement_in_main_analysis: false   # new protocol; MATCHED is a supplementary subset only
+  molecules_allowed: original graph with n_components == 1 only
+
+donors:
+  u_v_atom_class: 2
+  u_v_charge: 2
+  bond: {class: single, bridge: true, stereo: 0}
+  disjoint_from: [c, o, n, acyl_c]
+  carbonyl_carbon_forbidden: both u and v must have no DOUBLE bond to a class-9 O
+  ranking_or_selection: none (all donors kept; no distance/label/prediction criterion)
+  unit_not_extra_sample: "a donor is an auxiliary bond, not an extra observation or molecule"
+
+views:
+  O: original raw row
+  T: delete (c,n) and (u,v); add (c,u)+(n,v) or (c,v)+(n,u), whichever keeps the graph connected
+  K: delete (c,acyl_c) and the SAME (u,v); add (c,u)+(acyl_c,v) or (c,v)+(acyl_c,u), same legality rule
+  added_bonds: {class: single, stereo: 0, directed_records: both}
+  legality: exactly one crossing must keep the graph connected and create no duplicate bond/self-loop
+  pairing: only pairs with both T and K for the same donor qualify
+  view_key: "<row_id>:R<a-b>.<c-d>:A<e-f>.<g-h>"   # row id + removed set + added set
+  prediction_key: [view_key, scope]
+  invariants:
+    - single component, no self-loop, no duplicate physical bond
+    - atoms / atom attributes / per-atom degree / bond count / bond-type totals unchanged
+    - original ring bonds unchanged; added bonds are bridges; ring flags and min ring size unchanged
+    - T: restricted-amide instance count decreases by exactly 1 and o-c-n disappears
+    - K: instance count unchanged and o-c-n kept (fresh acyl carbon)
+    - every view removes 2 and adds 2 physical bonds (both directions recorded)
+    - AF51 byte-identical to the O view for every atom (control-failure gate)
+
+chemistry:
+  mapping: smiles_to_raw_row must equal the artifact row; typed/bond-typed isomorphism fallback
+  rewire: same deletions/additions on an RDKit copy, then Chem.SanitizeMol
+  must_match: heavy atoms, formal-charge bucket, H-count bucket, aromatic flags, bond set + bond types, 1 component
+  repair: forbidden (no H addition, no capping, no re-sanitising to force a pass)
+  note: valence legality does not mean the rewired graph is a measured compound
+
+scopes:
+  FULL: every input block (including global42) recomputed from the rewired connected graph
+  G_FIXED: local inputs / scalars from the rewired graph, raw global42 restored to the molecule's own O global42
+  both_scopes_reported: true
+  primary_scope: FULL
+
+range_support:
+  definition: per-dimension min/max of the RAW global42 over the full Train split (frozen Train cache)
+  tolerance: 1.0e-6
+  pair_rule: RANGE_SUPPORTED iff O, T and K are all inside the range
+  main_analysis: RANGE_SUPPORTED pairs only (filter donors -> average in instance -> average in molecule)
+  supplement: all structurally/chemically legal donors; out-of-range views listed with dimension/value/excess
+  no_clipping: true
+  no_refit: true
+  in_distribution_claim: forbidden (per-dimension membership is not joint membership)
+
+statistics:
+  losses: raw logD absolute error / absolute movement per view, then averaged
+  main_quantities:
+    J: mean_m mean_j mean_d (|pT-p0| - |pK-p0|)
+    D: mean_m mean_j mean_d (|pT-y_original| - |pK-y_original|)
+    B: mean_m mean_j mean_d (|pT-y_original| - |p0-y_original|)
+  weights: molecule-equal; instance-equal inside a molecule; donor-equal inside an instance
+  averaging_order: per-view loss/movement first, never averaged predictions before the loss
+  cluster: Bemis-Murcko scaffold (non-isomeric canonical SMILES; empty scaffold -> molecule canonical SMILES)
+  bootstrap: paired cluster bootstrap, 1000 replicates, seed 20261114, whole clusters with replacement,
+             one shared resample for both scopes of a population
+  ci: percentile 95 percent
+  influence:
+    ranking: main FULL |D_m|, ties by row_id
+    drop_worst_single: recompute D / J / B
+    drop_worst_block: ceil(0.05 * n) largest, recompute D / J / B
+    g_fixed: its own identical checks, reported separately
+  supplements: previous-round MATCHED subset and the all-legal-donor population (pre-defined, never a replacement)
+
+natural_pairs:
+  new_mining: forbidden
+  source: clarified previous round only
+  quoted: {E_T: [21, 8], E_HH: [3, 3]}   # [pairs, components]; E_HH = LOW_SUPPORT
+  wording: "lower error in this sample" (no significance claim without component-level uncertainty)
+
+execution:
+  host: res (compute), local host for analysis and figures
+  pools: [res-gpu0, res-gpu1]   # one A100 is enough; res-2 unused
+  gpu_budget_hours: {planned: 0.1, hard_cap: 0.3}
+  cpu_preprocessing_budget_minutes: 30
+  training: none (no optimizer, no backward, no probe, no new model, no new seed)
+  seeds: only the fixed cluster-bootstrap seed 20261114
+  allowed_reruns: implementation-error fixes only, recorded with the reason
+
+stop_conditions:
+  - frozen data / split / checkpoint / previous-round predictions missing or mismatched -> MISSING_BASELINE, stop
+  - structural pre-count mismatch after a coding-error search -> stop the formal analysis
+  - AF51 identity or structural invariant failure -> investigate implementation, never ignore
+  - reproduction difference above 1e-5 after model/split/denormalisation checks -> stop
+  - no qualifying Test molecule -> NO_SUPPORTED_COHORT, stop the main inference
+  - after the prescribed inference/analysis -> stop (no new motif, no next round)
+
+decision_rule:
+  supported_sentence_requires:
+    - main FULL Test D and J 95% CI lower bounds > 0
+    - main FULL Test B 95% CI lower bound > 0
+    - Valid D/J/B point estimates in the same direction
+    - both fixed influence checks keep D > 0 and J > 0
+  g_fixed: reported separately; the "conditional local-input intervention is compatible"
+           sentence requires G_FIXED support as well
+  unresolved: CI crosses zero
+  not_supported: reversed point estimate -> "this control does not support the selectivity"
+  conclusion_sensitive: contradictions across scope / Valid / influence checks
+  never: new-molecule accuracy claim, causal chemical effect, amide-beats-other-groups,
+         joint in-distribution claim, merging the previous round's formal rule pass with this round
