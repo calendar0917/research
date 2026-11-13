@@ -250,6 +250,12 @@ CANDIDATES: dict[str, dict[str, Any]] = {
     "MP_CONTEXT": {"kind": "mp_context", "family": "CTX", "recipe": "R*", "dataset_role": "diagnostic"},
     "POOL_CONTEXT": {"kind": "pool_context", "family": "CTX", "recipe": "R*", "dataset_role": "control"},
     # --- A5: D-MPNN reference (its own fixed recipe) ---------------------
+    #: transfer aliases: a candidate re-run under an explicit recipe on a transfer
+    #: task, so that ``R_task`` matching (PROTOCOL §6) is preserved without
+    #: changing the route definition or colliding with the Lipophilicity run dir
+    "C1_R1_T": {"kind": "c1", "family": "VANILLA", "recipe": "R1"},
+    "K_COMBO_R1_T": {"kind": "k_combo", "family": "K", "recipe": "R1"},
+    "K_COMBO_R0_T": {"kind": "k_combo", "family": "K", "recipe": "R0"},
     "DMPNN_LR3E4": {"kind": "dmpnn", "family": "DMPNN", "recipe": "D1", "dataset_role": "reference"},
     "DMPNN_LR1E3": {"kind": "dmpnn", "family": "DMPNN", "recipe": "D2", "dataset_role": "reference"},
 }
