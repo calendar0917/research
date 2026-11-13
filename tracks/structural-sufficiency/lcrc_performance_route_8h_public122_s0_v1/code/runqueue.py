@@ -28,7 +28,7 @@ def parse_spec(spec: str) -> dict[str, Any]:
         raise SystemExit(f"bad job spec {spec!r}; expected candidate:dataset[:recipe[:epochs[:smoke]]]")
     out = {"candidate": parts[0], "dataset": parts[1]}
     out["recipe"] = parts[2] if len(parts) > 2 and parts[2] else None
-    digits = [p for p in parts[3:] if p and p != "smoke"]
+    digits = [p for p in parts[3:] if p and p.isdigit()]
     out["epochs"] = int(digits[0]) if digits else None
     out["smoke"] = "smoke" in parts
     if out["smoke"]:

@@ -423,6 +423,12 @@ def train_candidate(
                 if isinstance(v, (int, float, np.floating)):
                     row[f"{s}_{k}"] = float(v)
         curve.append(row)
+        if epoch == 1 or epoch % 25 == 0 or epoch == int(epochs):
+            C.log(f"[{candidate}@{dataset}] epoch {epoch}/{epochs} "
+                  f"valid={metrics['valid'].get('rmse', metrics['valid'].get('roc_auc')):.5f} "
+                  f"test={metrics['test'].get('rmse', metrics['test'].get('roc_auc')):.5f} "
+                  f"best={best_epoch} epoch_s={train_seconds + eval_seconds:.2f}")
+            _write_curve(out_dir / "curve.csv", curve)   # incremental, monitorable
         if device.type == "cuda":
             gpu_peak = max(gpu_peak, int(torch.cuda.max_memory_allocated(device)))
 
