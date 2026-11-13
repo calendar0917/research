@@ -1,0 +1,72 @@
+{
+  "formal_run": {
+    "device": "cuda:0",
+    "git_commit": "a0850d89ed2f4ddaf9ce92fe63affc874eb37a7a",
+    "git_dirty": false,
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "node": "a100-2",
+    "run_id": "amide-dep-infer-v3-20261113-130354-355509f1",
+    "runtime_json": "analysis/runtime.json"
+  },
+  "interpretation": "same-input forward passes differ across devices (float32 reduction order): max 1.1e-5 raw logD on a single cut view, mean ~6e-7. On the A100 the two scope paths over the same O view already differ by <=9.5e-7, i.e. the device noise is reduction non-determinism, not a scope bug. Reported effects (D 0.14-0.47, B 0.20-7.56 logD) are orders of magnitude larger, but per-molecule digits beyond ~1e-5 are not device-independent.",
+  "max_abs_diff_raw_logD": 1.0954472532631598e-05,
+  "mean_abs_diff_raw_logD": 5.801863304813384e-07,
+  "n_above_1e-6": 831,
+  "n_predictions_compared": 6110,
+  "o_view_full_vs_gfixed_on_a100": {
+    "test": 8.344650268554688e-07,
+    "train": 9.5367431640625e-07,
+    "valid": 7.152557373046875e-07
+  },
+  "p99_abs_diff_raw_logD": 4.0358583017763294e-06,
+  "per_kind": {
+    "K": {
+      "max_abs_diff": 1.0954472532631598e-05,
+      "mean_abs_diff": 1.0139172738714241e-06,
+      "n": 884
+    },
+    "O": {
+      "max_abs_diff": 2.882755929300984e-06,
+      "mean_abs_diff": 3.709349728700914e-07,
+      "n": 4200
+    },
+    "R": {
+      "max_abs_diff": 6.342063045394752e-06,
+      "mean_abs_diff": 9.159601696382444e-07,
+      "n": 142
+    },
+    "R+T": {
+      "max_abs_diff": 6.9186142299670905e-06,
+      "mean_abs_diff": 1.0263942816224336e-06,
+      "n": 92
+    },
+    "T": {
+      "max_abs_diff": 8.648267789013175e-06,
+      "mean_abs_diff": 1.093704678139344e-06,
+      "n": 792
+    }
+  },
+  "per_split": {
+    "test": {
+      "max_abs_diff": 1.0954472532631598e-05,
+      "n": 1322
+    },
+    "train": {
+      "max_abs_diff": 2.882755929300984e-06,
+      "n": 3360
+    },
+    "valid": {
+      "max_abs_diff": 8.648267789013175e-06,
+      "n": 1428
+    }
+  },
+  "purpose": "cross-device sanity check only; every reported number uses the A100 run exclusively",
+  "round_id": "lcrc-lipo-amide-dependency-public122-v1",
+  "sanity_run": {
+    "device": "cpu",
+    "git_commit": "a0850d89ed2f4ddaf9ce92fe63affc874eb37a7a",
+    "host": "local workstation",
+    "note": "same committed code and inputs, CPU; used only to bound device noise"
+  },
+  "view_cache_content_fingerprints_identical": true
+}
