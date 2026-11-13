@@ -12,10 +12,11 @@ Seed: 0. No seed expansion, no hyperparameter search, no DDP, no `res-2`.
 
 **The pre-registered common-benefit code is `EDIT_PERFORMANCE_TRADEOFF`, with a
 strong caveat: this is not a robust edit benefit.** R's E_T component-equal
-pair-difference MAE is lower than A by only `+0.000751` (0.305260 vs 0.306011;
-95 % paired-component bootstrap interval `[-0.027790, +0.027102]`). At the same
-time R's Test RMSE is worse by `-0.016222` (`[−0.041010, +0.010198]`) and Valid
-RMSE is worse by `-0.024694`. The E_T gain is not supported by its interval, it
+pair-difference MAE is lower than A by only 0.000751 (0.305260 vs 0.306011;
+gain A−R = `+0.000751`; 95 % paired-component bootstrap interval
+`[-0.027790, +0.027102]`). At the same time R's Test RMSE is higher by 0.016222
+(gain A−R = `-0.016222`; `[−0.041010, +0.010198]`) and Valid RMSE is higher by
+0.024694. The E_T gain is not supported by its interval, it
 disappears under pair-equal weighting (R 0.314020 vs A 0.306786), and it reverses
 when A's single worst E_T component is removed (gain `−0.000895`). Therefore the
 honest conclusion is **no joint benefit in this configuration**, not “edit
@@ -219,7 +220,7 @@ Auxiliary-gradient diagnostics (steps 1, 28, 271, 2701) show that R's loss is a
 much weaker update than W/N: R's aux/molecule gradient L2 ratio is 0.0028, 0.0556,
 0.1860, 0.0293; W's is 0.8983, 0.6919, 0.7444, 0.4606; N's is 0.0818, 0.1013,
 0.8652, 0.4210. R's auxiliary direction is also less aligned with the molecule
-gradient (cosine −0.63 to +0.55) than W's (0.98–0.996). This is consistent with
+gradient (cosine −0.63 to +0.55) than W's (0.976–0.996). This is consistent with
 a weak residual-coupling objective, but it is a design property, not proof that
 a larger λ would help; λ was fixed at 1.0 and was not searched.
 
