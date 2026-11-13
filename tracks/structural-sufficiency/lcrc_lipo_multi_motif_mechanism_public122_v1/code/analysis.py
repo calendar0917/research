@@ -207,6 +207,8 @@ def build_pair_quantities(
             row["aC_init"] = aC_init
             row["J_C_init"] = row["aT_init"] - aC_init
             row["rC"] = _ratio(row[f"aT_{G_FIXED}"], aC, init=False)
+            row["rC_FULL"] = _ratio(row[f"aT_{FULL}"], row[f"aC_{FULL}"], init=False)
+            row["rK_FULL"] = _ratio(row[f"aT_{FULL}"], row[f"aK_{FULL}"], init=False)
             row["rC_init"] = _ratio(row["aT_init"], aC_init, init=True)
             row["rK"] = _ratio(row[f"aT_{G_FIXED}"], row[f"aK_{G_FIXED}"], init=False)
             row["rK_init"] = _ratio(row["aT_init"], row["aK_init"], init=True)
@@ -617,6 +619,7 @@ def main() -> int:  # noqa: C901
          "p0_init", "aT_init", "aK_init",
          "aC_FULL", "lossC_FULL", "J_C_FULL", "D_C_FULL", "aC_G_FIXED", "lossC_G_FIXED", "J_C_G_FIXED", "D_C_G_FIXED",
          "aC_init", "J_C_init", "pC_mean_G_FIXED", "pC_mean_FULL", "rC", "rC_init", "rK", "rK_init",
+         "rC_FULL", "rK_FULL",
          "mobius_available"],
     )
     write_csv(
@@ -943,7 +946,11 @@ def mechanism_tables(pair_rows, mol_store, mult) -> dict[str, Any]:
                 sel = family_rows(pair_rows, family, split, population)
                 if not sel:
                     continue
-                keys = [f"{cmp_H}_{t}" for t in TERMS] + [f"{cmp_L}_{t}" for t in TERMS]
+                keys = (
+                    [f"{cmp_H}_{t}" for t in TERMS]
+                    + [f"{cmp_L}_{t}" for t in TERMS]
+                    + ["H_s2_recovery_123_vs_13_T", "H_s2_recovery_123_vs_23_T"]
+                )
                 if not any(k in sel[0] for k in keys):
                     continue
                 mm = molecule_means(sel, keys)
@@ -1429,6 +1436,7 @@ def write_tables(analysis_dir, results, uncertainty, mechanism, mmp, strat, mol_
                     lo, hi = pct_ci(reps)
                     return f"[{_fmt(lo)}, {_fmt(hi)}]"
 
+                is_cal = population == POP_CAL
                 rC = point_mean({rid: d.get("rC", np.nan) for rid, d in mm.items()})
                 rC_init = point_mean({rid: d.get("rC_init", np.nan) for rid, d in mm.items()})
                 E = point_mean({rid: d.get("rC", np.nan) - d.get("rC_init", np.nan) for rid, d in mm.items()})
@@ -1446,7 +1454,9 @@ def write_tables(analysis_dir, results, uncertainty, mechanism, mmp, strat, mol_
                 bb = point_mean({rid: d.get("B_G_FIXED", np.nan) for rid, d in mm.items()})
                 lines.append(
                     f"| {family} | {split} | {population} | {support['molecules']} | {support['pairs']} | "
-                    f"{_fmt(rC)} {ci('rC')} | {_fmt(rC_init)} | {_fmt(E)} {E_ci} | "
+                    f"{(f'{_fmt(rC)} ' + ci('rC')) if is_cal else '—'} | "
+                    f"{_fmt(rC_init) if is_cal else '—'} | "
+                    f"{(f'{_fmt(E)} ' + E_ci) if is_cal else '—'} | "
                     f"{_fmt(jc)} | {_fmt(jk)} | {_fmt(dc)} | {_fmt(dk)} | {_fmt(bb)} |"
                 )
     (analysis_dir / "effect_matrix.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
