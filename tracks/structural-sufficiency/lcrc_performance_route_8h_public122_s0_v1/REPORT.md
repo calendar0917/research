@@ -20,13 +20,15 @@
 ## 0. 四问四答
 
 **Q1（当前 C1 离"便宜的改法"和"真 D-MPNN"有多远？）**
-配方（R0–R3）、增容（`WIDE_LOCAL` +42 % 参数）、加预算（720 epoch）三条便宜路线，能把 **Valid** 拉动
-最多 8 %（R1 −7.5 %、LONG +7.75 %），但对 **Test** 的净效果是 **0 ~ −4.6 %**，且方向与 Valid 相反；
-换容量甚至直接变差（Test −1.0 %）。指纹参考（ECFP4+RDKit+XGBoost，Test 0.6477）本轮被 C1 全面超过
+三条便宜路线各有各的答案，而且**互不一致**：配方（R0–R3）在 **Valid** 上最多值 7.5 %（R1），
+在 **Test** 上最多值 2.9 %（R3），但赢 Valid 的配方与赢 Test 的配方**不是同一个**；增容
+（`WIDE_LOCAL`，+42 % 参数、与 C1 逐位同初始化）**两个 split 都变差**（Valid −8.6 %、Test −1.0 %），
+说明不是欠容量；加预算（720 epoch）把 Valid 拉高 **+7.75 %** 而 Test **−4.6 %**，是典型的
+"训练更久 = 更像 Train"。指纹参考（ECFP4+RDKit+XGBoost，Test 0.6477）本轮被 C1 全面超过
 （Test +9.8 %），所以"离便宜基线还差多远"的答案是**没有差距、已经在前面**。真 chemprop v2.2.1 D-MPNN
 则是另一种答案：Test 0.5410（**+7.35 %**）但 Valid 0.7365（−12.8 %），两个 split 给出的距离符号相反。
 换言之 C1 与一个像样的 D-MPNN 之间**确实存在一个 Test 侧 ~7 % 的差**，而本轮所有便宜改法都够不着它——
-唯一同时把两个 split 都往好里推的是 `K_COMBO`（chem8 原子通道 + 贡献残差，+2.6 % 参数，
+唯一同时把两个 split 都往好里推的是 `K_COMBO`（chem8 原子通道 + 8 维潜在图贡献残差，+2.6 % 参数，
 Valid **+13.2 %** / Test **+4.6 %**），它补上了其中约一半。
 
 **Q2（两条解剖结论能不能变成预测增益？）**
@@ -117,7 +119,7 @@ Valid 赢了 7.5 %，Test 倒退 0.8 %；Test 最好的 R3 在 Valid 上几乎�
 | `LONG`（720 epoch 余弦） | 228 674 | **0.6021** | 0.6108 | **+7.75 %** | −4.6 % |
 
 增容是纯亏：新参数从 C1 状态零填起步、共享同一初始化（`shared_state_equal` 有单元测试），
-结果两个 split 都变差，说明**这个模型不是欠容量**。加预算拿到本轮的 Valid 冠军（0.6021），
+结果两个 split 都变差，说明**这个模型不是欠容量**。加预算把 Valid 拉到 0.6021，
 但 Test 掉到 0.6108，配对 bootstrap Valid Δ=+0.0506 CI [+0.0056, +0.0924] p=0.025（显著变好）、
 Test Δ=−0.0269 CI [−0.0694, +0.0105] p=0.183——**典型的"训练更久 = 更像 Train"而不是更准**。
 
@@ -146,7 +148,7 @@ Valid 打平、Test 领先 9.8 %。**"低配基线"这条路线的距离是负�
 
 | 臂 | 参数 | Valid RMSE | Test RMSE | ΔValid | ΔTest | 升/降 |
 | --- | --- | --- | --- | --- | --- | --- |
-| `K_COMBO`（chem8 原子通道 + 贡献残差） | 234 731 | **0.5667** | **0.5573** | **+13.2 %** | **+4.6 %** | 双升 |
+| `K_COMBO`（chem8 原子通道 + 8 维潜在图贡献残差） | 234 731 | **0.5667** | **0.5573** | **+13.2 %** | **+4.6 %** | 双升 |
 | `C1_CHEM8`（只加 chem8 通道） | 229 698 | 0.6539 | 0.5660 | −0.2 % | +3.1 % | Test 升 |
 | `C1_CONTRIB`（只加贡献残差） | 233 707 | **0.5376** | 0.6063 | **+17.6 %** | −3.8 % | 反向 |
 | `A0_CHEM8_CONTRIB_R0`（同一思路搬到 A0/R0） | 253 163 | 0.6854 | 0.5756 | −5.0 % | +1.4 % | 弱 |
@@ -154,7 +156,8 @@ Valid 打平、Test 领先 9.8 %。**"低配基线"这条路线的距离是负�
 这张 2×2 是整轮最有信息量的一张表：
 
 * chem8 通道**单独**只买到 Test +3.1 %（Valid 0）——它确实往"泛化"这个方向走。
-* 贡献残差**单独**买到 Valid +17.6 %（配对 bootstrap p=0.019，是本轮唯一 Valid 显著的臂），Test 却 −3.8 %。
+* 贡献残差**单独**买到 Valid +17.6 %（配对 bootstrap p=0.019，本轮 Valid 侧显著的两条臂之一，
+另一条是 `LONG` 的 p=0.025），Test 却 −3.8 %。
 * 两者**同时**开才得到两个 split 同时改善。
 
 也就是说：**便宜路线的瓶颈不在容量、不在预算、不在配方，而在"给模型一条能容纳化学先验的通道"**，
@@ -187,8 +190,8 @@ Valid 打平、Test 领先 9.8 %。**"低配基线"这条路线的距离是负�
 | 臂 | 干预 | Valid RMSE | Test RMSE | ΔValid | ΔTest |
 | --- | --- | --- | --- | --- | --- |
 | `C1_R1` | — | **0.6526** | **0.5839** | — | — |
-| `M_UNBIASED` | 训练期用无偏二阶矩（把 1.111 的偏差补回去） | 0.6706 | 0.6072 | −2.75 % | −3.98 % |
-| `M_CLEANPOOL` | 池化前把 dropout 掩码归一（clean pooling） | 0.7121 | 0.5781 | −9.11 % | +1.00 % |
+| `M_UNBIASED` | 训练期把二阶矩乘回 (1−p)，即用无偏二阶矩 | 0.6706 | 0.6072 | −2.75 % | −3.98 % |
+| `M_CLEANPOOL` | 用 dropout **之前**的干净表示池化（不加噪池化） | 0.7121 | 0.5781 | −9.11 % | +1.00 % |
 | `M_NODROP` | p=0 | 0.7239 | 0.5771 | −10.92 % | +1.17 % |
 
 **把偏差"修正"掉反而更差**，两个 split 都差。而**删掉 dropout**（不被偏差困扰）Test 略好、Valid 大差。
@@ -260,7 +263,7 @@ Test 64 行有非零 ΔJ 的行）：
 
 ### 4.1 三臂 + 对照
 
-设计：私有 aux 头（`q_aux: 64→64→1`），读同一个 `h` 与掩码，不额外的 dropout，λ=0.1 固定，
+设计：私有 aux 头（`q_aux: 64→64→1`，从 dropout 前的 `h` 做原子求和），不额外加 dropout，λ=0.1 固定，
 推理时整头丢弃；aux 目标在 **Train** 上标准化，`A_SHUFFLE` 用 Train-only 置换（seed 90217）。
 
 | 臂 | aux 目标 | Valid RMSE | Test RMSE | ΔValid | ΔTest | 参数 |
@@ -466,3 +469,46 @@ uv run python code/run.py report
 
 **引用口径**：本文件所有 Lipophilicity 数字为 `DEVELOPMENT_TEST`，seed 0，单轮，Test 参与过路线选择。
 不得表述为独立确认、跨 seed 稳定性、或对 MoleculeNet 排行榜的结论。
+
+---
+
+## 附录 A：全部正式训练
+
+（`analysis/run_table.csv` 是同一份数据的机器可读版本；冒烟训练不在其中。）
+
+| 数据集 | 候选 | 配方 | epoch (best/total) | Valid | Test | 参数 | 墙钟 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Lipophilicity | `A0_CHEM8_CONTRIB_R0` | R0 | 10/360 | RMSE 0.6854 | RMSE 0.5756 | 253,163 | 7.9 min |
+| Lipophilicity | `A0_R0` | R0 | 10/360 | RMSE 0.6995 | RMSE 0.5801 | 247,106 | 13.1 min |
+| Lipophilicity | `A_LOGP` | R1 | 1/360 | RMSE 0.6990 | RMSE 0.5737 | 243,972 | 59.9 min |
+| Lipophilicity | `A_MW` | R1 | 1/360 | RMSE 0.7188 | RMSE 0.6062 | 243,972 | 49.4 min |
+| Lipophilicity | `A_SHUFFLE` | R1 | 1/360 | RMSE 0.6695 | RMSE 0.5810 | 243,972 | 56.9 min |
+| Lipophilicity | `C1_CHEM8` | R1 | 1/360 | RMSE 0.6539 | RMSE 0.5660 | 229,698 | 21.7 min |
+| Lipophilicity | `C1_CONTRIB` | R1 | 1/360 | RMSE 0.5376 | RMSE 0.6063 | 233,707 | 29.9 min |
+| Lipophilicity | `C1_R0` | R0 | 1/360 | RMSE 0.7054 | RMSE 0.5795 | 228,674 | 6.4 min |
+| Lipophilicity | `C1_R1` | R1 | 1/360 | RMSE 0.6526 | RMSE 0.5839 | 228,674 | 6.5 min |
+| Lipophilicity | `C1_R2` | R2 | 1/360 | RMSE 0.6933 | RMSE 0.5730 | 228,674 | 6.5 min |
+| Lipophilicity | `C1_R3` | R3 | 1/360 | RMSE 0.6535 | RMSE 0.5670 | 228,674 | 13.0 min |
+| Lipophilicity | `DMPNN_LR1E3` | None | 2/100 | RMSE 0.6530 | RMSE 0.6112 | 318,301 | 58.1 min |
+| Lipophilicity | `DMPNN_LR3E4` | None | 1/100 | RMSE 0.7365 | RMSE 0.5410 | 318,301 | 1.3 min |
+| Lipophilicity | `K_COMBO` | R1 | 1/360 | RMSE 0.5667 | RMSE 0.5573 | 234,731 | 52.8 min |
+| Lipophilicity | `LONG` | R1 | 1/720 | RMSE 0.6021 | RMSE 0.6108 | 228,674 | 26.7 min |
+| Lipophilicity | `M_CLEANPOOL` | R1 | 1/360 | RMSE 0.7121 | RMSE 0.5781 | 228,674 | 39.3 min |
+| Lipophilicity | `M_NODROP` | R1 | 1/360 | RMSE 0.7239 | RMSE 0.5771 | 228,674 | 45.6 min |
+| Lipophilicity | `M_UNBIASED` | R1 | 1/360 | RMSE 0.6706 | RMSE 0.6072 | 228,674 | 33.0 min |
+| Lipophilicity | `S_SELECT_K1` | R1 | 1/360 | RMSE 0.6657 | RMSE 0.5739 | 228,674 | 11.5 min |
+| Lipophilicity | `S_SELECT_K4` | R1 | 1/360 | RMSE 0.7016 | RMSE 0.6028 | 228,674 | 31.4 min |
+| Lipophilicity | `S_UNIFORM_K1` | R1 | 1/360 | RMSE 0.6701 | RMSE 0.5824 | 228,674 | 21.0 min |
+| Lipophilicity | `S_UNIFORM_K4` | R1 | 1/360 | RMSE 0.6602 | RMSE 0.5699 | 228,674 | 41.8 min |
+| Lipophilicity | `WIDE_LOCAL` | R1 | 6/360 | RMSE 0.7089 | RMSE 0.5898 | 324,290 | 14.2 min |
+| ESOL | `C1_R0` | R0 | 1/360 | RMSE 0.5661 | RMSE 0.5409 | 228,674 | 1.6 min |
+| ESOL | `C1_R1` | R1 | 1/360 | RMSE 0.5383 | RMSE 0.5305 | 228,674 | 1.6 min |
+| ESOL | `K_COMBO` | R0 | 4/360 | RMSE 0.5534 | RMSE 0.5544 | 234,731 | 10.3 min |
+| ESOL | `K_COMBO_R1_T` | R1 | 1/360 | RMSE 0.5516 | RMSE 0.5362 | 234,731 | 1.8 min |
+| FreeSolv | `C1_R1` | R1 | 1/360 | RMSE 0.7523 | RMSE 0.9097 | 228,674 | 30.7 min |
+| FreeSolv | `K_COMBO` | R1 | 1/360 | RMSE 0.8150 | RMSE 0.8520 | 234,731 | 31.5 min |
+| BACE | `C1_R0` | R0 | 98/360 | AUC 0.7788 | AUC 0.8322 | 228,674 | 5.0 min |
+| BACE | `C1_R1` | R1 | 70/360 | AUC 0.7896 | AUC 0.8335 | 228,674 | 8.5 min |
+| BACE | `K_COMBO` | R0 | 98/360 | AUC 0.7854 | AUC 0.8255 | 234,731 | 14.0 min |
+| BACE | `K_COMBO_R1_T` | R1 | 152/360 | AUC 0.8017 | AUC 0.8306 | 234,731 | 5.6 min |
+| ogbg-molhiv | `C1_R1` | R1 | 23/160 | AUC 0.8378 | AUC 0.7458 | 228,674 | 32.7 min |

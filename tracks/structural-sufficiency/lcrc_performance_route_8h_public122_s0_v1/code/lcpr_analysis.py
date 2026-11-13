@@ -180,6 +180,29 @@ def _load_json(path: Path) -> Any:
     return json.loads(path.read_text())
 
 
+def _curve_best_epoch(path: Path, task: str) -> int | None:
+    """Best epoch from ``curve.csv`` for runs recorded before the field existed."""
+    if not path.exists():
+        return None
+    import csv as _csv
+
+    key = "valid_rmse" if task == "regression" else "valid_roc_auc"
+    try:
+        with path.open("r", encoding="utf-8") as fh:
+            rows = list(_csv.DictReader(fh))
+    except OSError:
+        return None
+    best, best_epoch = -math.inf, None
+    for row in rows:
+        try:
+            value = float(row[key])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if value > best:  # every metric here is "higher is better" in the curve
+            best, best_epoch = value, int(float(row["epoch"]))
+    return best_epoch
+
+
 def collect_runs(root: Path | None = None) -> list[dict[str, Any]]:
     root = Path(root or C.RUNS)
     rows: list[dict[str, Any]] = []
@@ -203,7 +226,9 @@ def collect_runs(root: Path | None = None) -> list[dict[str, Any]]:
             "weight_decay": rec.get("weight_decay"),
             "parameters": meta.get("parameters"),
             "trainable_parameters": meta.get("trainable_parameters"),
-            "best_epoch": payload.get("best_epoch"),
+            "best_epoch": payload.get("best_epoch", _curve_best_epoch(path.parent / "curve.csv",
+                                                                     payload["task"])),
+            "epochs_run": payload.get("epochs_run", (rec.get("epochs_run") or rec.get("epochs"))),
             "valid": payload["metrics"]["best"]["valid"],
             "test": payload["metrics"]["best"]["test"],
             "train": payload["metrics"]["best"]["train"],

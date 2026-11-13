@@ -508,6 +508,7 @@ def train_candidate(
         "schema": "lcrc-performance-route-train-v1",
         "round_id": C.ROUND_ID, "protocol_id": C.PROTOCOL_ID,
         "status": "completed", "smoke": bool(smoke),
+        "best_epoch": int(best_epoch), "epochs_run": int(len(curve)),
         "candidate": candidate, "candidate_def": cand, "kind": kind,
         "dataset": dataset, "task": task, "split_method": task_meta["split_method"],
         "units": task_meta["units"],
