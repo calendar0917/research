@@ -99,8 +99,11 @@ def panel_m(model, dataset: str = "Lipophilicity", *, masks: int = 256,
             "mean_h_mask": mh_m.cpu().numpy().tolist(),
             "mean_h2_mask": mh2_m.cpu().numpy().tolist(),
             "summary": {
-                "mean_h2_ratio_mask_over_clean": float((mh2_m / mh2_c.clamp(min=1e-12)).mean()),
-                "mean_h_ratio_mask_over_clean": float((mh_m / mh_clean.mean(dim=1).clamp(min=1e-12)).mean()),
+                #: pooled ratios use totals per split, which is the quantity the
+                #: pooling statistics actually aggregate (per-row ratios divide by
+                #: near-zero means and are uninformative)
+                "mean_h2_ratio_mask_over_clean": float(mh2_m.sum() / mh2_c.sum().clamp(min=1e-12)),
+                "mean_h_ratio_mask_over_clean": float(mh_m.sum() / mh_clean.mean(dim=1).sum().clamp(min=1e-12)),
                 "pred_mc_std_mean": float(torch.sqrt(mc_var).mean()),
                 "pred_mc_mean_minus_eval_mean": float((mc_mean - ev["y"]).mean()),
                 "keep_prob": keep,
