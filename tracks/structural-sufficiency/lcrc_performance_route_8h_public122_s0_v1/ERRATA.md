@@ -53,10 +53,11 @@ uv run pytest tests -q                                # 14 个回归测试
   ② `*_y` 与发布标签逐元素相等；③ 只用 Train 的 mean/scale 反标准化一次；
   ④ 重算 RMSE/MAE 与 `train.json.metrics.best` 差 ≤ 1e-6；
   ⑤ 与 `curve.csv` 在 best-Valid epoch 那一行差 ≤ 1e-6；⑥ `predictions_last.npz` 与 curve 最后一 epoch 一致。
-* 只有 **3 个 checkpoint 被保留**（`runs/` 是 git-ignore，其余在轮末删盘）：
+* 只有 **3 个旧 checkpoint 被保留**（`runs/` 是 git-ignore，其余在轮末删盘）：
   `C1_R1`、`A_LOGP`、`S_SELECT_K1` → 三者 `weight_identity = VERIFIED`
   （CPU 重播：max |Δpred| 2.6e-6 / 2.3e-6 / 1.7e-6；RMSE 完全对上）。
-  其余 `weight_identity = NOT_RETAINED`。因此：
+  两个新增 D-MPNN run 的 `best.pt` 在盘上 → `VERIFIED_METADATA`（见下）。
+  其余 20 条 `weight_identity = NOT_RETAINED`。因此：
   **主性能数字（全部基于保存的预测）身份成立；只有"重新从权重算一遍"的检查（机制面板、# 检查点梯度）受保留范围限制。**
 * **关于"对 base 与 K 做 CPU 重播"（prompt 点名项）**：base `C1_R1` 已重播并 `VERIFIED`（max|Δpred| = 2.6e-6，
   RMSE 逐位对上）；**`K_COMBO` 的 `best.pt` 在本机不存在**（`runs/K_COMBO__Lipophilicity/` 只剩
@@ -64,6 +65,10 @@ uv run pytest tests -q                                # 14 个回归测试
   `weight_identity = NOT_RETAINED`（不是遗漏）。K 的身份因此由**三条相互独立**的路径确认并全部通过：
   ① `predictions_best.npz` 的 row ids/labels/单位、② 重算指标 vs `train.json`、③ best-Valid 与最后一 epoch
   两处 vs `curve.csv`。若要真正重播 K，需要重训一次（本轮未做，也不计入 0.5 GPU·h）。
+* **D-MPNN 的权重核对只做到元数据层**（`VERIFIED_METADATA`）：`best.pt` 自己记录的
+  `best_epoch` 与 curve argbest 相等，`best_metric_value` 与该 epoch 的 `valid_rmse` 差 ≤1e-6，
+  参数量 318 301 与 `train.json.model.parameters` 一致。**不是**前向重播（D-MPNN 重播需要定向边/特征缓存，
+  未做）；其预测身份已由 `predictions_best.npz` 独立确认。
 * 重播时发现一个真实的可复现性约束（已记入 manifest）：`S_SELECT_K1` 的预测**依赖 `cache/support_*.npz`**，
   支撑表不在 checkpoint 内。只 `load_state_dict` 而不喂 `path_key_count` 会得到 0.57373（而不是 0.57393）。
   结论：S 臂的 checkpoints 是"权重 + 冻结支撑表"才能复现，两者都在库内，可复现，但必须成对使用。
@@ -117,7 +122,8 @@ uv run pytest tests -q                                # 14 个回归测试
 | `C1_CONTRIB` | −3.83 % | −4.15 % | −6.03 % | +17.63 % | −2.06 % |
 | `C1_R3` | +2.90 % | +2.59 % | **−0.60 %** | −0.14 % | −5.75 % |
 
-→ 在冻结 base 的**难行子集**上，本轮**没有任何臂**明显领先；K 是唯一在 Test 删 5 % 后仍为正的臂，
+→ 在**被保留的行**（= 去掉冻结 base 最难 5 % 之后的 399 行）上，本轮**没有任何臂**明显领先；
+K 是唯一在 Test 删 5 % 后仍为正的臂，
 但幅度只有 +1.13 %。
 
 ### 2.3 K 对 R3 / K 对 CHEM8（pair 自己的 control 定义 drop 集合）
@@ -208,17 +214,18 @@ p05 ≈ 0.836，`frac(c ≤ 1)` ≤ 0.06 %。→ 修正后的收缩**依然很�
 → "aux 梯度压过主梯度 10–20 倍、成了事实上的主任务"这句话在正确加权下**最多是 0.96–2.04 倍**，
 且这是**全部参数**口径（私有头贡献了大部分范数）。
 
-**不能恢复的**：step 1/100/1000 的权重没有保存，无法从旧标量还原"共享 trunk 上的比值"，
-也不能靠重训恢复轨迹。
+**不能恢复的**：step 1/100/1000 的 **checkpoint 没有保存**（`runs/A_MW__*`、`runs/A_SHUFFLE__*` 只剩
+`train.json`/`curve.csv`/`diagnostics.json`/`predictions_*.npz`），所以无法从旧标量还原"共享 trunk 上的比值"，
+也不能靠重训恢复那条轨迹（重训不是"恢复"，是新证据）。
 
 **能新算的**（`CHECKPOINT_DIAGNOSTIC`，明确不是原训练时的梯度）：在保留的 best 权重上，
 eval 模式、按 row hash 固定的 4 个 Train minibatch（128/批），同一次 forward 上分别求
 `g_main_shared`、`g_aux_shared`。共享主干 = `atom_encoder.* + bond_encoder.* + local.*`（23 个张量），
 排除 `f/rho/q_aux/rho_aux`（16 个张量）。产物：`analysis/grad_checkpoint_diagnostic.json`。
 
-| 臂 | checkpoint | ||0.1·g_aux_shared|| / ||g_main_shared|| | cosine | 全部参数加权比 | 全局 clip 系数 |
+| 臂 | checkpoint | ‖0.1·g_aux_shared‖/‖g_main_shared‖（4 批均值，括号内为逐批） | 加权 cosine（4 批均值 + 范围） | 全部参数加权比（4 批均值） | 全局 clip 系数 ‖g‖/5（4 批均值） |
 | --- | --- | --- | --- | --- | --- | --- |
-| `A_LOGP` | **保留** | **0.605**（4 批：0.54/0.65/0.49/0.74） | **+0.062**（−0.17/+0.14/+0.19） | 0.810 | **0.25**（不会被 clip） |
+| `A_LOGP` | **保留** | **0.605**（0.54 / 0.65 / 0.49 / 0.74） | **+0.062**（单批 +0.096 / −0.173 / +0.138 / +0.185） | 0.810（单批 0.67–1.08） | **0.253**（单批 0.19–0.29；**不会被 clip**） |
 | `A_MW` | 未保留 | — | — | — | — |
 | `A_SHUFFLE` | 未保留 | — | — | — | — |
 
@@ -367,7 +374,7 @@ Test RMSE（`train`/`valid` 见文件）：
 
 | 新增（本文件相关） | 内容 |
 | --- | --- |
-| `analysis/corrected_manifest.json` | 23 条 Lipo 臂逐字段身份 + 权重重播 + 旧表缺陷 |
+| `analysis/corrected_manifest.json` | 25 条 Lipo 臂逐字段身份 + 权重重播（3 条 `VERIFIED` / 2 条 D-MPNN `VERIFIED_METADATA` / 20 条 `NOT_RETAINED`）+ 旧表缺陷 |
 | `analysis/run_table_corrected.{json,csv}` | 37 条正式训练（35 旧 + 2 新），由原始记录重建的机器表（`best_epoch` / `epochs_run` / `git_commit` / `optimizer_base_lr` / `optimizer_updates` / checkpoint 保留标记） |
 | `analysis/tail_corrected.json` | E1 的 6 个 pair × 3 split 全口径（含五分位、最大改善/恶化行、累计 ΔSSE） |
 | `analysis/figures/tail_corrected_cumulative_dsse.png` | 按 base |error| 降序的累计 ΔSSE（K vs C1_R1，Valid/Test） |

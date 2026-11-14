@@ -309,6 +309,7 @@ def _run_identity(candidate: str, dataset: str = "Lipophilicity") -> dict[str, A
         "steps_per_epoch": recipe.get("steps_per_epoch"),
         "optimizer_steps": recipe.get("optimizer_steps"),
         "seed": payload.get("seed", C.TRAIN_SEED),
+        "parameters": (payload.get("model") or {}).get("parameters"),
         "source": "runs/<run>/train.json (written by the training process)",
     }
     rec["fields"]["curve"] = {
@@ -414,7 +415,37 @@ def _run_identity(candidate: str, dataset: str = "Lipophilicity") -> dict[str, A
             "best_metric_value": float(state.get("best_metric_value", float("nan"))),
         }
         if C.CANDIDATES.get(candidate, {}).get("kind") == "dmpnn":
+            #: D-MPNN replay would need the directed edge / feature cache, so instead
+            #: check what the checkpoint *itself* claims against the curve and
+            #: train.json. This is explicitly weaker than a forward replay.
+            sd = state.get("state_dict") or {}
+            n_params = int(sum(int(v.numel()) for v in sd.values())) if sd else -1
+            ck_best = int(state.get("best_epoch", -1))
+            ck_val = float(state.get("best_metric_value", float("nan")))
+            curve_argbest = None
+            curve_val_at_best = None
+            if curve:
+                row = min(curve, key=lambda r: float(r.get("valid_rmse", "inf")))
+                curve_argbest = int(row["epoch"])
+                curve_val_at_best = float(row["valid_rmse"])
+            tj_params = (rec.get("fields", {}).get("train_json") or {})
+            info["metadata_audit"] = {
+                "checkpoint_best_epoch": ck_best,
+                "curve_argbest_epoch": curve_argbest,
+                "checkpoint_best_metric_value": ck_val,
+                "curve_valid_rmse_at_argbest": curve_val_at_best,
+                "best_epoch_matches_curve": bool(ck_best == curve_argbest),
+                "best_metric_matches_curve": bool(
+                    curve_val_at_best is not None and abs(ck_val - curve_val_at_best) <= 1e-6),
+                "state_dict_tensors": len(sd),
+                "state_dict_parameters": n_params,
+                "declared_parameters": state.get("parameters"),
+                "train_json_parameters": tj_params.get("parameters"),
+            }
+            ok = bool(info["metadata_audit"]["best_epoch_matches_curve"]
+                      and info["metadata_audit"]["best_metric_matches_curve"])
             info["replay"] = "not_implemented_for_dmpnn_here"
+            rec["verdict"]["weight_identity"] = "VERIFIED_METADATA" if ok else "UNRESOLVED_IDENTITY"
         else:
             model = A._load_trained(C.CANDIDATES[candidate]["kind"], candidate, dataset)
             if model is not None:
@@ -545,6 +576,7 @@ def write_corrected_run_table() -> dict[str, Any]:
             "git_commit": prov.get("git_commit"),
             "git_dirty_tracked": prov.get("git_dirty_tracked"),
             "seed": payload.get("seed", C.TRAIN_SEED),
+        "parameters": (payload.get("model") or {}).get("parameters"),
             "checkpoint_retained": (run_dir / "best.pt").exists(),
             "predictions_retained": (run_dir / "predictions_best.npz").exists(),
         }
