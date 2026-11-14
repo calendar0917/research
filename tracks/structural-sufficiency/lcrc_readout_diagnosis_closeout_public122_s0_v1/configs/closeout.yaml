@@ -1,0 +1,69 @@
+# Frozen closeout config — lcrc_readout_diagnosis_closeout_public122_s0_v1
+# DEVELOPMENT / POST_DIAGNOSIS_FOLLOWUP (not an independent confirmation).
+# Written before the first new probe prediction; mirrors code/rc_common.py.
+round_id: lcrc-readout-diagnosis-closeout-public122-s0-v1
+protocol_id: lcrc-readout-diagnosis-closeout-public122-s0-v1
+status_tag: DEVELOPMENT / POST_DIAGNOSIS_FOLLOWUP
+seed: 0
+
+dataset:
+  name: Lipophilicity
+  task: regression
+  split_method: random122
+  sizes: [3360, 420, 420]
+  fit: "100"            # train on the full official Train split
+  train_rows: all official Train (nested subset "100")
+  eval: official Valid/Test, complete, unchanged
+
+source:
+  upstream_round: lcrc_bottleneck_diagnosis_public122_s0_v1
+  upstream_delivery_commit: 7e668a9a
+  arm: LIP_C1_R1_F100
+  ckpt: runs/LIP_C1_R1_F100/best_R_SEL.pt
+  expected_internal_update: 8165
+  scope: "E1 R_SEL (== E1+E2 R_SEL)"
+  norms: reused verbatim from upstream cache (struct_norm_*, target_norm_*); never refit
+  hcache: identity-keyed (source state hash + feature/norm hash + split row hash)
+
+probes:
+  arms: [P_WARM, P_POST, P_PRE]
+  frozen: [atom_encoder, bond_encoder, local]
+  warm_start: f, rho from source checkpoint, trainable
+  z_pool: "[g42, mean_h64, mean_h2_64, log1p n]  (171)"
+  psi: "64 -> 32 -> 16"
+  delta: "187 -> 64 -> 1"
+  hidden_act: SiLU
+  new_params: 14705
+  private_seed: 1101
+  delta_init: "final Linear zero (step0 == P_WARM)"
+  shared_init: "P_POST and P_PRE share initial psi/delta; three arms share f/rho init + minibatch order"
+  optimiser: {name: AdamW, lr: 3.0e-4, weight_decay: 1.0e-3, batch_size: 128,
+              updates: 1800, scheduler: none, dropout: false, augmentation: false, seed: 0}
+  grid: "step0 + round(j*1800/50), j=1..50 (51 points)"
+  eval: "every completed fit epoch + every grid point, complete Train/Valid/Test"
+
+selection_rules:
+  R_SEL: "min Valid MSE, ties keep earlier"      # primary, step0 IS a candidate
+  A_SEL: "min Valid MAE, ties keep earlier"       # sensitivity only
+  W_SEL: "5-point rolling mean of Valid MSE, model = window end"  # sensitivity only
+
+learning_path_diagnostics:
+  record_updates: [1, 2, 10, 100, 900, 1800]
+  grad_norms: [f, rho, delta_last, delta_first, psi]   # pre-clip
+  param_displacement: relative to init
+  fixed_molecules: 32   # Train rows ordered by public id only, no label filtering
+  channel_response: "delta([z_pool, extra]) - delta([z_pool, 0]) raw units"
+
+statistics:
+  purchase_threshold: ">=1% Valid AND Test RMSE gain vs P_WARM and vs common step0"
+  bootstrap: {replicates: 2000, seed: 20261114, type: paired row bootstrap on fixed predictions}
+
+budget:
+  wall_target_hours: 1.0
+  wall_hard_hours: 1.5
+  gpu_soft_cap_hours: 0.10
+  gpu_hard_cap_hours: 0.25
+  formal_trajectories: 3          # exactly P_WARM, P_POST, P_PRE
+  max_retries: "technical only, same spec; never retry for a weak scientific result"
+
+gpu_pools: [res-gpu0, res-gpu1]
