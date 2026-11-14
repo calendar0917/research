@@ -1,0 +1,166 @@
+# Frozen configuration — support-conditioned shrinkage of the joint (J) block
+# round: lcrc-support-conditioned-shrinkage-public122-s0-v1
+# Everything here is mirrored by PROTOCOL.md and code/sc_common.py and was
+# written before the first formal training run of this round.
+
+round_id: lcrc-support-conditioned-shrinkage-public122-s0-v1
+kind: new_route_experiment            # not an S-family numeric fix, not a probe round
+seed: 0
+
+datasets:
+  Lipophilicity:
+    split_method: random122
+    sizes: {train: 3360, valid: 420, test: 420}
+    task: regression
+    primary_metric: rmse
+    secondary_metric: mae
+    recipe: R3
+  BACE:
+    split_method: scaffold122
+    sizes: {train: 1210, valid: 151, test: 152}
+    task: binary
+    primary_metric: roc_auc
+    secondary_metric: pr_auc
+    recipe: R1
+    purchase: conditional_on_lipo_promotion
+
+test_policy:
+  visible: true
+  label: DEVELOPMENT_TEST
+  use: TEST_USED_FOR_ROUTE_SELECTION
+  note: not an independent final test; single seed, single round
+
+# --- the frozen contraction --------------------------------------------------
+operator:
+  only_block: J                    # joint two-hop contingency block
+  J_new: "J_marg + a_v * (J_full - J_marg)"
+  unchanged: [type, end, closure, content, S1, atom_scalar, global42, f, rho, dropout]
+  content_block: FULL              # a=0 is NOT the full B5 variant
+  inactive_roots: a = 1            # J_full == J_marg exactly
+  grouping: "b = path_cat % N_BOND_TYPES (N_BOND_TYPES=5, marginal_bt2 source)"
+  extra_parameters: 0
+  parameter_count_all_arms: 228674
+
+support_keys:
+  priority: [K_FINE, K_JOINT]
+  K_FINE: [canonical_float32(atom_feat[v], 51 cols), "sorted tuple(c, e, D_v(c,e))"]
+  K_JOINT: ["sorted tuple(c, e, D_v(c,e))"]
+  forbidden_content: [atom_id, path_end_index, row_id, smiles, global42, label]
+  digest: sha256
+  digest_role: index_only          # equality confirmed on the serialised content
+  canonical_float: {dtype: "<f4", fold_negative_zero: true, require_finite: true}
+
+support_counting:
+  unit: distinct canonical fit structures
+  group_identity: "MolFromSmiles(published SMILES) -> SetAtomMapNum(0) -> MolToSmiles(canonical, isomeric)"
+  desalt: false
+  tautomer_merge: false
+  same_key_multiple_roots_or_records: count once
+  unknown_key: 0
+  lower_fit_sees_held_out_structures: false
+  train_query_table: full_current_fit
+
+dose:
+  reference_weight: "w_v = r_v / sum_{u in record} r_u over active roots"
+  mid_cdf: "F_T(x) = [sum w 1(c<x) + 0.5 sum w 1(c=x)] / W, float64, F_T(0)=0"
+  uniform_a: 0.70
+  gate_slope: 0.60
+  gate_range: [0.40, 1.00]
+  mean_check_tolerance: 1.0e-10
+  arms:
+    BASE: 1.0
+    UNIFORM: 0.70
+    UNIFORM_OOF: a_oof
+    SELECT: "clip(0.70 + 0.60*(F_T(c)-0.5), 0.40, 1.00)"
+    REVERSE: "clip(0.70 - 0.60*(F_T(c)-0.5), 0.40, 1.00)"
+
+feasibility_gates:            # Train structures only, zero training, zero labels
+  folds: 5
+  fold_rule: "int(sha256('lcrc-support-fold-v1|' + canonical_smiles), 16) % 5"
+  E1: {min_active_groups: 100, min_active_keys: 20}
+  E2: {min_spread_fullfit: 0.20}
+  E3: {min_spread_oof: 0.20}
+  E4: {max_unknown_share: 0.60}
+  E5: {min_low_share: 0.10, max_c: 2, min_high_share: 0.10, min_c: 5}
+  quantile_rule: smallest observation whose cumulative weight reaches q (no interpolation)
+
+key_selection:
+  rule: "K_FINE before K_JOINT; both N if a key passes both, else fit100 only, else stop"
+  status: KEYS_PASS_BOTH_N
+  chosen_key: K_FINE
+  purchase_fits: ["100", "25"]
+  a_oof: {fit100: 0.6872798823318388, fit25: 0.6602285818620822}
+
+arms:
+  order: [BASE, SELECT, UNIFORM, UNIFORM_OOF, REVERSE]
+  BASE: "a=1 everywhere; frozen C1 operator"
+  UNIFORM: "active roots a=0.70"
+  UNIFORM_OOF: "active roots a=a_oof"
+  SELECT: "support gate, low support -> stronger contraction"
+  REVERSE: "support gate, high support -> stronger contraction"
+
+training:
+  optimizer: AdamW
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  peak_lr: 1.0e-3
+  min_lr: 1.0e-5
+  weight_decay: {Lipophilicity: 1.0e-2, BACE: 1.0e-3}
+  gradient_clip: 5.0
+  batch_size: 128
+  dropout: 0.10
+  precision: fp32
+  scheduler: per_step_cosine_fixed_horizon
+  U0: {Lipophilicity: 9720, BACE: 3600}
+  U0_formula: "360 * ceil(n_official_train / 128)"
+  shared_init: "FULL seed0 -> C1 remap (upstream frozen state), shared by all arms of one (dataset, fit)"
+  shared_batch_plan: true
+  support_buffer_consumes_rng: false
+
+normalisation:
+  structure_norm: all_official_train_structures (label free, fitted once)
+  target_norm: Lipophilicity fit840 labels (fitted once); BACE raw 0/1
+  inherited_from: lcrc_bottleneck_diagnosis_public122_s0_v1 (hashes in analysis/freeze.json)
+
+selection:
+  grid: "round(j*U0/50), j=1..50 plus step0 (step0 not a main candidate)"
+  R_SEL: {Lipophilicity: min valid RMSE, BACE: max valid ROC-AUC, tie: earliest}
+  A_SEL: {Lipophilicity: min valid MAE, BACE: min valid BCE}
+  W_SEL: {window: 5, rule: rolling mean of primary criterion, take window end}
+  per_epoch_eval: full train_fit / valid / test at every completed fit epoch
+
+promotion:
+  lipo:
+    select_vs_base_rmse_rel: 0.01        # both splits
+    mae_degradation_tolerance_rel: 0.01  # both splits
+    select_vs_uniform_arms: positive in both splits (UNIFORM, UNIFORM_OOF, REVERSE)
+  bace:
+    auc_gain_abs: 0.005                  # vs BASE and vs both uniforms + REVERSE, both splits
+  nature: budget ruler, not a significance test
+
+analysis:
+  bootstrap: {replicates: 2000, cluster: canonical structure, shared_index_per_task: true}
+  cluster_sensitivity: murcko_scaffold
+  support_groups: {thresholds: train-only OOF B_G q25/q75, min_structures_per_group: 30}
+  influence: {drop: [0.01, 0.05], row_source: this_round_BASE_abs_error}
+  secondary_selection_checks: [A_SEL, W_SEL, last-10-grid median]
+
+budget:
+  wall_target_hours: 3
+  wall_hard_hours: 4
+  gpu_soft_cap_hours: 2
+  gpu_hard_cap_hours: 3
+  max_formal_runs: 15
+  max_smoke_jobs: 8
+  smoke_max_updates: 8
+  pools: [res-gpu0, res-gpu1]
+
+stop_conditions:
+  - NO_TARGETABLE_SUPPORT_UNDER_REGISTERED_KEYS
+  - INTERVENTION_WEAK_OR_UNUSED
+  - GENERIC_CONTRACTION_SIGNAL
+  - DIRECTION_NOT_IDENTIFIED
+  - SUPPORT_DIRECTED_SIGNAL_THIS_CONFIG   # (or UNCERTAIN when the interval crosses 0)
+  - LOW_LABEL_ONLY
+  - SPLIT_OR_SELECTION_SENSITIVE
+  - NO_PREDICTIVE_GAIN_THIS_CONFIG
