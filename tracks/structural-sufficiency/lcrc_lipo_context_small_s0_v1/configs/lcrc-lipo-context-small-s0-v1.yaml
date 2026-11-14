@@ -1,0 +1,84 @@
+# Frozen resolved config — lcrc-lipo-context-small-s0-v1
+#
+# This file *is* the frozen scientific configuration of the round: the runner
+# (code/lp_runner.py::_frozen_config) refuses to run if any value here drifts
+# from code/lp_common.py.  `stage` / `arm` / `sections` are operational knobs and
+# are not part of the frozen scientific configuration.
+#
+# Written before the first formal run; any change is a new round.
+
+protocol_id: lcrc-lipo-context-small-s0-v1
+seed: 0
+dataset: ogbg-mollipo
+split_method: scaffold
+
+arms: [B, S, R1, R2, D2, G]
+
+epochs: {B: 360, S: 360, R1: 360, R2: 360, D2: 360, G: 100}
+
+c1_recipe:                  # frozen R3 (dissect_common.RECIPE semantics)
+  optimizer: AdamW
+  adam_betas: [0.9, 0.999]
+  adam_eps: 1.0e-8
+  peak_lr: 3.0e-4
+  min_lr: 1.0e-5
+  weight_decay: 1.0e-3
+  batch_size: 128
+  dropout: 0.10
+  gradient_clip: 5.0
+  epochs: 360
+  scheduler: per_step_cosine
+  shuffle_offset: 917000
+  soup: false
+  ema: false
+  swa: false
+  ssl: false
+  early_stopping: false
+  hyperparameter_search: false
+
+dmpnn_recipe:               # vendored chemprop 2.2.1 reference, ERRATA-E4 schedule
+  optimizer: Adam
+  batch_size: 64
+  epochs: 100
+  init_lr: 1.0e-4
+  peak_lr: 1.0e-3
+  min_lr: 1.0e-4
+  weight_decay: 0.0
+  gradient_clip: 5.0
+  warmup_epochs: 2
+  decay: exponential
+  optimizer_base_lr: 1.0e-4
+  hidden: 300
+  depth: 3
+
+expected_parameters: {B: 228674, S: 262978, R1: 262978, R2: 262978, D2: 262978}
+
+promise:
+  rel_improvement: 0.02
+  mae_tolerance: 0.01
+  tail_trim_fractions: [0.01, 0.05]
+
+groups:
+  gap_threshold: 0.05
+  min_side: 40
+  min_bin_side: 10
+  min_bins: 2
+  support_min: 5
+  morgan_radius: 3
+
+bootstrap:
+  replicates: 500
+  seed: 20261114
+  weight_dist: Exp(1)
+
+budget:
+  soft_gpu_hours: 1.5
+  hard_gpu_hours: 2.5
+
+# ---- operational (not part of the frozen scientific configuration) --------
+stage: prepare
+arm: B
+sections: [a, b, c, d, e, f]
+steps: 100
+f_epochs: 2
+device_pref: cuda

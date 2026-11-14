@@ -1,0 +1,50 @@
+id: lcrc-lipo-context-small-s0-v1
+protocol: lcrc-lipo-context-small-s0-v1
+active: true
+focus: true
+created: 2026-11-14
+
+question: >-
+  On the official OGB Lipophilicity scaffold split, at small-data cost, does
+  exchanging neighbour *state* inside the local encoding bring a prediction
+  increment worth continuing - and does it repair a locatable structural failure
+  mode?  Specifically: is the gain carried by the learned dynamic computation
+  (D2), or already by a fixed extended source (R2), or by the plain parameter /
+  depth increase (S)?
+
+baseline: >-
+  Arm B: the frozen C1 (NO_BOND_MEAN) base with the original f/rho readout, the
+  untrained shared initial state of the round; plus arm G, the vendored chemprop
+  v2.2.1 D-MPNN under its own frozen recipe, as an independent performance
+  coordinate.
+
+candidates:
+  - id: S
+    status: active
+    note: same parameters, layer sources read the target itself (locality control)
+  - id: R1
+    status: active
+    note: both layers re-read the original neighbour h0 (fixed source, depth bridge)
+  - id: R2
+    status: active
+    note: layer 2 reads the fixed 1-hop extended source c_j (fixed context)
+  - id: D2
+    status: active
+    note: layer 2 reads the dynamic neighbour h1_j (learned context)
+  - id: G
+    status: active
+    note: independent D-MPNN reference, different features and budget
+
+open_questions:
+  - Is any increment over B larger than the same-parameter locality control S?
+  - Does the fixed extended source R2 already compete, leaving nothing specific to D2?
+  - Is there a locatable group (unseen radius-2 environments / support>=5 without
+    radius-3 support / a defined amide motif) where B fails and D2 repairs more?
+  - How large is any gain compared with an off-the-shelf D-MPNN at this budget?
+
+guardrails:
+  - one dataset, one official split, one seed (0); no extra seeds, splits or recipes
+  - no PCBA, ZINC, pretraining, multi-task, or another dataset in this round
+  - selection is Validation-only; Test is reported and never selects
+  - the frozen C1 base, the R3 recipe and the shared epoch plan are not edited
+  - a small-data negative does not invalidate the existing PCBA dynamic signal

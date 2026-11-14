@@ -1,0 +1,150 @@
+{
+  "all_passed": true,
+  "checks": {
+    "c_channel_used": true,
+    "d_eval_does_not_disturb_training": true,
+    "d_replay_deterministic": true,
+    "e_determinism": true
+  },
+  "data": {
+    "cache_fingerprints": {
+      "test": "6b7c696acda25c20e51996eaebc5b83a57441811c733a88fbe973bf5fb9e9c1d",
+      "train": "e55d7bb4c94556c0bce780307777ad9b4f518e20a24b5051d9b497ebe2cae3ea",
+      "valid": "c8f5aefb83c5c03c3ec3845d88eb0798f21b5896bd9ec4f2d346a8b6d50dd868"
+    },
+    "dataset": "ogbg-mollipo",
+    "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "labels_in_structure_cache": false,
+    "row_sha256": {
+      "test": "cb141f9fe9b90c62c8b8c891eab68e6aa9f728209b4f41c4a1c0e33bad3f17a7",
+      "train": "9fb12a4f9c4fc522f9881d00c1d86b8bba5f63f0064b389bbb7accb3a6e8695f",
+      "valid": "16b6786637d12d087b917f06ee659a304f665fc81d1f3da2a7d7c630242db26a"
+    },
+    "sizes": {
+      "test": 420,
+      "train": 3360,
+      "valid": 420
+    },
+    "split_method": "scaffold",
+    "target_norm": {
+      "mean": 2.1621607142857147,
+      "n": 3360,
+      "scale": 1.2115398399123027,
+      "source": "official Train rows only",
+      "valid_or_test_used": false
+    },
+    "train_norm_fingerprint": "786abbcaba1b1f02eb72791b988288228374aa0f2c54b02dec39de3040ded35c",
+    "train_norm_source": "ogbg-mollipo_official_train_structures_only"
+  },
+  "device": "cpu",
+  "environment": {
+    "cublas_workspace_config": ":4096:8",
+    "cuda_available": false,
+    "cuda_device_name": "cpu",
+    "cuda_visible_devices": "",
+    "cudnn_benchmark": false,
+    "deterministic_algorithms": true,
+    "hostname": "main",
+    "numpy": "2.1.3",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "tf32_cudnn": false,
+    "tf32_matmul": false,
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "git_commit": "905efb2e7526fd272631ccd7d4e23c29eed3af42",
+  "git_dirty_tracked": false,
+  "seconds": 3.819932001992129,
+  "sections": {
+    "c": {
+      "arm": "D2",
+      "channel_used": true,
+      "checks": {
+        "bond_proj_gradient_nonzero_after_first_update": true,
+        "fc2_gradient_nonzero_at_every_watched_step": true,
+        "fc2_moved_away_from_zero": true,
+        "prediction_responds_to_layer2_source_late": true,
+        "second_layer_update_nonzero_late": true
+      },
+      "final_state_hash": "6749035b56f552c6e694b7dd98023ff5687ea044994b541e2058d272625d00af",
+      "note": "with both fc2 layers zero-initialised the source channel reaches the loss only through fc2.weight at step 1, so the bond_proj / fc1 gradients are expected to become non-zero from the first weight update on",
+      "records": {
+        "1": {
+          "fc2_max_abs_weight": 0.0,
+          "grad_norm_base_local": 1408.502685546875,
+          "grad_norm_block0_fc1": 0.0,
+          "grad_norm_block1_fc1": 0.0,
+          "grad_norm_block1_fc2": 471.9476318359375,
+          "grad_norm_bond_proj": 0.0,
+          "hidden_response_reuse": 0.0,
+          "message_norm_layer2": 0.0,
+          "prediction_response_fixed": 0.0,
+          "prediction_response_reuse": 0.0
+        },
+        "10": {
+          "fc2_max_abs_weight": 0.002542224247008562,
+          "grad_norm_base_local": 50.21722412109375,
+          "grad_norm_block0_fc1": 0.6702569723129272,
+          "grad_norm_block1_fc1": 0.6975881457328796,
+          "grad_norm_block1_fc2": 20.613649368286133,
+          "grad_norm_bond_proj": 0.16636328399181366,
+          "hidden_response_reuse": 0.000714719295501709,
+          "message_norm_layer2": 4.250791072845459,
+          "prediction_response_fixed": 0.04582470655441284,
+          "prediction_response_reuse": 0.012708604335784912
+        },
+        "3": {
+          "fc2_max_abs_weight": 0.0006003966554999352,
+          "grad_norm_base_local": 501.318603515625,
+          "grad_norm_block0_fc1": 3.826498031616211,
+          "grad_norm_block1_fc1": 4.075407981872559,
+          "grad_norm_block1_fc2": 175.9205322265625,
+          "grad_norm_bond_proj": 1.0242297649383545,
+          "hidden_response_reuse": 0.00025138258934020996,
+          "message_norm_layer2": 2.867255449295044,
+          "prediction_response_fixed": 0.06306648254394531,
+          "prediction_response_reuse": 0.005170345306396484
+        }
+      },
+      "steps_run": 12,
+      "watched_steps": [
+        1,
+        3,
+        10
+      ]
+    },
+    "d": {
+      "eval_state_hash": "205088fcb89f2ae5f00e15aecd18589f3dd38ce6074f386afc7e9e7bce434997",
+      "inserted_eval_at": [
+        10
+      ],
+      "note": "a full Train/Valid/Test evaluation inserted mid-epoch must not change the next step",
+      "plain_state_hash": "205088fcb89f2ae5f00e15aecd18589f3dd38ce6074f386afc7e9e7bce434997",
+      "replay_deterministic": true,
+      "replay_state_hash": "205088fcb89f2ae5f00e15aecd18589f3dd38ce6074f386afc7e9e7bce434997",
+      "state_equal_with_inserted_eval": true,
+      "steps": 20
+    },
+    "e": {
+      "adaptation_used": "none",
+      "bitwise_repeatable": true,
+      "config": {
+        "cublas_workspace_config": ":4096:8",
+        "cudnn_benchmark": false,
+        "deterministic_algorithms": true,
+        "tf32_cudnn": false,
+        "tf32_matmul": false
+      },
+      "error": null,
+      "forward_backward_repeat_max_abs_grad_diff": 0.0,
+      "forward_repeat_max_abs_pred_diff": 0.0,
+      "status": "PASSED"
+    }
+  },
+  "sections_run": [
+    "c",
+    "d",
+    "e"
+  ]
+}

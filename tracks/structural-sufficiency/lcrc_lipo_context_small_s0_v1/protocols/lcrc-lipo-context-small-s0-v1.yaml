@@ -1,0 +1,144 @@
+# Protocol — lcrc-lipo-context-small-s0-v1
+#
+# Rules only: dataset, split, metric, fitting scope, test policy, seeds, the six
+# pre-registered arms and the judgement thresholds.  Frozen before the first
+# formal run; any change is a new round.
+#
+# Test policy of THIS study: the round is explicitly authorised to evaluate the
+# official Test split during development (`test_policy: always`), which the
+# control plane records as `test_access=granted` for every run.  Test is
+# reported and may inform this round's route judgement, but it never selects a
+# checkpoint, a hyper-parameter, an arm or a next round: selection is
+# Validation-only (`lowest Validation RMSE, ties keep the earlier epoch`).
+
+id: lcrc-lipo-context-small-s0-v1
+
+dataset:
+  name: OGB ogbg-mollipo (Lipophilicity)
+  source: >-
+    official OGB archive `lipophilicity.zip` from the URL recorded in
+    ogb/graphproppred/master.csv at commit 61e9784ca76edeaa6e259ba0f836099608ff0586
+  fingerprint_policy: >-
+    SHA-256 of the archive, of mol.csv.gz, of the raw label / node-count /
+    edge-count files, and of the three official scaffold index files, verified
+    on every load
+  expected_rows: 4200
+  target: exp (logD)
+  units: log10 octanol/water distribution coefficient
+  task: regression
+  metric: rmse
+
+split:
+  description: >-
+    The official OGB scaffold split, read verbatim from
+    split/scaffold/{train,valid,test}.csv.gz and cross-checked against
+    GraphPropPredDataset('ogbg-mollipo').get_idx_split().
+  sizes: {train: 3360, valid: 420, test: 420}
+  fingerprint_policy: per-split int64 row-index SHA-256 of the official indices
+  forbidden: >-
+    no random_split, no re-derived scaffold split, no substitution of the
+    ChemBench random122 pickles, no row deletion for unmappable molecules
+
+metric:
+  ranking_metric: valid_rmse
+  metric_direction: lower_is_better
+  secondary_metrics: [valid_mae, test_rmse, test_mae, train_rmse, train_mae, bias]
+  unit: RMSE on the original label scale (logD units)
+
+train_only_fitting_scope:
+  structure_normalisation: fitted once on all 3,360 official Train structures (label-free)
+  target_normalisation: fitted once on the official Train targets
+  valid_or_test_used_for_fitting: false
+  note: >-
+    Validation and Test receive the Train-fitted scalers; every reported number
+    is converted back to raw logD units exactly once.
+
+arms:
+  B: frozen C1 (NO_BOND_MEAN) base, width 64, 228,674 parameters
+  S: B + bond_proj + two MessageFFN(64,128); layer sources = the target itself
+  R1: B + the same modules; both layers read the original neighbour h0_j
+  R2: B + the same modules; layer 2 reads the fixed 1-hop source c_j
+  D2: B + the same modules; layer 2 reads the dynamic neighbour h1_j
+  G: >-
+    vendored chemprop v2.2.1 D-MPNN reference (native 72/14 features, hidden
+    300, depth 3, mean aggregation), an independent performance coordinate
+  shared_initial_state: >-
+    every C1-family arm starts from build_full_state(seed=0) -> remap_state('C1');
+    the 34,304 new parameters are drawn from one private CPU Generator (seed 17)
+    with both fc2 layers zeroed, so all four context arms equal B at step 0
+  common_update:
+    epochs: {B: 360, S: 360, R1: 360, R2: 360, D2: 360, G: 100}
+    epoch_plan: "one shared randperm stream, torch.Generator(seed + 917000)"
+  forbidden: [extra seeds, extra splits, pretraining, early stopping, checkpoint soup]
+
+evaluation:
+  every_epoch: full Train, full Validation and full Test on the same weights
+  iterator: independent of the training iterator; RNG snapshot/restore; inference_mode
+  selection: lowest Validation RMSE, strict improvement, ties keep the earlier epoch
+  late_window: {B: 20, S: 20, R1: 20, R2: 20, D2: 20, G: 10}
+  test_used_for_selection: false
+
+judgements:
+  promise:
+    definition: >-
+      (RMSE_control - RMSE_candidate) / RMSE_control at the best-Val point, with
+      Val and Test both improving by >= 2%, MAE on both splits not worsening by
+      more than 1%, the last-epoch and late-window Test improvements pointing the
+      same way, the Test improvement surviving removal of the control's worst 1%
+      rows, and the source channel demonstrably used
+    thresholds: {rel_improvement: 0.02, mae_tolerance: 0.01, tail_trim: 0.01}
+  labels:
+    - PROMISING_THIS_TASK
+    - LEARNED_CONTEXT_CANDIDATE_ON_LIPO
+    - FIXED_CONTEXT_COMPETITIVE_ON_LIPO
+    - NO_SEPARATED_NEIGHBOR_GAIN_ON_LIPO
+    - WEAK_CHANNEL_THIS_CONFIG
+    - NO_CLEAR_INCREMENT_THIS_TASK
+    - TAIL_SPECIFIC
+    - SELECTION_OR_SPLIT_SENSITIVE
+    - FIT_ONLY
+    - NO_CLEAR_FAILURE_GROUP
+
+uncertainty:
+  design: >-
+    500 Murcko-scaffold-cluster bootstrap replicates with Exp(1) positive
+    weights, shared by every model in a comparison (paired), reporting the
+    2.5-97.5 percentile interval of paired RMSE/MAE and of group deltas
+  frame: sample uncertainty of fixed models, NOT training-seed variance
+  acyclic_fallback: canonical SMILES
+  p_values: not reported
+
+groups:
+  H1: "root with any valid radius-2 environment whose Train support is 0"
+  H2: "root with a radius-2 support >= 5 and no valid radius-3 Train support"
+  H3: "SMARTS [NX3]-[CX3](=[OX1]) match atoms (only this amide definition)"
+  support_definition: >-
+    number of distinct official Train molecules containing the (root, radius,
+    identifier) Morgan token; the molecule itself is excluded (leave-one-out) for
+    Train molecules; Val/Test use the full Train count
+  size_standardisation: "Train terciles of heavy-atom count; same counts never split"
+  selection: >-
+    on B's best-Val point only: the group with the largest size-standardised MAE
+    gap that is >= 0.05 raw logD, then frozen and reported on Test
+
+interventions:
+  models: "frozen D2 at best-Val and at the last epoch"
+  variants: [NORMAL, REUSE_ALL, FIXED_ALL, REUSE_TARGET, REUSE_CONTROL]
+  identity: "Delta pred = Delta contrib + Delta rho, checked numerically"
+  claim_scope: >-
+    an internal intervention on the prediction function of a frozen molecule, not
+    a chemical experiment and not a retraining gain
+
+test_policy: always
+test_access_note: >-
+  Declared development-evaluation access for this round (the authorisation for
+  this task).  No historical freeze is fabricated, the control-plane guard is
+  unchanged, and every read is recorded in analysis/test_access_log.json.
+
+budget:
+  target_gpu_hours: 1.5
+  hard_cap_gpu_hours: 2.5
+  formal_training_runs: 6
+  stop_rule: >-
+    RESOURCE_STOP if the measured projection exceeds the hard cap after one
+    <=20-minute mathematically equivalent optimisation
