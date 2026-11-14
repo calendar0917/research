@@ -66,7 +66,11 @@ def extract_h(*, dataset: str, ckpt: Path, device: torch.device, force: bool = F
     kind = "c1"
     model = PM.build_model(spec, snorm, kind, variant="C1")
     snap = torch.load(ckpt, map_location="cpu", weights_only=False)
-    model.load_state_dict(snap["state_dict"])
+    # accepts both a streamed ``best_*.pt`` (``state_dict``) and a ``u0_snapshot.pt`` (``model``)
+    state = snap.get("state_dict", snap.get("model"))
+    if state is None:
+        raise KeyError(f"no state_dict/model in {ckpt}")
+    model.load_state_dict({k: v for k, v in state.items()})
     model.to(device)
     model.eval()
     gm = model.global_mean.detach().cpu().numpy()
@@ -236,7 +240,11 @@ def train_probe(*, rule: str, dataset: str, ckpt: Path, device: torch.device, ou
 
     base = PM.build_model(spec, snorm, "c1", variant="C1")
     snap = torch.load(ckpt, map_location="cpu", weights_only=False)
-    base.load_state_dict(snap["state_dict"])
+    # accepts a streamed ``best_*.pt`` (``state_dict``) or a ``u0_snapshot.pt`` (``model``)
+    ck_state = snap.get("state_dict", snap.get("model"))
+    if ck_state is None:
+        raise KeyError(f"no state_dict/model in {ckpt}")
+    base.load_state_dict({k: v for k, v in ck_state.items()})
 
     z = dict(np.load(hcache_path(dataset), allow_pickle=False))
     views = {s: HView(z, s) for s in C.SPLITS}
@@ -390,6 +398,7 @@ def train_probe(*, rule: str, dataset: str, ckpt: Path, device: torch.device, ou
         "protocol_id": C.PROTOCOL_ID, "status": "completed", "smoke": bool(smoke),
         "probe": rule, "dataset": dataset, "task": task,
         "source_ckpt": C.track_rel(ckpt), "source_update": int(snap.get("update", -1)),
+        "target_norm": tnorm,
         "frozen_encoder": True, "new_params": int(new_params),
         "shared_head_warm_start": True,
         "train": {"updates": int(n_updates), "batch_size": C.PROBE_BATCH, "lr": C.PROBE_LR,

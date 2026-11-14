@@ -199,6 +199,12 @@ SELECTION_RULES = (R_SEL, A_SEL, W_SEL)
 #: purchase / practical-magnitude rulers (not significance laws)
 RMSE_GAIN_RULER = 0.01
 AUC_GAIN_RULER = 0.005
+#: short aliases used by lb_gates / lb_analysis
+RMSE_RULER = RMSE_GAIN_RULER
+AUC_RULER = AUC_GAIN_RULER
+PROBE_MIN_RELATIVE_GAIN = 0.01
+RESTART_TRAIN_DROP = RESTART_TRIGGER["train_rmse_drop_min"]
+RESTART_TEST_GAIN = RESTART_TRIGGER["test_gain_max"]
 
 BOOTSTRAP_SEED = 20261114
 BOOTSTRAP_REPLICATES = 2000

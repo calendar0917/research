@@ -198,3 +198,31 @@ BACE 四主体与必要对照优先于可选 restart。最后 45–60min 做 boo
 先答 H_SEL/H_OPT/H_DATA/H_USE）、`analysis/run_manifest.json`、结果表与
 `analysis/synthesis/{selection,data_budget,readout}.json`、3 张核心图。入口支持
 `prepare/smoke/train/analyze/report` 并能跳过已完成轨迹。不创建 PR、不开始下一轮。
+
+---
+
+## 附录 A — 实现映射与事后记录（训练开始后只追加，不改上方科学常量）
+
+### A1（第 10 节的实现偏差，在探针开跑之前记录）
+
+第 10 节写的是“U0 阶段 `R_SEL` checkpoint”，但流式保留只持久化了**全路径**各规则的
+`best_{rule}.pt` 与 `u0_snapshot.pt`，没有单独持久化 E1 作用域内的 `R_SEL` 选中权重
+（每阶段 50 候选 × 13 条臂全存全权重不划算）。因此本轮读出探针的源固定为
+**`LIP_C1_R1_F100/u0_snapshot.pt`**，即 update = U0 = 9720 的终点状态：
+
+- 这是主线的**训练预算终点**，不含任何按 Valid/Test 挑选 epoch 的步骤；
+- 三条探针共用同一份 `h` 缓存（同一 encoder 状态），只比较读出；
+- 偏差方向明确：它不比“E1 内 R_SEL 选中状态”更乐观，只是不再带选择步骤；
+- 报告里以 `source: u0_snapshot` 标注，不与其它选自 Valid 的状态混称。
+
+### A2 判读口径
+
+`grid_predictions.npz` 的回归预测是**标准化空间**（`lcpr_train.split_metrics` 内部才反标准化），
+分析侧用 `train.json.data.target_norm` 反标准化一次；BACE 存 raw logits。曲线的 `curve.csv`
+本来就是 raw 单位，二者已交叉核对一致。
+
+### A3 执行 regime
+
+全部正式臂经 `rr` 在 `res`（a100-2，A100-SXM4-40GB ×2，driver 550.163.01，
+torch 2.5.1+cu124）上以 `res-gpu0`/`res-gpu1` 两个 pool、每 pool 一条进程执行；
+`cuda:0` 进程内可见。逐臂 commit 见 `analysis/run_manifest.json`。

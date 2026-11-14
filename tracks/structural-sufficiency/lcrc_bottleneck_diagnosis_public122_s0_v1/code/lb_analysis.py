@@ -123,13 +123,25 @@ def load_arm_records(arm_id: str) -> dict[str, Any] | None:
     payload = C.read_json(tj)
     rec: dict[str, Any] = {"arm_id": arm_id, "meta": payload, "grid": None}
     if gp.exists():
+        task = payload["task"]
+        # regression predictions are stored in standardised space (`_pred` is pred_std in
+        # lcpr_train.split_metrics); de-normalise once here with the recorded frozen norm
+        tnorm = (payload.get("data") or {}).get("target_norm")
         z = np.load(gp, allow_pickle=False)
         updates = np.asarray(z["grid_updates"], np.int64)
+
+        def _p(split: str) -> np.ndarray:
+            arr = np.asarray(z[split])
+            if task == "regression" and tnorm is not None:
+                arr = arr * float(tnorm["scale"]) + float(tnorm["mean"])
+            return arr
+
+        rec["pred_space"] = "raw" if (task == "regression" and tnorm is not None) else "logit_or_raw"
         rec["grid"] = {
             "updates": updates,
-            "train_fit": np.asarray(z["train_fit"]),
-            "valid": np.asarray(z["valid"]),
-            "test": np.asarray(z["test"]),
+            "train_fit": _p("train_fit"),
+            "valid": _p("valid"),
+            "test": _p("test"),
             "fit_rows": np.asarray(z["fit_rows"]), "valid_rows": np.asarray(z["valid_rows"]),
             "test_rows": np.asarray(z["test_rows"]),
             "fit_y": np.asarray(z["fit_y"]), "valid_y": np.asarray(z["valid_y"]),
@@ -148,7 +160,7 @@ def torch_load_cpu(path):
 
 def grid_metric_sequence(task: str, grid: Mapping[str, Any], split: str, metric: str) -> np.ndarray:
     pred = np.asarray(grid[split], np.float64)
-    y = np.asarray(grid[f"{split}_y"], np.float64)
+    y = np.asarray(grid[_ykey(split)], np.float64)
     out = []
     for p in pred:
         if metric == "rmse":
@@ -167,6 +179,10 @@ def grid_metric_sequence(task: str, grid: Mapping[str, Any], split: str, metric:
     return np.asarray(out, np.float64)
 
 
+def _ykey(split: str) -> str:
+    return "fit_y" if split == "train_fit" else f"{split}_y"
+
+
 def arm_state_records(task: str, grid: Mapping[str, Any], updates: Sequence[int]) -> list[dict[str, Any]]:
     """Build selection records (update + per-split metric dicts) from grid arrays."""
     idx = {int(u): i for i, u in enumerate(grid["updates"])}
@@ -179,7 +195,7 @@ def arm_state_records(task: str, grid: Mapping[str, Any], updates: Sequence[int]
         rec = {"update": u}
         for split in ("train_fit", "valid", "test"):
             pred = np.asarray(grid[split], np.float64)[i]
-            y = np.asarray(grid[f"{split}_y"], np.float64)
+            y = np.asarray(grid[_ykey(split)], np.float64)
             rec[split] = _metrics(task, pred, y)
         recs.append(rec)
     return recs
@@ -401,8 +417,18 @@ def data_budget_table() -> dict[str, Any]:
                     row[f"{phase}_{rule}_test"] = float(s["test"]["rmse"] if task == "regression" else s["test"]["roc_auc"])
                 row[f"{phase}_last10_test_median"] = float(np.median(
                     [r["test"]["rmse"] if task == "regression" else r["test"]["roc_auc"] for r in recs[-min(10, len(recs)):]]))
+                row[f"{phase}_last10_train_fit_median"] = float(np.median(
+                    [r["train_fit"]["rmse"] if task == "regression" else r["train_fit"]["roc_auc"] for r in recs[-min(10, len(recs)):]]))
                 row[f"{phase}_final_update_test"] = float(recs[-1]["test"]["rmse"] if task == "regression" else recs[-1]["test"]["roc_auc"])
             rows.append(row)
+        # fractional Train_fit RMSE drop across the whole path (E1 last10 -> E2 last10)
+        for row in rows:
+            if row.get("status") != "OK":
+                continue
+            a0 = row.get("E1_last10_train_fit_median")
+            a1 = row.get("E2_last10_train_fit_median")
+            row["train_fit_drop_frac"] = (None if (a0 is None or a1 is None or a0 <= 0)
+                                          else float((a0 - a1) / a0))
         out["cells"][f"{model}@{dataset}"] = rows
     # optional restart
     rdir = arm_dir(C.RESTART_ARM)
@@ -435,11 +461,19 @@ def readout_table() -> dict[str, Any]:
             if gp.exists():
                 z = np.load(gp, allow_pickle=False)
                 task = payload["task"]
+                tnorm = payload.get("target_norm")
+
+                def _p(name: str) -> np.ndarray:
+                    arr = np.asarray(z[name], np.float64)
+                    if task == "regression" and tnorm is not None:
+                        arr = arr * float(tnorm["scale"]) + float(tnorm["mean"])
+                    return arr
+
                 updates = np.asarray(z["grid_updates"], np.int64)
                 recs = [{"update": int(u),
-                         "valid": _metrics(task, np.asarray(z["valid"])[i], np.asarray(z["valid_y"])),
-                         "test": _metrics(task, np.asarray(z["test"])[i], np.asarray(z["test_y"])),
-                         "train_fit": _metrics(task, np.asarray(z["train_fit"])[i], np.asarray(z["fit_y"]))}
+                         "valid": _metrics(task, _p("valid")[i], np.asarray(z["valid_y"])),
+                         "test": _metrics(task, _p("test")[i], np.asarray(z["test_y"])),
+                         "train_fit": _metrics(task, _p("train_fit")[i], np.asarray(z["fit_y"]))}
                         for i, u in enumerate(updates)]
                 for r in C.SELECTION_RULES:
                     s = SEL.select_state(task, r, recs, include_step0=True)["selected"]
