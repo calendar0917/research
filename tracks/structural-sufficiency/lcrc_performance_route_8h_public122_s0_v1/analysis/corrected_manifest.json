@@ -1,0 +1,4200 @@
+{
+  "checked_against": {
+    "metrics": "train.json metrics.best, curve.csv row at the best-Valid epoch",
+    "normalisation": "Train-split mean/std, decoded exactly once",
+    "published_labels": "same",
+    "published_rows": "lcrc_molnet_benchmark_pilot_v2 published split (via lcpr_data.targets)"
+  },
+  "created_utc": "2026-11-14T02:06:04Z",
+  "errata": "E5",
+  "other_lipophilicity_arms": {
+    "A_LOGP": {
+      "candidate": "A_LOGP",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "best_epoch_in_checkpoint": 216,
+          "best_metric_value": 0.6990147737942208,
+          "bytes": 987772,
+          "exists": true,
+          "replay": {
+            "consistent": true,
+            "device": "cpu",
+            "max_abs_pred_diff_vs_predictions_best": 2.306204743618423e-06,
+            "metrics": {
+              "test": {
+                "rmse": 0.5737147357077887
+              },
+              "train": {
+                "rmse": 0.15629694864838004
+              },
+              "valid": {
+                "rmse": 0.6990148318445104
+              }
+            }
+          },
+          "sha256": "b94ddc4fd42ef63c0160177a55a42ccb9f9188d88d72e7b29451c4914c662e87"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 216
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.149719952575623e-08,
+            "train": 1.2702160434585608e-09,
+            "valid": 9.938505685092025e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 216,
+          "curve_value_at_best_epoch": {
+            "test": 0.5737147699041393,
+            "train": 0.15629697485950964,
+            "valid": 0.6990147737942208
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 9.422247426726926e-09,
+              "curve_last_rmse": 0.57499512448886,
+              "rmse": 0.5749951339111075
+            },
+            "train": {
+              "abs_diff": 8.429034137336089e-10,
+              "curve_last_rmse": 0.1295002211442528,
+              "rmse": 0.1295002203013494
+            },
+            "valid": {
+              "abs_diff": 3.857352104397194e-09,
+              "curve_last_rmse": 0.7103382439316779,
+              "rmse": 0.71033824778903
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4273954119979471,
+              "n": 420,
+              "rmse": 0.5737147584069398
+            },
+            "train": {
+              "mae": 0.1141603961985454,
+              "n": 3360,
+              "rmse": 0.1562969735892936
+            },
+            "valid": {
+              "mae": 0.4073168049098702,
+              "n": 420,
+              "rmse": 0.6990147638557151
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5737147584069398,
+            "train": 0.1562969735892936,
+            "valid": 0.6990147638557151
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/A_LOGP__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "VERIFIED"
+      }
+    },
+    "A_MW": {
+      "candidate": "A_MW",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 237
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.910844038555126e-09,
+            "train": 1.2679555738692727e-09,
+            "valid": 3.988218977291069e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 237,
+          "curve_value_at_best_epoch": {
+            "test": 0.6061940806043805,
+            "train": 0.15745847431350316,
+            "valid": 0.7188435655960561
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 8.420641961492947e-09,
+              "curve_last_rmse": 0.6111252670923492,
+              "rmse": 0.6111252586717072
+            },
+            "train": {
+              "abs_diff": 1.9274964679905082e-09,
+              "curve_last_rmse": 0.1315313770692902,
+              "rmse": 0.13153137899678666
+            },
+            "valid": {
+              "abs_diff": 4.316763724254713e-09,
+              "curve_last_rmse": 0.7386642759324634,
+              "rmse": 0.7386642802492271
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4310326771472352,
+              "n": 420,
+              "rmse": 0.6061940825152246
+            },
+            "train": {
+              "mae": 0.11836335235033758,
+              "n": 3360,
+              "rmse": 0.15745847558145873
+            },
+            "valid": {
+              "mae": 0.41257730612728366,
+              "n": 420,
+              "rmse": 0.7188436054782459
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.6061940825152246,
+            "train": 0.15745847558145873,
+            "valid": 0.7188436054782459
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/A_MW__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "A_SHUFFLE": {
+      "candidate": "A_SHUFFLE",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 161
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.0414601514519006e-08,
+            "train": 2.588227521194142e-09,
+            "valid": 8.623606828628283e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 161,
+          "curve_value_at_best_epoch": {
+            "test": 0.5809908129957146,
+            "train": 0.1857341418329617,
+            "valid": 0.6694847700073702
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 8.685707708622203e-09,
+              "curve_last_rmse": 0.5857791615814701,
+              "rmse": 0.5857791702671779
+            },
+            "train": {
+              "abs_diff": 1.4453612195985954e-09,
+              "curve_last_rmse": 0.1374910403642678,
+              "rmse": 0.13749103891890657
+            },
+            "valid": {
+              "abs_diff": 2.137496291076957e-09,
+              "curve_last_rmse": 0.6958036260594451,
+              "rmse": 0.6958036239219488
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4213655305805622,
+              "n": 420,
+              "rmse": 0.5809908025811131
+            },
+            "train": {
+              "mae": 0.1405712585977083,
+              "n": 3360,
+              "rmse": 0.18573413924473417
+            },
+            "valid": {
+              "mae": 0.414118611909126,
+              "n": 420,
+              "rmse": 0.669484778630977
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5809908025811131,
+            "train": 0.18573413924473417,
+            "valid": 0.669484778630977
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/A_SHUFFLE__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "C1_R2": {
+      "candidate": "C1_R2",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 189
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.43772449501256e-09,
+            "train": 3.2754308154636647e-09,
+            "valid": 1.2400328097683655e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 189,
+          "curve_value_at_best_epoch": {
+            "test": 0.5730395140739929,
+            "train": 0.32575729296347705,
+            "valid": 0.6932584843491747
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 1.5962062782648445e-09,
+              "curve_last_rmse": 0.5700865448638622,
+              "rmse": 0.570086543267656
+            },
+            "train": {
+              "abs_diff": 1.4599885189703343e-09,
+              "curve_last_rmse": 0.2588577895893003,
+              "rmse": 0.25885778812931176
+            },
+            "valid": {
+              "abs_diff": 3.166785389474569e-09,
+              "curve_last_rmse": 0.7023753188776728,
+              "rmse": 0.7023753157108874
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.43345893172006544,
+              "n": 420,
+              "rmse": 0.5730395126362684
+            },
+            "train": {
+              "mae": 0.2459970481825461,
+              "n": 3360,
+              "rmse": 0.32575729623890787
+            },
+            "valid": {
+              "mae": 0.41617978481659174,
+              "n": 420,
+              "rmse": 0.6932584967495028
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5730395126362684,
+            "train": 0.32575729623890787,
+            "valid": 0.6932584967495028
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "1c7fc936152363e31c055957cd0dbe3aab504877ec9d6a86ff6cf1933e7006fb",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "4fe07a0c377a2a0d127210a482af7e3261728cb9",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/C1_R2__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "LONG": {
+      "candidate": "LONG",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 720,
+          "rows": 720,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 370
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 2.1741846656375685e-08,
+            "train": 4.289836041948547e-09,
+            "valid": 1.215099298956801e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 370,
+          "curve_value_at_best_epoch": {
+            "test": 0.6108159384773966,
+            "train": 0.12857371317755006,
+            "valid": 0.6020722056739453
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 2.164411982974457e-09,
+              "curve_last_rmse": 0.6081602214905256,
+              "rmse": 0.6081602193261136
+            },
+            "train": {
+              "abs_diff": 3.666806622226737e-09,
+              "curve_last_rmse": 0.10013493731407783,
+              "rmse": 0.10013494098088445
+            },
+            "valid": {
+              "abs_diff": 3.6375816803158045e-09,
+              "curve_last_rmse": 0.627030720187934,
+              "rmse": 0.6270307165503524
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.44022303858602585,
+              "n": 420,
+              "rmse": 0.6108159602192432
+            },
+            "train": {
+              "mae": 0.09666651653358989,
+              "n": 3360,
+              "rmse": 0.1285737174673861
+            },
+            "valid": {
+              "mae": 0.38705280513012186,
+              "n": 420,
+              "rmse": 0.6020721935229523
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.6108159602192432,
+            "train": 0.1285737174673861,
+            "valid": 0.6020721935229523
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 19440,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 720,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/LONG__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "M_CLEANPOOL": {
+      "candidate": "M_CLEANPOOL",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 139
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 4.61839155807553e-09,
+            "train": 2.1695096275031744e-09,
+            "valid": 4.7913709444458163e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 139,
+          "curve_value_at_best_epoch": {
+            "test": 0.5780989630215749,
+            "train": 0.21539302061136878,
+            "valid": 0.7120924273042994
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 5.501044064715188e-10,
+              "curve_last_rmse": 0.6034704732000977,
+              "rmse": 0.6034704726499933
+            },
+            "train": {
+              "abs_diff": 5.881353737358097e-09,
+              "curve_last_rmse": 0.08564479732490379,
+              "rmse": 0.08564479144355006
+            },
+            "valid": {
+              "abs_diff": 2.822247391343069e-08,
+              "curve_last_rmse": 0.7728080517155986,
+              "rmse": 0.7728080234931247
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.41548640062798997,
+              "n": 420,
+              "rmse": 0.5780989584031834
+            },
+            "train": {
+              "mae": 0.16320500837761398,
+              "n": 3360,
+              "rmse": 0.2153930227808784
+            },
+            "valid": {
+              "mae": 0.4081171825039455,
+              "n": 420,
+              "rmse": 0.7120924752180089
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5780989584031834,
+            "train": 0.2153930227808784,
+            "valid": 0.7120924752180089
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/M_CLEANPOOL__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "M_NODROP": {
+      "candidate": "M_NODROP",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 86
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 4.0797060174568855e-09,
+            "train": 3.3581751823774653e-09,
+            "valid": 8.853252797536015e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 86,
+          "curve_value_at_best_epoch": {
+            "test": 0.5770936308144736,
+            "train": 0.2954862958302446,
+            "valid": 0.7239311382808216
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 4.7849390005794135e-09,
+              "curve_last_rmse": 0.6432292014556401,
+              "rmse": 0.6432291966707011
+            },
+            "train": {
+              "abs_diff": 1.993746445716482e-09,
+              "curve_last_rmse": 0.07247116927974964,
+              "rmse": 0.0724711672860032
+            },
+            "valid": {
+              "abs_diff": 4.9444646155194505e-08,
+              "curve_last_rmse": 0.7956494251793867,
+              "rmse": 0.7956493757347406
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.42545115744448625,
+              "n": 420,
+              "rmse": 0.5770936348941796
+            },
+            "train": {
+              "mae": 0.21123460898771285,
+              "n": 3360,
+              "rmse": 0.2954862991884198
+            },
+            "valid": {
+              "mae": 0.4225782281029009,
+              "n": 420,
+              "rmse": 0.7239311294275688
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5770936348941796,
+            "train": 0.2954862991884198,
+            "valid": 0.7239311294275688
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/M_NODROP__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "M_UNBIASED": {
+      "candidate": "M_UNBIASED",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 221
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 3.5753320304365843e-09,
+            "train": 3.0805177297921205e-09,
+            "valid": 3.1486449558748575e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 221,
+          "curve_value_at_best_epoch": {
+            "test": 0.6071880412116681,
+            "train": 0.14161913322799338,
+            "valid": 0.6705791354044184
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 4.690893784520256e-09,
+              "curve_last_rmse": 0.6151041996492753,
+              "rmse": 0.6151041949583815
+            },
+            "train": {
+              "abs_diff": 2.8665477352918245e-09,
+              "curve_last_rmse": 0.1063049039463321,
+              "rmse": 0.10630490681287984
+            },
+            "valid": {
+              "abs_diff": 7.0628933812599826e-09,
+              "curve_last_rmse": 0.6813920619220519,
+              "rmse": 0.6813920548591585
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4378453518417013,
+              "n": 420,
+              "rmse": 0.6071880447870002
+            },
+            "train": {
+              "mae": 0.10107143233972671,
+              "n": 3360,
+              "rmse": 0.14161913014747565
+            },
+            "valid": {
+              "mae": 0.38736444379330565,
+              "n": 420,
+              "rmse": 0.6705791668908679
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.6071880447870002,
+            "train": 0.14161913014747565,
+            "valid": 0.6705791668908679
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/M_UNBIASED__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "S_SELECT_K1": {
+      "candidate": "S_SELECT_K1",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "best_epoch_in_checkpoint": 227,
+          "best_metric_value": 0.6656789024393037,
+          "bytes": 924652,
+          "exists": true,
+          "replay": {
+            "consistent": true,
+            "device": "cpu",
+            "max_abs_pred_diff_vs_predictions_best": 1.7296535577138172e-06,
+            "metrics": {
+              "test": {
+                "rmse": 0.5739309659986842
+              },
+              "train": {
+                "rmse": 0.1507340447958992
+              },
+              "valid": {
+                "rmse": 0.6656789196250532
+              }
+            }
+          },
+          "sha256": "c1e46fd8154f91ccea8172c2fc4ec23e86b806658351ebdae0721ec338f7da76"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 227
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.6204572350630997e-08,
+            "train": 4.144968923647241e-09,
+            "valid": 3.7042422462718605e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 227,
+          "curve_value_at_best_epoch": {
+            "test": 0.5739310063842314,
+            "train": 0.15073404249055072,
+            "valid": 0.6656789024393037
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 1.0574540576513414e-08,
+              "curve_last_rmse": 0.5772013422982503,
+              "rmse": 0.5772013528727908
+            },
+            "train": {
+              "abs_diff": 3.820676580668092e-09,
+              "curve_last_rmse": 0.12393548342009966,
+              "rmse": 0.12393548724077624
+            },
+            "valid": {
+              "abs_diff": 5.938499136881603e-09,
+              "curve_last_rmse": 0.6749115543328845,
+              "rmse": 0.6749115483943854
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.41663347943505297,
+              "n": 420,
+              "rmse": 0.5739309901796591
+            },
+            "train": {
+              "mae": 0.10956181492839323,
+              "n": 3360,
+              "rmse": 0.1507340383455818
+            },
+            "valid": {
+              "mae": 0.39989788070991833,
+              "n": 420,
+              "rmse": 0.6656788653968813
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5739309901796591,
+            "train": 0.1507340383455818,
+            "valid": 0.6656788653968813
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/S_SELECT_K1__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "VERIFIED"
+      }
+    },
+    "S_SELECT_K4": {
+      "candidate": "S_SELECT_K4",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 183
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.4868901887510333e-08,
+            "train": 1.180179454163266e-09,
+            "valid": 5.241704514880041e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 183,
+          "curve_value_at_best_epoch": {
+            "test": 0.6027601256612701,
+            "train": 0.18829239704873876,
+            "valid": 0.7015712522253332
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 1.088701084839272e-08,
+              "curve_last_rmse": 0.6009163466131386,
+              "rmse": 0.6009163575001495
+            },
+            "train": {
+              "abs_diff": 2.8814756414252685e-09,
+              "curve_last_rmse": 0.1329640161397673,
+              "rmse": 0.13296401325829166
+            },
+            "valid": {
+              "abs_diff": 1.8610621599357557e-08,
+              "curve_last_rmse": 0.7115285856933337,
+              "rmse": 0.7115286043039553
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.42410169088744143,
+              "n": 420,
+              "rmse": 0.602760140530172
+            },
+            "train": {
+              "mae": 0.14168874141196586,
+              "n": 3360,
+              "rmse": 0.1882923958685593
+            },
+            "valid": {
+              "mae": 0.41416137084271143,
+              "n": 420,
+              "rmse": 0.7015712469836287
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.602760140530172,
+            "train": 0.1882923958685593,
+            "valid": 0.7015712469836287
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/S_SELECT_K4__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "S_UNIFORM_K1": {
+      "candidate": "S_UNIFORM_K1",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 291
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 3.6847236373205305e-09,
+            "train": 2.93026186648504e-10,
+            "valid": 4.50563737430798e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 291,
+          "curve_value_at_best_epoch": {
+            "test": 0.5823835003463484,
+            "train": 0.13734104549414286,
+            "valid": 0.6700707964328486
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 1.9829347053246238e-09,
+              "curve_last_rmse": 0.5844144216994492,
+              "rmse": 0.5844144236823839
+            },
+            "train": {
+              "abs_diff": 2.5831591032865475e-09,
+              "curve_last_rmse": 0.13309788775959852,
+              "rmse": 0.13309789034275762
+            },
+            "valid": {
+              "abs_diff": 2.375440755209013e-08,
+              "curve_last_rmse": 0.6750771859951742,
+              "rmse": 0.6750772097495817
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4285850691676424,
+              "n": 420,
+              "rmse": 0.5823834966616248
+            },
+            "train": {
+              "mae": 0.10227969016518679,
+              "n": 3360,
+              "rmse": 0.13734104520111667
+            },
+            "valid": {
+              "mae": 0.3988492967217325,
+              "n": 420,
+              "rmse": 0.6700708414892224
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5823834966616248,
+            "train": 0.13734104520111667,
+            "valid": 0.6700708414892224
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/S_UNIFORM_K1__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "S_UNIFORM_K4": {
+      "candidate": "S_UNIFORM_K4",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 258
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.1212626493950495e-08,
+            "train": 3.198016795824543e-09,
+            "valid": 8.014285124424703e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 258,
+          "curve_value_at_best_epoch": {
+            "test": 0.56990922177984,
+            "train": 0.1399868089459188,
+            "valid": 0.6602470993067681
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 1.9579461052465774e-08,
+              "curve_last_rmse": 0.5761826293740483,
+              "rmse": 0.5761826489535093
+            },
+            "train": {
+              "abs_diff": 8.244031290960407e-10,
+              "curve_last_rmse": 0.12547150780250144,
+              "rmse": 0.1254715069780983
+            },
+            "valid": {
+              "abs_diff": 3.046224272829079e-09,
+              "curve_last_rmse": 0.6712099231011184,
+              "rmse": 0.6712099200548941
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.42108084543147517,
+              "n": 420,
+              "rmse": 0.5699092329924665
+            },
+            "train": {
+              "mae": 0.10520438704395095,
+              "n": 3360,
+              "rmse": 0.139986805747902
+            },
+            "valid": {
+              "mae": 0.4152556990186118,
+              "n": 420,
+              "rmse": 0.6602470912924829
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5699092329924665,
+            "train": 0.139986805747902,
+            "valid": 0.6602470912924829
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/S_UNIFORM_K4__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "WIDE_LOCAL": {
+      "candidate": "WIDE_LOCAL",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 126
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 5.291057703082913e-09,
+            "train": 4.335764802743114e-09,
+            "valid": 2.6997544644302707e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 126,
+          "curve_value_at_best_epoch": {
+            "test": 0.589836590080211,
+            "train": 0.23059870485884587,
+            "valid": 0.7088687213378385
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 7.132819002109159e-09,
+              "curve_last_rmse": 0.5741540444807123,
+              "rmse": 0.5741540516135313
+            },
+            "train": {
+              "abs_diff": 7.0151797426643014e-09,
+              "curve_last_rmse": 0.11811235949930138,
+              "rmse": 0.11811236651448112
+            },
+            "valid": {
+              "abs_diff": 5.892328069911912e-09,
+              "curve_last_rmse": 0.7273689476836573,
+              "rmse": 0.7273689417913293
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4307894538199226,
+              "n": 420,
+              "rmse": 0.5898365847891534
+            },
+            "train": {
+              "mae": 0.17545757985394678,
+              "n": 3360,
+              "rmse": 0.23059870919461067
+            },
+            "valid": {
+              "mae": 0.4129745093072859,
+              "n": 420,
+              "rmse": 0.7088686943402939
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5898365847891534,
+            "train": 0.23059870919461067,
+            "valid": 0.7088686943402939
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/WIDE_LOCAL__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    }
+  },
+  "runs": {
+    "A0_CHEM8_CONTRIB_R0": {
+      "candidate": "A0_CHEM8_CONTRIB_R0",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 244
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 3.723200525662662e-09,
+            "train": 7.046386696352158e-09,
+            "valid": 1.7118837125629227e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 244,
+          "curve_value_at_best_epoch": {
+            "test": 0.5756490857595163,
+            "train": 0.2729295356330409,
+            "valid": 0.685371839404765
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 9.908472931030587e-09,
+              "curve_last_rmse": 0.572734176124197,
+              "rmse": 0.5727341860326699
+            },
+            "train": {
+              "abs_diff": 1.8438364723927236e-10,
+              "curve_last_rmse": 0.24020066962449618,
+              "rmse": 0.24020066980887983
+            },
+            "valid": {
+              "abs_diff": 4.726034275037705e-08,
+              "curve_last_rmse": 0.6896762296371027,
+              "rmse": 0.6896762768974455
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.43145501327193175,
+              "n": 420,
+              "rmse": 0.5756490894827169
+            },
+            "train": {
+              "mae": 0.20454865957798848,
+              "n": 3360,
+              "rmse": 0.2729295285866542
+            },
+            "valid": {
+              "mae": 0.420778472916753,
+              "n": 420,
+              "rmse": 0.6853718565236021
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5756490894827169,
+            "train": 0.2729295285866542,
+            "valid": 0.6853718565236021
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/A0_CHEM8_CONTRIB_R0__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "A0_R0": {
+      "candidate": "A0_R0",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 321
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.4826404881596034e-08,
+            "train": 2.598064652303833e-09,
+            "valid": 2.928946474245464e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 321,
+          "curve_value_at_best_epoch": {
+            "test": 0.5801032423553572,
+            "train": 0.2583146185879229,
+            "valid": 0.6995443997559172
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 1.185958531380038e-08,
+              "curve_last_rmse": 0.5800958249448024,
+              "rmse": 0.5800958130852171
+            },
+            "train": {
+              "abs_diff": 6.438548805220989e-09,
+              "curve_last_rmse": 0.25650072080965874,
+              "rmse": 0.25650071437110994
+            },
+            "valid": {
+              "abs_diff": 5.455227103379201e-08,
+              "curve_last_rmse": 0.7035617653208406,
+              "rmse": 0.7035618198731116
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.42987964482040336,
+              "n": 420,
+              "rmse": 0.5801032275289523
+            },
+            "train": {
+              "mae": 0.19061652822821215,
+              "n": 3360,
+              "rmse": 0.2583146211859875
+            },
+            "valid": {
+              "mae": 0.4070175821188059,
+              "n": 420,
+              "rmse": 0.6995443704664525
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5801032275289523,
+            "train": 0.2583146211859875,
+            "valid": 0.6995443704664525
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "1c7fc936152363e31c055957cd0dbe3aab504877ec9d6a86ff6cf1933e7006fb",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "4fe07a0c377a2a0d127210a482af7e3261728cb9",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/A0_R0__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "C1_CHEM8": {
+      "candidate": "C1_CHEM8",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 206
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.9103459925062793e-09,
+            "train": 2.0804381550831863e-09,
+            "valid": 1.4270322701293026e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 206,
+          "curve_value_at_best_epoch": {
+            "test": 0.565980284629118,
+            "train": 0.1583454576912249,
+            "valid": 0.6539315202347629
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 6.4621781259432964e-09,
+              "curve_last_rmse": 0.5678948736703611,
+              "rmse": 0.5678948672081829
+            },
+            "train": {
+              "abs_diff": 4.664780367535926e-09,
+              "curve_last_rmse": 0.13069433537462874,
+              "rmse": 0.1306943400394091
+            },
+            "valid": {
+              "abs_diff": 9.835558367754516e-09,
+              "curve_last_rmse": 0.6608753607864917,
+              "rmse": 0.66087537062205
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.40950766564802504,
+              "n": 420,
+              "rmse": 0.565980282718772
+            },
+            "train": {
+              "mae": 0.1161253682108913,
+              "n": 3360,
+              "rmse": 0.15834545561078675
+            },
+            "valid": {
+              "mae": 0.3958780886244402,
+              "n": 420,
+              "rmse": 0.6539315216617951
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.565980282718772,
+            "train": 0.15834545561078675,
+            "valid": 0.6539315216617951
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "1f15c15f41194d73841a4cd486499739f80b7e09245ec9bd94042c5845d011bb",
+          "git_commit": "e17bd490b4ceebd34e133a8e6f49b72230f666d0",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/C1_CHEM8__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "C1_CONTRIB": {
+      "candidate": "C1_CONTRIB",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 206
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 8.089522052223685e-09,
+            "train": 2.8215400293962745e-09,
+            "valid": 3.839671569583203e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 206,
+          "curve_value_at_best_epoch": {
+            "test": 0.6063176516083865,
+            "train": 0.14632503397791935,
+            "valid": 0.5375640953661445
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 6.738770541581118e-09,
+              "curve_last_rmse": 0.6045597003425572,
+              "rmse": 0.6045596936037867
+            },
+            "train": {
+              "abs_diff": 4.0435824272266885e-09,
+              "curve_last_rmse": 0.11471732121320716,
+              "rmse": 0.11471731716962473
+            },
+            "valid": {
+              "abs_diff": 9.543619561291905e-09,
+              "curve_last_rmse": 0.5467536377798967,
+              "rmse": 0.5467536473235163
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.427476060349841,
+              "n": 420,
+              "rmse": 0.6063176596979085
+            },
+            "train": {
+              "mae": 0.10866342366870237,
+              "n": 3360,
+              "rmse": 0.14632503679945938
+            },
+            "valid": {
+              "mae": 0.3691362303758172,
+              "n": 420,
+              "rmse": 0.5375641337628602
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.6063176596979085,
+            "train": 0.14632503679945938,
+            "valid": 0.5375641337628602
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "1f15c15f41194d73841a4cd486499739f80b7e09245ec9bd94042c5845d011bb",
+          "git_commit": "e17bd490b4ceebd34e133a8e6f49b72230f666d0",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/C1_CONTRIB__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "C1_R0": {
+      "candidate": "C1_R0",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 244
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 5.208797837497059e-09,
+            "train": 2.8734212786929447e-09,
+            "valid": 4.819971088920738e-10
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 244,
+          "curve_value_at_best_epoch": {
+            "test": 0.5794825534519762,
+            "train": 0.28910855676374114,
+            "valid": 0.7054488772680739
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 1.2748335054268978e-08,
+              "curve_last_rmse": 0.5721210817139261,
+              "rmse": 0.5721210944622611
+            },
+            "train": {
+              "abs_diff": 6.315628187092415e-09,
+              "curve_last_rmse": 0.25656589155441956,
+              "rmse": 0.25656589787004774
+            },
+            "valid": {
+              "abs_diff": 9.844788095847434e-09,
+              "curve_last_rmse": 0.7107601912739935,
+              "rmse": 0.7107601814292054
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.43478519155468975,
+              "n": 420,
+              "rmse": 0.579482558660774
+            },
+            "train": {
+              "mae": 0.21667875972670356,
+              "n": 3360,
+              "rmse": 0.2891085596371624
+            },
+            "valid": {
+              "mae": 0.4161896171881201,
+              "n": 420,
+              "rmse": 0.705448877750071
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.579482558660774,
+            "train": 0.2891085596371624,
+            "valid": 0.705448877750071
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "1c7fc936152363e31c055957cd0dbe3aab504877ec9d6a86ff6cf1933e7006fb",
+          "code_hash_lcpr_train": "efb2483c205b8c63ed8ebfcb2204a94c7fcd7b32f7a765bf078bfa37e9515f56",
+          "git_commit": "f828e35ba32e2efa16c9406c09b447481296439a",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/C1_R0__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "C1_R1": {
+      "candidate": "C1_R1",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "best_epoch_in_checkpoint": 187,
+          "best_metric_value": 0.652632280841369,
+          "bytes": 924652,
+          "exists": true,
+          "replay": {
+            "consistent": true,
+            "device": "cpu",
+            "max_abs_pred_diff_vs_predictions_best": 2.5944803363486812e-06,
+            "metrics": {
+              "test": {
+                "rmse": 0.5839396554727031
+              },
+              "train": {
+                "rmse": 0.19149454481890385
+              },
+              "valid": {
+                "rmse": 0.6526322487632051
+              }
+            }
+          },
+          "sha256": "d8a9e31a071596e546452c4be44423d0e130c0d278e6e6dda4ce9ea931c46adb"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 187
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.1575972846955551e-08,
+            "train": 3.6668397485062343e-09,
+            "valid": 1.3268278586942017e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 187,
+          "curve_value_at_best_epoch": {
+            "test": 0.5839396491673046,
+            "train": 0.19149452384966237,
+            "valid": 0.652632280841369
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 4.893599192534737e-09,
+              "curve_last_rmse": 0.579480747296285,
+              "rmse": 0.5794807521898842
+            },
+            "train": {
+              "abs_diff": 4.210844894991794e-09,
+              "curve_last_rmse": 0.12574020273593217,
+              "rmse": 0.12574019852508728
+            },
+            "valid": {
+              "abs_diff": 6.252564133113481e-09,
+              "curve_last_rmse": 0.6627934841599216,
+              "rmse": 0.6627934904124857
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4287487324320027,
+              "n": 420,
+              "rmse": 0.5839396375913317
+            },
+            "train": {
+              "mae": 0.1440408353438534,
+              "n": 3360,
+              "rmse": 0.19149452751650212
+            },
+            "valid": {
+              "mae": 0.4042789534496898,
+              "n": 420,
+              "rmse": 0.6526322675730905
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5839396375913317,
+            "train": 0.19149452751650212,
+            "valid": 0.6526322675730905
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "1c7fc936152363e31c055957cd0dbe3aab504877ec9d6a86ff6cf1933e7006fb",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "4fe07a0c377a2a0d127210a482af7e3261728cb9",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/C1_R1__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "VERIFIED"
+      }
+    },
+    "C1_R3": {
+      "candidate": "C1_R3",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 161
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 1.0850453202593258e-08,
+            "train": 2.113646563328686e-09,
+            "valid": 4.099006245539272e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 161,
+          "curve_value_at_best_epoch": {
+            "test": 0.5669809017070563,
+            "train": 0.1974114913094263,
+            "valid": 0.6535257605788689
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 5.37150346424653e-09,
+              "curve_last_rmse": 0.5829157929743651,
+              "rmse": 0.5829157983458686
+            },
+            "train": {
+              "abs_diff": 4.40926295475208e-09,
+              "curve_last_rmse": 0.12970273706419366,
+              "rmse": 0.1297027326549307
+            },
+            "valid": {
+              "abs_diff": 4.045873636115971e-10,
+              "curve_last_rmse": 0.6586492696034525,
+              "rmse": 0.6586492691988651
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4122581563779909,
+              "n": 420,
+              "rmse": 0.5669809125575095
+            },
+            "train": {
+              "mae": 0.14814064318041373,
+              "n": 3360,
+              "rmse": 0.19741148919577975
+            },
+            "valid": {
+              "mae": 0.39686523748171304,
+              "n": 420,
+              "rmse": 0.6535257564798627
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5669809125575095,
+            "train": 0.19741148919577975,
+            "valid": 0.6535257564798627
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "1c7fc936152363e31c055957cd0dbe3aab504877ec9d6a86ff6cf1933e7006fb",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "4fe07a0c377a2a0d127210a482af7e3261728cb9",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/C1_R3__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "DMPNN_LR1E3": {
+      "candidate": "DMPNN_LR1E3",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "epoch",
+            "is_best",
+            "lr_end",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_mae",
+            "train_mse_online",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 100,
+          "rows": 100,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 59
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 2.104952878667632e-10,
+            "train": 3.3628734519286496e-09,
+            "valid": 1.398843485489465e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 59,
+          "curve_value_at_best_epoch": {
+            "test": 0.6112453723150147,
+            "train": 0.17846812947220747,
+            "valid": 0.6530073777114015
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.44974003361284415,
+              "n": 420,
+              "rmse": 0.6112453721045195
+            },
+            "train": {
+              "mae": 0.131522538861174,
+              "n": 3360,
+              "rmse": 0.17846812610933402
+            },
+            "valid": {
+              "mae": 0.4242921095382417,
+              "n": 420,
+              "rmse": 0.653007379110245
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.6112453721045195,
+            "train": 0.17846812610933402,
+            "valid": 0.653007379110245
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 5300,
+          "recipe_epochs": 100,
+          "recipe_epochs_run": 100,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 53
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/DMPNN_LR1E3__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "DMPNN_LR1E3_FIX": {
+      "candidate": "DMPNN_LR1E3_FIX",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "best_epoch_in_checkpoint": 92,
+          "best_metric_value": 0.645090449251287,
+          "bytes": 1276124,
+          "exists": true,
+          "replay": "not_implemented_for_dmpnn_here",
+          "sha256": "5759c4115a1478b465066503ae704aaae08fbc2074271ffc9a917b82a01e11cb"
+        },
+        "curve": {
+          "columns": [
+            "epoch",
+            "is_best",
+            "lr_end",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_mae",
+            "train_mse_online",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 100,
+          "rows": 100,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 92
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 5.223157462097561e-10,
+            "train": 1.2212792166454989e-09,
+            "valid": 3.352075506057872e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 92,
+          "curve_value_at_best_epoch": {
+            "test": 0.5669407404470067,
+            "train": 0.23323831146677898,
+            "valid": 0.645090449251287
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4129227702208337,
+              "n": 420,
+              "rmse": 0.5669407409693225
+            },
+            "train": {
+              "mae": 0.16755604925721498,
+              "n": 3360,
+              "rmse": 0.23323831024549976
+            },
+            "valid": {
+              "mae": 0.38277063969546943,
+              "n": 420,
+              "rmse": 0.6450904458992115
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5669407409693225,
+            "train": 0.23323831024549976,
+            "valid": 0.6450904458992115
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "f6994af0bb0f315f48b5d3ff7d11beed2002abfc21888be56f271a6d7f5bec12",
+          "code_hash_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "git_commit": "57a4777daa42f62f9ab2a1528f5efd1b897e9ec1",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 5300,
+          "recipe_epochs": 100,
+          "recipe_epochs_run": 100,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 53
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/DMPNN_LR1E3_FIX__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED"
+      }
+    },
+    "DMPNN_LR3E4": {
+      "candidate": "DMPNN_LR3E4",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "epoch",
+            "is_best",
+            "lr_end",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_mae",
+            "train_mse_online",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 100,
+          "rows": 100,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 64
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 4.6358539229629514e-10,
+            "train": 1.5613855208762573e-09,
+            "valid": 3.925438618601618e-08
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 64,
+          "curve_value_at_best_epoch": {
+            "test": 0.5410237044737463,
+            "train": 0.2647616082232977,
+            "valid": 0.7364506195517532
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.40079222749742965,
+              "n": 420,
+              "rmse": 0.5410237049373317
+            },
+            "train": {
+              "mae": 0.19377100820788626,
+              "n": 3360,
+              "rmse": 0.2647616097846832
+            },
+            "valid": {
+              "mae": 0.39784500076496987,
+              "n": 420,
+              "rmse": 0.736450580297367
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5410237049373317,
+            "train": 0.2647616097846832,
+            "valid": 0.736450580297367
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 5300,
+          "recipe_epochs": 100,
+          "recipe_epochs_run": 100,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 53
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/DMPNN_LR3E4__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    },
+    "DMPNN_LR3E4_FIX": {
+      "candidate": "DMPNN_LR3E4_FIX",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "best_epoch_in_checkpoint": 95,
+          "best_metric_value": 0.7332197814049457,
+          "bytes": 1276124,
+          "exists": true,
+          "replay": "not_implemented_for_dmpnn_here",
+          "sha256": "b0f037f70f2a472e14edb71f77d78b6fdadfffbfc7447e16dbd4e775bf7a25bf"
+        },
+        "curve": {
+          "columns": [
+            "epoch",
+            "is_best",
+            "lr_end",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_mae",
+            "train_mse_online",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 100,
+          "rows": 100,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 95
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 3.1779380238461385e-09,
+            "train": 5.811519043774638e-10,
+            "valid": 5.276594383651911e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 95,
+          "curve_value_at_best_epoch": {
+            "test": 0.5846826156674974,
+            "train": 0.40072921411123896,
+            "valid": 0.7332197814049457
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.4556814909178522,
+              "n": 420,
+              "rmse": 0.5846826124895593
+            },
+            "train": {
+              "mae": 0.3027028101423657,
+              "n": 3360,
+              "rmse": 0.40072921353008706
+            },
+            "valid": {
+              "mae": 0.4263315007150069,
+              "n": 420,
+              "rmse": 0.7332197866815401
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5846826124895593,
+            "train": 0.40072921353008706,
+            "valid": 0.7332197866815401
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "f6994af0bb0f315f48b5d3ff7d11beed2002abfc21888be56f271a6d7f5bec12",
+          "code_hash_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "git_commit": "57a4777daa42f62f9ab2a1528f5efd1b897e9ec1",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 5300,
+          "recipe_epochs": 100,
+          "recipe_epochs_run": 100,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 53
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/DMPNN_LR3E4_FIX__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED"
+      }
+    },
+    "K_COMBO": {
+      "candidate": "K_COMBO",
+      "dataset": "Lipophilicity",
+      "fields": {
+        "checkpoint": {
+          "exists": false,
+          "note": "runs/ is git-ignored and only three checkpoints were retained on this host (A_LOGP, C1_R1, S_SELECT_K1); everything else was deleted after the round, so weight identity cannot be re-verified - only prediction identity (curve + train.json + npz) can"
+        },
+        "curve": {
+          "columns": [
+            "aux_loss_mean",
+            "epoch",
+            "eval_seconds",
+            "grad_norm_max",
+            "is_best",
+            "lr_end",
+            "steps",
+            "test_bias",
+            "test_mae",
+            "test_n",
+            "test_r2",
+            "test_rmse",
+            "test_sse",
+            "train_bias",
+            "train_loss_online",
+            "train_mae",
+            "train_n",
+            "train_r2",
+            "train_rmse",
+            "train_seconds",
+            "train_sse",
+            "valid_bias",
+            "valid_mae",
+            "valid_n",
+            "valid_r2",
+            "valid_rmse",
+            "valid_sse"
+          ],
+          "exists": true,
+          "first_epoch": 1,
+          "last_epoch": 360,
+          "rows": 360,
+          "source": "runs/<run>/curve.csv (per-epoch, written by the training process)",
+          "valid_argbest_epoch_recomputed": 90
+        },
+        "predictions": {
+          "abs_diff_vs_curve_best_epoch": {
+            "test": 3.1289777435716815e-09,
+            "train": 1.880688216271409e-09,
+            "valid": 4.01094224500298e-09
+          },
+          "abs_diff_vs_train_json": {
+            "test": 0.0,
+            "train": 0.0,
+            "valid": 0.0
+          },
+          "curve_best_epoch": 90,
+          "curve_value_at_best_epoch": {
+            "test": 0.5572840737216229,
+            "train": 0.297139040729469,
+            "valid": 0.5667396908420405
+          },
+          "keys": [
+            "test_pred_std",
+            "test_rows",
+            "test_y",
+            "train_pred_std",
+            "train_rows",
+            "train_y",
+            "valid_pred_std",
+            "valid_rows",
+            "valid_y"
+          ],
+          "labels_ok": true,
+          "last_epoch_matches_curve": true,
+          "last_epoch_predictions": {
+            "test": {
+              "abs_diff": 4.142189480305092e-09,
+              "curve_last_rmse": 0.5918533158293227,
+              "rmse": 0.5918533116871332
+            },
+            "train": {
+              "abs_diff": 2.5785861640370555e-09,
+              "curve_last_rmse": 0.11257871184439941,
+              "rmse": 0.11257871442298557
+            },
+            "valid": {
+              "abs_diff": 5.618886067537687e-08,
+              "curve_last_rmse": 0.6247689528327488,
+              "rmse": 0.6247690090216095
+            }
+          },
+          "matches_curve_best_epoch": true,
+          "matches_train_json": true,
+          "normalisation": {
+            "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+            "mean": 2.176985119047619,
+            "n": 3360,
+            "scale": 1.2091154725538142,
+            "source": "train_split_only"
+          },
+          "recomputed_from_predictions": {
+            "test": {
+              "mae": 0.41355676737394986,
+              "n": 420,
+              "rmse": 0.5572840768506007
+            },
+            "train": {
+              "mae": 0.22526015418055204,
+              "n": 3360,
+              "rmse": 0.2971390388487808
+            },
+            "valid": {
+              "mae": 0.3879060179846728,
+              "n": 420,
+              "rmse": 0.5667396948529827
+            }
+          },
+          "recorded_train_json": {
+            "test": 0.5572840768506007,
+            "train": 0.2971390388487808,
+            "valid": 0.5667396948529827
+          },
+          "rows_ok": true,
+          "test_rows_match_published": true,
+          "test_rows_sha256": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+          "test_y_matches_published_labels": true,
+          "test_y_sha256": "6e0a7266e72e12b095f3e79a9e69aad963dee39024f4c111ef13450ee1fe3dab",
+          "train_rows_match_published": true,
+          "train_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "train_y_matches_published_labels": true,
+          "train_y_sha256": "ff1f79361ac0bb8e5b602842fdf50abf44135ceb15b2365432b43da0c83b6275",
+          "units": "logD",
+          "valid_rows_match_published": true,
+          "valid_rows_sha256": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365",
+          "valid_y_matches_published_labels": true,
+          "valid_y_sha256": "8fc566650f3323ced43be38db2b4d127d438a898c4c2f3da6826e8f704ff1d54"
+        },
+        "provenance": {
+          "code_hash_current_lcpr_dmpnn": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+          "code_hash_current_lcpr_train": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+          "code_hash_lcpr_dmpnn": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+          "code_hash_lcpr_train": "2f008147ce30f509e4e4ccdf7885cabd1be1331bfedd82f4e3a8ef6d67bc014e",
+          "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+          "git_dirty_tracked": false,
+          "note": "run_table.csv printed provenance['commit'], which does not exist (the key is 'git_commit'), hence commit=None in the stale table",
+          "provenance_commit_key_present": false
+        },
+        "train_json": {
+          "best_epoch": null,
+          "best_epoch_key_present": false,
+          "epochs_run": null,
+          "epochs_run_key_present": false,
+          "optimizer_steps": 9720,
+          "recipe_epochs": 360,
+          "recipe_epochs_run": 360,
+          "seed": 0,
+          "source": "runs/<run>/train.json (written by the training process)",
+          "status": "completed",
+          "steps_per_epoch": 27
+        }
+      },
+      "run_dir": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs/K_COMBO__Lipophilicity",
+      "verdict": {
+        "prediction_identity": "VERIFIED",
+        "weight_identity": "NOT_RETAINED"
+      }
+    }
+  },
+  "scope": "the ten identities named by the correction request plus every other Lipophilicity arm (mechanism panels depend on their weights)",
+  "stale_derived_table": {
+    "artifact": "analysis/run_table.csv / .json",
+    "created_utc": "2026-11-13T21:31:14Z",
+    "defects": [
+      "written before commit d6e8d1f4 fixed _curve_best_epoch (it maximised valid_rmse, so best_epoch=1 for most runs even though train.json metrics are at the true best-Valid epoch)",
+      "commit column read provenance['commit']; the record stores 'git_commit'",
+      "epochs column is recipe['epochs'], not epochs_run (LONG 720, ogbg-molhiv 160)"
+    ],
+    "superseded_by": "analysis/run_table_corrected.csv / .json"
+  }
+}

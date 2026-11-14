@@ -1,0 +1,191 @@
+{
+  "candidate": "DMPNN_LR1E3_FIX",
+  "data": {
+    "n_test": 420,
+    "n_train": 3360,
+    "n_valid": 420,
+    "rows_sha256": {
+      "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+      "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+      "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+    },
+    "target_norm": {
+      "formula": "z = (y - mean)/scale; y_raw = mean + scale*z",
+      "mean": 2.176985119047619,
+      "n": 3360,
+      "scale": 1.2091154725538142,
+      "source": "train_split_only"
+    },
+    "test_used_for_selection": false
+  },
+  "dataset": "Lipophilicity",
+  "environment": {
+    "cuda_available": true,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "device": "cuda",
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "family": "DMPNN",
+  "gpu": {
+    "device_name": "NVIDIA A100-SXM4-40GB",
+    "gpu_hours_charged": 0.02109633807666089
+  },
+  "implementation": {
+    "features_info": {
+      "dataset": "Lipophilicity",
+      "n_molecules": 4200,
+      "path": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/cache/dmpnn_Lipophilicity.npz",
+      "reused": true
+    },
+    "featurizer": "chemprop-v2.2.1-native-72-14",
+    "labelled_as": "D-MPNN formula reproduction on the pinned publication module",
+    "source": "chemprop v2.2.1 (pinned), vendored message-passing/agg/FFN source"
+  },
+  "metrics": {
+    "best": {
+      "test": {
+        "bias": 0.03146515935911481,
+        "mae": 0.4129227702208337,
+        "n": 420,
+        "r2": 0.7760304463702037,
+        "rmse": 0.5669407409693225,
+        "sse": 134.99715758375464
+      },
+      "train": {
+        "bias": 0.018340112432247153,
+        "mae": 0.16755604925721498,
+        "n": 3360,
+        "r2": 0.9627896105517386,
+        "rmse": 0.23323831024549976,
+        "sse": 182.78436747035136
+      },
+      "valid": {
+        "bias": 0.03684509310500506,
+        "mae": 0.38277063969546943,
+        "n": 420,
+        "r2": 0.6881389380845044,
+        "rmse": 0.6450904458992115,
+        "sse": 174.77950702398627
+      }
+    }
+  },
+  "model": {
+    "activation": "relu",
+    "bias": false,
+    "depth": 3,
+    "ffn": [
+      300,
+      300,
+      1
+    ],
+    "ffn_dropout": 0.0,
+    "hidden": 300,
+    "message_dropout": 0.0,
+    "parameters": 318301,
+    "undirected": false
+  },
+  "protocol_id": "lcrc-performance-route-8h-public122-s0-v1",
+  "provenance": {
+    "code_hashes": {
+      "PROTOCOL.md": "1402395985986dd95628d282b658873cf3345f0342fcce48929de01dcd4f5956",
+      "code/bench.py": "0d71342ed2dcf9f1007261eb0e2f4d128c9a467e840370aaafa2f802a1cf2d37",
+      "code/lcpr_analysis.py": "a5dd68667335fcbd40f283045ca6b996b54a1beb8ef9caf6878bfa94f446d5bd",
+      "code/lcpr_common.py": "8d55d85c19e9310127d7a216038cd0f26949f83888474c8a202e2e16d614f2dd",
+      "code/lcpr_correction.py": "201094d6fd83ef2c757bf4aafdba6ac50374893c00e989e0aa91c3b85f62a671",
+      "code/lcpr_data.py": "85347bb435e60cec63ae910f2bdbb8cee464890f5e69c0d453834c10206b22f3",
+      "code/lcpr_dmpnn.py": "f6994af0bb0f315f48b5d3ff7d11beed2002abfc21888be56f271a6d7f5bec12",
+      "code/lcpr_mech.py": "c7dda9c3b4e6b3d611173e94e95c7b57276391ca99355502ec7b7f0459f17813",
+      "code/lcpr_model.py": "1d69609bd5cbf8c2388c027d1ccf7d1d59a85143c3123ad42f6582deb1c58de2",
+      "code/lcpr_report.py": "02a047b7bdafd9543a5d1f373205b37131b541b1243910059dd4a6f8f26d238a",
+      "code/lcpr_train.py": "d42472d66263a89f67fc3bb08716be351c5903284827fc8701e8be55713a0e5b",
+      "code/run.py": "7fa674290b90c54a64e260d94bf4429214602ecb3f96e5db380f466e90075ae4",
+      "code/runqueue.py": "b4748fb5d7b6c056d488b8cb82c74d6328860956b8dee180b0b9475c00dfebf2",
+      "code/vendor/cpv221/chemprop/__init__.py": "d0130d06a10b953f6471907f02394b319fc5c571e76deae25e666bc30aa7bd05",
+      "code/vendor/cpv221/chemprop/conf.py": "80e28167d8f476942129f300112ac69d2385e5dafa26493029b9846df12dc490",
+      "code/vendor/cpv221/chemprop/data/__init__.py": "cc3d607a6ccc1a41df071ccd1afef9a06de2411acd0ebd4f3a0920cf0acf4ca8",
+      "code/vendor/cpv221/chemprop/exceptions.py": "4db8369de8b0271aa0043657f0db2db72d7a0bdc6ce157b39f6cdd70a93d1acb",
+      "code/vendor/cpv221/chemprop/nn/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "code/vendor/cpv221/chemprop/nn/agg.py": "ca9025b3a1292790a170d4c1bd889d78a9b51a50df6a4f7d693b660a11a66edd",
+      "code/vendor/cpv221/chemprop/nn/ffn.py": "fcc9f4a992b7ea7066cfdf0514a336aa6dcf5135de702a01880f64b051b3643e",
+      "code/vendor/cpv221/chemprop/nn/hparams.py": "fdf531a083cc4d2b5823fff1ec515b5585b39d19c2eb414152596bcbd3024b58",
+      "code/vendor/cpv221/chemprop/nn/message_passing/__init__.py": "6cd17445016c47ff39256916af75e8d43163309949ce492cc9c37bddc774ad13",
+      "code/vendor/cpv221/chemprop/nn/message_passing/base.py": "57b911ae87af933d51d1dd22bb3a52ecc40e68e13bc59c30ccbcd7db3d4bce1c",
+      "code/vendor/cpv221/chemprop/nn/message_passing/mixins.py": "3e287bbea70db2c872e0fd0f416e86243ee28c954358df60c253f5735aa5fb9b",
+      "code/vendor/cpv221/chemprop/nn/message_passing/proto.py": "ecf357e4b34b61105fbcac9a4267e572b9c750ba73b3356899ad0d0acb4a7758",
+      "code/vendor/cpv221/chemprop/nn/proto.py": "ecf357e4b34b61105fbcac9a4267e572b9c750ba73b3356899ad0d0acb4a7758",
+      "code/vendor/cpv221/chemprop/nn/transforms.py": "9eb6302635cbe777f8ae801287cd59b237fdd26d6aa345439c03220adc67ecef",
+      "code/vendor/cpv221/chemprop/nn/utils.py": "b2feb22b85643ea295eb2a762a0c14ffe939833acdb7cbf5d2c1c6a8d7938bbe",
+      "code/vendor/cpv221/chemprop/utils/__init__.py": "4be1da09d7ce603b5182a777b1909cb845901338e997427937881a3788922d0c",
+      "code/vendor/cpv221/chemprop/utils/utils.py": "1feff6e6f58bbede9d1b15b10d875a3c46d616dfecff655763946de0a2259411",
+      "code/vendor/cpv221/lightning/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "code/vendor/cpv221/lightning/pytorch/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "code/vendor/cpv221/lightning/pytorch/core/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "code/vendor/cpv221/lightning/pytorch/core/mixins/__init__.py": "7a24a3c6611448447b0f4ef0d809944d112a1b09ec0e047e285c67c9167ac54a",
+      "configs/experiment.yaml": "cf2bfba273c15bcf9138440f6dde2b057f070c18e92e1cd80b8b29e91288717c",
+      "tests/test_lcpr_core.py": "98b2cc24788577ed042c1d978732ec92a6d89f1631d21d981ac21b00a60f12e1",
+      "tests/test_lcpr_corrections.py": "21276f77f2b1bfca5598cb54eefc617d3626171240373fcfd160a63d7ba34e9c",
+      "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+      "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+      "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_common.py": "799be6b52ed155572d067a2edb53ff92d06fd89304e49d96af8b0c8a8bf079cf",
+      "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+      "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_model.py": "d5af76cb9b5998e6bfa068afd28c483c93dde579cfb85344ed928582b05c6d37",
+      "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+      "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+      "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_data.py": "dc1ed6a32f64463a48d1f3c7bec74a9932da39000f2da6e16a909abec04e06c2",
+      "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+      "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_source.py": "1b3dd8a96532b29f4adb1069edb86bbbe1d2355ff32338ec82a3a026c7a742e5",
+      "tracks/structural-sufficiency/lcrc_lipo_oracle_task_relevance_public122_s0_v1/code/oracle.py": "dafc5281d1002f9058afecfefad9a70508755d6f23243a10755459581b808dfb",
+      "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_baseline.py": "1d2043bb6234b2b65eab4dc7e93d7c8b9c64c0ea7b352505e8e1a1e627b61f31",
+      "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_common.py": "a8db1c0f2c28031792fc25673e39ce7404cbf884250592f7bdd33a1005e3e45c",
+      "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_data.py": "c57e2eb2934060634a3e61a74efdcff3471e0c170bcc0bdaf595ab41000ff767",
+      "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_metrics.py": "0c419a874f7012d1a76cc791f46b095e78e19fdf7bfdfa8cb50dd93e00c6e2a6",
+      "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/code/mb2_source.py": "5b0b9f6e77457f4e1e15c6771b8d851b5aaa3015714cf9b077bb6ba6eaf35dc7",
+      "tracks/structural-sufficiency/lcrc_performance_longrun_v1/code/cl_chem8.py": "339dc22c6e189b03f111cca1247e1bd6a6bce44b008d6d8ab73888593ed605f7"
+    },
+    "git_commit": "57a4777daa42f62f9ab2a1528f5efd1b897e9ec1",
+    "git_dirty_tracked": false
+  },
+  "recipe": {
+    "batch_size": 64,
+    "corrects": "ERRATA E4: LambdaLR base lr must be init_lr",
+    "decay": "exponential",
+    "epochs": 100,
+    "epochs_run": 100,
+    "gradient_clip": 5.0,
+    "init_lr": 0.0001,
+    "min_lr": 0.0001,
+    "optimizer": "Adam",
+    "optimizer_base_lr": 0.0001,
+    "optimizer_steps": 5300,
+    "peak_lr": 0.001,
+    "schedule_endpoints": {
+      "lambda_0": 1.0,
+      "lambda_last": 1.0004434146236727,
+      "lambda_warmup_end": 10.0,
+      "lr_last": 0.00010004434146236727,
+      "lr_step0": 0.0001,
+      "lr_warmup_end": 0.001,
+      "optimizer_base_lr": 0.0001,
+      "scheduler_step_after_optimizer_step": true,
+      "total_steps": 5300,
+      "warmup_steps": 106
+    },
+    "steps_per_epoch": 53,
+    "warmup_epochs": 2,
+    "weight_decay": 0.0
+  },
+  "round_id": "lcrc-performance-route-8h-public122-s0-v1",
+  "schema": "lcrc-performance-route-dmpnn-v1",
+  "smoke": false,
+  "split_method": "random122",
+  "status": "completed",
+  "task": "regression",
+  "timing": {
+    "process_wall_seconds": 75.9467641049996,
+    "train_wall_seconds": 74.41996903100517
+  }
+}

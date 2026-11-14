@@ -421,12 +421,26 @@ def _run_identity(candidate: str, dataset: str = "Lipophilicity") -> dict[str, A
                 import lcpr_train as T
 
                 caches = {s: D.load_cache(dataset, s, tgt["rows"][s]) for s in C.SPLITS}
-                preds = T.evaluate_all(model, caches, torch.device("cpu"))
-                rep = {s: {"rmse": _rmse(preds[s], np.asarray(tgt["y"][s], float))} for s in C.SPLITS}
+                import lcpr_model as LM
+
+                kind = C.CANDIDATES[candidate]["kind"]
+                path_counts = None
+                if kind in LM.SHRINK_KINDS:
+                    #: the S arms contract the joint block with the frozen support
+                    #: table, which lives in cache/support_*.npz, not in best.pt
+                    sup = D.load_support(dataset)
+                    path_counts = {s: sup["path_count"][s] for s in C.SPLITS}
+                preds = T.evaluate_all(model, caches, torch.device("cpu"), path_counts)
+                #: ``evaluate_all`` returns z-scored predictions; decode once with the
+                #: Train-only normaliser before any comparison with raw labels
+                tnorm = tgt["target_norm"]
+                rep = {s: {"rmse": _rmse(preds[s] * float(tnorm["scale"]) + float(tnorm["mean"]),
+                                         np.asarray(tgt["y"][s], float))} for s in C.SPLITS}
                 if pred_path.exists():
                     dec = _decoded(run_dir, dataset, "predictions_best.npz")
-                    rep_max = max(float(np.max(np.abs(preds[s] - dec[f"{s}_pred"])))
-                                  for s in C.SPLITS)
+                    rep_max = max(float(np.max(np.abs(
+                        preds[s] * float(tnorm["scale"]) + float(tnorm["mean"])
+                        - dec[f"{s}_pred"]))) for s in C.SPLITS)
                 else:
                     rep_max = float("nan")
                 info["replay"] = {
@@ -437,6 +451,7 @@ def _run_identity(candidate: str, dataset: str = "Lipophilicity") -> dict[str, A
                 }
                 rec["verdict"]["weight_identity"] = (
                     "VERIFIED" if rep_max <= 1e-5 else "UNRESOLVED_IDENTITY")
+        rec["fields"]["checkpoint"] = info
     else:
         rec["fields"]["checkpoint"] = {
             "exists": False,
@@ -1061,6 +1076,72 @@ def run_curves() -> dict[str, Any]:
 
 
 # --------------------------------------------------------------------------- #
+# paired intervals for the head-to-head comparisons the report needed
+# --------------------------------------------------------------------------- #
+
+
+PAIR_HEADS = (("C1_CHEM8", "K_COMBO"), ("C1_R3", "K_COMBO"), ("C1_R1", "K_COMBO"),
+              ("C1_R1", "DMPNN_LR1E3_FIX"), ("C1_R1", "DMPNN_LR3E4_FIX"),
+              ("C1_R1", "DMPNN_LR3E4"), ("C1_R1", "DMPNN_LR1E3"))
+
+
+def run_pairs() -> dict[str, Any]:
+    """Paired scaffold-cluster bootstrap for the *same-recipe* K increments.
+
+    ``K_COMBO`` vs ``C1_CHEM8`` is the only architecture-only increment (both run
+    the R1 recipe); the vs-``C1_R3`` and vs-``C1_R1`` pairs change the recipe too
+    and are therefore performance coordinates, not pure architecture effects.
+    """
+    import lcpr_analysis as A
+
+    out: dict[str, Any] = {
+        "created_utc": C.utcnow(),
+        "method": ("paired scaffold-cluster bootstrap, 2000 replicates, seed 20261113 "
+                   "(identical to analysis/paired_comparisons.json); delta = RMSE(control) - "
+                   "RMSE(arm), positive = the arm is better"),
+        "dataset": "Lipophilicity",
+        "pairs": {},
+        "full_metrics": {},
+    }
+    cands = sorted({c for pair in PAIR_HEADS for c in pair})
+    for cand in cands:
+        if not (C.run_dir(cand, "Lipophilicity") / "predictions_best.npz").exists():
+            continue
+        d = _decoded(C.run_dir(cand, "Lipophilicity"), "Lipophilicity")
+        out["full_metrics"][cand] = {
+            s: {"rmse": _rmse(d[f"{s}_pred"], d[f"{s}_y"]),
+                "mae": _mae(d[f"{s}_pred"], d[f"{s}_y"]), "n": int(d[f"{s}_y"].size)}
+            for s in C.SPLITS}
+    for control, arm in PAIR_HEADS:
+        entry: dict[str, Any] = {}
+        cdir = C.run_dir(control, "Lipophilicity")
+        adir = C.run_dir(arm, "Lipophilicity")
+        if not ((cdir / "predictions_best.npz").exists() and (adir / "predictions_best.npz").exists()):
+            out["pairs"][f"{arm}_vs_{control}"] = {"status": "missing_predictions"}
+            continue
+        c = _decoded(cdir, "Lipophilicity")
+        a = _decoded(adir, "Lipophilicity")
+        for split in ("valid", "test"):
+            y, index = A._cluster_index("Lipophilicity", split, "regression")
+            entry[split] = A.paired_bootstrap(
+                control=np.asarray(c[f"{split}_pred"], float),
+                candidate=np.asarray(a[f"{split}_pred"], float),
+                kind="rmse", index=index, y=y, replicates=C.BOOTSTRAP_REPLICATES,
+                seed=C.BOOTSTRAP_SEED)
+            entry[split]["gain_rel"] = float(
+                (entry[split]["delta"]) / _rmse(c[f"{split}_pred"], c[f"{split}_y"]))
+        entry["same_recipe"] = (C.CANDIDATES.get(control, {}).get("recipe")
+                                == C.CANDIDATES.get(arm, {}).get("recipe"))
+        entry["parameters"] = {control: (json.loads((cdir / "train.json").read_text())
+                                         .get("model", {}).get("parameters")),
+                               arm: (json.loads((adir / "train.json").read_text())
+                                     .get("model", {}).get("parameters"))}
+        out["pairs"][f"{arm}_vs_{control}"] = entry
+    C.write_json(C.ANALYSIS / "paired_corrected.json", out)
+    return out
+
+
+# --------------------------------------------------------------------------- #
 # figure: cumulative ΔSSE along the corrected tail order
 # --------------------------------------------------------------------------- #
 
@@ -1107,7 +1188,8 @@ def figure_tail(tail: Mapping[str, Any], path: Path) -> None:
 # --------------------------------------------------------------------------- #
 
 
-def run(stages: Sequence[str] = ("identity", "tail", "support", "grad", "schedule", "curves")) -> dict[str, Any]:
+def run(stages: Sequence[str] = ("identity", "tail", "pairs", "support", "grad", "schedule",
+                                 "curves")) -> dict[str, Any]:
     done: dict[str, Any] = {"created_utc": C.utcnow(), "stages": {}}
     if "identity" in stages:
         C.log("[correct] identity manifest")
@@ -1119,6 +1201,10 @@ def run(stages: Sequence[str] = ("identity", "tail", "support", "grad", "schedul
         done["stages"]["tail"] = {"pairs": len(tail["pairs"])}
         fig = C.ANALYSIS / "figures" / "tail_corrected_cumulative_dsse.png"
         figure_tail(tail, fig)
+    if "pairs" in stages:
+        C.log("[correct] head-to-head paired intervals")
+        pr = run_pairs()
+        done["stages"]["pairs"] = sorted(pr["pairs"])
     if "support" in stages:
         C.log("[correct] molecule-level support v2")
         sup = run_support()

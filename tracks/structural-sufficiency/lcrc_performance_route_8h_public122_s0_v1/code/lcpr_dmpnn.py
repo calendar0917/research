@@ -511,6 +511,12 @@ def train_dmpnn(*, candidate: str, dataset: str, device, out_dir: Path, smoke: b
                  "rows_sha256": {s: C.row_sha256(tgt["rows"][s]) for s in C.SPLITS},
                  "target_norm": dict(tnorm), "test_used_for_selection": False},
         "metrics": {"best": best_metrics},
+        #: E5: the two historical D-MPNN records omitted these two top-level fields
+        #: (only ``recipe.epochs_run`` existed), which is why the stale run_table
+        #: could not show a best epoch for them
+        "best_epoch": int(best_epoch),
+        "epochs_run": len(curve),
+        "checkpoint_rule": "best Validation only, strict improvement, tie keeps earlier",
         "timing": {"train_wall_seconds": wall,
                    "process_wall_seconds": float(time.perf_counter() - T.PROCESS_T0)},
         "gpu": {"device_name": torch.cuda.get_device_name(0) if device.type == "cuda" else "cpu",

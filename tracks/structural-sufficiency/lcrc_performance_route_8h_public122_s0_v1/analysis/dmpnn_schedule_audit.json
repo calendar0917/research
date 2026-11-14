@@ -1,0 +1,276 @@
+{
+  "code_revision_check": {
+    "lcpr_dmpnn_sha256_after_fix": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+    "lcpr_dmpnn_sha256_that_contained_the_defect": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+    "note": "both historical runs recorded the defect-bearing hash, so the wrong lr was the executed lr; the forward-parity check does not test the optimiser schedule and could never have caught it"
+  },
+  "created_utc": "2026-11-14T02:06:11Z",
+  "defect": "Adam(base lr = peak_lr) combined with LambdaLR(lambda = desired/init_lr) makes the realised lr peak_lr * desired/init_lr, i.e. 3x the protocol curve for D1 and 10x for D2",
+  "errata": "E4",
+  "observed_runs": {
+    "DMPNN_LR1E3": {
+      "consistent_with_fixed_trace": false,
+      "consistent_with_legacy_trace": true,
+      "curve_lr_end_epoch1": 0.005499999999999999,
+      "curve_lr_end_epoch2": 0.01,
+      "curve_lr_end_last": 0.001,
+      "curve_lr_max": 0.01,
+      "curve_rows": 100,
+      "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+      "git_dirty_tracked": false,
+      "lcpr_dmpnn_sha256_at_run": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+      "lcpr_dmpnn_sha256_current": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+      "recipe_declared": {
+        "epochs": 100,
+        "init_lr": 0.0001,
+        "min_lr": 0.0001,
+        "peak_lr": 0.001,
+        "steps_per_epoch": 53,
+        "warmup_epochs": 2
+      },
+      "run_used_defective_code": true,
+      "toy_fixed_epoch1_endpoint": 0.0005499999999999999,
+      "toy_legacy_epoch1_endpoint": 0.005499999999999999,
+      "verdict": "DMPNN_LEGACY_LR_MISMATCH"
+    },
+    "DMPNN_LR1E3_FIX": {
+      "best_epoch": null,
+      "curve_lr_end_epoch1": 0.0005499999999999999,
+      "curve_lr_end_epoch2": 0.001,
+      "curve_lr_end_last": 0.0001,
+      "curve_lr_max": 0.001,
+      "git_commit": "57a4777daa42f62f9ab2a1528f5efd1b897e9ec1",
+      "metrics_best": {
+        "test": {
+          "bias": 0.03146515935911481,
+          "mae": 0.4129227702208337,
+          "n": 420,
+          "r2": 0.7760304463702037,
+          "rmse": 0.5669407409693225,
+          "sse": 134.99715758375464
+        },
+        "train": {
+          "bias": 0.018340112432247153,
+          "mae": 0.16755604925721498,
+          "n": 3360,
+          "r2": 0.9627896105517386,
+          "rmse": 0.23323831024549976,
+          "sse": 182.78436747035136
+        },
+        "valid": {
+          "bias": 0.03684509310500506,
+          "mae": 0.38277063969546943,
+          "n": 420,
+          "r2": 0.6881389380845044,
+          "rmse": 0.6450904458992115,
+          "sse": 174.77950702398627
+        }
+      },
+      "recipe_declared": {
+        "epochs": 100,
+        "init_lr": 0.0001,
+        "min_lr": 0.0001,
+        "optimizer_base_lr": 0.0001,
+        "peak_lr": 0.001,
+        "steps_per_epoch": 53,
+        "warmup_epochs": 2
+      },
+      "schedule_endpoints": {
+        "lambda_0": 1.0,
+        "lambda_last": 1.0004434146236727,
+        "lambda_warmup_end": 10.0,
+        "lr_last": 0.00010004434146236727,
+        "lr_step0": 0.0001,
+        "lr_warmup_end": 0.001,
+        "optimizer_base_lr": 0.0001,
+        "scheduler_step_after_optimizer_step": true,
+        "total_steps": 5300,
+        "warmup_steps": 106
+      },
+      "status": "completed"
+    },
+    "DMPNN_LR3E4": {
+      "consistent_with_fixed_trace": false,
+      "consistent_with_legacy_trace": true,
+      "curve_lr_end_epoch1": 0.0006,
+      "curve_lr_end_epoch2": 0.0008999999999999998,
+      "curve_lr_end_last": 0.0003,
+      "curve_lr_max": 0.0008999999999999998,
+      "curve_rows": 100,
+      "git_commit": "7df6c3c701971bd69cd0ff115a635a2311b93683",
+      "git_dirty_tracked": false,
+      "lcpr_dmpnn_sha256_at_run": "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64",
+      "lcpr_dmpnn_sha256_current": "66f4c7ccb14129e5de70c3eb4b751cf53c6dea3d7ecaf670199591dfc65f31d1",
+      "recipe_declared": {
+        "epochs": 100,
+        "init_lr": 0.0001,
+        "min_lr": 0.0001,
+        "peak_lr": 0.0003,
+        "steps_per_epoch": 53,
+        "warmup_epochs": 2
+      },
+      "run_used_defective_code": true,
+      "toy_fixed_epoch1_endpoint": 0.0002,
+      "toy_legacy_epoch1_endpoint": 0.0006,
+      "verdict": "DMPNN_LEGACY_LR_MISMATCH"
+    },
+    "DMPNN_LR3E4_FIX": {
+      "best_epoch": null,
+      "curve_lr_end_epoch1": 0.0002,
+      "curve_lr_end_epoch2": 0.0003,
+      "curve_lr_end_last": 0.0001,
+      "curve_lr_max": 0.0003,
+      "git_commit": "57a4777daa42f62f9ab2a1528f5efd1b897e9ec1",
+      "metrics_best": {
+        "test": {
+          "bias": -0.09428094840807585,
+          "mae": 0.4556814909178522,
+          "n": 420,
+          "r2": 0.7617932805379914,
+          "rmse": 0.5846826124895593,
+          "sse": 143.5785780859988
+        },
+        "train": {
+          "bias": -0.09338904219039829,
+          "mae": 0.3027028101423657,
+          "n": 3360,
+          "r2": 0.8901585010837063,
+          "rmse": 0.40072921353008706,
+          "sse": 539.5619126568454
+        },
+        "valid": {
+          "bias": -0.06922739572328815,
+          "mae": 0.4263315007150069,
+          "n": 420,
+          "r2": 0.5971083317168977,
+          "rmse": 0.7332197866815401,
+          "sse": 225.79672734415573
+        }
+      },
+      "recipe_declared": {
+        "epochs": 100,
+        "init_lr": 0.0001,
+        "min_lr": 0.0001,
+        "optimizer_base_lr": 0.0001,
+        "peak_lr": 0.0003,
+        "steps_per_epoch": 53,
+        "warmup_epochs": 2
+      },
+      "schedule_endpoints": {
+        "lambda_0": 1.0,
+        "lambda_last": 1.0002115380212386,
+        "lambda_warmup_end": 2.9999999999999996,
+        "lr_last": 0.00010002115380212387,
+        "lr_step0": 0.0001,
+        "lr_warmup_end": 0.0003,
+        "optimizer_base_lr": 0.0001,
+        "scheduler_step_after_optimizer_step": true,
+        "total_steps": 5300,
+        "warmup_steps": 106
+      },
+      "status": "completed"
+    }
+  },
+  "protocol_expectation": {
+    "D1": {
+      "final": 0.0001,
+      "init": 0.0001,
+      "peak": 0.0003
+    },
+    "D2": {
+      "final": 0.0001,
+      "init": 0.0001,
+      "peak": 0.001
+    }
+  },
+  "toy_traces": {
+    "D1_fixed_base_init": {
+      "endpoints_as_traced": {
+        "final": 0.0001,
+        "init": 0.0001,
+        "peak": 0.0003
+      },
+      "lr_after_scheduler_done": 0.0001,
+      "lr_after_warmup_end": 0.0003,
+      "lr_at_first_update": 0.0001,
+      "lr_at_last_update": 0.00010002115380212387,
+      "lr_at_step_2": 0.0001018867924528302,
+      "lr_at_warmup_end_update": 0.0002981132075471698,
+      "lr_end_of_epoch_1_as_curve_records_it": 0.0002,
+      "lr_end_of_epoch_2_as_curve_records_it": 0.0003,
+      "lr_max_over_run": 0.0003,
+      "lr_min_over_run": 0.0001,
+      "optimizer_base_lr": 0.0001,
+      "scheduler_initial_lr": 0.0001,
+      "steps_per_epoch": 53,
+      "total_steps": 5300,
+      "warmup_steps": 106
+    },
+    "D1_legacy_base_peak": {
+      "endpoints_as_traced": {
+        "final": 0.0003,
+        "init": 0.0003,
+        "peak": 0.0008999999999999998
+      },
+      "lr_after_scheduler_done": 0.0003,
+      "lr_after_warmup_end": 0.0008999999999999998,
+      "lr_at_first_update": 0.0003,
+      "lr_at_last_update": 0.00030006346140637154,
+      "lr_at_step_2": 0.00030566037735849056,
+      "lr_at_warmup_end_update": 0.0008943396226415093,
+      "lr_end_of_epoch_1_as_curve_records_it": 0.0006,
+      "lr_end_of_epoch_2_as_curve_records_it": 0.0008999999999999998,
+      "lr_max_over_run": 0.0008999999999999998,
+      "lr_min_over_run": 0.0003,
+      "optimizer_base_lr": 0.0003,
+      "scheduler_initial_lr": 0.0003,
+      "steps_per_epoch": 53,
+      "total_steps": 5300,
+      "warmup_steps": 106
+    },
+    "D2_fixed_base_init": {
+      "endpoints_as_traced": {
+        "final": 0.0001,
+        "init": 0.0001,
+        "peak": 0.001
+      },
+      "lr_after_scheduler_done": 0.0001,
+      "lr_after_warmup_end": 0.001,
+      "lr_at_first_update": 0.0001,
+      "lr_at_last_update": 0.00010004434146236727,
+      "lr_at_step_2": 0.00010849056603773586,
+      "lr_at_warmup_end_update": 0.0009915094339622641,
+      "lr_end_of_epoch_1_as_curve_records_it": 0.0005499999999999999,
+      "lr_end_of_epoch_2_as_curve_records_it": 0.001,
+      "lr_max_over_run": 0.001,
+      "lr_min_over_run": 0.0001,
+      "optimizer_base_lr": 0.0001,
+      "scheduler_initial_lr": 0.0001,
+      "steps_per_epoch": 53,
+      "total_steps": 5300,
+      "warmup_steps": 106
+    },
+    "D2_legacy_base_peak": {
+      "endpoints_as_traced": {
+        "final": 0.001,
+        "init": 0.001,
+        "peak": 0.01
+      },
+      "lr_after_scheduler_done": 0.001,
+      "lr_after_warmup_end": 0.01,
+      "lr_at_first_update": 0.001,
+      "lr_at_last_update": 0.0010004434146236728,
+      "lr_at_step_2": 0.0010849056603773586,
+      "lr_at_warmup_end_update": 0.009915094339622642,
+      "lr_end_of_epoch_1_as_curve_records_it": 0.005499999999999999,
+      "lr_end_of_epoch_2_as_curve_records_it": 0.01,
+      "lr_max_over_run": 0.01,
+      "lr_min_over_run": 0.001,
+      "optimizer_base_lr": 0.001,
+      "scheduler_initial_lr": 0.001,
+      "steps_per_epoch": 53,
+      "total_steps": 5300,
+      "warmup_steps": 106
+    }
+  }
+}

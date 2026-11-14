@@ -215,7 +215,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     p.add_argument("--stage", default="all")
 
     p = sub.add_parser("correct", help="ERRATA corrections: additive, read-only on old artefacts")
-    p.add_argument("--stages", default="identity,tail,support,grad,schedule,curves")
+    p.add_argument("--stages", default="identity,tail,pairs,support,grad,schedule,curves")
 
     p = sub.add_parser("schedule-trace", help="toy D-MPNN lr trace (no data, no GPU)")
 

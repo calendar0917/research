@@ -1,0 +1,334 @@
+{
+  "created_utc": "2026-11-14T02:06:04Z",
+  "dataset": "Lipophilicity",
+  "full_metrics": {
+    "C1_CHEM8": {
+      "test": {
+        "mae": 0.40950766564802504,
+        "n": 420,
+        "rmse": 0.565980282718772
+      },
+      "train": {
+        "mae": 0.1161253682108913,
+        "n": 3360,
+        "rmse": 0.15834545561078675
+      },
+      "valid": {
+        "mae": 0.3958780886244402,
+        "n": 420,
+        "rmse": 0.6539315216617951
+      }
+    },
+    "C1_R1": {
+      "test": {
+        "mae": 0.4287487324320027,
+        "n": 420,
+        "rmse": 0.5839396375913317
+      },
+      "train": {
+        "mae": 0.1440408353438534,
+        "n": 3360,
+        "rmse": 0.19149452751650212
+      },
+      "valid": {
+        "mae": 0.4042789534496898,
+        "n": 420,
+        "rmse": 0.6526322675730905
+      }
+    },
+    "C1_R3": {
+      "test": {
+        "mae": 0.4122581563779909,
+        "n": 420,
+        "rmse": 0.5669809125575095
+      },
+      "train": {
+        "mae": 0.14814064318041373,
+        "n": 3360,
+        "rmse": 0.19741148919577975
+      },
+      "valid": {
+        "mae": 0.39686523748171304,
+        "n": 420,
+        "rmse": 0.6535257564798627
+      }
+    },
+    "DMPNN_LR1E3": {
+      "test": {
+        "mae": 0.44974003361284415,
+        "n": 420,
+        "rmse": 0.6112453721045195
+      },
+      "train": {
+        "mae": 0.131522538861174,
+        "n": 3360,
+        "rmse": 0.17846812610933402
+      },
+      "valid": {
+        "mae": 0.4242921095382417,
+        "n": 420,
+        "rmse": 0.653007379110245
+      }
+    },
+    "DMPNN_LR1E3_FIX": {
+      "test": {
+        "mae": 0.4129227702208337,
+        "n": 420,
+        "rmse": 0.5669407409693225
+      },
+      "train": {
+        "mae": 0.16755604925721498,
+        "n": 3360,
+        "rmse": 0.23323831024549976
+      },
+      "valid": {
+        "mae": 0.38277063969546943,
+        "n": 420,
+        "rmse": 0.6450904458992115
+      }
+    },
+    "DMPNN_LR3E4": {
+      "test": {
+        "mae": 0.40079222749742965,
+        "n": 420,
+        "rmse": 0.5410237049373317
+      },
+      "train": {
+        "mae": 0.19377100820788626,
+        "n": 3360,
+        "rmse": 0.2647616097846832
+      },
+      "valid": {
+        "mae": 0.39784500076496987,
+        "n": 420,
+        "rmse": 0.736450580297367
+      }
+    },
+    "DMPNN_LR3E4_FIX": {
+      "test": {
+        "mae": 0.4556814909178522,
+        "n": 420,
+        "rmse": 0.5846826124895593
+      },
+      "train": {
+        "mae": 0.3027028101423657,
+        "n": 3360,
+        "rmse": 0.40072921353008706
+      },
+      "valid": {
+        "mae": 0.4263315007150069,
+        "n": 420,
+        "rmse": 0.7332197866815401
+      }
+    },
+    "K_COMBO": {
+      "test": {
+        "mae": 0.41355676737394986,
+        "n": 420,
+        "rmse": 0.5572840768506007
+      },
+      "train": {
+        "mae": 0.22526015418055204,
+        "n": 3360,
+        "rmse": 0.2971390388487808
+      },
+      "valid": {
+        "mae": 0.3879060179846728,
+        "n": 420,
+        "rmse": 0.5667396948529827
+      }
+    }
+  },
+  "method": "paired scaffold-cluster bootstrap, 2000 replicates, seed 20261113 (identical to analysis/paired_comparisons.json); delta = RMSE(control) - RMSE(arm), positive = the arm is better",
+  "pairs": {
+    "DMPNN_LR1E3_FIX_vs_C1_R1": {
+      "parameters": {
+        "C1_R1": 228674,
+        "DMPNN_LR1E3_FIX": 318301
+      },
+      "same_recipe": false,
+      "test": {
+        "ci_high": 0.06576839556198527,
+        "ci_low": -0.03303556335714749,
+        "delta": 0.016998896622009263,
+        "gain_rel": 0.029110708586468463,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.506,
+        "positive_means": "improvement"
+      },
+      "valid": {
+        "ci_high": 0.08072255103675062,
+        "ci_low": -0.04854284150292448,
+        "delta": 0.007541821673878957,
+        "gain_rel": 0.011556004887598241,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.792,
+        "positive_means": "improvement"
+      }
+    },
+    "DMPNN_LR1E3_vs_C1_R1": {
+      "parameters": {
+        "C1_R1": 228674,
+        "DMPNN_LR1E3": 318301
+      },
+      "same_recipe": false,
+      "test": {
+        "ci_high": 0.03305083263094679,
+        "ci_low": -0.09189595837759708,
+        "delta": -0.02730573451318774,
+        "gain_rel": -0.04676122796839075,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.3600000000000001,
+        "positive_means": "improvement"
+      },
+      "valid": {
+        "ci_high": 0.06292198498519062,
+        "ci_low": -0.06937702726115613,
+        "delta": -0.0003751115371545266,
+        "gain_rel": -0.0005747670714312584,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.938,
+        "positive_means": "improvement"
+      }
+    },
+    "DMPNN_LR3E4_FIX_vs_C1_R1": {
+      "parameters": {
+        "C1_R1": 228674,
+        "DMPNN_LR3E4_FIX": 318301
+      },
+      "same_recipe": false,
+      "test": {
+        "ci_high": 0.04210654951161603,
+        "ci_low": -0.04649023795873018,
+        "delta": -0.0007429748982276108,
+        "gain_rel": -0.0012723488018252657,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.9610000000000001,
+        "positive_means": "improvement"
+      },
+      "valid": {
+        "ci_high": 0.04190757756448645,
+        "ci_low": -0.19950773678322153,
+        "delta": -0.08058751910844963,
+        "gain_rel": -0.12348074576227473,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.3759999999999999,
+        "positive_means": "improvement"
+      }
+    },
+    "DMPNN_LR3E4_vs_C1_R1": {
+      "parameters": {
+        "C1_R1": 228674,
+        "DMPNN_LR3E4": 318301
+      },
+      "same_recipe": false,
+      "test": {
+        "ci_high": 0.09427476939737434,
+        "ci_low": -0.008617298023628853,
+        "delta": 0.042915932654000066,
+        "gain_rel": 0.07349378238994395,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.106,
+        "positive_means": "improvement"
+      },
+      "valid": {
+        "ci_high": 0.07519179181664697,
+        "ci_low": -0.23969649918680783,
+        "delta": -0.08381831272427653,
+        "gain_rel": -0.1284311501114821,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.629,
+        "positive_means": "improvement"
+      }
+    },
+    "K_COMBO_vs_C1_CHEM8": {
+      "parameters": {
+        "C1_CHEM8": 229698,
+        "K_COMBO": 234731
+      },
+      "same_recipe": true,
+      "test": {
+        "ci_high": 0.04400464781140372,
+        "ci_low": -0.027055780255692406,
+        "delta": 0.008696205868171325,
+        "gain_rel": 0.015364856574857666,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.638,
+        "positive_means": "improvement"
+      },
+      "valid": {
+        "ci_high": 0.2028120169663902,
+        "ci_low": -0.009387902731602171,
+        "delta": 0.08719182680881243,
+        "gain_rel": 0.1333347971775964,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.128,
+        "positive_means": "improvement"
+      }
+    },
+    "K_COMBO_vs_C1_R1": {
+      "parameters": {
+        "C1_R1": 228674,
+        "K_COMBO": 234731
+      },
+      "same_recipe": false,
+      "test": {
+        "ci_high": 0.057441506555690316,
+        "ci_low": -0.002798777334220545,
+        "delta": 0.026655560740731055,
+        "gain_rel": 0.0456478016301162,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.069,
+        "positive_means": "improvement"
+      },
+      "valid": {
+        "ci_high": 0.19342959818720423,
+        "ci_low": -0.004761694031405471,
+        "delta": 0.08589257272010775,
+        "gain_rel": 0.1316094483644089,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.084,
+        "positive_means": "improvement"
+      }
+    },
+    "K_COMBO_vs_C1_R3": {
+      "parameters": {
+        "C1_R3": 228674,
+        "K_COMBO": 234731
+      },
+      "same_recipe": false,
+      "test": {
+        "ci_high": 0.043599484317951374,
+        "ci_low": -0.025286936930661343,
+        "delta": 0.009696835706908824,
+        "gain_rel": 0.01710257875025954,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.573,
+        "positive_means": "improvement"
+      },
+      "valid": {
+        "ci_high": 0.20700845698219397,
+        "ci_low": -0.01030881467557441,
+        "delta": 0.08678606162687996,
+        "gain_rel": 0.13279669663571114,
+        "n_clusters": 357,
+        "n_valid_replicates": 2000,
+        "p_two_sided": 0.146,
+        "positive_means": "improvement"
+      }
+    }
+  }
+}
