@@ -56,6 +56,16 @@ def build_report() -> str:
     src_ok = aud.get("verdict") == "SOURCE_OK"
     channel_formed = any(v.get("psi_grad_nonzero_by_1800") for v in lpsum.values()) if lpsum else None
     purchase_passed = purch.get("passed")
+    layer_name_pre = layer.get("layer", "")
+
+    def _best(vals):
+        vals = [v for v in vals if v is not None]
+        return max(vals) if vals else None
+    resp_rel = _best((lpsum.get(r, {}) or {}).get("channel_response_relative_to_full_delta") for r in ("P_POST", "P_PRE"))
+    resp_raw = _best((lpsum.get(r, {}) or {}).get("channel_response_raw_rms") for r in ("P_POST", "P_PRE"))
+    dfull = _best((lpsum.get(r, {}) or {}).get("delta_full_rms_std") for r in ("P_POST", "P_PRE"))
+    psi_grads = {r: (lpsum.get(r, {}) or {}).get("grad_norm_preclip", {}).get("psi") for r in ("P_POST", "P_PRE")}
+    scale = (res.get("target_norm") or {}).get("scale")
 
     # ---- opening four answers -------------------------------------------
     a1 = ("来源与缓存一致" if src_ok else "来源或缓存未通过校验")
@@ -65,18 +75,30 @@ def build_report() -> str:
            f"h 缓存与 return_aux 交叉核对最大差 {f((cc or {}).get('max_abs'),6)}。")
     if channel_formed is None:
         a2 = "新增通道响应未测得（诊断缺失）。"
+    elif layer_name_pre == "EXTRA_CHANNEL_WEAKLY_USED_THIS_CONFIG":
+        pg = psi_grads.get("P_POST")
+        pg_s = f"{pg:.1e}" if isinstance(pg, (int, float)) else "—"
+        a2 = ("计算路径是通的（首步只动 delta 末层，之后 psi/delta 首层梯度非零），"
+              f"但额外通道的输出贡献很弱：1800 步时 ‖∇psi‖≈{pg_s}（f 约 1.8），"
+              f"完整 delta 输出 RMS≈{f(dfull,4)}（标准化，目标尺度≈{f(scale,3)}），"
+              f"通道响应原始单位 RMS≈{f(resp_raw,6)}，只占 delta 自身输出≈{f((resp_rel or 0)*100,1)}%。")
     elif channel_formed:
-        a2 = "新增通道确实形成了可测响应（1800 步时 psi/delta 首层梯度非零，通道响应见 §4）。"
+        a2 = "新增通道确实形成了可测响应（psi/delta 首层梯度非零，通道响应见 §3）。"
     else:
         a2 = "新增通道在 1800 步后仍近乎未被使用（psi/delta 首层梯度接近零，响应很弱）。"
     if purchase_passed:
-        a3 = "有新增探针越过了相对 P_WARM 与共同 step0 的 1% 采购门槛（见 §3）。"
+        a3 = "有新增探针越过了相对 P_WARM 与共同 step0 的 1% 采购门槛（见 §2.2）。"
+    elif table and all((row.get("r_sel") or {}).get("update") == 0 for row in table):
+        a3 = ("没有越过采购门槛：三臂的 R_SEL（按 Valid）全部回到共同 step0（update 0），"
+              "即读出头训练 1800 步没有给出更好的 Valid 状态；Test 终点仅小幅改善且无法由 Valid 选到，"
+              "事后按 Test 选的 oracle 虽超 1%，但含 Test 选择乐观偏差、不是可选规则。")
     else:
-        a3 = "没有新增探针越过 1% 采购门槛：相对 P_WARM 与共同 step0 均无 Valid+Test 双改善。"
+        a3 = "没有越过 1% 采购门槛：相对 P_WARM 与共同 step0 均无 Valid+Test 双改善。"
     layer_name = layer.get("layer", "INCONCLUSIVE")
     if layer_name == "EXTRA_CHANNEL_WEAKLY_USED_THIS_CONFIG":
-        a4 = ("值得保留的方向：把“读出再加模块”暂缓——本轮证据是额外通道本身没被用起来，"
-              "池化位置问题仍未解决；仍未识别：表示是否缺任务信息（H_REP）本轮不检验。")
+        a4 = ("值得保留的方向：暂停给这类读出再加模块（本轮证据是额外通道在本配置下没被用起来，"
+              "不是“读出容量不够”）；仍未识别：池化位置问题（PRE vs POST 在本配置下退化）与"
+              "表示是否缺任务信息（H_REP 本轮不检验）。")
     elif layer_name == "NO_READOUT_GAIN_THIS_CONFIG":
         a4 = ("值得保留的方向：读出侧仍有计算响应但无留出收益，支持暂缓给出此类读出加模块；"
               "仍未识别：池化位置与 H_REP。")
@@ -150,7 +172,7 @@ def build_report() -> str:
         if not g:
             L.append(f"| {r} | — | — | — | — | — | — | — |")
             continue
-        L.append(f"| {r} | {g.get('R_SEL_update')} | {pct(g.get('vs_warm_valid_rel_gain')) and f(g.get('vs_warm_valid_delta'),6)} | "
+        L.append(f"| {r} | {g.get('R_SEL_update')} | {f(g.get('vs_warm_valid_delta'),6)} | "
                  f"{f(g.get('vs_warm_test_delta'),6)} | {pct(g.get('vs_warm_valid_rel_gain'))} | {pct(g.get('vs_warm_test_rel_gain'))} | "
                  f"{f(g.get('vs_step0_valid_delta'),6)} | {f(g.get('vs_step0_test_delta'),6)} |")
     L.append("")
@@ -179,6 +201,20 @@ def build_report() -> str:
                      f"{f(b.get('delta_ci_lo'),6)} | {f(b.get('delta_ci_hi'),6)} | {f(b.get('frac_positive'),3)} |")
     L.append("")
 
+    # ---- oracle (post-hoc, not selectable) --------------------------------
+    oracle = res.get("oracle", {})
+    if oracle:
+        L.append("### 2.4 事后 oracle（含 Test 选择乐观偏差，不是可选规则）\n")
+        L.append("| probe | Test 曲线最小 | 位置 | 相对 step0 的 oracle 相对增益 | Test 终点 | Valid 曲线最小 |")
+        L.append("|---|---|---|---|---|---|")
+        for r, o in oracle.items():
+            L.append(f"| {r} | {f(o.get('test_curve_min'))} | {o.get('test_curve_min_update')} | "
+                     f"{pct(o.get('oracle_rel_gain_vs_step0'))} | {f(o.get('test_final'))} | {f(o.get('valid_curve_min'))} |")
+        L.append("\n读法：训练使 Train_fit 下降、Valid 变差，因此预注册的 R_SEL（按 Valid）必然回到 step0。"
+                 "事后按 Test 选的 oracle 相对 step0 可达约 1.7%（>1% 投入尺），但它含 Test 选择乐观偏差、"
+                 "不是预注册可选规则，不能当作采购依据；本轮的采购判定仍只看 R_SEL（见 §2.2）。"
+                 "Test 终点（update 1800）只有约 0.6% 改善。\n")
+
     # ---- branch learning path -------------------------------------------
     L.append("## 3. 分支是否学到（直接测量，不只看 PRE/POST 接近）\n")
     L.append("“末层零初始化”只使前层在首步没有梯度；不能单凭 PRE≈POST 说明分支没训练。以下为 1800 步的实测（详见 `analysis/learning_path.json`）：\n")
@@ -190,13 +226,23 @@ def build_report() -> str:
                  f"{f(g.get('delta_last'),4)} | {f(g.get('f'),4)} | {f(g.get('rho'),4)} |")
     L.append("")
     L.append("固定 32 个 Train 分子（仅按公开 row 排序）的通道诊断（1800 步）：\n")
-    L.append("| probe | meanψ(h) vs ψ(mean h) 相对量级 | extra 特征 RMS | 通道响应相对完整 delta | 通道响应原始单位 RMS |")
-    L.append("|---|---|---|---|---|")
+    L.append("| probe | meanψ(h) vs ψ(mean h) 相对量级 | extra 特征 RMS | 完整 delta 输出 RMS（标准化） | 通道响应相对完整 delta | 通道响应原始单位 RMS |")
+    L.append("|---|---|---|---|---|---|")
     for r, s in lpsum.items():
         L.append(f"| {r} | {f(s.get('mean_psi_vs_psi_mean_relative_to_extra_rms'),3)} | {f(s.get('extra_feature_rms'),4)} | "
-                 f"{f(s.get('channel_response_relative_to_full_delta'),4)} | {f(s.get('channel_response_raw_rms'),4)} |")
+                 f"{f(s.get('delta_full_rms_std'),5)} | {f(s.get('channel_response_relative_to_full_delta'),4)} | "
+                 f"{f(s.get('channel_response_raw_rms'),2e0 and 6)} |")
     L.append("")
-    L.append("（`delta([z_pool, extra]) − delta([z_pool, 0])` 只是内部通道使用诊断，不称合法分子干预或独立贡献。）\n")
+    L.append(f"目标尺度（target norm scale）≈{f((res.get('target_norm') or {}).get('scale'),3)}；"
+             "完整 delta 输出 RMS 与通道响应 RMS 都远小于它，可直接读出额外通道对预测的实际贡献量级。")
+    L.append("（`delta([z_pool, extra]) − delta([z_pool, 0])` 只是内部通道使用诊断，不称合法分子干预或独立贡献。"
+             "注意 `delta` 末层初值为零，其“相对初态位移”无定义，故只报梯度与输出量级。）\n")
+    # channel-response trajectory
+    for r, s in lpsum.items():
+        traj = s.get("channel_response_trajectory") or []
+        if traj:
+            L.append(f"- {r} 通道响应时间线（update：相对完整 delta / 原始单位 RMS）：" +
+                     "，".join(f"{t['update']}:{f(t.get('relative_to_full_delta'),4)}/{f(t.get('raw_rms'),2e0 and 6)}" for t in traj))
     pvp = branch.get("POST_vs_PRE_R_SEL", {})
     L.append(f"- PRE 与 POST 在 R_SEL 下的预测差：Valid 最大 {f(pvp.get('valid',{}).get('max_abs'),6)}，"
              f"Test 最大 {f(pvp.get('test',{}).get('max_abs'),6)}。")
@@ -220,7 +266,10 @@ def build_report() -> str:
         L.append(f"| {r} | {f(o.get('valid_rmse'))} | {f(o.get('test_rmse'))} | {f(n.get('valid_rmse'))} | {f(n.get('test_rmse'))} |")
     L.append("")
     L.append(f"旧探针 meta：branch displacement vs WARM max_abs={f((comp.get('old_probes_u0_snapshot_9720') or {}).get('meta',{}).get('branch_displacement_vs_P_WARM_max_abs'),6)}，"
-             f"PRE vs POST max_abs={f((comp.get('old_probes_u0_snapshot_9720') or {}).get('meta',{}).get('pre_vs_post_max_abs'),6)}。\n")
+             f"PRE vs POST max_abs={f((comp.get('old_probes_u0_snapshot_9720') or {}).get('meta',{}).get('pre_vs_post_max_abs'),6)}。")
+    L.append(f"新来源 step0 的 Valid 更好（{f(step0.get('valid_rmse'))} vs 旧 ≈0.7254）但 Test 略差"
+             f"（{f(step0.get('test_rmse'))} vs 旧 ≈0.5897）：换成“原计划 E1 来源”并不等于得到一个更好的探针基线；"
+             "本轮所有对比都是**同一来源内**的，不混用旧来源数字。\n")
 
     # ---- comparisons -----------------------------------------------------
     L.append("## 5. 已有上游预测的同口径对照（不重算）\n")

@@ -179,6 +179,22 @@ def build_results(source: dict[str, Any]) -> dict[str, Any]:
             rec[f"vs_step0_{s}"] = _boot_rmse_delta(a["pred_raw"][s][ia], warm["pred_raw"][s][i0], warm["y"][s])
         boot[r] = rec
 
+    # oracle over the grid (post-hoc, contains Test-selection optimism; not a selectable rule)
+    oracle = {}
+    for r in R.PROBE_ARMS:
+        a = arms[r]
+        gu = a["grid_updates"]
+        test_curve = [(_rmse(a["pred_raw"]["test"][i], a["y"]["test"]), gu[i]) for i in range(len(gu))]
+        valid_curve = [(_rmse(a["pred_raw"]["valid"][i], a["y"]["valid"]), gu[i]) for i in range(len(gu))]
+        tmin, tupd = min(test_curve)
+        vmin, vupd = min(valid_curve)
+        final_test = _rmse(a["pred_raw"]["test"][selected_index(gu, gu[-1])], a["y"]["test"])
+        oracle[r] = {"test_curve_min": float(tmin), "test_curve_min_update": int(tupd),
+                     "valid_curve_min": float(vmin), "valid_curve_min_update": int(vupd),
+                     "test_step0": float(step0["test_rmse"]), "test_final": float(final_test),
+                     "oracle_gap_vs_step0": float(step0["test_rmse"] - tmin),
+                     "oracle_rel_gain_vs_step0": float((step0["test_rmse"] - tmin) / step0["test_rmse"])}
+
     # PRE vs POST closeness
     post = arms["P_POST"]
     pre = arms["P_PRE"]
@@ -220,6 +236,7 @@ def build_results(source: dict[str, Any]) -> dict[str, Any]:
         "purchase_threshold": {"rule": f">={R.PURCHASE_RELATIVE_GAIN:.0%} Valid AND Test RMSE gain vs P_WARM and common step0 (R_SEL)",
                                "result": purchase, "passed": any(v.get("passes") for v in purchase.values())},
         "bootstrap": boot,
+        "oracle": oracle,
         "branch_presence": branch_presence,
         "interpretation_layer": layer,
         "learning_path_summary": lp.get("summary"),
@@ -247,17 +264,28 @@ def aggregate_learning_path() -> dict[str, Any]:
             continue
         last = recs[-1]
         b = last.get("branch", {})
+        dr = b.get("delta_channel_response", {})
         summary[r] = {
             "update": last["update"],
             "grad_norm_preclip": last["grad_norm_preclip"],
             "relative_param_displacement": last["relative_param_displacement"],
-            "channel_response_relative_to_full_delta": b.get("delta_channel_response", {}).get("relative_to_full_delta"),
-            "channel_response_raw_rms": b.get("delta_channel_response", {}).get("raw_rms"),
+            "channel_response_relative_to_full_delta": dr.get("relative_to_full_delta"),
+            "channel_response_raw_rms": dr.get("raw_rms"),
+            "channel_response_raw_abs_mean": dr.get("raw_abs_mean"),
+            "delta_full_rms_std": b.get("delta_full_std", {}).get("rms"),
             "mean_psi_vs_psi_mean_relative_to_extra_rms": b.get("mean_psi_vs_psi_mean", {}).get("relative_to_extra_rms"),
+            "mean_psi_vs_psi_mean_mean_l2": b.get("mean_psi_vs_psi_mean", {}).get("per_mol_l2_mean"),
             "extra_feature_rms": b.get("extra_feature_rms"),
             "psi_grad_nonzero_by_1800": (last["grad_norm_preclip"].get("psi", 0.0) or 0.0) > 0.0,
             "delta_first_grad_nonzero_by_1800": (last["grad_norm_preclip"].get("delta_first", 0.0) or 0.0) > 0.0,
+            "delta_last_relative_displacement_note": "undefined: delta last layer starts at exactly zero",
         }
+        # trajectory of the channel response so the reader sees it grow (or not), not just one number
+        summary[r]["channel_response_trajectory"] = [
+            {"update": rec["update"],
+             "relative_to_full_delta": (rec.get("branch", {}).get("delta_channel_response", {}) or {}).get("relative_to_full_delta"),
+             "raw_rms": (rec.get("branch", {}).get("delta_channel_response", {}) or {}).get("raw_rms")}
+            for rec in recs]
     out["summary"] = summary
     return out
 
