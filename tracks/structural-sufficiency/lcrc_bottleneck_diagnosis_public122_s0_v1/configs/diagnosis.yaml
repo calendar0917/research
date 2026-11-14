@@ -1,0 +1,118 @@
+# Frozen diagnosis matrix — lcrc_bottleneck_diagnosis_public122_s0_v1
+# Mirrors code/lb_common.py; written before the first formal run and not edited
+# while training is in flight.  Any change here is a new round.
+round_id: lcrc-bottleneck-diagnosis-public122-s0-v1
+protocol_id: lcrc-bottleneck-diagnosis-public122-s0-v1
+seed: 0
+
+datasets:
+  Lipophilicity:
+    task: regression
+    split_method: random122
+    sizes: [3360, 420, 420]
+    primary: rmse
+    secondary: mae
+    fit_n: {25: 840, 50: 1680, 100: 3360}
+  BACE:
+    task: binary
+    split_method: scaffold122
+    sizes: [1210, 151, 152]
+    primary: roc_auc
+    secondary: pr_auc
+    fit_n: {50: 605, 100: 1210}
+
+nested_subsets:
+  key: "sha256('lcrc-bottleneck-v1|<dataset>|<global_row_id>') ascending, tie by row id"
+  coordinates: [cache_local_position, published_global_row_id]
+
+norms:
+  structure: fitted once on ALL official Train structures (label-free), shared by every N
+  regression_target: fitted once on the smallest fit subset (Lipo-25 = 840 rows)
+  classification_target: raw 0/1 (BCEWithLogits, no target norm)
+
+recipes:
+  C1_R1: {peak_lr: 1.0e-3, min_lr: 1.0e-5, weight_decay: 1.0e-3, batch_size: 128,
+          optimizer: AdamW, adam_betas: [0.9, 0.999], adam_eps: 1.0e-8,
+          dropout: 0.10, gradient_clip: 5.0, scheduler: per_step_cosine_fixed_horizon}
+  C1_R3: {inherits: C1_R1, weight_decay: 1.0e-2}
+  CHEM8_R1: {inherits: C1_R1, input: frozen 8 chem8 atom columns}
+  K_R1: {inherits: C1_R1, input: chem8 atom columns + Q8 graph contribution residual}
+  DMPNN_D2F: {optimizer: Adam, batch_size: 64, init_lr: 1.0e-4, peak_lr: 1.0e-3,
+              min_lr: 1.0e-4, weight_decay: 0.0, gradient_clip: 5.0,
+              warmup_epochs: 2, decay: exponential, optimizer_base_lr: 1.0e-4,
+              note: "E4-corrected: LambdaLR base lr == init_lr"}
+
+update_budget:
+  C1_U0: "360 * ceil(N_official_Train / 128)"
+  DMPNN_U0: "100 * ceil(N_official_Train / 64)"
+  DMPNN_warmup: "2 * ceil(N_official_Train / 64)"
+  lipo_U0: {C1: 9720, DMPNN: 5300}
+  bace_U0: {C1: 3600, DMPNN: 1900}
+  lipo_trains_to: 2U0      # one path; U0 is an observation budget, not a second run
+  bace_trains_to: U0
+  after_U0: fixed min_lr, optimiser/RNG/data stream preserved
+
+checkpoint_grid:
+  points_per_phase: 50
+  E1: "{round(j*U0/50), j=1..50}"
+  E2: "{U0 + round(j*U0/50), j=1..50}  (Lipo only)"
+  step0: stored separately, excluded from the main candidate pool
+  eval: every completed fit epoch on full train_fit/Valid/Test, plus every grid update
+
+selection_rules:
+  R_SEL: {regression: min Valid MSE, binary: max Valid ROC-AUC}   # primary
+  A_SEL: {regression: min Valid MAE, binary: min Valid BCE}
+  W_SEL: "5-point rolling mean of the primary criterion; model = window end"
+  ties: keep the earlier update
+
+main_matrix:
+  lipo:  # all to 2U0
+    - {model: C1_R1, fit: 25}
+    - {model: C1_R1, fit: 50}
+    - {model: C1_R1, fit: 100}
+    - {model: DMPNN_D2F, fit: 25}
+    - {model: DMPNN_D2F, fit: 50}
+    - {model: DMPNN_D2F, fit: 100}
+    - {model: C1_R3, fit: 100}
+    - {model: CHEM8_R1, fit: 100}
+    - {model: K_R1, fit: 100}
+  bace:  # to U0
+    - {model: C1_R1, fit: 50}
+    - {model: C1_R1, fit: 100}
+    - {model: DMPNN_D2F, fit: 50}
+    - {model: DMPNN_D2F, fit: 100}
+  restart:
+    arm: LIP_C1_R1_F100_RESTART
+    trigger: "train-RMSE drop < 5% AND Test gain < 1% over the low-lr extension"
+    max_arms: 1
+
+readout_probes:
+  source: "LIP_C1_R1_F100 U0-stage R_SEL checkpoint, clean h (pre-dropout)"
+  frozen: [atom_encoder, bond_encoder, local]
+  arms: [P_WARM, P_POST, P_PRE]
+  z_pool: "[g42, mean_h64, mean_h2_64, log1p n]  (171)"
+  psi: "64 -> 32 -> 16"
+  delta: "187 -> 64 -> 1"
+  new_params: 14705
+  private_seed: 1101
+  delta_init: "final Linear zero (step0 == P_WARM)"
+  train: {lr: 3.0e-4, weight_decay: 1.0e-3, batch_size: 128, updates: 1800,
+          scheduler: none, dropout: false}
+  grid: "50 common points + step0 (step0 selectable)"
+  purchase_rule: ">=1% Lipo Valid AND Test RMSE gain vs P_WARM -> run BACE probes"
+
+statistics:
+  bootstrap_replicates: 2000
+  bootstrap_seed: 20261114
+  bootstrap_scope: "Validation composition -> selection; fixed training states; no seed CI"
+  jackknife: "leave-one-Validation-row (and the published row 2087) re-selection on original Test"
+
+budget:
+  wall_target_hours: 5.0
+  wall_hard_hours: 6.0
+  gpu_soft_cap_hours: 4.0
+  gpu_hard_cap_hours: 6.0
+  max_trajectories: 20
+  max_restarts: 1
+
+gpu_pools: [res-gpu0, res-gpu1]

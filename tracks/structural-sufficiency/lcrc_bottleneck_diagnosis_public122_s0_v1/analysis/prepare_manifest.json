@@ -1,0 +1,145 @@
+{
+  "created_utc": "2026-11-14T03:56:24Z",
+  "datasets": {
+    "BACE": {
+      "rows_sha256": {
+        "test": "ea331b0b94e8191547951dbe385e701e3155419d4e9c724912f7f73e1ef99256",
+        "train": "5f36ea5e5ae6a8ebf451a831c4e41b944daa85ad66a0b92498dad282c60db51e",
+        "valid": "b44a8e9e69c9bb9a1a657f6ee0ca94a49e526d59256e54bca1fbc794cd81b23b"
+      },
+      "sizes": [
+        1210,
+        151,
+        152
+      ],
+      "split_method": "scaffold122",
+      "task": "binary"
+    },
+    "Lipophilicity": {
+      "rows_sha256": {
+        "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+        "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+        "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+      },
+      "sizes": [
+        3360,
+        420,
+        420
+      ],
+      "split_method": "random122",
+      "task": "regression"
+    }
+  },
+  "dmpnn_features": {
+    "BACE": {
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/cache/dmpnn_BACE.npz",
+      "sha256": "9c6cb4f3192d7ab4abc637705cc23e4e648caa5eb12f288f92e2a18eb163eaae"
+    },
+    "Lipophilicity": {
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/cache/dmpnn_Lipophilicity.npz",
+      "sha256": "b064a058a8dd9f3aefcd2171340bf6d3eb572a0c7e0c8ad7de17527c78cda398"
+    }
+  },
+  "label_access": {
+    "official_valid_test": "never used to fit any normaliser / selector / probe",
+    "structure_norm_uses": "official Train structures only (label-free)",
+    "target_norm_uses": "smallest fit subset labels only",
+    "test_used_for_selection": false
+  },
+  "norms": {
+    "BACE": {
+      "structure_norm_sha256": "12597dbdbec15ba0d8c3ea4c9ff35a38882887282283a35d884481454075c76b",
+      "structure_norm_source": "all_official_train_structures",
+      "target_norm": null
+    },
+    "Lipophilicity": {
+      "structure_norm_sha256": "276aa2edca9c63f999633df20e36c5732a26e7df46ac035a8a73488474ff147f",
+      "structure_norm_source": "all_official_train_structures",
+      "target_norm": {
+        "formula": "z = (y-mean)/scale; y_raw = mean + scale*z",
+        "mean": 2.1337738095238095,
+        "n": 840,
+        "scale": 1.20391649420894,
+        "source": "smallest_fit_subset:25:840"
+      }
+    }
+  },
+  "round_id": "lcrc-bottleneck-diagnosis-public122-s0-v1",
+  "subsets": {
+    "BACE": {
+      "consistency": {
+        "nested": true,
+        "ordered_by_n": [
+          "50",
+          "100"
+        ],
+        "pairs": {
+          "50->100": true
+        },
+        "sizes": {
+          "100": 1210,
+          "50": 605
+        }
+      },
+      "detail": {
+        "100": {
+          "global_rows_sha256": "5f36ea5e5ae6a8ebf451a831c4e41b944daa85ad66a0b92498dad282c60db51e",
+          "n": 1210,
+          "positions_sha256": "2864ac1a8efb3de3942c26a6c6deb67e23dfe53dd9e7e91049d9f3ee3eb7dd62"
+        },
+        "50": {
+          "global_rows_sha256": "03295a2a0950567ea7b544daa0a33904d7575c170ffbffe03fef54d4970e83d1",
+          "n": 605,
+          "positions_sha256": "5a1e9c1cc94cc7920fc65736d344fc231236c5058da98659056102d588db8828"
+        }
+      },
+      "fractions": [
+        "50",
+        "100"
+      ]
+    },
+    "Lipophilicity": {
+      "consistency": {
+        "nested": true,
+        "ordered_by_n": [
+          "25",
+          "50",
+          "100"
+        ],
+        "pairs": {
+          "25->50": true,
+          "50->100": true
+        },
+        "sizes": {
+          "100": 3360,
+          "25": 840,
+          "50": 1680
+        }
+      },
+      "detail": {
+        "100": {
+          "global_rows_sha256": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+          "n": 3360,
+          "positions_sha256": "c9bb5e8c40fb567e83575aa5278e44a1f1787988a3cd81e401c33c1217402a01"
+        },
+        "25": {
+          "global_rows_sha256": "a6fc7bedd4d9a3f96edfa09a5b9bd5172d6458eab73dc6342e6e156f5d99f93a",
+          "n": 840,
+          "positions_sha256": "624f6cfa611550d07652452e5a4089c1ce5d4e05ff21f51cfa685c453a8dfe08"
+        },
+        "50": {
+          "global_rows_sha256": "967cd224342dd0007bca12ef736d45967c28ccbd8b37135b5b8bf8c7b665f6b6",
+          "n": 1680,
+          "positions_sha256": "a2bba251527abbf5521b27ad9bb42e52321173f3cb56fcb025f1cd42cca9c4e4"
+        }
+      },
+      "fractions": [
+        "25",
+        "50",
+        "100"
+      ]
+    }
+  }
+}
