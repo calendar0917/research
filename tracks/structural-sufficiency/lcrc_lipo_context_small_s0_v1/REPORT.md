@@ -33,7 +33,9 @@
 * `GraphPropPredDataset('ogbg-mollipo').get_idx_split()` 原样使用：
   Train 3360 / Valid 420 / Test 420，与官方 `split/scaffold/*.csv.gz`
   逐一相等、两两不相交、并集 4200（`data/split_v1.json`；`code/lp_source.py`
-  的 12 项身份核验全部通过，结果写到 `data/manifest.json`）。
+  的 19 项身份核验全部通过 —— 16 条布尔断言全为真（划分相等/不相交/覆盖、
+  标签一致、原子与有向边计数、OGB reader 一致、未用 random_split 等），
+  另 3 条记录 reader 元数据与官方划分来源，结果写到 `data/manifest.json`）。
 * 标签与结构分离：`data/labels_v1.npz`（4200 标签）与
   `data/raw_attributes_v1.json.gz`（无标签结构属性）；特征构建函数拒绝
   带标签行。目标统计只用 Train：`mean=2.16216`、`scale=1.21154`。
