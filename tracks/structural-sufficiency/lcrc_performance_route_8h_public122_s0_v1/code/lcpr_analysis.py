@@ -431,18 +431,82 @@ def error_ledger(dataset: str, base_run: Mapping[str, Any],
     return rows
 
 
+def tail_rank(y: np.ndarray, pred: np.ndarray, rows: Sequence[int] | None = None) -> np.ndarray:
+    """Row **positions** ordered by decreasing base absolute error.
+
+    Ties are broken by ascending global row id (never by array position), so the
+    set is well defined even when two rows share the same absolute error.
+    """
+    y = np.asarray(y, dtype=float).reshape(-1)
+    pred = np.asarray(pred, dtype=float).reshape(-1)
+    if y.shape != pred.shape:
+        raise ValueError(f"label/prediction length differ: {y.shape} vs {pred.shape}")
+    if rows is None:
+        rows = np.arange(y.size, dtype=np.int64)
+    rows = np.asarray(list(rows), dtype=np.int64).reshape(-1)
+    if rows.size != y.size:
+        raise ValueError(f"row-id length {rows.size} != {y.size}")
+    ae = np.abs(pred - y)
+    #: lexsort uses the LAST key as primary -> (-ae) primary, global row id tie-break
+    return np.lexsort((rows, -ae))
+
+
+def tail_sets(y: np.ndarray, pred: np.ndarray, rows: Sequence[int] | None = None,
+              fractions: Sequence[float] = C.TAIL_FRACTIONS) -> dict[str, Any]:
+    """The *drop* sets: the ``k`` rows with the largest base absolute error.
+
+    ``k = max(1, round(frac * n))`` exactly as in the round protocol.  Positions
+    (index into the split array) and published global row ids are kept apart.
+    """
+    y = np.asarray(y, dtype=float).reshape(-1)
+    pred = np.asarray(pred, dtype=float).reshape(-1)
+    rows = (np.arange(y.size, dtype=np.int64) if rows is None
+            else np.asarray(list(rows), dtype=np.int64).reshape(-1))
+    order = tail_rank(y, pred, rows)
+    n = int(order.size)
+    ae = np.abs(pred - y)
+    top = int(order[0])
+    out: dict[str, Any] = {
+        "n": n,
+        "order": "|base error| descending, ties by ascending global row id",
+        "top_row_position": top,
+        "top_global_row_id": int(rows[top]),
+        "top_row_abs_error": float(ae[top]),
+    }
+    for frac in fractions:
+        k = max(1, int(round(float(frac) * n)))
+        idx = order[:k]
+        out[f"exclude_top_{frac:g}"] = {
+            "k": int(k),
+            "positions": [int(i) for i in idx],
+            "global_row_ids": [int(rows[i]) for i in idx],
+            "abs_errors": [float(ae[i]) for i in idx],
+            "sse_share_of_base": float(np.sum(ae[idx] ** 2) / max(np.sum(ae ** 2), 1e-300)),
+        }
+    return out
+
+
 def tail_view(base_pred: Mapping[str, np.ndarray], split: str,
               fractions: Sequence[float] = C.TAIL_FRACTIONS) -> dict[str, Any]:
-    """Row sets defined **only** by the frozen base's absolute error."""
+    """Row sets defined **only** by the frozen base's absolute error.
+
+    Fixed 2026-11-14: the previous implementation used ``np.argsort(ae)[:k]``,
+    i.e. the ``k`` *smallest* errors, while every caller treated the value as the
+    set to drop.  It now returns the ``k`` **largest** errors (ties broken by
+    global row id) and keeps positions and global row ids in separate keys.
+    """
     y = np.asarray(base_pred[f"{split}_y"], dtype=float)
     pb = np.asarray(base_pred[f"{split}_pred"], dtype=float)
-    ae = np.abs(pb - y)
-    n = len(ae)
-    out: dict[str, Any] = {"n": int(n), "top_row": int(np.argmax(ae)),
-                           "top_row_abs_error": float(ae.max())}
+    rows = base_pred.get(f"{split}_rows")
+    sets = tail_sets(y, pb, None if rows is None else np.asarray(rows), fractions)
+    out: dict[str, Any] = {"n": sets["n"], "top_row": sets["top_row_position"],
+                           "top_row_global_id": sets["top_global_row_id"],
+                           "top_row_abs_error": sets["top_row_abs_error"]}
     for frac in fractions:
-        k = max(1, int(round(frac * n)))
-        out[f"exclude_top_{frac:g}"] = np.argsort(ae)[:k].tolist()
+        block = sets[f"exclude_top_{frac:g}"]
+        out[f"exclude_top_{frac:g}"] = list(block["positions"])
+        out[f"exclude_top_{frac:g}_ids"] = list(block["global_row_ids"])
+        out[f"exclude_top_{frac:g}_sse_share"] = block["sse_share_of_base"]
     return out
 
 

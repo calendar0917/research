@@ -261,19 +261,47 @@ CANDIDATES: dict[str, dict[str, Any]] = {
     "K_COMBO_R0_T": {"kind": "k_combo", "family": "K", "recipe": "R0"},
     "DMPNN_LR3E4": {"kind": "dmpnn", "family": "DMPNN", "recipe": "D1", "dataset_role": "reference"},
     "DMPNN_LR1E3": {"kind": "dmpnn", "family": "DMPNN", "recipe": "D2", "dataset_role": "reference"},
+    # --- ERRATA E4: same two recipes with the optimiser base lr corrected ----
+    "DMPNN_LR3E4_FIX": {"kind": "dmpnn", "family": "DMPNN", "recipe": "D1F",
+                        "dataset_role": "reference", "corrects": "E4"},
+    "DMPNN_LR1E3_FIX": {"kind": "dmpnn", "family": "DMPNN", "recipe": "D2F",
+                        "dataset_role": "reference", "corrects": "E4"},
 }
 
 #: D-MPNN fixed recipes (chemprop v2.2.1 semantics, not our R0..R3).
+#:
+#: ``optimizer_base_lr`` is the lr handed to ``Adam``; ``LambdaLR`` multiplies it
+#: by ``lambda(step) == desired_lr / init_lr``.  ``D1``/``D2`` keep the historical
+#: (buggy, ERRATA E4) value ``optimizer_base_lr = peak_lr``; ``D1F``/``D2F`` are
+#: the same recipes with the only change ``optimizer_base_lr = init_lr = 1e-4``,
+#: which makes the realised lr equal the protocol curve
+#: (1e-4 -> peak -> 1e-4).
 DMPNN_RECIPES: dict[str, dict[str, Any]] = {
     "D1": {"batch_size": 64, "epochs": 100, "peak_lr": 3.0e-4, "init_lr": 1.0e-4, "min_lr": 1.0e-4,
            "warmup_epochs": 2, "decay": "exponential", "weight_decay": 0.0, "gradient_clip": 5.0,
-           "optimizer": "Adam"},
+           "optimizer": "Adam", "optimizer_base_lr": 3.0e-4},
     "D2": {"batch_size": 64, "epochs": 100, "peak_lr": 1.0e-3, "init_lr": 1.0e-4, "min_lr": 1.0e-4,
            "warmup_epochs": 2, "decay": "exponential", "weight_decay": 0.0, "gradient_clip": 5.0,
-           "optimizer": "Adam"},
+           "optimizer": "Adam", "optimizer_base_lr": 1.0e-3},
+    "D1F": {"batch_size": 64, "epochs": 100, "peak_lr": 3.0e-4, "init_lr": 1.0e-4, "min_lr": 1.0e-4,
+            "warmup_epochs": 2, "decay": "exponential", "weight_decay": 0.0, "gradient_clip": 5.0,
+            "optimizer": "Adam", "optimizer_base_lr": 1.0e-4,
+            "corrects": "ERRATA E4: LambdaLR base lr must be init_lr"},
+    "D2F": {"batch_size": 64, "epochs": 100, "peak_lr": 1.0e-3, "init_lr": 1.0e-4, "min_lr": 1.0e-4,
+            "warmup_epochs": 2, "decay": "exponential", "weight_decay": 0.0, "gradient_clip": 5.0,
+            "optimizer": "Adam", "optimizer_base_lr": 1.0e-4,
+            "corrects": "ERRATA E4: LambdaLR base lr must be init_lr"},
 }
 DMPNN_FAMILY = {"hidden": 300, "depth": 3, "bias": False, "undirected": False,
                 "activation": "relu", "message_dropout": 0.0, "ffn": [300, 300, 1], "ffn_dropout": 0.0}
+
+#: sha256 of ``code/lcpr_dmpnn.py`` as executed by both historical D-MPNN runs
+#: (its ``train.json`` records this hash under ``provenance.code_hashes``).  The
+#: file is *content-identical* to the defect-bearing revision (ERRATA E4: the
+#: optimiser was constructed with ``lr=peak_lr`` while the ``LambdaLR`` returns
+#: ``desired_lr / init_lr``); the fix adds the ``optimizer_base_lr`` field, so
+#: the current hash differs by design and the historical value is frozen here.
+DMPNN_LEGACY_SHA256 = "fb0618efec28f1f55a6af3029d16cf2882ccb138d1e312a8cc9e39da20f55a64"
 
 # ---------------------------------------------------------------------------
 # frozen selection rules (written before any score is read)

@@ -214,6 +214,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     p = sub.add_parser("report")
     p.add_argument("--stage", default="all")
 
+    p = sub.add_parser("correct", help="ERRATA corrections: additive, read-only on old artefacts")
+    p.add_argument("--stages", default="identity,tail,support,grad,schedule,curves")
+
+    p = sub.add_parser("schedule-trace", help="toy D-MPNN lr trace (no data, no GPU)")
+
     args = ap.parse_args(argv)
 
     if args.cmd == "prepare":
@@ -256,6 +261,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         import lcpr_report as R
 
         R.run(stage=args.stage)
+        return 0
+    if args.cmd == "correct":
+        import lcpr_correction as CORR
+
+        CORR.run([s for s in args.stages.split(",") if s])
+        return 0
+    if args.cmd == "schedule-trace":
+        import lcpr_correction as CORR
+
+        r = CORR.run_schedule()
+        print(json.dumps(r["toy_traces"], indent=2))
         return 0
     raise SystemExit(f"unknown command {args.cmd}")
 

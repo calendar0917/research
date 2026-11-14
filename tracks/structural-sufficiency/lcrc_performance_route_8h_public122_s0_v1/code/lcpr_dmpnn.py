@@ -383,7 +383,8 @@ def train_dmpnn(*, candidate: str, dataset: str, device, out_dir: Path, smoke: b
         torch.cuda.manual_seed_all(int(C.TRAIN_SEED))
 
     optimizer = torch.optim.Adam([p for p in model.parameters() if p.requires_grad],
-                                 lr=float(recipe["peak_lr"]), weight_decay=float(recipe["weight_decay"]))
+                                 lr=float(recipe.get("optimizer_base_lr", recipe["peak_lr"])),
+                                 weight_decay=float(recipe["weight_decay"]))
     warmup_steps = int(round(recipe["warmup_epochs"] * steps_per_epoch))
     sched = torch.optim.lr_scheduler.LambdaLR(
         optimizer, lr_lambda=lambda s: _noam_lambda(
@@ -391,6 +392,23 @@ def train_dmpnn(*, candidate: str, dataset: str, device, out_dir: Path, smoke: b
             float(recipe["peak_lr"]), float(recipe["min_lr"]),
         ),
     )
+    #: LambdaLR multiplies the optimizer's *base* lr by ``lambda(step)``.  With
+    #: ``lambda`` returning ``desired_lr / init_lr`` the base lr must be
+    #: ``init_lr`` for the schedule to realise ``desired_lr`` (see ERRATA E4).
+    _base = float(optimizer.param_groups[0]["initial_lr"])
+    _lam = sched.lr_lambdas[0]
+    schedule_endpoints = {
+        "optimizer_base_lr": _base,
+        "lambda_0": float(_lam(0)),
+        "lambda_warmup_end": float(_lam(warmup_steps)),
+        "lambda_last": float(_lam(total_steps - 1)),
+        "lr_step0": _base * float(_lam(0)),
+        "lr_warmup_end": _base * float(_lam(warmup_steps)),
+        "lr_last": _base * float(_lam(total_steps - 1)),
+        "warmup_steps": int(warmup_steps),
+        "total_steps": int(total_steps),
+        "scheduler_step_after_optimizer_step": True,
+    }
 
     def _eval_all():
         preds = {}
@@ -486,7 +504,9 @@ def train_dmpnn(*, candidate: str, dataset: str, device, out_dir: Path, smoke: b
         },
         "model": {**C.DMPNN_FAMILY, "parameters": n_params},
         "recipe": {**recipe, "epochs_run": len(curve), "steps_per_epoch": steps_per_epoch,
-                   "optimizer_steps": len(curve) * steps_per_epoch},
+                   "optimizer_steps": len(curve) * steps_per_epoch,
+                   "optimizer_base_lr": _base,
+                   "schedule_endpoints": schedule_endpoints},
         "data": {"n_train": int(n_train), "n_valid": int(meta["sizes"][1]), "n_test": int(meta["sizes"][2]),
                  "rows_sha256": {s: C.row_sha256(tgt["rows"][s]) for s in C.SPLITS},
                  "target_norm": dict(tnorm), "test_used_for_selection": False},

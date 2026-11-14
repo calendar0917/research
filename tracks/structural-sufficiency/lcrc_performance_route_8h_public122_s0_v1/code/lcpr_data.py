@@ -293,6 +293,175 @@ def load_support(dataset: str) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# support table v2: DISTINCT-MOLECULE support (the definition the round stated)
+# ---------------------------------------------------------------------------
+
+
+def support_v2_path(dataset: str) -> Path:
+    return C.CACHE / f"support_v2_{dataset}.npz"
+
+
+def _mol_key_counts(atom_ptr, path_ptr, cat, end, n_mol: int) -> dict[tuple[int, int], int]:
+    """``c(key)`` = number of distinct molecules that contain ``key`` at least once.
+
+    A molecule's roots are the atoms in ``[atom_ptr[m], atom_ptr[m+1])``; the
+    paths rooted at those atoms are contiguous in ``path_ptr`` (per-atom prefix
+    sums), so the molecule's whole path block is ``[path_ptr[a0], path_ptr[a1])``.
+    Keys are de-duplicated per molecule *before* counting, so extra roots that
+    carry the same key do not inflate the count.
+    """
+    atom_ptr = np.asarray(atom_ptr, dtype=np.int64)
+    path_ptr = np.asarray(path_ptr, dtype=np.int64)
+    cat = np.asarray(cat, dtype=np.int64)
+    end = np.asarray(end, dtype=np.int64)
+    counts: dict[tuple[int, int], int] = {}
+    for m in range(int(n_mol)):
+        a0, a1 = int(atom_ptr[m]), int(atom_ptr[m + 1])
+        if a1 <= a0:
+            continue
+        p0, p1 = int(path_ptr[a0]), int(path_ptr[a1])
+        keys = {(int(cat[i]), int(end[i])) for i in range(p0, p1)}
+        for k in keys:
+            counts[k] = counts.get(k, 0) + 1
+    return counts
+
+
+def build_support_v2(dataset: str) -> dict[str, Any]:
+    """Corrected support table: **distinct Train molecules**, not distinct roots.
+
+    ``build_support`` walks ``for a in range(n_atoms)`` and accumulates per root
+    atom, so its ``c`` is a *root* support (one molecule with the same key on many
+    roots is counted many times).  The round's stated definition is the number of
+    distinct Train molecules that contain the key; this function implements it and
+    writes a separate file so the legacy cache stays byte-identical.
+    """
+    train = load_cache(dataset, "train")
+    atom_ptr = np.asarray(train["atom_ptr"], dtype=np.int64)
+    path_ptr = np.asarray(train["path_ptr"], dtype=np.int64)
+    cat = np.asarray(train["path_cat"], dtype=np.int64)
+    end = np.asarray(train["path_end63"], dtype=np.int64)
+    n_mol = int(train["n_molecules"])
+    n_atoms = int(atom_ptr[-1])
+    counts = _mol_key_counts(atom_ptr, path_ptr, cat, end, n_mol)
+    keys = np.asarray(sorted(counts), dtype=np.int64).reshape(-1, 2)
+    vals = np.asarray([counts[(int(k[0]), int(k[1]))] for k in keys], dtype=np.float32)
+    n_codes = int(C.N_PATH_CODES) * int(C.N_NBR_CODES)
+    flat_keys = keys[:, 0] * n_codes + keys[:, 1]
+
+    # ---- sanity assertions that encode the definition ---------------------
+    if vals.size:
+        assert float(vals.min()) >= 1.0, "a table key must be present in >=1 molecule"
+        assert float(vals.max()) <= n_mol, f"c_mol {vals.max()} > n_Train {n_mol}"
+    legacy = support_path(dataset)
+    root_max = None
+    if legacy.exists():
+        old = np.load(legacy, allow_pickle=False)
+        old_keys = np.asarray(old["keys"]).reshape(-1, 2)
+        old_vals = np.asarray(old["counts"]).astype(np.float64)
+        root_max = float(old_vals.max())
+        old_flat = old_keys[:, 0] * n_codes + old_keys[:, 1]
+        pos = np.clip(np.searchsorted(old_flat, flat_keys), 0, max(len(old_vals) - 1, 0))
+        ok = old_flat[pos] == flat_keys
+        if bool(ok.all()):
+            assert bool((vals.astype(np.float64) <= old_vals[pos] + 1e-6).all()), \
+                "molecule support must never exceed root support"
+
+    occ = np.asarray(sorted(counts.values()), dtype=np.float64)
+    kappa = float(max(1.0, np.median(occ))) if occ.size else 1.0
+
+    def _coeff(c: np.ndarray) -> np.ndarray:
+        return c / (c + kappa)
+
+    def _counts_for(cache) -> np.ndarray:
+        pc = np.asarray(cache["path_cat"], dtype=np.int64)
+        pe = np.asarray(cache["path_end63"], dtype=np.int64)
+        flat = pc * n_codes + pe
+        out = np.zeros(len(flat), dtype=np.float32)
+        if len(flat) == 0 or not len(vals):
+            return out
+        pos = np.clip(np.searchsorted(flat_keys, flat), 0, max(len(vals) - 1, 0))
+        ok = flat_keys[pos] == flat
+        out[ok] = vals[pos[ok]]
+        return out
+
+    def _mean_root_coeff(mult: float) -> float:
+        """Mean over all Train root atoms of the mean coefficient of its paths."""
+        k_eff = kappa * float(mult)
+        coeff = vals / (vals + k_eff)
+        total = 0.0
+        for a in range(n_atoms):
+            p0, p1 = int(path_ptr[a]), int(path_ptr[a + 1])
+            if p1 <= p0:
+                total += 1.0          # atom with no path contributes 1 (protocol)
+                continue
+            flat = cat[p0:p1] * n_codes + end[p0:p1]
+            pos = np.clip(np.searchsorted(flat_keys, flat), 0, max(len(coeff) - 1, 0))
+            ok = flat_keys[pos] == flat
+            cur = np.ones(len(flat))
+            cur[ok] = coeff[pos[ok]]
+            total += float(np.mean(cur))
+        return float(total / max(n_atoms, 1))
+
+    a_bar_k1 = _mean_root_coeff(1.0)
+    a_bar_k4 = _mean_root_coeff(4.0)
+    per_split = {s: _counts_for(load_cache(dataset, s)) for s in C.SPLITS}
+    alpha: dict[str, dict[str, float]] = {}
+    for s in C.SPLITS:
+        c = per_split[s].astype(np.float64)
+        a = _coeff(c)
+        alpha[s] = {
+            "n_tokens": int(c.size),
+            "frac_c_le_1": float(np.mean(c <= 1)) if c.size else 0.0,
+            "alpha_mean": float(np.mean(a)) if c.size else 1.0,
+            "alpha_p05": float(np.percentile(a, 5)) if c.size else 1.0,
+            "alpha_p25": float(np.percentile(a, 25)) if c.size else 1.0,
+            "alpha_median": float(np.median(a)) if c.size else 1.0,
+            "alpha_p75": float(np.percentile(a, 75)) if c.size else 1.0,
+            "alpha_p95": float(np.percentile(a, 95)) if c.size else 1.0,
+        }
+    np.savez_compressed(
+        support_v2_path(dataset),
+        keys=keys, counts=vals, kappa=np.float64(kappa), a_bar=np.float64(a_bar_k1),
+        a_bar_k1=np.float64(a_bar_k1), a_bar_k4=np.float64(a_bar_k4),
+        **{f"path_count_{s}": per_split[s] for s in C.SPLITS},
+    )
+    return {
+        "dataset": dataset,
+        "definition": "c(key) = # distinct Train molecules containing key >= once",
+        "n_occupied_keys": int(len(vals)),
+        "n_train_molecules": int(n_mol),
+        "n_train_root_atoms": int(n_atoms),
+        "c_min": float(vals.min()) if vals.size else None,
+        "c_median": float(np.median(vals)) if vals.size else None,
+        "c_max": float(vals.max()) if vals.size else None,
+        "legacy_root_support_max": root_max,
+        "kappa": kappa,
+        "a_bar": a_bar_k1,
+        "a_bar_k1": a_bar_k1,
+        "a_bar_k4": a_bar_k4,
+        "alpha_by_split": alpha,
+        "label_free": True,
+        "fitted_on": "Train split only",
+    }
+
+
+def load_support_v2(dataset: str) -> dict[str, Any]:
+    path = support_v2_path(dataset)
+    if not path.exists():
+        raise FileNotFoundError(f"missing v2 support table {path}; run the correct stage first")
+    z = np.load(path, allow_pickle=False)
+    return {
+        "kappa": float(z["kappa"]),
+        "a_bar": float(z["a_bar"]),
+        "a_bar_k1": float(z["a_bar_k1"]),
+        "a_bar_k4": float(z["a_bar_k4"]),
+        "path_count": {s: np.asarray(z[f"path_count_{s}"]) for s in C.SPLITS},
+        "keys": np.asarray(z["keys"]),
+        "counts": np.asarray(z["counts"]),
+    }
+
+
+# ---------------------------------------------------------------------------
 # auxiliary targets (Train only, plus reporting-only values elsewhere)
 # ---------------------------------------------------------------------------
 
