@@ -10,6 +10,7 @@ priority class, no retries beyond one infrastructure retry per arm.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import time
 from dataclasses import dataclass
@@ -19,7 +20,7 @@ from typing import Any, Sequence
 
 import lb_common as C
 
-STATE = C.ANALYSIS / "dispatch_state.json"
+STATE = Path(os.environ.get("LB_DISPATCH_STATE", str(C.ANALYSIS / "dispatch_state.json")))
 
 
 def _now() -> datetime:
@@ -123,10 +124,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     launched = 0
     while True:
         pending = [a for a in arms if a["status"] == "PENDING"]
-        for slot in slots:
+        for i, slot in enumerate(slots):
             if slot.ident and slot.status == "running":
                 st, code = poll(slot)
-                if st in ("complete", "failed", "cancelled"):
+                if st in ("complete", "failed", "cancelled", "unknown") and st != "unknown":
                     arm = next(a for a in arms if a["arm_id"] == slot.arm_id)
                     ok = st == "complete" and code in ("0", "")
                     arm["status"] = "COMPLETE" if ok else "FAILED"
@@ -137,32 +138,41 @@ def main(argv: Sequence[str] | None = None) -> int:
                                          "pool": slot.pool, "exit": code})
                     C.write_json(STATE, state)
                     C.log(f"[dispatch] {slot.arm_id} -> {arm['status']} exit={code}")
-                    slot.ident = slot.arm_id = None
-                    slot.status = "idle"
-            if slot.status == "idle" and pending:
-                if stop_at and _now() >= stop_at:
-                    continue
-                if args.max_runs is not None and launched >= args.max_runs:
-                    continue
-                arm = pending.pop(0)
-                if args.dry_run:
-                    C.log(f"[dispatch][dry-run] would launch {arm['arm_id']} on {slot.pool}")
-                    arm["status"] = "COMPLETE"
-                    launched += 1
-                    continue
-                new = launch(slot.pool, arm)
+                    slots[i] = Slot(pool=slot.pool)
+        pending = [a for a in arms if a["status"] == "PENDING"]
+        for i, slot in enumerate(slots):
+            if slot.status != "idle" or not pending:
+                continue
+            if stop_at and _now() >= stop_at:
+                break
+            if args.max_runs is not None and launched >= args.max_runs:
+                break
+            arm = pending.pop(0)
+            if args.dry_run:
+                C.log(f"[dispatch][dry-run] would launch {arm['arm_id']} on {slot.pool}")
+                arm["status"] = "COMPLETE"
                 launched += 1
-                if new.ident:
-                    slots[slots.index(slot)] = new
-                    arm["status"] = "RUNNING"
+                continue
+            new = launch(slot.pool, arm)
+            launched += 1
+            if new.ident:
+                slots[i] = new
+                arm["status"] = "RUNNING"
+            else:
+                arm["status"] = "FAILED"
+                slots[i] = Slot(pool=slot.pool)
         if args.dry_run:
             if all(a["status"] != "PENDING" for a in arms):
                 break
             continue
-        if all(s.status == "idle" for s in slots) and not pending:
+        pending = [a for a in arms if a["status"] == "PENDING"]
+        all_idle = all(s.status == "idle" for s in slots)
+        if all_idle and not pending:
             C.log("[dispatch] matrix exhausted")
             break
-        if all(s.status == "idle" for s in slots) and stop_at and _now() >= stop_at:
+        if all_idle and ((stop_at and _now() >= stop_at) or
+                         (args.max_runs is not None and launched >= args.max_runs)):
+            C.log("[dispatch] stopping: budget reached with pending arms")
             break
         time.sleep(args.poll_seconds)
     C.log(f"[dispatch] finished; launched={launched}; "
