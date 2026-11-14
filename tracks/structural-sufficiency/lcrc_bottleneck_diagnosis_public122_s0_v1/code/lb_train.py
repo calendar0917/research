@@ -408,7 +408,7 @@ def train_arm(
         Umax = start_update + U0
         # restart only extends past the prefix; grid points of E1 are reused from
         # the base arm, so only E2 needs recalling (handled by the analysis)
-        grid_e2 = set(range(start_update + 1, Umax + 1)) & grid_all
+        grid_e2 = set(range(start_update + 1, Umax + 1)) & set(grid_all)
         grid_e1 = set()
 
     update = start_update

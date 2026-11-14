@@ -432,11 +432,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--updates", type=int, default=None)
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--extract-only", action="store_true")
+    ap.add_argument("--force", action="store_true")
     args = ap.parse_args(argv)
     device = torch.device(args.device)
     if args.extract_only:
-        print(extract_h(dataset=args.dataset, ckpt=Path(args.ckpt), device=device))
+        print(extract_h(dataset=args.dataset, ckpt=Path(args.ckpt), device=device, force=args.force))
         return 0
+    # the frozen-h cache is a prerequisite; harmless no-op when it already exists
+    extract_h(dataset=args.dataset, ckpt=Path(args.ckpt), device=device, force=args.force)
     train_probe(rule=args.rule, dataset=args.dataset, ckpt=Path(args.ckpt), device=device,
                 out_dir=Path(args.out_dir), smoke=args.smoke, updates=args.updates)
     return 0
