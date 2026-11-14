@@ -172,7 +172,19 @@ PCBA、ZINC、多 seed、多 split、预训练或任何其他数据集；没有�
 | 干预 | `analysis/interventions/interventions.json`、`analysis/figures/interventions.png` |
 | 曲线与敏感性图 | `analysis/figures/{learning_curves,rmse_mae_tail}.png` |
 | Test 读取记录 | `analysis/test_access_log.json` |
+| 重复性核验 | `analysis/repro_check.json` |
 | 逐臂原始输出（不入库） | `analysis/results/<arm>/`（`metrics.json`、`curve.csv`、`pred_*`、`checkpoint_*`） |
+
+### 重复性
+
+正式 sweep 里的 B 用 `rr run` + `lp_train.py` 直接启动；收尾又用控制平面
+`research run lcrc_lipo_context_small_v1 --set stage=train --set arm=B` 独立重放一次
+（`analysis/repro_check.json`）：best epoch 同为 180，六个 RMSE/MSE 数字零差，
+360 个 epoch 的 `state_hash`、`lr`、`steps`、全部指标列逐位相同，六个预测文件
+`max|Δ| = 0`；只有 `train_seconds`/`eval_seconds` 因 GPU 争用不同。也就是说
+新 run 已接入 `research run`，并且协议在同一 commit 系列下可逐位重放。
+
+总 GPU 计费 1.21 + 0.17 = **1.38 A100·h**（soft 1.5 / hard 2.5 以内）。
 
 复现：`uv run --group lipo python -m pytest tracks/structural-sufficiency/lcrc_lipo_context_small_s0_v1/tests`
 （10 项通过），再按 `PROTOCOL.md` §9 走 `lp_preflight.py` → `lp_train.py` →
