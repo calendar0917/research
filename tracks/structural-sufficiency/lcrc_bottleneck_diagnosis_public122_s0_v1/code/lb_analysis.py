@@ -22,6 +22,8 @@ import lb_common as C
 import lb_selection as SEL
 import lb_data as D
 
+observed_oracle_gap = SEL.observed_oracle_gap
+
 PERF_RUNS = C.REPO / "tracks/structural-sufficiency/lcrc_performance_route_8h_public122_s0_v1/runs"
 
 
@@ -338,13 +340,21 @@ def fulln_u0_panel() -> dict[str, Any]:
             # bootstrap selection
             boot = _bootstrap_over_draws(task, draws, vpred, np.asarray(vy, np.float64),
                                          tpred, np.asarray(grid["test_y"], np.float64), upstreams)
+            jk = SEL.jackknife_selection(
+                task, C.R_SEL, np.asarray(grid["valid_rows"], np.int64),
+                np.asarray(grid["test_rows"], np.int64), vpred, np.asarray(vy, np.float64),
+                tpred, np.asarray(grid["test_y"], np.float64),
+                clusters=None, drop_rows=[2087])
+            # ``selected_update`` from the jackknife is a *state index*; translate it
+            jk["selected_state_index"] = True
+            jk["grid_updates"] = upstreams
+            for k in ("targeted_drop",):
+                for item in jk.get(k, []):
+                    item["selected_state_index"] = item["selected_update"]
+                    item["selected_grid_update"] = upstreams[item["selected_update"]]
+            jk["targeted_drop_rows_note"] = "2087 is a published global Valid row id, present in the Lipo Valid split"
             out["arms"][a] = {"task": task, "U0": U0, "n_states": len(sel_idx),
-                              "bootstrap": boot,
-                              "jackknife": SEL.jackknife_selection(
-                                  task, C.R_SEL, np.asarray(grid["valid_rows"], np.int64),
-                                  np.asarray(grid["test_rows"], np.int64), vpred, np.asarray(vy, np.float64),
-                                  tpred, np.asarray(grid["test_y"], np.float64),
-                                  clusters=None, drop_rows=[2087])}
+                              "bootstrap": boot, "jackknife": jk}
     return out
 
 
@@ -555,6 +565,36 @@ def structural_subgroups() -> dict[str, Any]:
             "counts": [int(((n_atoms[ridx] <= q[0]).sum())), int(((n_atoms[ridx] > q[0]) & (n_atoms[ridx] <= q[1])).sum()),
                        int(((n_atoms[ridx] > q[1]) & (n_atoms[ridx] <= q[2])).sum()), int((n_atoms[ridx] > q[2]).sum())],
         }
+    return out
+
+
+def restart_summary() -> dict[str, Any]:
+    """Compare the optional restart arm against the low-lr E2 leg of the base arm."""
+    base = load_arm_records("LIP_C1_R1_F100")
+    rst = load_arm_records(C.RESTART_ARM)
+    out: dict[str, Any] = {"base_arm": "LIP_C1_R1_F100", "restart_arm": C.RESTART_ARM}
+    if base is None or base["grid"] is None:
+        out["status"] = "BASE_NOT_RUN"; return out
+    if rst is None or rst["grid"] is None:
+        out["status"] = "NOT_RUN"; return out
+    out["status"] = "OK"
+    for tag, rec in (("base_E2", base), ("restart_E2", rst)):
+        g = rec["grid"]; U0 = int(rec["meta"]["recipe"]["U0"])
+        us = [u for u in g["updates"] if int(u) > U0] or list(g["updates"])
+        recs = arm_state_records("regression", g, us)
+        rs = SEL.select_state("regression", C.R_SEL, recs)["selected"]
+        tail = recs[-min(10, len(recs)):]
+        out[tag] = {
+            "n_candidates": len(recs),
+            "R_SEL_update": int(rs["update"]),
+            "R_SEL_valid_mse": float(rs["valid"]["rmse"] ** 2),
+            "R_SEL_test_rmse": float(rs["test"]["rmse"]),
+            "last10_test_median": float(np.median([r["test"]["rmse"] for r in tail])),
+            "last10_train_fit_median": float(np.median([r["train_fit"]["rmse"] for r in tail])),
+            "oracle_gap": float(observed_oracle_gap("regression", recs)["observed_oracle_gap"]),
+        }
+    out["test_gain_restart_minus_base"] = (out["base_E2"]["R_SEL_test_rmse"]
+                                            - out["restart_E2"]["R_SEL_test_rmse"])
     return out
 
 

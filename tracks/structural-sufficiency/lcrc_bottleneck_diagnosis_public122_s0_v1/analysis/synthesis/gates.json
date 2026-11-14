@@ -1,0 +1,389 @@
+{
+  "caveat": "Different intervention gains are not addable; low train error, block-deletion sensitivity, finer signatures and a single failed probe each do not locate the bottleneck.",
+  "labels": {
+    "H_DATA": {
+      "evidence": "SAMPLE_EFFICIENCY_LIMIT",
+      "grade": "direct"
+    },
+    "H_OPT": {
+      "evidence": "FIT_ONLY",
+      "grade": "direct"
+    },
+    "H_REP": {
+      "evidence": "not_established",
+      "grade": "suspected_only"
+    },
+    "H_SEL": {
+      "evidence": "SELECTION_SENSITIVITY",
+      "grade": "direct",
+      "selector_utility": "NO_CLEAR_AVOIDABLE_LIMIT"
+    },
+    "H_USE": {
+      "evidence": "READOUT_NO_PURCHASE",
+      "grade": "direct"
+    }
+  },
+  "optimization": {
+    "note": "E1/E2 are the same continuous prefix; U0 is an observation budget, not a second run",
+    "rows": [
+      {
+        "E1": 0.7508000272432933,
+        "E2": 0.7545252705670498,
+        "arm": "LIP_C1_R1_F25",
+        "cell": "C1_R1@Lipophilicity",
+        "holdout_gain": -0.0037252433237564553,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.0027201516337501674,
+        "ruler": 0.01,
+        "train_fit_gain": 0.001785559908689463
+      },
+      {
+        "E1": 0.6415780974368642,
+        "E2": 0.6536923048924325,
+        "arm": "LIP_C1_R1_F50",
+        "cell": "C1_R1@Lipophilicity",
+        "holdout_gain": -0.012114207455568238,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.0005617646819261468,
+        "ruler": 0.01,
+        "train_fit_gain": 0.005423790900479314
+      },
+      {
+        "E1": 0.5920667914129428,
+        "E2": 0.5900870785016233,
+        "arm": "LIP_C1_R1_F100",
+        "cell": "C1_R1@Lipophilicity",
+        "holdout_gain": 0.0019797129113194867,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.0030887769180996116,
+        "ruler": 0.01,
+        "train_fit_gain": 0.0010349931265460632
+      },
+      {
+        "E1": 0.755529572468,
+        "E2": 0.7835287751484319,
+        "arm": "LIP_DMPNN_D2F_F25",
+        "cell": "DMPNN_D2F@Lipophilicity",
+        "holdout_gain": -0.02799920268043188,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.009334535746926553,
+        "ruler": 0.01,
+        "train_fit_gain": 0.020696364166013607
+      },
+      {
+        "E1": 0.6332465277905228,
+        "E2": 0.670550988566415,
+        "arm": "LIP_DMPNN_D2F_F50",
+        "cell": "DMPNN_D2F@Lipophilicity",
+        "holdout_gain": -0.03730446077589222,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.017977990646452002,
+        "ruler": 0.01,
+        "train_fit_gain": 0.06046845236284357
+      },
+      {
+        "E1": 0.5658182248266752,
+        "E2": 0.5770241462108235,
+        "arm": "LIP_DMPNN_D2F_F100",
+        "cell": "DMPNN_D2F@Lipophilicity",
+        "holdout_gain": -0.011205921384148332,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.016351090376216293,
+        "ruler": 0.01,
+        "train_fit_gain": 0.06035682476796339
+      },
+      {
+        "E1": 0.5729927248228881,
+        "E2": 0.5865802852856741,
+        "arm": "LIP_C1_R3_F100",
+        "cell": "C1_R3@Lipophilicity",
+        "holdout_gain": -0.013587560462785975,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.0014057676591454626,
+        "ruler": 0.01,
+        "train_fit_gain": 0.006874091786517433
+      },
+      {
+        "E1": 0.5917037962089132,
+        "E2": 0.5896533748748093,
+        "arm": "LIP_CHEM8_R1_F100",
+        "cell": "CHEM8_R1@Lipophilicity",
+        "holdout_gain": 0.0020504213341039357,
+        "label": "FIT_ONLY",
+        "last10_gain": -0.0007842174809145064,
+        "ruler": 0.01,
+        "train_fit_gain": 0.005135744264427325
+      },
+      {
+        "E1": 0.585857369802613,
+        "E2": 0.5838261553862936,
+        "arm": "LIP_K_R1_F100",
+        "cell": "K_R1@Lipophilicity",
+        "holdout_gain": 0.0020312144163194823,
+        "label": "NO_EFFECT",
+        "last10_gain": -0.0016584192414529353,
+        "ruler": 0.01,
+        "train_fit_gain": -0.0005371231769551871
+      }
+    ],
+    "verdict": "FIT_ONLY"
+  },
+  "primary_drivers": [
+    "H_SEL",
+    "H_OPT",
+    "H_DATA",
+    "H_USE"
+  ],
+  "readout": {
+    "purchase_bace_probes": false,
+    "rows": [
+      {
+        "meets_purchase_rule": false,
+        "probe": "P_POST",
+        "relative_test": -1.3266151222448212e-09,
+        "relative_valid": -3.442675394147313e-09,
+        "test_rmse_gain": -7.823640624238237e-10,
+        "valid_rmse_gain": -2.4972894863140027e-09
+      },
+      {
+        "meets_purchase_rule": false,
+        "probe": "P_PRE",
+        "relative_test": -4.337468863161148e-09,
+        "relative_valid": -6.305289814718425e-09,
+        "test_rmse_gain": -2.5579987017465555e-09,
+        "valid_rmse_gain": -4.573807332874935e-09
+      }
+    ],
+    "verdict": "READOUT_NO_PURCHASE"
+  },
+  "restart_trigger": {
+    "arm": "LIP_C1_R1_F100",
+    "note": "one restart max; failure is recorded as-is and never re-tuned",
+    "rule": {
+      "test_gain_max": 0.01,
+      "train_rmse_drop_min": 0.05
+    },
+    "test_gain_E1_to_E2": 0.0019797129113194867,
+    "train_rmse_drop_frac": 0.008242635348103988,
+    "verdict": "FIRE_RESTART"
+  },
+  "sample_efficiency": {
+    "cells": {
+      "C1_R1@BACE": {
+        "N_big": 1210,
+        "N_small": 605,
+        "gains": {
+          "E1_A_SEL": 0.0019927536231882925,
+          "E1_R_SEL": 0.0545289855072465,
+          "E1_W_SEL": 0.06431159420289845
+        },
+        "n_comparisons": 3,
+        "n_rules_meeting_ruler": 2,
+        "ruler": 0.005,
+        "verdict": "SAMPLE_EFFICIENCY_LIMIT"
+      },
+      "C1_R1@Lipophilicity": {
+        "N_big": 3360,
+        "N_small": 840,
+        "gains": {
+          "E1_A_SEL": 0.1688173899457559,
+          "E1_R_SEL": 0.15873323583035048,
+          "E1_W_SEL": 0.15990139179201635,
+          "E2_A_SEL": 0.1638782797922641,
+          "E2_R_SEL": 0.16443819206542643,
+          "E2_W_SEL": 0.16318749745861805
+        },
+        "n_comparisons": 6,
+        "n_rules_meeting_ruler": 6,
+        "ruler": 0.01,
+        "verdict": "SAMPLE_EFFICIENCY_LIMIT"
+      },
+      "C1_R3@Lipophilicity": {
+        "reason": "needs >=2 fit sizes",
+        "status": "INCONCLUSIVE"
+      },
+      "CHEM8_R1@Lipophilicity": {
+        "reason": "needs >=2 fit sizes",
+        "status": "INCONCLUSIVE"
+      },
+      "DMPNN_D2F@BACE": {
+        "N_big": 1210,
+        "N_small": 605,
+        "gains": {
+          "E1_A_SEL": 0.03568840579710164,
+          "E1_R_SEL": 0.055978260869565366,
+          "E1_W_SEL": 0.06594202898550727
+        },
+        "n_comparisons": 3,
+        "n_rules_meeting_ruler": 3,
+        "ruler": 0.005,
+        "verdict": "SAMPLE_EFFICIENCY_LIMIT"
+      },
+      "DMPNN_D2F@Lipophilicity": {
+        "N_big": 3360,
+        "N_small": 840,
+        "gains": {
+          "E1_A_SEL": 0.1639946346548775,
+          "E1_R_SEL": 0.1897113476413248,
+          "E1_W_SEL": 0.1855364399499987,
+          "E2_A_SEL": 0.21358382816342125,
+          "E2_R_SEL": 0.20650462893760835,
+          "E2_W_SEL": 0.21057728230580341
+        },
+        "n_comparisons": 6,
+        "n_rules_meeting_ruler": 6,
+        "ruler": 0.01,
+        "verdict": "SAMPLE_EFFICIENCY_LIMIT"
+      },
+      "K_R1@Lipophilicity": {
+        "reason": "needs >=2 fit sizes",
+        "status": "INCONCLUSIVE"
+      }
+    },
+    "verdict": "SAMPLE_EFFICIENCY_LIMIT"
+  },
+  "selection": {
+    "fraction_arms_with_spread_ge_3": 1.0,
+    "median_observed_oracle_gap": 0.013768115942028869,
+    "note": "observed gaps include Test-selection optimism; they are not achievable gains",
+    "rows": [
+      {
+        "arm": "LIP_C1_R1_F100",
+        "bootstrap_p10_p90_width": 0.011115599178050717,
+        "observed_oracle_gap": 0.01008415411540542,
+        "selected_update_spread": 31
+      },
+      {
+        "arm": "LIP_C1_R3_F100",
+        "bootstrap_p10_p90_width": 0.01108264280373883,
+        "observed_oracle_gap": 0.021067509713677324,
+        "selected_update_spread": 24
+      },
+      {
+        "arm": "LIP_CHEM8_R1_F100",
+        "bootstrap_p10_p90_width": 0.007075717230364598,
+        "observed_oracle_gap": 0.008869805459379765,
+        "selected_update_spread": 27
+      },
+      {
+        "arm": "LIP_K_R1_F100",
+        "bootstrap_p10_p90_width": 0.01145833582200273,
+        "observed_oracle_gap": 0.018685371925548533,
+        "selected_update_spread": 19
+      },
+      {
+        "arm": "LIP_DMPNN_D2F_F100",
+        "bootstrap_p10_p90_width": 0.06064908548409764,
+        "observed_oracle_gap": 0.012729250763665712,
+        "selected_update_spread": 26
+      },
+      {
+        "arm": "BACE_C1_R1_F100",
+        "bootstrap_p10_p90_width": 0.044021739130434945,
+        "observed_oracle_gap": 0.02608695652173909,
+        "selected_update_spread": 39
+      },
+      {
+        "arm": "BACE_DMPNN_D2F_F100",
+        "bootstrap_p10_p90_width": 0.0126811594202898,
+        "observed_oracle_gap": 0.013768115942028869,
+        "selected_update_spread": 35
+      }
+    ],
+    "verdict": "SELECTION_SENSITIVITY"
+  },
+  "selector_utility": {
+    "A_SEL": {
+      "median_gain": 0.0,
+      "n": 13,
+      "n_positive": 6
+    },
+    "W_SEL": {
+      "median_gain": -0.001168155961665862,
+      "n": 13,
+      "n_positive": 5
+    },
+    "best_alternative": "A_SEL",
+    "rows": [
+      {
+        "A_SEL_gain_vs_R_SEL": 0.0,
+        "R_SEL": 0.7508000272432933,
+        "W_SEL_gain_vs_R_SEL": -0.001168155961665862,
+        "arm": "LIP_C1_R1_F25"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": 0.023474739654054888,
+        "R_SEL": 0.755529572468,
+        "W_SEL_gain_vs_R_SEL": 0.0019329343589337133,
+        "arm": "LIP_DMPNN_D2F_F25"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": 0.011902911380982095,
+        "R_SEL": 0.6415780974368642,
+        "W_SEL_gain_vs_R_SEL": -0.01236812313646174,
+        "arm": "LIP_C1_R1_F50"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": -0.016237050353205884,
+        "R_SEL": 0.6332465277905228,
+        "W_SEL_gain_vs_R_SEL": -0.018900112909727818,
+        "arm": "LIP_DMPNN_D2F_F50"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": 0.01008415411540542,
+        "R_SEL": 0.5920667914129428,
+        "W_SEL_gain_vs_R_SEL": 0.0,
+        "arm": "LIP_C1_R1_F100"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": -0.0022419733323923996,
+        "R_SEL": 0.5658182248266752,
+        "W_SEL_gain_vs_R_SEL": -0.0022419733323923996,
+        "arm": "LIP_DMPNN_D2F_F100"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": -0.00526008468376149,
+        "R_SEL": 0.5729927248228881,
+        "W_SEL_gain_vs_R_SEL": -0.01108264280373883,
+        "arm": "LIP_C1_R3_F100"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": 0.003953376326705116,
+        "R_SEL": 0.5917037962089132,
+        "W_SEL_gain_vs_R_SEL": 0.0020595006911884317,
+        "arm": "LIP_CHEM8_R1_F100"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": 0.008771891146149513,
+        "R_SEL": 0.585857369802613,
+        "W_SEL_gain_vs_R_SEL": -0.004851894198645068,
+        "arm": "LIP_K_R1_F100"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": 0.0240942028985508,
+        "R_SEL": 0.7630434782608695,
+        "W_SEL_gain_vs_R_SEL": -0.0021739130434781373,
+        "arm": "BACE_C1_R1_F50"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": -0.06376811594202902,
+        "R_SEL": 0.7400362318840579,
+        "W_SEL_gain_vs_R_SEL": 0.0010869565217391797,
+        "arm": "BACE_DMPNN_D2F_F50"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": -0.028442028985507406,
+        "R_SEL": 0.817572463768116,
+        "W_SEL_gain_vs_R_SEL": 0.007608695652173814,
+        "arm": "BACE_C1_R1_F100"
+      },
+      {
+        "A_SEL_gain_vs_R_SEL": -0.08405797101449275,
+        "R_SEL": 0.7960144927536232,
+        "W_SEL_gain_vs_R_SEL": 0.011050724637681086,
+        "arm": "BACE_DMPNN_D2F_F100"
+      }
+    ],
+    "verdict": "NO_CLEAR_AVOIDABLE_LIMIT"
+  }
+}

@@ -37,4 +37,16 @@ uv run python -m pytest tests -q       # 不变量回归（快、CPU）
 ## 结论
 
 见 `REPORT.md` 首页（先答 H_SEL / H_OPT / H_DATA / H_USE）与
-`analysis/synthesis/{selection,data_budget,readout}.json`。
+`analysis/synthesis/{selection,data_budget,readout,gates}.json`。
+
+| 假设 | 判定 | 等级 | 一句话 |
+|---|---|---|---|
+| H_DATA | `SAMPLE_EFFICIENCY_LIMIT` | direct | Lipo N 840→3360 在两个学习器、三规则、两阶段上都拿到 +0.16~+0.21 Test RMSE；BACE 同样随 N 变好 |
+| H_SEL | `SELECTION_SENSITIVITY` + `NO_CLEAR_AVOIDABLE_LIMIT` | direct | 逐行 jackknife 就能让选中模型的 Test 摆动 ~0.011（与整条 E2 优化增益同量级），但 A_SEL/W_SEL 都不稳定兑现（6/13、5/13，中位 ≈0） |
+| H_OPT | `FIT_ONLY` | direct | 所有臂 E1→E2 都是 Train_fit 变好、留出集不变或变差；peak-lr 重启臂相对低 lr 延长仍为 −0.0029 |
+| H_USE | `READOUT_NO_PURCHASE` | direct | 冻结 h 上 3 条 14705 参数探针，R_SEL 全部落在 step 0；oracle Test 也只 +0.0074（<0.01 尺） |
+| H_REP | `not_established` | suspected_only | 本轮不检验；不靠排除前三项宣布表达力不足 |
+
+已知执行事故与预算见 `analysis/incident.json` 与 `REPORT.md` §7
+（一次本地调度器重复投放，浪费 94.3 job-min，已修复且不影响结论）。
+

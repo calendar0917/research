@@ -1,0 +1,64 @@
+{
+ "round_id": "lcrc-bottleneck-diagnosis-public122-s0-v1",
+ "regime": {
+  "host": "res",
+  "node": "a100-2",
+  "gpu": "2x A100-SXM4-40GB",
+  "driver": "550.163.01",
+  "torch": "2.5.1+cu124",
+  "pools": [
+   "res-gpu0",
+   "res-gpu1"
+  ]
+ },
+ "useful_job_minutes": 182.8,
+ "wasted_duplicate_minutes": 94.3,
+ "failed_minutes": 0,
+ "duplicates": [
+  {
+   "ident": "bnlipc1r1f50",
+   "run_id": "bnlipc1r1f50-20261114-125050-0273d07a",
+   "state": "cancelled",
+   "minutes": 5.7
+  },
+  {
+   "ident": "bnlipc1r1f50",
+   "run_id": "bnlipc1r1f50-20261114-124435-efa1364a",
+   "state": "cancelled",
+   "minutes": 11.7
+  },
+  {
+   "ident": "bnlipc1r1f25",
+   "run_id": "bnlipc1r1f25-20261114-124239-ef937499",
+   "state": "cancelled",
+   "minutes": 13.4
+  },
+  {
+   "ident": "bnlipc1r1f25",
+   "run_id": "bnlipc1r1f25-20261114-124122-8eabfae3",
+   "state": "cancelled",
+   "minutes": 14.3
+  },
+  {
+   "ident": "bnlipc1r1f25",
+   "run_id": "bnlipc1r1f25-20261114-124004-ca007d9c",
+   "state": "cancelled",
+   "minutes": 15.4
+  },
+  {
+   "ident": "bnlipc1r1f25",
+   "run_id": "bnlipc1r1f25-20261114-123850-17ab5a1b",
+   "state": "cancelled",
+   "minutes": 16.4
+  },
+  {
+   "ident": "bnlipc1r1f25",
+   "run_id": "bnlipc1r1f25-20261114-123738-d2b0220e",
+   "state": "cancelled",
+   "minutes": 17.4
+  }
+ ],
+ "failures": [],
+ "incident": "local scheduler (code/lb_queue.py v1) treated a transiently empty `rr jobs` listing as 'no job running' and relaunched LIP_C1_R1_F25 (5 extra) and LIP_C1_R1_F50 (2 extra) into the same --out-dir. All extras were cancelled within ~8 min. Detected and fixed the same hour: fail-closed reconciliation + local launch ledger + settle window (v2).",
+ "integrity_check": "every retained arm satisfies updates_run == Umax, grid_updates length 100 (Lipo) / 50 (BACE), last grid update == Umax, and curve.csv/grid_predictions agree on the raw-unit Test RMSE of every grid state; the retained LIP_C1_R1_F25 payload is the last-finishing survivor's complete write, reproduced deterministically by seed 0."
+}

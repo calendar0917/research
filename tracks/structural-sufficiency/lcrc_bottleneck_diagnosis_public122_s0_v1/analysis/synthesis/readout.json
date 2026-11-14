@@ -12,14 +12,179 @@
   },
   "lipo": {
     "P_POST": {
-      "status": "NOT_RUN"
+      "gain_vs_warm_R_SEL": {
+        "test_rmse_gain": -7.823640624238237e-10,
+        "valid_rmse_gain": -2.4972894863140027e-09
+      },
+      "new_params": 14705,
+      "selected": {
+        "A_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.417529502403454,
+          "test_rmse": 0.5838537972466215,
+          "update": 36,
+          "valid_auc": null,
+          "valid_rmse": 0.7300543677320521
+        },
+        "R_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.4282281114807535,
+          "test_rmse": 0.5897445689732894,
+          "update": 0,
+          "valid_auc": null,
+          "valid_rmse": 0.7253920887100923
+        },
+        "W_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.41838491899343205,
+          "test_rmse": 0.5836013915923811,
+          "update": 144,
+          "valid_auc": null,
+          "valid_rmse": 0.7344454768789417
+        }
+      },
+      "status": "OK",
+      "step0_equivalence": 8.940696716308594e-08,
+      "updates": 1800
     },
     "P_PRE": {
-      "status": "NOT_RUN"
+      "gain_vs_warm_R_SEL": {
+        "test_rmse_gain": -2.5579987017465555e-09,
+        "valid_rmse_gain": -4.573807332874935e-09
+      },
+      "new_params": 14705,
+      "selected": {
+        "A_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.4175297384673877,
+          "test_rmse": 0.5838547196628312,
+          "update": 36,
+          "valid_auc": null,
+          "valid_rmse": 0.7300529899640833
+        },
+        "R_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.42822811353101103,
+          "test_rmse": 0.5897445707489241,
+          "update": 0,
+          "valid_auc": null,
+          "valid_rmse": 0.7253920907866102
+        },
+        "W_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.4183844941816652,
+          "test_rmse": 0.5836013568384292,
+          "update": 144,
+          "valid_auc": null,
+          "valid_rmse": 0.7344436811277468
+        }
+      },
+      "status": "OK",
+      "step0_equivalence": 1.7881393432617188e-07,
+      "updates": 1800
     },
     "P_WARM": {
-      "status": "NOT_RUN"
+      "gain_vs_warm_R_SEL": {
+        "test_rmse_gain": 0.0,
+        "valid_rmse_gain": 0.0
+      },
+      "new_params": 0,
+      "selected": {
+        "A_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.4174031579676511,
+          "test_rmse": 0.5837583032589682,
+          "update": 36,
+          "valid_auc": null,
+          "valid_rmse": 0.7298808724368032
+        },
+        "R_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.4282281109468322,
+          "test_rmse": 0.5897445681909254,
+          "update": 0,
+          "valid_auc": null,
+          "valid_rmse": 0.7253920862128028
+        },
+        "W_SEL": {
+          "test_auc": null,
+          "test_bce": null,
+          "test_mae": 0.4183867482730138,
+          "test_rmse": 0.5835976544750282,
+          "update": 144,
+          "valid_auc": null,
+          "valid_rmse": 0.7344059632723043
+        }
+      },
+      "status": "OK",
+      "step0_equivalence": 0.0,
+      "updates": 1800
     }
   },
-  "purchase_rule": ">=1% Lipo Valid AND Test RMSE gain vs P_WARM (both splits)"
+  "probe_oracle": {
+    "P_POST": {
+      "observed_oracle_gap": 0.007425489790008677,
+      "status": "OK",
+      "step0_test_rmse": 0.5897445689732894,
+      "test_curve_min": 0.5823190791832807,
+      "test_curve_min_update": 180
+    },
+    "P_PRE": {
+      "observed_oracle_gap": 0.007425396099611126,
+      "status": "OK",
+      "step0_test_rmse": 0.5897445707489241,
+      "test_curve_min": 0.5823191746493129,
+      "test_curve_min_update": 180
+    },
+    "P_WARM": {
+      "observed_oracle_gap": 0.007445169270274277,
+      "status": "OK",
+      "step0_test_rmse": 0.5897445681909254,
+      "test_curve_min": 0.5822993989206511,
+      "test_curve_min_update": 180
+    },
+    "branch_displacement_vs_P_WARM_max_abs": 0.01854030494047798,
+    "pre_vs_post_max_abs": 0.0005242713634183715
+  },
+  "purchase_rule": ">=1% Lipo Valid AND Test RMSE gain vs P_WARM (both splits)",
+  "subgroups": {
+    "covariates": [
+      "n_atoms",
+      "train_morgan_maxsim"
+    ],
+    "dataset": "Lipophilicity",
+    "rooted_wl_support": "NOT_AVAILABLE",
+    "status": "OK",
+    "test_n_atoms_quartile": {
+      "counts": [
+        130,
+        89,
+        104,
+        97
+      ],
+      "q1": 22.0,
+      "q2": 27.0,
+      "q3": 32.0
+    },
+    "thresholds": "Train quartiles",
+    "valid_n_atoms_quartile": {
+      "counts": [
+        117,
+        100,
+        90,
+        113
+      ],
+      "q1": 22.0,
+      "q2": 27.0,
+      "q3": 32.0
+    }
+  }
 }
