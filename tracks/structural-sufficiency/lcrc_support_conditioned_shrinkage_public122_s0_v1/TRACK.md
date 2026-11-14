@@ -14,3 +14,14 @@
 `lcrc_bottleneck_diagnosis_public122_s0_v1`（update-driven trainer、嵌套子集、norm、50 点 grid）、
 `lcrc_lipo_model_dissection_v1`（`LocalContent` 与 `marginal_joint_agg`）、
 `lcrc_lipo_s3_locality_public122_s0_v1`（别名对）、`lcrc_readout_diagnosis_closeout_public122_s0_v1`（阴性边界）。
+
+## 结果（2026-11-14，单 seed 0，DEVELOPMENT_TEST）
+
+- 冻结 `K_FINE`，`KEYS_PASS_BOTH_N`；正式训练 10 条（Lipo fit100 五臂 + fit25 五臂），
+  **未采购 BACE**（Lipo 未过晋升门槛 → `NOT_PURCHASED_BY_BUDGET`）。
+- 判定：**`SPLIT_OR_SELECTION_SENSITIVE`** —— fit100 上 SELECT 相对 BASE 在 Test 改善 2.76% 但在
+  Valid 恶化 1.17%；fit25 上两 split 都是正（+4.47% / +3.25%）但 MAE 在 Test 恶化 1.2%；
+  bootstrap（canonical-structure / Murcko 簇）区间除 fit100 Valid 的 SELECT-vs-UNIFORM 外全部跨 0。
+- 门控确实被使用：`a=1` 反事实改变 90.2%（Test）/92.6%（Valid）分子的预测，p50|Δp|=0.025。
+- 全部正式训练在本机 CPU regime 完成（`res` 共享 `/home` 写满，`rr deploy res` 失败），
+  见 `REPORT.md` §7 与 `analysis/run_manifest.json`。
