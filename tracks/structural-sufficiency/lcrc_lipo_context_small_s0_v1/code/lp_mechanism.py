@@ -53,7 +53,7 @@ def membership_arrays(
         flag = GROUP_FLAGS[name]
         out[name] = np.asarray([bool(e.get(flag, False)) if "status" not in e else False for e in entries], dtype=bool)
         out[f"{name}_roots"] = {
-            int(e["row"]): [int(a) for a in e.get(f"{name}_roots", [])] for e in entries if "status" not in e
+            int(e["row"]): [int(a) for a in e.get(f"{flag}_roots", [])] for e in entries if "status" not in e
         }
     out["missing"] = {
         int(e["row"]): [int(a) for a in e.get("missing_r2_roots", [])] for e in entries if "status" not in e
@@ -261,7 +261,16 @@ def _load_frozen(view: D.View, tag: str):
     return model, payload
 
 
-def _predict_variant(model, cache, device, *, source_override=None, alt_state=None, alt_map=None) -> tuple[np.ndarray, dict[str, np.ndarray]]:
+def _predict_variant(
+    model,
+    cache,
+    device,
+    *,
+    norm: Mapping[str, Any],
+    source_override=None,
+    alt_state=None,
+    alt_map=None,
+) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Whole-split prediction with an optional layer-2 source switch."""
     n = int(cache["n_molecules"])
     preds: list[np.ndarray] = []
@@ -293,9 +302,16 @@ def _predict_variant(model, cache, device, *, source_override=None, alt_state=No
                 rhos.append(aux["rho"].detach().float().cpu().numpy().reshape(-1))
     finally:
         model.train(was_training)
+    # raw logD space: the head predicts the standardised target
+    scale = float(norm["scale"])
+    mean = float(norm["mean"])
     return (
-        np.concatenate(preds).astype(np.float64),
-        {"contrib": np.concatenate(contribs).astype(np.float64), "rho": np.concatenate(rhos).astype(np.float64)},
+        np.concatenate(preds).astype(np.float64) * scale + mean,
+        {
+            "contrib": np.concatenate(contribs).astype(np.float64) * scale,
+            "rho": np.concatenate(rhos).astype(np.float64) * scale,
+            "mean": mean,
+        },
     )
 
 
@@ -382,9 +398,10 @@ def run_interventions(selection: Mapping[str, Any]) -> dict[str, Any]:
         }
         for split in ("valid", "test"):
             cache = view.caches[split]
-            normal, aux_n = _predict_variant(model, cache, device)
-            reuse_all, aux_r = _predict_variant(model, cache, device, source_override="reuse")
-            fixed_all, _ = _predict_variant(model, cache, device, source_override="fixed")
+            norm = view.target_norm
+            normal, aux_n = _predict_variant(model, cache, device, norm=norm)
+            reuse_all, _aux_r = _predict_variant(model, cache, device, norm=norm, source_override="reuse")
+            fixed_all, _ = _predict_variant(model, cache, device, norm=norm, source_override="fixed")
             y = view.y[split]
             split_entry: dict[str, Any] = {
                 "normal_rmse": A.rmse(normal, y),
@@ -411,10 +428,10 @@ def run_interventions(selection: Mapping[str, Any]) -> dict[str, Any]:
                     split_entry["match"] = {"label": "NO_MATCHABLE_CONTROL"}
                 else:
                     target_pred, aux_t = _predict_variant(
-                        model, cache, device, alt_state="reuse", alt_map=matched["target"]
+                        model, cache, device, norm=norm, alt_state="reuse", alt_map=matched["target"]
                     )
                     control_pred, aux_c = _predict_variant(
-                        model, cache, device, alt_state="reuse", alt_map=matched["control"]
+                        model, cache, device, norm=norm, alt_state="reuse", alt_map=matched["control"]
                     )
                     identity_t = float(
                         np.abs((target_pred - normal) - ((aux_t["contrib"] - aux_n["contrib"]) + (aux_t["rho"] - aux_n["rho"]))).max()
