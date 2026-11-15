@@ -1,0 +1,101 @@
+# Protocol — lcrc-semantic-analysis-repair-bw0-s0-v1
+#
+# Rules only.  Frozen before the first formal run; any change is a new round.
+# The machine-checked core lives in configs/<id>.yaml and in code/rp_common.py
+# (the runner refuses to run on drift).
+#
+# Test policy of THIS study: the round is explicitly authorised to evaluate the
+# official Test split during development (test_policy: always).  Test is
+# reported and may inform this round's route judgement, but selection is
+# Validation-only.
+
+id: lcrc-semantic-analysis-repair-bw0-s0-v1
+parent: lcrc-explicit-semantic-learning-8h-s0-v1
+
+method_change: >-
+  None.  This round repairs analysis, mechanism and export code only.  The
+  method body, codec, generator, arms, recipes, data pipeline and epoch plan are
+  inherited unchanged from the parent round and its predecessors.
+
+data:
+  lipo:
+    dataset: OGB ogbg-mollipo
+    split: official scaffold (Train 3360 / Valid 420 / Test 420)
+    target: raw exp (logD); Train-only target normalisation
+  esol:
+    dataset: official ogbg-molesol
+    split: official scaffold (Train 902 / Valid 113 / Test 113)
+  budget:
+    nested_subsets: sha256('LCRC-semantic-budget-v1|'+global_row_id) ascending
+    fractions: {N100: 1.0, N50: 0.5, N25: 0.25}
+    update_budget: U = 360 * ceil(N_full/128) = 9720
+
+new_training:
+  arm: B_N100_lipo_W0
+  family: B
+  dataset: lipo
+  budget: N100
+  recipe: W0
+  seed: 0
+  template: B_N100_lipo_Rwd   # identical except weight_decay 1e-2 -> 0
+  parameters: 228674
+  initialisation: >-
+    The frozen documented C1 initial state
+    (dissect_model.build_full_state(spec, norm, 0) -> remap_state('C1', ...)),
+    i.e. lp_model.shared_c1_init_state, the same init the HOME round's original
+    B arm used.  Recorded in analysis/init_reproducibility.json: the parent
+    loop never seeds the global RNG before building the model, so the parent
+    arms' initial weights are not reproducible across processes and cannot be
+    shown to be shared.
+
+recipes:
+  R:   {weight_decay: 1.0e-3}
+  W0:  {weight_decay: 0.0}
+  Rwd: {weight_decay: 1.0e-2}
+
+evaluation:
+  every_epoch: full official Train / Valid / Test on the same weights
+  selection: Validation-only
+  table_A: old protocol 50-point update grid round(j*U/50), j=1..50, Val-min, earlier on tie
+  table_B: every-epoch best-Valid
+  late_window: last 20 epochs (the old code's actual window)
+
+repairs:
+  reader: >-
+    atom_ptr is molecule->atom; path_ptr / nbr_ptr are atom->occurrence.  The
+    parent code indexed the latter with a molecule index.  One corrected reader
+    with shape assertions is the single entry point.
+  support: corrected document frequency per split and per label budget, Fit-LOO
+  explicit: corrected sparse matrix for the same 32604 columns / Ridge / XGBoost
+  mechanism: checkpoint replay, corrected gradient kernel, native lookup export
+  edit: corrected component-equal weights and official-split coverage
+
+judgements:
+  labels:
+    - UNCERTAIN
+    - SPLIT_DEPENDENT
+    - NUMERICALLY_UNRESOLVED
+    - NEEDS_HELDOUT_EVIDENCE
+    - INCOMPLETE_RESOURCE_OR_IMPLEMENTATION
+  note: >-
+    Labels annotate; the continuous numbers always win.  No "smaller than X%"
+    equivalence threshold is invented.
+
+uncertainty:
+  performance: 500 Murcko-scaffold-cluster Exp(1) perturbation, seed 20261115,
+    weights shared by all models in a comparison after row_id alignment
+  edits: 500 component-level Exp(1) perturbation, seed 20261115, common weights
+  frame: sample uncertainty of fixed states, NOT training-seed variance
+
+budget:
+  wall_target_hours: 2.0
+  wall_hard_hours: 3.0
+  gpu_soft_hours: 0.5
+  gpu_hard_hours: 1.0
+  max_training_runs: 1
+
+test_policy: always
+test_access_note: >-
+  Declared development-evaluation access for this round (user-authorised).  The
+  global control-plane guard is unchanged; selection is Validation-only and
+  every read is recorded.
