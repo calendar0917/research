@@ -273,6 +273,35 @@ def label_route(payload: Mapping[str, Any]) -> dict[str, Any]:
     return {"labels": labels, "did_valid": did_v, "did_test": did_t}
 
 
+def grid_point(run_name: str) -> dict[str, float]:
+    """Protocol-primary point: Validation-only grid selection."""
+    g = load_grid(run_name)
+    s = g["selection"]
+    return {"j": int(s["j"]), "update": int(s["update"]),
+            "valid_rmse": float(s["valid_rmse"]), "test_rmse": float(s["test_rmse"])}
+
+
+def grid_compare(sem_ctrl: str, sem_cand: str, perm_ctrl: str, perm_cand: str) -> dict[str, Any]:
+    """Grid-selected (Validation-only) paired contrast + DiD for the semantic pair.
+
+    Point deltas use each model's own Val-selected grid point; the DiD is the
+    difference of those deltas (LS-FS) - (LP-FP) on each split.  This is the
+    protocol-primary selection; the best-epoch view is reported alongside.
+    """
+    out: dict[str, Any] = {}
+    pts = {n: grid_point(n) for n in (sem_ctrl, sem_cand, perm_ctrl, perm_cand)}
+    for split, key in (("valid", "valid_rmse"), ("test", "test_rmse")):
+        d_sem = pts[sem_ctrl][key] - pts[sem_cand][key]
+        d_perm = pts[perm_ctrl][key] - pts[perm_cand][key]
+        out[split] = {
+            "sem_ctrl_rmse": pts[sem_ctrl][key], "sem_cand_rmse": pts[sem_cand][key],
+            "perm_ctrl_rmse": pts[perm_ctrl][key], "perm_cand_rmse": pts[perm_cand][key],
+            "delta_sem": d_sem, "delta_perm": d_perm, "did": d_sem - d_perm,
+        }
+    out["points"] = pts
+    return out
+
+
 def run_all(*, with_bootstrap: bool = True) -> dict[str, Any]:
     """Assemble every table that can be built from the present runs."""
     C.ANALYSIS.mkdir(parents=True, exist_ok=True)
@@ -301,6 +330,11 @@ def run_all(*, with_bootstrap: bool = True) -> dict[str, Any]:
         did_payload["semantics"] = did(comparisons["FS_vs_LS"], comparisons["FP_vs_LP"])
     C.write_json(C.ANALYSIS / "tables_comparisons.json", comparisons)
     C.write_json(C.ANALYSIS / "tables_did.json", did_payload)
+
+    if all(k in present for k in ("LS", "FS", "LP", "FP")):
+        grid = grid_compare(present["LS"], present["FS"], present["LP"], present["FP"])
+        C.write_json(C.ANALYSIS / "tables_did_grid.json", grid)
+        did_payload["semantics_grid"] = grid
 
     bs = bootstrap(present) if (with_bootstrap and len(present) >= 2) else {}
     if bs:
