@@ -16,6 +16,7 @@ Nothing here selects on Valid/Test.
 from __future__ import annotations
 
 import hashlib
+import json
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -135,34 +136,36 @@ def _esol_download_root() -> Any:
     return C.REPO / "data" / "ogb" / MOLESOL_DIRNAME
 
 
+#: committed label-free ESOL artifacts (built once by ``se_esol_prep.py``)
+ESOL_RAW = C.DATA / "esol_raw_v1.json.gz"
+ESOL_LABELS = C.DATA / "esol_labels_v1.npz"
+ESOL_SPLIT = C.DATA / "esol_split_v1.json"
+
+
 def build_esol_view(*, rebuild: bool = False) -> LPD.View:
     """Official ogbg-molesol with the same lipo_v1 schema/codes.
 
-    Structures come from the official OGB release; the *only* thing re-fitted
-    for this task is the Train target normaliser.  The label-free raw graph
-    artifact is generated locally (RDKit) exactly as for Lipo.
+    Structures come from the committed label-free artifact (built once locally
+    with RDKit by ``se_esol_prep.py``); the GPU hosts have no RDKit.  The *only*
+    thing re-fitted for this task is the Train target normaliser.
     """
     import gzip
 
-    root = _esol_download_root()
-    if not root.is_dir():
-        raise FileNotFoundError(f"official ogbg-molesol not found at {root}; run the OGB download first")
-    smiles_path = root / "mapping/mol.csv.gz"
-    if not smiles_path.is_file():
-        raise FileNotFoundError(smiles_path)
-    with gzip.open(smiles_path, "rt", encoding="utf-8") as fh:
-        header = fh.readline().strip().split(",")
-        rows = [line.rstrip("\n").split(",") for line in fh if line.strip()]
-    if header[0] != "measured log solubility in mols per litre":
-        # header check is advisory; OGB uses a long label name
-        C.log(f"unexpected molesol header {header}")
-    y_all = np.asarray([float(r[0]) for r in rows], dtype=np.float64)
-    smiles = [r[1] for r in rows]
-    idx = _esol_split(root)
-    if len(smiles) != sum(len(v) for v in idx.values()):
-        raise ValueError("molesol split does not cover every row")
+    if not ESOL_RAW.is_file():
+        raise FileNotFoundError(f"missing {C.track_rel(ESOL_RAW)}; run code/se_esol_prep.py locally first")
+    with gzip.open(ESOL_RAW, "rt", encoding="utf-8") as fh:
+        payload = json.loads(fh.read())
+    if payload.get("label_free") is not True:
+        raise PermissionError("ESOL raw artifact is not declared label-free")
+    raw_rows = payload["rows"]
+    split_payload = C.read_json(ESOL_SPLIT)
+    labels = np.load(ESOL_LABELS, allow_pickle=False)
+    y_all = np.asarray(labels["y"], dtype=np.float64)
+    rows_by_split = {k: [int(x) for x in split_payload["rows"][k]] for k in LPC.SPLITS}
+    sizes = {k: len(v) for k, v in rows_by_split.items()}
+    if sizes != MOLESOL_SPLIT:
+        raise ValueError(f"molesol split sizes {sizes} != official {MOLESOL_SPLIT}")
 
-    # label-free raw rows + graphs via the frozen RDKit path (local only)
     import sys
 
     for p in (str(C.PREP_CODE),):
@@ -170,22 +173,16 @@ def build_esol_view(*, rebuild: bool = False) -> LPD.View:
             sys.path.insert(0, p)
     import adapters as PREP_ADAPTERS
     import lcrc_data as PREP_DATA
-    from feature_spec import FeatureSpec  # noqa: F401
-    import mb_rdkit as R
 
     spec = LPD.frozen_spec()
-    rows_by_split: dict[str, list[int]] = idx
-    graphs_all: dict[int, Any] = {}
-    all_rows = sorted({int(r) for v in idx.values() for r in v})
-    for row in all_rows:
-        raw = R.smiles_to_raw_row(str(smiles[row]), int(row))
-        raw["mol_id"] = str(row)
-        graphs_all[row] = PREP_ADAPTERS.lipo_row_to_graph(raw, int(row), spec)
+    graphs_all = {}
+    for row in sorted({r for v in rows_by_split.values() for r in v}):
+        graphs_all[row] = PREP_ADAPTERS.lipo_row_to_graph(raw_rows[row], int(row), spec)
 
     caches: dict[str, Any] = {}
     rows_out: dict[str, np.ndarray] = {}
     for split in LPC.SPLITS:
-        rws = [int(r) for r in rows_by_split[split]]
+        rws = rows_by_split[split]
         graphs = [graphs_all[r] for r in rws]
         cache = PREP_DATA.build_cache(graphs, spec, split=f"{OGB_MOLESOL}_{split}")
         cache["rows"] = np.asarray(rws, dtype=np.int64)
@@ -200,9 +197,7 @@ def build_esol_view(*, rebuild: bool = False) -> LPD.View:
     train_norm = PREP_DATA.fit_norm(caches["train"], spec, source=f"{OGB_MOLESOL}_official_train_structures_only")
     y = {k: y_all[rows_out[k]] for k in LPC.SPLITS}
     target_norm = LPD.target_normaliser(y["train"])
-    return LPD.View(
-        spec=spec, caches=caches, train_norm=train_norm, target_norm=target_norm, rows=rows_out, y=y
-    )
+    return LPD.View(spec=spec, caches=caches, train_norm=train_norm, target_norm=target_norm, rows=rows_out, y=y)
 
 
 def _esol_split(root) -> dict[str, list[int]]:
