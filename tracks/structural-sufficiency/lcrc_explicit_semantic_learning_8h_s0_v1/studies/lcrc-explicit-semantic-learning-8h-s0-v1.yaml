@@ -1,0 +1,47 @@
+id: lcrc-explicit-semantic-learning-8h-s0-v1
+protocol: lcrc-explicit-semantic-learning-8h-s0-v1
+active: true
+focus: true
+created: 2026-11-14
+
+question: >-
+  With the LCRC explicit-structure input held fixed, does letting the same
+  atom/bond composition components share learned parameters across different
+  path combinations improve finite-sample learnability - and, if so, is the
+  gain carried by the real composition semantics (rather than a generic
+  reparameterisation / initialisation / weight-decay / low-label effect)?
+
+baseline: >-
+  Arm B is the frozen C1 (NO_BOND_MEAN) base with the original f/rho readout.
+  The paired controls are LS (free tables initialised to the semantic
+  generator's theta_0) and LP (free tables initialised to the permuted
+  generator's theta_0).  The semantic arms are FS (true codec) and FP (fixed
+  composite-code bijection).
+
+candidates:
+  - id: FS
+    status: active
+    note: semantic composition generator, real mid/atom/bond decode
+  - id: FP
+    status: active
+    note: same generator, composite-code bijection before decode (control)
+  - id: LS
+    status: active
+    note: free lookup tables, matched theta_0 initialisation (control)
+  - id: LP
+    status: active
+    note: free lookup tables, matched permuted theta_0 initialisation (control)
+
+open_questions:
+  - Does shared training beat the matched-initialisation free lookup (LS)?
+  - Is the gain specific to real composition semantics (Delta_sem > Delta_perm)?
+  - Does any gain come from the parameter-space weight decay, or the label budget?
+  - Does it show up in the structural risk slices and real molecular edit response?
+  - How does it compare with the cheapest explicit statistics and the D-MPNN coordinate?
+
+guardrails:
+  - method body remains LCRC; no message passing / attention / D-MPNN
+  - one seed (0); no extra seeds, splits or new losses
+  - selection is Validation-only; Test is reported and never selects
+  - the frozen C1 base, R3 recipe and shared epoch plan are not edited
+  - positive/negative results both change the route judgement; no bought-for-GPU runs

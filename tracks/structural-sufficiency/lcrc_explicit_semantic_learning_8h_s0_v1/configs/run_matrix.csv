@@ -1,0 +1,24 @@
+run_id,stage,family,recipe,dataset,budget,priority,depends,gate,status,note
+P1_FS_R,main,FS,R,lipo,N100,1,-,always,PENDING,core semantic arm
+P1_LS_R,main,LS,R,lipo,N100,1,-,always,PENDING,core matched lookup
+P1_FP_R,main,FP,R,lipo,N100,1,-,always,PENDING,core permuted generator
+P1_LP_R,main,LP,R,lipo,N100,1,-,always,PENDING,core permuted lookup
+P1_LS_W0,main,LS,W0,lipo,N100,2,P1_LS_R,always,PENDING,wd0 pair
+P1_FS_W0,main,FS,W0,lipo,N100,2,P1_FS_R,always,PENDING,wd0 pair
+P1_B_Rwd,main,B,Rwd,lipo,N100,3,P1_LS_R,always,PENDING,recipe performance coordinate
+P1_LS_Rwd,main,LS,Rwd,lipo,N100,3,P1_LS_R,always,PENDING,wd 1e-2 branch
+P1_FS_Rwd,main,FS,Rwd,lipo,N100,3,P1_FS_R,always,PENDING,wd 1e-2 branch
+P1_LP_Rwd,main,LP,Rwd,lipo,N100,4,P1_LP_R,P1_FS_Rwd,PENDING,-,gated by wd pair gain
+P1_FP_Rwd,main,FP,Rwd,lipo,N100,4,P1_FP_R,P1_FS_Rwd,PENDING,-,gated by wd pair gain
+P2_B_esol,esol,B,R,esol,N100,4,-,always,PENDING,cross-task reference
+P2_LS_esol,esol,LS,R,esol,N100,4,-,always,PENDING,cross-task
+P2_FS_esol,esol,FS,R,esol,N100,4,-,always,PENDING,cross-task
+P2_LP_esol,esol,LP,R,esol,N100,4,-,always,PENDING,cross-task
+P2_FP_esol,esol,FP,R,esol,N100,4,-,always,PENDING,cross-task
+P3_LS_N25,budget,LS,R,lipo,N25,5,P1_FS_R,always,PENDING,label budget
+P3_FS_N25,budget,FS,R,lipo,N25,5,P1_FS_R,always,PENDING,label budget
+P3_LS_N50,budget,LS,R,lipo,N50,6,P3_FS_N25,gate_n50,PENDING,gated by N25 signal
+P3_FS_N50,budget,FS,R,lipo,N50,6,P3_FS_N25,gate_n50,PENDING,gated by N25 signal
+P4_B_HIV,amplify,B,R,hiv,N100,7,P2_FS_esol,gate_E,PENDING,amplify candidate (HIV fallback)
+P4_LS_HIV,amplify,LS,R,hiv,N100,7,P2_FS_esol,gate_E,PENDING,amplify candidate
+P4_FS_HIV,amplify,FS,R,hiv,N100,7,P2_FS_esol,gate_E,PENDING,amplify candidate

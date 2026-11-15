@@ -1,0 +1,137 @@
+# Protocol — lcrc-explicit-semantic-learning-8h-s0-v1
+#
+# Rules only: dataset, split, metric, fitting scope, test policy, seeds, the
+# method change (semantic parameter sharing), the four paired arms and the
+# judgement thresholds.  Frozen before the first formal run; any change is a new
+# round.  Text file; the machine-checked core lives in configs/*.yaml and in
+# code/se_common.py (the runner refuses to run on drift).
+#
+# Test policy of THIS study: the round is explicitly authorised to evaluate the
+# official Test split during development (test_policy: always).  Test is
+# reported and may inform this round's route judgement, but selection is
+# Validation-only.
+
+id: lcrc-explicit-semantic-learning-8h-s0-v1
+
+method_change: >-
+  The method body stays LCRC (same explicit local objects, atom/bond/path
+  statistics, LocalMLP and readout).  The six free embedding tables of the C1
+  local encoder are generated from one shared atom-composition embedding A(16,16)
+  and one shared bond composition embedding B(5,8) via small per-bank MLPs.
+  No message passing, attention, graph head or D-MPNN is added anywhere.
+
+codec:
+  atom_types: 16
+  bond_types: 5
+  path_codes: 400          # mid*25 + (b1-1)*5 + (b2-1);  b = bond-1
+  binary_codes: 80         # atom*5 + bond;  bond = code % 5
+  rank: 32
+  note: >-
+    path_end63 is a historical field name; the live schema has 80 end classes.
+    The ZINC 189/63 vocabularies are never used.
+
+generator:
+  shared_composition_tables: 296
+  path_mlp: MLP(32 -> 197 -> 32)     (2 banks)
+  binary_mlp: MLP(24 -> 40 -> 32)    (3 banks)
+  gate_mlp: 1 + MLP(32 -> 23 -> 1)   (final Linear zeroed -> gate == 1 at init)
+  hidden_activation: SiLU
+  init: shared embeddings N(0,1); MLP Linear U(+-1/sqrt(in)); gate final zeroed
+  generator_seed: 17                 (independent CPU Generator)
+  total_generator_params: 33689
+  free_table_params_replaced: 33680
+  fs_total_params: 228683            # +9 vs the free-lookup C1 (228674)
+
+standardisation:
+  scope: five vector banks (path_emb, path_u, nbr_emb, end_emb, path_v)
+  rule: >-
+    at theta_0 compute the generator raw output on the fixed code grid, then fix
+    per-column affine buffers mapping mu/std to the original C1 initial table's
+    mu/std.  Constants come from initial weights + public schema; never refit.
+  gate: not standardised; always 1 + gate_net
+  std_floor: 1.0e-4
+
+arms:
+  LS: free tables initialised to FS's theta_0 materialisation, then free training
+  FS: semantic generator (true mid/atom/bond composition decode)
+  LP: free tables initialised to FP's theta_0 materialisation, then free training
+  FP: same generator as FS, but a fixed composite-code bijection before decode
+  B:  the frozen C1 base (used only as the wd=1e-2 performance coordinate)
+  perm: >-
+    np.random.default_rng(20261114) -> pi400 / sigma80.  A composite-code
+    bijection (not a per-atom / per-bond rename).  Preserves class identity
+    information, destroys the real atom/bond composition correspondence.
+
+paired_comparisons:
+  Delta_sem: RMSE(LS) - RMSE(FS)
+  Delta_perm: RMSE(LP) - RMSE(FP)
+  DiD_semantics: Delta_sem - Delta_perm
+  note: >-
+    fixed-weight common scaffold perturbation recomputes all four models; the
+    four models are never stitched from independent intervals when reporting DiD.
+
+data:
+  lipo:
+    dataset: OGB ogbg-mollipo
+    split: official scaffold (Train 3360 / Valid 420 / Test 420)
+    target: raw exp (logD); Train-only target normalisation
+  esol:
+    dataset: official ogbg-molesol
+    split: official scaffold (Train 902 / Valid 113 / Test 113)
+    schema: same lipo_v1 label-free structure schema and code rules
+    target: Train-fitted normalisation; no ESOL hyper-parameter search
+  budget:
+    nested_subsets: sha256('LCRC-semantic-budget-v1|'+global_row_id) ascending
+    fractions: {N100: 1.0, N50: 0.5, N25: 0.25}
+    update_budget: U = 360 * ceil(N_full/128) = 9720
+    grid: "round(j*U/50), j=1..50; Val-only selection on the grid"
+    structure_normalisation: frozen all-official-Train (label-free); disclosed
+
+recipes:
+  R:   {recipe: frozen R3, weight_decay: 1.0e-3}
+  W0:  {weight_decay: 0.0}
+  Rwd: {weight_decay: 1.0e-2}
+  frozen: >-
+    AdamW lr 3e-4 -> 1e-5 per-step cosine, batch 128, dropout 0.10, clip 5.0,
+    360 epochs, FP32/TF32 off, row order seed0 + 917000.
+
+evaluation:
+  every_epoch: full official Train / Valid / Test on the same weights
+  selection: Validation-only (grid for budget runs; best-epoch auxiliary)
+  late_window: last 20 epochs (mean of per-epoch metrics, not an ensemble)
+
+judgements:
+  labels:
+    - INITIALIZATION_SIGNAL_ONLY
+    - GENERIC_REPARAMETERIZATION
+    - SEMANTIC_SHARING_SUPPORTED_THIS_PANEL
+    - REGULARIZATION_DEPENDENT
+    - SMALL_LABEL_REGIME_CANDIDATE
+    - MECHANISM_SIGNAL_NO_PERFORMANCE_ADVANCE
+    - PERFORMANCE_ADVANCE_CANDIDATE
+    - NO_USEFUL_SIGNAL
+    - INCOMPLETE_RESOURCE_OR_IMPLEMENTATION
+  evidence_switch_E:
+    - FS beats matched LS by >=2% Val and Test RMSE in one full-Train recipe with MAE not worse >1%
+    - DiD_semantics > 0 on Val and Test and survives deleting the control's worst 1%
+    - wd0 pair or ESOL gives a same-direction FS advantage
+    - FS also beats the best reachable lookup candidate (B_R / B_Rwd / LS) by >=1% Val and Test
+
+uncertainty:
+  design: 500 Murcko-scaffold-cluster bootstrap, Exp(1) weights shared by all
+    models in a comparison (paired); seed 20261114
+  frame: sample uncertainty of fixed models, NOT training-seed variance
+  acyclic_fallback: canonical SMILES
+
+budget:
+  wall_target_hours: 7.5
+  wall_hard_hours: 8.0
+  gpu_soft_hours: 14.0
+  gpu_hard_hours: 16.0
+  max_training_runs: 23
+
+test_policy: always
+test_access_note: >-
+  Declared development-evaluation access for this round.  No historical freeze
+  is fabricated, the control-plane guard is unchanged, and every read is
+  recorded in analysis/test_access_log.json.

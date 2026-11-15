@@ -1,0 +1,72 @@
+protocol_id: lcrc-explicit-semantic-learning-8h-s0-v1
+seed: 0
+dataset_name: ogbg-mollipo
+split_method: scaffold
+families:
+- LS
+- FS
+- LP
+- FP
+recipes:
+  R:
+    weight_decay: 0.001
+  W0:
+    weight_decay: 0.0
+  Rwd:
+    weight_decay: 0.01
+c1_recipe:
+  optimizer: AdamW
+  adam_betas:
+  - 0.9
+  - 0.999
+  adam_eps: 1.0e-08
+  peak_lr: 0.0003
+  min_lr: 1.0e-05
+  weight_decay: 0.001
+  batch_size: 128
+  dropout: 0.1
+  gradient_clip: 5.0
+  epochs: 360
+  scheduler: per_step_cosine
+  shuffle_offset: 917000
+  soup: false
+  ema: false
+  swa: false
+  ssl: false
+  early_stopping: false
+  hyperparameter_search: false
+codec:
+  n_atom_types: 16
+  n_bond_types: 5
+  n_path_codes: 400
+  n_nbr_codes: 80
+  rank: 32
+  atom_emb_dim: 16
+  bond_emb_dim: 8
+  path_hidden: 197
+  binary_hidden: 40
+  gate_hidden: 23
+params:
+  free_table: 33680
+  generator: 33689
+  FS: 228683
+seeds:
+  generator: 17
+  perm: 20261114
+gpu_budget:
+  gpu_soft_hours: 14.0
+  gpu_hard_hours: 16.0
+stage: prepare
+family: FS
+recipe: R
+dataset: lipo
+budget: N100
+sections:
+- a
+- b
+- c
+- d
+- e
+- f
+steps: 100
+device_pref: cuda
