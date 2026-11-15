@@ -431,6 +431,7 @@ tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/
     pair_mapping_checked.csv        pair_components.csv
     edit_coverage.json              edit_metrics_corrected.json     edit_before_after.csv
     performance_tables.json         performance_tables.csv          analysis_run.json
+    figures/fig1_kernel_grading.png figures/fig2_performance_panel.png
   runs/arm_B_N100_lipo_W0/          # metrics/curve/grid/pred_*/checkpoint_{best,last}/identity
   data/checkpoints/                 # 拉回的 FS/FP/B_Rwd/LS_Rwd/FS_Rwd best + 两个 native-lookup
 ```
@@ -450,6 +451,18 @@ rr run res <exp> --pool res-gpu1 --gpus 1 --cpus 4 -- \
       RESEARCH_EXTRA_RUNNER_PATHS=.../code RESEARCH_EXTRA_RUNNERS=rp_runner \
   uv run research run lcrc-semantic-analysis-repair-bw0-s0-v1 --set stage=train
 ```
+
+## 8.1 两张图（只为改变理解，不做图数凑数）
+
+* `analysis/figures/fig1_kernel_grading.png` —— 修正后的梯度核按共享原始组成成分数
+  （0/1/2）的余弦：FS（真实 codec）与 FP（置换控制）在 **init** 与**各自 best** 两点的对比。
+  它把 §4.2 的表读成一件事：**分级在 init 就已存在，训练把三档一起压低但顺序不变，
+  而置换控制从头到尾接近平坦**。这是纯数字最难一眼看出的结论。
+* `analysis/figures/fig2_performance_panel.png` —— 两种选点口径（旧 50 点 grid / 每 epoch 最佳 Valid）
+  的 Valid–Test 散点，标出承载本轮判断的 10 个臂。它直观显示：**同一臂在两种口径下都赢**，
+  而 FS 的 grid 与 best 的 Test 值差得最远 —— 这正是两张表都要全列的原因。
+
+两图只读 `analysis/*.json`，不做任何重算或再选点；由 `rp_analysis` 的 `figures` 段重生成。
 
 ## 9. 明确缺口
 

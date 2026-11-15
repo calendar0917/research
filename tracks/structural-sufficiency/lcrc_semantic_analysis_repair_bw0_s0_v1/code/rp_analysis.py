@@ -10,6 +10,7 @@ predecessor artifacts plus the frozen caches, in a fixed order:
 5. ``rp_replay``   — checkpoint replay, corrected gradient kernel, native export
 6. ``rp_perform     — the two complete performance tables + bootstrap
 7. ``rp_edit``     — corrected real edit response
+8. ``rp_figures``  — the two figures that carry the reading (kernel grading, both tables)
 
 It never launches a training run.  ``--sections`` selects a subset.
 """
@@ -29,6 +30,7 @@ def _register() -> None:
     import rp_checks as CK
     import rp_edit as ED
     import rp_explicit as EX
+    import rp_figures as FG
     import rp_init as IN
     import rp_perf as PF
     import rp_replay as RP2
@@ -45,6 +47,7 @@ def _register() -> None:
             "replay": RP2.run,
             "performance": PF.run,
             "edit": ED.run,
+            "figures": FG.run,
         }
     )
 
