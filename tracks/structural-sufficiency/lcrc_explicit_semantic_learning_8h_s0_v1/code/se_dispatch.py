@@ -220,6 +220,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             if slot.ident and slot.status == "running":
                 st, code = poll(slot, args.rr_config)
                 if st in ("complete", "failed", "cancelled"):
+                    row = next(r for r in rows if r["run_id"] == slot.run_id)
                     ok = st == "complete" and code in ("0", "")
                     row["status"] = "COMPLETE" if ok else "FAILED"
                     row["note"] = f"exit={code} wall={(_now() - slot.started).total_seconds():.0f}s"
