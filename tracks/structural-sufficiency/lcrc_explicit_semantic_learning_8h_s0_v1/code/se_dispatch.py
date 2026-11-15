@@ -72,6 +72,23 @@ class Slot:
     status: str = "idle"
 
 
+def ensure_deployed(rr_config: str | None) -> bool:
+    """Deploy local HEAD to the host if the remote checkout is behind.
+
+    The dispatcher may be restarted after an analysis commit moved local HEAD
+    ahead of the deployed revision; rather than stalling every launch we sync
+    the host ourselves (still exclusively through ``rr``)."""
+    cmd = ["rr"]
+    if rr_config:
+        cmd += ["--config", rr_config]
+    cmd += ["deploy", "res"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=str(C.REPO))
+    if proc.returncode != 0:
+        C.log(f"[dispatch] deploy failed: {proc.stderr.strip()[:300]}")
+        return False
+    return True
+
+
 def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), rr_config: str | None = None, attempt: int = 1) -> Slot:
     run_id = row["run_id"]
     ident = f"{EXPERIMENT_PREFIX}{run_id}".replace("_", "").lower()[:30]
@@ -96,6 +113,10 @@ def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), rr
     ]
     C.log(f"[dispatch] launch {run_id} on {pool} ({row['family']}-{row['recipe']} {row['dataset']}/{row['budget']})")
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=str(C.REPO))
+    if proc.returncode != 0 and "remote checkout is not at the local commit" in proc.stderr:
+        C.log("[dispatch] remote behind local HEAD; deploying and retrying once")
+        if ensure_deployed(rr_config):
+            proc = subprocess.run(cmd, capture_output=True, text=True, cwd=str(C.REPO))
     if proc.returncode != 0:
         C.log(f"[dispatch] launch failed {run_id}: {proc.stderr.strip()[:400]}")
         return Slot(pool=pool, status="failed")
