@@ -54,7 +54,9 @@ def write_matrix(rows: Sequence[dict[str, Any]]) -> None:
 
 
 def dirty_paths() -> list[str]:
-    proc = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, cwd=str(C.REPO))
+    """Tracked modifications only (untracked user files are not our edits)."""
+    proc = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+                          capture_output=True, text=True, cwd=str(C.REPO))
     out = []
     for line in proc.stdout.splitlines():
         if len(line) > 3:
