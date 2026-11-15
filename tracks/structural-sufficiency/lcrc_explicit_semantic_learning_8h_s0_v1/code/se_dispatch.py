@@ -71,7 +71,7 @@ class Slot:
     status: str = "idle"
 
 
-def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), attempt: int = 1) -> Slot:
+def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), rr_config: str | None = None, attempt: int = 1) -> Slot:
     run_id = row["run_id"]
     ident = f"{EXPERIMENT_PREFIX}{run_id}".replace("_", "").lower()[:30]
     if attempt > 1:
@@ -79,8 +79,11 @@ def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), at
     bad = [p for p in dirty_paths() if p not in ALLOWED_DIRTY]
     if bad:
         raise SystemExit(f"refusing to launch with dirty code paths: {bad}")
-    cmd = [
-        "rr", "run", "res", ident, "--pool", pool, "--allow-dirty",
+    cmd = ["rr"]
+    if rr_config:
+        cmd += ["--config", rr_config]
+    cmd += [
+        "run", "res", ident, "--pool", pool, "--allow-dirty",
         "--result", C.track_rel(C.RUNS),
         "--", "uv", "run", "python",
         C.track_rel(Path(__file__).resolve().parent / "se_train.py"),
@@ -96,10 +99,14 @@ def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), at
     return Slot(pool=pool, ident=ident, run_id=run_id, started=_now(), status="running")
 
 
-def poll(slot: Slot) -> tuple[str, str]:
+def poll(slot: Slot, rr_config: str | None = None) -> tuple[str, str]:
     if not slot.ident:
         return "failed", ""
-    proc = subprocess.run(["rr", "status", slot.ident, "--json"], capture_output=True, text=True, cwd=str(C.REPO))
+    cmd = ["rr"]
+    if rr_config:
+        cmd += ["--config", rr_config]
+    cmd += ["status", slot.ident, "--json"]
+    proc = subprocess.run(cmd, capture_output=True, text=True, cwd=str(C.REPO))
     import json
 
     try:
@@ -128,6 +135,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--max-runs", type=int, default=None)
     ap.add_argument("--poll-seconds", type=float, default=20.0)
     ap.add_argument("--keep-pools", default=",".join(GPU_POOLS))
+    ap.add_argument("--rr-config", default=None, help="path to an rr config override")
     ap.add_argument("--priorities", default=None)
     ap.add_argument("--once", action="store_true", help="one scheduling pass then exit (launch-only)")
     args = ap.parse_args(argv)
@@ -145,7 +153,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         pending.sort(key=lambda r: (int(r["priority"]), r["run_id"]))
         for slot in slots:
             if slot.ident and slot.status == "running":
-                st, code = poll(slot)
+                st, code = poll(slot, args.rr_config)
                 if st in ("complete", "failed", "cancelled"):
                     row = next(r for r in rows if r["run_id"] == slot.run_id)
                     ok = st == "complete" and code in ("0", "")
@@ -172,7 +180,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     row["status"] = "COMPLETE"
                     launched += 1
                     continue
-                new = launch(slot.pool, row)
+                new = launch(slot.pool, row, rr_config=args.rr_config)
                 launched += 1
                 if new.ident:
                     slots[slots.index(slot)] = new
