@@ -70,9 +70,7 @@ def support_slices(run_name: str, *, budget: str = "N100") -> dict[str, Any]:
     view = LPD.build_view()
     train = view.caches["train"]
     sup = _train_loo_support(train)
-    # frozen terciles of the per-molecule low-support joint fraction on Train
-    r_train = np.asarray([_low_support_frac(sup["per_mol_joint"], sup["df_joint"]) for _ in range(sup["n"])])
-    # recompute properly (loop above was a placeholder)
+    # frozen terciles of the per-molecule joint low-support fraction on Train
     r_train = np.asarray([_low_support_frac_for(sup["per_mol_joint"][i], sup["df_joint"]) for i in range(sup["n"])])
     q1, q2 = np.quantile(r_train, [1 / 3, 2 / 3])
     out: dict[str, Any] = {"terciles": [float(q1), float(q2)], "budget": budget}
@@ -103,10 +101,6 @@ def _low_support_frac_for(joint_set, df_joint, thresh: int = 5) -> float:
         return 0.0
     low = sum(1 for j in joint_set if df_joint.get(j, 0) <= thresh)
     return low / len(joint_set)
-
-
-def _low_support_frac(joint_per_mol, df_joint, thresh: int = 5) -> float:
-    return 0.0
 
 
 # ---------------------------------------------------------------------------
