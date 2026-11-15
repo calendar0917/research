@@ -1,0 +1,10 @@
+# rr config override: route the `res` host through the direct SSH alias.
+#
+# 2026-11-15: the JumpHost `pve-old` (an IPv6-only DNS name) intermittently
+# fails to resolve ("Could not resolve hostname pve-old.yulinsec.cn"), which
+# makes every `rr` call to `res` flaky during a long run.  The direct alias
+# `res-direct` (same IP/port, no ProxyJump) is reachable, so this override points
+# the `res` host at it.  Network topology still lives in ~/.ssh/config; this file
+# only remaps the alias rr uses.
+[hosts.res]
+ssh_alias = "res-direct"

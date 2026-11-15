@@ -1,0 +1,169 @@
+{
+  "all_passed": true,
+  "checks": {
+    "a_binary_roundtrip": true,
+    "a_free_eq_generator_plus_9": true,
+    "a_generator_registered_once": true,
+    "a_params_FP_expected": true,
+    "a_params_FS_expected": true,
+    "a_params_LP_expected": true,
+    "a_params_LS_expected": true,
+    "a_path_roundtrip": true,
+    "b_finite": true,
+    "b_gate_init_one": true,
+    "b_non_table_equal": true,
+    "b_pair_perm_close": true,
+    "b_pair_sem_close": true,
+    "c_atom_renumber_invariant": true,
+    "c_bondless_finite": true,
+    "c_perm_bijection": true,
+    "d_atom_grad": true,
+    "d_gate_hidden_zero_first_step": true,
+    "d_gate_last_nonzero_first_step": true,
+    "e_deterministic_algorithms": true,
+    "e_eval_insertion_invariant": true,
+    "e_tf32_off": true,
+    "f_export_leq_1e5": true
+  },
+  "device": "cuda",
+  "environment": {
+    "cublas_workspace_config": ":4096:8",
+    "cuda_available": true,
+    "cuda_device_name": "NVIDIA A100-SXM4-40GB",
+    "cuda_visible_devices": "1",
+    "cudnn_benchmark": false,
+    "deterministic_algorithms": true,
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "rdkit": null,
+    "tf32_cudnn": false,
+    "tf32_matmul": false,
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "git_commit": "933410cf8469b90c69f32ded4fc705973f4aedbe",
+  "sections": {
+    "a": {
+      "checks": {
+        "binary_roundtrip": true,
+        "free_eq_generator_plus_9": true,
+        "generator_registered_once": true,
+        "params_FP_expected": true,
+        "params_FS_expected": true,
+        "params_LP_expected": true,
+        "params_LS_expected": true,
+        "path_roundtrip": true
+      },
+      "codec": {
+        "atom_range": [
+          0,
+          15
+        ],
+        "binary_roundtrip": true,
+        "bond_range": [
+          0,
+          4
+        ],
+        "n_binary_codes": 80,
+        "n_path_codes": 400,
+        "path_ranges": {
+          "b1": [
+            0,
+            4
+          ],
+          "b2": [
+            0,
+            4
+          ],
+          "mid": [
+            0,
+            15
+          ]
+        },
+        "path_roundtrip": true
+      },
+      "generator_registered_once": true,
+      "parameters": {
+        "FP": 228683,
+        "FS": 228683,
+        "LP": 228674,
+        "LS": 228674
+      },
+      "params_expected": {
+        "FP": 228683,
+        "FS": 228683,
+        "LP": 228674,
+        "LS": 228674
+      }
+    },
+    "b": {
+      "atol": 1e-05,
+      "checks": {
+        "finite": true,
+        "gate_init_one": true,
+        "non_table_equal": true,
+        "pair_perm_close": true,
+        "pair_sem_close": true
+      },
+      "epoch0_max_abs_LP_FP": 2.384185791015625e-06,
+      "epoch0_max_abs_LS_FS": 2.86102294921875e-06,
+      "gate_max": 1.0,
+      "gate_min": 1.0,
+      "non_table_tensor_equal_LS_FS": true
+    },
+    "c": {
+      "bondless_pred": -1.3647892475128174,
+      "checks": {
+        "atom_renumber_invariant": true,
+        "bondless_finite": true,
+        "perm_bijection": true
+      },
+      "perm_bijection": true,
+      "renumber_max_abs": 4.76837158203125e-07
+    },
+    "d": {
+      "checks": {
+        "atom_grad": true,
+        "gate_hidden_zero_first_step": true,
+        "gate_last_nonzero_first_step": true
+      },
+      "gate_hidden_grad_first_step": 0.0,
+      "gate_last_grad_first_step": 58.088836669921875,
+      "shared_composition_grad": {
+        "atom": 427.7110290527344,
+        "bond": 246.05471801757812
+      }
+    },
+    "e": {
+      "checks": {
+        "deterministic_algorithms": true,
+        "eval_insertion_invariant": true,
+        "tf32_off": true
+      },
+      "determinism": {
+        "cublas_workspace_config": ":4096:8",
+        "cudnn_benchmark": false,
+        "deterministic_algorithms": true,
+        "tf32_cudnn": false,
+        "tf32_matmul": false
+      },
+      "replay_hash": "b3db2c799ebf0d18f4f117c38de5fbf1a78fe2f2ea3d6051175ef6ba59f1d101",
+      "replay_with_eval_hash": "b3db2c799ebf0d18f4f117c38de5fbf1a78fe2f2ea3d6051175ef6ba59f1d101"
+    },
+    "f": {
+      "checks": {
+        "export_leq_1e5": true
+      },
+      "export_max_abs": {
+        "test": 4.291534423828125e-06,
+        "train": 4.291534423828125e-06,
+        "valid": 4.291534423828125e-06
+      },
+      "independent_rmse": {
+        "test": 9.466819980850415,
+        "valid": 9.418001013313747
+      }
+    }
+  }
+}
