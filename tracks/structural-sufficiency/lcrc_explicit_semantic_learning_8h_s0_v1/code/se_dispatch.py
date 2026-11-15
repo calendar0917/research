@@ -76,6 +76,8 @@ def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), rr
     ident = f"{EXPERIMENT_PREFIX}{run_id}".replace("_", "").lower()[:30]
     if attempt > 1:
         ident = f"{ident[:28]}r{attempt}"
+    out_name = C.arm_name(row["family"], row["recipe"], row["dataset"], row["budget"])
+    out_dir = C.RUNS / f"arm_{out_name}"
     bad = [p for p in dirty_paths() if p not in ALLOWED_DIRTY]
     if bad:
         raise SystemExit(f"refusing to launch with dirty code paths: {bad}")
@@ -84,12 +86,12 @@ def launch(pool: str, row: dict[str, Any], *, extra_args: Sequence[str] = (), rr
         cmd += ["--config", rr_config]
     cmd += [
         "run", "res", ident, "--pool", pool, "--allow-dirty",
-        "--result", C.track_rel(C.RUNS),
+        "--result", C.track_rel(out_dir),
         "--", "uv", "run", "python",
         C.track_rel(Path(__file__).resolve().parent / "se_train.py"),
         "--family", row["family"], "--recipe", row["recipe"],
         "--dataset", row["dataset"], "--budget", row["budget"],
-        "--device", "cuda", *extra_args,
+        "--device", "cuda", "--out-dir", C.track_rel(out_dir), *extra_args,
     ]
     C.log(f"[dispatch] launch {run_id} on {pool} ({row['family']}-{row['recipe']} {row['dataset']}/{row['budget']})")
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=str(C.REPO))
