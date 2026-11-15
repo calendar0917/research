@@ -1,0 +1,35 @@
+protocol_id: lcrc-semantic-analysis-repair-bw0-s0-v1
+seed: 0
+dataset_name: ogbg-mollipo
+split_method: scaffold
+split_sizes:
+  train: 3360
+  valid: 420
+  test: 420
+new_training:
+  family: B
+  recipe: W0
+  dataset: lipo
+  budget: N100
+  seed: 0
+recipes:
+  W0:
+    weight_decay: 0.0
+reference_template:
+  arm: B_N100_lipo_Rwd
+  weight_decay: 0.01
+parameters:
+  C1: 228674
+bootstrap:
+  replicates: 500
+  seed: 20261115
+kernel:
+  seed: 20261115
+  rank: 32
+  max_codes: 64
+tolerances:
+  replay_max_abs_delta: 1.0e-05
+  kernel_coupling: 1.0e-06
+low_support_min_components: 20
+stage: prepare
+device_pref: cpu

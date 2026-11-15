@@ -1,0 +1,55 @@
+{
+  "conclusion": "NOT_REPRODUCIBLE: se_train seeds the global RNG only after building the model, so the old arms' initial weights depend on the OS entropy of each process.  The 'same non-table initial state' pairing across B/LS/FS/LP/FP is therefore not established by construction.",
+  "created_utc": "2026-11-15T06:15:49Z",
+  "distinct_initial_seeds": 3,
+  "distinct_state_hashes": 3,
+  "git_commit": "1d6700ea01acbee33e7630f1813c7884d28bee71",
+  "matches_any_recorded": {
+    "B_Rwd": false,
+    "FS_Rwd": false,
+    "LS_Rwd": false
+  },
+  "method": "fresh subprocesses run setup_determinism -> build_view -> build_permutations -> se_train.build_model(B), exactly the order train_run uses before torch.manual_seed",
+  "probes": [
+    {
+      "initial_seed": 12529522649825718501,
+      "params": 228674,
+      "state_hash": "841ce578e41123c568463f710aceee1ad04b7f484b7d2c6f0df36a2965948882"
+    },
+    {
+      "initial_seed": 4728654756341503179,
+      "params": 228674,
+      "state_hash": "c631b13a5fd4d08c06c79f21c201b1426a178f022f397fb8974438797edcaa81"
+    },
+    {
+      "initial_seed": 15356147813196860705,
+      "params": 228674,
+      "state_hash": "944c17bbf028665e45cc207334d41f8673696e733bfa9ba95aa67975a60395c4"
+    }
+  ],
+  "protocol_id": "lcrc-semantic-analysis-repair-bw0-s0-v1",
+  "question": "does the frozen training loop start from a reproducible initial state?",
+  "recorded_init_hashes": {
+    "B_Rwd": {
+      "best_epoch": 216,
+      "init_state_hash": "ee9e4e5721fa8dd3c92c925209768e1810495d4bcc52b0ff85078dc6be3c038e",
+      "present": true,
+      "state_hash": "83b7a7f8def027303eeba32b0ddbf98e4cd2e4cf1215dbb50bb4f22a3040cde9"
+    },
+    "FS_Rwd": {
+      "best_epoch": 104,
+      "init_state_hash": "6732ff5a883ca8d9f2e4ae2482379e3cf55ec706a42868ad1d86c8457d6b0e74",
+      "present": true,
+      "state_hash": "b4c3cbdb0006c8bc1db7dacdcafe32a966756e78f1ed53b04693dd8f4e586b9d"
+    },
+    "LS_Rwd": {
+      "best_epoch": 278,
+      "init_state_hash": "007dd94ea4c02fe2efcd7a4d5af16113c52c586d66a4d8cf55b5e0bc41a6c0a2",
+      "present": true,
+      "state_hash": "9bd10b588d8802b0f3b790c5c458ef41cb424786b1d228703c5d8b09fa7ed347"
+    }
+  },
+  "reproducible_across_processes": false,
+  "schema": "lcrc-semantic-analysis-repair-init-reproducibility-v1",
+  "this_round_action": "B_N100_lipo_W0 loads the frozen, documented C1 initial state dissect_model.build_full_state(spec,norm,0) -> remap_state('C1',...) (i.e. lp_model.shared_c1_init_state) before training, the same init the HOME round's original B arm used."
+}
