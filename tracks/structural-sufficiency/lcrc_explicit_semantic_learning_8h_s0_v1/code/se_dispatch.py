@@ -114,7 +114,7 @@ def poll(slot: Slot, rr_config: str | None = None) -> tuple[str, str]:
 
     try:
         data = json.loads(proc.stdout)
-        state = str(data.get("state") or "unknown")
+        state = _norm_state(str(data.get("state") or "unknown"))
         code = str(data.get("exit_code") if data.get("exit_code") is not None else "")
         return state, code
     except Exception:
@@ -128,6 +128,17 @@ def poll(slot: Slot, rr_config: str | None = None) -> tuple[str, str]:
             elif parts[0] == "exit_code":
                 code = parts[-1]
         return state or "unknown", code
+
+
+def _norm_state(st: str) -> str:
+    st = (st or "").strip().lower()
+    if st.startswith("complete"):
+        return "complete"
+    if st.startswith("fail") or st.startswith("error"):
+        return "failed"
+    if st.startswith("cancel"):
+        return "cancelled"
+    return st
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -158,6 +169,27 @@ def main(argv: Sequence[str] | None = None) -> int:
         if r["run_id"] in state["status"]:
             r["status"] = state["status"][r["run_id"]]
     slots = [Slot(pool=p) for p in pools]
+    # resume: re-attach slots to any run the previous session left RUNNING
+    for run_id, st in list(state["status"].items()):
+        if st != "RUNNING":
+            continue
+        rec = state["runs"].get(run_id) or {}
+        ident = rec.get("ident")
+        pool = rec.get("pool")
+        if not ident:
+            state["status"][run_id] = "PENDING"
+            continue
+        attached = False
+        for s in slots:
+            if s.pool == pool and s.status == "idle":
+                s.ident = ident
+                s.run_id = run_id
+                s.status = "running"
+                s.started = _now()
+                attached = True
+                break
+        if not attached:
+            C.log(f"[dispatch] cannot re-attach {run_id} ({ident}); left RUNNING for inspection")
     launched = 0
     while True:
         pending = [r for r in rows if r["status"] == "PENDING" and (prio is None or int(r["priority"]) in prio)]
@@ -166,7 +198,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             if slot.ident and slot.status == "running":
                 st, code = poll(slot, args.rr_config)
                 if st in ("complete", "failed", "cancelled"):
-                    row = next(r for r in rows if r["run_id"] == slot.run_id)
                     ok = st == "complete" and code in ("0", "")
                     row["status"] = "COMPLETE" if ok else "FAILED"
                     row["note"] = f"exit={code} wall={(_now() - slot.started).total_seconds():.0f}s"
