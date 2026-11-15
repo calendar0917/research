@@ -67,6 +67,41 @@ def recorded_init_hashes() -> dict[str, Any]:
     return out
 
 
+def bw0_init_identity() -> dict[str, Any]:
+    """Does ``B_N100_lipo_W0`` share the HOME round ``B`` arm's initial state?"""
+    import torch
+
+    import lp_data as LPD
+    import lp_model as LPM
+
+    out: dict[str, Any] = {}
+    view = LPD.build_view()
+    c1_state = LPM.shared_c1_init_state(view.spec, view.train_norm)
+    out["shared_c1_state_hash"] = LPD.state_hash(c1_state)
+    home = RP.HOME / "analysis/results/B/metrics.json"
+    out["home_B_recorded_c1_init_state_hash"] = (
+        (RP.read_json(home).get("init") or {}).get("c1_init_state_hash") if home.is_file() else None
+    )
+    out["matches_home_B"] = out["home_B_recorded_c1_init_state_hash"] == out["shared_c1_state_hash"]
+    ck_path = RP.BW0_DIR / "checkpoint_best.pt"
+    if ck_path.is_file():
+        ck = torch.load(ck_path, map_location="cpu", weights_only=False)
+        model = LPM.build_arm(view.spec, view.train_norm, "B")
+        model.base.load_state_dict(c1_state, strict=True)
+        out["bw0_recorded_init_state_hash"] = ck.get("init_state_hash")
+        out["bw0_reproduced_init_state_hash"] = LPD.state_hash(model.state_dict())
+        out["bw0_init_reproduced"] = out["bw0_recorded_init_state_hash"] == out["bw0_reproduced_init_state_hash"]
+        out["bw0_parameters"] = ck.get("parameters")
+        out["bw0_best_epoch"] = ck.get("best_epoch")
+    else:
+        out["bw0_recorded_init_state_hash"] = None
+    out["note"] = (
+        "the two hashes use different state_dict conventions (unprefixed C1 state vs the wrapper's "
+        "prefixed state), so equality is established by rebuilding the state, not by comparing strings"
+    )
+    return out
+
+
 def run(n_probes: int = 3) -> dict[str, Any]:
     probes = [probe() for _ in range(n_probes)]
     hashes = [p.get("state_hash") for p in probes if "state_hash" in p]
@@ -99,6 +134,7 @@ def run(n_probes: int = 3) -> dict[str, Any]:
             if not reproducible else
             "REPRODUCIBLE: the initial state is identical across fresh processes."
         ),
+        "b_w0_initial_state": bw0_init_identity(),
         "this_round_action": (
             "B_N100_lipo_W0 loads the frozen, documented C1 initial state "
             "dissect_model.build_full_state(spec,norm,0) -> remap_state('C1',...) (i.e. "
@@ -110,6 +146,7 @@ def run(n_probes: int = 3) -> dict[str, Any]:
         "reproducible_across_processes": payload["reproducible_across_processes"],
         "distinct_state_hashes": payload["distinct_state_hashes"],
         "matches_any_recorded": payload["matches_any_recorded"],
+        "b_w0_matches_home_B": payload["b_w0_initial_state"].get("matches_home_B"),
         "artifacts": [RP.track_rel(RP.ANALYSIS / "init_reproducibility.json")],
     }
 

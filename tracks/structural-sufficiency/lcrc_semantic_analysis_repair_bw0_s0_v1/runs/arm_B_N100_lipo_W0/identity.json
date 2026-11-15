@@ -1,0 +1,37 @@
+{
+  "c1_recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "early_stopping": false,
+    "ema": false,
+    "epochs": 360,
+    "gradient_clip": 5.0,
+    "hyperparameter_search": false,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "shuffle_offset": 917000,
+    "soup": false,
+    "ssl": false,
+    "swa": false,
+    "weight_decay": 0.001
+  },
+  "expected_parameters": 228674,
+  "init_adaptation": {
+    "effect_on_comparison": "B_W0 vs B_R share an initial state by construction; B_Rwd (old round) cannot be shown to share it, so the wd 1e-2 coordinate is compared with a stated initial-state caveat",
+    "name": "deterministic_shared_c1_init",
+    "why": "se_train never seeds the process RNG before building the C1 base, so the initial weights differ per process and cannot be shared across arms; build_full_state(seed=0)+remap_state('C1') is the frozen, documented C1 init used by the HOME round's original B arm"
+  },
+  "old_protocol_id": "lcrc-explicit-semantic-learning-8h-s0-v1",
+  "protocol_id": "lcrc-semantic-analysis-repair-bw0-s0-v1",
+  "recipe": {
+    "weight_decay": 0.0
+  },
+  "smoke": false
+}

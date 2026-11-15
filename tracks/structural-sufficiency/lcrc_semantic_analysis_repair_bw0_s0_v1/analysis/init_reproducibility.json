@@ -1,9 +1,20 @@
 {
+  "b_w0_initial_state": {
+    "bw0_best_epoch": 223,
+    "bw0_init_reproduced": true,
+    "bw0_parameters": 228674,
+    "bw0_recorded_init_state_hash": "7f5d7570ec6f5e15e91e3b55da46d0af838f5368a1fc844a94c00edc10960ff0",
+    "bw0_reproduced_init_state_hash": "7f5d7570ec6f5e15e91e3b55da46d0af838f5368a1fc844a94c00edc10960ff0",
+    "home_B_recorded_c1_init_state_hash": "7d0884f71156267b63e0416dd83711afe8ea57994699ebe0160df49a838e9ae1",
+    "matches_home_B": true,
+    "note": "the two hashes use different state_dict conventions (unprefixed C1 state vs the wrapper's prefixed state), so equality is established by rebuilding the state, not by comparing strings",
+    "shared_c1_state_hash": "7d0884f71156267b63e0416dd83711afe8ea57994699ebe0160df49a838e9ae1"
+  },
   "conclusion": "NOT_REPRODUCIBLE: se_train seeds the global RNG only after building the model, so the old arms' initial weights depend on the OS entropy of each process.  The 'same non-table initial state' pairing across B/LS/FS/LP/FP is therefore not established by construction.",
-  "created_utc": "2026-11-15T06:15:49Z",
+  "created_utc": "2026-11-15T06:45:52Z",
   "distinct_initial_seeds": 3,
   "distinct_state_hashes": 3,
-  "git_commit": "1d6700ea01acbee33e7630f1813c7884d28bee71",
+  "git_commit": "8c3aaa2a393910249e9c07680aea6fbfcdd2b566",
   "matches_any_recorded": {
     "B_Rwd": false,
     "FS_Rwd": false,
@@ -12,19 +23,19 @@
   "method": "fresh subprocesses run setup_determinism -> build_view -> build_permutations -> se_train.build_model(B), exactly the order train_run uses before torch.manual_seed",
   "probes": [
     {
-      "initial_seed": 12529522649825718501,
+      "initial_seed": 1868902193454307134,
       "params": 228674,
-      "state_hash": "841ce578e41123c568463f710aceee1ad04b7f484b7d2c6f0df36a2965948882"
+      "state_hash": "3c1323c2930c0e46de4b7586aafdc358c29708a959f289f3194f24ee574036a3"
     },
     {
-      "initial_seed": 4728654756341503179,
+      "initial_seed": 9419977030465636491,
       "params": 228674,
-      "state_hash": "c631b13a5fd4d08c06c79f21c201b1426a178f022f397fb8974438797edcaa81"
+      "state_hash": "345ad01f687986cf272e3f72f2e0deb6aabf4c4672a049055d4e1b9a30d66b27"
     },
     {
-      "initial_seed": 15356147813196860705,
+      "initial_seed": 16257226060339586115,
       "params": 228674,
-      "state_hash": "944c17bbf028665e45cc207334d41f8673696e733bfa9ba95aa67975a60395c4"
+      "state_hash": "a31875fcb7c11d906657f6b1c886a3e3170b0aaff83f662bb34eeaefb210d34c"
     }
   ],
   "protocol_id": "lcrc-semantic-analysis-repair-bw0-s0-v1",

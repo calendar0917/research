@@ -79,8 +79,11 @@ def _summary(d: Path) -> dict[str, Any]:
                           "bias": (blk.get(sp) or {}).get("bias")} for sp in RP.SPLITS}
         out[name]["epoch"] = blk.get("epoch")
     lw = s.get("late_window") or {}
-    out["late_window"] = {"window": lw.get("window"), "splits": {
-        sp: {"rmse": (lw.get(sp) or {}).get("rmse"), "mae": (lw.get(sp) or {}).get("mae")} for sp in RP.SPLITS}}
+    out["late_window"] = {
+        "window": lw.get("window"),
+        "epochs": lw.get("epochs"),
+        "splits": {sp: {"rmse": lw.get(f"{sp}_rmse"), "mae": lw.get(f"{sp}_mae")} for sp in RP.SPLITS},
+    }
     out["anomalies"] = m.get("anomalies")
     return out
 

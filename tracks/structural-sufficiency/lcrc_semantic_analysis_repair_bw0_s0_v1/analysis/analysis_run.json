@@ -1,0 +1,333 @@
+{
+  "created_utc": "2026-11-15T06:46:09Z",
+  "git_commit": "8c3aaa2a393910249e9c07680aea6fbfcdd2b566",
+  "protocol_id": "lcrc-semantic-analysis-repair-bw0-s0-v1",
+  "schema": "lcrc-semantic-analysis-repair-analysis-run-v1",
+  "seconds": 24.8,
+  "sections": {
+    "checks": {
+      "_seconds": 0.7,
+      "all_ok": true,
+      "artifacts": [
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/focused_checks.json"
+      ],
+      "failed": []
+    },
+    "edit": {
+      "_seconds": 1.1,
+      "artifacts": [
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/pair_mapping_checked.csv",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/pair_components.csv",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/edit_coverage.json",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/edit_metrics_corrected.json",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/edit_before_after.csv"
+      ],
+      "cells": {
+        "ALL": {
+          "low_support": false,
+          "n_components": 231,
+          "n_pairs": 823
+        },
+        "E_T": {
+          "low_support": true,
+          "n_components": 7,
+          "n_pairs": 27
+        },
+        "HH": {
+          "low_support": true,
+          "n_components": 0,
+          "n_pairs": 0
+        },
+        "TT": {
+          "low_support": false,
+          "n_components": 228,
+          "n_pairs": 791
+        },
+        "Train-Test": {
+          "low_support": true,
+          "n_components": 7,
+          "n_pairs": 27
+        },
+        "Train-Valid": {
+          "low_support": true,
+          "n_components": 4,
+          "n_pairs": 5
+        }
+      },
+      "graph": {
+        "n_components": 231,
+        "n_endpoints": 704
+      },
+      "missing_models": [],
+      "old_comparisons_present": true,
+      "split_combos": {
+        "test-train": 27,
+        "train-train": 791,
+        "train-valid": 5
+      }
+    },
+    "explicit": {
+      "_seconds": 6.5,
+      "created_utc": "2026-11-15T06:45:58Z",
+      "esol": {
+        "build_seconds": 0.08999483899970073,
+        "global_features": "raw lipo_v1 global42 values (NOT pre-standardised)",
+        "label": "ogbg-molesol",
+        "n_features": 32604,
+        "ridge": {
+          "test": {
+            "mae": 0.8338581461241675,
+            "n": 113,
+            "rmse": 1.0934718579939695
+          },
+          "train": {
+            "mae": 0.7307554642868163,
+            "n": 902,
+            "rmse": 0.9283205082778418
+          },
+          "valid": {
+            "mae": 0.9375445438431238,
+            "n": 113,
+            "rmse": 1.2285010988027505
+          }
+        },
+        "ridge_seconds": 0.007219195998914074,
+        "row_count_oracle": {
+          "test": {
+            "n_mismatch": 0,
+            "n_rows_checked": 113,
+            "ok": true,
+            "split": "test"
+          },
+          "train": {
+            "n_mismatch": 0,
+            "n_rows_checked": 902,
+            "ok": true,
+            "split": "train"
+          },
+          "valid": {
+            "n_mismatch": 0,
+            "n_rows_checked": 113,
+            "ok": true,
+            "split": "valid"
+          }
+        },
+        "scaler": "Train column positive maximum (max>0 -> max else 1.0); not centred",
+        "sparsity": {
+          "test": 0.9983198760562524,
+          "train": 0.998687298036697,
+          "valid": 0.9984072750723891
+        },
+        "xgb": {
+          "test": {
+            "mae": 0.97764061418868,
+            "n": 113,
+            "rmse": 1.4208725335371888
+          },
+          "train": {
+            "mae": 0.25734370162234765,
+            "n": 902,
+            "rmse": 0.33937785755349886
+          },
+          "valid": {
+            "mae": 0.8749880956390262,
+            "n": 113,
+            "rmse": 1.2159689653905248
+          }
+        },
+        "xgb_params": {
+          "colsample_bytree": 0.8,
+          "learning_rate": 0.03,
+          "max_bin": 128,
+          "max_depth": 4,
+          "min_child_weight": 5,
+          "n_estimators": 600,
+          "n_jobs": 8,
+          "objective": "reg:squarederror",
+          "random_state": 0,
+          "reg_lambda": 10.0,
+          "subsample": 0.8,
+          "tree_method": "hist"
+        },
+        "xgb_seconds": 2.056628438000189,
+        "xgb_zero_semantics": "sparse zeros are the XGBoost 'missing' value and take a learned default direction, not a data gap"
+      },
+      "lipo": {
+        "build_seconds": 0.45474361199921987,
+        "global_features": "raw lipo_v1 global42 values (NOT pre-standardised)",
+        "label": "ogbg-mollipo",
+        "n_features": 32604,
+        "ridge": {
+          "test": {
+            "mae": 0.7742057883706921,
+            "n": 420,
+            "rmse": 0.9638110519041918
+          },
+          "train": {
+            "mae": 0.7639869020481853,
+            "n": 3360,
+            "rmse": 0.9567446957856139
+          },
+          "valid": {
+            "mae": 0.8201394183866313,
+            "n": 420,
+            "rmse": 1.0357351211473178
+          }
+        },
+        "ridge_seconds": 0.018291471000338788,
+        "row_count_oracle": {
+          "test": {
+            "n_mismatch": 0,
+            "n_rows_checked": 420,
+            "ok": true,
+            "split": "test"
+          },
+          "train": {
+            "n_mismatch": 0,
+            "n_rows_checked": 3360,
+            "ok": true,
+            "split": "train"
+          },
+          "valid": {
+            "n_mismatch": 0,
+            "n_rows_checked": 420,
+            "ok": true,
+            "split": "valid"
+          }
+        },
+        "scaler": "Train column positive maximum (max>0 -> max else 1.0); not centred",
+        "sparsity": {
+          "test": 0.9978434577118788,
+          "train": 0.9978409839429576,
+          "valid": 0.9978299478299478
+        },
+        "xgb": {
+          "test": {
+            "mae": 0.6671047081578343,
+            "n": 420,
+            "rmse": 0.8432277619012745
+          },
+          "train": {
+            "mae": 0.4239022784475791,
+            "n": 3360,
+            "rmse": 0.5492151548762652
+          },
+          "valid": {
+            "mae": 0.7023305738781179,
+            "n": 420,
+            "rmse": 0.90197424063527
+          }
+        },
+        "xgb_params": {
+          "colsample_bytree": 0.8,
+          "learning_rate": 0.03,
+          "max_bin": 128,
+          "max_depth": 4,
+          "min_child_weight": 5,
+          "n_estimators": 600,
+          "n_jobs": 8,
+          "objective": "reg:squarederror",
+          "random_state": 0,
+          "reg_lambda": 10.0,
+          "subsample": 0.8,
+          "tree_method": "hist"
+        },
+        "xgb_seconds": 2.237249873998735,
+        "xgb_zero_semantics": "sparse zeros are the XGBoost 'missing' value and take a learned default direction, not a data gap"
+      },
+      "old_status": "INVALID_FOR_COMPARISON (predecessor matrix read path_ptr/nbr_ptr with a molecule index)",
+      "protocol_id": "lcrc-semantic-analysis-repair-bw0-s0-v1",
+      "schema": "lcrc-semantic-analysis-repair-explicit-baseline-v1"
+    },
+    "init": {
+      "_seconds": 5.0,
+      "artifacts": [
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/init_reproducibility.json"
+      ],
+      "b_w0_matches_home_B": true,
+      "distinct_state_hashes": 3,
+      "matches_any_recorded": {
+        "B_Rwd": false,
+        "FS_Rwd": false,
+        "LS_Rwd": false
+      },
+      "reproducible_across_processes": false
+    },
+    "performance": {
+      "_seconds": 3.8,
+      "artifacts": [
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/performance_tables.json",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/performance_tables.csv"
+      ],
+      "bootstrap_ok": 22,
+      "bootstrap_total": 22,
+      "n_arms": 17
+    },
+    "replay": {
+      "_seconds": 6.0,
+      "artifacts": [
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/checkpoint_replay.json",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/kernel_init_best_corrected.json",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/export_equivalence.json"
+      ],
+      "export": {
+        "FP_R": true,
+        "FS_R": true
+      },
+      "ls_zero_coupling": true,
+      "replay": {
+        "FP_R": true,
+        "FS_R": true
+      }
+    },
+    "source": {
+      "_seconds": 0.5,
+      "artifacts": [
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/source_manifest.json",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/metric_recompute.csv"
+      ],
+      "n_arms": 16,
+      "n_metric_rows": 96,
+      "n_metric_rows_match": 96,
+      "schema": "lcrc-semantic-analysis-repair-source-manifest-v1"
+    },
+    "support": {
+      "_seconds": 1.3,
+      "artifacts": [
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/support_corrected.json",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/support_before_after.csv",
+        "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/analysis/support_molecules.csv"
+      ],
+      "n100": {
+        "df_reference_size": {
+          "end": 24,
+          "joint": 108,
+          "nbr": 25,
+          "path": 28
+        },
+        "risk_bins": {
+          "note": "frozen terciles keep ties; no alternative quantile/threshold was searched",
+          "q1": 0.0,
+          "q2": 0.0,
+          "reason": "equal tercile thresholds (ties dominate) -> bins not estimable",
+          "status": "NOT_ESTIMABLE"
+        },
+        "train_occurrences": {
+          "end": 277312,
+          "joint": 277312,
+          "nbr": 197122,
+          "path": 277312
+        },
+        "train_terciles": {
+          "degenerate": true,
+          "max": 0.38235294117647056,
+          "n": 3360,
+          "n_nonzero": 41,
+          "q1": 0.0,
+          "q2": 0.0,
+          "reason": "equal tercile thresholds (ties dominate) -> bins not estimable"
+        }
+      }
+    }
+  }
+}

@@ -223,3 +223,59 @@ Train-LOO 联合 code 的 df≤5 占比三分位为 `[0,0]`（几乎所有 Train
 - 阶段/队列/test-access：`analysis/stage_decisions.json`、`analysis/dispatch_state.json`、`analysis/test_access_log.json`
 - 图（5 张，`analysis/figures/`）：`fig1_curves.png`、`fig2_paired_did.png`、`fig3_budget.png`、`fig4_support_kernel.png`、`fig5_cost_edit.png`
 - 来源说明：`SOURCE_NOTES.md`
+
+---
+
+## ERRATA — 后续轮次的分析修复（请先读这条）
+
+`tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/REPORT.md`
+（round `lcrc-semantic-analysis-repair-bw0-s0-v1`）复核了本轮的分析、机制与导出代码，
+并**部分替代**了本报告中的下列结论。本报告中的原始数字**未被修改**，但它们的前提已被修正。
+
+1. **支持度 / 稀有 code（`analysis/p0_audit.json`、`mech_support_fs.json`）**
+   `path_ptr` / `nbr_ptr` 是**原子**级 occurrence 指针，被旧代码用**分子**编号索引，
+   只读到约 3.7% 的 occurrence（Train `path_tokens` 10 238 vs 真实 277 312）。
+   修正后 path code 的 df 几乎全在 `>20` 桶，`6–20` 桶占比为 **0**，
+   且三分位风险阈值退化（`q1 = q2 = 0`）。
+   → 本报告中"稀有组合/低支持是瓶颈"的推论**撤回**，风险分箱**不可估**。
+   `support_corrected.json`、`support_before_after.csv`
+
+2. **廉价显式基线（`analysis/explicit_baseline.json`）**
+   同一错位 bug 也进入了 32 604 维稀疏矩阵。修正后 Ridge/XGBoost **明显变强**
+   （lipo XGBoost Test 0.9869 → 0.8432；ESOL Ridge 1.8274 → 1.0935），
+   即旧数字标 `INVALID_FOR_COMPARISON`，但仍明显弱于神经路线。
+   `explicit_baseline_corrected.json`
+
+3. **梯度核（`mech_kernel_fs.json` / `mech_kernel_fp.json`）**
+   旧核新建模型、未加载 checkpoint，并用 `bank_raw` 绕开 CodeTable 的固定 affine 与 FP
+   复合 code 置换。修正后（真实 best 状态 + 真实 `path_emb(c)`）耦合分级在**初始化**就已存在，
+   训练后三档耦合**整体下降**但顺序保持；置换控制 FP 无分级。
+   → 旧数值列为 `INIT_RAW_DIAGNOSTIC`，不再作为"训练后机制证据"。
+   `checkpoint_replay.json`、`kernel_init_best_corrected.json`
+
+4. **纯查表导出（`checkpoint_best_lookup.pt`）**
+   旧导出在模型已被改成 `last` 之后生成，且 key 布局未验证可被原始 C1 严格加载。
+   本轮从重放通过的 best 状态重新导出，`strict=True` 加载后 raw `max|Δ| ≤ 1.4e-7`。
+   → 旧导出标 `EXPORT_INVALID`；这不否定生成器本身的训练性能。
+   `export_equivalence.json`、`checkpoint_best_native_lookup.pt`
+
+5. **真实编辑响应（`mech_edit.json`）**
+   `pairs.csv` 自带的 split 列有 **331/823** 条与官方 scaffold split 不符；按官方行归属重算后
+   Train–Train 791、Train–Test 27、Train–Valid 5、两端均非 Train **0**（与预期一致）。
+   真正留出的编辑支持只有 **27 pair / 7 个全图分量 / 7 个 Test 分子**（LOW_SUPPORT），
+   CE-MAE 必须按 component 等权而不是 pair 等权。
+   → "编辑解释层成立"**撤回为具体 cell/权重/覆盖下的表述**，标 `NEEDS_HELDOUT_EVIDENCE`。
+   `edit_coverage.json`、`edit_metrics_corrected.json`
+
+6. **"共享同一非表初始状态"（全部配对比较）**
+   `se_train` 在建模型**之后**才 `torch.manual_seed`，C1 base 使用进程全局 RNG，
+   因此本报告 20 条 run 的初始权重不可复现、也不可证明跨 family 共享。
+   → 所有以"共享初值"为前提的 pairing 叙述降级为**未建立**；
+   唯一新增的 `B_N100_lipo_W0` 载入冻结的 `shared_c1_init_state`（与 HOME 轮 `B` 臂同一初值对象）。
+   `init_reproducibility.json`
+
+7. **选点与叙述**
+   两张表并列（旧 50 点 grid / 每 epoch 最佳 Valid）；`last` 与旧 late-window 明确是**末 20 个 epoch**。
+   "初始化有小而稳的 Test 收益"未建立（best-epoch LS_R Test 0.7223 略差于 B_R 0.7211）。
+   新增的 `B_N100_lipo_W0`（wd=0）表明取消 weight decay **不能**解释 LS_W0 的进步：
+   同样改动在 `B` 上 Val/Test 都略变差。`performance_tables.json`

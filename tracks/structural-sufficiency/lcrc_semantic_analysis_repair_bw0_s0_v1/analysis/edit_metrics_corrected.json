@@ -3,6 +3,14 @@
     "cells": {
       "ALL": {
         "differences": {
+          "B_R-B_W0": {
+            "ci95": [
+              0.0039901332259600865,
+              0.018088807371189446
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": 0.011269971957826863
+          },
           "B_R-FP_R": {
             "ci95": [
               -0.05214780647677488,
@@ -50,6 +58,54 @@
             ],
             "crosses_zero": true,
             "delta_ce_mae": -0.005588814920645835
+          },
+          "B_W0-FP_R": {
+            "ci95": [
+              -0.06748860551235653,
+              -0.027697458973223496
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.04567754729687257
+          },
+          "B_W0-FS_R": {
+            "ci95": [
+              -0.018434439541865404,
+              0.010351654794399484
+            ],
+            "crosses_zero": true,
+            "delta_ce_mae": -0.003238980924917201
+          },
+          "B_W0-FS_W0": {
+            "ci95": [
+              -0.03290472935185246,
+              0.000272001669033036
+            ],
+            "crosses_zero": true,
+            "delta_ce_mae": -0.016819095096840375
+          },
+          "B_W0-LP_R": {
+            "ci95": [
+              -0.05907602167548988,
+              -0.027159747372220915
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.042784142569634254
+          },
+          "B_W0-LS_R": {
+            "ci95": [
+              -0.03353355314124899,
+              -0.0071925753928772426
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.021224927046078035
+          },
+          "B_W0-LS_W0": {
+            "ci95": [
+              -0.030407733787447554,
+              -0.0036391300007584575
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.016858786878472698
           },
           "FP_R-FS_R": {
             "ci95": [
@@ -181,6 +237,14 @@
               0.34385246157310934
             ]
           },
+          "B_W0": {
+            "ce_mae": 0.2963612790618926,
+            "ce_mae_boot_mean": 0.29549909585590023,
+            "ci95": [
+              0.26313172805656265,
+              0.3310215337619767
+            ]
+          },
           "FP_R": {
             "ce_mae": 0.34203882635876515,
             "ce_mae_boot_mean": 0.3404885176619873,
@@ -234,6 +298,14 @@
       },
       "TT": {
         "differences": {
+          "B_R-B_W0": {
+            "ci95": [
+              0.005101057278742657,
+              0.019107920323475632
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": 0.012176844450940694
+          },
           "B_R-FP_R": {
             "ci95": [
               -0.05448319073949106,
@@ -281,6 +353,54 @@
             ],
             "crosses_zero": true,
             "delta_ce_mae": -0.003330554680588571
+          },
+          "B_W0-FP_R": {
+            "ci95": [
+              -0.06898303843397788,
+              -0.03198612678657706
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.04991388325195073
+          },
+          "B_W0-FS_R": {
+            "ci95": [
+              -0.016567582664277714,
+              0.010171558848966136
+            ],
+            "crosses_zero": true,
+            "delta_ce_mae": -0.002829899815279535
+          },
+          "B_W0-FS_W0": {
+            "ci95": [
+              -0.03268795185277798,
+              -0.0037209688088653214
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.01806599084785837
+          },
+          "B_W0-LP_R": {
+            "ci95": [
+              -0.06185381421521174,
+              -0.030563226973189174
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.04522344812911705
+          },
+          "B_W0-LS_R": {
+            "ci95": [
+              -0.03399060760741169,
+              -0.00791779914295362
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.02018958896832007
+          },
+          "B_W0-LS_W0": {
+            "ci95": [
+              -0.0296546128432461,
+              -0.0027258050537123336
+            ],
+            "crosses_zero": false,
+            "delta_ce_mae": -0.015507399131529265
           },
           "FP_R-FS_R": {
             "ci95": [
@@ -412,6 +532,14 @@
               0.34918122808684454
             ]
           },
+          "B_W0": {
+            "ce_mae": 0.29348973156972386,
+            "ce_mae_boot_mean": 0.2919582333354156,
+            "ci95": [
+              0.25783905009833874,
+              0.3333816861225275
+            ]
+          },
           "FP_R": {
             "ce_mae": 0.3434036148216746,
             "ce_mae_boot_mean": 0.34197726702700654,
@@ -467,7 +595,7 @@
     "replicates": 500,
     "seed": 20261115
   },
-  "created_utc": "2026-11-15T05:57:17Z",
+  "created_utc": "2026-11-15T06:46:09Z",
   "definitions": {
     "ce_mae": "per-component mean of e=|\u0394pred-\u0394y|, then equal weight over components with a pair",
     "low_support": "component count < 20",
@@ -566,6 +694,98 @@
         "valid": {
           "n": 420,
           "rmse": 0.7371033975365271
+        }
+      },
+      "n_pairs_with_prediction": 823
+    },
+    "B_W0": {
+      "arm_dir": "tracks/structural-sufficiency/lcrc_semantic_analysis_repair_bw0_s0_v1/runs/arm_B_N100_lipo_W0",
+      "cells": {
+        "ALL": {
+          "ce_mae": 0.2963612790618926,
+          "low_support": false,
+          "n_components": 231,
+          "n_pairs": 823,
+          "pair_mae": 0.2890218861818233,
+          "sign_agreement_component": 0.8910842064028338,
+          "sign_agreement_pair": 0.8870967741935484,
+          "sign_n_pairs": 744,
+          "zero_ce_mae": 0.645741885751019,
+          "zero_pair_mae": 0.6322843256379103
+        },
+        "E_T": {
+          "ce_mae": 0.4230021977182498,
+          "low_support": true,
+          "n_components": 7,
+          "n_pairs": 27,
+          "pair_mae": 0.46839320426296294,
+          "sign_agreement_component": 0.9365079365079365,
+          "sign_agreement_pair": 0.8333333333333334,
+          "sign_n_pairs": 24,
+          "zero_ce_mae": 0.7052380952380952,
+          "zero_pair_mae": 0.7140740740740741
+        },
+        "HH": {
+          "ce_mae": null,
+          "low_support": true,
+          "n_components": 0,
+          "n_pairs": 0,
+          "pair_mae": null,
+          "sign_agreement_component": null,
+          "sign_agreement_pair": null,
+          "sign_n_pairs": 0,
+          "zero_ce_mae": null,
+          "zero_pair_mae": null
+        },
+        "TT": {
+          "ce_mae": 0.29348973156972386,
+          "low_support": false,
+          "n_components": 228,
+          "n_pairs": 791,
+          "pair_mae": 0.2813999610727352,
+          "sign_agreement_component": 0.8858485945814712,
+          "sign_agreement_pair": 0.8884239888423989,
+          "sign_n_pairs": 717,
+          "zero_ce_mae": 0.6419685836675526,
+          "zero_pair_mae": 0.6309355246523388
+        },
+        "Train-Test": {
+          "ce_mae": 0.4230021977182498,
+          "low_support": true,
+          "n_components": 7,
+          "n_pairs": 27,
+          "pair_mae": 0.46839320426296294,
+          "sign_agreement_component": 0.9365079365079365,
+          "sign_agreement_pair": 0.8333333333333334,
+          "sign_n_pairs": 24,
+          "zero_ce_mae": 0.7052380952380952,
+          "zero_pair_mae": 0.7140740740740741
+        },
+        "Train-Valid": {
+          "ce_mae": 0.5317068269353704,
+          "low_support": true,
+          "n_components": 4,
+          "n_pairs": 5,
+          "pair_mae": 0.5262053208014101,
+          "sign_agreement_component": 1.0,
+          "sign_agreement_pair": 1.0,
+          "sign_n_pairs": 3,
+          "zero_ce_mae": 0.4675,
+          "zero_pair_mae": 0.4040000000000001
+        }
+      },
+      "molecule_rmse": {
+        "test": {
+          "n": 420,
+          "rmse": 0.7246371989645506
+        },
+        "train": {
+          "n": 3360,
+          "rmse": 0.29828256210913967
+        },
+        "valid": {
+          "n": 420,
+          "rmse": 0.7402782800707927
         }
       },
       "n_pairs_with_prediction": 823

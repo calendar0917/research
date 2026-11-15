@@ -1,9 +1,18 @@
 {
   "code_hashes": {
-    "code/rp_common.py": "568ab7acc078914d72a1c4ed4c996d4d37a1d34cec8dbc420bd1252c9be8f529",
+    "code/rp_analysis.py": "0685d93227e33354a39b858233308b9dbe077c35969f5c97cabd6c7004b5107b",
+    "code/rp_checks.py": "8013f5b77313185885e6cee032d5cfdc16cc35521542880fa890532e41f7d396",
+    "code/rp_common.py": "4f91b0be7a1e44ef342db9df1bac6d0c6c9d0823a9238276a44e4d2de93ec51e",
+    "code/rp_edit.py": "6a6c0be97d3efa1dc297821a3bcdce5877539e0d57e2c0aba8cb9b154dbf2a1d",
+    "code/rp_explicit.py": "1b32f8949e2a5adee30e810f4b331e59854c322d94bba3a47f50e52fd053badc",
+    "code/rp_init.py": "bfae11ba2105bb8f8a5daf9725809817b869d50d2b5916039c1cbc2200f509ce",
+    "code/rp_perf.py": "b3d281d96598c004124a4b65900090a80794939cebb621e4f4d477124c32b8c2",
     "code/rp_reader.py": "8fdea283442b350b370fac1d122055a02e36a199bc1e4744c4efcd29d63d9d86",
+    "code/rp_replay.py": "6b1a202541cfc373d7440ac2213c61b1c7fe7c10369e807fb4aac793f652f08d",
+    "code/rp_runner.py": "14cffa26e8bbf348d570ffa7597c019988adbabb7c7e926929c25e98df39c31a",
     "code/rp_source.py": "c7629399031b0b8369026f3f8f31fe9e75050eebae5b15e0963a5328030661c8",
     "code/rp_support.py": "ee85132245b5628fbd18a26aa7017ad2e0934a7cff650e19dea5c3168eb087a5",
+    "code/rp_train.py": "8f8c6bae3c31af50ee122c8c5c0bd1fa77474939e31d7e45554ad101e881983f",
     "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
     "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
     "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
@@ -20,7 +29,7 @@
     "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
     "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a"
   },
-  "created_utc": "2026-11-15T05:49:39Z",
+  "created_utc": "2026-11-15T06:45:44Z",
   "data_identity": {
     "lipo": {
       "cache_fingerprints": {
@@ -694,7 +703,7 @@
       "train_norm_source": "ogbg-molesol_official_train_structures_only"
     }
   },
-  "git_commit": "1d6700ea01acbee33e7630f1813c7884d28bee71",
+  "git_commit": "8c3aaa2a393910249e9c07680aea6fbfcdd2b566",
   "lipo_arms": {
     "B_R": {
       "arm_dir": "tracks/structural-sufficiency/lcrc_lipo_context_small_s0_v1/analysis/results/B",
@@ -862,8 +871,23 @@
         "valid": "c8f5aefb83c5c03c3ec3845d88eb0798f21b5896bd9ec4f2d346a8b6d50dd868"
       },
       "checkpoint_best": {
-        "note": "checkpoint on res, not pulled (not needed by this round)",
-        "present": false
+        "best_epoch": 216,
+        "checkpoint": "best",
+        "epoch_plan_sha256": "55f3be5c02c00fb6118a4fbbd4c03dd3d408d8d421a0b488761f4bc341e5661b",
+        "family": "B",
+        "init_state_hash": "ee9e4e5721fa8dd3c92c925209768e1810495d4bcc52b0ff85078dc6be3c038e",
+        "parameters": 228674,
+        "present": true,
+        "sha256": "1fc9d2fb550076966b42ba94ad698627ed3ae20592990b04c62a80f8746f6153",
+        "state_hash": "83b7a7f8def027303eeba32b0ddbf98e4cd2e4cf1215dbb50bb4f22a3040cde9",
+        "target_norm": {
+          "mean": 2.1621607142857147,
+          "n": 3360,
+          "scale": 1.2115398399123027,
+          "source": "Fit subset (3360 official Train rows)",
+          "structure_normalisation": "frozen all-official-Train (label-free); disclosed",
+          "valid_or_test_used": false
+        }
       },
       "dataset": "lipo",
       "family": "B",
@@ -1756,8 +1780,23 @@
         "valid": "c8f5aefb83c5c03c3ec3845d88eb0798f21b5896bd9ec4f2d346a8b6d50dd868"
       },
       "checkpoint_best": {
-        "note": "checkpoint on res, not pulled (not needed by this round)",
-        "present": false
+        "best_epoch": 104,
+        "checkpoint": "best",
+        "epoch_plan_sha256": "55f3be5c02c00fb6118a4fbbd4c03dd3d408d8d421a0b488761f4bc341e5661b",
+        "family": "FS",
+        "init_state_hash": "6732ff5a883ca8d9f2e4ae2482379e3cf55ec706a42868ad1d86c8457d6b0e74",
+        "parameters": 228683,
+        "present": true,
+        "sha256": "b32539cce02399f93add73c53b1279279a10c68901bb3e3122df689b8e8120f3",
+        "state_hash": "b4c3cbdb0006c8bc1db7dacdcafe32a966756e78f1ed53b04693dd8f4e586b9d",
+        "target_norm": {
+          "mean": 2.1621607142857147,
+          "n": 3360,
+          "scale": 1.2115398399123027,
+          "source": "Fit subset (3360 official Train rows)",
+          "structure_normalisation": "frozen all-official-Train (label-free); disclosed",
+          "valid_or_test_used": false
+        }
       },
       "dataset": "lipo",
       "family": "FS",
@@ -2764,8 +2803,23 @@
         "valid": "c8f5aefb83c5c03c3ec3845d88eb0798f21b5896bd9ec4f2d346a8b6d50dd868"
       },
       "checkpoint_best": {
-        "note": "checkpoint on res, not pulled (not needed by this round)",
-        "present": false
+        "best_epoch": 278,
+        "checkpoint": "best",
+        "epoch_plan_sha256": "55f3be5c02c00fb6118a4fbbd4c03dd3d408d8d421a0b488761f4bc341e5661b",
+        "family": "LS",
+        "init_state_hash": "007dd94ea4c02fe2efcd7a4d5af16113c52c586d66a4d8cf55b5e0bc41a6c0a2",
+        "parameters": 228674,
+        "present": true,
+        "sha256": "5182fd8eeb3bc5c65404156180ea9c057281fb36e411779fd6b949c2f85ce34a",
+        "state_hash": "9bd10b588d8802b0f3b790c5c458ef41cb424786b1d228703c5d8b09fa7ed347",
+        "target_norm": {
+          "mean": 2.1621607142857147,
+          "n": 3360,
+          "scale": 1.2115398399123027,
+          "source": "Fit subset (3360 official Train rows)",
+          "structure_normalisation": "frozen all-official-Train (label-free); disclosed",
+          "valid_or_test_used": false
+        }
       },
       "dataset": "lipo",
       "family": "LS",
