@@ -1,0 +1,40 @@
+id: lcrc-semantic-analysis-repair-bw0-s0-v1
+protocol: lcrc-semantic-analysis-repair-bw0-s0-v1
+active: true
+focus: true
+created: 2026-11-15
+
+question: >-
+  Can the previous round's analysis, mechanism and edit-response conclusions be
+  made trustworthy and judgeable after fixing the confirmed input-reader and
+  post-processing defects - and specifically, can the LS_W0 configuration's
+  improvement be explained away by the removal of weight decay alone?
+
+baseline: >-
+  Every old formal run stays frozen and read-only; all numbers other than the
+  single new training are re-derivations from stored checkpoints, stored raw
+  predictions and the frozen caches.  The one new training is B_N100_lipo_W0
+  (original C1 / NO_BOND_MEAN, 228674 parameters, weight_decay 0 instead of the
+  B_N100_lipo_Rwd template's 1e-2).
+
+candidates:
+  - id: B_N100_lipo_W0
+    status: active
+    note: the only new formal training; completes the initialisation x weight-decay contrast
+  - id: analysis_repair
+    status: active
+    note: reader/support/explicit/kernel/export/edit recomputation, no training
+
+open_questions:
+  - Which old conclusions survive, which are retracted, and which stay uncertain?
+  - Did the reader defect touch training, or only analysis and export?
+  - Does B_W0 explain LS_W0's improvement on both splits, or only one?
+  - How much independent held-out edit support is there really?
+  - How much of the gradient coupling exists already at initialisation?
+
+guardrails:
+  - at most one new formal neural training; nothing else is retrained
+  - no new seeds, permutations, hyper-parameters, losses, structures or datasets
+  - selection stays Validation-only; Test is reported, never used to select
+  - predecessor code, configs, caches, checkpoints and machine tables stay byte identical
+  - result labels never replace the continuous numbers
