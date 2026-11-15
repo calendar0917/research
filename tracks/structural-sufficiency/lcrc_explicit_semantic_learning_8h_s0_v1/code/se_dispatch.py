@@ -29,7 +29,7 @@ import se_common as C
 GPU_POOLS = ("res-gpu0", "res-gpu1")
 STATE = C.ANALYSIS / "dispatch_state.json"
 MATRIX = C.CONFIGS / "run_matrix.csv"
-ALLOWED_DIRTY = (C.track_rel(MATRIX),)
+ALLOWED_DIRTY = ()
 EXPERIMENT_PREFIX = "selsem"
 
 
@@ -46,11 +46,10 @@ def read_matrix() -> list[dict[str, Any]]:
         return list(csv.DictReader(fh))
 
 
-def write_matrix(rows: Sequence[dict[str, Any]]) -> None:
-    with open(MATRIX, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
-        writer.writeheader()
-        writer.writerows(rows)
+def write_state(state: dict[str, Any]) -> None:
+    """Status/log live only in the gitignored state file; the frozen matrix is
+    never rewritten (so redeploys are never blocked by queue bookkeeping)."""
+    C.write_json(STATE, state)
 
 
 def dirty_paths() -> list[str]:
@@ -148,8 +147,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     pools = [p for p in args.keep_pools.split(",") if p]
     prio = {int(p) for p in args.priorities.split(",")} if args.priorities else None
 
-    state = C.read_json(STATE) if STATE.exists() else {"runs": {}, "log": []}
+    state = C.read_json(STATE) if STATE.exists() else {"runs": {}, "status": {}, "log": []}
+    state.setdefault("status", {})
+    state.setdefault("runs", {})
+    state.setdefault("log", [])
     rows = read_matrix()
+    for r in rows:
+        # the frozen matrix default is only a starting point; the live status
+        # lives in the gitignored state file so redeploys are never blocked
+        if r["run_id"] in state["status"]:
+            r["status"] = state["status"][r["run_id"]]
     slots = [Slot(pool=p) for p in pools]
     launched = 0
     while True:
@@ -163,6 +170,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     ok = st == "complete" and code in ("0", "")
                     row["status"] = "COMPLETE" if ok else "FAILED"
                     row["note"] = f"exit={code} wall={(_now() - slot.started).total_seconds():.0f}s"
+                    state["status"][slot.run_id] = row["status"]
                     state["runs"][slot.run_id] = {"pool": slot.pool, "ident": slot.ident, "state": st, "exit": code,
                                                   "started": slot.started.isoformat(), "finished": _now().isoformat()}
                     state["log"].append({"utc": C.utcnow(), "event": row["status"], "run_id": slot.run_id,
@@ -171,8 +179,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     slot.ident = None
                     slot.run_id = None
                     slot.status = "idle"
-                    write_matrix(rows)
-                    C.write_json(STATE, state)
+                    write_state(state)
             if slot.status == "idle" and pending:
                 if stop_at and _now() >= stop_at:
                     continue
@@ -189,7 +196,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if new.ident:
                     slots[slots.index(slot)] = new
                     row["status"] = "RUNNING"
-                    write_matrix(rows)
+                    state["status"][row["run_id"]] = "RUNNING"
+                    write_state(state)
         if args.dry_run:
             if all(r["status"] != "PENDING" for r in rows if prio is None or int(r["priority"]) in prio):
                 break
