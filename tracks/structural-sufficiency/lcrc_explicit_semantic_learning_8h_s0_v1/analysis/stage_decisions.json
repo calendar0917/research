@@ -1,0 +1,300 @@
+{
+ "stages_run": {
+  "P0_audit": "done (recomputed B/D2/G; H2 gap; support)",
+  "P1_core": "done: FS_R,LS_R,LP_R,FP_R + W0 pair + Rwd trio + Rwd perm pair",
+  "P2_esol": "done: B,LS,FS,LP,FP on official ogbg-molesol",
+  "P3_budget": "done: N25 pair + N50 pair (gate met by test-side signal)",
+  "P4_amplify": "NOT PURCHASED (evidence switch E not met)",
+  "diagnostics": "preflight, selfcheck, smoke, cost profile, mechanism, edit"
+ },
+ "p4_decision": {
+  "rule": "evidence switch E",
+  "E1_FS>=2pct_both_splits": false,
+  "E2_did_positive_val_and_test_trim1": false,
+  "E3_wd0_or_esol_same_direction": false,
+  "E4_FS_beats_best_lookup_1pct_both": false,
+  "verdict": "E not met -> no PCBA / no HIV purchase; method expansion stopped"
+ },
+ "label_route": {
+  "labels": [
+   "MECHANISM_SIGNAL_NO_PERFORMANCE_ADVANCE",
+   "GENERIC_REPARAMETERIZATION",
+   "NO_USEFUL_SIGNAL"
+  ],
+  "detail": {
+   "mechanism_supported": "FS gradient coupling graded by overlap 0.082/0.316/0.632 vs FP flat ~0.20; FS edit MAE 0.293 < LS 0.308 and < FP 0.334",
+   "no_performance_advance": "FS worse on Valid in every lipo recipe; DiD negative on Valid, positive only on Test; ESOL DiD negative on Test",
+   "generic_reparam": "FP_vs_LP and FS_vs_LS have similar magnitude on Test (~+1%) and neither survives bootstrap; 95% CI crosses 0"
+  }
+ },
+ "gpu_hours_used_approx": 4.2,
+ "n_runs": 20,
+ "dispatch_log": [
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P1_LP_R",
+   "utc": "2026-11-15T01:27:15Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu1",
+   "run_id": "P1_LS_R",
+   "utc": "2026-11-15T01:27:27Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu1",
+   "run_id": "P1_LS_W0",
+   "utc": "2026-11-15T01:39:30Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P1_FS_W0",
+   "utc": "2026-11-15T01:42:08Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P1_B_Rwd",
+   "utc": "2026-11-15T02:33:13Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu1",
+   "run_id": "P1_FS_Rwd",
+   "utc": "2026-11-15T02:37:00Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P1_LS_Rwd",
+   "utc": "2026-11-15T02:44:13Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu1",
+   "run_id": "P1_FP_Rwd",
+   "utc": "2026-11-15T02:52:18Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu1",
+   "run_id": "P2_B_esol",
+   "utc": "2026-11-15T02:53:16Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu1",
+   "run_id": "P2_FP_esol",
+   "utc": "2026-11-15T02:54:05Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu1",
+   "run_id": "P2_FS_esol",
+   "utc": "2026-11-15T02:54:51Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P1_LP_Rwd",
+   "utc": "2026-11-15T02:55:28Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu1",
+   "run_id": "P2_LP_esol",
+   "utc": "2026-11-15T02:55:39Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu0",
+   "run_id": "P2_LS_esol",
+   "utc": "2026-11-15T02:56:15Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2besol",
+   "pool": "res-gpu0",
+   "run_id": "P2_B_esol",
+   "utc": "2026-11-15T03:22:35Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2fpesol",
+   "pool": "res-gpu1",
+   "run_id": "P2_FP_esol",
+   "utc": "2026-11-15T03:22:39Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu0",
+   "run_id": "P2_B_esol",
+   "utc": "2026-11-15T03:25:23Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2fsesol",
+   "pool": "res-gpu0",
+   "run_id": "P2_FS_esol",
+   "utc": "2026-11-15T03:25:26Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu1",
+   "run_id": "P2_FP_esol",
+   "utc": "2026-11-15T03:27:01Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2lpesol",
+   "pool": "res-gpu1",
+   "run_id": "P2_LP_esol",
+   "utc": "2026-11-15T03:27:04Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu0",
+   "run_id": "P2_FS_esol",
+   "utc": "2026-11-15T03:29:06Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2lsesol",
+   "pool": "res-gpu0",
+   "run_id": "P2_LS_esol",
+   "utc": "2026-11-15T03:29:09Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu1",
+   "run_id": "P2_LP_esol",
+   "utc": "2026-11-15T03:30:00Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp3fsn50",
+   "pool": "res-gpu1",
+   "run_id": "P3_FS_N50",
+   "utc": "2026-11-15T03:30:03Z"
+  },
+  {
+   "event": "FAILED",
+   "exit": "1",
+   "pool": "res-gpu0",
+   "run_id": "P2_LS_esol",
+   "utc": "2026-11-15T03:32:02Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp3lsn50",
+   "pool": "res-gpu0",
+   "run_id": "P3_LS_N50",
+   "utc": "2026-11-15T03:32:05Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P3_LS_N50",
+   "utc": "2026-11-15T03:46:33Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu1",
+   "run_id": "P3_FS_N50",
+   "utc": "2026-11-15T03:48:08Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2besol",
+   "pool": "res-gpu0",
+   "run_id": "P2_B_esol",
+   "utc": "2026-11-15T03:48:52Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2fpesol",
+   "pool": "res-gpu1",
+   "run_id": "P2_FP_esol",
+   "utc": "2026-11-15T03:48:56Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P2_B_esol",
+   "utc": "2026-11-15T03:51:42Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2fsesol",
+   "pool": "res-gpu0",
+   "run_id": "P2_FS_esol",
+   "utc": "2026-11-15T03:51:45Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P2_FS_esol",
+   "utc": "2026-11-15T03:59:39Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2lpesol",
+   "pool": "res-gpu0",
+   "run_id": "P2_LP_esol",
+   "utc": "2026-11-15T03:59:42Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu1",
+   "run_id": "P2_FP_esol",
+   "utc": "2026-11-15T03:59:50Z"
+  },
+  {
+   "event": "LAUNCH",
+   "ident": "selsemp2lsesol",
+   "pool": "res-gpu1",
+   "run_id": "P2_LS_esol",
+   "utc": "2026-11-15T03:59:53Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu0",
+   "run_id": "P2_LP_esol",
+   "utc": "2026-11-15T04:02:52Z"
+  },
+  {
+   "event": "COMPLETE",
+   "exit": "0",
+   "pool": "res-gpu1",
+   "run_id": "P2_LS_esol",
+   "utc": "2026-11-15T04:03:00Z"
+  }
+ ]
+}
