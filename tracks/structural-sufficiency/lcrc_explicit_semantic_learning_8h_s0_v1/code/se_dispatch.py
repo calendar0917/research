@@ -198,6 +198,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ident = rec.get("ident")
         pool = rec.get("pool")
         if not ident:
+            # no launch record: the job could not have been started by us
             state["status"][run_id] = "PENDING"
             continue
         attached = False
@@ -249,6 +250,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                     slots[slots.index(slot)] = new
                     row["status"] = "RUNNING"
                     state["status"][row["run_id"]] = "RUNNING"
+                    # persist ident/pool at LAUNCH time so a restarted dispatcher
+                    # can always re-attach a still-running job (never double-book)
+                    state["runs"][row["run_id"]] = {"pool": slot.pool, "ident": new.ident,
+                                                     "started": new.started.isoformat(), "state": "running"}
+                    state["log"].append({"utc": C.utcnow(), "event": "LAUNCH", "run_id": row["run_id"],
+                                         "pool": slot.pool, "ident": new.ident})
                     write_state(state)
         if args.dry_run:
             if all(r["status"] != "PENDING" for r in rows if prio is None or int(r["priority"]) in prio):
