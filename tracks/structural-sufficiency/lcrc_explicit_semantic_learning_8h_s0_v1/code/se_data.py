@@ -172,6 +172,7 @@ def build_esol_view(*, rebuild: bool = False) -> LPD.View:
         if p not in sys.path:
             sys.path.insert(0, p)
     import adapters as PREP_ADAPTERS
+    import lcrc_common as PREP_COMMON
     import lcrc_data as PREP_DATA
 
     spec = LPD.frozen_spec()
@@ -190,6 +191,7 @@ def build_esol_view(*, rebuild: bool = False) -> LPD.View:
         cache["split_name"] = split
         cache["cache_version"] = "lcrc-esol-view-v1"
         cache["meta"]["labels_present"] = False
+        cache["meta"]["content_fingerprint"] = PREP_COMMON.content_fingerprint(cache)
         PREP_DATA.validate_cache(cache, spec)
         caches[split] = cache
         rows_out[split] = np.asarray(rws, dtype=np.int64)
