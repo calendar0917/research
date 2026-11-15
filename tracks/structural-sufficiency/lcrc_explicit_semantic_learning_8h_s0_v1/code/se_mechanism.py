@@ -132,11 +132,16 @@ def gradient_kernel(family: str = "FS", *, max_codes: int = 64, seed: int = 2026
     q_t = torch.as_tensor(q / np.sqrt(C.RANK), dtype=torch.float32, device=device)
 
     params = [p for p in gen.parameters() if p.requires_grad]
+    # for FP the composite-code bijection is applied to the code BEFORE decode,
+    # so the gradient for original code c is taken at perm[c]
+    path_perm = np.asarray(perms[T.perm_for_bank("path_emb")], dtype=np.int64) \
+        if family == "FP" else None
     jac = {}
     for c in chosen:
         gen.zero_grad(set_to_none=True)
         table = gen.bank_raw("path_emb", codes_t)
-        s = (table[c] * q_t).sum()
+        idx = int(path_perm[c]) if path_perm is not None else c
+        s = (table[idx] * q_t).sum()
         s.backward(retain_graph=False)
         jac[c] = np.concatenate([
             (p.grad.detach().cpu().numpy().reshape(-1) if p.grad is not None else np.zeros(p.numel(), dtype=np.float32))
