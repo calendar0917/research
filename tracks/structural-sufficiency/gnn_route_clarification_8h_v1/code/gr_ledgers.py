@@ -162,7 +162,9 @@ def make_runner(model_key: str, dataset: str = "ogbg-mollipo", *, property_name:
         recipe = S.lipo_recipe_for_model("T")
         stage = C.STAGE_ORACLE if property_name else C.STAGE1
         folder = f"{property_name}/selected" if property_name else recipe
-        path = _checkpoint_path(stage, dataset, kind, folder)
+        # stage-1 dense checkpoints live under the trunk name (G0/Gx); the
+        # oracle task writes under the model name T.
+        path = _checkpoint_path(stage, dataset, "T" if property_name else kind, folder)
         model = M.ModelSet(b).dense(kind)
         model.load_state_dict(_load_state(path)["model_state"], strict=True)
         model.eval()

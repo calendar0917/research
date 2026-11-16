@@ -68,7 +68,7 @@ def main() -> int:
     add("")
     add(f"- 轮次：`{C.ROUND_ID}`；设计基线 `{C.DESIGN_BASIS_COMMIT[:12]}`")
     add(f"- 运行设备：res 双 A100-SXM4-40GB（res-gpu0 / res-gpu1），单 seed=0，官方 split，每 epoch 全量三划分 eval")
-    add(f"- 训练总墙钟：{f(manifest.get('total_seconds', 0) / 3600.0, 2)} 卡·小时（两卡合计，含解释/校准单元）")
+    add(f"- 训练/校准单元 GPU 时间：{f(manifest.get('total_seconds', 0) / 3600.0, 2)} 卡·小时（按单元 `seconds_total` 求和；两卡并行，墙钟 17:06→20:01Z，含屏障等待与两次崩溃重启）")
     add("- Test 每 epoch 被观察；下文 Test 数字只作固定状态描述，不参与任何选择。")
     add("")
 
@@ -127,9 +127,11 @@ def main() -> int:
         except KeyError:
             pass
     add("")
-    add(f"L 两配方最佳 / T 两配方最佳（Val）：{', '.join(f'{k}={v:.4f}' for k, v in l_ratio.items()) if l_ratio else '—'}")
+    add(f"L/T 的 Val 比值（>1 表示 L 更差）：{', '.join(f'{k}={v:.4f}' for k, v in l_ratio.items()) if l_ratio else '—'}")
     behind = [d for d, r in l_ratio.items() if r > C.A_GATE_RATIO]
-    add(f"判读：**C1_BEHIND_THIS_BUDGET = {'YES' if behind else 'NO'}**，具体任务：{', '.join(behind) if behind else '无'}（门槛 5%，只适用本轮预算与这两套 recipe）。")
+    ahead = [d for d, r in l_ratio.items() if r <= 1.0]
+    add(f"判读：**C1_BEHIND_THIS_BUDGET = {'YES' if behind else 'NO'}**，具体任务：{', '.join(behind) if behind else '无'}（门槛 5%，只适用本轮预算与这两套 recipe）。"
+        + (f" 注意方向在任务间相反：{', '.join(ahead)} 上 L 的 Val 不差于 T，因此差距是任务依赖的，不是普遍落后。" if ahead else ""))
     add("")
 
     # ---------------- Q2 ----------------
@@ -148,7 +150,16 @@ def main() -> int:
             f"{f(e['selected']['test_rmse_raw'])} | {f(e['T_selected']['test_rmse_raw'])} | {tt['diff']:+.4f} | {ci(tt)} | {'PASS' if a_gate[dataset] else 'FAIL'} |"
         )
     add("")
-    add(f"A 的可加读出参数预算：head H 与总参数见 `analysis/tables/stage23.json`；预算公式在 `prepare.json` 中按解析式核对。")
+    add(
+        "判读：**不能**。Val 的 A/T 比值为 1.19/1.21，两个任务都超过 1.05 门槛；Test 方向一致但 95% CI 都含 0，"
+        "因此正确的说法是“没有保住 Val 门槛，且 Test 也没有显著更差”，不是“显著退步”。A 的读出预算：H=253、实际读出参数 33,153"
+        "（解析 nominal 33,192，Δ=39，`analysis/tables/stage23.json`）。"
+    )
+    add("")
+    add(
+        "A 的训练/验证差显示它在拟合训练分子：ogbg-molesol Train RMSE 0.411 vs Val 1.023，ogbg-mollipo Train RMSE 0.232 vs Val 0.747"
+        "（`analysis/tables/stage23.json`）——可加读出不是单纯“没训够”。"
+    )
     add("")
 
     # ---------------- Q3 ----------------
@@ -175,7 +186,7 @@ def main() -> int:
         if not any(a_gate.values()) and any(d_pass.values()):
             add("判读：**REPRESENTATION_VS_READOUT = 联合训练嫌疑**——同一读出在冻结 T 表示上可用，端到端 A 未保住性能；这不等于证明可加形式表达力足够，只把瓶颈定位到端到端优化/正则。")
         elif not any(a_gate.values()) and not any(d_pass.values()):
-            add("判读：**REPRESENTATION_VS_READOUT = 读出限制嫌疑**——A 与 D 都没有保住；仍不能证明形式不可表达。")
+            add("判读：**REPRESENTATION_VS_READOUT = 读出限制嫌疑**——A 与 D 都没有保住；D 在冻结表示上仍未达到 0.02σ 保真（0.224/0.244），但它的 Train fidelity 只有 0.119/0.129 而 Val fidelity 0.224/0.244（`analysis/tables/stage23.json` 的 curves），说明失败里同时有优化/过拟合成分；0.02σ 是冻结的严格门槛，本轮不能把“未达到”升级为“形式不可表达”。")
         else:
             add("判读：**REPRESENTATION_VS_READOUT = 目前不可分辨/未见失败**，按上表逐数据集读。")
     else:
@@ -226,7 +237,7 @@ def main() -> int:
         add("|---|---|---|---|---|---|---|---|---|")
         for prop, e in oracle["properties"].items():
             for model, block in e.get("models", {}).items():
-                if not isinstance(block, dict) or "E_pair_mean" not in block:
+                if not isinstance(block, dict):
                     continue
                 for source, s in block.items():
                     if not isinstance(s, dict) or "E_pair_mean" not in s:
@@ -249,6 +260,15 @@ def main() -> int:
             )
         add("")
         add("由于主集合 H 的独立分量 <30，以上 A vs T 只作为固定状态描述，不构成“A 解释优于 T”的工作信号。")
+        add("")
+        add("**读法（按 8.5 的冻结分组约定）**")
+        add("")
+        add("- WC_LOGP：T-IG（E≈0.278）优于所有 native 账目（A≈0.334/0.341，L≈0.311），zero=0.425；A-native/T-IG=1.199，95% CI 1.108–1.293，即 **A 的原生账目显著更差**，不是“增量”。")
+        add("- MOLWT：A-native 与 T-IG 基本持平（1.069，CI 含 1）；L-native 的 E≈0.181 看似最低，但其误差 8.87 全部落在 `global` 通道——L 的原生读出把整图质量项放进独立 rho（任务书允许的全图项），按冻结分组该部分记作误差。zero=0.189 已接近 L，因此不能把 L 的低 E 读成“更准的原子贡献”；这是分组/rho 约定的结果，不是 native 账目的解释优势。")
+        add("- 两个性质都只有 train-train 分子上的 E（H 为空），所以即使方向有利也不构成未见配对上的工作信号。")
+        add("- A 的 MOLWT E 由 size 通道主导（15.6–18.4，占 E 的绝大部分）：它把质量效应放进 N 通道，按 7.7 的分组必须记作大小通道成本，而不是变量贡献；这与 L 把质量放进 rho 是同一类“分组约定决定 E”的现象。")
+        add("")
+        add("**Q4 判读：增量价值 = 未显示（NO_INCREMENT_THIS_BUDGET）**。WC_LOGP 是信息量较高的一栏：native 账目（A/L）显著差于 T-IG（A/T=1.199，CI 1.108–1.293）。MOLWT 一栏被分组约定主导：A 的 E（0.347）甚至高于 zero 对照（0.189），因为 A 把质量放进 size 通道、truth 把质量放在原子变量；L 的 E（0.181）低是因为它把质量放进 rho。两者都不是“更接近真值”，而是同一分配在不同通道上的记账差异——所以 MOLWT 不能用来判 native 与 IG 的优劣。综合两栏，本轮没有可复现的 native 增量。")
     else:
         add("oracle 校准表缺失（oracle 训练或 ledger 未完成）→ Q4 = EXPLANATION_UNRESOLVED（样本/数值未完成，不是方法失败）。")
     add("")
@@ -285,7 +305,7 @@ def main() -> int:
             f"| zero | ALL | {z.get('n_pairs')} | {f(z.get('component_equal_abs_delta_error'))} | {f(z.get('abs_delta_error_mean'))} | — | {z.get('n_components')} | {z.get('support')} |"
         )
         add("")
-        add("注意：H（两端均非 Train）为空集，主集合指标只能报 `LOW_SUPPORT/NO_H_SUPPORT`；上表的非 train-train 结论仅基于 5 个 train-valid + 27 个 train-test 对。")
+        add("注意：H（两端均非 Train）为空集，主集合指标只能报 `LOW_SUPPORT/NO_H_SUPPORT`；上表的非 train-train 结论仅基于 5 个 train-valid + 27 个 train-test 对。`T` 与 `G0` 是同一 checkpoint（本轮 T=G0），两行相同不是重复表错误。")
     expl = _load("mmp_explanation", {})
     if expl.get("models"):
         add("")
@@ -352,6 +372,10 @@ def main() -> int:
     add("- H 集为空、非 train-train 分量少，MMP 主集合标 LOW_SUPPORT；不把 train-train 指标称为完全未见配对泛化。")
     add("- Test 已每 epoch 观察，不能称为盲测；bootstrap 只描述固定 checkpoint 的有限样本不确定性，不含 seed/配方选择偏差。")
     add("- IG 只对声明的连续输入表示与路径成立，中间点不是合法分子，不是物理干预。")
+    add("- MolHIV：**BUDGET_NOT_RUN**。前置门（A/D 联合优势或 oracle 校准支持）未成立，按任务书不把它当作可解释性收益的证据；本轮不报告 HIV 数字。")
+    add("- 多映射检查：**NOT_RUN**（冻结 catalog 每对只有单一已验证恒等核心映射；不制造替代映射以避免“最有利映射”选择）。")
+    add("- 512/2048 点积分只作为诊断，不是冻结结果；256 点未过的 pair 仍按 NUMERICALLY_UNRESOLVED 处理，没有用通过子集宣布优胜。")
+    add("- H 为空来自冻结 pair catalog 的构成（823 对中 791 对为 train-train），不是模型选择的结果；这也是路线 (b) 无法触发的直接原因。")
     add("")
 
     path = C.ROUND_DIR / "REPORT.md"
@@ -404,6 +428,19 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
                     if key.endswith("/native") and value <= (1.0 - C.EXPLANATION_IMPROVEMENT) * base:
                         oracle_signal = True
                         oracle_improvement[prop] = {"native": key, "E": value, "best": base}
+    oracle_ratios = {}
+    for prop, e in (oracle.get("properties") or {}).items():
+        r = e.get("A_vs_T")
+        if r:
+            oracle_ratios[prop] = {
+                "E_A_native": r["E_A_native"],
+                "E_T_ig": r["E_T_ig"],
+                "ratio": r["ratio"],
+                "ratio_ci95": r["ratio_ci95"],
+                "prob_A_better": r["prob_A_better"],
+                "n_components": r["n_components"],
+                "support": r["support"],
+            }
     a_ok = any(a_gate.values())
     d_ok = any(d_pass.values())
     quad_ok = True
@@ -471,7 +508,7 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
         stop = "暂停“更可解释因此值得牺牲性能”的方法主张，保留预测参照与工具。"
     else:
         choice = "PAUSE_EXPLANATION_CLAIM"
-        text.append("**(d) 暂停“更可解释因此值得牺牲性能”的方法主张**：A/D 没有性能-解释联合优势，IG 在冻结的 256 点预算下数值未闭合（或 oracle 校准不足），解释证据只达到“能重建/能描述”的层级；保留强预测参照与工具，暂停方法学主张。暂停是资源判断，不是证明不可能。")
+        text.append("**(d) 暂停“更可解释因此值得牺牲性能”的方法主张**：A/D 没有性能-解释联合优势；IG 在冻结的 256 点预算下并非普遍可用（真实 Lipo T 账目 22/96 pair 未闭合，oracle WC_LOGP 6/96），只有 MOLWT 全部闭合；oracle 精度虽有部分达标，但 A/T 在 MOLWT 上超出 0.02σ 可比性、WC_LOGP 上 A 的 Test 0.106σ 未达 0.10σ。解释证据只达到“能重建/能描述”的层级；保留强预测参照与工具，暂停方法学主张。暂停是资源判断，不是证明不可能。")
         believe = "本轮能复现的最强对象是强 GINE 预测器；原生可加账目与 IG 都能在端点重建预测，但都没有转化为可验证的解释优势。"
         against = "A 与 D 都没保住预测；IG 在 256 点内未满足完整性门槛的 pair 超过 5%；H 为空使 oracle 的工作信号无法成立。"
         unknown = "这是优化/正则问题、读出形式问题，还是评价门槛（0.02σ 保真、256 点积分）本身过严；本轮设计无法分离。"
@@ -487,6 +524,7 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
             "oracle_native_increment": oracle_improvement,
             "explanation_checks_pass": checks_pass,
         "ig_quadrature_within_5pct": quad_ok,
+        "oracle_A_vs_T_E": oracle_ratios,
         },
         "note": "开发决策门槛，不是显著性检验；UNRESOLVED 是允许的结论。",
     }

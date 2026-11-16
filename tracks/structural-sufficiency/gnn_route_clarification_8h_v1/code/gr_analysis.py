@@ -784,6 +784,11 @@ def run_manifest() -> dict[str, Any]:
     for task in C.all_tasks():
         path = C.task_status_path(task)
         status = C.read_json(path) if path.is_file() else {"state": "MISSING"}
+        seconds = (costs.get("units", {}).get(task["key"], {}) or {}).get("seconds")
+        if not seconds:
+            traj = C.task_out_dir(task) / "trajectory.json"
+            if traj.is_file():
+                seconds = C.read_json(traj).get("seconds_total")
         units.append(
             {
                 "key": task["key"],
@@ -795,7 +800,7 @@ def run_manifest() -> dict[str, Any]:
                 "status": status.get("state", "UNKNOWN"),
                 "selected_epoch": status.get("selected_epoch"),
                 "signature": status.get("signature"),
-                "seconds": (costs.get("units", {}).get(task["key"], {}) or {}).get("seconds"),
+                "seconds": seconds,
                 "n_parameters": (costs.get("units", {}).get(task["key"], {}) or {}).get("n_parameters"),
             }
         )
