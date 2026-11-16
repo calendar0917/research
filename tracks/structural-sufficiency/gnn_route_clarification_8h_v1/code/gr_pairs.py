@@ -72,6 +72,7 @@ def _raw_row(lipo, row: int) -> dict[str, Any]:
 
 def verify_identity_mapping(mol, raw: Mapping[str, Any]) -> dict[str, Any]:
     """Node/edge label identity between the RDKit mol and the official input."""
+    D.prepare_imports()
     import sq_data
 
     classes = {pair: k for k, pair in enumerate(sq_data.LIPO_RAW_ATOM_CLASSES)}
@@ -171,6 +172,7 @@ def load_pairs() -> tuple[list[dict[str, Any]], dict[str, Any]]:
 
 
 def build_catalog(*, verify: bool = True) -> dict[str, Any]:
+    D.prepare_imports()
     import sq_data
 
     b = D.bundle("ogbg-mollipo")
@@ -407,8 +409,9 @@ def sample_explanations(catalog: Sequence[Mapping[str, Any]]) -> tuple[list[dict
         "n_selected_train": int(sum(1 for p in chosen if p["train_train"])),
         "n_components_selected": len({p["component"] for p in chosen}),
         "n_components_by_stratum": {
-            key: len({p["component"] for p in chosen if (p["in_H"] if key == "H" else ("train_train" if p["train_train"] else "non_train_train"))})
-            for key in ("H", "non_train_train", "train_train")
+            "H": len({p["component"] for p in chosen if p["in_H"]}),
+            "non_train_train": len({p["component"] for p in chosen if (not p["in_H"]) and (not p["train_train"])}),
+            "train_train": len({p["component"] for p in chosen if p["train_train"]}),
         },
         "rule": "stratum -> shared-endpoint component round-robin -> sha256(pair_id) inside component",
         "selection_is_label_blind": True,
