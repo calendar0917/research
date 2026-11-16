@@ -189,6 +189,7 @@ def smoke(device: str = "cuda:0") -> int:
             device=device,
             epochs=3,
             recipe="Rf",
+            resume=False,
         )
         wall = time.time() - t0
         per_epoch = wall / 3.0
