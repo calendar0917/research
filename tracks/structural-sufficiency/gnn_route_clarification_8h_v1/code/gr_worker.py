@@ -51,6 +51,8 @@ def plan(pool: str) -> list[dict[str, Any]]:
 
 
 def _deps_ready(task: dict[str, Any]) -> tuple[bool, str]:
+    if task["stage"] == C.STAGE1:
+        return True, "ready"
     stage1 = C.stage1_tasks()
     if not all(C.task_complete(t) for t in stage1):
         missing = [t["key"] for t in stage1 if not C.task_complete(t)]
