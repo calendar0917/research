@@ -733,8 +733,11 @@ def _stage_dataset_worker(
     d_selected_pred = A.predict_d_full(
         ctx, d_selected_run.booster, d_selected_run.trees, int(d_selection["round"])
     )
+    # R selects its own (preset, round, config): the residual anchor is that D state
+    r_run = d_runs[r_selection["preset"]]
+    r_prefix = A.predict_d_full(ctx, r_run.booster, r_run.trees, int(r_selection["round"]))
     r_selected_pred = {
-        split: A.d_r_predictions_at(ctx, d_selected_pred, r_selection["config"], split) for split in SPLITS
+        split: A.d_r_predictions_at(ctx, r_prefix, r_selection["config"], split) for split in SPLITS
     }
 
     # ---- N -------------------------------------------------------------
@@ -858,6 +861,22 @@ def _stage_dataset_worker(
         "trajectories": {"D": d_info, "C": c_info},
     }
     _write(out_dir / "selection.json", selection)
+
+    # ---- the persisted selected predictions must reproduce the curves ----
+    for arm, payload_pred, state in (
+        ("D", d_selected_pred, selection["D"]),
+        ("R", r_selected_pred, selection["R"]),
+        ("N", n_run["selected_predictions"], selection["N"]),
+        ("C", c_state["pred"], selection["C"]),
+    ):
+        for split in C.SPLITS:
+            recomputed = C.rmse(payload_pred[split], task.y[split])
+            delta = abs(recomputed - float(state[f"{split}_rmse_raw"]))
+            if delta > 1e-9:
+                raise AssertionError(
+                    f"{dataset} {arm}: persisted {split} RMSE {recomputed} != "
+                    f"selected {state[f'{split}_rmse_raw']} (delta {delta})"
+                )
 
     # ---- persistence of selected predictions ---------------------------
     d_payload = {

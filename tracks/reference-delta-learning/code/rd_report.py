@@ -265,11 +265,9 @@ def _curve_rows(
 ) -> list[dict[str, Any]]:
     """Curve rows of one arm/preset/config from the persisted per-preset CSVs."""
     if arm == "N":
-        return []
-    table = data["curves"]["D" if arm in ("D", "R") else "C"] if preset in C.PRESET_ORDER else {}
-    if not isinstance(table, dict):
-        return []
-    rows = table.get(preset, [])
+        return []  # a constant predictor has a single state, not a curve
+    key = f"{'D' if arm in ('D', 'R') else 'C'}_{preset}"
+    rows = data["curves"].get(key, [])
     return [
         row
         for row in rows
