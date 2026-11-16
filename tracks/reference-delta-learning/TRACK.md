@@ -28,23 +28,53 @@ does not claim novelty, chemistry, structure explanation, composition
 generalisation or a top-tier result.  A pass only licenses *designing* a
 structural comparator next round; it is not evidence that the comparator works.
 
-## Outcome of rd-pilot-small-v1 (2026-11-16)
+## Outcome of rd-pilot-small-v1 (2026-11-16, evaluation revision rd-evalfix-v1)
 
-`EXECUTION_PASS`, `REFERENCE_COMPLETE`, `NO_JOINT_INCREMENT_THIS_RECIPE`,
+`EXECUTION_PASS`, `REFERENCE_COMPLETE`, **`CROSS_TASK_TRADEOFF`**,
 `SUBSTANTIVE_PROGRESS = false`, `WORTH_STRUCTURAL_COMPARATOR_FOLLOWUP = false`.
+No model was retrained for the evaluation repair.
 
-C selected its **first** boosting round on both tasks (molesol 1.5297/1.5824,
-mollipo 0.9991/0.9181 Val/Test), i.e. it collapses to the neighbour-label
-baseline N; every trained state is worse than N on Val (0/1600 winning rounds on
-both tasks).  The training-pair fit improves monotonically while Val/Test
-degrade (see `results/rd-pilot-small-v1/REPORT.md`).  R — the same retrieval and
-restoration with a trained absolute anchor — does improve on D (Val +4.9% /
-+3.9%; Test −1.5% / +6.5%), so the negative result is about *learning the delta
-from Train pairs*, not about reference-based restoration.
+The original C evaluation read Val/Test query rows from the Train matrix while
+keeping the true Val/Test references and labels.  That invalidated the old C
+Val/Test curves, selected states, predictions, comparisons and the old
+`NO_JOINT_INCREMENT_THIS_RECIPE` reading.  With the explicit input domains
+fixed, C selects late boosting rounds (molesol H2/1577, mollipo H2/1595) and
+the two tasks disagree:
+
+* **mollipo** is a `strong_joint_task`: C beats D/N/R by +7.96/+28.49/+4.27% on
+  Val and +9.82/+25.04/+3.58% on Test.  It is still not within the 5% band of
+  the frozen G reference (Val/Test ratio 1.171/1.066).
+* **molesol** is better than D and R on Val (+5.34%/+0.44%) but worse on Test
+  (−9.15%/−7.53% vs D/R), so the other-task 5% condition fails.  It is within
+  the 5% band of the frozen L reference (1.010/1.039).
+
+C is therefore a real task-dependent tradeoff, not a collapse to the
+neighbour-label baseline N; C beats N on all 1600 rounds for both splits on
+both tasks.  The frozen `strong_joint_task` + `not_regressing` gates still do
+not yield `JOINT_DELTA_SIGNAL`, and the 5%/50% substantive-progress gate fails
+on mollipo.  R — the same retrieval and restoration with a trained absolute
+anchor — is unchanged and still improves on D (Val +4.9%/+3.9%; Test −1.5%/
++6.5%).
 
 The result is scoped to this frozen recipe: 1600 rounds, no depth/eta search, no
 early stopping on pairs.  It is **not** evidence that pairwise learning cannot
 work, and it licenses no structural-comparator round.
+
+## Evaluation repair (rd-evalfix-v1)
+
+* Root cause fixed at `ca475ba8` on branch `rd-pilot-small-v1-evalfix`, starting
+  from `7f51ae14`: `pair_matrix` / `pair_feature_blocks` now take explicit
+  `query_x` / `reference_x` domains; training passes Train/Train, evaluation
+  passes split/Train.  Reverse pairs are still the correct blocks with X1/X2
+  swapped and X3 negated.
+* Only the four existing C boosters were re-evaluated; all eight D/C booster
+  files are byte-identical before/after.  New training trajectories: 0.
+* Every evaluation cache key now includes `rd-evalfix-v1`, the code hashes,
+  split/row_id/feature hashes, reference/pair hashes, weight hashes, scaler and
+  model SHA-256, so pre-fix C curves cannot be reused.
+* The input identity, independent native-XGBoost prefix/full predictions,
+  Train-curve invariance and no-training checks all pass; see
+  `results/rd-pilot-small-v1/CORRIGENDUM_evalfix_v1.md` and `checks.json`.
 
 ## Non-goals of this round
 

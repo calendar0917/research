@@ -1,13 +1,13 @@
 {
   "competitive": {
     "ogbg-molesol": {
-      "COMPETITIVE_WITH_FROZEN_REFERENCES": false,
+      "COMPETITIVE_WITH_FROZEN_REFERENCES": true,
       "best_reference": {
         "arm": "L",
-        "competitive_c": false,
+        "competitive_c": true,
         "ratio_c_over_b": {
-          "test": 1.8463510168481074,
-          "valid": 1.761080225905351
+          "test": 1.0391385619097353,
+          "valid": 1.0101932544800134
         },
         "test": 0.8570313114642779,
         "valid": 0.8686407641532152
@@ -19,8 +19,8 @@
         "arm": "G",
         "competitive_c": false,
         "ratio_c_over_b": {
-          "test": 1.422055108355577,
-          "valid": 1.640395707364113
+          "test": 1.0655853030869236,
+          "valid": 1.1705900270312641
         },
         "test": 0.6456006570813893,
         "valid": 0.6090630882456797
@@ -31,18 +31,38 @@
     "EXECUTION_PASS": true,
     "checks_ok": {
       "ogbg-molesol": {
+        "input_identity_pass": true,
         "max_abs_diff_D_raw": 0.0,
         "max_abs_margin_diff_C": 0.0,
         "max_abs_metric_diff": 0.0,
+        "model_sha_unchanged_pass": true,
+        "no_training_calls": true,
         "pass": true,
-        "per_sample_tolerance_raw": 1e-05
+        "per_sample_tolerance_raw": 1e-05,
+        "train_curve_unchanged_pass": true,
+        "training_calls": {
+          "booster_update": 0,
+          "sklearn_fit": 0,
+          "train": 0
+        },
+        "training_input_unchanged_pass": true
       },
       "ogbg-mollipo": {
+        "input_identity_pass": true,
         "max_abs_diff_D_raw": 0.0,
         "max_abs_margin_diff_C": 0.0,
         "max_abs_metric_diff": 0.0,
+        "model_sha_unchanged_pass": true,
+        "no_training_calls": true,
         "pass": true,
-        "per_sample_tolerance_raw": 1e-05
+        "per_sample_tolerance_raw": 1e-05,
+        "train_curve_unchanged_pass": true,
+        "training_calls": {
+          "booster_update": 0,
+          "sklearn_fit": 0,
+          "train": 0
+        },
+        "training_input_unchanged_pass": true
       }
     },
     "formal_trajectories": 8,
@@ -50,64 +70,66 @@
   },
   "joint_signal": {
     "JOINT_DELTA_SIGNAL": false,
-    "classification": "NO_JOINT_INCREMENT_THIS_RECIPE",
-    "strong_joint_tasks": []
+    "classification": "CROSS_TASK_TRADEOFF",
+    "strong_joint_tasks": [
+      "ogbg-mollipo"
+    ]
   },
   "per_dataset": {
     "ogbg-molesol": {
       "best_reference": {
         "arm": "L",
-        "competitive_c": false,
+        "competitive_c": true,
         "ratio_c_over_b": {
-          "test": 1.8463510168481074,
-          "valid": 1.761080225905351
+          "test": 1.0391385619097353,
+          "valid": 1.0101932544800134
         },
         "test": 0.8570313114642779,
         "valid": 0.8686407641532152
       },
-      "competitive_with_frozen_references": false,
+      "competitive_with_frozen_references": true,
       "gains": {
-        "D_test": -0.9394155054725812,
-        "D_valid": -0.650161350826072,
-        "N_test": 0.0014016030892570752,
-        "N_valid": -0.00031947517956165683,
-        "R_test": -0.910580406170407,
-        "R_valid": -0.73557066134079
+        "D_test": -0.09151587152835172,
+        "D_valid": 0.05343218276660355,
+        "N_test": 0.43798221864517606,
+        "N_valid": 0.42619537072373537,
+        "R_test": -0.07528728695913123,
+        "R_valid": 0.004439576931510758
       },
       "not_regressing": false,
       "not_worse_than_5pct_conditions": {
         "D_test": false,
-        "D_valid": false,
+        "D_valid": true,
         "N_test": true,
         "N_valid": true,
         "R_test": false,
-        "R_valid": false
+        "R_valid": true
       },
       "progress": {
         "per_split": {
           "test": {
             "J_min_DNR": 0.8159059412114759,
             "b_best_reference": 0.8570313114642779,
-            "c_joint": 1.5823806333927366,
-            "competitive_5pct": false,
+            "c_joint": 0.8905742845066041,
+            "competitive_5pct": true,
             "half_gap_closed": "not_applicable",
-            "progress_pass": false
+            "progress_pass": true
           },
           "valid": {
             "J_min_DNR": 0.8814081196692722,
             "b_best_reference": 0.8686407641532152,
-            "c_joint": 1.529746073165541,
-            "competitive_5pct": false,
+            "c_joint": 0.8774950405139422,
+            "competitive_5pct": true,
             "half_gap_closed": false,
-            "progress_pass": false
+            "progress_pass": true
           }
         },
-        "substantive_progress": false
+        "substantive_progress": true
       },
       "rmse": {
         "C": {
-          "test": 1.5823806333927366,
-          "valid": 1.529746073165541
+          "test": 0.8905742845066041,
+          "valid": 0.8774950405139422
         },
         "D": {
           "test": 0.8159059412114759,
@@ -124,9 +146,9 @@
       },
       "strong_conditions": {
         "D_test": false,
-        "D_valid": false,
-        "N_test": false,
-        "N_valid": false,
+        "D_valid": true,
+        "N_test": true,
+        "N_valid": true,
         "R_test": false,
         "R_valid": false
       },
@@ -137,36 +159,36 @@
         "arm": "G",
         "competitive_c": false,
         "ratio_c_over_b": {
-          "test": 1.422055108355577,
-          "valid": 1.640395707364113
+          "test": 1.0655853030869236,
+          "valid": 1.1705900270312641
         },
         "test": 0.6456006570813893,
         "valid": 0.6090630882456797
       },
       "competitive_with_frozen_references": false,
       "gains": {
-        "D_test": -0.2035148943538796,
-        "D_valid": -0.28973611143468236,
-        "N_test": -0.00029687011443457756,
-        "N_valid": -0.0020730080866149247,
-        "R_test": -0.28673303421431373,
-        "R_valid": -0.34146815270672026
+        "D_test": 0.09817293582054587,
+        "D_valid": 0.07964144092190817,
+        "N_test": 0.2504498333047245,
+        "N_valid": 0.28491847158739236,
+        "R_test": 0.035815277341295415,
+        "R_valid": 0.0427253411545393
       },
-      "not_regressing": false,
+      "not_regressing": true,
       "not_worse_than_5pct_conditions": {
-        "D_test": false,
-        "D_valid": false,
+        "D_test": true,
+        "D_valid": true,
         "N_test": true,
         "N_valid": true,
-        "R_test": false,
-        "R_valid": false
+        "R_test": true,
+        "R_valid": true
       },
       "progress": {
         "per_split": {
           "test": {
             "J_min_DNR": 0.7134966523346401,
             "b_best_reference": 0.6456006570813893,
-            "c_joint": 0.9180797123603067,
+            "c_joint": 0.6879425718491892,
             "competitive_5pct": false,
             "half_gap_closed": false,
             "progress_pass": false
@@ -174,7 +196,7 @@
           "valid": {
             "J_min_DNR": 0.7447843420331822,
             "b_best_reference": 0.6090630882456797,
-            "c_joint": 0.999104475472143,
+            "c_joint": 0.7129631769332554,
             "competitive_5pct": false,
             "half_gap_closed": false,
             "progress_pass": false
@@ -184,8 +206,8 @@
       },
       "rmse": {
         "C": {
-          "test": 0.9180797123603067,
-          "valid": 0.999104475472143
+          "test": 0.6879425718491892,
+          "valid": 0.7129631769332554
         },
         "D": {
           "test": 0.7628320319651616,
@@ -201,14 +223,14 @@
         }
       },
       "strong_conditions": {
-        "D_test": false,
-        "D_valid": false,
-        "N_test": false,
-        "N_valid": false,
-        "R_test": false,
-        "R_valid": false
+        "D_test": true,
+        "D_valid": true,
+        "N_test": true,
+        "N_valid": true,
+        "R_test": true,
+        "R_valid": true
       },
-      "strong_joint_task": false
+      "strong_joint_task": true
     }
   },
   "protocol_id": "rd-pilot-small-v1",
@@ -221,28 +243,28 @@
           "test": {
             "J_min_DNR": 0.8159059412114759,
             "b_best_reference": 0.8570313114642779,
-            "c_joint": 1.5823806333927366,
-            "competitive_5pct": false,
+            "c_joint": 0.8905742845066041,
+            "competitive_5pct": true,
             "half_gap_closed": "not_applicable",
-            "progress_pass": false
+            "progress_pass": true
           },
           "valid": {
             "J_min_DNR": 0.8814081196692722,
             "b_best_reference": 0.8686407641532152,
-            "c_joint": 1.529746073165541,
-            "competitive_5pct": false,
+            "c_joint": 0.8774950405139422,
+            "competitive_5pct": true,
             "half_gap_closed": false,
-            "progress_pass": false
+            "progress_pass": true
           }
         },
-        "substantive_progress": false
+        "substantive_progress": true
       },
       "ogbg-mollipo": {
         "per_split": {
           "test": {
             "J_min_DNR": 0.7134966523346401,
             "b_best_reference": 0.6456006570813893,
-            "c_joint": 0.9180797123603067,
+            "c_joint": 0.6879425718491892,
             "competitive_5pct": false,
             "half_gap_closed": false,
             "progress_pass": false
@@ -250,7 +272,7 @@
           "valid": {
             "J_min_DNR": 0.7447843420331822,
             "b_best_reference": 0.6090630882456797,
-            "c_joint": 0.999104475472143,
+            "c_joint": 0.7129631769332554,
             "competitive_5pct": false,
             "half_gap_closed": false,
             "progress_pass": false

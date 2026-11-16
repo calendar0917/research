@@ -1356,7 +1356,8 @@ def render_report(
     )
     lines.append(
         f"- 本次 `rd-evalfix-v1` 新增评价墙钟（两任务合计）= {eval_fix_wall:.1f} s；"
-        "只加载既有 booster，CPU 评价，新增训练 0 条、新增 GPU·h = 0。"
+        "只加载既有 booster，CPU 评价，新增训练 0 条、新增 GPU 计算 = 0；"
+        f"按独占分配计约 {eval_fix_wall / 3600.0:.3f} GPU·h（GPU 空闲等待）。"
     )
     lines.append(
         "- worker 进程 peak RSS："

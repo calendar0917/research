@@ -1,4 +1,4 @@
-phase: rd-pilot-small-v1-closed-negative
+phase: rd-pilot-small-v1-evalfix-closed
 active_studies: [rd-pilot-small-v1]
 focus_study: rd-pilot-small-v1
 updated: 2026-11-16
@@ -12,54 +12,88 @@ current_candidate: C-antisymmetrised-pairwise-delta
 base_commit: 6f01b13738f7c393dbcaec8d6db926e0e280fd51
 reuse_source_commit: 4e17deb6ea894e6ff34dcdad6965642bcbb396bb
 reuse_performance_references: 4430042683bfad26c02391c10d17a26932716812
+evalfix_start_commit: 7f51ae14c99ccf5929d3ccf118dd73b41c05b44d
+evalfix_commit: ca475ba838213ffd0ca67f52dae19e71b2c57c40
+evaluation_revision: rd-evalfix-v1
 
 round_result:
   study: rd-pilot-small-v1
   protocol: rd-pilot-small-v1
+  evaluation_revision: rd-evalfix-v1
   artifacts: results/rd-pilot-small-v1/REPORT.md
+  corrigendum: results/rd-pilot-small-v1/CORRIGENDUM_evalfix_v1.md
   execution: EXECUTION_PASS
   reference_axis: REFERENCE_COMPLETE
-  joint_signal: NO_JOINT_INCREMENT_THIS_RECIPE
+  joint_signal: CROSS_TASK_TRADEOFF
+  strong_joint_task: [ogbg-mollipo]
   substantive_progress: false
+  competitive_with_frozen_references:
+    ogbg-molesol: true
+    ogbg-mollipo: false
   worth_structural_comparator_followup: false
   one_line: >-
-    C selected its first round on both tasks (delta ~ 0, i.e. it collapses to N)
-    and every trained state was worse than N on Val; R, which reuses the same
-    references and restoration but anchors on D, improved on D.
+    After fixing the C evaluation input domain, mollipo is a strong joint task
+    (C beats D/N/R by ≥3% on Val and Test, +3.6% to +28.5%), while molesol is
+    better than D/R on Val but worse on Test (-9.2% vs D, -7.5% vs R).  The
+    frozen gate therefore reads CROSS_TASK_TRADEOFF, not a joint increment;
+    SUBSTANTIVE_PROGRESS and WORTH_STRUCTURAL_COMPARATOR_FOLLOWUP remain false.
+    No model was retrained.
 
 axes:
   ogbg-molesol:   # raw units, Val-selected states
     D: {valid: 0.9270, test: 0.8159, preset: H1, round: 798}
     N: {valid: 1.5293, test: 1.5846, config: K4_softmax_tau_0.1}
     R: {valid: 0.8814, test: 0.8282, preset: H1, round: 669, config: K4_softmax_tau_0.1}
-    C: {valid: 1.5297, test: 1.5824, preset: H2, round: 1, config: K4_softmax_tau_0.1}
+    C: {valid: 0.8775, test: 0.8906, preset: H2, round: 1577, config: K4_softmax_tau_0.1}
     G: {valid: 0.9353, test: 0.9354}   # reused point reference
     L: {valid: 0.8686, test: 0.8570}   # reused point reference, best B on this task
   ogbg-mollipo:
     D: {valid: 0.7747, test: 0.7628, preset: H2, round: 800}
     N: {valid: 0.9970, test: 0.9178, config: K16_softmax_tau_0.1}
     R: {valid: 0.7448, test: 0.7135, preset: H1, round: 790, config: K16_softmax_tau_0.1}
-    C: {valid: 0.9991, test: 0.9181, preset: H2, round: 1, config: K16_softmax_tau_0.1}
+    C: {valid: 0.7130, test: 0.6879, preset: H2, round: 1595, config: K16_softmax_tau_0.1}
     G: {valid: 0.6091, test: 0.6456}   # best B on this task
     L: {valid: 0.7052, test: 0.7139}
 
+correction:
+  old_C_curves_invalid: true
+  old_C_selected_round: {ogbg-molesol: 1, ogbg-mollipo: 1}
+  new_C_selected_round: {ogbg-molesol: 1577, ogbg-mollipo: 1595}
+  root_cause: >-
+    pair_matrix / pair_feature_blocks always read task.x["train"]; the C
+    evaluator reused them for Val/Test query local indices.  References and
+    labels were the true Val/Test ones, so the two sides of the pair did not
+    describe the same query.
+  model_sha_unchanged: true
+  new_training_trajectories: 0
+  withdrawn: >-
+    Old C Val/Test curves, selected state, predictions, comparisons, cases,
+    route decision, "C selects its first round", "training worsens
+    generalisation", and NO_JOINT_INCREMENT_THIS_RECIPE.
+
 mechanism:
-  - C pair RMSE falls monotonically (molesol 1.28 -> 0.25, mollipo 1.32 -> 0.60 in sigma units) while Train molecule RMSE falls and Val/Test rise to ~2-3x N.
-  - C never beats N on Val at any round on either task (0/1600); Test wins 2/1600 (molesol) and 0/1600 (mollipo).
-  - R beats D on Val (molesol +4.9%, mollipo +3.9%) and on mollipo Test (+6.5%); only molesol Test is 1.5% worse. The retrieval + restoration machinery is usable; learning the delta from Train pairs alone is not, in this frozen recipe.
+  - C pair RMSE still falls monotonically (molesol 1.28 -> 0.25, mollipo 1.32 -> 0.60 in sigma units) and the C molecule Train curve is also unchanged.
+  - With the correct input domain, C Val/Test curves improve with training on both tasks; C beats N on all 1600 rounds for Val and Test on both tasks.
+  - mollipo: C beats D/N/R by +7.96%/+28.49%/+4.27% on Val and +9.82%/+25.04%/+3.58% on Test, so it is a strong_joint_task.
+  - molesol: C beats D/N/R on Val (+5.34%/+42.62%/+0.44%) but is worse than D and R on Test (-9.15%/-7.53%), so the other-task 5% condition fails and the joint signal is a cross-task tradeoff.
+  - C is within 5% of the best frozen reference L on molesol (Val/Test ratios 1.010/1.039) but not within 5% of G on mollipo (1.171/1.066).
+  - R vs D is unchanged: Val +4.9%/+3.9%, Test -1.5%/+6.5%.  The retrieval + restoration machinery is usable; the delta learner now shows a task-dependent tradeoff.
 
 open_questions:
-  - Is the failure specific to the frozen capacity (1600 rounds, no depth/eta search) rather than the idea?
-  - Would a regularised delta (early stop on Val, smaller capacity, Train-only pair subsampling) change the sign?
-  - Does a structural comparator add anything once the delta model stops collapsing to the neighbour baseline?
+  - Is the molesol Test regression vs D/R a property of this frozen capacity and single seed, or of the delta target?
+  - Could a pre-registered regularisation (early stop on Val, smaller capacity, Train-only pair subsampling) remove the cross-task tradeoff without changing the gate?
+  - Does a structural comparator add anything once the delta model beats retrieval baselines on one task but not the other?
 
 next_action: >-
-  Not started automatically.  Any follow-up must be a new round with a new
-  protocol id: this round's negative result is scoped to this exact recipe and
-  must not be re-read as "pairwise learning cannot work".
+  Not started automatically.  The frozen 3%/5%/50% gates are unchanged and were
+  not passed.  Any follow-up must be a new round with a new protocol id; this
+  result must not be re-read as "pairwise learning cannot work" or as a license
+  for a structural comparator.
 
 guardrails:
   - test_policy=always; Test never selected a state in this round
   - single training seed 0; no multi-seed claim
   - G/L are reused point references only, never retrained here
   - thresholds 3%/5%/50% are this exploration's investment gates, not significance
+  - evaluation_revision=rd-evalfix-v1; eight D/C boosters byte-identical before/after
+  - new training trajectories in the repair = 0
