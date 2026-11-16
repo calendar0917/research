@@ -76,8 +76,13 @@ def load_catalog() -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 
-def load_predictions(stage: str, dataset: str, model: str, recipe: str) -> dict[str, dict[str, np.ndarray]]:
-    path = C.task_dir(stage, dataset, model, recipe) / "best_predictions.npz"
+def load_predictions(
+    stage: str, dataset: str, model: str, recipe: str, prop: str | None = None
+) -> dict[str, dict[str, np.ndarray]]:
+    if prop:
+        path = C.RESULTS_DIR / stage / dataset / model / prop / recipe / "best_predictions.npz"
+    else:
+        path = C.task_dir(stage, dataset, model, recipe) / "best_predictions.npz"
     if not path.is_file():
         raise FileNotFoundError(path)
     z = np.load(path)
@@ -455,7 +460,7 @@ def _oracle_pair_predictions(prop: str, truth: Mapping[str, np.ndarray], sigma: 
     out: dict[str, Any] = {}
     for model in ("L", "T", "A"):
         try:
-            pred = load_predictions(C.STAGE_ORACLE, "ogbg-mollipo", model, "selected")
+            pred = load_predictions(C.STAGE_ORACLE, "ogbg-mollipo", model, "selected", prop=prop)
         except FileNotFoundError:
             out[model] = {"status": "MISSING"}
             continue
@@ -491,17 +496,17 @@ def _oracle_pair_predictions(prop: str, truth: Mapping[str, np.ndarray], sigma: 
             "delta_sign_accuracy": float(np.mean([r["sign_ok"] for r in signs])) if signs else None,
             **{
                 key: value
-                for key, value in _oracle_traj_metrics(model).items()
+                for key, value in _oracle_traj_metrics(model, prop).items()
                 if key in ("valid_rmse_raw", "test_rmse_raw")
             },
-            "valid_rmse_sigma": _oracle_traj_metrics(model).get("valid_rmse_raw", float("nan")) / sigma,
-            "test_rmse_sigma": _oracle_traj_metrics(model).get("test_rmse_raw", float("nan")) / sigma,
+            "valid_rmse_sigma": _oracle_traj_metrics(model, prop).get("valid_rmse_raw", float("nan")) / sigma,
+            "test_rmse_sigma": _oracle_traj_metrics(model, prop).get("test_rmse_raw", float("nan")) / sigma,
         }
     return out
 
 
-def _oracle_traj_metrics(model: str) -> dict[str, float]:
-    path = C.task_dir(C.STAGE_ORACLE, "ogbg-mollipo", model, "selected") / "trajectory.json"
+def _oracle_traj_metrics(model: str, prop: str) -> dict[str, float]:
+    path = C.RESULTS_DIR / C.STAGE_ORACLE / "ogbg-mollipo" / model / prop / "selected" / "trajectory.json"
     if not path.is_file():
         return {}
     return C.read_json(path)["selected"]

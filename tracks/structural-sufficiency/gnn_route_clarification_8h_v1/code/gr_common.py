@@ -424,6 +424,18 @@ def task_dir(stage: str, dataset: str, model: str, recipe: str) -> Path:
     return base / recipe if recipe else base
 
 
+def task_out_dir(task: Mapping[str, Any]) -> Path:
+    """Output directory of a task.
+
+    Oracle tasks for the two properties share stage/dataset/model, so the
+    property must be part of the path; otherwise WC_LOGP and MOLWT overwrite
+    each other's checkpoints and predictions.
+    """
+    if task["stage"] == STAGE_ORACLE:
+        return RESULTS_DIR / STAGE_ORACLE / task["dataset"] / task["model"] / str(task["property"]) / "selected"
+    return task_dir(task["stage"], task["dataset"], task["model"], task["recipe"])
+
+
 # ---------------------------------------------------------------------------
 # task catalog
 # ---------------------------------------------------------------------------
@@ -520,7 +532,7 @@ def all_tasks() -> list[dict[str, Any]]:
 
 
 def task_status_path(task: Mapping[str, Any]) -> Path:
-    return task_dir(task["stage"], task["dataset"], task["model"], task["recipe"]) / "status.json"
+    return task_out_dir(task) / "status.json"
 
 
 def task_complete(task: Mapping[str, Any]) -> bool:

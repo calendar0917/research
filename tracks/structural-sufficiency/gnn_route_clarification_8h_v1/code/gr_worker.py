@@ -126,7 +126,7 @@ def serve(pool: str, deadline: dt.datetime, *, force: bool = False, only: str | 
             traceback.print_exc()
             _heartbeat(pool, {"pool": pool, "state": "error", "task": key, "traceback": traceback.format_exc()})
             C.write_json(
-                C.task_dir(task["stage"], task["dataset"], task["model"], task["recipe"]) / "status.json",
+                C.task_out_dir(task) / "status.json",
                 {"state": "failed", "task": key, "traceback": traceback.format_exc()},
             )
             return 1

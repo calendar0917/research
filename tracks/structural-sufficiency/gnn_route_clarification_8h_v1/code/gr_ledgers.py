@@ -151,7 +151,7 @@ def make_runner(model_key: str, dataset: str = "ogbg-mollipo", *, property_name:
     if model_key == "L":
         recipe = S.lipo_recipe_for_model("L")
         stage = C.STAGE_ORACLE if property_name else C.STAGE1
-        folder = "selected" if property_name else recipe
+        folder = f"{property_name}/selected" if property_name else recipe
         path = _checkpoint_path(stage, dataset, "L", folder)
         model = M.ModelSet(b).lcrc()
         model.load_state_dict(_load_state(path)["model_state"], strict=True)
@@ -161,7 +161,7 @@ def make_runner(model_key: str, dataset: str = "ogbg-mollipo", *, property_name:
         kind = S.selected_trunk_model()
         recipe = S.lipo_recipe_for_model("T")
         stage = C.STAGE_ORACLE if property_name else C.STAGE1
-        folder = "selected" if property_name else recipe
+        folder = f"{property_name}/selected" if property_name else recipe
         path = _checkpoint_path(stage, dataset, kind, folder)
         model = M.ModelSet(b).dense(kind)
         model.load_state_dict(_load_state(path)["model_state"], strict=True)
@@ -171,7 +171,7 @@ def make_runner(model_key: str, dataset: str = "ogbg-mollipo", *, property_name:
         kind = S.selected_trunk_model()
         recipe = S.lipo_recipe_for_model("A")
         stage = C.STAGE_ORACLE if property_name else C.STAGE2
-        folder = "selected" if property_name else recipe
+        folder = f"{property_name}/selected" if property_name else recipe
         path = _checkpoint_path(stage, dataset, "A", folder)
         model = M.ModelSet(b).additive(
             kind,

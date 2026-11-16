@@ -445,7 +445,7 @@ def run_standard_task(task: Mapping[str, Any], *, device: str, b=None) -> dict[s
     if recipe == "selected":
         recipe = S.lipo_recipe_for_model(task["model"])
         init_audit["selected_recipe_from_real_lipo"] = recipe
-    out_dir = C.task_dir(task["stage"], task["dataset"], task["model"], task["recipe"])
+    out_dir = C.task_out_dir(task)
     summary = run_trajectory(
         task=task,
         b=b,
@@ -536,7 +536,7 @@ def run_stage3(task: Mapping[str, Any], *, device: str) -> dict[str, Any]:
     active = [] if t == "G0" else b.active_global["active_indices"]
     # identical head construction to A (same isolated seed, same H)
     head = ms._new_head(t, n_active=(1 if t == "G0" else len(active)), active_indices=active, size_scaler=size_scaler)
-    out_dir = C.task_dir(task["stage"], task["dataset"], task["model"], task["recipe"])
+    out_dir = C.task_out_dir(task)
     out_dir.mkdir(parents=True, exist_ok=True)
     signature = task_signature(
         task,
