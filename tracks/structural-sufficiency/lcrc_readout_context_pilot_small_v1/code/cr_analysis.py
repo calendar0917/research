@@ -1537,7 +1537,35 @@ def aggregate(
     _ensure_dirs()
     checks_path = OUT / "checks.json"
     checks = C.read_json(checks_path) if checks_path.is_file() else {"all_pass": False, "checks": []}
-    pretrain_ok = {dataset: bool(checks.get("all_pass")) for dataset in datasets}
+    # the two workers run in parallel, so the merged checks.json is not a reliable
+    # medium: prefer the per-dataset files each worker wrote under its own name
+    per_dataset_checks = {}
+    for dataset in datasets:
+        path = OUT / f"checks_{dataset}.json"
+        if path.is_file():
+            payload = C.read_json(path)
+            per_dataset_checks[dataset] = payload
+    pretrain_ok = {
+        dataset: bool(
+            per_dataset_checks[dataset].get("all_pass")
+            if dataset in per_dataset_checks
+            else checks.get("all_pass")
+        )
+        for dataset in datasets
+    }
+    checks = {
+        "all_pass": bool(all(pretrain_ok.values())),
+        "per_dataset": {
+            dataset: {
+                "path": str((OUT / f"checks_{dataset}.json").relative_to(C.REPO_ROOT)),
+                "n_checks": payload.get("n_checks"),
+                "all_pass": payload.get("all_pass"),
+                "failed": payload.get("failed"),
+            }
+            for dataset, payload in per_dataset_checks.items()
+        },
+        "merged_path": str(checks_path.relative_to(C.REPO_ROOT)),
+    }
 
     main_rows: list[dict[str, Any]] = []
     contrast_rows: list[dict[str, Any]] = []
