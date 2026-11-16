@@ -770,7 +770,7 @@ def _stage_dataset_worker(
 
     # every selected state must exist in the curve file of *its own* preset
     for arm, chosen, curves, config in (
-        ("D", d_selection, d_selected_run.curves, None),
+        ("D", d_selection, d_selected_run.curves, "none"),
         ("R", r_selection, d_runs[r_selection["preset"]].curves, str(r_selection["config"])),
         ("C", c_selection, c_selected_run.curves, str(c_selection["config"])),
     ):
