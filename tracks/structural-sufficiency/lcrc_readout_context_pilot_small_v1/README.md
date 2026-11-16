@@ -125,7 +125,10 @@ rr run res lcrc-rc-molesol --pool res-gpu0 \
 
 Then pull the two runs and run the CPU-only aggregate stage locally (this
 recomputes every table, ledger, intervention, figure and verdict from the pulled
-artefacts; it never touches a GPU and never changes a trained weight):
+artefacts and rewrites `REPORT.md` / `DECISION.md` / `run_manifest.json` /
+`resource_ledger.json`; it never touches a GPU and never changes a trained weight.
+On the committed artefacts it reproduces them byte-for-byte apart from timestamps,
+`.csv.gz` included, because the ledger gzip stream uses a fixed mtime):
 
 ```bash
 bash tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/run_remote.sh \

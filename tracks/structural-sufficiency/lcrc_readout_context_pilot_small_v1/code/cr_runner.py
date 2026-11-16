@@ -124,7 +124,17 @@ def run(config: Mapping[str, Any], context) -> Any:
     elif stage == "aggregate":
         import cr_analysis
 
-        metrics = cr_analysis.aggregate(datasets=_datasets(config), ledger=ledger)
+        # The aggregate stage is whole-round by construction: it rewrites the merged
+        # tables / ledgers / verdicts / report for *every* dataset that has results.
+        # Honouring a per-dataset `dataset:` override here would silently emit a
+        # half-round report, so it is ignored on purpose (dataset_worker still needs it).
+        metrics = cr_analysis.aggregate(datasets=list(C.DATASETS), ledger=ledger)
+        # ... and then regenerate REPORT.md / DECISION.md / run_manifest.json /
+        # resource_ledger.json from those artefacts, so one documented command
+        # reproduces the whole deliverable (numbers are read back, never typed).
+        import cr_report
+
+        metrics["reports"] = cr_report.write_reports()
     else:
         raise ValueError(f"unknown stage {stage!r}")
     metrics = {**metrics, "stage": stage, "wall_seconds": time.perf_counter() - t0}

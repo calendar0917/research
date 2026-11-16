@@ -1015,10 +1015,15 @@ rr run res lcrc-rc-molesol --pool res-gpu0 \\
      --purpose "formal: ogbg-molesol" --set stage=dataset_worker --set dataset=ogbg-molesol
 # 另一个池/数据集：--pool res-gpu1 --set dataset=ogbg-mollipo
 
-# 拉回并从零重算全部表格、账目、干预、图与判定（纯 CPU）
+# 拉回并从零重算全部表格、账目、干预、图与判定，并重写本报告（纯 CPU，约 21 s）
 bash tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/run_remote.sh \\
   --purpose "aggregate" --set stage=aggregate
 ```
+
+`--set stage=aggregate` 与 `dataset` 设置无关：它总是覆盖两个数据集，并顺带重写
+`REPORT.md` / `DECISION.md` / `analysis/run_manifest.json` / `analysis/resource_ledger.json`。
+在已提交的产物上重跑该命令，除时间戳外**逐字节复现**仓库里的表格、账目、图与 JSON
+（`.csv.gz` 用固定 mtime，所以连压缩字节都一致）。
 
 正式轨迹执行 commit 见 §12 的 `commit` 列（由 rr 记录），分支 `{freeze.get('round_branch')}`，
 依据版本 `{str(freeze.get('design_basis_commit'))[:12]}`。执行来源（host / GPU / driver / torch / commit）

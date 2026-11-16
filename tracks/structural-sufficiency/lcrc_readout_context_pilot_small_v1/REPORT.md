@@ -3,7 +3,7 @@
 **轮次** `lcrc-readout-context-pilot-small-v1` · **状态** DEVELOPMENT · **所有 Test 数字都是 `DEVELOPMENT_TEST`** ·
 **分支** `lcrc-readout-context-pilot-small-v1`（依据版本 `9b3dba098915`）·
 **正式轨迹执行 commit** `ee72310d9290` · **freeze hash** `5a6d48aaef012aac…` ·
-**生成时间** 2026-11-16T23:23:41 · **正式 GPU 墙钟** 0.659 A100-h
+**生成时间** 2026-11-16T23:26:47 · **正式 GPU 墙钟** 0.659 A100-h
 
 > 本报告是**单 seed、两个小任务的可行性实验**。Test 划分经用户明确授权每 epoch 全量评估
 > （`test_policy=always`），但**从未**参与 checkpoint、宽度、LR 或任何判读量的选择。
@@ -406,10 +406,15 @@ rr run res lcrc-rc-molesol --pool res-gpu0 \
      --purpose "formal: ogbg-molesol" --set stage=dataset_worker --set dataset=ogbg-molesol
 # 另一个池/数据集：--pool res-gpu1 --set dataset=ogbg-mollipo
 
-# 拉回并从零重算全部表格、账目、干预、图与判定（纯 CPU）
+# 拉回并从零重算全部表格、账目、干预、图与判定，并重写本报告（纯 CPU，约 21 s）
 bash tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/run_remote.sh \
   --purpose "aggregate" --set stage=aggregate
 ```
+
+`--set stage=aggregate` 与 `dataset` 设置无关：它总是覆盖两个数据集，并顺带重写
+`REPORT.md` / `DECISION.md` / `analysis/run_manifest.json` / `analysis/resource_ledger.json`。
+在已提交的产物上重跑该命令，除时间戳外**逐字节复现**仓库里的表格、账目、图与 JSON
+（`.csv.gz` 用固定 mtime，所以连压缩字节都一致）。
 
 正式轨迹执行 commit 见 §12 的 `commit` 列（由 rr 记录），分支 `lcrc-readout-context-pilot-small-v1`，
 依据版本 `9b3dba098915`。执行来源（host / GPU / driver / torch / commit）
