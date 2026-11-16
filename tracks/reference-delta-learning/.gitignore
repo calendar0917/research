@@ -4,11 +4,8 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
-# complete trained boosters are large; their SHA-256 is recorded in the
-# committed checks/selection JSON and they stay available on res + pulled copies
-results/**/models/
-
-# the repo-wide .gitignore drops *.json / *.csv under results/; this track keeps
-# the small frozen identity and evidence files next to the (git-ignored) arrays
-!results/**/*.json
-!results/**/*.csv
+# Everything a run writes under results/ is an output, not source: the remote
+# worker must never be able to dirty a tracked file.  Selected evidence is
+# promoted explicitly with `git add -f` after the round (see results/README.md).
+results/
+!results/README.md
