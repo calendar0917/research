@@ -281,22 +281,30 @@ y=-0.500000  pred_D=0.260279  pred_C=2.412827  |err_C|=2.912827  config=K16_soft
 
 ## 资源账本
 
-| dataset | arm | preset | rounds | train_seconds | eval_seconds | matrix_build_seconds | seconds_per_round | gpu_peak_mb | model_sha256 |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ogbg-molesol | D | H1 | 800 | 2.2388 | 1.4098 | 0.0000 | 0.0028 | 528.0000 | 719c3ab2fde6d7b3f6391aca5b2bdeca397cf3943b49110568e2975aad5b9024 |
-| ogbg-molesol | D | H2 | 800 | 2.6820 | 1.3196 | 0.0000 | 0.0034 | 532.0000 | 000df6502fb675f4605b0b2b6defc65fe569639e199dcb1607f37db941b792ec |
-| ogbg-molesol | C | H1 | 1600 | 15.1288 | 30.3028 | 2.8841 | 0.0095 | 1134.0000 | 9415143d5c8212a7ef18fe5d5611b5e9563a6149d00f032fbca81f53e96b06b8 |
-| ogbg-molesol | C | H2 | 1600 | 16.5472 | 49.8026 | 2.2398 | 0.0103 | 1146.0000 | 32e73107b8f5b268cf5c4f3f21751e7a2411261c9a37fc17a47691621b4122bd |
-| ogbg-mollipo | D | H1 | 800 | 2.2088 | 2.7391 | 0.0000 | 0.0028 | 536.0000 | 7532858029f2179e3ab18a16cd32d795eba71f52196cc6ee1405b32e776737d9 |
-| ogbg-mollipo | D | H2 | 800 | 2.1399 | 3.0802 | 0.0000 | 0.0027 | 540.0000 | 2e28a5bf8c9ed835da3841ab43960e38e3e8620a81d59a958bc1531b4be3fd6f |
-| ogbg-mollipo | C | H1 | 1600 | 34.5486 | 136.8870 | 11.7230 | 0.0216 | 10670.0000 | 9e75ae321be2c0bba316f5e56c3a72617bfd2a03ba7fcfed0e4c8125e01cf2e5 |
-| ogbg-mollipo | C | H2 | 1600 | 38.2668 | 212.2467 | 10.8613 | 0.0239 | 10694.0000 | 78c128dc67aae760b5490bdcbc6d7031ea9767421ce048fd87771305aae9ccd3 |
+| dataset | arm | preset | rounds | train_seconds | eval_seconds | matrix_build_seconds | seconds_per_round | gpu_peak_mb | trained_at | model_sha256 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ogbg-molesol | D | H1 | 800 | 2.2388 | 1.4098 | 0.0000 | 0.0028 | 528.0000 | 2026-11-16T14:04:54 | 719c3ab2fde6d7b3f6391aca5b2bdeca397cf3943b49110568e2975aad5b9024 |
+| ogbg-molesol | D | H2 | 800 | 2.6820 | 1.3196 | 0.0000 | 0.0034 | 532.0000 | 2026-11-16T14:04:58 | 000df6502fb675f4605b0b2b6defc65fe569639e199dcb1607f37db941b792ec |
+| ogbg-molesol | C | H1 | 1600 | 15.1288 | 30.3028 | 2.8841 | 0.0095 | 1134.0000 | 2026-11-16T14:05:47 | 9415143d5c8212a7ef18fe5d5611b5e9563a6149d00f032fbca81f53e96b06b8 |
+| ogbg-molesol | C | H2 | 1600 | 16.5472 | 49.8026 | 2.2398 | 0.0103 | 1146.0000 | 2026-11-16T14:06:56 | 32e73107b8f5b268cf5c4f3f21751e7a2411261c9a37fc17a47691621b4122bd |
+| ogbg-mollipo | D | H1 | 800 | 2.2088 | 2.7391 | 0.0000 | 0.0028 | 536.0000 | 2026-11-16T14:05:11 | 7532858029f2179e3ab18a16cd32d795eba71f52196cc6ee1405b32e776737d9 |
+| ogbg-mollipo | D | H2 | 800 | 2.1399 | 3.0802 | 0.0000 | 0.0027 | 540.0000 | 2026-11-16T14:05:16 | 2e28a5bf8c9ed835da3841ab43960e38e3e8620a81d59a958bc1531b4be3fd6f |
+| ogbg-mollipo | C | H1 | 1600 | 34.5486 | 136.8870 | 11.7230 | 0.0216 | 10670.0000 | 2026-11-16T14:08:21 | 9e75ae321be2c0bba316f5e56c3a72617bfd2a03ba7fcfed0e4c8125e01cf2e5 |
+| ogbg-mollipo | C | H2 | 1600 | 38.2668 | 212.2467 | 10.8613 | 0.0239 | 10694.0000 | 2026-11-16T14:12:43 | 78c128dc67aae760b5490bdcbc6d7031ea9767421ce048fd87771305aae9ccd3 |
 
 - 轨迹算力合计（训练 + 每轮三集评测 + 一次性 pair 矩阵构建）= 579.3 s = 0.161 GPU·h；两个 worker 各独占一张 A100，并行执行。
-- 两个 worker 最后一次执行的墙钟合计 = 52.1 s（每 GPU 一个训练 worker；本轮的启动失败与 resume 重跑另计，均记录在 `rr jobs`）。
-- worker 进程 peak RSS：ogbg-molesol 2457 MB，ogbg-mollipo 6258 MB。GPU 峰值是 nvidia-smi 采样的整卡占用，只作上界参考。
+- 两个 worker 最后一次执行的墙钟合计 = 49.7 s（每 GPU 一个训练 worker；本轮的启动失败与 resume 重跑另计，均记录在 `rr jobs`）。
+- worker 进程 peak RSS：ogbg-molesol 2432 MB，ogbg-mollipo 6260 MB。GPU 峰值是 nvidia-smi 采样的整卡占用，只作上界参考。
 - 预算：soft 3 GPU·h / hard 6 GPU·h（含 smoke 与重跑）；本轮轨迹算力远低于 soft 预算。
 - 每轮评价成本已与一次性 pair 矩阵构建分开记录；C 的评测成本是训练本身的 2-6 倍，这是“每轮完整三集评测”的直接代价（K 越大、查询越多，代价越高）。
+
+## 实施修复与重跑范围
+
+八条正式轨迹的 booster 全部在首次正式 worker 运行期间生成（上表 `trained_at`：`ogbg-molesol` 14:04:54-14:06:56，`ogbg-mollipo` 14:05:11-14:12:43）；之后的所有运行都是 resume，只重算选择、持久化与检查，**没有重训任何模型**。
+
+- 已修复（都在选择/持久化/检查路径，不改变训练目标、特征、参照或配对）：① R 的选中状态必须读它自己 preset 的曲线文件（此前读 D 的选中 preset）；② R 的持久化预测必须锚定 R 选中的那个 D 轮次（此前误用 D 的选中轮次，影响 `pred_R.npz`，报告中的 R 曲线值一直正确）；③ D 的 reload 检查比较了“重载后的完整森林”与“选中轮预测”（轮次不匹配），改为分别核对选中前缀与最终状态；④ 选择前显式断言每个选中 (preset, round, config) 都能在自己的曲线文件里找到；⑤ 修复一处变量遮蔽与一处 `config` 字面量。
+- 作废范围：无。没有任何轨迹因数值错误作废；受影响文件仅 `pred_R.npz` 与相关检查字段，均已重新生成，主表/比较表/判定在修复后重算。
+- 额外成本：修复后的 resume 重跑与两次已失败启动合计约 0.1 GPU·h（含在下面的预算口径内）。
 
 ## 数据与模型身份
 

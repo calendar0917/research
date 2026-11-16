@@ -1353,6 +1353,31 @@ def render_report(
         "这是“每轮完整三集评测”的直接代价（K 越大、查询越多，代价越高）。"
     )
     lines.append("")
+    lines.append("## 实施修复与重跑范围")
+    lines.append("")
+    lines.append(
+        "八条正式轨迹的 booster 全部在首次正式 worker 运行期间生成（上表 `trained_at`："
+        "`ogbg-molesol` 14:04:54-14:06:56，`ogbg-mollipo` 14:05:11-14:12:43）；"
+        "之后的所有运行都是 resume，只重算选择、持久化与检查，**没有重训任何模型**。"
+    )
+    lines.append("")
+    lines.append(
+        "- 已修复（都在选择/持久化/检查路径，不改变训练目标、特征、参照或配对）："
+        "① R 的选中状态必须读它自己 preset 的曲线文件（此前读 D 的选中 preset）；"
+        "② R 的持久化预测必须锚定 R 选中的那个 D 轮次（此前误用 D 的选中轮次，"
+        "影响 `pred_R.npz`，报告中的 R 曲线值一直正确）；"
+        "③ D 的 reload 检查比较了“重载后的完整森林”与“选中轮预测”（轮次不匹配），"
+        "改为分别核对选中前缀与最终状态；④ 选择前显式断言每个选中 (preset, round, config) "
+        "都能在自己的曲线文件里找到；⑤ 修复一处变量遮蔽与一处 `config` 字面量。"
+    )
+    lines.append(
+        "- 作废范围：无。没有任何轨迹因数值错误作废；受影响文件仅 `pred_R.npz` 与相关检查字段，"
+        "均已重新生成，主表/比较表/判定在修复后重算。"
+    )
+    lines.append(
+        "- 额外成本：修复后的 resume 重跑与两次已失败启动合计约 0.1 GPU·h（含在下面的预算口径内）。"
+    )
+    lines.append("")
     lines.append("## 数据与模型身份")
     lines.append("")
     identity_rows = []
