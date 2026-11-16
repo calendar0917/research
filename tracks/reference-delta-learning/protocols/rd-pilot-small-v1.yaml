@@ -1,0 +1,248 @@
+# Comparability protocol for the reference-delta learning pilot (rd-pilot-small-v1).
+#
+# A protocol states rules, not a model.  Everything below was frozen before the
+# first formal training round and is re-asserted at every run.
+
+id: rd-pilot-small-v1
+
+dataset:
+  tasks:
+    - name: ogbg-molesol
+      role: small_task
+      expected_rows: 1128
+      target_unit: official OGB target (log solubility, mol/L)
+    - name: ogbg-mollipo
+      role: main_task
+      expected_rows: 4200
+      target_unit: official OGB target (logD at pH 7.4)
+  source_policy: reuse the frozen SQ caches only (official OGB rows, no re-download)
+  loader: >-
+    tracks/structural-query-learning/data/ogbg_<task>_sq-pilot-cache-v1.npz
+    (labels + official row ids + split indices) and
+    ogbg_<task>_ecfp4_sq-pilot-cache-v1.npz (Morgan bits + 10 descriptors +
+    parse flag).  SHA-256 pinned in code/rd_common.py and re-verified per run.
+  forbidden_state:
+    - re-splitting, dropping rows, adding labels
+    - recomputing chirality, swapping the fingerprint or adding descriptors
+    - installing chemistry software or downloading raw OGB data on res
+
+features:
+  x_G: 2059 dense float32 columns, exactly sq_data.ecfp_design_matrix output
+  columns: 2048 unpacked Morgan radius-2 bits + 10 cached descriptors + 1 parse-failure flag
+  zero_semantics: zero is a real value; the matrix is dense and never made sparse
+  missing_descriptors: >-
+    filled with the median of successfully parsed Train rows only; parse-failure
+    rows are kept with an explicit flag
+  scaling: none beyond the frozen fill
+  target_standardisation: >-
+    mu = mean(y_train), sigma = std(y_train, ddof=0) in float64, computed once
+    from raw Train labels; sigma <= 0 or non-finite is a data error; all four
+    arms share the same mu and sigma
+  pair_features: >-
+    z(i,j) = concat(x_i, x_j, x_i - x_j), 6177 dense float32 columns; the
+    difference column is a raw-value difference, no re-scaling
+
+split:
+  description: official OGB Train / Validation / Test in the frozen SQ row order
+  sizes:
+    ogbg-molesol: {train: 902, valid: 113, test: 113}
+    ogbg-mollipo: {train: 3360, valid: 420, test: 420}
+  no_row_deletion: true
+  no_train_valid_merge: true
+
+metric:
+  ranking_metric: valid_rmse
+  metric_direction: lower_is_better
+  unit: raw target units (de-standardised once, never twice)
+  official_metric: rmse
+  secondary_metrics: [test_rmse, train_rmse, train_mae, valid_mae, test_mae]
+  per_round: [train_rmse, valid_rmse, test_rmse, train_mae, valid_mae, test_mae]
+  train_metric_role: >-
+    "Train" means the fit evaluated with self and identical-SMILES references
+    excluded.  It is not an out-of-fold generalisation estimate.
+
+references:
+  similarity: tanimoto on the 2048 Morgan bits only (intersection / union; union == 0 -> 0)
+  arithmetic: float32 0/1 dot product (exact for 2048 bits; no uint8 overflow)
+  source: Train rows only, for every query including Train evaluation queries
+  exclusions:
+    - the query's own global row_id
+    - every Train row whose stripped SMILES is exactly the query's stripped SMILES
+  exclusion_claim: >-
+    exact-string deduplication only; this is not a claim that all chemical
+    isomorphic structures were removed
+  sort: similarity descending, Train global row_id ascending
+  max_references: 64
+  k_effective: min(K, eligible_count)
+  report_excluded_same_smiles: true
+  unavailable: >-
+    a query with zero legal reference is reported as REFERENCE_UNAVAILABLE; the
+    query label is never used as a reference and the other task still completes
+  configurations:
+    K: [4, 16, 64]
+    weights: [uniform, softmax_tau_0.1]
+    uniform: 1 / K_eff
+    softmax: exp((s_j - max s) / 0.1) / sum_l exp((s_l - max s) / 0.1)
+    normalization: over the same K_eff selected references; every row sums to 1
+  shared: the six configurations are identical for N, R and C
+  selection: each arm selects one configuration by minimum Val RMSE only
+  forbidden: no extra K, temperature, similarity or retrieval search
+
+pairs:
+  purpose: frozen one-shot construction of the C training records (no label-based selection)
+  rng: numpy.random.default_rng(1701)
+  order: Train queries in ascending global row_id
+  per_query:
+    top_pool: legal Top64
+    draw_top: 16 uniformly without replacement from the Top64
+    draw_tail: 16 uniformly without replacement from the legal references outside the Top64
+    top_up: >-
+      if either pool is short, take what exists and top up uniformly from the
+      still-unselected legal references; at most 32 records, never self, never
+      a same-SMILES row, never a repeat within one query
+  records:
+    forward: 'z(i,j), target (y_i - y_j) / sigma'
+    reverse: 'z(j,i), target -(y_i - y_j) / sigma'
+    weight: 1 / (2 q_i) on both directions
+  weight_contract: each original query contributes total weight 1; the pair DMatrix sums to n_train
+  duplicates: kept; duplicate rate and endpoint frequency are reported
+  expected_records:
+    ogbg-molesol: 57728
+    ogbg-mollipo: 215040
+  frozen_hash: recorded in pairs.json before training
+
+model:
+  library: XGBoost (version recorded, never upgraded for this round)
+  objective: reg:squarederror
+  tree_method: hist
+  device: cuda:0
+  max_bin: 64
+  min_child_weight: 5
+  reg_lambda: 10
+  reg_alpha: 0
+  subsample: 1
+  colsample_bytree: 1
+  base_score: 0
+  seed: 0
+  nthread: 4
+  early_stopping: false
+  presets:
+    H1: {max_depth: 3, eta: 0.05}
+    H2: {max_depth: 5, eta: 0.03}
+  rounds: {D: 800, C: 1600}
+  no_extra_recipes: true
+  no_neural_encoder: true
+
+arms:
+  D: 'D_t(G) = mu + sigma * f_t(x_G); sample weight 1'
+  N: 'N(G) = sum_j w_j(G) y_j; no training'
+  C: >-
+    one weighted XGBoost on the bidirectional pair records; inference is
+    delta_t(G,R) = sigma/2 [h_t(z(G,R)) - h_t(z(R,G))] and
+    C_t(G) = sum_j w_j(G) [y_j + delta_t(G,R_j)];
+    delta is a raw-unit difference and never gets mu added
+  R: >-
+    R_t(G) = D_t(G) + sum_j w_j(G) [y_j - D_t(R_j)]; no additional training.
+    R may select its own D preset, tree prefix and retrieval configuration.
+  antisymmetry: delta(G,G) = 0 and delta(G,R) = -delta(R,G) by construction
+  c_not_two_absolute_models: C is never implemented as a difference of two independent absolute models
+
+evaluation:
+  cadence: every boosting round, complete Train / Val / Test for every arm and configuration
+  c_extra: weighted standardised-difference RMSE on the training pair records
+  n: evaluated once, recorded as a constant
+  selection: >-
+    one Val-selected state per arm.  Val RMSE minimum over the frozen union;
+    exact ties break H1 first, then the earlier round, then the smaller K, then
+    uniform.  Not-applicable fields are skipped.
+  reporting: >-
+    the selected state plus the final-round value and the mean of the last 20
+    rounds of that same recipe/configuration (curve summaries, never substitutes)
+  test_policy: >-
+    Test is evaluated and stored at every round as a development evaluation set;
+    it never selects a checkpoint, K, weight mode or hyperparameter.
+  forbidden:
+    - selecting by Test RMSE
+    - pair RMSE or a random pair holdout as the selection signal
+    - reducing evaluation rows or frequency
+
+test_policy: always
+
+train_only_fitting_scope:
+  description: >-
+    The target mean/std (ddof=0), the descriptor fill values, every reference
+    table, every pair record and the whole boosting recipe are fitted on
+    official Train only.  Feature engineering itself never reads a label.
+  test_role: >-
+    The official Test split is a development evaluation set for this round and
+    may be inspected continuously.  It never selects a model state, a retrieval
+    configuration, a preset or a round; selection is by minimum Val RMSE only.
+
+validation_selection_policy:
+  selection: >-
+    minimum Val RMSE over the union of the two frozen presets and all boosting
+    rounds, for each arm, with the declared tie-breaks (H1 first, then the
+    earlier round, then the smaller K, then uniform).
+  reporting: >-
+    the Test column of that same frozen state, plus the final-round value and
+    the mean of the last 20 rounds (curve summaries, not ensembles).
+  forbidden: selecting a state by Test RMSE and calling it Val selection
+
+verification:
+  per_sample_tolerance_raw: 1e-5
+  independent_recompute_rounds: [1, 2, 3, "selected round", "final round"]
+  label_isolation: >-
+    changing Val/Test labels cannot change features, references, weights or the
+    training pairs; changing Train labels only changes pair/reference targets.
+    No Val/Test-based stopping or learning-rate mechanism exists.
+
+seed_semantics:
+  seeds: [0]
+  note: single training seed; no multi-seed stability claim
+  rngs:
+    training_seed: 0
+    pair_generator: 1701
+    bootstrap_seed: 1703
+
+performance_references:
+  reuse: true
+  gine_G: tracks/structural-query-learning results at 44300426 (standardisation-fixed G)
+  lcrc_L: tracks/structural-query-learning results at 44300426 (correct L)
+  rule: >-
+    point reference only, with row_id/y/split hash verification and a raw-unit
+    RMSE recomputation.  G and L are never retrained in this round.
+  missing_reference: REPORT REFERENCE_INCOMPLETE for that axis; never fabricate
+
+decision_scales:
+  note: >-
+    Thresholds of this exploration only (not statistical significance limits and
+    not a universal standard).  All booleans are reported next to the numbers.
+  strong_joint_task: >-
+    C improves over D, N and R by at least 3% on BOTH Val and Test (six
+    conditions)
+  other_task_not_regressing: >-
+    C is not worse than any of D, N, R by more than 5% on either Val or Test
+    (six conditions)
+  joint_delta_signal: at least one strong_joint_task AND the other task not clearly regressing
+  cross_task_tradeoff: one strong_joint_task but the other task clearly regressing
+  competitive: 'C Val and Test <= 1.05 * B, where B is the best verifiable non-joint Val-selected reference of {D,N,R,G,L}'
+  substantive_progress: >-
+    per split: J = min(D,N,R); half_gap_closed = c <= b + 0.5 (J - b) when
+    J > b, otherwise not_applicable; progress_pass = (c <= 1.05 b) OR
+    half_gap_closed.  Both splits must pass.  Never unlocked by a subgroup.
+  worth_followup: EXECUTION_PASS AND JOINT_DELTA_SIGNAL AND SUBSTANTIVE_PROGRESS
+
+resources:
+  workers: 2 (one GPU each; molesol on res-gpu0, mollipo on res-gpu1)
+  soft_budget_gpu_hours: 3
+  soft_budget_wall_hours: 4
+  hard_budget_gpu_hours: 6
+  hard_budget_wall_hours: 8
+  hard_budget_includes: smoke, failed launches and repaired reruns
+  reserved_tail_fraction: 0.10
+  infeasible: report BUDGET_INFEASIBLE; never shrink the protocol silently
+
+comparability:
+  requires: [protocol_id, dataset_fingerprint, split_fingerprint]
+  ranking_metric: valid_rmse
+  note: only runs of this protocol with these cache/split hashes are comparable

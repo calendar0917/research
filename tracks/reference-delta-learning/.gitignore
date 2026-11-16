@@ -1,0 +1,14 @@
+# local scratch (never committed)
+cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# complete trained boosters are large; their SHA-256 is recorded in the
+# committed checks/selection JSON and they stay available on res + pulled copies
+results/**/models/
+
+# the repo-wide .gitignore drops *.json / *.csv under results/; this track keeps
+# the small frozen identity and evidence files next to the (git-ignored) arrays
+!results/**/*.json
+!results/**/*.csv

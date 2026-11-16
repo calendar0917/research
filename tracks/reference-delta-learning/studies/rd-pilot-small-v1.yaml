@@ -1,0 +1,37 @@
+id: rd-pilot-small-v1
+protocol: rd-pilot-small-v1
+active: true
+focus: true
+created: 2026-11-16
+
+question: >-
+  On two official small OGB molecular tasks, does jointly learning a
+  two-molecule property difference (with Train-label references at inference)
+  beat direct absolute regression, a Train-neighbour label predictor, and a
+  direct model with a neighbour residual correction?
+
+baseline: >-
+  In-round arms D (direct XGBoost), N (Train reference labels), R (D plus a
+  Train-reference residual correction) on the identical frozen features, split,
+  target scaler and six retrieval configurations, plus the reused point
+  references G (standardisation-fixed GINE) and L (C1 / NO_BOND_MEAN).
+
+candidates:
+  - id: C-antisymmetrised-pairwise-delta
+    status: active
+    note: >-
+      one XGBoost on frozen bidirectional pair records, weighted 1/(2 q_i);
+      inference enforces delta(G,R) = -delta(R,G) and restores raw units with
+      y_j + delta, never with mu added to the delta.
+
+open_questions:
+  - Does the joint delta beat the neighbour-label baseline N and the residual-corrected R?
+  - Is any gain large enough to be worth a structural comparator next round?
+  - Are the two tasks consistent, or is there a cross-task tradeoff?
+
+guardrails:
+  - Test is a development evaluation set; it never selects a model state
+  - single training seed 0; no multi-seed claim
+  - two tasks only; no extra K, temperature, head, feature or dataset
+  - G/L are reused point references only and are never retrained
+  - no graph alignment, MCS, edit rules, interpretable comparator or message passing this round

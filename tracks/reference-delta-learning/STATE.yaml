@@ -1,0 +1,28 @@
+phase: rd-pilot-small-v1-in-progress
+active_studies: [rd-pilot-small-v1]
+focus_study: rd-pilot-small-v1
+updated: 2026-11-16
+
+question: >-
+  Does a joint pairwise delta learner with Train-reference inference beat direct
+  absolute regression, Train-neighbour labels and a neighbour residual
+  correction on official ogbg-molesol / ogbg-mollipo?
+
+current_candidate: C-antisymmetrised-pairwise-delta
+base_commit: 6f01b13738f7c393dbcaec8d6db926e0e280fd51
+reuse_source_commit: 4e17deb6ea894e6ff34dcdad6965642bcbb396bb
+reuse_performance_references: 4430042683bfad26c02391c10d17a26932716812
+
+round_result:
+  study: rd-pilot-small-v1
+  protocol: rd-pilot-small-v1
+  artifacts: results/rd-pilot-small-v1/REPORT.md
+
+axes: {}   # filled by the aggregate stage
+
+guardrails:
+  - test_policy=always; Test never selects a state
+  - single training seed 0; no multi-seed claim
+  - G/L are reused point references only, never retrained
+  - thresholds 3%/5%/50% are this exploration's investment gates, not significance
+  - stop after the two tasks; the next round is not started automatically
