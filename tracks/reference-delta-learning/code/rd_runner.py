@@ -695,7 +695,7 @@ def _reload_check_c(
     for split in SPLITS:
         entry = ctx.ref_table["splits"][split]
         rows = np.asarray(sample_rows[split], dtype=np.int64)
-        fwd_matrix, rev_matrix = A._sample_pair_matrices(ctx.task, entry, rows)
+        fwd_matrix, rev_matrix = A._sample_pair_matrices(ctx.task, split, entry, rows)
         fwd = xgb.DMatrix(fwd_matrix, feature_names=names)
         rev = xgb.DMatrix(rev_matrix, feature_names=names)
         del fwd_matrix, rev_matrix
@@ -1130,7 +1130,11 @@ def _checks_ok(checks: Mapping[str, Any]) -> dict[str, Any]:
     worst_d = 0.0
     worst_c = 0.0
     worst_metric = 0.0
-    for key, report in checks["D"].items():
+    identity_ok = True
+    training_input_ok = True
+    train_curve_ok = True
+    model_sha_ok = True
+    for key, report in checks.get("D", {}).items():
         if key == "reload":
             worst_d = max(worst_d, float(report["max_abs_diff_raw"]))
             if "max_abs_diff_final_raw" in report:
@@ -1141,24 +1145,60 @@ def _checks_ok(checks: Mapping[str, Any]) -> dict[str, Any]:
             worst_metric = max(worst_metric, float(entry["rmse_abs_diff"]))
         for key_r, entry_r in report.get("r_axis", {}).items():
             worst_metric = max(worst_metric, float(entry_r["rmse_abs_diff"]))
-    for key, report in checks["C"].items():
-        if key == "reload":
-            worst_c = max(worst_c, max(float(v) for v in report["max_abs_margin_diff"].values()))
-            if report.get("max_abs_margin_diff_final"):
-                worst_c = max(
-                    worst_c, max(float(v) for v in report["max_abs_margin_diff_final"].values())
+    for key, report in checks.get("C", {}).items():
+        if not isinstance(report, dict):
+            continue
+        if key == "input_identity":
+            identity_ok = bool(identity_ok and report.get("pass", False))
+            continue
+        if key == "training_input_unchanged":
+            training_input_ok = bool(training_input_ok and report.get("pass", False))
+            continue
+        if key == "model_sha":
+            model_sha_ok = bool(model_sha_ok and report.get("pass", False))
+            continue
+        if key.startswith("train_curve_"):
+            train_curve_ok = bool(train_curve_ok and report.get("pass", False))
+            continue
+        if key.startswith("prefix_"):
+            for _, splits in report.get("rounds", {}).items():
+                for split, entry in splits.items():
+                    worst_c = max(
+                        worst_c,
+                        float(entry["max_abs_margin_diff_fwd"]),
+                        float(entry["max_abs_margin_diff_rev"]),
+                        float(entry["max_abs_raw_delta_diff"]),
+                    )
+            continue
+        if key in ("full_selected", "reload") and "splits" in report:
+            for split, entry in report["splits"].items():
+                worst_c = max(worst_c, float(entry["max_abs_prediction_diff"]))
+                worst_metric = max(
+                    worst_metric,
+                    float(entry["rmse_abs_diff"]),
+                    float(entry["mae_abs_diff"]),
                 )
             continue
-        for split, entry in report["splits"].items():
-            for name in (
-                "max_abs_margin_diff_sel_fwd",
-                "max_abs_margin_diff_sel_rev",
-                "max_abs_margin_diff_fwd",
-                "max_abs_margin_diff_rev",
-            ):
-                if name in entry:
-                    worst_c = max(worst_c, float(entry[name]))
-            worst_metric = max(worst_metric, float(entry["rmse_abs_diff"]))
+        if key == "train_metric":
+            worst_metric = max(
+                worst_metric,
+                float(report["rmse_abs_diff"]),
+                float(report["mae_abs_diff"]),
+            )
+            continue
+        # legacy C check layout (kept for reloaded pre-fix runs)
+        if "splits" in report:
+            for split, entry in report["splits"].items():
+                for name in (
+                    "max_abs_margin_diff_sel_fwd",
+                    "max_abs_margin_diff_sel_rev",
+                    "max_abs_margin_diff_fwd",
+                    "max_abs_margin_diff_rev",
+                ):
+                    if name in entry:
+                        worst_c = max(worst_c, float(entry[name]))
+                if "rmse_abs_diff" in entry:
+                    worst_metric = max(worst_metric, float(entry["rmse_abs_diff"]))
         if "pair_sample" in report:
             worst_c = max(
                 worst_c,
@@ -1172,12 +1212,489 @@ def _checks_ok(checks: Mapping[str, Any]) -> dict[str, Any]:
                     float(entry["max_abs_margin_diff_fwd"]),
                     float(entry["max_abs_margin_diff_rev"]),
                 )
+    calls = dict(checks.get("training_calls", {}))
+    no_training = bool(all(int(value) == 0 for value in calls.values()))
     return {
         "per_sample_tolerance_raw": tol,
         "max_abs_diff_D_raw": worst_d,
         "max_abs_margin_diff_C": worst_c,
         "max_abs_metric_diff": worst_metric,
-        "pass": bool(worst_d <= tol and worst_c <= tol and worst_metric <= 1e-6),
+        "input_identity_pass": bool(identity_ok),
+        "training_input_unchanged_pass": bool(training_input_ok),
+        "train_curve_unchanged_pass": bool(train_curve_ok),
+        "model_sha_unchanged_pass": bool(model_sha_ok),
+        "training_calls": calls,
+        "no_training_calls": no_training,
+        "pass": bool(
+            worst_d <= tol
+            and worst_c <= tol
+            and worst_metric <= 1e-6
+            and identity_ok
+            and training_input_ok
+            and train_curve_ok
+            and model_sha_ok
+            and no_training
+        ),
+    }
+
+
+def _margins_from_checkpoint(
+    run: A.CRun, task: D.TaskData, round_index: int
+) -> dict[str, dict[str, np.ndarray]]:
+    out: dict[str, dict[str, np.ndarray]] = {}
+    for split in C.SPLITS:
+        n_rows = int(task.n(split) * C.MAX_REFERENCES)
+        stored = run.checkpoints[split][int(round_index)]
+        out[split] = {"fwd": stored[:n_rows], "rev": stored[n_rows:]}
+    return out
+
+
+def _state_from_margins(
+    ctx: A.ArmContext,
+    margins: Mapping[str, Mapping[str, np.ndarray]],
+    config_name: str,
+) -> dict[str, Any]:
+    task = ctx.task
+    out: dict[str, Any] = {"delta": {}, "pred": {}, "margins": {}, "shapes": {}}
+    for split in C.SPLITS:
+        width = C.MAX_REFERENCES
+        n_query = task.n(split)
+        fwd = np.asarray(margins[split]["fwd"]).reshape(n_query, width)
+        rev = np.asarray(margins[split]["rev"]).reshape(n_query, width)
+        delta = E.delta_from_margins(fwd, rev, ctx.sigma)
+        pred = E.aggregate_c(ctx.weights[split][config_name], ctx.y_ref[split], delta)
+        out["delta"][split] = delta.astype(np.float32)
+        out["pred"][split] = pred
+        out["margins"][split] = {"fwd": fwd.reshape(-1), "rev": rev.reshape(-1)}
+        out["shapes"][split] = (n_query, width)
+    return out
+
+
+def _stage_reevaluate_c(
+    config: Mapping[str, Any], ledger: C.Ledger, artifact_dir: Path
+) -> dict[str, Any]:
+    """Load frozen C boosters and rebuild every C evaluation without training."""
+    import xgboost as xgb
+
+    import rd_reeval as RE
+
+    dataset = str(config["dataset"])
+    if dataset not in C.DATASETS:
+        raise ValueError(f"unknown dataset {dataset!r}")
+    revision = str(config.get("evaluation_revision", C.EVALUATION_REVISION))
+    if revision != C.EVALUATION_REVISION:
+        raise ValueError(
+            f"this repair entry only implements {C.EVALUATION_REVISION}, got {revision!r}"
+        )
+    if bool(config.get("fit_allowed", False)):
+        raise AssertionError("reevaluate_c must never allow fitting")
+    force_eval_rebuild = bool(config.get("force_eval_rebuild", True))
+    stage_t0 = time.perf_counter()
+    out_dir = C.ensure_dir(C.results_dir(dataset))
+
+    old_selection = C.read_json(out_dir / "selection.json")
+    old_summary = C.read_json(out_dir / "worker_summary.json")
+    old_checks = C.read_json(out_dir / "checks.json")
+    old_curves = {
+        preset: _read_curves(out_dir / f"curves_C_{preset}.csv")
+        for preset in C.PRESET_ORDER
+    }
+    old_pair_curves = {
+        preset: _read_pair_curves(out_dir / f"pair_curves_C_{preset}.csv")
+        for preset in C.PRESET_ORDER
+    }
+    old_state_arrays: dict[str, dict[str, np.ndarray]] = {}
+    for preset in C.PRESET_ORDER:
+        with np.load(out_dir / f"state_C_{preset}.npz", allow_pickle=False) as handle:
+            old_state_arrays[preset] = {key: handle[key] for key in handle.files}
+
+    prepared = _prepare_dataset(dataset, ledger)
+    task = D.load_task(dataset)
+    ref_table = R.load_reference_table(out_dir / "references.npz", dataset)
+    pair_spec = P.load_pairs(out_dir / "pairs.npz", dataset)
+    if pair_spec["hash"] != prepared["pair_hash"]:
+        raise AssertionError("pair hash changed before reevaluation")
+    ctx = A.ArmContext.build(task, ref_table)
+
+    model_paths = {
+        preset: out_dir / "models" / f"C_{preset}.ubj" for preset in C.PRESET_ORDER
+    }
+    model_sha = {preset: C.sha256_file(path) for preset, path in model_paths.items()}
+    recorded_sha = {
+        preset: old_summary.get("trajectories", {}).get("C", {}).get(preset, {}).get(
+            "model_sha256"
+        )
+        for preset in C.PRESET_ORDER
+    }
+    model_sha_unchanged = {
+        preset: bool(recorded_sha[preset] is None or recorded_sha[preset] == model_sha[preset])
+        for preset in C.PRESET_ORDER
+    }
+    model_sha_check = {
+        "before": recorded_sha,
+        "after": model_sha,
+        "unchanged": model_sha_unchanged,
+        "pass": all(model_sha_unchanged.values()),
+    }
+
+    identity = RE.build_evaluation_identity(
+        task,
+        ref_table,
+        reference_hash=prepared["reference_hash"],
+        pair_hash=prepared["pair_hash"],
+        model_sha256=model_sha,
+        config_weights=ctx.weights,
+        revision=revision,
+    )
+
+    eval_seconds: dict[str, float] = {}
+    cache_files: dict[str, Any] = {}
+    runs: dict[str, A.CRun] = {}
+    training_guard: dict[str, int] = {}
+    checks: dict[str, Any] = {
+        "dataset": dataset,
+        "evaluation_revision": revision,
+        "D": old_checks.get("D", {}),
+        "C": {},
+    }
+    eval_blocks: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] | None = None
+    with RE.forbid_training() as guard:
+        training_guard = guard
+        eval_blocks = A.build_eval_blocks(ctx)
+        for preset in C.PRESET_ORDER:
+            booster = xgb.Booster(model_file=str(model_paths[preset]))
+            names = A._pair_feature_names(task)
+            trees = T.extract_trees(booster, names, rounds=C.ROUNDS_C)
+            if len(trees) != C.ROUNDS_C:
+                raise AssertionError(
+                    f"{dataset} C-{preset}: expected {C.ROUNDS_C} trees, got {len(trees)}"
+                )
+            # Curves are always rebuilt for this repair.  The cache below is
+            # keyed by revision + full input identity so an old key can never
+            # be read; force_eval_rebuild is additionally true for this round.
+            t_eval = time.perf_counter()
+            run = A._evaluate_c(
+                ctx,
+                pair_spec,
+                preset,
+                booster,
+                trees,
+                seconds=0.0,
+                eval_blocks=eval_blocks,
+                include_pairs=False,
+            )
+            eval_seconds[preset] = time.perf_counter() - t_eval
+            run.eval_seconds = eval_seconds[preset]
+            run.pair_curves = old_pair_curves[preset]
+            runs[preset] = run
+            cache_files[preset] = RE.save_curve_cache(
+                RE.cache_path(dataset, preset, identity),
+                run.curves,
+                identity,
+            )
+
+        if training_guard and any(int(value) != 0 for value in training_guard.values()):
+            raise AssertionError(f"training entry point was called: {training_guard}")
+
+        c_selection = A.select_c(list(runs.values()))
+        selected_preset = str(c_selection["preset"])
+        selected_round = int(c_selection["round"])
+        selected_config = str(c_selection["config"])
+        selected_run = runs[selected_preset]
+        best_round_by_preset = {
+            preset: int(A.select_c([run])["round"]) for preset, run in runs.items()
+        }
+
+        snapshots_by_preset: dict[str, dict[int, dict[str, dict[str, np.ndarray]]]] = {}
+        states_cache: dict[tuple[str, int, str], dict[str, Any]] = {}
+        for preset, run in runs.items():
+            needed = {1, 2, 3, C.ROUNDS_C, best_round_by_preset[preset]}
+            if preset == selected_preset:
+                needed.add(selected_round)
+            snapshots: dict[int, dict[str, dict[str, np.ndarray]]] = {}
+            for round_index in sorted(needed):
+                if round_index == C.ROUNDS_C:
+                    margins = run.final_margins
+                elif round_index in (1, 2, 3):
+                    margins = _margins_from_checkpoint(run, task, round_index)
+                else:
+                    cfg = (
+                        selected_config
+                        if preset == selected_preset and round_index == selected_round
+                        else str(C.CONFIGS[0]["name"])
+                    )
+                    key = (preset, round_index, cfg)
+                    if key not in states_cache:
+                        states_cache[key] = A.c_state(
+                            ctx,
+                            booster=run.booster,
+                            trees=run.trees,
+                            rounds=int(round_index),
+                            config_name=cfg,
+                            eval_blocks=eval_blocks,
+                        )
+                    margins = states_cache[key]["margins"]
+                snapshots[int(round_index)] = {
+                    split: {
+                        "fwd": np.asarray(margins[split]["fwd"]),
+                        "rev": np.asarray(margins[split]["rev"]),
+                    }
+                    for split in C.SPLITS
+                }
+            snapshots_by_preset[preset] = snapshots
+
+        selected_margins = snapshots_by_preset[selected_preset][selected_round]
+        selected_state = _state_from_margins(ctx, selected_margins, selected_config)
+        selected_index = {
+            (row["round"], row["split"], row["config"]): row for row in selected_run.curves
+        }
+        recorded_train = selected_index[(selected_round, "train", selected_config)]
+        rmse_train, mae_train = E.rmse_mae(
+            selected_state["pred"]["train"], task.y["train"]
+        )
+        train_metric_check = {
+            "round": selected_round,
+            "config": selected_config,
+            "rmse_fresh": rmse_train,
+            "rmse_recorded": float(recorded_train["rmse_raw"]),
+            "rmse_abs_diff": abs(rmse_train - float(recorded_train["rmse_raw"])),
+            "mae_fresh": mae_train,
+            "mae_recorded": float(recorded_train["mae_raw"]),
+            "mae_abs_diff": abs(mae_train - float(recorded_train["mae_raw"])),
+            "pass": bool(
+                abs(rmse_train - float(recorded_train["rmse_raw"])) <= 1e-9
+                and abs(mae_train - float(recorded_train["mae_raw"])) <= 1e-9
+            ),
+        }
+
+        sample = {
+            split: RE.sample_legal_slots(ref_table, split, count=8, seed=C.BOOTSTRAP_SEED)
+            for split in C.SPLITS
+        }
+        input_check = RE.check_input_identity(task, ref_table, eval_blocks, sample)
+        prefix_checks = {
+            preset: RE.check_prefix_predictions(
+                task,
+                ref_table,
+                booster=run.booster,
+                sample=sample,
+                snapshots=snapshots_by_preset[preset],
+                sigma=ctx.sigma,
+            )
+            for preset, run in runs.items()
+        }
+        full_check = RE.check_full_native_state(
+            task,
+            ref_table,
+            booster=selected_run.booster,
+            state=selected_state,
+            round_index=selected_round,
+            config_name=selected_config,
+            ctx=ctx,
+            splits=("valid", "test"),
+        )
+        reload_booster = xgb.Booster(model_file=str(model_paths[selected_preset]))
+        reload_check = RE.check_full_native_state(
+            task,
+            ref_table,
+            booster=reload_booster,
+            state=selected_state,
+            round_index=selected_round,
+            config_name=selected_config,
+            ctx=ctx,
+            splits=("valid", "test"),
+        )
+        train_input_check = RE.check_training_input_unchanged(task, pair_spec)
+        train_curve_checks = {
+            preset: RE.compare_train_curves(old_curves[preset], run.curves, preset=preset)
+            for preset, run in runs.items()
+        }
+
+    checks["C"] = {
+        "input_identity": input_check,
+        "training_input_unchanged": train_input_check,
+        "model_sha": model_sha_check,
+        "train_metric": train_metric_check,
+        **{f"prefix_{preset}": report for preset, report in prefix_checks.items()},
+        **{f"train_curve_{preset}": report for preset, report in train_curve_checks.items()},
+        "full_selected": full_check,
+        "reload": reload_check,
+    }
+    checks["training_calls"] = dict(training_guard)
+    checks["evaluation_cache_key"] = str(identity["cache_key"])
+    checks["evaluation_identity_sha256"] = C.sha256_json(identity)
+    checks["checks_ok"] = _checks_ok(checks)
+
+    # ---- write the repaired C artefacts; D/N/R files are untouched --------
+    for preset, run in runs.items():
+        _curve_rows_to_csv(out_dir / f"curves_C_{preset}.csv", run.curves)
+        arrays = dict(old_state_arrays[preset])
+        for split in C.SPLITS:
+            arrays[f"margin_{split}_fwd"] = run.final_margins[split]["fwd"]
+            arrays[f"margin_{split}_rev"] = run.final_margins[split]["rev"]
+        arrays["trained_rounds"] = np.asarray(run.trained_rounds)
+        arrays["eval_seconds"] = np.asarray(eval_seconds[preset])
+        arrays["evaluation_revision"] = np.asarray(revision)
+        np.savez_compressed(out_dir / f"state_C_{preset}.npz", **arrays)
+
+    state = _load_state(dataset)
+    for preset in C.PRESET_ORDER:
+        part = f"C_{preset}"
+        if part in state.get("parts", {}):
+            state["parts"][part].update(
+                {
+                    "eval_seconds": eval_seconds[preset],
+                    "curves_sha256": C.sha256_file(out_dir / f"curves_C_{preset}.csv"),
+                    "state_sha256": C.sha256_file(out_dir / f"state_C_{preset}.npz"),
+                    "evaluation_revision": revision,
+                    "reevaluated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "evaluation_cache_key": str(identity["cache_key"]),
+                    "model_sha256": model_sha[preset],
+                }
+            )
+    _save_state(state)
+
+    c_info = {preset: dict(old_summary["trajectories"]["C"][preset]) for preset in C.PRESET_ORDER}
+    for preset, run in runs.items():
+        c_info[preset].update(
+            {
+                "eval_seconds": eval_seconds[preset],
+                "curves_sha256": C.sha256_file(out_dir / f"curves_C_{preset}.csv"),
+                "state_sha256": C.sha256_file(out_dir / f"state_C_{preset}.npz"),
+                "pair_curves_sha256": C.sha256_file(
+                    out_dir / f"pair_curves_C_{preset}.csv"
+                ),
+                "evaluation_revision": revision,
+                "reevaluated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+                "evaluation_cache_key": str(identity["cache_key"]),
+                "evaluation_cache_file": cache_files[preset]["path"],
+                "model_sha256": model_sha[preset],
+                "trained_at": old_summary["trajectories"]["C"][preset].get("trained_at"),
+            }
+        )
+
+    selection = dict(old_selection)
+    selection["evaluation_revision"] = revision
+    selection["evaluation_identity_sha256"] = C.sha256_json(identity)
+    selection["evaluation_cache_key"] = str(identity["cache_key"])
+    selection["C"] = _selected_state_payload(
+        dataset,
+        "C",
+        selected_run.curves,
+        preset=selected_preset,
+        round_index=selected_round,
+        config=selected_config,
+        trained_rounds=selected_run.trained_rounds,
+        extra={
+            "pair_rmse_std_at_selected": _pair_curve_value(
+                selected_run.pair_curves, selected_round, "pair_rmse_std"
+            ),
+            "pair_rmse_std_antisym_at_selected": _pair_curve_value(
+                selected_run.pair_curves, selected_round, "pair_rmse_std_antisym"
+            ),
+            "mean_last20_pair_rmse_std": float(
+                np.mean([row["pair_rmse_std"] for row in selected_run.pair_curves[-20:]])
+            ),
+            "evaluation_revision": revision,
+        },
+    )
+    selection["C_candidates_best_per_preset"] = {
+        preset: A.select_c([run]) for preset, run in runs.items()
+    }
+    selection["trajectories"]["C"] = c_info
+    _write(out_dir / "selection.json", selection)
+
+    c_payload = {
+        split: {
+            "pred_raw": selected_state["pred"][split],
+            "y_raw": task.y[split],
+            "row_id": task.row_id[split],
+        }
+        for split in C.SPLITS
+    }
+    files = {
+        "C": _save_predictions(out_dir / "pred_C.npz", c_payload),
+    }
+    delta_arrays: dict[str, np.ndarray] = {}
+    for split in C.SPLITS:
+        entry = ref_table["splits"][split]
+        delta_arrays[f"{split}__delta_raw"] = selected_state["delta"][split]
+        delta_arrays[f"{split}__weights"] = ctx.weights[split][selected_config]
+        delta_arrays[f"{split}__y_ref"] = ctx.y_ref[split]
+        delta_arrays[f"{split}__ref_row_id"] = entry["ref_row_id"]
+        delta_arrays[f"{split}__sim"] = entry["sim"]
+        delta_arrays[f"{split}__row_id"] = task.row_id[split]
+    np.savez_compressed(out_dir / "pred_C_delta.npz", **delta_arrays)
+    files["C_delta"] = {
+        "path": str(out_dir / "pred_C_delta.npz"),
+        "sha256": C.sha256_file(out_dir / "pred_C_delta.npz"),
+    }
+
+    checks_ok = checks["checks_ok"]
+    summary = dict(old_summary)
+    summary["evaluation_revision"] = revision
+    summary["selection"] = dict(old_summary["selection"])
+    summary["selection"]["C"] = selection["C"]
+    summary["trajectories"] = dict(old_summary["trajectories"])
+    summary["trajectories"]["C"] = c_info
+    summary["checks_ok"] = checks_ok
+    summary["prediction_files"] = dict(old_summary["prediction_files"])
+    summary["prediction_files"]["C"] = files["C"]
+    summary["prediction_files"]["C_delta"] = files["C_delta"]
+    summary["evalfix"] = {
+        "evaluation_revision": revision,
+        "force_eval_rebuild": force_eval_rebuild,
+        "wall_seconds": time.perf_counter() - stage_t0,
+        "gpu_hours": 0.0,
+        "training_calls": dict(training_guard),
+        "eval_seconds": eval_seconds,
+        "evaluation_cache_key": str(identity["cache_key"]),
+        "evaluation_identity_sha256": C.sha256_json(identity),
+        "evaluation_cache_files": cache_files,
+        "model_sha256": model_sha,
+        "environment": C.environment_snapshot(),
+    }
+    _write(out_dir / "worker_summary.json", summary)
+    _write(out_dir / "checks.json", checks)
+    _write(
+        out_dir / "evaluation_identity.json",
+        {
+            "dataset": dataset,
+            "evaluation_revision": revision,
+            "identity": identity,
+            "identity_sha256": C.sha256_json(identity),
+            "cache_key": str(identity["cache_key"]),
+            "cache_files": cache_files,
+            "model_sha256": model_sha,
+            "created_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "environment": C.environment_snapshot(),
+        },
+    )
+
+    return {
+        "dataset": dataset,
+        "evaluation_revision": revision,
+        "selected_C": {
+            "preset": selected_preset,
+            "round": selected_round,
+            "config": selected_config,
+            "valid_rmse_raw": float(c_selection["valid_rmse_raw"]),
+            "test_rmse_raw": float(
+                selection["C"]["test_rmse_raw"]
+            ),
+        },
+        "previous_C": {
+            "preset": old_selection["C"].get("preset"),
+            "round": old_selection["C"].get("round"),
+            "config": old_selection["C"].get("config"),
+        },
+        "checks_ok": checks_ok,
+        "eval_seconds": eval_seconds,
+        "wall_seconds": time.perf_counter() - stage_t0,
+        "training_calls": dict(training_guard),
+        "model_sha256": model_sha,
+        "model_sha_unchanged": model_sha_unchanged,
+        "evaluation_cache_key": str(identity["cache_key"]),
     }
 
 
@@ -1356,8 +1873,18 @@ def _stage_inference_cost(config: Mapping[str, Any], ledger: C.Ledger) -> dict[s
     y_ref_c = ctx.y_ref["test"][:, :k_c]
 
     def _predict_c() -> np.ndarray:
-        fwd = P.pair_matrix(task, query, ref)
-        rev = P.pair_matrix(task, ref, query)
+        fwd = P.pair_matrix(
+            query_x=task.x["test"],
+            reference_x=task.x["train"],
+            query_local=query,
+            reference_local=ref,
+        )
+        rev = P.pair_matrix(
+            query_x=task.x["train"],
+            reference_x=task.x["test"],
+            query_local=ref,
+            reference_local=query,
+        )
         m_fwd = c_booster.predict(xgb.DMatrix(fwd, feature_names=names))
         m_rev = c_booster.predict(xgb.DMatrix(rev, feature_names=names))
         delta = E.delta_from_margins(m_fwd, m_rev, ctx.sigma)
@@ -1380,7 +1907,13 @@ def _stage_inference_cost(config: Mapping[str, Any], ledger: C.Ledger) -> dict[s
         retrieval_seconds = _timeit(lambda: R.reference_table(task), repeats=2)
         pair_seconds = _timeit(lambda: P.build_pairs(task, P.eligible_order_train(task)), repeats=2)
         matrix_seconds = _timeit(
-            lambda: P.pair_matrix(task, query, ref), repeats=3
+            lambda: P.pair_matrix(
+                query_x=task.x["test"],
+                reference_x=task.x["train"],
+                query_local=query,
+                reference_local=ref,
+            ),
+            repeats=3,
         )
 
     payload = {
@@ -1449,6 +1982,8 @@ def run(config: Mapping[str, Any], context) -> Any:
         metrics = _stage_dataset_worker(config, ledger, ledger_dir)
     elif stage == "inference_cost":
         metrics = _stage_inference_cost(config, ledger)
+    elif stage == "reevaluate_c":
+        metrics = _stage_reevaluate_c(config, ledger, ledger_dir)
     elif stage == "aggregate":
         metrics = _stage_aggregate(config, ledger)
     else:

@@ -412,6 +412,26 @@ def _eval_pairs(ctx: ArmContext) -> dict[str, tuple[np.ndarray, np.ndarray, np.n
     return out
 
 
+def build_eval_blocks(ctx: ArmContext) -> dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]]:
+    """Correct feature-major blocks for every evaluated split.
+
+    Query rows come from the evaluated split; reference rows always come from
+    Train.  The two domains are passed explicitly, so a Val/Test query local
+    row can never be looked up in the Train matrix.
+    """
+    task = ctx.task
+    blocks: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
+    for split in C.SPLITS:
+        query, ref = P.evaluation_pairs(ctx.ref_table["splits"][split])
+        blocks[split] = P.pair_feature_blocks(
+            query_x=task.x[split],
+            reference_x=task.x["train"],
+            query_local=query,
+            reference_local=ref,
+        )
+    return blocks
+
+
 def run_c(
     ctx: ArmContext,
     pair_spec: dict[str, Any],
@@ -430,7 +450,12 @@ def run_c(
     src = np.asarray(pair_spec["src_local"], dtype=np.int64)
     ref = np.asarray(pair_spec["ref_local"], dtype=np.int64)
     t_matrix = time.perf_counter()
-    matrix = P.pair_matrix(task, src, ref)
+    matrix = P.pair_matrix(
+        query_x=task.x["train"],
+        reference_x=task.x["train"],
+        query_local=src,
+        reference_local=ref,
+    )
     dtrain = xgb.DMatrix(
         matrix,
         label=np.asarray(pair_spec["target_std"], dtype=np.float32),
@@ -459,25 +484,29 @@ def _evaluate_c(
     booster: Any,
     trees: Sequence[dict[str, np.ndarray]],
     seconds: float,
+    *,
+    eval_blocks: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] | None = None,
+    include_pairs: bool = True,
 ) -> CRun:
     task = ctx.task
     n_features = task.n_features
     sigma = ctx.sigma
-    eval_pairs = _eval_pairs(ctx)
-    blocks: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] = {}
+    blocks = eval_blocks if eval_blocks is not None else build_eval_blocks(ctx)
     shapes: dict[str, tuple[int, int]] = {}
     for split in C.SPLITS:
-        query, ref = eval_pairs[split][0], eval_pairs[split][1]
-        blocks[split] = P.pair_feature_blocks(task, query, ref)
-        shapes[split] = (int(query.size // C.MAX_REFERENCES), C.MAX_REFERENCES)
-    pair_blocks = P.pair_feature_blocks(
-        task,
-        np.asarray(pair_spec["src_local"], dtype=np.int64),
-        np.asarray(pair_spec["ref_local"], dtype=np.int64),
-    )
+        shapes[split] = (task.n(split), C.MAX_REFERENCES)
+    pair_blocks: tuple[np.ndarray, np.ndarray, np.ndarray] | None = None
     pair_target = np.asarray(pair_spec["target_std"], dtype=np.float64)
     pair_weight = np.asarray(pair_spec["weight"], dtype=np.float64)
+    if include_pairs:
+        pair_blocks = P.pair_feature_blocks(
+            query_x=task.x["train"],
+            reference_x=task.x["train"],
+            query_local=np.asarray(pair_spec["src_local"], dtype=np.int64),
+            reference_local=np.asarray(pair_spec["ref_local"], dtype=np.int64),
+        )
 
+    keys = list(C.SPLITS) + (["pairs"] if include_pairs else [])
     acc: dict[str, dict[str, np.ndarray]] = {}
     layout: dict[str, dict[str, T.BlockLayout]] = {}
     for split in C.SPLITS:
@@ -490,21 +519,22 @@ def _evaluate_c(
             "fwd": T.BlockLayout(blocks[split], n_features, reverse=False),
             "rev": T.BlockLayout(blocks[split], n_features, reverse=True),
         }
-    n_pair = int(pair_target.size)
-    acc["pairs"] = {
-        "fwd": np.zeros(n_pair, dtype=np.float32),
-        "rev": np.zeros(n_pair, dtype=np.float32),
-    }
-    layout["pairs"] = {
-        "fwd": T.BlockLayout(pair_blocks, n_features, reverse=False),
-        "rev": T.BlockLayout(pair_blocks, n_features, reverse=True),
-    }
+    if include_pairs:
+        n_pair = int(pair_target.size)
+        acc["pairs"] = {
+            "fwd": np.zeros(n_pair, dtype=np.float32),
+            "rev": np.zeros(n_pair, dtype=np.float32),
+        }
+        layout["pairs"] = {
+            "fwd": T.BlockLayout(pair_blocks, n_features, reverse=False),
+            "rev": T.BlockLayout(pair_blocks, n_features, reverse=True),
+        }
 
     curves: list[dict[str, Any]] = []
     pair_curves: list[dict[str, Any]] = []
     checkpoints: dict[str, dict[int, np.ndarray]] = {split: {} for split in C.SPLITS}
     for index, tree in enumerate(trees, start=1):
-        for key in ("train", "valid", "test", "pairs"):
+        for key in keys:
             np.add(
                 acc[key]["fwd"],
                 T.tree_leaf_values(tree, layout[key]["fwd"], int(acc[key]["fwd"].size)),
@@ -535,20 +565,21 @@ def _evaluate_c(
                 curves.append(
                     _curve_row(task.dataset, "C", preset, index, split, config["name"], rmse_raw, mae_raw)
                 )
-        pair_pred = acc["pairs"]["fwd"].astype(np.float64)
-        antisym = 0.5 * (acc["pairs"]["fwd"].astype(np.float64) - acc["pairs"]["rev"].astype(np.float64))
-        pair_curves.append(
-            {
-                "dataset": task.dataset,
-                "method": "C",
-                "preset": preset,
-                "round": int(index),
-                "pair_rmse_std": E.weighted_rmse(pair_pred, pair_target, pair_weight),
-                "pair_rmse_std_antisym": E.weighted_rmse(antisym, pair_target, pair_weight),
-            }
-        )
+        if include_pairs:
+            pair_pred = acc["pairs"]["fwd"].astype(np.float64)
+            antisym = 0.5 * (acc["pairs"]["fwd"].astype(np.float64) - acc["pairs"]["rev"].astype(np.float64))
+            pair_curves.append(
+                {
+                    "dataset": task.dataset,
+                    "method": "C",
+                    "preset": preset,
+                    "round": int(index),
+                    "pair_rmse_std": E.weighted_rmse(pair_pred, pair_target, pair_weight),
+                    "pair_rmse_std_antisym": E.weighted_rmse(antisym, pair_target, pair_weight),
+                }
+            )
     final_margins = {
-        key: {"fwd": acc[key]["fwd"], "rev": acc[key]["rev"]} for key in acc
+        key: {"fwd": acc[key]["fwd"], "rev": acc[key]["rev"]} for key in keys
     }
     return CRun(
         preset=preset,
@@ -577,6 +608,7 @@ def c_state(
     config_name: str,
     splits: Sequence[str] = C.SPLITS,
     sample_rows: dict[str, np.ndarray] | None = None,
+    eval_blocks: dict[str, tuple[np.ndarray, np.ndarray, np.ndarray]] | None = None,
 ) -> dict[str, Any]:
     """Recompute C for one tree prefix from scratch, per split.
 
@@ -596,7 +628,15 @@ def c_state(
     for split in splits:
         entry = ctx.ref_table["splits"][split]
         query, ref = P.evaluation_pairs(entry)
-        blocks = P.pair_feature_blocks(task, query, ref)
+        if eval_blocks is not None and split in eval_blocks:
+            blocks = eval_blocks[split]
+        else:
+            blocks = P.pair_feature_blocks(
+                query_x=task.x[split],
+                reference_x=task.x["train"],
+                query_local=query,
+                reference_local=ref,
+            )
         n_query, width = int(query.size // C.MAX_REFERENCES), C.MAX_REFERENCES
         n_rows = int(query.size)
         acc_f = np.zeros(n_rows, dtype=np.float32)
@@ -612,7 +652,7 @@ def c_state(
         out["shapes"][split] = (n_query, width)
         if sample_rows is not None and split in sample_rows:
             rows = np.asarray(sample_rows[split], dtype=np.int64)
-            fwd_matrix, rev_matrix = _sample_pair_matrices(task, entry, rows)
+            fwd_matrix, rev_matrix = _sample_pair_matrices(task, split, entry, rows)
             import xgboost as xgb
 
             names = _pair_feature_names(task)
@@ -641,14 +681,32 @@ def _pair_feature_names(task: D.TaskData) -> list[str]:
 
 def _sample_pair_matrices(
     task: D.TaskData,
+    split: str,
     entry: dict[str, Any],
     rows: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Explicit forward/reverse pair matrices for the sampled flat slots."""
+    """Forward/reverse pair matrices for sampled flat slots of one split.
+
+    Forward is ``z(query_split, reference_train)``.  Reverse is
+    ``z(reference_train, query_split)``, built from the two *correct* domains,
+    not by swapping two local indices inside the Train matrix.
+    """
     query, ref = P.evaluation_pairs(entry)
     src = query[rows].astype(np.int64)
     dst = ref[rows].astype(np.int64)
-    return P.pair_matrix(task, src, dst), P.pair_matrix(task, dst, src)
+    forward = P.pair_matrix(
+        query_x=task.x[split],
+        reference_x=task.x["train"],
+        query_local=src,
+        reference_local=dst,
+    )
+    reverse = P.pair_matrix(
+        query_x=task.x["train"],
+        reference_x=task.x[split],
+        query_local=dst,
+        reference_local=src,
+    )
+    return forward, reverse
 
 
 def sample_flat_rows(n_rows: int, count: int, *, seed: int = C.BOOTSTRAP_SEED) -> np.ndarray:
@@ -757,8 +815,18 @@ def verify_c(
     pair_rows = sample_flat_rows(int(pair_spec["src_local"].size), sample_count)
     src = np.asarray(pair_spec["src_local"], dtype=np.int64)[pair_rows]
     ref = np.asarray(pair_spec["ref_local"], dtype=np.int64)[pair_rows]
-    fwd_matrix = P.pair_matrix(task, src, ref)
-    rev_matrix = P.pair_matrix(task, ref, src)
+    fwd_matrix = P.pair_matrix(
+        query_x=task.x["train"],
+        reference_x=task.x["train"],
+        query_local=src,
+        reference_local=ref,
+    )
+    rev_matrix = P.pair_matrix(
+        query_x=task.x["train"],
+        reference_x=task.x["train"],
+        query_local=ref,
+        reference_local=src,
+    )
     names = _pair_feature_names(task)
     import xgboost as xgb
 
@@ -807,7 +875,7 @@ def compare_final_margins(
         entry = ctx.ref_table["splits"][split]
         n_rows = int(task.n(split) * C.MAX_REFERENCES)
         rows = sample_flat_rows(n_rows, sample_count, seed=C.PAIR_RNG_SEED)
-        fwd, rev = _sample_pair_matrices(task, entry, rows)
+        fwd, rev = _sample_pair_matrices(task, split, entry, rows)
         fwd_pred = np.asarray(
             booster.predict(xgb.DMatrix(fwd, feature_names=names), iteration_range=(0, int(final_round))),
             dtype=np.float64,

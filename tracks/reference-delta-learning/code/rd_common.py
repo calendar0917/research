@@ -30,6 +30,9 @@ import numpy as np
 ROUND_ID = "rd-pilot-small-v1"
 PROTOCOL_ID = ROUND_ID
 STUDY_ID = ROUND_ID
+#: Evaluation-only repair revision.  It changes no training input; it keys the
+#: C evaluation cache so pre-repair Val/Test curves can never be reused.
+EVALUATION_REVISION = "rd-evalfix-v1"
 
 CODE_DIR = Path(__file__).resolve().parent
 TRACK_ROOT = CODE_DIR.parent

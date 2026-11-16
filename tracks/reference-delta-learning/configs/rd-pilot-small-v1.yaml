@@ -8,7 +8,10 @@
 protocol_id: rd-pilot-small-v1
 round_id: rd-pilot-small-v1
 
-# prepare | smoke | dataset_worker | aggregate
+# prepare | smoke | dataset_worker | reevaluate_c | aggregate
+# reevaluate_c is evaluation-only: fit_allowed=false, force_eval_rebuild=true,
+# evaluation_revision=rd-evalfix-v1. It loads existing C boosters and never
+# enters run_c / xgboost.train.
 stage: dataset_worker
 # ogbg-molesol / ogbg-mollipo, or "all" for prepare and aggregate
 dataset: ogbg-molesol

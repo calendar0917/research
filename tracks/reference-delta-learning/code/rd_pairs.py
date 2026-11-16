@@ -268,24 +268,62 @@ def load_pairs(path, dataset: str) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _validate_pair_domains(
+    query_x: np.ndarray,
+    reference_x: np.ndarray,
+    query_local: np.ndarray,
+    reference_local: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Validate two *explicit* input domains, never one implicit Train domain.
+
+    The caller decides which split each side of ``z(query, reference)`` comes
+    from.  Training pairs pass Train for both sides; evaluation pairs pass the
+    evaluated split for the query and Train for the reference.  Keeping the two
+    domains as separate arguments is what makes a Val/Test query local index
+    impossible to silently reinterpret as a Train row.
+    """
+    qx = np.asarray(query_x)
+    rx = np.asarray(reference_x)
+    q = np.asarray(query_local, dtype=np.int64).reshape(-1)
+    r = np.asarray(reference_local, dtype=np.int64).reshape(-1)
+    if qx.ndim != 2 or rx.ndim != 2:
+        raise ValueError("query_x and reference_x must both be 2-D design matrices")
+    if qx.shape[1] != rx.shape[1]:
+        raise ValueError(f"feature width mismatch: {qx.shape[1]} != {rx.shape[1]}")
+    if q.size != r.size:
+        raise ValueError(f"query/reference slot count mismatch: {q.size} != {r.size}")
+    if q.size and (int(q.min()) < 0 or int(q.max()) >= int(qx.shape[0])):
+        raise IndexError("a query_local index is outside its own input domain")
+    if r.size and (int(r.min()) < 0 or int(r.max()) >= int(rx.shape[0])):
+        raise IndexError("a reference_local index is outside the Train input domain")
+    return qx, rx, q, r
+
+
 def pair_matrix(
-    task: D.TaskData,
-    src_local: np.ndarray,
-    ref_local: np.ndarray,
     *,
+    query_x: np.ndarray,
+    reference_x: np.ndarray,
+    query_local: np.ndarray,
+    reference_local: np.ndarray,
     chunk: int = 8192,
 ) -> np.ndarray:
-    """Dense float32 ``[x_src, x_ref, x_src - x_ref]`` (6177 columns)."""
-    x = task.x["train"]
-    n = int(np.asarray(src_local).size)
-    n_features = int(x.shape[1])
+    """Dense float32 ``[x_q, x_r, x_q - x_r]`` (6177 columns).
+
+    ``query_x``/``query_local`` and ``reference_x``/``reference_local`` are two
+    independent domains.  A Val/Test evaluation passes ``query_x=task.x[split]``
+    and ``reference_x=task.x["train"]``; a Train--Train training pair passes
+    ``task.x["train"]`` for both sides.
+    """
+    qx, rx, q, r = _validate_pair_domains(
+        query_x, reference_x, query_local, reference_local
+    )
+    n = int(q.size)
+    n_features = int(qx.shape[1])
     out = np.empty((n, 3 * n_features), dtype=np.float32)
     for start in range(0, n, chunk):
         stop = min(start + chunk, n)
-        s = np.asarray(src_local[start:stop], dtype=np.int64)
-        r = np.asarray(ref_local[start:stop], dtype=np.int64)
-        head = x[s]
-        tail = x[r]
+        head = qx[q[start:stop]]
+        tail = rx[r[start:stop]]
         out[start:stop, :n_features] = head
         out[start:stop, n_features:2 * n_features] = tail
         out[start:stop, 2 * n_features:] = head - tail
@@ -293,10 +331,11 @@ def pair_matrix(
 
 
 def pair_feature_blocks(
-    task: D.TaskData,
-    src_local: np.ndarray,
-    ref_local: np.ndarray,
     *,
+    query_x: np.ndarray,
+    reference_x: np.ndarray,
+    query_local: np.ndarray,
+    reference_local: np.ndarray,
     chunk: int = 4096,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Feature-major copies of the three 2059-column blocks.
@@ -304,19 +343,24 @@ def pair_feature_blocks(
     ``X1``/``X2``/``X3`` are ``(2059, n_records)`` contiguous float32, so a tree
     split reads one contiguous row instead of striding through a wide matrix.
     ``X3`` is computed in float32 exactly as the DMatrix column would be.
+
+    As in :func:`pair_matrix`, the two sides are explicit domains.  The reverse
+    pair is produced from the *correct* forward blocks by ``BlockLayout`` (swap
+    X1/X2, negate X3); swapping only local indices while keeping the Train
+    matrix would be a different, wrong operation.
     """
-    x = task.x["train"]
-    n = int(np.asarray(src_local).size)
-    n_features = int(x.shape[1])
+    qx, rx, q, r = _validate_pair_domains(
+        query_x, reference_x, query_local, reference_local
+    )
+    n = int(q.size)
+    n_features = int(qx.shape[1])
     x1 = np.empty((n_features, n), dtype=np.float32)
     x2 = np.empty((n_features, n), dtype=np.float32)
     x3 = np.empty((n_features, n), dtype=np.float32)
     for start in range(0, n, chunk):
         stop = min(start + chunk, n)
-        s = np.asarray(src_local[start:stop], dtype=np.int64)
-        r = np.asarray(ref_local[start:stop], dtype=np.int64)
-        head = x[s]
-        tail = x[r]
+        head = qx[q[start:stop]]
+        tail = rx[r[start:stop]]
         x1[:, start:stop] = head.T
         x2[:, start:stop] = tail.T
         x3[:, start:stop] = (head - tail).T
@@ -326,8 +370,13 @@ def pair_feature_blocks(
 def evaluation_pairs(table_split: dict[str, np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
     """Flattened (query, reference) slots over the frozen Top64 table.
 
-    Missing slots (fewer than 64 legal references) are filled with the query
-    itself, whose delta is exactly zero and whose weight is zero.
+    Missing slots (fewer than 64 legal references) are sentinel *Train* slots
+    with weight zero, never the query's local index interpreted in Train.  The
+    frozen weight matrix is zero there, so they do not contribute to N/R/C; a
+    cross-domain padding index would nevertheless be ill-defined for a Val/Test
+    query and is therefore avoided explicitly.
+
+    All queries are kept; only individual padded slots are inactive.
     """
     ref_local = np.asarray(table_split["ref_local"], dtype=np.int32)
     n_kept = np.asarray(table_split["n_kept"], dtype=np.int32)
@@ -337,5 +386,6 @@ def evaluation_pairs(table_split: dict[str, np.ndarray]) -> tuple[np.ndarray, np
     flat_kept = np.repeat(n_kept, width)
     slot = np.tile(np.arange(width, dtype=np.int32), n_query)
     missing = slot >= flat_kept
-    ref[missing] = query[missing]
+    # 0 is always a legal Train-local sentinel; the corresponding weight is 0.
+    ref[missing] = 0
     return query, ref

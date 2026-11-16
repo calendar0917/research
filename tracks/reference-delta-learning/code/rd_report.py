@@ -928,7 +928,17 @@ def render_report(
     lines.append(
         "官方 OGB `ogbg-molesol` / `ogbg-mollipo`，官方 Train/Validation/Test 划分，"
         "单训练 seed=0，`test_policy: always`（Test 作开发评估集，不参与任何选择）。"
-        "本文件由 `stage=aggregate` 依据两个 GPU worker 的产物生成。"
+        "本文件由 `stage=aggregate` 依据两个 worker 的产物生成；"
+        f"评价修订为 `{C.EVALUATION_REVISION}`。"
+    )
+    lines.append("")
+    lines.append(
+        "> **评价纠错（rd-evalfix-v1）。** 原 C 评价在 Val/Test 上把当前 split 的"
+        " query 局部行号误当成 Train 行号读取特征；参照与标签却是真正的 Val/Test。"
+        "因此旧 C 的 Val/Test 曲线、选中状态、预测、比较、案例与路线判定无效，"
+        "已在 **不重训任何 booster** 的前提下重算。旧报告中的“C 只能选第 1 轮”"
+        "“越训练越不泛化”“NO_JOINT_INCREMENT”等表述已撤回。"
+        "根因、撤回范围与模型 SHA 见 `CORRIGENDUM_evalfix_v1.md`。"
     )
     lines.append("")
     lines.append("## 问题与四条臂")
@@ -1159,7 +1169,7 @@ def render_report(
         )
     )
     lines.append("")
-    lines.append("## C 的退化机制（曲线层面）")
+    lines.append("## C 的曲线与拟合层级")
     lines.append("")
     lines.extend(mechanism_lines(datasets, data, main_rows, decision))
     lines.append("")
@@ -1329,6 +1339,10 @@ def render_report(
     wall_seconds = sum(
         float(data[dataset]["summary"].get("wall_seconds_total", 0.0)) for dataset in datasets
     )
+    eval_fix_wall = sum(
+        float(data[dataset]["summary"].get("evalfix", {}).get("wall_seconds", 0.0))
+        for dataset in datasets
+    )
     peak_rss = {
         dataset: data[dataset]["summary"].get("peak_rss_mb") for dataset in datasets
     }
@@ -1337,8 +1351,12 @@ def render_report(
         f"= {compute_seconds / 3600.0:.3f} GPU·h；两个 worker 各独占一张 A100，并行执行。"
     )
     lines.append(
-        f"- 两个 worker 最后一次执行的墙钟合计 = {wall_seconds:.1f} s"
+        f"- 两个 worker 训练时最后一次执行的墙钟合计 = {wall_seconds:.1f} s"
         f"（每 GPU 一个训练 worker；本轮的启动失败与 resume 重跑另计，均记录在 `rr jobs`）。"
+    )
+    lines.append(
+        f"- 本次 `rd-evalfix-v1` 新增评价墙钟（两任务合计）= {eval_fix_wall:.1f} s；"
+        "只加载既有 booster，CPU 评价，新增训练 0 条、新增 GPU·h = 0。"
     )
     lines.append(
         "- worker 进程 peak RSS："
@@ -1348,34 +1366,42 @@ def render_report(
     lines.append(
         "- 预算：soft 3 GPU·h / hard 6 GPU·h（含 smoke 与重跑）；本轮轨迹算力远低于 soft 预算。"
     )
+    ratios = []
+    for row in resource_rows_all:
+        if row["arm"] == "C" and float(row["train_seconds"]) > 0:
+            ratios.append(
+                f"{row['dataset']}/{row['preset']} {float(row['eval_seconds']) / float(row['train_seconds']):.2f}x"
+            )
     lines.append(
-        "- 每轮评价成本已与一次性 pair 矩阵构建分开记录；C 的评测成本是训练本身的 2-6 倍，"
-        "这是“每轮完整三集评测”的直接代价（K 越大、查询越多，代价越高）。"
+        "- 每轮评价成本已与一次性 pair 矩阵构建分开记录；本次修正后 C 的评测/训练时间比 = "
+        + "，".join(ratios)
+        + "。这是“每轮完整三集评测”的直接代价（K 越大、查询越多，代价越高）。"
     )
     lines.append("")
-    lines.append("## 实施修复与重跑范围")
+    lines.append("## 评价纠错与重跑范围（rd-evalfix-v1）")
     lines.append("")
     lines.append(
-        "八条正式轨迹的 booster 全部在首次正式 worker 运行期间生成（上表 `trained_at`："
-        "`ogbg-molesol` 14:04:54-14:06:56，`ogbg-mollipo` 14:05:11-14:12:43）；"
-        "之后的所有运行都是 resume，只重算选择、持久化与检查，**没有重训任何模型**。"
-    )
-    lines.append("")
-    lines.append(
-        "- 已修复（都在选择/持久化/检查路径，不改变训练目标、特征、参照或配对）："
-        "① R 的选中状态必须读它自己 preset 的曲线文件（此前读 D 的选中 preset）；"
-        "② R 的持久化预测必须锚定 R 选中的那个 D 轮次（此前误用 D 的选中轮次，"
-        "影响 `pred_R.npz`，报告中的 R 曲线值一直正确）；"
-        "③ D 的 reload 检查比较了“重载后的完整森林”与“选中轮预测”（轮次不匹配），"
-        "改为分别核对选中前缀与最终状态；④ 选择前显式断言每个选中 (preset, round, config) "
-        "都能在自己的曲线文件里找到；⑤ 修复一处变量遮蔽与一处 `config` 字面量。"
+        "- 根因：`pair_matrix` / `pair_feature_blocks` 原实现固定读取 `task.x[\"train\"]`。"
+        "Train–Train 训练对因此正确，但 C 的 Val/Test 评价 query 也被映射到 Train 矩阵；"
+        "参照表、权重和评价标签仍对应真正的 Val/Test query，取数身份不一致。"
     )
     lines.append(
-        "- 作废范围：无。没有任何轨迹因数值错误作废；受影响文件仅 `pred_R.npz` 与相关检查字段，"
-        "均已重新生成，主表/比较表/判定在修复后重算。"
+        "- 修复：两个构造函数改为 keyword-only 的显式 `query_x` / `reference_x` 两个输入域；"
+        "训练对两边都传 Train，评价 query 传当前 split、参照传 Train。反向对仍由"
+        "`BlockLayout(reverse=True)` 在正确构造的正向块上交换 X1/X2 并对 X3 取负。"
     )
     lines.append(
-        "- 额外成本：修复后的 resume 重跑与两次已失败启动合计约 0.1 GPU·h（含在下面的预算口径内）。"
+        "- 撤回：旧 C 的 Val/Test 曲线、Val-selected preset/round/config、`pred_C.npz`、"
+        "`pred_C_delta.npz`、C-D/C-N/C-R 比较、paired bootstrap、drop-one、参照覆盖中的 C 误差、"
+        "三个 Val 案例账本，以及由旧 C 状态支撑的“C 退化/第 1 轮/NO_JOINT_INCREMENT”结论。"
+    )
+    lines.append(
+        "- 保留：八个 D/C booster、D/N/R 的选中状态与预测、G/L 点参照、参照表、"
+        "训练 pair、样本权重和六种推理配置均未改变；本次新增训练 0 条。"
+    )
+    lines.append(
+        "- 重算：从两个既有 C booster 各提取全部 1600 棵树，逐前缀重算三 split × 六配置的"
+        "分子级 RMSE/MAE；Train 分子曲线与训练 pair 曲线在相同状态下的修复前后差均为 0。"
     )
     lines.append("")
     lines.append("## 数据与模型身份")
@@ -1522,6 +1548,14 @@ def _json_default(value: Any) -> Any:
     raise TypeError(f"not JSON serializable: {type(value)!r}")
 
 
+def _curve_direction(first: float, last: float) -> str:
+    if last < first - 1e-12:
+        return "下降"
+    if last > first + 1e-12:
+        return "上升"
+    return "基本持平"
+
+
 def mechanism_lines(
     datasets: Sequence[str],
     data: Mapping[str, Any],
@@ -1560,17 +1594,26 @@ def mechanism_lines(
             f"第 1 轮 {pair_at.get(1, float('nan')):.4f} → 第 {last_round} 轮 "
             f"{pair_at.get(last_round, float('nan')):.4f}"
         )
+        directions: dict[str, str] = {}
+        best_valid_round = None
+        best_valid_value = None
         for split, label in (("train", "分子 Train"), ("valid", "Val"), ("test", "Test")):
             first = value(split, 1)
             last = value(split, last_round)
-            best = min(
-                (float(row["rmse_raw"]) for row in rows if row["split"] == split)
+            best_row = min(
+                (row for row in rows if row["split"] == split),
+                key=lambda row: (float(row["rmse_raw"]), int(row["round"])),
             )
             if first is None or last is None:
                 continue
+            directions[split] = _curve_direction(first, last)
+            if split == "valid":
+                best_valid_round = int(best_row["round"])
+                best_valid_value = float(best_row["rmse_raw"])
             lines.append(
                 f"- {label} RMSE：第 1 轮 {first:.4f} → 第 {last_round} 轮 {last:.4f}"
-                f"（该 split 全曲线最好 {best:.4f}）"
+                f"（{directions[split]}；该 split 全曲线最好 {float(best_row['rmse_raw']):.4f}，"
+                f"第 {int(best_row['round'])} 轮）"
             )
         lines.append(
             f"- 对照：N 的 Val/Test = {n_state['valid_rmse']:.4f}/{n_state['test_rmse']:.4f}，"
@@ -1585,16 +1628,21 @@ def mechanism_lines(
             )
             baseline = float(n_state[f"{split}_rmse"])
             wins = [round_index for round_index, value in per_round if value < baseline]
-            beats[split] = (len(wins), len(per_round), int(baseline != baseline), wins[:3])
+            beats[split] = (len(wins), len(per_round), wins[:3])
         lines.append(
             f"- 与自身基线 N 相比：Val 上 C 在 {beats['valid'][1]} 轮中有 {beats['valid'][0]} 轮优于 N"
             f"（N = {n_state['valid_rmse']:.4f}），Test 上 {beats['test'][0]}/{beats['test'][1]} 轮"
             f"（N = {n_state['test_rmse']:.4f}）"
         )
+        selected_valid = value("valid", c_selected_round)
+        selected_test = value("test", c_selected_round)
         lines.append(
-            "- 读法：pair 层与分子 Train 层单调变好，Val/Test 单调变差，"
-            f"且 C 在 Val 上的最好轮是第 {c_selected_round} 轮——即“几乎不输出差值”的初始状态。"
-            "差值模型把 Train-Train 的训练对拟合得越好，还原到未见 scaffold 的分子上偏差越大。"
+            f"- 读法：分子 Train 曲线{directions.get('train', '未知')}，"
+            f"Val {directions.get('valid', '未知')}，Test {directions.get('test', '未知')}；"
+            f"Val 全曲线最小 RMSE 在第 {best_valid_round} 轮（{best_valid_value:.4f}），"
+            f"Val-selected 状态是第 {c_selected_round} 轮"
+            f"（Val/Test {selected_valid:.4f}/{selected_test:.4f}）。"
+            "这是固定配方下的曲线描述；选中仍只由完整 Val RMSE 决定。"
         )
         lines.append("")
     rows = []
@@ -1619,12 +1667,12 @@ def mechanism_lines(
         f"{row['dataset']} Val {100 * row['gain_valid']:+.1f}% / Test {100 * row['gain_test']:+.1f}%"
         for row in rows
     ]
+    worse_test = [row["dataset"] for row in rows if row["gain_test"] < 0.0]
     lines.append(
         "R 与 C 共用同一套 Tanimoto 参照、同一批权重配置和同一还原公式；"
         "差别只在 R 的锚点是已训练的绝对模型 D，而 C 的差值 h 是从 Train-Train 对里从零学的。"
         "R 相对 D 的增益：" + "；".join(improved) + "。"
-        "也就是说，在有强绝对值锚点时参照残差修正是有效的（molesol 的 Test 是唯一例外，"
-        "R 比 D 差约 1.5%），本轮的负结果落在“用 Train 对从零联合学习差值”这一步，"
-        "而不是落在“检索 + 还原”机制本身。该对照是描述性的，不参与冻结判定。"
+        + (f"Test 上 R 低于 D 的任务：{', '.join(worse_test)}。" if worse_test else "Test 上 R 均不差于 D。")
+        + "该对照是描述性的，不参与冻结判定。"
     )
     return lines

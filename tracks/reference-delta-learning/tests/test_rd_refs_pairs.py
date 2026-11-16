@@ -152,13 +152,13 @@ def test_pair_matrix_difference_column_is_signed():
     spec = P.build_pairs(task, order)
     src = spec["src_local"][:4].astype(np.int64)
     ref = spec["ref_local"][:4].astype(np.int64)
-    matrix = P.pair_matrix(task, src, ref)
+    matrix = P.pair_matrix(query_x=task.x["train"], reference_x=task.x["train"], query_local=src, reference_local=ref)
     n = task.n_features
     assert matrix.shape == (4, 3 * n)
     assert np.array_equal(matrix[:, :n], task.x["train"][src])
     assert np.array_equal(matrix[:, n:2 * n], task.x["train"][ref])
     assert np.array_equal(matrix[:, 2 * n:], task.x["train"][src] - task.x["train"][ref])
-    reverse = P.pair_matrix(task, ref, src)
+    reverse = P.pair_matrix(query_x=task.x["train"], reference_x=task.x["train"], query_local=ref, reference_local=src)
     assert np.array_equal(reverse[:, 2 * n:], -matrix[:, 2 * n:])
     assert np.array_equal(reverse[:, :n], matrix[:, n:2 * n])
 

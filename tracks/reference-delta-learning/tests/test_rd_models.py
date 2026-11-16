@@ -44,9 +44,9 @@ def test_block_layout_is_the_transposed_pair_matrix():
     src = spec["src_local"][:300].astype(np.int64)
     ref = spec["ref_local"][:300].astype(np.int64)
     n_rows = int(src.size)
-    forward = P.pair_matrix(task, src, ref)
-    reverse = P.pair_matrix(task, ref, src)
-    blocks = P.pair_feature_blocks(task, src, ref)
+    forward = P.pair_matrix(query_x=task.x["train"], reference_x=task.x["train"], query_local=src, reference_local=ref)
+    reverse = P.pair_matrix(query_x=task.x["train"], reference_x=task.x["train"], query_local=ref, reference_local=src)
+    blocks = P.pair_feature_blocks(query_x=task.x["train"], reference_x=task.x["train"], query_local=src, reference_local=ref)
     booster = _tiny_xgb(forward, spec["target_std"][:300])
     trees = T.extract_trees(booster, [f"c{i}" for i in range(forward.shape[1])], rounds=6)
 
