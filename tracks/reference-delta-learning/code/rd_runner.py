@@ -863,7 +863,7 @@ def _stage_dataset_worker(
     _write(out_dir / "selection.json", selection)
 
     # ---- the persisted selected predictions must reproduce the curves ----
-    for arm, payload_pred, state in (
+    for arm, payload_pred, chosen in (
         ("D", d_selected_pred, selection["D"]),
         ("R", r_selected_pred, selection["R"]),
         ("N", n_run["selected_predictions"], selection["N"]),
@@ -871,11 +871,11 @@ def _stage_dataset_worker(
     ):
         for split in C.SPLITS:
             recomputed = C.rmse(payload_pred[split], task.y[split])
-            delta = abs(recomputed - float(state[f"{split}_rmse_raw"]))
-            if delta > 1e-9:
+            reported = float(chosen[f"{split}_rmse_raw"])
+            if abs(recomputed - reported) > 1e-9:
                 raise AssertionError(
                     f"{dataset} {arm}: persisted {split} RMSE {recomputed} != "
-                    f"selected {state[f'{split}_rmse_raw']} (delta {delta})"
+                    f"selected {reported}"
                 )
 
     # ---- persistence of selected predictions ---------------------------
