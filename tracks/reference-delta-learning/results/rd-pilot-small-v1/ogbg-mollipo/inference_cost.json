@@ -1,0 +1,93 @@
+{
+  "arms": {
+    "C": {
+      "config": "K16_softmax_tau_0.1",
+      "device": "cpu",
+      "molecules": 420,
+      "ms_per_molecule": 1.588402685731472,
+      "note": "test split only (pair matrices are the expensive part)",
+      "references_per_query": 16,
+      "seconds": 0.6671291280072182
+    },
+    "D": {
+      "config": null,
+      "device": "cpu",
+      "molecules": 4200,
+      "ms_per_molecule": 0.12805597475519226,
+      "references_per_query": 0,
+      "seconds": 0.5378350939718075
+    },
+    "N": {
+      "config": "K16_softmax_tau_0.1",
+      "device": "cpu",
+      "molecules": 4200,
+      "ms_per_molecule": 9.083047708762544e-05,
+      "references_per_query": 16,
+      "seconds": 0.00038148800376802683
+    },
+    "R": {
+      "config": "K16_softmax_tau_0.1",
+      "device": "cpu",
+      "molecules": 4200,
+      "ms_per_molecule": 0.00023411214074474715,
+      "references_per_query": 16,
+      "seconds": 0.000983270991127938
+    }
+  },
+  "dataset": "ogbg-mollipo",
+  "device": "cpu",
+  "device_status": {
+    "build_info_cuda_version": "[11, 8]",
+    "build_info_use_cuda": "True",
+    "fallback_reason": null,
+    "probed": true,
+    "requested": "cpu"
+  },
+  "environment": {
+    "cpu_count": 104,
+    "env": {},
+    "hostname": "a100-2",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "versions": {
+      "numpy": "2.1.3",
+      "scipy": "1.14.1",
+      "torch": "2.5.1+cu124",
+      "xgboost": "2.1.3"
+    },
+    "xgboost": {
+      "use_cuda": "True",
+      "version": "2.1.3"
+    }
+  },
+  "note": "descriptive cost only: CPU prediction after reloading the selected boosters, no batching/tuning, measured with the frozen retrieval configuration",
+  "nthread": 4,
+  "one_off": {
+    "design_matrix_seconds": 0.05526124199968763,
+    "pair_list_seconds": 2.4255926809855737,
+    "pair_matrix_rows": 6720,
+    "pair_matrix_seconds_for_selected_C": 0.10819296998670325,
+    "retrieval_table_seconds": 1.352532169490587
+  },
+  "pair_stats": {
+    "all_endpoints_in_train": true,
+    "duplicate_directed_rate": 0.04230840773809519,
+    "endpoint_frequency_max": 238,
+    "endpoint_frequency_mean": 128.0,
+    "endpoint_frequency_min": 82,
+    "matches_expected_count": true,
+    "n_distinct_directed_records": 205942,
+    "n_distinct_unordered_pairs": 102971,
+    "n_query_pair_slots": 107520,
+    "n_records": 215040,
+    "n_records_expected": 215040,
+    "pairs_seen_from_both_endpoints": 4549,
+    "q_max": 32,
+    "q_mean": 32.0,
+    "q_min": 32,
+    "weight_sum": 3360.0,
+    "weight_sum_by_origin": 3360.0,
+    "weight_sum_equals_n_train": true
+  },
+  "repeats": 5
+}

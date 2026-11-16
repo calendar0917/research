@@ -259,6 +259,26 @@ y=-0.500000  pred_D=0.260279  pred_C=2.412827  |err_C|=2.912827  config=K16_soft
 
 其余参照加权和 = 1.564257633；Top5 加权和 = 0.848569339；合计 = 2.412826972（与 pred_C 差 1.01e-10）
 
+## 单分子推理成本（描述性）
+
+| dataset | arm | device | references_per_query | us_per_molecule | molecules_timed | config |
+| --- | --- | --- | --- | --- | --- | --- |
+| ogbg-molesol | C | cpu | 4 | 916.9540 | 113 | K4_softmax_tau_0.1 |
+| ogbg-molesol | D | cpu | 0 | 152.6730 | 1128 | - |
+| ogbg-molesol | N | cpu | 4 | 0.1760 | 1128 | K4_softmax_tau_0.1 |
+| ogbg-molesol | R | cpu | 4 | 0.4480 | 1128 | K4_softmax_tau_0.1 |
+| ogbg-mollipo | C | cpu | 16 | 1588.4030 | 420 | K16_softmax_tau_0.1 |
+| ogbg-mollipo | D | cpu | 0 | 128.0560 | 4200 | - |
+| ogbg-mollipo | N | cpu | 16 | 0.0910 | 4200 | K16_softmax_tau_0.1 |
+| ogbg-mollipo | R | cpu | 16 | 0.2340 | 4200 | K16_softmax_tau_0.1 |
+
+| dataset | design_matrix_seconds | retrieval_table_seconds | pair_list_seconds | pair_matrix_seconds | pair_matrix_rows |
+| --- | --- | --- | --- | --- | --- |
+| ogbg-molesol | 0.0102 | 0.0695 | 0.4824 | 0.0016 | 452 |
+| ogbg-mollipo | 0.0553 | 1.3525 | 2.4256 | 0.1082 | 6720 |
+
+定义：`us_per_molecule` = 用选中模型做一次预测的中位耗时 / 分子数（CPU，nthread=4，重载后的 booster，无 batching/调优）；`references_per_query` 是该臂选中配置的 `K_eff`。D 不需要参照；N 只做加权求和；R 行只计“取参照 + 加权残差”这一步（锚点模型 D 的前向已单列在 D 行，实际 R 推理 ≈ D + R 两行之和）；C 需要正反两向的 6177 维 pair 特征与两次树遍历，因此成本最高，且只在 Test split 上计时（pair 矩阵是最贵的部分），其余臂覆盖三个 split。一次性成本里，`retrieval_table_seconds` 覆盖三个 split 的 Top-64 全表，`pair_list_seconds` 是一次性冻结配对，`pair_matrix_seconds` 是 C 在 Test 上构建选中配置 pair 特征的时间（这些都不进入每轮评测）。
+
 ## 资源账本
 
 | dataset | arm | preset | rounds | train_seconds | eval_seconds | matrix_build_seconds | seconds_per_round | gpu_peak_mb | model_sha256 |

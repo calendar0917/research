@@ -1237,7 +1237,7 @@ def render_report(
                     "arm": arm,
                     "device": entry["device"],
                     "references_per_query": entry["references_per_query"],
-                    "ms_per_molecule": entry["ms_per_molecule"],
+                    "us_per_molecule": round(1000.0 * float(entry["ms_per_molecule"]), 3),
                     "molecules_timed": entry["molecules"],
                     "config": entry.get("config"),
                 }
@@ -1251,7 +1251,7 @@ def render_report(
                     "arm",
                     "device",
                     "references_per_query",
-                    "ms_per_molecule",
+                    "us_per_molecule",
                     "molecules_timed",
                     "config",
                 ],
@@ -1288,10 +1288,12 @@ def render_report(
         )
         lines.append("")
         lines.append(
-            "定义：`ms_per_molecule` = 用选中模型对整条 split 做一次预测的中位耗时 / 分子数"
+            "定义：`us_per_molecule` = 用选中模型做一次预测的中位耗时 / 分子数"
             "（CPU，nthread=4，重载后的 booster，无 batching/调优）；`references_per_query` 是"
-            "该臂选中配置的 `K_eff`。D 不需要参照；N 只做加权求和；R 额外对每个参照做一次 D 预测；"
-            "C 需要正反两向的 6177 维 pair 特征与两次树遍历，因此成本最高。"
+            "该臂选中配置的 `K_eff`。D 不需要参照；N 只做加权求和；R 行只计“取参照 + 加权残差”"
+            "这一步（锚点模型 D 的前向已单列在 D 行，实际 R 推理 ≈ D + R 两行之和）；"
+            "C 需要正反两向的 6177 维 pair 特征与两次树遍历，因此成本最高，"
+            "且只在 Test split 上计时（pair 矩阵是最贵的部分），其余臂覆盖三个 split。"
             "一次性成本里，`retrieval_table_seconds` 覆盖三个 split 的 Top-64 全表，"
             "`pair_list_seconds` 是一次性冻结配对，`pair_matrix_seconds` 是 C 在 Test 上"
             "构建选中配置 pair 特征的时间（这些都不进入每轮评测）。"
