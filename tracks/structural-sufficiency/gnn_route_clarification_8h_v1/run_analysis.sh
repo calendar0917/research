@@ -9,6 +9,10 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$HERE/../../.." && pwd)"
 PY="${PYTHON_BIN:-$ROOT/.venv/bin/python}"
+if [ ! -x "$PY" ]; then
+  # worktrees usually do not carry their own venv; reuse the main checkout's.
+  PY="/home/calendar/code/research/.venv/bin/python"
+fi
 CODE="$HERE/code"
 export PYTHONPATH="$CODE${PYTHONPATH:+:$PYTHONPATH}"
 

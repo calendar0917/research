@@ -131,7 +131,7 @@ def main() -> int:
     behind = [d for d, r in l_ratio.items() if r > C.A_GATE_RATIO]
     ahead = [d for d, r in l_ratio.items() if r <= 1.0]
     add(f"判读：**C1_BEHIND_THIS_BUDGET = {'YES' if behind else 'NO'}**，具体任务：{', '.join(behind) if behind else '无'}（门槛 5%，只适用本轮预算与这两套 recipe）。"
-        + (f" 注意方向在任务间相反：{', '.join(ahead)} 上 L 的 Val 不差于 T，因此差距是任务依赖的，不是普遍落后。" if ahead else ""))
+        + (f" 注意方向在任务间相反：{', '.join(ahead)} 上 L 的 Val 不差于 T，因此差距是任务依赖的，不是普遍落后；但 ESOL 的“L 更好”只在 Val 成立（Test 比值 1.066，CI 含 0），不能声称 L 在 ESOL 上稳定更优。" if ahead else ""))
     add("")
 
     # ---------------- Q2 ----------------
@@ -186,7 +186,7 @@ def main() -> int:
         if not any(a_gate.values()) and any(d_pass.values()):
             add("判读：**REPRESENTATION_VS_READOUT = 联合训练嫌疑**——同一读出在冻结 T 表示上可用，端到端 A 未保住性能；这不等于证明可加形式表达力足够，只把瓶颈定位到端到端优化/正则。")
         elif not any(a_gate.values()) and not any(d_pass.values()):
-            add("判读：**REPRESENTATION_VS_READOUT = 读出限制嫌疑**——A 与 D 都没有保住；D 在冻结表示上仍未达到 0.02σ 保真（0.224/0.244），但它的 Train fidelity 只有 0.119/0.129 而 Val fidelity 0.224/0.244（`analysis/tables/stage23.json` 的 curves），说明失败里同时有优化/过拟合成分；0.02σ 是冻结的严格门槛，本轮不能把“未达到”升级为“形式不可表达”。")
+            add("判读：**REPRESENTATION_VS_READOUT = 不可分离（读出限制嫌疑，但不是纯读出结论）**——A 与 D 都没有保住；D 用同一读出在冻结 T 表示上连 **Train** fidelity 都只到 0.119/0.129（Val 0.224/0.244），没有达到 0.02σ，因此不能把 A 的失败单独归因于联合训练；同一证据也不能证明可加形式不可表达，因为失败可能来自 600 epoch / H=253 / dropout 0.1 的冻结优化预算。0.02σ 是预先冻结的严格门槛，本轮只报告“未达到”，不升级为不可能。")
         else:
             add("判读：**REPRESENTATION_VS_READOUT = 目前不可分辨/未见失败**，按上表逐数据集读。")
     else:
