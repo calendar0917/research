@@ -102,6 +102,29 @@ def align_to(
     return out
 
 
+def load_reference_l(dataset: str) -> dict[str, Any] | None:
+    """The frozen ``L`` (C1 / NO_BOND_MEAN, R3) trajectory of sq-pilot-small-v1.
+
+    Arm A is that same head; the only intentional difference is the frozen batch
+    order (this round uses ``np.random.default_rng(0)`` per epoch, the historical
+    run used ``shuffle_offset=917000``).  Comparing A to L is therefore a
+    reproduction check of the loop, not a new experiment.
+    """
+    path = C.SQL_RESULTS / dataset / "method_L.json"
+    if not path.is_file():
+        return None
+    payload = C.read_json(path)
+    return {
+        "source": str(path.relative_to(C.REPO_ROOT)),
+        "variant": payload.get("variant"),
+        "n_parameters": payload.get("n_parameters"),
+        "recipe": payload.get("recipe"),
+        "selected": payload.get("selected"),
+        "final": payload.get("final"),
+        "last20": payload.get("last20"),
+    }
+
+
 def load_gine(dataset: str) -> dict[str, Any] | None:
     path = C.SQL_RESULTS / dataset / "method_G.json"
     if not path.is_file():
@@ -1171,58 +1194,88 @@ def verdict_context(
     bootstrap: Mapping[str, Any],
     diag4: Mapping[str, Any],
 ) -> dict[str, Any]:
+    """C vs B on four pre-declared surfaces; no sign is hidden by an average."""
     b, c = traj["B"], traj["C"]
     gain = {s: 1.0 - _ratio(c["selected"][f"{s}_rmse_raw"], b["selected"][f"{s}_rmse_raw"]) for s in ("valid", "test")}
     l20_gain = {
         s: 1.0 - _ratio(c["last20"][f"mean_last20_{s}_rmse_raw"], b["last20"][f"mean_last20_{s}_rmse_raw"])
         for s in ("valid", "test")
     }
-    best_signal = all(g >= CONTEXT_GAIN_MIN for g in gain.values())
-    late_ok = all(g >= -1e-12 for g in l20_gain.values())
+    surfaces = {
+        "selected_valid": gain["valid"],
+        "selected_test": gain["test"],
+        "last20_valid": l20_gain["valid"],
+        "last20_test": l20_gain["test"],
+    }
+    positive = [name for name, value in surfaces.items() if value >= CONTEXT_GAIN_MIN]
+    negative = [name for name, value in surfaces.items() if value < 0.0]
+    strong = all(value >= CONTEXT_GAIN_MIN for value in gain.values()) and all(
+        value >= 0.0 for value in l20_gain.values()
+    )
+    no_signal = all(value < CONTEXT_GAIN_MIN for value in surfaces.values())
     intervals = {s: bootstrap[s]["contrasts"].get("C-B", {}).get("rmse_raw") for s in ("valid", "test")}
     uncertain = any(v is not None and v["contains_zero"] for v in intervals.values())
-    if best_signal and late_ok:
+    if strong:
         label = "CONTEXT_PERFORMANCE_POINT_SIGNAL" + (" / UNCERTAIN_FIXED_STATE" if uncertain else "")
-    elif best_signal or late_ok:
-        label = "SPLIT_OR_SELECTION_SENSITIVE"
-    else:
+    elif no_signal:
         label = "NO_MATERIAL_CONTEXT_GAIN_THIS_RECIPE"
+    else:
+        label = "SPLIT_OR_SELECTION_SENSITIVE"
     return {
         "dataset": dataset,
         "axis": "context_increment_C_vs_B",
         "threshold": CONTEXT_GAIN_MIN,
-        "selected_relative_gain_C_over_B": gain,
+        "relative_gain_by_surface": surfaces,
+        "relative_gain_C_over_B": gain,
         "last20_relative_gain_C_over_B": l20_gain,
+        "surfaces_above_threshold": positive,
+        "surfaces_below_zero": negative,
+        "sign_disagrees_between_splits": bool(gain["valid"] * gain["test"] < 0.0),
         "paired_intervals": intervals,
         "label": label,
         "interaction_readout": diag4.get("labels", {}),
         "note": (
             "a performance label without a measurable interaction response cannot attribute the change "
-            "to the interaction mechanism; matched parameter budgets are not unique causal attribution"
+            "to the interaction mechanism; matched parameter budgets are not unique causal attribution. "
+            "A label of SPLIT_OR_SELECTION_SENSITIVE means the sign is not stable across Val/Test or "
+            "across the selected state and the last-20 horizon, so no context gain is claimed."
         ),
     }
 
 
 def verdict_gine(dataset: str, traj: Mapping[str, Mapping[str, Any]], gine: Mapping[str, Any]) -> dict[str, Any]:
-    gaps = {}
-    within = True
-    for split in ("valid", "test"):
-        c_val = float(traj["C"]["selected"][f"{split}_rmse_raw"])
-        g_val = float(gine["selected"][f"{split}_rmse_raw"])
-        gaps[split] = {
-            "C_rmse_raw": c_val,
-            "G_rmse_raw": g_val,
-            "ratio_C_over_G": _ratio(c_val, g_val),
-            "abs_gap": c_val - g_val,
-        }
-        within = within and gaps[split]["ratio_C_over_G"] <= RETENTION_TOL
+    """Every arm against the frozen GINE coordinate, never only the best one."""
+    arms: dict[str, Any] = {}
+    for arm in C.ARMS:
+        entry: dict[str, Any] = {}
+        for split in ("valid", "test"):
+            own = float(traj[arm]["selected"][f"{split}_rmse_raw"])
+            ref = float(gine["selected"][f"{split}_rmse_raw"])
+            entry[split] = {
+                "rmse_raw": own,
+                "gine_rmse_raw": ref,
+                "ratio_over_gine": _ratio(own, ref),
+                "abs_gap": own - ref,
+            }
+        entry["within_5pct_both_splits"] = bool(
+            entry["valid"]["ratio_over_gine"] <= RETENTION_TOL and entry["test"]["ratio_over_gine"] <= RETENTION_TOL
+        )
+        arms[arm] = entry
+    qualified = [arm for arm, entry in arms.items() if entry["within_5pct_both_splits"]]
     return {
         "dataset": dataset,
         "axis": "competitiveness_vs_G",
         "reference": "REUSED_FROZEN_REFERENCE",
-        "gaps": gaps,
-        "label": "WITHIN_5PCT_OF_THIS_GINE" if within else "BEHIND_THIS_GINE",
-        "note": "G is a strong performance coordinate with different inputs and recipe; not a SOTA claim",
+        "arms": arms,
+        "arms_within_5pct_both_splits": qualified,
+        "label": (
+            "WITHIN_5PCT_OF_THIS_GINE (" + ", ".join(qualified) + ")" if qualified else "BEHIND_THIS_GINE"
+        ),
+        "caveat": (
+            "G is a strong performance coordinate with a different input path and a stronger learning-rate "
+            "preset (1e-3 vs the frozen 3e-4); no gap is attributable to a single operator and no SOTA claim "
+            "is made in either direction"
+        ),
     }
 
 
@@ -1577,6 +1630,7 @@ def aggregate(
     contexts: dict[str, Any] = {}
     diag4: dict[str, Any] = {}
     equiv: dict[str, Any] = {}
+    reference_l: dict[str, Any] = {}
     verdicts: dict[str, Any] = {}
     case_figures: dict[str, Any] = {}
 
@@ -1588,6 +1642,40 @@ def aggregate(
             main_rows.append(_arm_row(dataset, arm, traj[arm]))
         if gine is not None:
             main_rows.append(_gine_row(dataset, gine))
+        ref_l = load_reference_l(dataset)
+        if ref_l is None:
+            reference_l[dataset] = None
+        else:
+            a_sel, l_sel = traj["A"]["selected"], ref_l["selected"]
+            a_l20, l_l20 = traj["A"]["last20"], ref_l["last20"]
+            reference_l[dataset] = {
+                "arm": "A_vs_REUSED_L",
+                "source": ref_l["source"],
+                "variant": ref_l["variant"],
+                "n_parameters_match": bool(ref_l["n_parameters"] == traj["A"]["n_parameters"]),
+                "recipe_peak_lr_match": bool(
+                    abs(float(ref_l["recipe"]["peak_lr"]) - float(T.RECIPE["peak_lr"])) < 1e-12
+                ),
+                "recipe_epochs_match": bool(int(ref_l["recipe"]["epochs"]) == int(T.RECIPE["epochs"])),
+                "intentional_difference": "batch order (rng(0) permutation here, shuffle_offset=917000 there)",
+                "reference_selected": l_sel,
+                "this_round_selected": a_sel,
+                "selected_epoch_delta": int(a_sel["epoch"]) - int(l_sel["epoch"]),
+                "selected_valid_relative_delta": float(
+                    a_sel["valid_rmse_raw"] / l_sel["valid_rmse_raw"] - 1.0
+                ),
+                "selected_test_relative_delta": float(a_sel["test_rmse_raw"] / l_sel["test_rmse_raw"] - 1.0),
+                "last20_valid_relative_delta": float(
+                    a_l20["mean_last20_valid_rmse_raw"] / l_l20["mean_last20_valid_rmse_raw"] - 1.0
+                ),
+                "last20_test_relative_delta": float(
+                    a_l20["mean_last20_test_rmse_raw"] / l_l20["mean_last20_test_rmse_raw"] - 1.0
+                ),
+                "note": (
+                    "identity check of the frozen loop; the prompt froze the rng(0) batch-order convention, "
+                    "so a small difference is expected and is not a model change"
+                ),
+            }
         contrast_rows.extend(contrast_entries(dataset, traj, gine))
 
         predictions = {arm: load_predictions(dataset, arm) for arm in C.ARMS}
@@ -1724,6 +1812,7 @@ def aggregate(
     C.atomic_write_json(OUT / "context_response.json", contexts)
     C.atomic_write_json(OUT / "interaction_diagnostics.json", diag4)
     C.atomic_write_json(OUT / "equivalence_scale.json", equiv)
+    C.atomic_write_json(OUT / "reference_arm_A_vs_L.json", reference_l)
     C.atomic_write_json(OUT / "verdicts.json", verdicts)
     C.atomic_write_json(OUT / "bootstrap.json", bootstraps)
     C.atomic_write_json(OUT / "drop_one.json", drop_one)
