@@ -231,7 +231,11 @@ def run_trajectory(
             C.restore_rng_payload(saved["rng_payload"])
             optimizer_state = True
         else:
-            raise RuntimeError(f"{task['key']}: resume signature mismatch; refusing to mix trajectories")
+            print(
+                f"[resume] {task['key']}: signature mismatch (code/data revision changed); "
+                "discarding the stale partial state and restarting this unit from scratch",
+                flush=True,
+            )
     if optimizer_state is None:
         C.set_global_seeds(C.TRAIN_SEED)  # reset the training RNG after construction
 
@@ -476,15 +480,10 @@ def cache_representation(b, kind: str, state: Mapping[str, Any], ms: M.ModelSet,
 
     trunk = M.build_trunk(kind, b)
     model = M.DenseGraphModel(trunk, M.DenseHead(kind, b.spec.global_dim))
-    trunk_state = {
-        k[len("trunk.") :]: v
-        for k, v in state["model_state"].items()
-        if k.startswith("trunk.")
-    }
-    missing = set(trunk.state_dict()) - set(trunk_state)
-    if missing:
-        raise RuntimeError(f"T checkpoint trunk missing {sorted(missing)}")
-    trunk.load_state_dict(trunk_state, strict=True)
+    # The teacher is the full trained T: load trunk *and* dense head.  Loading
+    # only the trunk would leave a random readout and produce a meaningless
+    # teacher, so the strict full-state load is deliberate.
+    model.load_state_dict(state["model_state"], strict=True)
     model = model.to(device).eval()
     out: dict[str, Any] = {}
     for split in C.SPLITS:
@@ -507,13 +506,18 @@ def cache_representation(b, kind: str, state: Mapping[str, Any], ms: M.ModelSet,
                     zs.append(trunk.z_global(batch).detach().cpu().numpy().astype(np.float32))
                 ns.append(batch["gine_n_atoms"].detach().cpu().numpy().astype(np.int64))
                 teacher.append(parts["pred_std"].detach().cpu().numpy().astype(np.float64))
+        n_atoms = np.concatenate(ns)
         out[split] = {
             "row_ids": row_ids,
             "y_raw": targets_raw,
             "y_std": (targets_raw - b.scaler["mean"]) / b.scaler["std"],
+            # ``h`` is node-level: consecutive blocks, one per graph, in the
+            # order of ``row_ids``.  ``atom_ptr`` lets a graph batch gather its
+            # own rows; indexing h directly by graph id would be wrong.
             "h": np.concatenate(hs, axis=0),
             "z_full": np.concatenate(zs, axis=0),
-            "n_atoms": np.concatenate(ns),
+            "n_atoms": n_atoms,
+            "atom_ptr": np.concatenate([[0], np.cumsum(n_atoms)]).astype(np.int64),
             "teacher_std": np.concatenate(teacher),
             "order": order,
         }
@@ -556,7 +560,7 @@ def run_stage3(task: Mapping[str, Any], *, device: str) -> dict[str, Any]:
     cache = cache_representation(b, t, ckpt, ms, device)
     z_index = [] if t == "G0" else list(b.active_global["active_indices"])
     epochs = int(task["epochs"])
-    n_train = int(cache["train"]["h"].shape[0])
+    n_train = int(len(cache["train"]["row_ids"]))
     spe = C.steps_per_epoch(n_train)
     optimizer = torch.optim.AdamW(head.parameters(), lr=1e-3, betas=tuple(C.ADAM_BETAS), eps=float(C.ADAM_EPS), weight_decay=0.0)
     head = head.to(device)
@@ -583,15 +587,15 @@ def run_stage3(task: Mapping[str, Any], *, device: str) -> dict[str, Any]:
 
     def batch_forward(split: str, idx: np.ndarray):
         block = cache[split]
-        h = torch.as_tensor(block["h"][idx], dtype=torch.float32, device=device)
+        n = torch.as_tensor(block["n_atoms"][idx], dtype=torch.long, device=device)
+        ptr = block["atom_ptr"]
+        node_idx = np.concatenate([np.arange(ptr[i], ptr[i + 1], dtype=np.int64) for i in idx]) if idx.size else np.zeros(0, np.int64)
+        h = torch.as_tensor(block["h"][node_idx], dtype=torch.float32, device=device)
         if t == "G0":
-            n = torch.as_tensor(block["n_atoms"][idx], dtype=torch.long, device=device)
             z = head.size_z(n)
-            atom_batch = torch.repeat_interleave(torch.arange(idx.size, device=device), n)
         else:
-            n = torch.as_tensor(block["n_atoms"][idx], dtype=torch.long, device=device)
             z = torch.as_tensor(block["z_full"][idx][:, z_index], dtype=torch.float32, device=device)
-            atom_batch = torch.repeat_interleave(torch.arange(idx.size, device=device), n)
+        atom_batch = torch.repeat_interleave(torch.arange(idx.size, device=device), n)
         return h, z, n, atom_batch
 
     for epoch in range(state["epoch"] + 1, epochs + 1):
@@ -621,7 +625,7 @@ def run_stage3(task: Mapping[str, Any], *, device: str) -> dict[str, Any]:
             for split in C.SPLITS:
                 block = cache[split]
                 preds_std = []
-                n_rows = int(block["h"].shape[0])
+                n_rows = int(len(block["row_ids"]))
                 for start in range(0, n_rows, C.EVAL_BATCH_SIZE):
                     idx = np.arange(start, min(start + C.EVAL_BATCH_SIZE, n_rows), dtype=np.int64)
                     h, z, n, atom_batch = batch_forward(split, idx)
