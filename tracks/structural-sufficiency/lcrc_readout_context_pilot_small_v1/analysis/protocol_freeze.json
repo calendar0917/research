@@ -1,0 +1,330 @@
+{
+  "active_span_eps": 1e-08,
+  "analysis_scales": {
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 1703,
+    "context_gain_threshold_relative": 0.02,
+    "interaction_resolution_std": 0.01,
+    "retention_tolerance_ratio": 1.05,
+    "root_specificity_threshold": 0.05,
+    "trace_tolerance": "1e-5 + 1e-6 * max(1, |x|) in raw target units"
+  },
+  "arms": [
+    "A",
+    "B",
+    "C"
+  ],
+  "budget": {
+    "ogbg-molesol": {
+      "assignment": {
+        "A": {
+          "budget": {
+            "arm": "A",
+            "formula": "f(64->64->1) + rho(171->64->1), unchanged from C1",
+            "hidden": null,
+            "n_active_global": 34,
+            "nominal_readout_params": 15298
+          },
+          "hidden": null,
+          "n_active_global": 34,
+          "nominal_readout_params": 15298,
+          "readout_form": "f(h_v) summed over roots + rho([g, mean h, mean h^2, log1p n])  [unchanged C1]"
+        },
+        "B": {
+          "budget": {
+            "abs_delta": 2,
+            "arm": "B",
+            "budget": 15298,
+            "formula": "66*H + 48*M + 2",
+            "hidden": 207,
+            "n_active_global": 34,
+            "nominal_readout_params": 15296,
+            "relative_delta": 0.00013073604392731077,
+            "search": "analytic argmin over H in 1..1024, ties to the smaller H (no fitting, no validation)"
+          },
+          "hidden": 207,
+          "n_active_global": 34,
+          "nominal_readout_params": 15296,
+          "readout_form": "b_global + sum_v c0(h_v) + sum_j u_j(z_j) over active globals"
+        },
+        "C": {
+          "budget": {
+            "abs_delta": 32,
+            "arm": "C",
+            "budget": 15298,
+            "formula": "68*H + 48*M + 98",
+            "hidden": 200,
+            "n_active_global": 34,
+            "nominal_readout_params": 15330,
+            "relative_delta": 0.0020917767028369723,
+            "search": "analytic argmin over H in 1..1024, ties to the smaller H (no fitting, no validation)"
+          },
+          "hidden": 200,
+          "n_active_global": 34,
+          "nominal_readout_params": 15330,
+          "readout_form": "B + a_size(z_size) * sum_v c_size(h_v) + a_ring(z_ring) * sum_v c_ring(h_v)"
+        }
+      },
+      "match_rule": "A is the frozen C1 readout (its parameter count is the budget; no C1 change is allowed). H for B and C is chosen so the nominal readout count is within one hidden-width step (+/-48 / +/-66 params) of A; exact equality is impossible for integer H.",
+      "nominal_param_spread": 34,
+      "readout_budget_A": 15298
+    },
+    "ogbg-mollipo": {
+      "assignment": {
+        "A": {
+          "budget": {
+            "arm": "A",
+            "formula": "f(64->64->1) + rho(171->64->1), unchanged from C1",
+            "hidden": null,
+            "n_active_global": 36,
+            "nominal_readout_params": 15298
+          },
+          "hidden": null,
+          "n_active_global": 36,
+          "nominal_readout_params": 15298,
+          "readout_form": "f(h_v) summed over roots + rho([g, mean h, mean h^2, log1p n])  [unchanged C1]"
+        },
+        "B": {
+          "budget": {
+            "abs_delta": 28,
+            "arm": "B",
+            "budget": 15298,
+            "formula": "66*H + 48*M + 2",
+            "hidden": 206,
+            "n_active_global": 36,
+            "nominal_readout_params": 15326,
+            "relative_delta": 0.0018303046149823507,
+            "search": "analytic argmin over H in 1..1024, ties to the smaller H (no fitting, no validation)"
+          },
+          "hidden": 206,
+          "n_active_global": 36,
+          "nominal_readout_params": 15326,
+          "readout_form": "b_global + sum_v c0(h_v) + sum_j u_j(z_j) over active globals"
+        },
+        "C": {
+          "budget": {
+            "abs_delta": 8,
+            "arm": "C",
+            "budget": 15298,
+            "formula": "68*H + 48*M + 98",
+            "hidden": 198,
+            "n_active_global": 36,
+            "nominal_readout_params": 15290,
+            "relative_delta": 0.0005229441757092431,
+            "search": "analytic argmin over H in 1..1024, ties to the smaller H (no fitting, no validation)"
+          },
+          "hidden": 198,
+          "n_active_global": 36,
+          "nominal_readout_params": 15290,
+          "readout_form": "B + a_size(z_size) * sum_v c_size(h_v) + a_ring(z_ring) * sum_v c_ring(h_v)"
+        }
+      },
+      "match_rule": "A is the frozen C1 readout (its parameter count is the budget; no C1 change is allowed). H for B and C is chosen so the nominal readout count is within one hidden-width step (+/-48 / +/-66 params) of A; exact equality is impossible for integer H.",
+      "nominal_param_spread": 36,
+      "readout_budget_A": 15298
+    }
+  },
+  "canonical_init": {
+    "ogbg-molesol": {
+      "full_state_hash": "73d907c9ad7aa79448f02010403bfbde692d41ddc7d50e6d783df398bdc3cff9",
+      "readout_keys": [
+        "f.lins.0.bias",
+        "f.lins.0.weight",
+        "f.lins.1.bias",
+        "f.lins.1.weight",
+        "rho.lins.0.bias",
+        "rho.lins.0.weight",
+        "rho.lins.1.bias",
+        "rho.lins.1.weight"
+      ],
+      "trunk_hash": "1d075977ddb49ffea7b9b2eff599adbbdcea482cb198893c70d095dfdf5ed909",
+      "trunk_keys": [
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.1.bias",
+        "atom_encoder.lins.1.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.1.bias",
+        "bond_encoder.lins.1.weight",
+        "global_mean",
+        "global_scale",
+        "local.close_emb.weight",
+        "local.end_emb.weight",
+        "local.joint_proj.bias",
+        "local.joint_proj.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.1.bias",
+        "local.mlp.lins.1.weight",
+        "local.nbr_emb.weight",
+        "local.norm.bias",
+        "local.norm.weight",
+        "local.path_emb.weight",
+        "local.path_gate.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "scalar_mean",
+        "scalar_scale"
+      ]
+    },
+    "ogbg-mollipo": {
+      "full_state_hash": "bde55cb3635e005d7c0c3761bdb208cb3c100efd880436ac06e7034bc7ef714e",
+      "readout_keys": [
+        "f.lins.0.bias",
+        "f.lins.0.weight",
+        "f.lins.1.bias",
+        "f.lins.1.weight",
+        "rho.lins.0.bias",
+        "rho.lins.0.weight",
+        "rho.lins.1.bias",
+        "rho.lins.1.weight"
+      ],
+      "trunk_hash": "30262df9366f83c364a332517fc6b89949f689ce5b2a5492bb6de0f150b29177",
+      "trunk_keys": [
+        "atom_encoder.lins.0.bias",
+        "atom_encoder.lins.0.weight",
+        "atom_encoder.lins.1.bias",
+        "atom_encoder.lins.1.weight",
+        "bond_encoder.lins.0.bias",
+        "bond_encoder.lins.0.weight",
+        "bond_encoder.lins.1.bias",
+        "bond_encoder.lins.1.weight",
+        "global_mean",
+        "global_scale",
+        "local.close_emb.weight",
+        "local.end_emb.weight",
+        "local.joint_proj.bias",
+        "local.joint_proj.weight",
+        "local.mlp.lins.0.bias",
+        "local.mlp.lins.0.weight",
+        "local.mlp.lins.1.bias",
+        "local.mlp.lins.1.weight",
+        "local.nbr_emb.weight",
+        "local.norm.bias",
+        "local.norm.weight",
+        "local.path_emb.weight",
+        "local.path_gate.weight",
+        "local.path_u.weight",
+        "local.path_v.weight",
+        "scalar_mean",
+        "scalar_scale"
+      ]
+    }
+  },
+  "checks_path": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/analysis/checks.json",
+  "code_sha256": {
+    "cr_common.py": "3a201d2933a73b76d533545e28cee809127a933c720084444f233d06fb99e5ca",
+    "cr_data.py": "2b3e945190a7112552a125a22cb0596f3295d7567e128089450c198c75ba47b6",
+    "cr_models.py": "e8e5f6d55e65d9e0bc134679773c989f73043319deb29f4be776cd51dde0185a",
+    "cr_train.py": "61e725cd101c34ad327e413aeaa57de937966b74e6d08fd2dde0e5432a6fc259",
+    "reused/lcrc_cross_task_preparation_v1/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+    "reused/lcrc_cross_task_preparation_v1/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "reused/lcrc_cross_task_preparation_v1/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "reused/lcrc_cross_task_preparation_v1/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "reused/lcrc_lipo_model_dissection_v1/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+    "reused/lcrc_lipo_model_dissection_v1/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+    "reused/sq-pilot-small-v1/sq_common.py": "fe7333978fd748cf2a61fcdb4d3fa73bf855ebbdc6b05c439477b2c921b9d8cb",
+    "reused/sq-pilot-small-v1/sq_data.py": "89ad5436be3ddb8825fe877535e7fbb13679f4cb012a3a3073d63deaf9a83647",
+    "reused/sq-pilot-small-v1/sq_lcrc.py": "d8b12c51ae006d04e19ca50b18bc57423133ae020c65ef50039c9051914db351"
+  },
+  "context_fields": [
+    "log1p_n_atoms",
+    "ring_atom_fraction"
+  ],
+  "context_quantiles": [
+    25.0,
+    75.0
+  ],
+  "design_basis_commit": "9b3dba098915b0cdd800767f61b523681ee9e25d",
+  "environment": {
+    "cpu_count": 16,
+    "env": {
+      "RESEARCH_EXTRA_RUNNERS": "cr_runner",
+      "RESEARCH_TRACK_ROOT": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1"
+    },
+    "git_branch": "main",
+    "git_commit": "9b3dba098915b0cdd800767f61b523681ee9e25d",
+    "git_dirty_tracked": false,
+    "hostname": "main",
+    "nvidia_smi": null,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "torch": {
+      "cuda_available": false,
+      "cudnn_version": 90100,
+      "deterministic_algorithms": false,
+      "device_count": 0,
+      "device_uuid": [],
+      "devices": [],
+      "torch_cuda": "12.4"
+    },
+    "uv_lock_sha256": "d063dedc762d1f338661cbd67c59a7245a0efb2966a2b932836530cf5cba7033",
+    "versions": {
+      "matplotlib": "3.11.1",
+      "numpy": "2.1.3",
+      "ogb": "1.3.6",
+      "rdkit": "2026.09.1",
+      "scipy": "1.14.1",
+      "torch": "2.5.1+cu124",
+      "torch_geometric": "2.6.1",
+      "xgboost": "2.1.3"
+    }
+  },
+  "freeze_hash": "8216c5e66df171f4c594d8571d406c3e6b25e57673632d68a88d7d5291899cc5",
+  "frozen_caches": {
+    "ogbg_molesol_sq-pilot-cache-v1.npz": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+    "ogbg_molesol_sq-pilot-lipo-raw-v1.npz": "a3ab9f7e22798a8f6fdc7f0913b1136b7cf59d4ffc7168faecc7f8b3094710b1",
+    "ogbg_mollipo_sq-pilot-cache-v1.npz": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "ogbg_mollipo_sq-pilot-lipo-raw-v1.npz": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3"
+  },
+  "generated_at": "2026-11-16T22:23:33",
+  "protocol_id": "lcrc-readout-context-pilot-small-v1",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "amp": false,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "dropout_module_count": 1,
+    "early_stopping": false,
+    "ema": false,
+    "epoch0_role": "initialisation diagnostic; can never be selected",
+    "epochs": 360,
+    "eval_batch_size": 256,
+    "gradient_clip": 5.0,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "selection": "minimum Val RMSE; strictly smaller replaces, ties keep the earlier epoch",
+    "selection_split": "valid",
+    "shuffle_generator": "np.random.default_rng(0).permutation over Train split-local rows, one per epoch",
+    "smoke_epochs": 2,
+    "soup": false,
+    "swa": false,
+    "target_unit_for_reporting": "raw (de-standardised once)",
+    "test_policy": "always",
+    "warmup_epochs": 0,
+    "weight_decay": 0.001
+  },
+  "reused_readonly": {
+    "lcrc_cross_task_preparation_v1": "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code",
+    "lcrc_lipo_model_dissection_v1": "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code",
+    "sq-pilot-small-v1": [
+      "tracks/structural-query-learning/code/sq_common.py",
+      "tracks/structural-query-learning/code/sq_data.py"
+    ],
+    "sq_results_method_G": "tracks/structural-query-learning/results/sq-pilot-small-v1",
+    "sq_runner": "tracks/structural-query-learning/code/sq_runner.py"
+  },
+  "round_branch": "main",
+  "round_commit": "9b3dba098915b0cdd800767f61b523681ee9e25d",
+  "round_id": "lcrc-readout-context-pilot-small-v1",
+  "seed": 0,
+  "seed_semantics": "single training seed; no repeat, no multi-seed claim, no best-of-N",
+  "test_policy": "always"
+}
