@@ -286,6 +286,19 @@ def main() -> int:
         )
         add("")
         add("注意：H（两端均非 Train）为空集，主集合指标只能报 `LOW_SUPPORT/NO_H_SUPPORT`；上表的非 train-train 结论仅基于 5 个 train-valid + 27 个 train-test 对。")
+    expl = _load("mmp_explanation", {})
+    if expl.get("models"):
+        add("")
+        add("**解释样本上的局部效应一致性（只把 variable 通道与 Δy 对比；这是代理指标，不是原子真值）**")
+        add("")
+        add("| model/source | n | MAE | 分量等权 MAE | 符号准确率 | Pearson r | 支持 |")
+        add("|---|---|---|---|---|---|---|")
+        for name, e in expl["models"].items():
+            add(
+                f"| {name} | {e['n']} | {f(e['variable_vs_dy_mae'])} | {f(e['component_equal_mae'])} | "
+                f"{f(e['sign_accuracy'])} | {f(e['pearson_r'])} | {e['support']} |"
+            )
+        add(f"（对照：该样本 |Δy| 均值 {f(next(iter(expl['models'].values()))['dy_mean_abs'])}；样本 {expl['n_pairs']} 对，其中非 train-train 32 对/11 分量。）")
     add("")
 
     # ---------------- Q5 ----------------
@@ -393,6 +406,13 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
                         oracle_improvement[prop] = {"native": key, "E": value, "best": base}
     a_ok = any(a_gate.values())
     d_ok = any(d_pass.values())
+    quad_ok = True
+    for model in ("T", "A"):
+        block = (checks.get("models") or {}).get(model) or {}
+        q = block.get("quadrature") or {}
+        n = block.get("n_pairs") or 0
+        if n and q.get("n_unresolved", 0) / n > 0.05:
+            quad_ok = False
     checks_pass = bool(
         checks
         and any(
@@ -403,8 +423,21 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
         )
     )
 
+    cells_complete = (
+        len(stage23.get("A", {})) == len(C.DATASETS)
+        and len(stage23.get("D", {})) == len(C.DATASETS)
+        and all("selected" in v for v in stage23.get("A", {}).values())
+    )
     text = []
-    if all(l_ok.get(d, False) for d in C.DATASETS):
+    if not cells_complete:
+        choice = "UNRESOLVED"
+        text.append("**UNRESOLVED**：A/D 必要单元不齐，不能强行四选一。")
+        believe = "目前只能确认已完成单元的预测数字与数值核验状态。"
+        against = "缺格使任何路线判断都可能被新证据推翻。"
+        unknown = "A/D 的真实性能-解释联合优势是否存在于未完成单元。"
+        nxt = "先补齐 A/D 与 oracle/ledger 的必要单元，再做路线判断。"
+        stop = "停止在证据不齐时扩大架构或数据集。"
+    elif all(l_ok.get(d, False) for d in C.DATASETS):
         choice = "KEEP_LCRC_AS_MAIN_CANDIDATE"
         text.append("**(a) 保留 LCRC 作为主要候选**：L 在两个真实小任务的 Val 上都在 T 的 5% 内；Test 与原生结构账目的实际优势见上表，仍需按 10.3 的具体条件核对，不能据此宣称论文创新。")
         believe = "在本轮预算内，LCRC 的预测劣势不再是稳定的、跨任务的；它仍提供一份不摊 rho 的原生原子账目。"
@@ -428,7 +461,7 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
         unknown = "在冻结表示上加入真实标签微调是否仍保住；A 的失败能否通过训练技巧而非新形式解决。"
         nxt = "在冻结表示上做小规模、预注册的读出/训练对照，不再新增大架构。"
         stop = "停止把端到端可加模型当作已失败的架构结论；也停止用 D 的保真度替代真实任务性能。"
-    elif not a_ok and not d_ok and checks_pass:
+    elif not a_ok and not d_ok and checks_pass and quad_ok:
         choice = "STRONG_PREDICTOR_WITH_ATTRIBUTION"
         text.append("**(c) 优先保留强预测器 + 现有归因**：A/D 都没有性能-解释联合优势，而 T-IG 的 endpoint/完整性核验通过、成本可接受；停止把“MP 不能回溯”作为新架构的唯一理由。")
         believe = "本轮最强的可复现对象是强 GINE 预测器；后置 IG 在该表示上数值可核验。"
@@ -437,13 +470,13 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
         nxt = "把 T-IG 与原生账目放在同一 oracle/真实配对基准上做一次成本-收益比较。"
         stop = "暂停“更可解释因此值得牺牲性能”的方法主张，保留预测参照与工具。"
     else:
-        choice = "UNRESOLVED"
-        text.append("**UNRESOLVED**：必要条件不齐（缺格、数值核验未过或分量不足），不能强行四选一。")
-        believe = "目前只能确认已完成单元的预测数字与数值核验状态。"
-        against = "缺格与低支持使任何路线判断都可能被新证据推翻。"
-        unknown = "A/D 的真实性能-解释联合优势是否存在于未完成单元。"
-        nxt = "先补齐 A/D 与 oracle/ledger 的必要单元，再做路线判断。"
-        stop = "停止在证据不齐时扩大架构或数据集。"
+        choice = "PAUSE_EXPLANATION_CLAIM"
+        text.append("**(d) 暂停“更可解释因此值得牺牲性能”的方法主张**：A/D 没有性能-解释联合优势，IG 在冻结的 256 点预算下数值未闭合（或 oracle 校准不足），解释证据只达到“能重建/能描述”的层级；保留强预测参照与工具，暂停方法学主张。暂停是资源判断，不是证明不可能。")
+        believe = "本轮能复现的最强对象是强 GINE 预测器；原生可加账目与 IG 都能在端点重建预测，但都没有转化为可验证的解释优势。"
+        against = "A 与 D 都没保住预测；IG 在 256 点内未满足完整性门槛的 pair 超过 5%；H 为空使 oracle 的工作信号无法成立。"
+        unknown = "这是优化/正则问题、读出形式问题，还是评价门槛（0.02σ 保真、256 点积分）本身过严；本轮设计无法分离。"
+        nxt = "先把“可加读出为什么在冻结表示上也拟合不到 T”的原因查清（优化/容量/正则），再用同一 oracle 判据检验任何新读出。"
+        stop = "暂停新增架构与“可解释性换性能”的叙事；停止用完整性/守恒本身当作解释优势。"
 
     decision = {
         "route": choice,
@@ -453,6 +486,7 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, An
             "D_fidelity_and_real": d_pass,
             "oracle_native_increment": oracle_improvement,
             "explanation_checks_pass": checks_pass,
+        "ig_quadrature_within_5pct": quad_ok,
         },
         "note": "开发决策门槛，不是显著性检验；UNRESOLVED 是允许的结论。",
     }

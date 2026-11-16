@@ -680,6 +680,63 @@ def _oracle_aggregate(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# local-effect consistency of the explained variable channel (task brief 7.9)
+# ---------------------------------------------------------------------------
+
+
+def mmp_explanation_table() -> dict[str, Any]:
+    catalog = {p["pair_id"]: p for p in load_catalog()}
+    sample = C.read_json(C.ANALYSIS_DIR / "explain_sample.json")["pairs"]
+    b = D.bundle("ogbg-mollipo")
+    y = row_targets(b)
+    out: dict[str, Any] = {"models": {}, "n_pairs": len(sample)}
+    for path in sorted(C.LEDGER_DIR.glob("explain_ogbg-mollipo_*.json")):
+        tag = path.stem.replace("explain_ogbg-mollipo_", "")
+        if "_" in tag:
+            continue  # oracle ledgers are handled by the oracle table
+        ledger = C.read_json(path)
+        sigma = float(ledger.get("sigma") or b.scaler["std"])
+        for source in ("native", "ig"):
+            rows = []
+            for entry in ledger["pairs"]:
+                scores = _scores_from_ledger(entry, source)
+                if scores is None:
+                    continue
+                pair = catalog[entry["pair_id"]]
+                dy = y[int(pair["row_b"])] - y[int(pair["row_a"])]
+                var_raw = scores["variable"] * sigma
+                rows.append(
+                    {
+                        "pair_id": entry["pair_id"],
+                        "component": int(pair["component"]),
+                        "dy": dy,
+                        "variable": var_raw,
+                        "abs_error": abs(var_raw - dy),
+                        "sign_ok": None if abs(dy) < 0.1 else bool(np.sign(var_raw) == np.sign(dy)),
+                    }
+                )
+            if not rows:
+                continue
+            signs = [r for r in rows if r["sign_ok"] is not None]
+            comp: dict[int, list[float]] = defaultdict(list)
+            for r in rows:
+                comp[r["component"]].append(r["abs_error"])
+            x = np.asarray([r["variable"] for r in rows])
+            z = np.asarray([r["dy"] for r in rows])
+            out["models"][f"{tag}/{source}"] = {
+                "n": len(rows),
+                "variable_vs_dy_mae": float(np.mean([r["abs_error"] for r in rows])),
+                "component_equal_mae": float(np.mean([np.mean(v) for v in comp.values()])),
+                "sign_accuracy": float(np.mean([r["sign_ok"] for r in signs])) if signs else None,
+                "n_sign": len(signs),
+                "pearson_r": float(np.corrcoef(x, z)[0, 1]) if len(rows) > 2 else None,
+                "dy_mean_abs": float(np.mean([abs(r["dy"]) for r in rows])),
+                "support": "LOW_SUPPORT" if len(comp) < 30 else "OK",
+            }
+    return out
+
+
+# ---------------------------------------------------------------------------
 # explanation checks + algebraic reallocation
 # ---------------------------------------------------------------------------
 
@@ -761,6 +818,8 @@ def build_all() -> dict[str, Any]:
     summary["stage23"] = stage23
     mmp = mmp_predictions()
     write_table("mmp_predictions", {k: v for k, v in mmp.items() if k != "pairs"})
+    expl = mmp_explanation_table()
+    write_table("mmp_explanation", expl)
     summary["mmp"] = {k: v for k, v in mmp.items() if k != "pairs"}
     summary["finished_at"] = time_stamp()
     C.write_json(C.ANALYSIS_DIR / "analysis_summary.json", summary)
