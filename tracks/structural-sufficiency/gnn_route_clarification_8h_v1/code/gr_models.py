@@ -150,7 +150,10 @@ class GineTrunk(nn.Module):
             for j in range(1, 3):
                 out = out + self.bond_embeddings[j](edge_cat[:, j])
             return out
-        return self.edge_proj(batch["bond_feat"])
+        # the LCRC cache stores one row per physical bond; the message graph
+        # carries both directions, so the same edge features are used twice
+        bf = batch["bond_feat"]
+        return self.edge_proj(torch.cat([bf, bf], dim=0))
 
     def z_global(self, batch: Mapping[str, torch.Tensor]) -> torch.Tensor:
         return (batch["global"] - self.global_mean) / self.global_scale
