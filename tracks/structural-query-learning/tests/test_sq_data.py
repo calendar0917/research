@@ -163,3 +163,41 @@ def test_vocabulary_and_bank_do_not_read_labels_structurally():
     source = inspect.getsource(B.build_base_bank) + inspect.getsource(D.train_vocabulary)
     for forbidden in ('payload["labels"]', "labels[", "y_train", "targets["):
         assert forbidden not in source
+
+
+def test_reference_targets_are_standardised_exactly_once():
+    """`Data.y` is standardised and `_evaluate` de-standardises once.
+
+    A model that always predicts 0 in standardised space must therefore report
+    ``pred_raw == Train mean`` and ``target_raw == raw label``.  If raw labels
+    were stored and transformed again, both the predictions and the RMSE would be
+    scaled by the Train standard deviation (that is a real bug this test pins).
+    """
+    torch = pytest.importorskip("torch")
+    import torch_geometric
+
+    import sq_gine as G
+    from helpers import random_tree_molecules
+
+    rng = np.random.default_rng(3)
+    packed = make_packed(random_tree_molecules(rng, 24))
+    packed.labels = (np.arange(packed.n_graphs, dtype=np.float32) * 0.5 - 4.0).astype(np.float32)
+    scaler = {"mean": float(packed.labels.mean()), "std": 1.75}
+    categories = G.category_counts([packed])
+    data = G.build_data_list(packed, categories, scaler)
+    expected = (packed.labels - scaler["mean"]) / scaler["std"]
+    assert np.allclose(np.asarray([float(item.y) for item in data]), expected, atol=1e-6)
+
+    from torch_geometric.loader import DataLoader
+
+    class Zero(torch.nn.Module):
+        def forward(self, batch):
+            return torch.zeros(batch.num_graphs, dtype=torch.float32)
+
+    loader = DataLoader(data, batch_size=8, shuffle=False)
+    out = G._evaluate(Zero(), loader, "cpu", scaler)
+    assert np.allclose(out["pred_raw"], scaler["mean"], atol=1e-6)
+    assert np.allclose(out["target_raw"], packed.labels, atol=1e-5)
+    rmse = np.sqrt(np.mean((out["pred_raw"] - out["target_raw"]) ** 2))
+    assert rmse == pytest.approx(float(np.std(packed.labels)), rel=1e-5)
+    assert np.array_equal(out["row_ids"], packed.row_ids)

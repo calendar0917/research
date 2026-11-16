@@ -51,8 +51,17 @@ def _torch():
     return torch
 
 
-def build_data_list(packed: PackedGraph, n_categories: Mapping[str, int]):
-    """One ``torch_geometric.data.Data`` per molecule (both bond directions)."""
+def build_data_list(
+    packed: PackedGraph,
+    n_categories: Mapping[str, int],
+    scaler: Mapping[str, float],
+):
+    """One ``torch_geometric.data.Data`` per molecule (both bond directions).
+
+    ``Data.y`` is the *standardised* target (Train mean/std); ``_evaluate``
+    converts back exactly once.  Storing raw labels here and de-standardising
+    again would scale every reported RMSE by the Train standard deviation.
+    """
     torch = _torch()
     from torch_geometric.data import Data
 
@@ -79,7 +88,10 @@ def build_data_list(packed: PackedGraph, n_categories: Mapping[str, int]):
             ring=ring,
             edge_index=edge_index,
             edge_cat=edge_cat,
-            y=torch.as_tensor([float(packed.labels[graph])], dtype=torch.float32),
+            y=torch.as_tensor(
+                [(float(packed.labels[graph]) - float(scaler["mean"])) / float(scaler["std"])],
+                dtype=torch.float32,
+            ),
             n_atoms=torch.as_tensor([int(a1 - a0)], dtype=torch.long),
             row_id=torch.as_tensor([int(packed.row_ids[graph])], dtype=torch.long),
         )
@@ -344,7 +356,8 @@ def run_gine(
 ) -> dict[str, Any]:
     n_categories = category_counts([packed["train"], packed["valid"], packed["test"]])
     data = {
-        split: build_data_list(packed[split], n_categories) for split in ("train", "valid", "test")
+        split: build_data_list(packed[split], n_categories, scaler)
+        for split in ("train", "valid", "test")
     }
     results = {}
     for peak_lr in peak_lrs:
