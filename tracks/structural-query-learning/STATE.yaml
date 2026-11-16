@@ -1,0 +1,28 @@
+phase: sq-pilot-small-v1-running
+active_studies:
+  - sq-pilot-small-v1
+focus_study: sq-pilot-small-v1
+updated: 2026-11-16
+
+question: >-
+  Do Train-supervised composite structural queries beat a fixed and a
+  complexity-matched random query bank with the same gradient-boosted reader on
+  official ogbg-molesol / ogbg-mollipo, at competitive performance and with an
+  exactly replayable export?
+
+current_candidate: A-supervised-discrete-query-discovery
+
+open_design_questions:
+  - Which composite query families carry the signal, if any, and do they survive on the second task?
+  - Is the gap (if any) attributable to supervised selection or just to extra query capacity?
+
+deferred_scientific_questions:
+  - Larger official tasks (ZINC / PCBA) and multi-seed stability — explicitly NOT this round.
+  - Any hybrid that attaches the query language to a message-passing backbone — NOT authorized here.
+
+guardrails:
+  - test_policy=always for this round; Test is a development evaluation set, never a selection signal
+  - single training seed 0; no multi-seed claim
+  - all fitting and discovery on Train only
+  - no LCRC residual branch, no encoder inside the main predictor, no distillation, no SSL
+  - stop after the two small tasks

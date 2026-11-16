@@ -1,0 +1,39 @@
+# Frozen configuration for round sq-pilot-small-v1.
+#
+# Only engineering knobs live here; the scientific constants (query grammar,
+# bank cap, proxy/final XGBoost hyperparameters, GINE recipe, C1 recipe,
+# discovery budgets) are in the code modules and are recorded in
+# analysis/protocol_freeze.json at prepare time.
+
+protocol_id: sq-pilot-small-v1
+round_id: sq-pilot-small-v1
+
+# Single training seed for the whole round (no multi-seed stability claim).
+seed: 0
+
+# prepare | smoke | dataset_worker | aggregate
+stage: dataset_worker
+# one of ogbg-molesol / ogbg-mollipo, or "all" for prepare / aggregate
+dataset: ogbg-molesol
+
+# XGBoost device request; CPU hist is used (and recorded) when CUDA is absent.
+xgboost_device: cuda:0
+
+# Frozen final-head budget: 800 boosting rounds = 800 "epochs" of this method.
+num_boost_round: 800
+
+# Resume a partially finished worker instead of redoing finished stages.
+resume: true
+
+# Query-discovery and random-library wall-clock caps (45 min each, per brief).
+discovery_time_limit_s: 2700
+random_time_limit_s: 2700
+
+# Reference recipes (frozen; present here so a run records what it used).
+gine_epochs: 360
+lcrc_epochs: 360
+
+# Smoke-stage budgets (never reported as a scientific number).
+smoke_outer_rounds: 2
+smoke_proxy_rounds: 16
+smoke_boost_rounds: 24

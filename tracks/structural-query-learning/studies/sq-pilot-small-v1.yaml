@@ -1,0 +1,40 @@
+id: sq-pilot-small-v1
+protocol: sq-pilot-small-v1
+active: true
+focus: true
+created: 2026-11-16
+
+question: >-
+  On the official small OGB molecular graph-property tasks, do composite
+  structural queries discovered under Train supervision beat (a) a fixed
+  statistical query bank and (b) a complexity-matched random query bank, with
+  the same gradient-boosted reader and the same raw graph — and can the final
+  prediction be replayed exactly from the exported discrete queries and the
+  actual decision trees?
+
+baseline: >-
+  In-round references, all retrained here on the same official splits and seed:
+  F (base bank B), R (random complexity-matched queries), E (ECFP4 + 10 RDKit
+  descriptors + XGBoost), G (5-layer GINE from scratch, two peak LRs),
+  L (repository C1 / NO_BOND_MEAN, frozen R3 recipe).  B* per task is the best of
+  E/G/L by Val RMSE.  No historical number enters this round's ranking.
+
+candidates:
+  - id: A-supervised-discrete-query-discovery
+    status: active
+    note: >-
+      Train-label-guided growth of AND/NBR/BRANCH queries, explicit query-count
+      features and an XGBoost head; no iterative hidden-state message passing.
+
+open_questions:
+  - Does supervised query discovery buy anything over the fixed bank on these two tasks?
+  - How close does the query model get to a strong classical or neural reference?
+  - Is the exported rule set executable and traceable at realistic size?
+
+guardrails:
+  - test access is `always` for this round; Test is a development evaluation set and never selects a model state
+  - single training seed 0; no multi-seed stability claim
+  - no LCRC residual branch, no GNN/Transformer encoder inside the main predictor, no distillation, no SSL
+  - base bank / vocabulary / normalisation fitted on Train only
+  - selection by Val RMSE only (both frozen presets, all rounds)
+  - two small tasks only; stop after them (no ZINC/PCBA, no second seed, no third preset)

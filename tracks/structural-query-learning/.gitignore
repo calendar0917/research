@@ -1,0 +1,13 @@
+# local scratch (never committed)
+cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# The round's durable artefacts (JSON/CSV/MD) ARE committed even though the
+# repository-wide default ignores tracks/*/results/**/*.json: a deeper ignore
+# file wins, so the export/replay/decision files travel with the revision.
+!results/
+!results/sq-pilot-small-v1/
+!results/sq-pilot-small-v1/**
+results/sq-pilot-small-v1/**/*.npz
