@@ -1,0 +1,20 @@
+# Frozen run configuration for round rd-pilot-small-v1.
+#
+# Only engineering knobs live here.  The scientific constants (features,
+# retrieval grid, pair construction, model recipe, selection policy and
+# decision scales) are frozen in protocols/rd-pilot-small-v1.yaml and encoded
+# in code/rd_common.py.
+
+protocol_id: rd-pilot-small-v1
+round_id: rd-pilot-small-v1
+
+# prepare | smoke | dataset_worker | aggregate
+stage: dataset_worker
+# ogbg-molesol / ogbg-mollipo, or "all" for prepare and aggregate
+dataset: ogbg-molesol
+
+# XGBoost device request; CPU hist is used (and recorded) when CUDA is absent.
+xgboost_device: cuda:0
+
+# Smoke budget in boosting rounds (never a scientific number).
+smoke_rounds: 3

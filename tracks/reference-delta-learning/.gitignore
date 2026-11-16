@@ -1,0 +1,11 @@
+# local scratch (never committed)
+cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Everything a run writes under results/ is an output, not source: the remote
+# worker must never be able to dirty a tracked file.  Selected evidence is
+# promoted explicitly with `git add -f` after the round (see results/README.md).
+results/
+!results/README.md
