@@ -1,4 +1,4 @@
-phase: rd-pilot-small-v1-in-progress
+phase: rd-pilot-small-v1-closed-negative
 active_studies: [rd-pilot-small-v1]
 focus_study: rd-pilot-small-v1
 updated: 2026-11-16
@@ -17,12 +17,49 @@ round_result:
   study: rd-pilot-small-v1
   protocol: rd-pilot-small-v1
   artifacts: results/rd-pilot-small-v1/REPORT.md
+  execution: EXECUTION_PASS
+  reference_axis: REFERENCE_COMPLETE
+  joint_signal: NO_JOINT_INCREMENT_THIS_RECIPE
+  substantive_progress: false
+  worth_structural_comparator_followup: false
+  one_line: >-
+    C selected its first round on both tasks (delta ~ 0, i.e. it collapses to N)
+    and every trained state was worse than N on Val; R, which reuses the same
+    references and restoration but anchors on D, improved on D.
 
-axes: {}   # filled by the aggregate stage
+axes:
+  ogbg-molesol:   # raw units, Val-selected states
+    D: {valid: 0.9270, test: 0.8159, preset: H1, round: 798}
+    N: {valid: 1.5293, test: 1.5846, config: K4_softmax_tau_0.1}
+    R: {valid: 0.8814, test: 0.8282, preset: H1, round: 669, config: K4_softmax_tau_0.1}
+    C: {valid: 1.5297, test: 1.5824, preset: H2, round: 1, config: K4_softmax_tau_0.1}
+    G: {valid: 0.9353, test: 0.9354}   # reused point reference
+    L: {valid: 0.8686, test: 0.8570}   # reused point reference, best B on this task
+  ogbg-mollipo:
+    D: {valid: 0.7747, test: 0.7628, preset: H2, round: 800}
+    N: {valid: 0.9970, test: 0.9178, config: K16_softmax_tau_0.1}
+    R: {valid: 0.7448, test: 0.7135, preset: H1, round: 790, config: K16_softmax_tau_0.1}
+    C: {valid: 0.9991, test: 0.9181, preset: H2, round: 1, config: K16_softmax_tau_0.1}
+    G: {valid: 0.6091, test: 0.6456}   # best B on this task
+    L: {valid: 0.7052, test: 0.7139}
+
+mechanism:
+  - C pair RMSE falls monotonically (molesol 1.28 -> 0.25, mollipo 1.32 -> 0.60 in sigma units) while Train molecule RMSE falls and Val/Test rise to ~2-3x N.
+  - C never beats N on Val at any round on either task (0/1600); Test wins 2/1600 (molesol) and 0/1600 (mollipo).
+  - R beats D on Val (molesol +4.9%, mollipo +3.9%) and on mollipo Test (+6.5%); only molesol Test is 1.5% worse. The retrieval + restoration machinery is usable; learning the delta from Train pairs alone is not, in this frozen recipe.
+
+open_questions:
+  - Is the failure specific to the frozen capacity (1600 rounds, no depth/eta search) rather than the idea?
+  - Would a regularised delta (early stop on Val, smaller capacity, Train-only pair subsampling) change the sign?
+  - Does a structural comparator add anything once the delta model stops collapsing to the neighbour baseline?
+
+next_action: >-
+  Not started automatically.  Any follow-up must be a new round with a new
+  protocol id: this round's negative result is scoped to this exact recipe and
+  must not be re-read as "pairwise learning cannot work".
 
 guardrails:
-  - test_policy=always; Test never selects a state
+  - test_policy=always; Test never selected a state in this round
   - single training seed 0; no multi-seed claim
-  - G/L are reused point references only, never retrained
+  - G/L are reused point references only, never retrained here
   - thresholds 3%/5%/50% are this exploration's investment gates, not significance
-  - stop after the two tasks; the next round is not started automatically

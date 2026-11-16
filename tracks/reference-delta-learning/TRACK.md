@@ -28,6 +28,24 @@ does not claim novelty, chemistry, structure explanation, composition
 generalisation or a top-tier result.  A pass only licenses *designing* a
 structural comparator next round; it is not evidence that the comparator works.
 
+## Outcome of rd-pilot-small-v1 (2026-11-16)
+
+`EXECUTION_PASS`, `REFERENCE_COMPLETE`, `NO_JOINT_INCREMENT_THIS_RECIPE`,
+`SUBSTANTIVE_PROGRESS = false`, `WORTH_STRUCTURAL_COMPARATOR_FOLLOWUP = false`.
+
+C selected its **first** boosting round on both tasks (molesol 1.5297/1.5824,
+mollipo 0.9991/0.9181 Val/Test), i.e. it collapses to the neighbour-label
+baseline N; every trained state is worse than N on Val (0/1600 winning rounds on
+both tasks).  The training-pair fit improves monotonically while Val/Test
+degrade (see `results/rd-pilot-small-v1/REPORT.md`).  R — the same retrieval and
+restoration with a trained absolute anchor — does improve on D (Val +4.9% /
++3.9%; Test −1.5% / +6.5%), so the negative result is about *learning the delta
+from Train pairs*, not about reference-based restoration.
+
+The result is scoped to this frozen recipe: 1600 rounds, no depth/eta search, no
+early stopping on pairs.  It is **not** evidence that pairwise learning cannot
+work, and it licenses no structural-comparator round.
+
 ## Non-goals of this round
 
 * No graph alignment, MCS, edit rules, interpretable comparator, message

@@ -449,8 +449,9 @@ def case_ledger(data: Mapping[str, Any], task: D.TaskData) -> list[dict[str, Any
     n = int(y.size)
     picked: list[tuple[str, int]] = [("median_abs_error_C", int(order[n // 2]))]
     for label, key in (
-        ("largest_improvement_vs_D", -(err_c - err_d)),
-        ("largest_regression_vs_D", (err_c - err_d)),
+        # lexsort ascending on key: most negative change first = largest improvement
+        ("largest_improvement_vs_D", err_c - err_d),
+        ("largest_regression_vs_D", -(err_c - err_d)),
     ):
         chosen = None
         for candidate in np.lexsort((row_id, key)):
@@ -925,6 +926,41 @@ def render_report(
         "本文件由 `stage=aggregate` 依据两个 GPU worker 的产物生成。"
     )
     lines.append("")
+    lines.append("## 问题与四条臂")
+    lines.append("")
+    lines.append(
+        "在**静态分子输入完全相同**（同一 2059 维 ECFP4+描述符矩阵、同一官方划分、"
+        "同一 Train 目标标准化）的前提下："
+    )
+    lines.append("")
+    lines.append(
+        "**联合学习两个分子的性质差**（推理时用 Train 参照还原成绝对值），"
+        "是否优于直接绝对回归、Train 邻居标签直接预测、以及“直接模型 + 邻居残差修正”？"
+    )
+    lines.append("")
+    lines.append(
+        "| 臂 | 定义 | 训练 |\n| --- | --- | --- |\n"
+        "| **D** | `D_t(G) = mu + sigma * f_t(x_G)` | 800 轮 |\n"
+        "| **N** | `N(G) = sum_j w_j y_j` | 无 |\n"
+        "| **C** | `delta_t(G,R) = sigma/2 [h_t(z(G,R)) - h_t(z(R,G))]`，`C_t(G) = sum_j w_j (y_j + delta_t(G,R_j))` | 1600 轮 |\n"
+        "| **R** | `R_t(G) = D_t(G) + sum_j w_j (y_j - D_t(R_j))` | 复用 D |"
+    )
+    lines.append("")
+    lines.append(
+        "`z(i,j) = [x_i, x_j, x_i - x_j]`（6177 维）；参照一律来自 Train，"
+        "按 Tanimoto 取 Top-64，排除自身与完全相同 SMILES 的行；"
+        "`w_j` 由冻结的 6 个 (K, 权重) 配置之一给出（`K ∈ {4,16,64}`，uniform 或 softmax τ=0.1）。"
+        "C 的反对称化是**推理定义**的一部分（`delta(G,R) = -delta(R,G)`），不是事后修补；"
+        "`delta` 是原始单位差值，乘 `sigma` 之后**不再加 `mu`**。"
+    )
+    lines.append("")
+    lines.append(
+        "判定（投入门槛，不是统计显著性界限）：C 需在 **Val 与 Test 同时** 比 D、N、R 各好 ≥3% "
+        "才算 `strong_joint_task`；另一任务不得差于任何一条臂超过 5%；"
+        "`SUBSTANTIVE_PROGRESS` 要求两个 split 都满足 `c <= 1.05 b` 或关闭一半差距；"
+        "`COMPETITIVE` 要求 C 的 Val 与 Test 都不超过最优可核验参照 B 的 105%。"
+    )
+    lines.append("")
     lines.append("## 主表（每任务每臂：Val 选中状态，原始单位）")
     lines.append("")
     lines.append(
@@ -1118,6 +1154,10 @@ def render_report(
         )
     )
     lines.append("")
+    lines.append("## C 的退化机制（曲线层面）")
+    lines.append("")
+    lines.extend(mechanism_lines(datasets, data, main_rows, decision))
+    lines.append("")
     lines.append("## 参照覆盖（最高合法参照 Tanimoto 的固定分箱）")
     lines.append("")
     lines.append(
@@ -1200,15 +1240,35 @@ def render_report(
         )
     )
     lines.append("")
-    total_gpu_seconds = sum(
+    compute_seconds = sum(
+        float(row["train_seconds"]) + float(row["eval_seconds"]) + float(row["matrix_build_seconds"])
+        for row in resource_rows_all
+    )
+    wall_seconds = sum(
         float(data[dataset]["summary"].get("wall_seconds_total", 0.0)) for dataset in datasets
     )
+    peak_rss = {
+        dataset: data[dataset]["summary"].get("peak_rss_mb") for dataset in datasets
+    }
     lines.append(
-        f"- 两 worker 墙钟合计 = {total_gpu_seconds:.1f} s = {total_gpu_seconds / 3600.0:.3f} GPU·h"
-        f"（每个 worker 独占一张 GPU；两 worker 并行执行）。"
+        f"- 轨迹算力合计（训练 + 每轮三集评测 + 一次性 pair 矩阵构建）= {compute_seconds:.1f} s "
+        f"= {compute_seconds / 3600.0:.3f} GPU·h；两个 worker 各独占一张 A100，并行执行。"
     )
     lines.append(
-        "- peak RSS / GPU 峰值来自 worker 进程采样；每轮评价成本已与一次性 pair 矩阵构建分开。"
+        f"- 两个 worker 最后一次执行的墙钟合计 = {wall_seconds:.1f} s"
+        f"（每 GPU 一个训练 worker；本轮的启动失败与 resume 重跑另计，均记录在 `rr jobs`）。"
+    )
+    lines.append(
+        "- worker 进程 peak RSS："
+        + "，".join(f"{dataset} {peak_rss[dataset]:.0f} MB" for dataset in datasets)
+        + "。GPU 峰值是 nvidia-smi 采样的整卡占用，只作上界参考。"
+    )
+    lines.append(
+        "- 预算：soft 3 GPU·h / hard 6 GPU·h（含 smoke 与重跑）；本轮轨迹算力远低于 soft 预算。"
+    )
+    lines.append(
+        "- 每轮评价成本已与一次性 pair 矩阵构建分开记录；C 的评测成本是训练本身的 2-6 倍，"
+        "这是“每轮完整三集评测”的直接代价（K 越大、查询越多，代价越高）。"
     )
     lines.append("")
     lines.append("## 数据与模型身份")
@@ -1353,3 +1413,111 @@ def _json_default(value: Any) -> Any:
     if isinstance(value, np.ndarray):
         return value.tolist()
     raise TypeError(f"not JSON serializable: {type(value)!r}")
+
+
+def mechanism_lines(
+    datasets: Sequence[str],
+    data: Mapping[str, Any],
+    main_rows: Sequence[Mapping[str, Any]],
+    decision: Mapping[str, Any],
+) -> list[str]:
+    """Descriptive curve reading of the frozen trajectories (never a selection)."""
+    lines: list[str] = []
+    for dataset in datasets:
+        state = data[dataset]["selection"]["C"]
+        preset = str(state["preset"])
+        config = str(state["config"])
+        curves = data[dataset]["curves"].get(f"C_{preset}", [])
+        rows = [row for row in curves if row["method"] == "C" and row["config"] == config]
+        if not rows:
+            continue
+        last_round = max(int(row["round"]) for row in rows)
+
+        def value(split: str, round_index: int) -> float | None:
+            for row in rows:
+                if row["split"] == split and int(row["round"]) == round_index:
+                    return float(row["rmse_raw"])
+            return None
+
+        pair_curves = data[dataset]["pair_curves"].get(preset, [])
+        pair_at = {int(row["round"]): float(row["pair_rmse_std"]) for row in pair_curves}
+        n_state = {row["arm"]: row for row in main_rows if row["dataset"] == dataset}["N"]
+        d_state = {row["arm"]: row for row in main_rows if row["dataset"] == dataset}["D"]
+        c_selected_round = int(state["round"])
+        lines.append(
+            f"**{dataset}**（C-{preset}，配置 `{config}`，选中轮 = {c_selected_round} / 共 {last_round} 轮）"
+        )
+        lines.append("")
+        lines.append(
+            "- 训练 pair 加权 RMSE（标准化目标）："
+            f"第 1 轮 {pair_at.get(1, float('nan')):.4f} → 第 {last_round} 轮 "
+            f"{pair_at.get(last_round, float('nan')):.4f}"
+        )
+        for split, label in (("train", "分子 Train"), ("valid", "Val"), ("test", "Test")):
+            first = value(split, 1)
+            last = value(split, last_round)
+            best = min(
+                (float(row["rmse_raw"]) for row in rows if row["split"] == split)
+            )
+            if first is None or last is None:
+                continue
+            lines.append(
+                f"- {label} RMSE：第 1 轮 {first:.4f} → 第 {last_round} 轮 {last:.4f}"
+                f"（该 split 全曲线最好 {best:.4f}）"
+            )
+        lines.append(
+            f"- 对照：N 的 Val/Test = {n_state['valid_rmse']:.4f}/{n_state['test_rmse']:.4f}，"
+            f"D 的 Val/Test = {d_state['valid_rmse']:.4f}/{d_state['test_rmse']:.4f}"
+        )
+        beats = {}
+        for split in ("valid", "test"):
+            per_round = sorted(
+                (int(row["round"]), float(row["rmse_raw"]))
+                for row in rows
+                if row["split"] == split
+            )
+            baseline = float(n_state[f"{split}_rmse"])
+            wins = [round_index for round_index, value in per_round if value < baseline]
+            beats[split] = (len(wins), len(per_round), int(baseline != baseline), wins[:3])
+        lines.append(
+            f"- 与自身基线 N 相比：Val 上 C 在 {beats['valid'][1]} 轮中有 {beats['valid'][0]} 轮优于 N"
+            f"（N = {n_state['valid_rmse']:.4f}），Test 上 {beats['test'][0]}/{beats['test'][1]} 轮"
+            f"（N = {n_state['test_rmse']:.4f}）"
+        )
+        lines.append(
+            "- 读法：pair 层与分子 Train 层单调变好，Val/Test 单调变差，"
+            f"且 C 在 Val 上的最好轮是第 {c_selected_round} 轮——即“几乎不输出差值”的初始状态。"
+            "差值模型把 Train-Train 的训练对拟合得越好，还原到未见 scaffold 的分子上偏差越大。"
+        )
+        lines.append("")
+    rows = []
+    for dataset in datasets:
+        entry = {row["arm"]: row for row in main_rows if row["dataset"] == dataset}
+        rows.append(
+            {
+                "dataset": dataset,
+                "D_valid": entry["D"]["valid_rmse"],
+                "R_valid": entry["R"]["valid_rmse"],
+                "gain_valid": 1.0 - entry["R"]["valid_rmse"] / entry["D"]["valid_rmse"],
+                "D_test": entry["D"]["test_rmse"],
+                "R_test": entry["R"]["test_rmse"],
+                "gain_test": 1.0 - entry["R"]["test_rmse"] / entry["D"]["test_rmse"],
+            }
+        )
+    lines.append("### 同一参照还原机制的对照：R vs D")
+    lines.append("")
+    lines.append(_table(rows, ["dataset", "D_valid", "R_valid", "gain_valid", "D_test", "R_test", "gain_test"]))
+    lines.append("")
+    improved = [
+        f"{row['dataset']} Val {100 * row['gain_valid']:+.1f}% / Test {100 * row['gain_test']:+.1f}%"
+        for row in rows
+    ]
+    lines.append(
+        "R 与 C 共用同一套 Tanimoto 参照、同一批权重配置和同一还原公式；"
+        "差别只在 R 的锚点是已训练的绝对模型 D，而 C 的差值 h 是从 Train-Train 对里从零学的。"
+        "R 相对 D 的增益：" + "；".join(improved) + "。"
+        "也就是说，在有强绝对值锚点时参照残差修正是有效的（molesol 的 Test 是唯一例外，"
+        "R 比 D 差约 1.5%），本轮的负结果落在“用 Train 对从零联合学习差值”这一步，"
+        "而不是落在“检索 + 还原”机制本身。该对照是描述性的，不参与冻结判定。"
+    )
+    return lines
