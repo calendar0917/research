@@ -8,6 +8,7 @@ report says so instead of silently dropping the section.
 from __future__ import annotations
 
 import time
+from datetime import datetime
 from typing import Any, Mapping, Sequence
 
 import cr_common as C
@@ -932,6 +933,18 @@ def _provenance(prov: Mapping[str, Any]) -> str:
     runs = prov.get("runs") or {}
     if not runs:
         return "## 11. Execution provenance\n\n_missing `analysis/run_provenance.json`._\n"
+    budget_rows = []
+    total_hours = 0.0
+    for name, run in runs.items():
+        try:
+            start = datetime.fromisoformat(str(run.get("started_at")))
+            end = datetime.fromisoformat(str(run.get("completed_at")))
+            seconds = (end - start).total_seconds()
+        except (TypeError, ValueError):
+            seconds = None
+        if seconds is not None:
+            total_hours += seconds / 3600.0
+            budget_rows.append([name, f"{seconds:.0f}", f"{seconds / 3600.0:.3f}", run.get("pool")])
     body = []
     for name, run in runs.items():
         body.append(
@@ -960,6 +973,25 @@ def _provenance(prov: Mapping[str, Any]) -> str:
             ),
             "",
             "The analysis stage is CPU-only and reads only the pulled artefacts; it never touches the GPU host.",
+            "",
+            "### 11.1 Compute actually spent",
+            "",
+        ]
+        + (
+            [
+                table(["experiment", "job wall (s)", "job wall (A100-h)", "GPU"], budget_rows),
+                "",
+            ]
+            if budget_rows
+            else []
+        )
+        + [
+            f"Total formal compute: **{total_hours:.3f} A100-h** of job wall across the two workers "
+            "(one GPU each, one training process per GPU, no fan-out), plus one short GPU smoke run and "
+            "CPU-only prepare/aggregate stages.",
+            "",
+            "Per-arm trainer-measured time is in each `results/<task>/<arm>/trajectory.json` "
+            "(`train_seconds`, `eval_seconds_total`).",
             "",
         ]
     ) + "\n"

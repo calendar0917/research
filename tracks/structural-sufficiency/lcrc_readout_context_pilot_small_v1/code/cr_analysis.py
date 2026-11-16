@@ -18,6 +18,8 @@ Frozen read-out scales (declared before the runs):
 from __future__ import annotations
 
 import time
+import json
+from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -559,6 +561,46 @@ def _atom_rows(
                         entry[f"interaction_root_raw_{name}"] = float(sigma * block["interaction_root"][j, k])
             rows.append(entry)
     return rows
+
+
+def write_csv_gz(path, rows: Sequence[Mapping[str, Any]], columns: Sequence[str] | None = None) -> str:
+    """Same content as :func:`cr_common.write_csv`, gzip-compressed on disk."""
+    import gzip
+    import io
+
+    buffer = io.StringIO()
+    if not rows:
+        text = ""
+    else:
+        fieldnames = list(columns) if columns else sorted({k for row in rows for k in row})
+        buffer.write(",".join(fieldnames) + "\n")
+        for row in rows:
+            cells = []
+            for name in fieldnames:
+                value = row.get(name)
+                if value is None:
+                    cells.append("")
+                elif isinstance(value, (dict, list, tuple)):
+                    cells.append(json.dumps(C.jsonable(value), separators=(",", ":")))
+                else:
+                    cells.append(str(value))
+            buffer.write(",".join(cells) + "\n")
+        text = buffer.getvalue()
+    target = Path(path)
+    C.ensure_dir(target.parent)
+    tmp = target.with_suffix(target.suffix + ".tmp")
+    with gzip.open(tmp, "wt", encoding="utf-8", newline="") as handle:
+        handle.write(text)
+    tmp.replace(target)
+    return str(target)
+
+
+def _ledger_csv_rows(molecules: Sequence[Mapping[str, Any]]) -> list[dict[str, Any]]:
+    """Molecule rows without the nested dicts (those go to the npz + field table)."""
+    out = []
+    for entry in molecules:
+        out.append({k: v for k, v in entry.items() if not isinstance(v, dict)})
+    return out
 
 
 def component_ledger(
@@ -1789,8 +1831,23 @@ def aggregate(
         dataset, arm = key.split("/")
         base = OUT / "ledgers" / f"{dataset}_{arm}"
         C.atomic_write_json(base.with_suffix(".json"), payload["meta"])
-        C.write_csv(f"{base}_molecules.csv", payload["molecules"])
-        C.write_csv(f"{base}_atoms.csv", payload["atoms"])
+        write_csv_gz(f"{base}_molecules.csv.gz", _ledger_csv_rows(payload["molecules"]))
+        write_csv_gz(f"{base}_atoms.csv.gz", payload["atoms"])
+        # the per-molecule global vectors are numeric evidence: keep them as arrays
+        active_names = payload["meta"]["active_global_names"]
+        C.atomic_write_npz(
+            f"{base}_globals.npz",
+            {
+                "official_row_id": np.asarray(
+                    [m["official_row_id"] for m in payload["molecules"]], dtype=np.int64
+                ),
+                "split": np.asarray([m["split"] for m in payload["molecules"]]),
+                **{
+                    name: np.asarray([m["global_raw"][name] for m in payload["molecules"]], dtype=np.float64)
+                    for name in active_names
+                },
+            },
+        )
         C.atomic_write_npz(
             f"{base}_molecules.npz",
             {

@@ -1,0 +1,394 @@
+{
+  "ogbg-molesol": {
+    "context": {
+      "axis": "context_increment_C_vs_B",
+      "dataset": "ogbg-molesol",
+      "interaction_readout": {
+        "log1p_n_atoms": {
+          "global_main_effect_rms_std": 0.08338616120494782,
+          "resolution_threshold_std": 0.01,
+          "response_label": "RESOLVED_FUNCTIONAL_RESPONSE",
+          "rms_interaction_diagnostic3_std": 0.4709052945363623,
+          "rms_interaction_std_test": 1.3325207676307513,
+          "rms_interaction_std_valid": 1.0533763544848407,
+          "root_specificity_label": "NONUNIFORM_ROOT_RESPONSE",
+          "root_std_over_rms_median_valid": 0.6598098385568012
+        },
+        "ring_atom_fraction": {
+          "global_main_effect_rms_std": 0.1645348321954765,
+          "resolution_threshold_std": 0.01,
+          "response_label": "RESOLVED_FUNCTIONAL_RESPONSE",
+          "rms_interaction_diagnostic3_std": 0.06882967895971553,
+          "rms_interaction_std_test": 0.13516071878415348,
+          "rms_interaction_std_valid": 0.11881425728382793,
+          "root_specificity_label": "NONUNIFORM_ROOT_RESPONSE",
+          "root_std_over_rms_median_valid": 0.8693217284118173
+        }
+      },
+      "label": "SPLIT_OR_SELECTION_SENSITIVE",
+      "last20_relative_gain_C_over_B": {
+        "test": 0.21348816993787567,
+        "valid": -0.08189204975672837
+      },
+      "note": "a performance label without a measurable interaction response cannot attribute the change to the interaction mechanism; matched parameter budgets are not unique causal attribution. A label of SPLIT_OR_SELECTION_SENSITIVE means the sign is not stable across Val/Test or across the selected state and the last-20 horizon, so no context gain is claimed.",
+      "paired_intervals": {
+        "test": {
+          "ci95_high": 0.06801113248121453,
+          "ci95_low": -0.6467240668488481,
+          "contains_zero": true,
+          "n_replicates": 2000,
+          "point": -0.284026787064678
+        },
+        "valid": {
+          "ci95_high": 0.24245456350433217,
+          "ci95_low": -0.05665111459955245,
+          "contains_zero": true,
+          "n_replicates": 2000,
+          "point": 0.07966275886038521
+        }
+      },
+      "relative_gain_C_over_B": {
+        "test": 0.20503475544038663,
+        "valid": -0.08674450168924674
+      },
+      "relative_gain_by_surface": {
+        "last20_test": 0.21348816993787567,
+        "last20_valid": -0.08189204975672837,
+        "selected_test": 0.20503475544038663,
+        "selected_valid": -0.08674450168924674
+      },
+      "sign_disagrees_between_splits": true,
+      "surfaces_above_threshold": [
+        "selected_test",
+        "last20_test"
+      ],
+      "surfaces_below_zero": [
+        "selected_valid",
+        "last20_valid"
+      ],
+      "threshold": 0.02
+    },
+    "gine": {
+      "arms": {
+        "A": {
+          "test": {
+            "abs_gap": -0.0809131398861106,
+            "gine_rmse_raw": 0.9354040211193085,
+            "ratio_over_gine": 0.9134992601493315,
+            "rmse_raw": 0.8544908812331979
+          },
+          "valid": {
+            "abs_gap": -0.06000370172061342,
+            "gine_rmse_raw": 0.9353018197709349,
+            "ratio_over_gine": 0.9358456270989519,
+            "rmse_raw": 0.8752981180503214
+          },
+          "within_5pct_both_splits": true
+        },
+        "B": {
+          "test": {
+            "abs_gap": 0.44985721543573665,
+            "gine_rmse_raw": 0.9354040211193085,
+            "ratio_over_gine": 1.4809229009914193,
+            "rmse_raw": 1.3852612365550452
+          },
+          "valid": {
+            "abs_gap": -0.016940170178759928,
+            "gine_rmse_raw": 0.9353018197709349,
+            "ratio_over_gine": 0.981888017514059,
+            "rmse_raw": 0.9183616495921749
+          },
+          "within_5pct_both_splits": false
+        },
+        "C": {
+          "test": {
+            "abs_gap": 0.16583051657762538,
+            "gine_rmse_raw": 0.9354040211193085,
+            "ratio_over_gine": 1.1772822361605757,
+            "rmse_raw": 1.101234537696934
+          },
+          "valid": {
+            "abs_gap": 0.062722653485628,
+            "gine_rmse_raw": 0.9353018197709349,
+            "ratio_over_gine": 1.0670614043079585,
+            "rmse_raw": 0.9980244732565628
+          },
+          "within_5pct_both_splits": false
+        }
+      },
+      "arms_within_5pct_both_splits": [
+        "A"
+      ],
+      "axis": "competitiveness_vs_G",
+      "caveat": "G is a strong performance coordinate with a different input path and a stronger learning-rate preset (1e-3 vs the frozen 3e-4); no gap is attributable to a single operator and no SOTA claim is made in either direction",
+      "dataset": "ogbg-molesol",
+      "label": "WITHIN_5PCT_OF_THIS_GINE (A)",
+      "reference": "REUSED_FROZEN_REFERENCE"
+    },
+    "retention": {
+      "axis": "performance_retention_C_vs_A",
+      "dataset": "ogbg-molesol",
+      "label": "PERFORMANCE_LOSS_THIS_RECIPE",
+      "last20_ratio_C_over_A": {
+        "test": 1.286844003009837,
+        "valid": 1.1268579153745983
+      },
+      "note": "single-seed development judgement at a 5 % practical tolerance, not an equivalence test",
+      "selected_ratio_C_over_A": {
+        "test": 1.2887610176806528,
+        "valid": 1.1402109209141311
+      },
+      "tolerance": 1.05
+    },
+    "trace": {
+      "axis": "trace",
+      "checkpoint_replay": {
+        "A": true,
+        "B": true,
+        "C": true
+      },
+      "dataset": "ogbg-molesol",
+      "intervention_reconstruction": {
+        "n_failures": 0,
+        "n_molecules": 32
+      },
+      "label": "TRACE_PASS",
+      "note": "TRACE_PASS is bookkeeping closure, not proof of unique or chemically real contributions",
+      "prediction_reconstruction": {
+        "B": {
+          "test": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 4.696479862786873e-07,
+            "median_abs_error_raw": 2.3097442181096994e-08,
+            "n_rows": 113,
+            "pass": true,
+            "tolerance_max": 1.9148593720779623e-05
+          },
+          "valid": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 2.694701546346323e-07,
+            "median_abs_error_raw": 2.3097441737007784e-08,
+            "n_rows": 113,
+            "pass": true,
+            "tolerance_max": 2.0319828783859358e-05
+          }
+        },
+        "C": {
+          "test": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 4.86008671529703e-07,
+            "median_abs_error_raw": 7.02547189312952e-08,
+            "n_rows": 113,
+            "pass": true,
+            "tolerance_max": 1.925615130950957e-05
+          },
+          "valid": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 5.47601850087176e-07,
+            "median_abs_error_raw": 5.678121084429222e-08,
+            "n_rows": 113,
+            "pass": true,
+            "tolerance_max": 1.9719629608239092e-05
+          }
+        }
+      },
+      "pretrain_checks": true,
+      "scale_equivalence": true
+    }
+  },
+  "ogbg-mollipo": {
+    "context": {
+      "axis": "context_increment_C_vs_B",
+      "dataset": "ogbg-mollipo",
+      "interaction_readout": {
+        "log1p_n_atoms": {
+          "global_main_effect_rms_std": 0.26357609313160074,
+          "resolution_threshold_std": 0.01,
+          "response_label": "RESOLVED_FUNCTIONAL_RESPONSE",
+          "rms_interaction_diagnostic3_std": 0.2110775962556542,
+          "rms_interaction_std_test": 0.1564342282768088,
+          "rms_interaction_std_valid": 0.18904165250026958,
+          "root_specificity_label": "NONUNIFORM_ROOT_RESPONSE",
+          "root_std_over_rms_median_valid": 0.9899028790950186
+        },
+        "ring_atom_fraction": {
+          "global_main_effect_rms_std": 0.1918916092075263,
+          "resolution_threshold_std": 0.01,
+          "response_label": "RESOLVED_FUNCTIONAL_RESPONSE",
+          "rms_interaction_diagnostic3_std": 0.18384964010489038,
+          "rms_interaction_std_test": 0.253783848133866,
+          "rms_interaction_std_valid": 0.22849606707304684,
+          "root_specificity_label": "NONUNIFORM_ROOT_RESPONSE",
+          "root_std_over_rms_median_valid": 0.932444843353307
+        }
+      },
+      "label": "SPLIT_OR_SELECTION_SENSITIVE",
+      "last20_relative_gain_C_over_B": {
+        "test": -0.020555599197892738,
+        "valid": 0.08526817334522019
+      },
+      "note": "a performance label without a measurable interaction response cannot attribute the change to the interaction mechanism; matched parameter budgets are not unique causal attribution. A label of SPLIT_OR_SELECTION_SENSITIVE means the sign is not stable across Val/Test or across the selected state and the last-20 horizon, so no context gain is claimed.",
+      "paired_intervals": {
+        "test": {
+          "ci95_high": 0.04317299847559339,
+          "ci95_low": -0.02353865540471376,
+          "contains_zero": true,
+          "n_replicates": 2000,
+          "point": 0.011343663164193996
+        },
+        "valid": {
+          "ci95_high": 0.005377426434396249,
+          "ci95_low": -0.14055353969441264,
+          "contains_zero": true,
+          "n_replicates": 2000,
+          "point": -0.06220191420394772
+        }
+      },
+      "relative_gain_C_over_B": {
+        "test": -0.015559702427179856,
+        "valid": 0.08196540879208802
+      },
+      "relative_gain_by_surface": {
+        "last20_test": -0.020555599197892738,
+        "last20_valid": 0.08526817334522019,
+        "selected_test": -0.015559702427179856,
+        "selected_valid": 0.08196540879208802
+      },
+      "sign_disagrees_between_splits": true,
+      "surfaces_above_threshold": [
+        "selected_valid",
+        "last20_valid"
+      ],
+      "surfaces_below_zero": [
+        "selected_test",
+        "last20_test"
+      ],
+      "threshold": 0.02
+    },
+    "gine": {
+      "arms": {
+        "A": {
+          "test": {
+            "abs_gap": 0.07979137331821151,
+            "gine_rmse_raw": 0.6456006671896313,
+            "ratio_over_gine": 1.1235924579594254,
+            "rmse_raw": 0.7253920405078428
+          },
+          "valid": {
+            "abs_gap": 0.09956121843851717,
+            "gine_rmse_raw": 0.6090630979914318,
+            "ratio_over_gine": 1.163466180707467,
+            "rmse_raw": 0.7086243164299489
+          },
+          "within_5pct_both_splits": false
+        },
+        "B": {
+          "test": {
+            "abs_gap": 0.0834424922041831,
+            "gine_rmse_raw": 0.6456006671896313,
+            "ratio_over_gine": 1.1292478407239217,
+            "rmse_raw": 0.7290431593938144
+          },
+          "valid": {
+            "abs_gap": 0.14981726220681457,
+            "gine_rmse_raw": 0.6090630979914318,
+            "ratio_over_gine": 1.245979870888389,
+            "rmse_raw": 0.7588803601982463
+          },
+          "within_5pct_both_splits": false
+        },
+        "C": {
+          "test": {
+            "abs_gap": 0.09478618682092188,
+            "gine_rmse_raw": 0.6456006671896313,
+            "ratio_over_gine": 1.1468186010921213,
+            "rmse_raw": 0.7403868540105532
+          },
+          "valid": {
+            "abs_gap": 0.08761532325887833,
+            "gine_rmse_raw": 0.6090630979914318,
+            "ratio_over_gine": 1.1438526214243092,
+            "rmse_raw": 0.6966784212503101
+          },
+          "within_5pct_both_splits": false
+        }
+      },
+      "arms_within_5pct_both_splits": [],
+      "axis": "competitiveness_vs_G",
+      "caveat": "G is a strong performance coordinate with a different input path and a stronger learning-rate preset (1e-3 vs the frozen 3e-4); no gap is attributable to a single operator and no SOTA claim is made in either direction",
+      "dataset": "ogbg-mollipo",
+      "label": "BEHIND_THIS_GINE",
+      "reference": "REUSED_FROZEN_REFERENCE"
+    },
+    "retention": {
+      "axis": "performance_retention_C_vs_A",
+      "dataset": "ogbg-mollipo",
+      "label": "PRESERVED_POINT_ESTIMATE / HORIZON_CONSISTENT",
+      "last20_ratio_C_over_A": {
+        "test": 1.0328967132736713,
+        "valid": 1.0364887983239044
+      },
+      "note": "single-seed development judgement at a 5 % practical tolerance, not an equivalence test",
+      "selected_ratio_C_over_A": {
+        "test": 1.0206713234573301,
+        "valid": 0.9831421320117516
+      },
+      "tolerance": 1.05
+    },
+    "trace": {
+      "axis": "trace",
+      "checkpoint_replay": {
+        "A": true,
+        "B": true,
+        "C": true
+      },
+      "dataset": "ogbg-mollipo",
+      "intervention_reconstruction": {
+        "n_failures": 0,
+        "n_molecules": 32
+      },
+      "label": "TRACE_PASS",
+      "note": "TRACE_PASS is bookkeeping closure, not proof of unique or chemically real contributions",
+      "prediction_reconstruction": {
+        "B": {
+          "test": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 2.4259189679298743e-07,
+            "median_abs_error_raw": 1.9181684685065647e-08,
+            "n_rows": 420,
+            "pass": true,
+            "tolerance_max": 1.5581261809276897e-05
+          },
+          "valid": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 1.9745852064545488e-07,
+            "median_abs_error_raw": 1.9181684685065647e-08,
+            "n_rows": 420,
+            "pass": true,
+            "tolerance_max": 1.7228194843780255e-05
+          }
+        },
+        "C": {
+          "test": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 2.022539415946767e-07,
+            "median_abs_error_raw": 2.059210268967604e-08,
+            "n_rows": 420,
+            "pass": true,
+            "tolerance_max": 1.5077094956014173e-05
+          },
+          "valid": {
+            "failed_row_ids": [],
+            "max_abs_error_raw": 2.7051817319545535e-07,
+            "median_abs_error_raw": 1.946376848582787e-08,
+            "n_rows": 420,
+            "pass": true,
+            "tolerance_max": 1.5103834725680016e-05
+          }
+        }
+      },
+      "pretrain_checks": true,
+      "scale_equivalence": true
+    }
+  }
+}

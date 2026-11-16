@@ -1,0 +1,733 @@
+{
+  "all_pass": true,
+  "checks": [
+    {
+      "check": "data",
+      "contexts_status": "CONTEXT_ESTIMABLE",
+      "dataset": "ogbg-molesol",
+      "file_sha256": {
+        "ogbg_molesol_sq-pilot-cache-v1.npz": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+        "ogbg_molesol_sq-pilot-lipo-raw-v1.npz": "a3ab9f7e22798a8f6fdc7f0913b1136b7cf59d4ffc7168faecc7f8b3094710b1"
+      },
+      "n_active_global": 34,
+      "norm_fingerprint": "c7358fb5bc27fc41045000b3efc833d64e3c6c59edd07f730dfcf742a4085894",
+      "occurrence": {
+        "test": {
+          "mean_s2_per_atom": 3.188296366210477,
+          "molecules_without_s2": 0,
+          "n_atoms": 2119,
+          "n_bonds": 2318,
+          "n_molecules": 113,
+          "n_s1_occurrences": 4636,
+          "n_s2_occurrences": 6756,
+          "occurrence_arrays_full_range": true,
+          "s1_equals_two_bonds": true,
+          "s2_sum_matches_pointer": true,
+          "split": "test"
+        },
+        "train": {
+          "mean_s2_per_atom": 2.663661453541858,
+          "molecules_without_s2": 7,
+          "n_atoms": 10870,
+          "n_bonds": 10920,
+          "n_molecules": 902,
+          "n_s1_occurrences": 21840,
+          "n_s2_occurrences": 28954,
+          "occurrence_arrays_full_range": true,
+          "s1_equals_two_bonds": true,
+          "s2_sum_matches_pointer": true,
+          "split": "train"
+        },
+        "valid": {
+          "mean_s2_per_atom": 3.2407592407592407,
+          "molecules_without_s2": 0,
+          "n_atoms": 2002,
+          "n_bonds": 2190,
+          "n_molecules": 113,
+          "n_s1_occurrences": 4380,
+          "n_s2_occurrences": 6488,
+          "occurrence_arrays_full_range": true,
+          "s1_equals_two_bonds": true,
+          "s2_sum_matches_pointer": true,
+          "split": "valid"
+        }
+      },
+      "pass": true,
+      "row_id_sha256": {
+        "test": "1e67f428df66712660c12f436fc9416d9fa7b404c03e57a3823641a6a6ec310b",
+        "train": "facea0d71f408f731585c60117921d34f9d3a5f36c9474cb654400bf84fe8000",
+        "valid": "dec602694cc576778820ea4d57df20003622ab1987f7d85794e622f94a84f73b"
+      },
+      "split_sizes": {
+        "test": 113,
+        "train": 902,
+        "valid": 113
+      },
+      "target_scaler": {
+        "fit_split": "train",
+        "mean": -2.866875829922651,
+        "n": 902,
+        "std": 2.0667241081324765
+      }
+    },
+    {
+      "budget": {
+        "A": {
+          "arm": "A",
+          "formula": "f(64->64->1) + rho(171->64->1), unchanged from C1",
+          "hidden": null,
+          "n_active_global": 34,
+          "nominal_readout_params": 15298
+        },
+        "B": {
+          "abs_delta": 2,
+          "arm": "B",
+          "budget": 15298,
+          "formula": "66*H + 48*M + 2",
+          "hidden": 207,
+          "n_active_global": 34,
+          "nominal_readout_params": 15296,
+          "relative_delta": 0.00013073604392731077,
+          "search": "analytic argmin over H in 1..1024, ties to the smaller H (no fitting, no validation)"
+        },
+        "C": {
+          "abs_delta": 32,
+          "arm": "C",
+          "budget": 15298,
+          "formula": "68*H + 48*M + 98",
+          "hidden": 200,
+          "n_active_global": 34,
+          "nominal_readout_params": 15330,
+          "relative_delta": 0.0020917767028369723,
+          "search": "analytic argmin over H in 1..1024, ties to the smaller H (no fitting, no validation)"
+        }
+      },
+      "check": "parameters",
+      "counts": {
+        "A_readout": {
+          "actual": 15298,
+          "expected": 15298
+        },
+        "A_total": {
+          "actual": 228674,
+          "expected": 228674
+        },
+        "B_readout": {
+          "actual": 15296,
+          "expected": 15296
+        },
+        "C_readout": {
+          "actual": 15330,
+          "expected": 15330
+        },
+        "trunk": {
+          "actual": 213376,
+          "expected": 213376
+        }
+      },
+      "dataset": "ogbg-molesol",
+      "forbidden_f_or_rho_parameters_in_B_C": [],
+      "mismatches": {},
+      "n_active_global": 34,
+      "pass": true,
+      "reports": {
+        "A": {
+          "arm": "A",
+          "breakdown": {
+            "f": 4225,
+            "rho": 11073,
+            "trunk": 213376
+          },
+          "n_parameter_tensors": 31,
+          "non_trainable_parameters": [],
+          "readout": 15298,
+          "readout_parameter_names": [
+            "f.lins.0.bias",
+            "f.lins.0.weight",
+            "f.lins.1.bias",
+            "f.lins.1.weight",
+            "rho.lins.0.bias",
+            "rho.lins.0.weight",
+            "rho.lins.1.bias",
+            "rho.lins.1.weight"
+          ],
+          "total": 228674,
+          "trunk": 213376
+        },
+        "B": {
+          "arm": "B",
+          "breakdown": {
+            "b_global": 1,
+            "b_hidden": 207,
+            "b_local": 1,
+            "global_functions": 1632,
+            "trunk": 213376,
+            "w_base": 207,
+            "w_hidden": 13248
+          },
+          "n_parameter_tensors": 31,
+          "non_trainable_parameters": [],
+          "readout": 15296,
+          "readout_parameter_names": [
+            "b_global",
+            "b_hidden",
+            "b_local",
+            "global_functions.b1",
+            "global_functions.w1",
+            "global_functions.w2",
+            "w_base",
+            "w_hidden"
+          ],
+          "total": 228672,
+          "trunk": 213376
+        },
+        "C": {
+          "arm": "C",
+          "breakdown": {
+            "b_global": 1,
+            "b_hidden": 200,
+            "b_local": 1,
+            "context_functions": 96,
+            "global_functions": 1632,
+            "trunk": 213376,
+            "w_base": 200,
+            "w_context": 400,
+            "w_hidden": 12800
+          },
+          "n_parameter_tensors": 35,
+          "non_trainable_parameters": [],
+          "readout": 15330,
+          "readout_parameter_names": [
+            "b_global",
+            "b_hidden",
+            "b_local",
+            "context_functions.b1",
+            "context_functions.w1",
+            "context_functions.w2",
+            "global_functions.b1",
+            "global_functions.w1",
+            "global_functions.w2",
+            "w_base",
+            "w_context",
+            "w_hidden"
+          ],
+          "total": 228706,
+          "trunk": 213376
+        }
+      }
+    },
+    {
+      "check": "armA_equivalence",
+      "dataset": "ogbg-molesol",
+      "local_sum": {
+        "max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1.2620822668075563e-05
+      },
+      "n_rows": 64,
+      "pass": true,
+      "prediction": {
+        "max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1.2733005285263062e-05
+      },
+      "reference_class": "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code/dissect_model.py::DissectLCRC('C1')",
+      "rho": {
+        "max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1.1000000000000001e-05
+      }
+    },
+    {
+      "arm_trunk_hashes": {
+        "A": "1d075977ddb49ffea7b9b2eff599adbbdcea482cb198893c70d095dfdf5ed909",
+        "B": "1d075977ddb49ffea7b9b2eff599adbbdcea482cb198893c70d095dfdf5ed909",
+        "C": "1d075977ddb49ffea7b9b2eff599adbbdcea482cb198893c70d095dfdf5ed909"
+      },
+      "arm_trunk_tensor_equality": {
+        "A": {
+          "atom_encoder.lins.0.bias": true,
+          "atom_encoder.lins.0.weight": true,
+          "atom_encoder.lins.1.bias": true,
+          "atom_encoder.lins.1.weight": true,
+          "bond_encoder.lins.0.bias": true,
+          "bond_encoder.lins.0.weight": true,
+          "bond_encoder.lins.1.bias": true,
+          "bond_encoder.lins.1.weight": true,
+          "global_mean": true,
+          "global_scale": true,
+          "local.close_emb.weight": true,
+          "local.end_emb.weight": true,
+          "local.joint_proj.bias": true,
+          "local.joint_proj.weight": true,
+          "local.mlp.lins.0.bias": true,
+          "local.mlp.lins.0.weight": true,
+          "local.mlp.lins.1.bias": true,
+          "local.mlp.lins.1.weight": true,
+          "local.nbr_emb.weight": true,
+          "local.norm.bias": true,
+          "local.norm.weight": true,
+          "local.path_emb.weight": true,
+          "local.path_gate.weight": true,
+          "local.path_u.weight": true,
+          "local.path_v.weight": true,
+          "scalar_mean": true,
+          "scalar_scale": true
+        },
+        "B": {
+          "atom_encoder.lins.0.bias": true,
+          "atom_encoder.lins.0.weight": true,
+          "atom_encoder.lins.1.bias": true,
+          "atom_encoder.lins.1.weight": true,
+          "bond_encoder.lins.0.bias": true,
+          "bond_encoder.lins.0.weight": true,
+          "bond_encoder.lins.1.bias": true,
+          "bond_encoder.lins.1.weight": true,
+          "global_mean": true,
+          "global_scale": true,
+          "local.close_emb.weight": true,
+          "local.end_emb.weight": true,
+          "local.joint_proj.bias": true,
+          "local.joint_proj.weight": true,
+          "local.mlp.lins.0.bias": true,
+          "local.mlp.lins.0.weight": true,
+          "local.mlp.lins.1.bias": true,
+          "local.mlp.lins.1.weight": true,
+          "local.nbr_emb.weight": true,
+          "local.norm.bias": true,
+          "local.norm.weight": true,
+          "local.path_emb.weight": true,
+          "local.path_gate.weight": true,
+          "local.path_u.weight": true,
+          "local.path_v.weight": true,
+          "scalar_mean": true,
+          "scalar_scale": true
+        },
+        "C": {
+          "atom_encoder.lins.0.bias": true,
+          "atom_encoder.lins.0.weight": true,
+          "atom_encoder.lins.1.bias": true,
+          "atom_encoder.lins.1.weight": true,
+          "bond_encoder.lins.0.bias": true,
+          "bond_encoder.lins.0.weight": true,
+          "bond_encoder.lins.1.bias": true,
+          "bond_encoder.lins.1.weight": true,
+          "global_mean": true,
+          "global_scale": true,
+          "local.close_emb.weight": true,
+          "local.end_emb.weight": true,
+          "local.joint_proj.bias": true,
+          "local.joint_proj.weight": true,
+          "local.mlp.lins.0.bias": true,
+          "local.mlp.lins.0.weight": true,
+          "local.mlp.lins.1.bias": true,
+          "local.mlp.lins.1.weight": true,
+          "local.nbr_emb.weight": true,
+          "local.norm.bias": true,
+          "local.norm.weight": true,
+          "local.path_emb.weight": true,
+          "local.path_gate.weight": true,
+          "local.path_u.weight": true,
+          "local.path_v.weight": true,
+          "scalar_mean": true,
+          "scalar_scale": true
+        }
+      },
+      "canonical_full_state_hash": "73d907c9ad7aa79448f02010403bfbde692d41ddc7d50e6d783df398bdc3cff9",
+      "canonical_trunk_hash": "1d075977ddb49ffea7b9b2eff599adbbdcea482cb198893c70d095dfdf5ed909",
+      "check": "shared_init",
+      "dataset": "ogbg-molesol",
+      "pass": true,
+      "readout_stream_hashes": {
+        "A": "552b96c4822958c30678d687b304f6bc842f827e3dd2b6614798fabb0f0567f2",
+        "B": "d4089efd3a9fccc0bafe52d3d8006766201c3bbb28e2ce6b5a97a328724120fb",
+        "C": "c3354a0f48edd9046b0989e1ddb48a5b90f8346b9a7275401c9fff71fa65d4fe"
+      },
+      "subprocess_returncode": 0,
+      "subprocess_trunk_hash": "1d075977ddb49ffea7b9b2eff599adbbdcea482cb198893c70d095dfdf5ed909",
+      "u_hash_B_C": {
+        "B": "83c60b5f954fa1cd33f9beab5beca15f11486b1287bd61c0a9a8a530bcf2f896",
+        "C": "83c60b5f954fa1cd33f9beab5beca15f11486b1287bd61c0a9a8a530bcf2f896"
+      },
+      "u_tensor_equality_B_C": {
+        "b1": true,
+        "w1": true,
+        "w2": true
+      }
+    },
+    {
+      "check": "dropout_shared",
+      "dataset": "ogbg-molesol",
+      "note": "one dropout(0.10) call on h per forward; the same h feeds every local head of the arm",
+      "pass": true,
+      "per_arm": {
+        "A": {
+          "dropout_calls_per_train_forward": 1,
+          "eval_repeat_identical": true,
+          "train_mode_differs_from_eval": true
+        },
+        "B": {
+          "dropout_calls_per_train_forward": 1,
+          "eval_repeat_identical": true,
+          "train_mode_differs_from_eval": true
+        },
+        "C": {
+          "dropout_calls_per_train_forward": 1,
+          "eval_repeat_identical": true,
+          "train_mode_differs_from_eval": true
+        }
+      }
+    },
+    {
+      "check": "roundtrip_and_zero_readout",
+      "dataset": "ogbg-molesol",
+      "note": "de-standardisation happens exactly once: pred_raw = mu + sigma * pred_std",
+      "pass": true,
+      "target_roundtrip_max_abs_error": 4.440892098500626e-16,
+      "zero_readout": {
+        "B": {
+          "expected_constant_rmse": 2.171361205939952,
+          "match": true,
+          "pred_raw_max_abs_minus_train_mean": 0.0,
+          "rmse_raw": 2.171361205939952
+        },
+        "C": {
+          "expected_constant_rmse": 2.171361205939952,
+          "match": true,
+          "pred_raw_max_abs_minus_train_mean": 0.0,
+          "rmse_raw": 2.171361205939952
+        }
+      }
+    },
+    {
+      "batch_size": 64,
+      "check": "gradients",
+      "dataset": "ogbg-molesol",
+      "n_batches": 8,
+      "note": "eight fixed Train batches distinguish a genuinely unreachable path from a z==0 column inside a single batch",
+      "pass": true,
+      "per_arm": {
+        "B": {
+          "a_max_grad_over_batches": 0.0,
+          "active_columns_with_zero_z_everywhere": [],
+          "finite": true,
+          "local_max_grad_over_batches": 9.538176536560059,
+          "pass": true,
+          "u_max_grad_over_batches": 2.2541449069976807
+        },
+        "C": {
+          "a_max_grad_over_batches": 28.680078506469727,
+          "active_columns_with_zero_z_everywhere": [],
+          "finite": true,
+          "local_max_grad_over_batches": 26.993410110473633,
+          "pass": true,
+          "u_max_grad_over_batches": 4.592616558074951
+        }
+      }
+    },
+    {
+      "atom_renumbering": [
+        {
+          "abs_diff": 2.384185791015625e-07,
+          "base_pred_std": 1.239498496055603,
+          "global_row_id": 32,
+          "local_row": 0,
+          "n_atoms": 22,
+          "pass": true,
+          "permuted_pred_std": 1.239498257637024
+        },
+        {
+          "abs_diff": 1.7881393432617188e-07,
+          "base_pred_std": 0.9345881938934326,
+          "global_row_id": 34,
+          "local_row": 1,
+          "n_atoms": 14,
+          "pass": true,
+          "permuted_pred_std": 0.9345880150794983
+        },
+        {
+          "abs_diff": 1.1920928955078125e-07,
+          "base_pred_std": -0.457901269197464,
+          "global_row_id": 72,
+          "local_row": 2,
+          "n_atoms": 11,
+          "pass": true,
+          "permuted_pred_std": -0.45790114998817444
+        },
+        {
+          "abs_diff": 0.0,
+          "base_pred_std": -0.5408146977424622,
+          "global_row_id": 88,
+          "local_row": 3,
+          "n_atoms": 11,
+          "pass": true,
+          "permuted_pred_std": -0.5408146977424622
+        }
+      ],
+      "check": "invariance",
+      "dataset": "ogbg-molesol",
+      "eval_batching": {
+        "max_abs_diff": 9.5367431640625e-07,
+        "pass": true,
+        "tolerance": 1e-05
+      },
+      "molecule_isolation": {
+        "max_abs_diff": 4.76837158203125e-07,
+        "pass": true,
+        "tolerance": 1e-05
+      },
+      "note": "renumbering goes through raw row -> adapters -> build_cache, not a tensor permutation",
+      "pass": true
+    },
+    {
+      "check": "ledger_closure",
+      "dataset": "ogbg-molesol",
+      "note": "verified on the canonical initial state: closure is an implementation property, not a trained-weight property",
+      "pass": true,
+      "per_arm": {
+        "B": {
+          "closure": {
+            "max_abs_diff": 8.940696716308594e-08,
+            "pass": true,
+            "tolerance": 1.2932167291641236e-05
+          },
+          "per_root_base_sum": {
+            "max_abs_diff": 4.954636096954346e-07,
+            "pass": true,
+            "tolerance": 1e-05
+          }
+        },
+        "C": {
+          "closure": {
+            "max_abs_diff": 2.2724270820617676e-07,
+            "pass": true,
+            "tolerance": 1.5084372997283935e-05
+          },
+          "per_root_base_sum": {
+            "max_abs_diff": 4.209578037261963e-07,
+            "pass": true,
+            "tolerance": 1e-05
+          },
+          "per_root_interaction": {
+            "max_abs_diff": 7.03614205121994e-07,
+            "pass": true
+          }
+        }
+      }
+    },
+    {
+      "a_doubled": {
+        "max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1e-05
+      },
+      "c_halved": {
+        "max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1e-05
+      },
+      "check": "scale_equivalence",
+      "dataset": "ogbg-molesol",
+      "n_rows": 32,
+      "note": "a_k and c_k individual parameter norms are therefore not importance measures",
+      "pass": true,
+      "per_root_interaction": {
+        "max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1e-05
+      },
+      "prediction": {
+        "max_abs_diff": 0.0,
+        "pass": true,
+        "tolerance": 1e-05
+      }
+    },
+    {
+      "check": "checkpoint_reload",
+      "dataset": "ogbg-molesol",
+      "pass": true,
+      "per_arm": {
+        "B": {
+          "ledger": {
+            "max_abs_diff": 0.0,
+            "pass": true,
+            "tolerance": 1e-06
+          },
+          "pass": true,
+          "prediction": {
+            "max_abs_diff": 0.0,
+            "pass": true,
+            "tolerance": 1e-06
+          },
+          "reloaded_matches_stored": true
+        },
+        "C": {
+          "ledger": {
+            "max_abs_diff": 0.0,
+            "pass": true,
+            "tolerance": 1e-06
+          },
+          "pass": true,
+          "prediction": {
+            "max_abs_diff": 0.0,
+            "pass": true,
+            "tolerance": 1e-06
+          },
+          "reloaded_matches_stored": true
+        }
+      }
+    },
+    {
+      "check": "gine_reference_reuse",
+      "curve_recomputation": {
+        "best_epoch": 179,
+        "best_test_rmse_raw": 0.9354040211193085,
+        "best_valid_rmse_raw": 0.9353018197709349,
+        "epochs_are_1_to_360": true,
+        "final": {
+          "epoch": 360,
+          "test_rmse_raw": 0.9479135060293007,
+          "valid_rmse_raw": 0.9962523646083573
+        },
+        "has_three_split_mae": true,
+        "has_three_split_rmse": true,
+        "last20": {
+          "mean_last20_test_rmse_raw": 0.9473249333392628,
+          "mean_last20_train_rmse_raw": 0.2534560449523499,
+          "mean_last20_valid_rmse_raw": 0.9936192621763877
+        },
+        "n_epochs": 360
+      },
+      "dataset": "ogbg-molesol",
+      "n_parameters": 377094,
+      "note": "reused as a frozen performance coordinate only; no G trajectory was retrained because every reuse gate passed",
+      "pass": true,
+      "path": "tracks/structural-query-learning/results/sq-pilot-small-v1/ogbg-molesol/method_G.json",
+      "per_split": {
+        "test": {
+          "destandardisation_roundtrip_max_abs_diff": 4.1418043128516047e-07,
+          "mae_abs_diff": 0.0,
+          "mae_recomputed": 0.7287628998798606,
+          "mae_reported": 0.7287628998798606,
+          "n": 113,
+          "pass": true,
+          "rmse_abs_diff": 0.0,
+          "rmse_recomputed": 0.9354040211193085,
+          "rmse_reported": 0.9354040211193085,
+          "row_ids_equal_official_split": true,
+          "target_raw_max_abs_diff_vs_cache_labels": 4.76837158203125e-07
+        },
+        "train": {
+          "destandardisation_roundtrip_max_abs_diff": 4.7425721128036e-07,
+          "mae_abs_diff": 0.0,
+          "mae_recomputed": 0.23712991055786742,
+          "mae_reported": 0.23712991055786742,
+          "n": 902,
+          "pass": true,
+          "rmse_abs_diff": 0.0,
+          "rmse_recomputed": 0.3298816531975694,
+          "rmse_reported": 0.3298816531975694,
+          "row_ids_equal_official_split": true,
+          "target_raw_max_abs_diff_vs_cache_labels": 9.5367431640625e-07
+        },
+        "valid": {
+          "destandardisation_roundtrip_max_abs_diff": 3.4280411131959454e-07,
+          "mae_abs_diff": 0.0,
+          "mae_recomputed": 0.7095007411146586,
+          "mae_reported": 0.7095007411146586,
+          "n": 113,
+          "pass": true,
+          "rmse_abs_diff": 0.0,
+          "rmse_recomputed": 0.9353018197709349,
+          "rmse_reported": 0.9353018197709349,
+          "row_ids_equal_official_split": true,
+          "target_raw_max_abs_diff_vs_cache_labels": 4.76837158203125e-07
+        }
+      },
+      "selected_peak_lr": 0.001,
+      "sha256": "92178afd6e888a63664b19ad061d741c1225599c534878b3d50e886553244d49",
+      "source": "tracks/structural-query-learning/code/sq_gine.py",
+      "source_declares_standardised_target": true,
+      "source_sha256": "78bfdfbfd85cd17e0987f1664f11c03a3c13ebc62628766aa3f1cbf0ba5b6494",
+      "standardisation_fix_commit": "44300426",
+      "status": "REUSED_FROZEN_REFERENCE",
+      "summary_matches": {
+        "best_epoch": true,
+        "best_test": true,
+        "best_valid": true,
+        "final_round_selected": true,
+        "last20": true
+      },
+      "target_scaler": {
+        "mean": -2.866875829922651,
+        "std": 2.0667241081324765
+      }
+    },
+    {
+      "b1_grad_at_nonzero_z_max_abs": 0.22797566652297974,
+      "check": "single_variable_functions",
+      "gradient_match_vectorised_vs_loop": true,
+      "has_output_bias": false,
+      "parameter_names": [
+        "w1",
+        "b1",
+        "w2"
+      ],
+      "params_per_function": 48,
+      "pass": true,
+      "q_of_zero_max_abs": 5.322751128744585e-10,
+      "q_of_zero_note": "q(0) subtracts the identical SiLU(b1) term, so it is zero by construction; the measured residual is float32 ULP noise from the SiLU kernel, not a bias",
+      "vectorised_vs_loop": {
+        "max_abs_diff": 1.4901161193847656e-08,
+        "pass": true,
+        "tolerance": 1e-06
+      }
+    }
+  ],
+  "datasets": [
+    "ogbg-molesol"
+  ],
+  "environment": {
+    "cpu_count": 104,
+    "env": {
+      "CUDA_VISIBLE_DEVICES": "0",
+      "RESEARCH_EXTRA_RUNNERS": "cr_runner",
+      "RESEARCH_TRACK_ROOT": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1"
+    },
+    "git_branch": "lcrc-readout-context-pilot-small-v1",
+    "git_commit": "ee72310d9290f1728bd1ff2149351cb57a83f5d9",
+    "git_dirty_tracked": false,
+    "hostname": "a100-2",
+    "nvidia_smi": "0, NVIDIA A100-SXM4-40GB, 550.163.01, 40960 MiB, GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f\n1, NVIDIA A100-SXM4-40GB, 550.163.01, 40960 MiB, GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "torch": {
+      "cuda_available": true,
+      "cudnn_version": 90100,
+      "deterministic_algorithms": false,
+      "device_count": 1,
+      "device_uuid": [
+        "5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f"
+      ],
+      "devices": [
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "torch_cuda": "12.4"
+    },
+    "uv_lock_sha256": "d063dedc762d1f338661cbd67c59a7245a0efb2966a2b932836530cf5cba7033",
+    "versions": {
+      "matplotlib": "3.11.1",
+      "numpy": "2.1.3",
+      "ogb": "1.3.6",
+      "rdkit": "MISSING (ModuleNotFoundError)",
+      "scipy": "1.14.1",
+      "torch": "2.5.1+cu124",
+      "torch_geometric": "2.6.1",
+      "xgboost": "2.1.3"
+    }
+  },
+  "failed": [],
+  "generated_at": "2026-11-16T22:31:58",
+  "n_checks": 13,
+  "round_id": "lcrc-readout-context-pilot-small-v1"
+}
