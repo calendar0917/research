@@ -502,7 +502,7 @@ def cache_representation(b, kind: str, state: Mapping[str, Any], ms: M.ModelSet,
                 if kind == "G0":
                     mean, scale = D.size_scaler(b)
                     npy = batch["gine_n_atoms"].detach().cpu().numpy().astype(np.float64)
-                    zs.append((np.log1p(npy) - mean) / scale).astype(np.float32)
+                    zs.append((((np.log1p(npy) - mean) / scale)).astype(np.float32))
                 else:
                     zs.append(trunk.z_global(batch).detach().cpu().numpy().astype(np.float32))
                 ns.append(batch["gine_n_atoms"].detach().cpu().numpy().astype(np.int64))

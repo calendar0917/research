@@ -32,7 +32,9 @@ ROUND_DIR = CODE_DIR.parent
 TRACK_DIR = ROUND_DIR.parent
 REPO_ROOT = TRACK_DIR.parents[1]
 
-RESULTS_DIR = ROUND_DIR / "results"
+#: ``GR_RESULTS_DIR`` lets a local analysis point at a merged pull tree without
+#: copying checkpoints into the repository; remote runs never set it.
+RESULTS_DIR = Path(os.environ["GR_RESULTS_DIR"]) if os.environ.get("GR_RESULTS_DIR") else ROUND_DIR / "results"
 ANALYSIS_DIR = ROUND_DIR / "analysis"
 TABLES_DIR = ANALYSIS_DIR / "tables"
 LEDGER_DIR = ANALYSIS_DIR / "ledgers"
