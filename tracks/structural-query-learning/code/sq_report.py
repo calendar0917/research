@@ -252,6 +252,16 @@ def aggregate(config: Mapping[str, Any], ledger: Ledger, *, output_dir: Path) ->
 
     main_rows: list[dict[str, Any]] = []
     for dataset, payload in collected.items():
+        worker = payload.get("worker") or {}
+        n_base = int(worker.get("n_queries_B") or 0)
+        n_extra = {
+            "F": 0,
+            "R": int((payload.get("random_library") or {}).get("n_filled") or 0),
+            "A": int(worker.get("n_discovered") or 0),
+            "E": None,
+            "G": 0,
+            "L": 0,
+        }
         for method in METHOD_ORDER:
             entry = payload["scorers"][method]
             if not entry["complete"]:
@@ -274,7 +284,9 @@ def aggregate(config: Mapping[str, Any], ledger: Ledger, *, output_dir: Path) ->
                     "title": METHOD_TITLES[method],
                     "selected_state": entry["selected_label"],
                     "n_features": entry.get("n_features"),
-                    "n_queries": entry.get("n_features", 0) and None,
+                    "n_queries": (
+                        None if n_extra.get(method) is None else n_base + int(n_extra[method])
+                    ) if method in ("F", "R", "A") else None,
                     "n_trees": entry.get("n_trees"),
                     "n_parameters": entry.get("n_parameters"),
                     "train_rmse": metrics["train"]["rmse"],
@@ -356,8 +368,12 @@ def aggregate(config: Mapping[str, Any], ledger: Ledger, *, output_dir: Path) ->
 
     decision = _decision(collected, bootstrap_payload)
     C.write_json(output_dir / "decision.json", decision)
-    C.write_json(output_dir / "ledger_all.json", ledger.summary())
-    _write_markdown(output_dir, collected, main_rows, comparison_rows, bootstrap_payload, decision)
+    ledger_payload = _merge_ledgers(ledger, collected)
+    C.write_json(output_dir / "ledger_all.json", ledger_payload)
+    _write_markdown(
+        output_dir, collected, main_rows, comparison_rows, bootstrap_payload, decision,
+        ledger_payload=ledger_payload,
+    )
     return {
         "datasets": datasets,
         "n_main_rows": len(main_rows),
@@ -369,6 +385,66 @@ def aggregate(config: Mapping[str, Any], ledger: Ledger, *, output_dir: Path) ->
 # ---------------------------------------------------------------------------
 # decision axes
 # ---------------------------------------------------------------------------
+
+
+def _merge_ledgers(ledger, collected: Mapping[str, Any]) -> dict[str, Any]:
+    """Round-level resource account, merged from the per-worker ledgers.
+
+    The aggregate stage runs in its own process, so its own ledger is empty; the
+    comparable numbers are the ones each worker recorded next to its
+    ``worker_summary.json``.
+    """
+    merged: dict[str, Any] = {"aggregate_run": ledger.summary()}
+    per_dataset: dict[str, Any] = {}
+    stages: dict[str, float] = {}
+    total_wall = 0.0
+    total_cpu = 0.0
+    for dataset, payload in collected.items():
+        record = (payload.get("worker") or {}).get("ledger")
+        if not record:
+            continue
+        per_dataset[dataset] = record
+        total_wall += float(record.get("wall_seconds_total", 0.0))
+        total_cpu += float(record.get("cpu_seconds_total", 0.0))
+        for stage, seconds in (record.get("wall_seconds_by_stage") or {}).items():
+            stages[stage] = stages.get(stage, 0.0) + float(seconds)
+    accounting: dict[str, Any] = {}
+    for dataset, payload in collected.items():
+        worker = payload.get("worker") or {}
+        scorer_seconds = sum(
+            float(scorer.get("fit_seconds", 0.0))
+            for scorer in (payload.get("scorers") or {}).values()
+            if scorer.get("method") in ("F", "R", "A", "E")
+        )
+        stage_seconds = {
+            "discovery": float((worker.get("discovery") or {}).get("elapsed_seconds", 0.0)),
+            "random_library": float((worker.get("random_library") or {}).get("elapsed_seconds", 0.0)),
+            "xgboost_heads": scorer_seconds,
+            "G": float((worker.get("G") or {}).get("seconds_total", 0.0) or 0.0),
+            "L": float((worker.get("L") or {}).get("seconds", 0.0) or 0.0),
+        }
+        accounting[dataset] = {
+            "stage_seconds": stage_seconds,
+            "total_seconds": float(sum(stage_seconds.values())),
+            "xgboost_device": worker.get("xgboost_device_used"),
+            "torch_device": worker.get("torch_device_used"),
+            "note": (
+                "one dedicated GPU per worker: GPU time is the wall time of these "
+                "stages (discovery runs the proxy XGBoost on the GPU as well)"
+            ),
+        }
+    merged.update(
+        {
+            "per_dataset_worker_ledgers": per_dataset,
+            "workers_wall_seconds_total": total_wall,
+            "workers_cpu_seconds_total": total_cpu,
+            "workers_wall_seconds_by_stage": dict(sorted(stages.items())),
+            "gpu_accounting": accounting,
+            "gpu_seconds_total": float(sum(item["total_seconds"] for item in accounting.values())),
+            "gpu_hours_total": float(sum(item["total_seconds"] for item in accounting.values()) / 3600.0),
+        }
+    )
+    return merged
 
 
 def _pct_delta(value: float, reference: float) -> float:
@@ -486,6 +562,7 @@ def _write_markdown(
     comparison_rows: Sequence[Mapping[str, Any]],
     bootstrap_payload: Mapping[str, Any],
     decision: Mapping[str, Any],
+    ledger_payload: Mapping[str, Any] | None = None,
 ) -> None:
     lines: list[str] = []
     lines.append("# Structural query learning pilot — sq-pilot-small-v1\n")
@@ -495,19 +572,20 @@ def _write_markdown(
         "本文件由 `stage=aggregate` 依据两个 GPU worker 的产物自动生成。\n"
     )
     lines.append("## 主表（每任务每方法：Val 选中状态，原始单位）\n")
-    lines.append("| dataset | method | selected state | #feat | #trees | Train RMSE | Val RMSE | Test RMSE | Test MAE | fit s | complete |")
-    lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    lines.append("| dataset | method | selected state | #queries | #feat | #trees | Train RMSE | Val RMSE | Test RMSE | Test MAE | fit s | complete |")
+    lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |")
     for row in main_rows:
         if not row.get("complete"):
             lines.append(
-                f"| {row['dataset']} | {row['method']} | {row.get('status')} | - | - | - | - | - | - | - | no |"
+                f"| {row['dataset']} | {row['method']} | {row.get('status')} | - | - | - | - | - | - | - | - | no |"
             )
             continue
         lines.append(
-            "| {dataset} | {method} | {state} | {feat} | {trees} | {tr} | {va} | {te} | {mae} | {sec} | yes |".format(
+            "| {dataset} | {method} | {state} | {queries} | {feat} | {trees} | {tr} | {va} | {te} | {mae} | {sec} | yes |".format(
                 dataset=row["dataset"],
                 method=row["method"],
                 state=row["selected_state"],
+                queries=_fmt(row.get("n_queries")),
                 feat=_fmt(row.get("n_features")),
                 trees=_fmt(row.get("n_trees")),
                 tr=_fmt(row.get("train_rmse")),
@@ -567,6 +645,34 @@ def _write_markdown(
                 tb=costs.get("trees_file_bytes"),
                 err=_fmt(payload["replay"]["max_abs_error_overall"], 8),
             )
+        )
+    accounting = (ledger_payload or {}).get("gpu_accounting") or {}
+    if accounting:
+        lines.append("")
+        lines.append("## 资源账本（每个 worker 独占一块 GPU）\n")
+        lines.append("| dataset | discovery s | R s | XGB heads s | G s | L s | 合计 s | XGB device | torch device |")
+        lines.append("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+        for dataset, item in accounting.items():
+            st = item["stage_seconds"]
+            lines.append(
+                "| {d} | {disc:.1f} | {rand:.1f} | {xgb:.1f} | {g:.1f} | {l:.1f} | {tot:.1f} | {xd} | {td} |".format(
+                    d=dataset,
+                    disc=st["discovery"],
+                    rand=st["random_library"],
+                    xgb=st["xgboost_heads"],
+                    g=st["G"],
+                    l=st["L"],
+                    tot=item["total_seconds"],
+                    xd=item.get("xgboost_device"),
+                    td=item.get("torch_device"),
+                )
+            )
+        lines.append("")
+        lines.append(
+            f"- 合计 GPU·s = {(ledger_payload or {}).get('gpu_seconds_total', 0.0):.1f}，"
+            f"GPU·h = {(ledger_payload or {}).get('gpu_hours_total', 0.0):.2f}；"
+            f"两 worker 的 stage 时间之和 = {(ledger_payload or {}).get('workers_wall_seconds_total', 0.0) / 3600.0:.2f} h"
+            "（两个 worker 并行执行，实际墙钟取较大者）；本轮预算 8 h 墙钟 / 6 GPU·h。"
         )
     (output_dir / "REPORT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     decision_lines = [
