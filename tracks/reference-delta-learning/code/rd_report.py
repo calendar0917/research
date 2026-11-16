@@ -52,6 +52,8 @@ def load_dataset(dataset: str) -> dict[str, Any]:
         arm: _read_npz(base / f"pred_{arm}.npz") for arm in ARMS
     }
     delta = _read_npz(base / "pred_C_delta.npz")
+    cost_path = base / "inference_cost.json"
+    cost = C.read_json(cost_path) if cost_path.is_file() else None
     curves: dict[str, list[dict[str, Any]]] = {}
     for preset in C.PRESET_ORDER:
         curves[f"D_{preset}"] = _read_curves(base / f"curves_D_{preset}.csv")
@@ -69,6 +71,7 @@ def load_dataset(dataset: str) -> dict[str, Any]:
         "checks": checks,
         "predictions": predictions,
         "delta": delta,
+        "cost": cost,
         "curves": curves,
         "pair_curves": pair_curves,
         "base": base,
@@ -1218,6 +1221,80 @@ def render_report(
             f"其余参照加权和 = {row['remaining_weighted_sum']:.9f}；"
             f"Top5 加权和 = {row['top5_weighted_sum']:.9f}；"
             f"合计 = {row['ledger_total']:.9f}（与 pred_C 差 {row['prediction_abs_diff']:.2e}）"
+        )
+        lines.append("")
+    lines.append("## 单分子推理成本（描述性）")
+    lines.append("")
+    cost_rows = []
+    for dataset in datasets:
+        cost = data[dataset]["cost"]
+        if cost is None:
+            continue
+        for arm, entry in cost["arms"].items():
+            cost_rows.append(
+                {
+                    "dataset": dataset,
+                    "arm": arm,
+                    "device": entry["device"],
+                    "references_per_query": entry["references_per_query"],
+                    "ms_per_molecule": entry["ms_per_molecule"],
+                    "molecules_timed": entry["molecules"],
+                    "config": entry.get("config"),
+                }
+            )
+    if cost_rows:
+        lines.append(
+            _table(
+                cost_rows,
+                [
+                    "dataset",
+                    "arm",
+                    "device",
+                    "references_per_query",
+                    "ms_per_molecule",
+                    "molecules_timed",
+                    "config",
+                ],
+            )
+        )
+        lines.append("")
+        one_off = []
+        for dataset in datasets:
+            cost = data[dataset]["cost"]
+            if cost is None:
+                continue
+            one_off.append(
+                {
+                    "dataset": dataset,
+                    "design_matrix_seconds": cost["one_off"]["design_matrix_seconds"],
+                    "retrieval_table_seconds": cost["one_off"]["retrieval_table_seconds"],
+                    "pair_list_seconds": cost["one_off"]["pair_list_seconds"],
+                    "pair_matrix_seconds": cost["one_off"]["pair_matrix_seconds_for_selected_C"],
+                    "pair_matrix_rows": cost["one_off"]["pair_matrix_rows"],
+                }
+            )
+        lines.append(
+            _table(
+                one_off,
+                [
+                    "dataset",
+                    "design_matrix_seconds",
+                    "retrieval_table_seconds",
+                    "pair_list_seconds",
+                    "pair_matrix_seconds",
+                    "pair_matrix_rows",
+                ],
+            )
+        )
+        lines.append("")
+        lines.append(
+            "定义：`ms_per_molecule` = 用选中模型对整条 split 做一次预测的中位耗时 / 分子数"
+            "（CPU，nthread=4，重载后的 booster，无 batching/调优）；`references_per_query` 是"
+            "该臂选中配置的 `K_eff`。D 不需要参照；N 只做加权求和；R 额外对每个参照做一次 D 预测；"
+            "C 需要正反两向的 6177 维 pair 特征与两次树遍历，因此成本最高。"
+            "一次性成本里，`retrieval_table_seconds` 覆盖三个 split 的 Top-64 全表，"
+            "`pair_list_seconds` 是一次性冻结配对，`pair_matrix_seconds` 是 C 在 Test 上"
+            "构建选中配置 pair 特征的时间（这些都不进入每轮评测）。"
         )
         lines.append("")
     lines.append("## 资源账本")

@@ -172,6 +172,8 @@ def data_audit(task: TaskData) -> dict[str, Any]:
         "train_target_scaler": dict(task.scaler),
         "n_features": task.n_features,
         "feature_names_hash": C.sha256_json(task.feature_names),
+        # the full list is required deliverable evidence; it is only 2059 short names
+        "feature_names": list(task.feature_names),
         "design_stats": task.design_stats,
         "n_parse_failed_total": int(np.asarray(task.ecfp_cache["parse_failed"]).sum()),
         "n_parse_failed_by_split": {

@@ -33,6 +33,7 @@ import numpy as np
 import rd_arms as A
 import rd_common as C
 import rd_data as D
+import rd_eval as E
 import rd_pairs as P
 import rd_refs as R
 import rd_tree as T
@@ -1235,6 +1236,156 @@ def _stage_smoke(config: Mapping[str, Any], ledger: C.Ledger) -> dict[str, Any]:
     return report
 
 
+
+# ---------------------------------------------------------------------------
+# inference cost (descriptive, never a scientific number)
+# ---------------------------------------------------------------------------
+
+
+def _timeit(fn, repeats: int = 5) -> float:
+    """Median wall time of ``fn`` in seconds (warm-up call excluded)."""
+    fn()
+    times = []
+    for _ in range(int(repeats)):
+        t0 = time.perf_counter()
+        fn()
+        times.append(time.perf_counter() - t0)
+    return float(np.median(times))
+
+
+def _stage_inference_cost(config: Mapping[str, Any], ledger: C.Ledger) -> dict[str, Any]:
+    """Per-molecule inference cost and one-off feature/retrieval costs."""
+    import xgboost as xgb
+
+    dataset = str(config["dataset"])
+    if dataset not in C.DATASETS:
+        raise ValueError(f"unknown dataset {dataset!r}")
+    out_dir = C.ensure_dir(C.results_dir(dataset))
+    _prepare_dataset(dataset, ledger)  # identity + frozen assets, verified again
+    selection = C.read_json(out_dir / "selection.json")
+    device_request = str(config.get("xgboost_device", "cpu"))
+    device, device_status = C.SQX.resolve_backend(device_request)
+
+    with C.stage_timer(ledger, "features", dataset=dataset):
+        task = D.load_task(dataset)
+    ref_table = R.load_reference_table(out_dir / "references.npz", dataset)
+    pair_spec = P.load_pairs(out_dir / "pairs.npz", dataset)
+    ctx = A.ArmContext.build(task, ref_table)
+
+    d_state = selection["D"]
+    c_state = selection["C"]
+    r_state = selection["R"]
+    n_state = selection["N"]
+    d_booster = xgb.Booster(model_file=str(out_dir / "models" / f"D_{d_state['preset']}.ubj"))
+    c_booster = xgb.Booster(model_file=str(out_dir / "models" / f"C_{c_state['preset']}.ubj"))
+    d_trees = T.extract_trees(d_booster, list(task.feature_names), rounds=int(d_state["trained_rounds"]))
+
+    n_rows = {split: task.n(split) for split in SPLITS}
+    n_total = sum(n_rows.values())
+    per_arm: dict[str, Any] = {}
+
+    d_full = A.predict_d_full(ctx, d_booster, d_trees, int(d_state["round"]))
+    per_arm["D"] = {
+        "config": None,
+        "references_per_query": 0,
+        "seconds": _timeit(lambda: A.predict_d_full(ctx, d_booster, d_trees, int(d_state["round"]))),
+        "molecules": n_total,
+    }
+    per_arm["N"] = {
+        "config": n_state["config"],
+        "references_per_query": _effective_k(ctx, "test", str(n_state["config"])),
+        "seconds": _timeit(
+            lambda: {
+                split: E.aggregate_n(ctx.weights[split][n_state["config"]], ctx.y_ref[split])
+                for split in SPLITS
+            }
+        ),
+        "molecules": n_total,
+    }
+    per_arm["R"] = {
+        "config": r_state["config"],
+        "references_per_query": _effective_k(ctx, "test", str(r_state["config"])),
+        "seconds": _timeit(
+            lambda: {
+                split: A.d_r_predictions_at(ctx, d_full, str(r_state["config"]), split)
+                for split in SPLITS
+            }
+        ),
+        "molecules": n_total,
+    }
+
+    names = A._pair_feature_names(task)
+    k_c = _effective_k(ctx, "test", str(c_state["config"]))
+    test_entry = ref_table["splits"]["test"]
+    query_all, ref_all = P.evaluation_pairs(test_entry)
+    n_test = n_rows["test"]
+    query = query_all.reshape(n_test, C.MAX_REFERENCES)[:, :k_c].ravel()
+    ref = ref_all.reshape(n_test, C.MAX_REFERENCES)[:, :k_c].ravel()
+    weights_c = ctx.weights["test"][str(c_state["config"])][:, :k_c]
+    y_ref_c = ctx.y_ref["test"][:, :k_c]
+
+    def _predict_c() -> np.ndarray:
+        fwd = P.pair_matrix(task, query, ref)
+        rev = P.pair_matrix(task, ref, query)
+        m_fwd = c_booster.predict(xgb.DMatrix(fwd, feature_names=names))
+        m_rev = c_booster.predict(xgb.DMatrix(rev, feature_names=names))
+        delta = E.delta_from_margins(m_fwd, m_rev, ctx.sigma)
+        return E.aggregate_c(weights_c, y_ref_c, delta.reshape(n_test, k_c))
+
+    per_arm["C"] = {
+        "config": c_state["config"],
+        "references_per_query": k_c,
+        "seconds": _timeit(_predict_c),
+        "molecules": n_test,
+        "note": "test split only (pair matrices are the expensive part)",
+    }
+
+    for arm, entry in per_arm.items():
+        entry["ms_per_molecule"] = 1000.0 * float(entry["seconds"]) / float(entry["molecules"])
+        entry["device"] = device
+
+    # one-off costs: feature assembly, frozen retrieval table, pair list, pair matrix
+    with C.stage_timer(ledger, "retrieval", dataset=dataset):
+        retrieval_seconds = _timeit(lambda: R.reference_table(task), repeats=2)
+        pair_seconds = _timeit(lambda: P.build_pairs(task, P.eligible_order_train(task)), repeats=2)
+        matrix_seconds = _timeit(
+            lambda: P.pair_matrix(task, query, ref), repeats=3
+        )
+
+    payload = {
+        "dataset": dataset,
+        "device": device,
+        "device_status": device_status,
+        "nthread": 4,
+        "repeats": 5,
+        "arms": per_arm,
+        "one_off": {
+            "design_matrix_seconds": None,
+            "retrieval_table_seconds": retrieval_seconds,
+            "pair_list_seconds": pair_seconds,
+            "pair_matrix_seconds_for_selected_C": matrix_seconds,
+            "pair_matrix_rows": int(query.size),
+        },
+        "pair_stats": pair_spec["stats"],
+        "environment": C.environment_snapshot(),
+        "note": (
+            "descriptive cost only: CPU prediction after reloading the selected boosters, "
+            "no batching/tuning, measured with the frozen retrieval configuration"
+        ),
+    }
+    with C.stage_timer(ledger, "features_timing", dataset=dataset):
+        payload["one_off"]["design_matrix_seconds"] = _timeit(
+            lambda: D.load_task(dataset), repeats=2
+        )
+    _write(out_dir / "inference_cost.json", payload)
+    return payload
+
+
+def _effective_k(ctx: A.ArmContext, split: str, config_name: str) -> int:
+    weights = ctx.weights[split][config_name]
+    return int(np.max(np.sum(weights > 0, axis=1)))
+
+
 # ---------------------------------------------------------------------------
 # aggregate
 # ---------------------------------------------------------------------------
@@ -1265,6 +1416,8 @@ def run(config: Mapping[str, Any], context) -> Any:
         metrics = _stage_smoke(config, ledger)
     elif stage == "dataset_worker":
         metrics = _stage_dataset_worker(config, ledger, ledger_dir)
+    elif stage == "inference_cost":
+        metrics = _stage_inference_cost(config, ledger)
     elif stage == "aggregate":
         metrics = _stage_aggregate(config, ledger)
     else:
