@@ -29,10 +29,10 @@ import gr_select as S
 # ---------------------------------------------------------------------------
 
 
-def _attach_target(batch: dict[str, Any], chunk: np.ndarray, y_std: np.ndarray) -> None:
+def _attach_target(batch: dict[str, Any], chunk: np.ndarray, y_std: np.ndarray, device=None) -> None:
     import torch
 
-    batch["y"] = torch.as_tensor(np.asarray(y_std, dtype=np.float32)[chunk], dtype=torch.float32)
+    batch["y"] = torch.as_tensor(np.asarray(y_std, dtype=np.float32)[chunk], dtype=torch.float32, device=device)
 
 
 def _to_device(batch: Mapping[str, Any], device) -> dict[str, Any]:
@@ -57,7 +57,7 @@ def evaluate(model, b, split: str, device, *, with_parts: bool = False) -> dict[
         for start in range(0, order.size, C.EVAL_BATCH_SIZE):
             chunk = order[start : start + C.EVAL_BATCH_SIZE]
             batch = _to_device(D.collate(b, split, chunk), device)
-            _attach_target(batch, chunk, y_std)
+            _attach_target(batch, chunk, y_std, device)
             if with_parts:
                 parts = model.parts(batch)
                 pred = parts["pred_std"]
@@ -250,7 +250,7 @@ def run_trajectory(
         for start in range(0, order.size, C.BATCH_SIZE):
             chunk = order[start : start + C.BATCH_SIZE]
             batch = _to_device(D.collate(b, "train", chunk), device)
-            _attach_target(batch, chunk, y_std)
+            _attach_target(batch, chunk, y_std, device)
             lr = C.lr_at(recipe, state["global_step"], n_train, int(epochs)) if recipe else C.MIN_LR
             optimizer.param_groups[0]["lr"] = float(lr)
             state["global_step"] += 1
