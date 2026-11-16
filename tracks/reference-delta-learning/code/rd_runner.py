@@ -198,6 +198,32 @@ def _save_state(state: dict[str, Any]) -> None:
     _write(_state_path(state["dataset"]), state)
 
 
+def _write_once(path: Path, payload: Any) -> None:
+    """Write only when absent; a promoted artefact is never rewritten in place."""
+    if _exists(path):
+        return
+    _write(path, payload)
+
+
+def _write_once_npz(path: Path, writer) -> dict[str, Any]:
+    """Write the frozen array file once, then verify its recorded SHA-256."""
+    if _exists(path):
+        recorded = {
+            "path": str(path),
+            "sha256": C.sha256_file(path),
+            "bytes": int(path.stat().st_size),
+        }
+        sidecar = path.with_suffix(".sha256")
+        if sidecar.is_file():
+            expected = sidecar.read_text(encoding="utf-8").strip()
+            if expected and expected != recorded["sha256"]:
+                raise AssertionError(f"{path.name}: frozen sha256 {expected} != {recorded['sha256']}")
+        return recorded
+    written = writer(path)
+    path.with_suffix(".sha256").write_text(str(written["sha256"]), encoding="utf-8")
+    return written
+
+
 def _mark(state: dict[str, Any], name: str, **info: Any) -> None:
     state["parts"][name] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S"), **info}
     _save_state(state)
@@ -249,10 +275,15 @@ def _prepare_dataset(dataset: str, ledger: C.Ledger) -> dict[str, Any]:
             raise AssertionError(
                 f"{dataset}: {kind} drifted: recomputed {actual} != frozen {frozen.get('hash')}"
             )
-    ref_files = R.save_reference_table(table, out_dir / "references.npz")
-    pair_files = P.save_pairs(pairs, out_dir / "pairs.npz")
-    _write(out_dir / "data_audit.json", audit)
-    _write(
+    # ---- write-once: promoted evidence must survive a re-run unchanged ----
+    ref_files = _write_once_npz(
+        out_dir / "references.npz", lambda path: R.save_reference_table(table, path)
+    )
+    pair_files = _write_once_npz(
+        out_dir / "pairs.npz", lambda path: P.save_pairs(pairs, path)
+    )
+    _write_once(out_dir / "data_audit.json", audit)
+    _write_once(
         out_dir / "references.json",
         {
             "dataset": dataset,
@@ -289,7 +320,7 @@ def _prepare_dataset(dataset: str, ledger: C.Ledger) -> dict[str, Any]:
             "weight": "1/(2*q_i) on both directions",
         },
     }
-    _write(out_dir / "pairs.json", pair_payload)
+    _write_once(out_dir / "pairs.json", pair_payload)
     return {
         "dataset": dataset,
         "audit": audit,
