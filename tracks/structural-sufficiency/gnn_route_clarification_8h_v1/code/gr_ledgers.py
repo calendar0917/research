@@ -614,7 +614,9 @@ def forward_batch(runner: Runner, inputs: Mapping[str, torch.Tensor], n_graphs: 
     return runner.head.bias.view(-1) + sum_s + mean_m + u_sum
 
 
-def integrate_ig(runner: Runner, unions: Sequence[UnionPair], points: int) -> dict[str, Any]:
+def integrate_ig(
+    runner: Runner, unions: Sequence[UnionPair], points: int, *, dtype: torch.dtype = torch.float32
+) -> dict[str, Any]:
     """Midpoint IG for a batch of union graphs; returns per-pair channel arrays."""
     per_pair = [
         {
@@ -630,7 +632,7 @@ def integrate_ig(runner: Runner, unions: Sequence[UnionPair], points: int) -> di
     with torch.enable_grad():
         for k in range(points):
             t = (k + 0.5) / points
-            inputs = batch_union_inputs(unions, runner, t)
+            inputs = batch_union_inputs(unions, runner, t, dtype=dtype)
             out = forward_batch(runner, inputs, len(unions))
             targets = [inputs["X"], inputs["E"], inputs["m"], inputs["a"], inputs["N"]]
             if inputs["Z"] is not None:
@@ -762,6 +764,7 @@ def explanation_job(model_key: str, dataset: str = "ogbg-mollipo", *, limit: int
         "n_train": len(train_pairs),
         "pairs": [],
     }
+    # FP64 is used when FP32 completeness fails; the same midpoint rule applies.
     if runner.kind == "L" or model_key in ("L", "D"):
         for pair in selected:
             la = native_ledger(runner, int(pair["row_a"]))

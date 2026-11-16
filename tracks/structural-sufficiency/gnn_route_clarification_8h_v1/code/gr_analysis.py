@@ -449,6 +449,64 @@ def _ledger_path(tag: str):
     return C.LEDGER_DIR / f"explain_ogbg-mollipo_{tag}.json"
 
 
+def _oracle_pair_predictions(prop: str, truth: Mapping[str, np.ndarray], sigma: float) -> dict[str, Any]:
+    catalog = load_catalog()
+    b = D.oracle_bundle("ogbg-mollipo", prop)
+    out: dict[str, Any] = {}
+    for model in ("L", "T", "A"):
+        try:
+            pred = load_predictions(C.STAGE_ORACLE, "ogbg-mollipo", model, "selected")
+        except FileNotFoundError:
+            out[model] = {"status": "MISSING"}
+            continue
+        row_map = {}
+        for split in C.SPLITS:
+            for row, value in zip(pred[split]["row_id"].tolist(), pred[split]["pred_raw"].tolist()):
+                row_map[int(row)] = float(value)
+        rows = []
+        for pair in catalog:
+            a, bb = int(pair["row_a"]), int(pair["row_b"])
+            t = _truth_groups(truth, prop, pair)
+            df = row_map[bb] - row_map[a]
+            rows.append(
+                {
+                    "pair_id": pair["pair_id"],
+                    "component": int(pair["component"]),
+                    "dtruth": t["total"],
+                    "df": df,
+                    "abs_error": abs(df - t["total"]),
+                    "sign_ok": None if abs(t["total"]) < 0.1 else bool(np.sign(df) == np.sign(t["total"])),
+                }
+            )
+        comp: dict[int, list[float]] = defaultdict(list)
+        for r in rows:
+            comp[r["component"]].append(r["abs_error"])
+        signs = [r for r in rows if r["sign_ok"] is not None]
+        out[model] = {
+            "n_pairs": len(rows),
+            "delta_mae_raw": float(np.mean([r["abs_error"] for r in rows])),
+            "delta_mae_sigma": float(np.mean([r["abs_error"] for r in rows]) / sigma),
+            "delta_component_equal_sigma": float(np.mean([np.mean(v) for v in comp.values()]) / sigma),
+            "n_sign": len(signs),
+            "delta_sign_accuracy": float(np.mean([r["sign_ok"] for r in signs])) if signs else None,
+            **{
+                key: value
+                for key, value in _oracle_traj_metrics(model).items()
+                if key in ("valid_rmse_raw", "test_rmse_raw")
+            },
+            "valid_rmse_sigma": _oracle_traj_metrics(model).get("valid_rmse_raw", float("nan")) / sigma,
+            "test_rmse_sigma": _oracle_traj_metrics(model).get("test_rmse_raw", float("nan")) / sigma,
+        }
+    return out
+
+
+def _oracle_traj_metrics(model: str) -> dict[str, float]:
+    path = C.task_dir(C.STAGE_ORACLE, "ogbg-mollipo", model, "selected") / "trajectory.json"
+    if not path.is_file():
+        return {}
+    return C.read_json(path)["selected"]
+
+
 def oracle_explanation_table() -> dict[str, Any]:
     truth = load_oracle_truth()
     catalog = {p["pair_id"]: p for p in load_catalog()}
@@ -464,11 +522,24 @@ def oracle_explanation_table() -> dict[str, Any]:
             t = _truth_groups(truth, prop, pair)
             truth_rows.append({"pair_id": pid, "component": int(pair["component"]), **t})
         entry["truth"] = truth_rows
+        for model, block in _oracle_pair_predictions(prop, truth, out["sigma"][prop]).items():
+            entry.setdefault("prediction", {})[model] = block
         # zero predictor and oracle-delta predictor controls
         sigma = out["sigma"][prop]
         entry["controls"]["zero"] = {
             "E": float(np.mean([(abs(r["variable"]) + abs(r["core"])) / sigma for r in truth_rows])),
             "note": "predicts zero contribution for every pair",
+        }
+        entry["controls"]["generative_rule"] = {
+            "E": 0.0,
+            "note": "pipeline positive control: scores are the true c_v, so E is zero by construction",
+        }
+        entry["controls"]["all_on_variable"] = {
+            "E": float(np.mean([(abs(r["total"] - r["variable"]) + abs(r["core"])) / sigma for r in truth_rows])),
+            "note": "uses the correct total Δy but assigns it all to the variable channel (no Δy-accuracy credit for attribution)",
+        }
+        entry["controls"]["conservation_check"] = {
+            "max_abs_var_plus_core_minus_total": float(max(abs(r["variable"] + r["core"] - r["total"]) for r in truth_rows)),
         }
         for model in ("L", "T", "A"):
             path = _ledger_path(f"{model}_{prop}")
@@ -482,10 +553,52 @@ def oracle_explanation_table() -> dict[str, Any]:
                 rows = _oracle_rows(ledger, truth_rows, sigma, source)
                 if rows:
                     block[source] = _oracle_aggregate(rows)
-            block["ledger"] = str(path.relative_to(C.TASK_DIR))
+            block["ledger"] = str(path.relative_to(C.ROUND_DIR))
+            block["quadrature"] = ledger.get("quadrature")
+            block["scope"] = ledger.get("scope")
             entry["models"][model] = block
+        ratio = _oracle_ratio(entry, prop)
+        if ratio:
+            entry["A_vs_T"] = ratio
         out["properties"][prop] = entry
     return out
+
+
+def _oracle_ratio(entry: Mapping[str, Any], prop: str) -> dict[str, Any] | None:
+    """Component bootstrap of E_A(native) / E_T(ig) on the shared sample."""
+    a_block = (entry.get("models", {}).get("A") or {}).get("native")
+    t_block = (entry.get("models", {}).get("T") or {}).get("ig")
+    if not a_block or not t_block:
+        return None
+    a_rows = {r["pair_id"]: r for r in a_block.get("rows", [])}
+    t_rows = {r["pair_id"]: r for r in t_block.get("rows", [])}
+    ids = sorted(set(a_rows) & set(t_rows))
+    if len(ids) < 4:
+        return None
+    comps = sorted({int(a_rows[i]["component"]) for i in ids})
+    rng = np.random.default_rng(C.BOOTSTRAP_SEED)
+    ratios = np.empty(BOOT_N)
+    for k in range(BOOT_N):
+        pick = rng.choice(comps, size=len(comps), replace=True)
+        ea, et = [], []
+        for c in pick:
+            members = [i for i in ids if int(a_rows[i]["component"]) == c]
+            ea.extend(a_rows[i]["E"] for i in members)
+            et.extend(t_rows[i]["E"] for i in members)
+        ratios[k] = float(np.mean(ea) / np.mean(et)) if et else float("nan")
+    return {
+        "property": prop,
+        "n_pairs": len(ids),
+        "n_components": len(comps),
+        "E_A_native": float(np.mean([a_rows[i]["E"] for i in ids])),
+        "E_T_ig": float(np.mean([t_rows[i]["E"] for i in ids])),
+        "ratio": float(np.mean([a_rows[i]["E"] for i in ids]) / np.mean([t_rows[i]["E"] for i in ids])),
+        "ratio_ci95": [float(np.percentile(ratios, 2.5)), float(np.percentile(ratios, 97.5))],
+        "prob_A_better": float(np.mean(ratios < 1.0)),
+        "bootstrap": BOOT_N,
+        "seed": BOOT_SEED,
+        "support": "LOW_SUPPORT" if len(comps) < 30 else "OK",
+    }
 
 
 def _scores_from_ledger(entry: Mapping[str, Any], source: str) -> dict[str, Any] | None:

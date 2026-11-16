@@ -186,6 +186,40 @@ def main() -> int:
     add("## Q4. 原生贡献账目相对归因的增量价值")
     add("")
     if oracle.get("properties"):
+        add("**oracle 预测精度与 Δ 预测（全部 823 对；σ = oracle Train 目标标准差）**")
+        add("")
+        add("| property | model | Val RMSE/σ | Test RMSE/σ | Δf MAE/σ | 分量等权 Δ/σ | Δ 符号准确率 |")
+        add("|---|---|---|---|---|---|---|")
+        for prop, e in oracle["properties"].items():
+            for model, p in (e.get("prediction") or {}).items():
+                if not isinstance(p, dict) or "delta_mae_sigma" not in p:
+                    continue
+                add(
+                    f"| {prop} | {model} | {f(p.get('valid_rmse_sigma'))} | {f(p.get('test_rmse_sigma'))} | {f(p.get('delta_mae_sigma'))} | "
+                    f"{f(p.get('delta_component_equal_sigma'))} | {f(p.get('delta_sign_accuracy'))} |"
+                )
+        add("")
+        add("预测精度门槛（8.6）：A、T 的 Val/Test RMSE 均需 ≤0.10σ；可比性 |RMSE_A−RMSE_T|≤0.02σ。逐性质判读见下。")
+        add("")
+        for prop, e in oracle["properties"].items():
+            preds = e.get("prediction") or {}
+            vals = {m: preds.get(m, {}) for m in ("A", "T")}
+            ok = all(
+                isinstance(v, dict) and v.get("valid_rmse_sigma", 9e9) <= C.ORACLE_ACCURACY_SIGMA and v.get("test_rmse_sigma", 9e9) <= C.ORACLE_ACCURACY_SIGMA
+                for v in vals.values()
+            )
+            comparable = all(
+                isinstance(vals["A"], dict)
+                and isinstance(vals["T"], dict)
+                and abs(vals["A"].get(f"{split}_rmse_sigma", 9e9) - vals["T"].get(f"{split}_rmse_sigma", 9e9)) <= C.ORACLE_COMPARABILITY_SIGMA
+                for split in ("valid", "test")
+            )
+            h_comps = (mmp.get("per_model", {}).get("T") or {}).get("mmp_main_H", {}).get("n_components", 0)
+            add(
+                f"- {prop}: {'CALIBRATION_OK' if ok else 'CALIBRATION_INCONCLUSIVE（A/T 未同时达到 0.10σ）'}；"
+                f"{'COMPARABLE' if comparable else 'NOT_COMPARABLE'}；H 独立分量 {h_comps}（<30，不能声明 A> T 的工作信号）。"
+            )
+        add("")
         add("**已知生成贡献校准**（truth = Crippen WC_LOGP / MolWt 的指定生成分解；E 按 8.5 定义，先分量内均值再分量均值）")
         add("")
         add("| property | model | source | E (pair) | E (component) | var MAE | core MAE | size | global |")
@@ -204,9 +238,34 @@ def main() -> int:
             add(f"| {prop} | zero | — | {f(z)} | — | — | — | — | — |")
         add("")
         add("注：E 的 raw 单位是目标 σ；`zero` 为每对预测零贡献的对照。")
+        add("")
+        for prop, e in oracle["properties"].items():
+            r = e.get("A_vs_T")
+            if not r:
+                continue
+            add(
+                f"- {prop}: E_A(native)/E_T(IG) = {r['ratio']:.3f}，95% CI {r['ratio_ci95'][0]:.3f}–{r['ratio_ci95'][1]:.3f}，"
+                f"P(A 更低)={r['prob_A_better']:.3f}，分量 {r['n_components']}（{r['support']}）。"
+            )
+        add("")
+        add("由于主集合 H 的独立分量 <30，以上 A vs T 只作为固定状态描述，不构成“A 解释优于 T”的工作信号。")
     else:
         add("oracle 校准表缺失（oracle 训练或 ledger 未完成）→ Q4 = EXPLANATION_UNRESOLVED（样本/数值未完成，不是方法失败）。")
     add("")
+    oracle_summary_path = C.ANALYSIS_DIR / "oracle_ledger_summary.json"
+    if oracle_summary_path.is_file():
+        os_ = C.read_json(oracle_summary_path)
+        for prop, block in os_.get("properties", {}).items():
+            for model, b in block.items():
+                if isinstance(b, dict) and b.get("quadrature"):
+                    q = b["quadrature"]
+                    n = b.get("n_pairs", 0)
+                    unresolved = q.get("n_unresolved", 0)
+                    add(
+                        f"- {prop}/{model}: scope={b.get('scope')}, quadrature unresolved {unresolved}/{n} "
+                        f"{'(>5% → IG 部分标 NUMERICALLY_UNRESOLVED)' if n and unresolved / n > 0.05 else ''}"
+                    )
+        add("")
     if mmp.get("models"):
         add("**真实 MMP 预测对照（全部 823 对，不按标签挑核心）**")
         add("")
@@ -232,7 +291,7 @@ def main() -> int:
     # ---------------- Q5 ----------------
     add("## Q5. 最终路线建议")
     add("")
-    route = _route(stage1, stage23, oracle, checks, a_gate, d_pass)
+    route = _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp)
     for line in route["text"]:
         add(line)
         add("")
@@ -305,7 +364,7 @@ def C_trunk() -> str:
         return "G0"
 
 
-def _route(stage1, stage23, oracle, checks, a_gate, d_pass) -> dict[str, Any]:
+def _route(stage1, stage23, oracle, checks, a_gate, d_pass, mmp) -> dict[str, Any]:
     """Task brief 10.3, evaluated in priority order with explicit evidence."""
     scores = stage1.get("selected_scores", {})
     l_ok = {}
@@ -317,7 +376,8 @@ def _route(stage1, stage23, oracle, checks, a_gate, d_pass) -> dict[str, Any]:
 
     oracle_signal = False
     oracle_improvement = {}
-    if oracle.get("properties"):
+    h_components = (mmp.get("per_model", {}).get("T") or {}).get("mmp_main_H", {}).get("n_components", 0)
+    if oracle.get("properties") and h_components >= 30:
         for prop, e in oracle["properties"].items():
             vals = {}
             for model, block in e.get("models", {}).items():
