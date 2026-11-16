@@ -589,8 +589,11 @@ def write_csv_gz(path, rows: Sequence[Mapping[str, Any]], columns: Sequence[str]
     target = Path(path)
     C.ensure_dir(target.parent)
     tmp = target.with_suffix(target.suffix + ".tmp")
-    with gzip.open(tmp, "wt", encoding="utf-8", newline="") as handle:
-        handle.write(text)
+    # deterministic bytes: fixed mtime and no embedded file name, so re-running the
+    # CPU-only aggregate on the same inputs reproduces the committed file exactly
+    with open(tmp, "wb") as raw:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=6) as gz:
+            gz.write(text.encode("utf-8"))
     tmp.replace(target)
     return str(target)
 
@@ -1630,6 +1633,7 @@ def aggregate(
     device: str = "cpu",
 ) -> dict[str, Any]:
     _ensure_dirs()
+    _t_start = time.perf_counter()
     checks_path = OUT / "checks.json"
     checks = C.read_json(checks_path) if checks_path.is_file() else {"all_pass": False, "checks": []}
     # the two workers run in parallel, so the merged checks.json is not a reliable
@@ -1882,6 +1886,8 @@ def aggregate(
         "verdicts": verdicts,
         "trace_all_pass": all(v["trace"]["label"] == "TRACE_PASS" for v in verdicts.values()),
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "aggregate_seconds": float(time.perf_counter() - _t_start),
+        "device": device,
     }
     C.atomic_write_json(OUT / "analysis_summary.json", summary)
     return summary

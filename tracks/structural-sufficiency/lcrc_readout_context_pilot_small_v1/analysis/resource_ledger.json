@@ -1,0 +1,100 @@
+{
+  "budget": {
+    "hard_gpu_hours": 3.0,
+    "soft_gpu_hours": 2.0,
+    "used_gpu_hours": 0.6594444444444445
+  },
+  "cpu_only": {
+    "aggregate_seconds_local": 20.887142990992288,
+    "note": "prepare / 分析 / 画图全在本地 CPU 完成，不占 GPU",
+    "prepare_seconds_local": null
+  },
+  "formal_gpu_hours_total": 0.6594444444444445,
+  "formal_jobs": [
+    {
+      "experiment": "lcrc-rc-molesol",
+      "job_wall_gpu_hours": 0.1322222222222222,
+      "job_wall_seconds": 476.0,
+      "pool": "res-gpu0",
+      "run_id": "lcrc-rc-molesol-20261116-223138-ad73b71e"
+    },
+    {
+      "experiment": "lcrc-rc-mollipo",
+      "job_wall_gpu_hours": 0.5272222222222223,
+      "job_wall_seconds": 1898.0,
+      "pool": "res-gpu1",
+      "run_id": "lcrc-rc-mollipo-20261116-223149-6b1569e9"
+    }
+  ],
+  "generated_at": "2026-11-16T23:23:49",
+  "note": "工程故障作废的重跑会记入 wasted_reruns 并计入总耗时；本轮没有作废的正式轨迹",
+  "per_arm_trainer_measured": [
+    {
+      "arm": "A",
+      "dataset": "ogbg-molesol",
+      "eval_seconds_total": 37.44577272795141,
+      "gpu_hours_apportion_rule": "worker job wall x (this arm's trainer-measured train+eval seconds / the three arms' total)",
+      "gpu_hours_apportioned": 0.044558521502951975,
+      "inference_seconds_three_splits": 0.09051515499595553,
+      "total_updates": 2880,
+      "train_seconds": 98.65030989283696
+    },
+    {
+      "arm": "B",
+      "dataset": "ogbg-molesol",
+      "eval_seconds_total": 36.78173445578432,
+      "gpu_hours_apportion_rule": "worker job wall x (this arm's trainer-measured train+eval seconds / the three arms' total)",
+      "gpu_hours_apportioned": 0.04217049768562017,
+      "inference_seconds_three_splits": 0.08800649200566113,
+      "total_updates": 2880,
+      "train_seconds": 92.0205539415474
+    },
+    {
+      "arm": "C",
+      "dataset": "ogbg-molesol",
+      "eval_seconds_total": 37.629272590857,
+      "gpu_hours_apportion_rule": "worker job wall x (this arm's trainer-measured train+eval seconds / the three arms' total)",
+      "gpu_hours_apportioned": 0.04549320303365006,
+      "inference_seconds_three_splits": 0.09154291800223291,
+      "total_updates": 2880,
+      "train_seconds": 101.32162860414246
+    },
+    {
+      "arm": "A",
+      "dataset": "ogbg-mollipo",
+      "eval_seconds_total": 199.3871123334975,
+      "gpu_hours_apportion_rule": "worker job wall x (this arm's trainer-measured train+eval seconds / the three arms' total)",
+      "gpu_hours_apportioned": 0.17817490053336568,
+      "inference_seconds_three_splits": 0.5407030850183219,
+      "total_updates": 9720,
+      "train_seconds": 385.1057404692401
+    },
+    {
+      "arm": "B",
+      "dataset": "ogbg-mollipo",
+      "eval_seconds_total": 194.78721329476684,
+      "gpu_hours_apportion_rule": "worker job wall x (this arm's trainer-measured train+eval seconds / the three arms' total)",
+      "gpu_hours_apportioned": 0.1676340505577548,
+      "inference_seconds_three_splits": 0.5340876880218275,
+      "total_updates": 9720,
+      "train_seconds": 355.12696734501515
+    },
+    {
+      "arm": "C",
+      "dataset": "ogbg-mollipo",
+      "eval_seconds_total": 200.1818307735375,
+      "gpu_hours_apportion_rule": "worker job wall x (this arm's trainer-measured train+eval seconds / the three arms' total)",
+      "gpu_hours_apportioned": 0.1814132711311018,
+      "inference_seconds_three_splits": 0.5431431149481796,
+      "total_updates": 9720,
+      "train_seconds": 394.93431668763515
+    }
+  ],
+  "round_id": "lcrc-readout-context-pilot-small-v1",
+  "smoke": {
+    "gpu_hours": 0.0025833333333333333,
+    "note": "3 epoch × 3 臂的 GPU 完整 wire-up smoke，单独 _smoke 目录，从不作为结论"
+  },
+  "unit": "A100-SXM4-40GB hours of job wall, one GPU per worker",
+  "wasted_reruns": []
+}

@@ -38,7 +38,7 @@ import cr_models as M
 import cr_train as T
 from cr_common import Ledger, stage_timer
 
-DEFAULT_CONFIG = C.ROUND_DIR / "configs" / f"{C.ROUND_ID}.yaml"
+DEFAULT_CONFIG = C.ROUND_DIR / "configs" / "experiment.yaml"
 SMOKE_EPOCHS = 3
 
 

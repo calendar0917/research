@@ -174,7 +174,7 @@ def test_protocol_declares_test_policy_always() -> None:
 
 def test_study_and_config_parse() -> None:
     study = _yaml(C.ROUND_DIR / "studies" / f"{C.ROUND_ID}.yaml")
-    config = _yaml(C.ROUND_DIR / "configs" / f"{C.ROUND_ID}.yaml")
+    config = _yaml(C.ROUND_DIR / "configs" / "experiment.yaml")
     assert study["id"] == C.ROUND_ID and study["protocol"] == C.ROUND_ID
     assert config["protocol_id"] == C.ROUND_ID
     assert config["seed"] == 0

@@ -72,16 +72,32 @@ used to choose one.
 
 ## What the round delivers
 
-* `analysis/protocol_freeze.json` — every frozen constant + hashes at prepare time
-* `analysis/dataset_audit.json` — split disjointness/cover, occurrence counts, row-id hashes
-* `analysis/checks_<dataset>.json` — 13 preflight gates per dataset (see below)
-* `results/<dataset>/<arm>/trajectory.json` — the full per-epoch curve, selection record, hashes
-* `results/<dataset>/<arm>/checkpoint_best_val.pt` — the Val-selected state
-* `analysis/tables/main_table.csv`, `contrasts.csv`, `bootstrap.csv`, `drop_one.csv`
-* `analysis/ledgers/<dataset>_<arm>_{molecules,atoms}.csv|npz` — raw-unit account of every Val/Test molecule and root
-* `analysis/{interventions,context_response,interaction_diagnostics,equivalence_scale}.json`
-* `analysis/figures/*.png` — curves, learned context functions, three fixed display cases
-* `analysis/verdicts.json`, `REPORT.md`, `DECISION.md`
+Read [`REPORT.md`](REPORT.md) first (Chinese, all numbers read back from the
+artefacts below), then [`DECISION.md`](DECISION.md).  [`PROTOCOL.md`](PROTOCOL.md)
+is the frozen rule statement declared *before* the runs; the machine-readable
+form is `protocols/*.yaml` + `configs/experiment.yaml`, and the executed constants
+land in `analysis/protocol_freeze.json`.
+
+| artefact | content |
+| --- | --- |
+| `analysis/protocol_freeze.json` | every frozen constant, cache/init/recipe hashes, budget assignment, `freeze_hash` |
+| `analysis/dataset_audit.json` | split disjointness/cover, occurrence counts, row-id hashes, split sizes |
+| `analysis/checks_<dataset>.json` | 13 preflight gates per dataset (see below) |
+| `results/<dataset>/<arm>/trajectory.json` | full per-epoch curve (Train/Val/Test RMSE+MAE), selection record, timings, hashes |
+| `results/<dataset>/<arm>/checkpoint_best_val.pt` | the Val-selected state (committed, with sha256 in `run_manifest.json`) |
+| `results/<dataset>/<arm>/best_predictions.npz` | float64 predictions of the selected state on all three splits |
+| `analysis/tables/*.csv` | `main_table`, `contrasts`, `bootstrap`, `drop_one` |
+| `analysis/ledgers/<dataset>_<arm>_{molecules,atoms}.csv.gz` | raw-unit account of every Val/Test molecule and every root |
+| `analysis/{interventions,context_response,interaction_diagnostics,equivalence_scale,checkpoint_replay}.json` | the five trace diagnostics |
+| `analysis/figures/*.png` | per-task curves with the G overlay, learned `a_k` curves, three fixed display cases per task |
+| `analysis/run_manifest.json` | run_id / commit / signature / checkpoint hash for the 6 formal trajectories + reused references |
+| `analysis/resource_ledger.json` | real GPU wall clock (job level and apportioned per arm), CPU-only costs, budget check |
+| `analysis/engineering_log.md` | every implementation fix, with "could this have changed a formal number?" |
+| `analysis/verdicts.json`, `analysis/decision.json` | the four frozen axes, per dataset |
+
+Not committed (by size, reproducible from the same commit): `pred_matrix_*.npz`
+(360 x rows per-epoch predictions), `checkpoint_final.pt`, and the `.gz`
+expansion.  `README` + `run_manifest.json` pin their paths and hashes.
 
 ## Preflight gates (all must pass before training)
 
@@ -107,11 +123,21 @@ rr run res lcrc-rc-molesol --pool res-gpu0 \
 # ... same for mollipo on --pool res-gpu1
 ```
 
-Then pull the two runs and run the CPU-only aggregate stage locally:
+Then pull the two runs and run the CPU-only aggregate stage locally (this
+recomputes every table, ledger, intervention, figure and verdict from the pulled
+artefacts; it never touches a GPU and never changes a trained weight):
 
 ```bash
-uv run research run lcrc-readout-context-pilot-small-v1 --study lcrc-readout-context-pilot-small-v1 \
-  --mode screen --set stage=aggregate     # with RESEARCH_TRACK_ROOT/EXTRA_* as in run_remote.sh
+bash tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/run_remote.sh \
+  --purpose "aggregate" --set stage=aggregate
+```
+
+`run_remote.sh` exports the control-plane opt-in for you
+(`RESEARCH_TRACK_ROOT`, `RESEARCH_EXTRA_RUNNER_PATHS`, `RESEARCH_EXTRA_RUNNERS=cr_runner`),
+so the same script works locally and on the cluster.  Unit tests:
+
+```bash
+uv run pytest -q tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/tests
 ```
 
 ## Rules this round keeps
