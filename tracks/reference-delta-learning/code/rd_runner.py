@@ -610,18 +610,37 @@ def _selected_state_payload(
     return payload
 
 
-def _reload_check_d(ctx: A.ArmContext, model_path: Path, predictions: Mapping[str, np.ndarray]) -> dict[str, Any]:
+def _reload_check_d(
+    ctx: A.ArmContext,
+    model_path: Path,
+    predictions: Mapping[str, np.ndarray],
+    final_predictions: Mapping[str, np.ndarray],
+    *,
+    rounds: int,
+    final_round: int,
+) -> dict[str, Any]:
+    """Reloaded booster vs (a) the selected prefix and (b) the recorded final state."""
     import xgboost as xgb
 
     booster = xgb.Booster(model_file=str(model_path))
     names = list(ctx.task.feature_names)
-    pred = booster.predict(xgb.DMatrix(ctx.task.x["valid"], feature_names=names))
-    raw = ctx.mu + ctx.sigma * np.asarray(pred, dtype=np.float64)
-    return {
+    matrix = xgb.DMatrix(ctx.task.x["valid"], feature_names=names)
+    selected = np.asarray(booster.predict(matrix, iteration_range=(0, int(rounds))), dtype=np.float64)
+    raw = ctx.mu + ctx.sigma * selected
+    payload: dict[str, Any] = {
         "model": str(model_path),
         "split": "valid",
+        "selected_prefix_round": int(rounds),
+        "final_round": int(final_round),
         "max_abs_diff_raw": float(np.max(np.abs(raw - predictions["valid"]))),
     }
+    if int(final_round) != int(rounds):
+        final = np.asarray(booster.predict(matrix), dtype=np.float64)
+        raw_final = ctx.mu + ctx.sigma * final
+        payload["max_abs_diff_final_raw"] = float(
+            np.max(np.abs(raw_final - final_predictions["valid"]))
+        )
+    return payload
 
 
 def _reload_check_c(
@@ -749,6 +768,27 @@ def _stage_dataset_worker(
             sample_rows=sample_rows,
         )
 
+    # every selected state must exist in the curve file of *its own* preset
+    for arm, chosen, curves, config in (
+        ("D", d_selection, d_selected_run.curves, None),
+        ("R", r_selection, d_runs[r_selection["preset"]].curves, str(r_selection["config"])),
+        ("C", c_selection, c_selected_run.curves, str(c_selection["config"])),
+    ):
+        wanted_config = config
+        for split in SPLITS:
+            found = any(
+                row["split"] == split
+                and row["preset"] == chosen["preset"]
+                and int(row["round"]) == int(chosen["round"])
+                and row["config"] == wanted_config
+                for row in curves
+            )
+            if not found:
+                raise AssertionError(
+                    f"{dataset} {arm}: selected {chosen['preset']}/round {chosen['round']}/"
+                    f"config {wanted_config} has no {split} curve row"
+                )
+
     selection = {
         "dataset": dataset,
         "D": _selected_state_payload(
@@ -763,7 +803,8 @@ def _stage_dataset_worker(
         "R": _selected_state_payload(
             dataset,
             "R",
-            d_selected_run.curves,
+            # R selects its own preset, so its curve rows live in that preset's file
+            d_runs[r_selection["preset"]].curves,
             preset=r_selection["preset"],
             round_index=int(r_selection["round"]),
             config=str(r_selection["config"]),
@@ -915,7 +956,14 @@ def _stage_dataset_worker(
             recorded_predictions=d_selected_run.final_predictions,
             curves_index=d_index,
         )
-        checks["D"]["reload"] = _reload_check_d(ctx, out_dir / "models" / f"D_{d_selection['preset']}.ubj", d_selected_pred)
+        checks["D"]["reload"] = _reload_check_d(
+            ctx,
+            out_dir / "models" / f"D_{d_selection['preset']}.ubj",
+            d_selected_pred,
+            d_selected_run.final_predictions,
+            rounds=int(d_selection["round"]),
+            final_round=int(d_selected_run.trained_rounds),
+        )
 
     c_index = c_selected_run.curve_index() if hasattr(c_selected_run, "curve_index") else None
     if c_index is None:
@@ -1034,6 +1082,8 @@ def _checks_ok(checks: Mapping[str, Any]) -> dict[str, Any]:
     for key, report in checks["D"].items():
         if key == "reload":
             worst_d = max(worst_d, float(report["max_abs_diff_raw"]))
+            if "max_abs_diff_final_raw" in report:
+                worst_d = max(worst_d, float(report["max_abs_diff_final_raw"]))
             continue
         for split, entry in report["splits"].items():
             worst_d = max(worst_d, float(entry["max_abs_sample_diff_raw"]))

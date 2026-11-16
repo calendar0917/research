@@ -259,6 +259,50 @@ def _split_config(name: str) -> tuple[int, str]:
     raise KeyError(name)
 
 
+
+def _curve_rows(
+    data: Mapping[str, Any], arm: str, preset: str, config: str | None
+) -> list[dict[str, Any]]:
+    """Curve rows of one arm/preset/config from the persisted per-preset CSVs."""
+    if arm == "N":
+        return []
+    table = data["curves"]["D" if arm in ("D", "R") else "C"] if preset in C.PRESET_ORDER else {}
+    if not isinstance(table, dict):
+        return []
+    rows = table.get(preset, [])
+    return [
+        row
+        for row in rows
+        if row["method"] == arm and (config is None or row["config"] == config)
+    ]
+
+
+def curve_summary(
+    data: Mapping[str, Any], arm: str, state: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Selected / final-round / mean-of-last-20 values of the *same* frozen recipe."""
+    out: dict[str, Any] = {"dataset": data["dataset"], "arm": arm}
+    preset = str(state.get("preset"))
+    config = state.get("config")
+    rows = _curve_rows(data, arm, preset, config)
+    trained = int(state.get("trained_rounds") or 0)
+    for split in ("valid", "test"):
+        selected_value = float(state[f"{split}_rmse_raw"])
+        out[f"{split}_selected"] = selected_value
+        if not rows:
+            # N is a constant predictor: its single state *is* its curve
+            out[f"{split}_final"] = selected_value
+            out[f"{split}_mean_last20"] = selected_value
+            continue
+        at_final = [float(row["rmse_raw"]) for row in rows if row["split"] == split and int(row["round"]) == trained]
+        out[f"{split}_final"] = at_final[0] if at_final else None
+        tail = sorted(
+            (row for row in rows if row["split"] == split), key=lambda row: int(row["round"])
+        )[-20:]
+        out[f"{split}_mean_last20"] = float(np.mean([float(row["rmse_raw"]) for row in tail])) if tail else None
+    out["rounds"] = trained
+    return out
+
 def reference_coverage(
     data: Mapping[str, Any], task: D.TaskData
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
@@ -741,6 +785,7 @@ def aggregate(*, ledger: C.Ledger) -> dict[str, Any]:
     case_rows: list[dict[str, Any]] = []
     resource_rows_all: list[dict[str, Any]] = []
     fit_rows: list[dict[str, Any]] = []
+    curve_rows_summary: list[dict[str, Any]] = []
     best: dict[str, dict[str, Any]] = {}
     quantiles: dict[str, Any] = {}
     with C.stage_timer(ledger, "aggregate_tables"):
@@ -754,6 +799,10 @@ def aggregate(*, ledger: C.Ledger) -> dict[str, Any]:
             quantiles[dataset] = quant
             case_rows.extend(case_ledger(data[dataset], tasks[dataset]))
             resource_rows_all.extend(resource_rows(data[dataset]))
+            for arm in ARMS:
+                curve_rows_summary.append(
+                    curve_summary(data[dataset], arm, data[dataset]["selection"][arm])
+                )
             state = data[dataset]["selection"]["C"]
             fit_rows.append(
                 {
@@ -809,6 +858,7 @@ def aggregate(*, ledger: C.Ledger) -> dict[str, Any]:
                 "cases": case_rows,
                 "resources": resource_rows_all,
                 "c_fit_levels": fit_rows,
+                "curve_summary": curve_rows_summary,
                 "configs": [
                     config
                     for dataset in datasets
@@ -837,7 +887,7 @@ def aggregate(*, ledger: C.Ledger) -> dict[str, Any]:
         )
         report = render_report(
             datasets, data, main_rows, comparison_rows, coverage_rows, case_rows,
-            resource_rows_all, fit_rows, quantiles, decision, references,
+            resource_rows_all, fit_rows, curve_rows_summary, quantiles, decision, references,
         )
         (C.RESULTS_DIR / "REPORT.md").write_text(report, encoding="utf-8")
     metrics = {
@@ -863,6 +913,7 @@ def render_report(
     case_rows: Sequence[Mapping[str, Any]],
     resource_rows_all: Sequence[Mapping[str, Any]],
     fit_rows: Sequence[Mapping[str, Any]],
+    curve_rows_summary: Sequence[Mapping[str, Any]],
     quantiles: Mapping[str, Any],
     decision: Mapping[str, Any],
     references: Mapping[str, Mapping[str, Mapping[str, Any]]],
@@ -903,6 +954,31 @@ def render_report(
         "D/N/R/C 均为本轮产物：D、C 每个 preset 一条正式轨迹，N 为常量（无训练），"
         "R 复用 D 的树前缀并重新选择检索配置。G/L 为 44300426 的复用点参照，"
         "行级 row_id/y 已核验并复算 RMSE；未重训。"
+    )
+    lines.append("")
+    lines.append("## 曲线摘要（同一配方/配置：选中轮 / 最后一轮 / 最后 20 轮均值）")
+    lines.append("")
+    lines.append(
+        _table(
+            curve_rows_summary,
+            [
+                "dataset",
+                "arm",
+                "rounds",
+                "valid_selected",
+                "valid_final",
+                "valid_mean_last20",
+                "test_selected",
+                "test_final",
+                "test_mean_last20",
+            ],
+        )
+    )
+    lines.append("")
+    lines.append(
+        "最后一轮与最后 20 轮均值只作曲线摘要报告，从不替代 Val 选中的状态；"
+        "N 为常量预测，三者相同。选中轮早于最后一轮时，二者的差就是该配方在本任务上的"
+        "过拟合/漂移幅度。"
     )
     lines.append("")
     lines.append("## C 相对 D / N / R 的差距与配对不确定性")
