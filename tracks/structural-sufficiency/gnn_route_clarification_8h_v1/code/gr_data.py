@@ -275,6 +275,9 @@ class TargetOverride:
         self.label = label
         self.build_seconds = float(getattr(base, "build_seconds", 0.0))
 
+    def row_ids_sorted(self, split: str):
+        return self.base.row_ids_sorted(split)
+
 
 def oracle_bundle(dataset: str, property_name: str) -> Any:
     """Load the committed atom-contribution oracle table and override targets."""
