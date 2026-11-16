@@ -380,11 +380,16 @@ def main() -> int:
 
     path = C.ROUND_DIR / "REPORT.md"
     path.write_text("\n".join(lines) + "\n")
+    behind_test = {}
+    for row in stage1.get("l_vs_gine", []):
+        if row.get("b") == "G0" and row.get("split") == "test":
+            behind_test[row["dataset"]] = row["ratio"]
     decision = {**route["decision"], "gates": {
         "A_VAL_GATE": a_gate,
         "D_FIDELITY_AND_REAL": d_pass,
         "RECIPE_SENSITIVE": bool(recipe_sensitive),
-        "C1_BEHIND": l_ratio,
+        "C1_BEHIND_VAL": l_ratio,
+        "C1_BEHIND_TEST": behind_test,
     }}
     C.write_json(C.ROUND_DIR / "DECISION.json", decision)
     print(f"wrote {path}")
