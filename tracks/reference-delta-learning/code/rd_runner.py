@@ -727,7 +727,7 @@ def _stage_dataset_worker(
     for preset in C.PRESET_ORDER:
         run, info = _run_or_load_d(ctx, dataset, preset, device, C.ROUNDS_D, state, ledger)
         d_runs[preset] = run
-        d_info[preset] = info
+        d_info[preset] = {**info, "trained_at": state["parts"][f"D_{preset}"].get("at")}
     d_selection = A.select_d(list(d_runs.values()))
     r_selection = A.select_r(list(d_runs.values()))
     d_selected_run = d_runs[d_selection["preset"]]
@@ -751,7 +751,7 @@ def _stage_dataset_worker(
     for preset in C.PRESET_ORDER:
         run, info = _run_or_load_c(ctx, dataset, preset, device, C.ROUNDS_C, pair_spec, state, ledger)
         c_runs[preset] = run
-        c_info[preset] = info
+        c_info[preset] = {**info, "trained_at": state["parts"][f"C_{preset}"].get("at")}
     c_selection = A.select_c(list(c_runs.values()))
     c_selected_run = c_runs[c_selection["preset"]]
 

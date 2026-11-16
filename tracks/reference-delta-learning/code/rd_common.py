@@ -153,6 +153,28 @@ def environment_snapshot() -> dict[str, Any]:
             if os.environ.get(key) is not None
         },
     }
+    try:  # provenance only: the commit the code was executed from
+        import subprocess
+
+        payload["git_commit"] = (
+            subprocess.run(
+                ["git", "-C", str(REPO_ROOT), "rev-parse", "HEAD"],
+                capture_output=True,
+                check=True,
+                text=True,
+            ).stdout.strip()
+        )
+        payload["git_branch"] = (
+            subprocess.run(
+                ["git", "-C", str(REPO_ROOT), "rev-parse", "--abbrev-ref", "HEAD"],
+                capture_output=True,
+                check=True,
+                text=True,
+            ).stdout.strip()
+        )
+    except Exception:  # noqa: BLE001 - a missing git must not fail a run
+        payload["git_commit"] = None
+        payload["git_branch"] = None
     try:
         import xgboost
 

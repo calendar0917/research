@@ -540,6 +540,7 @@ def resource_rows(data: Mapping[str, Any]) -> list[dict[str, Any]]:
                 "matrix_build_seconds": 0.0,
                 "seconds_per_round": float(info["seconds"]) / max(int(info["trained_rounds"]), 1),
                 "gpu_peak_mb": info.get("gpu_peak_mb"),
+                "trained_at": info.get("trained_at"),
                 "model_sha256": info.get("model_sha256"),
             }
         )
@@ -555,6 +556,7 @@ def resource_rows(data: Mapping[str, Any]) -> list[dict[str, Any]]:
                 "matrix_build_seconds": float(info["matrix_build_seconds"]),
                 "seconds_per_round": float(info["seconds"]) / max(int(info["trained_rounds"]), 1),
                 "gpu_peak_mb": info.get("gpu_peak_mb"),
+                "trained_at": info.get("trained_at"),
                 "model_sha256": info.get("model_sha256"),
             }
         )
@@ -1314,6 +1316,7 @@ def render_report(
                 "matrix_build_seconds",
                 "seconds_per_round",
                 "gpu_peak_mb",
+                "trained_at",
                 "model_sha256",
             ],
         )
