@@ -1,0 +1,20 @@
+# local scratch (never committed)
+cache/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# The round's durable artefacts (JSON/CSV/MD) ARE committed even though the
+# repository-wide default ignores tracks/*/results/**/*.json: a deeper ignore
+# file wins, so the export/replay/decision files travel with the revision.
+!results/
+!results/sq-pilot-small-v1/
+!results/sq-pilot-small-v1/**
+# prediction dumps stay local/reproducible
+results/sq-pilot-small-v1/**/*.npz
+# per-method curves are merged into tables/curves_all.csv (same rows, one file)
+results/sq-pilot-small-v1/ogbg-*/curves_*.csv
+
+# the committed label-free caches are .npz and must travel with the revision
+!data/
+!data/*.npz

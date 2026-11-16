@@ -1,0 +1,53 @@
+phase: sq-pilot-small-v1-closed
+active_studies: []
+focus_study: sq-pilot-small-v1
+updated: 2026-11-16
+
+question: >-
+  Do Train-supervised composite structural queries beat a fixed and a
+  complexity-matched random query bank with the same gradient-boosted reader on
+  official ogbg-molesol / ogbg-mollipo, at competitive performance and with an
+  exactly replayable export?
+
+current_candidate: A-supervised-discrete-query-discovery
+
+round_result:
+  study: sq-pilot-small-v1
+  protocol: sq-pilot-small-v1
+  revision: 44300426          # G refit + report code; F/R/A/E/L trained at 4d782bbd
+  artifacts: results/sq-pilot-small-v1/REPORT.md
+  reading: analysis/reading_sq-pilot-small-v1.md
+  axes:
+    performance: PERFORMANCE_BEHIND     # A / best reference = 1.25-1.30 Val, 1.17-1.27 Test
+    query_learning: CONTROL_INCOMPLETE  # R filled 61/64 on mollipo (512 attempt cap)
+    export: EXPORT_PASS                 # replay max |err| 6.4e-6 / 5.0e-6 raw units
+  promising_small_data_pilot: false
+  resources:
+    gpu_hours: 0.55
+    wall_hours: 1.5
+    budget_gpu_hours: 6
+    budget_wall_hours: 8
+
+closed_questions:
+  - Is the export/replay path exact? Yes, <= 6.4e-6 in raw units on both tasks (H_execute).
+  - Does supervised discovery beat the fixed bank F? Only on mollipo (-4.8%/-3.0%), not on molesol (+4.9% test); CI includes 0.
+  - Does it beat the complexity-matched random bank R? No: -2.9%/+0.6% (molesol) and -1.4%/-0.8% (mollipo), never >=3% on both splits.
+
+open_design_questions:
+  - R's per-slot attempt cap (512) leaves ~10-71% per-slot failure probability for the deepest
+    composite shapes; a complete control needs a pre-registered enumeration or a larger cap.
+    The exploratory complete-R check (analysis/reading) does not change the verdict.
+  - The selected trees spend >50% of their splits on `base::n_atoms`, so a size-controlled or
+    size-excluded evaluation is required before any "structural rule" claim.
+
+deferred_scientific_questions:
+  - Larger official tasks (ZINC / PCBA) and multi-seed stability — explicitly NOT this round.
+  - Any hybrid that attaches the query language to a message-passing backbone — NOT authorized here.
+  - Re-parameterising G/E with a tuning budget — would be a different (fairer) reference arm.
+
+guardrails:
+  - test_policy=always for this round; Test is a development evaluation set, never a selection signal
+  - single training seed 0; no multi-seed claim
+  - all fitting and discovery on Train only
+  - no LCRC residual branch, no encoder inside the main predictor, no distillation, no SSL
+  - stop after the two small tasks
