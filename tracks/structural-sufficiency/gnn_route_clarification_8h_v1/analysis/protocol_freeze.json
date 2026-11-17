@@ -1,0 +1,116 @@
+{
+ "authorised": {
+  "architectures_stage1": [
+   "L",
+   "G0",
+   "Gx"
+  ],
+  "batch_size": 128,
+  "budget_hard_gpu_hours": 16.0,
+  "budget_soft_gpu_hours": 14.0,
+  "datasets": [
+   "ogbg-molesol",
+   "ogbg-mollipo"
+  ],
+  "dropout": 0.1,
+  "epochs": 360,
+  "eval_batch_size": 256,
+  "gates": {
+   "A_POINT_RETENTION": 1.05,
+   "A_VAL_GATE": 1.05,
+   "BRIDGE_R_GEO": 0.99,
+   "BRIDGE_R_MAX": 1.1,
+   "D_FIDELITY_SIGMA": 0.02,
+   "D_REAL_RATIO": 1.05,
+   "EXPLANATION_IMPROVEMENT": 0.1,
+   "IG_TOL_ABS": 0.001,
+   "IG_TOL_REL": 0.0001,
+   "LOW_SUPPORT_COMPONENTS": 30,
+   "MAX_EXPLAIN_NONTRAIN": 256,
+   "MAX_EXPLAIN_TRAIN": 64,
+   "ORACLE_ACCURACY_SIGMA": 0.1,
+   "ORACLE_COMPARABILITY_SIGMA": 0.02
+  },
+  "oracle": {
+   "models": [
+    "L",
+    "T",
+    "A"
+   ],
+   "properties": [
+    "WC_LOGP",
+    "MOLWT"
+   ]
+  },
+  "recipes": {
+   "R3": {
+    "name": "R3",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine_no_warmup",
+    "warmup_epochs": 0,
+    "weight_decay": 0.001
+   },
+   "Rf": {
+    "name": "Rf",
+    "peak_lr": 0.001,
+    "scheduler": "per_step_linear_warmup_then_cosine",
+    "warmup_epochs": 5,
+    "weight_decay": 1e-05
+   }
+  },
+  "seed": 0,
+  "selection": "minimum Val RMSE (stage 3: minimum Val teacher-fidelity RMSE); ties keep the earlier epoch / R3",
+  "stage2_family": "A: dropout(SiLU(W h + b)) -> bias-free s_v, m_v; y = b + sum s_v + mean m_v + sum_j u_j(z_j)",
+  "stage3": "same head on frozen final representation; teacher = T",
+  "test_policy": "always; Test is observed every epoch and never used for selection"
+ },
+ "code_sha256": {
+  "code/gr_common.py": "82552151a182d45d526161b09b4f5b1fa4ecd89c9e36969aec498ffaba3c561d",
+  "code/gr_data.py": "872c17a5c7d3010d78a55e7578f80d660c277bcaf63360bde1e758c09c14d7d7",
+  "code/gr_models.py": "af3f6ba7d4ab1114cfdc991979e8b083bd5466616c2497b8e3e11aa121d20773",
+  "code/gr_oracle.py": "c292d90943fe822e27e4c283567e160660b174e815ca436ab587d8e3efa2c6c9",
+  "code/gr_prepare.py": "1d01d0a0f3935c785f2fc578d71e07b0f347561c2e1d3f1c106e910f6cdc265e",
+  "code/gr_select.py": "f304621c5b1ecd5d4ae2ba0d902247dff55e6fefded0b4ccd0fec640eb9c0029",
+  "code/gr_train.py": "1d0b029a47f871bb90dc0e6b217b43ba8d2bb16528ef0cafe19311c3e0e096b0",
+  "code/gr_worker.py": "0951433217d18dfd5c48631082ba21415253152d3121c9345eeeecc78826ba9c",
+  "reused/lcrc_cross_task_preparation_v1/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+  "reused/lcrc_cross_task_preparation_v1/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+  "reused/lcrc_cross_task_preparation_v1/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+  "reused/lcrc_cross_task_preparation_v1/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+  "reused/lcrc_lipo_model_dissection_v1/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+  "reused/lcrc_lipo_model_dissection_v1/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+  "reused/lcrc_readout_context_pilot_small_v1/cr_common.py": "3a201d2933a73b76d533545e28cee809127a933c720084444f233d06fb99e5ca",
+  "reused/lcrc_readout_context_pilot_small_v1/cr_data.py": "2b3e945190a7112552a125a22cb0596f3295d7567e128089450c198c75ba47b6",
+  "reused/lcrc_readout_context_pilot_small_v1/cr_models.py": "e8e5f6d55e65d9e0bc134679773c989f73043319deb29f4be776cd51dde0185a",
+  "reused/lcrc_readout_context_pilot_small_v1/cr_train.py": "61e725cd101c34ad327e413aeaa57de937966b74e6d08fd2dde0e5432a6fc259",
+  "reused/structural-query-learning/sq_common.py": "fe7333978fd748cf2a61fcdb4d3fa73bf855ebbdc6b05c439477b2c921b9d8cb",
+  "reused/structural-query-learning/sq_data.py": "89ad5436be3ddb8825fe877535e7fbb13679f4cb012a3a3073d63deaf9a83647",
+  "reused/structural-query-learning/sq_gine.py": "78bfdfbfd85cd17e0987f1664f11c03a3c13ebc62628766aa3f1cbf0ba5b6494",
+  "reused/structural-query-learning/sq_lcrc.py": "d8b12c51ae006d04e19ca50b18bc57423133ae020c65ef50039c9051914db351"
+ },
+ "design_basis_commit": "7de32adf4c8941b7e5e0389738fe82c0f18586b2",
+ "freeze_hash": "71689b128839de0ff342c9e49ce771d0ea27fc1b312a176fae1ec84e58a1f61d",
+ "mainline_basis_commit": "9b3dba098915b0cdd800767f61b523681ee9e25d",
+ "prepare": {
+  "environment": {
+   "cuda": "12.4",
+   "cuda_available": false,
+   "cwd": "/home/calendar/code/research-gnn-route-8h/tracks/structural-sufficiency/gnn_route_clarification_8h_v1/code",
+   "git": {
+    "branch": "gnn-route-clarification-8h-v1",
+    "commit": "7de32adf4c8941b7e5e0389738fe82c0f18586b2",
+    "dirty": true
+   },
+   "hostname": "main",
+   "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+   "python": "3.12.15",
+   "rdkit": "2026.09.1",
+   "torch": "2.5.1+cu124",
+   "torch_geometric": "2.6.1"
+  },
+  "passed": true,
+  "seconds": 10.242128610610962,
+  "started_at": "2026-11-16T17:19:51Z"
+ },
+ "round_id": "gnn-route-clarification-8h-v1"
+}
