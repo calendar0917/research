@@ -301,6 +301,34 @@ def write_report() -> Path:
     lines.append("")
 
     # 7 controls
+    # Top-1 size distribution -- the 6-bond cap binds for some datasets
+    import collections
+
+    cap_rows = []
+    for dataset in C.DATASETS:
+        sub = [r for r in data["molecule_rows"] if r["dataset"] == dataset and r.get("has_top1")]
+        if not sub:
+            continue
+        dist = collections.Counter(int(r["top1_n_bonds"]) for r in sub)
+        at_cap = dist.get(C.SEARCH_MAX_K, 0) / len(sub)
+        cap_rows.append(
+            [
+                f"`{dataset}`",
+                len(sub),
+                " ".join(f"{k}:{dist[k]}" for k in sorted(dist)),
+                _pct(at_cap),
+            ]
+        )
+    lines.append(_table(["dataset", "n", "Top-1 键数分布 (k:count)", "落在 6 键上限的比例"], cap_rows))
+    lines.append("")
+    lines.append(
+        "落在 6 键上限的比例越高，说明该数据集的 `A(S)` 在冻结搜索空间边界上仍在增长；"
+        "此时报告的真实屏蔽效果是**当前搜索空间下的下界**，而不是该分子的最优可解释结构。"
+        "这是搜索范围的诊断，本轮不改变 2–6 键的冻结上限。"
+    )
+    lines.append("")
+
+    # 7 controls
     lines.append("## 7. 相对两类对照")
     lines.append("")
     rows = []
