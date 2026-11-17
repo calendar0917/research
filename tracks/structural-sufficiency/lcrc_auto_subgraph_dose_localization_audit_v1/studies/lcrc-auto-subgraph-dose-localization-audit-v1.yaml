@@ -1,0 +1,43 @@
+id: lcrc-auto-subgraph-dose-localization-audit-v1
+protocol: lcrc-auto-subgraph-dose-localization-audit-v1
+active: true
+focus: false
+created: 2026-11-19
+
+question: >-
+  The pilot matched its random connected subgraphs on n_s2_internal -- the number of
+  two-path occurrences whose BOTH bonds lie inside the subgraph -- but the frozen S2
+  gate removes an occurrence as soon as EITHER bond is masked.  Did that mismatch the
+  random-null perturbation dose, does the pilot's Top-1 advantage over random survive a
+  corrected n_s2_affected-matched null, and does the masked local response stay on the
+  highlighted atoms' own roots or spread to the surrounding roots?
+
+baseline: >-
+  The pilot's frozen Top-1 bond sets, gradients, discovery scores, search log and Arm-A
+  checkpoint, reused read-only.  No retraining, no re-selection, no new seed, no wider
+  search space, no architecture change.
+
+candidates:
+  - id: corrected-affected-matched-null
+    status: active
+    note: "same molecule, same bond count, n_s2_affected within 25%, seed 20261117, <=512 attempts, first 16, min 8."
+  - id: root-localization
+    status: active
+    note: "c_v = f(h_v) before/after the mask for every atom root; inside/outside absolute response split."
+  - id: pilot-internal-matched-null
+    status: reference
+    note: "re-used unchanged and reported beside the corrected row; the two protocols are not pooled."
+
+open_questions:
+  - Is the pilot's dose-matching quantity the quantity the gate actually removes?
+  - Does the corrected affected-matched null still favour the pilot's Top-1?
+  - Is the masked local response concentrated on the highlighted atoms or spread to surrounding roots?
+  - How do outside fraction and boundary/affected relate to Top-1 size, gradient score and effect size?
+
+guardrails:
+  - read-only reuse of the pilot round; no file under the upstream round is written
+  - no retraining, no re-selection, no seed change, no architecture change, no new dataset
+  - the intervention is CONDITIONAL_S1_S2_EVIDENCE_MASK, never a chemical bond/group deletion
+  - inside/outside localization is a statement about where the local readout moves, not a unique chemical contribution
+  - the two null protocols are reported side by side and never combined
+  - no automatic architecture conclusion is drawn from these diagnostics

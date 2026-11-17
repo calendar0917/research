@@ -1,0 +1,30 @@
+# Engineering configuration for round lcrc-auto-subgraph-dose-localization-audit-v1.
+#
+# Only engineering knobs live here.  Every scientific constant (the corrected
+# affected-dose matching rule, the localization definitions, the frozen verdict
+# thresholds, the bootstrap) is frozen in code/au_common.FROZEN_CONSTANTS and
+# hashed into analysis/protocol_freeze.json.
+
+protocol_id: lcrc-auto-subgraph-dose-localization-audit-v1
+round_id: lcrc-auto-subgraph-dose-localization-audit-v1
+upstream_round_id: lcrc-auto-subgraph-faithfulness-pilot-v1
+
+# The only training seed of the reused arm-A checkpoint (no training here).
+seed: 0
+
+# preflight | audit | aggregate
+stage: audit
+# one of ogbg-molesol / ogbg-mollipo, or "all" for preflight / aggregate
+dataset: ogbg-molesol
+
+# Logical device inside the pool; CPU is enough for this audit, a GPU only speeds
+# up the frozen forward pass.
+device: cuda:0
+
+# Torch/BLAS threads.  The audit batches one small molecule at a time, so a high
+# thread count buys nothing and only inflates peak memory.
+threads: 4
+
+# Optional engineering cap on the number of audited molecules (never used for a
+# formal run; it exists so a smoke cannot silently become the run).
+limit: null
