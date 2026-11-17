@@ -281,10 +281,8 @@ def run(job: str, *, out_dir: Path | str, device: str = "cuda", max_endpoints: i
             if i % 20 == 0 or i + 1 == len(endpoints):
                 print(f"[worker:{job}] {i+1}/{len(endpoints)} {rec['endpoint']} status={rec.get('status')} t={time.time()-t_start:.1f}s", flush=True)
             if models["device"] != "cpu" and (i + 1) % 50 == 0:
-                import torch
                 torch.cuda.empty_cache()
                 gc.collect()
-    import torch
     if models["device"] != "cpu":
         torch.cuda.empty_cache()
     summary = {
