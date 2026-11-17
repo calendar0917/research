@@ -31,7 +31,7 @@
 | wc_glop_main_scope_closure | PASS |
 | wc_glop_pair_closure | PASS |
 
-执行阶段部署的是提交 `fb561973ec15b1614e9ae086a86901e644772a36`（`res` 上的版本；`protocol_freeze.json` 冻结了当时的代码哈希）；本报告由提交 `6300c34f68bc32198be538033ba29e597dae2f10` 的分析代码生成。相对冻结时被改动的是 `lfa_aux.py`, `lfa_common.py`, `lfa_gates.py`, `lfa_main.py`, `lfa_manifest.py`, `lfa_report.py`。这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。
+执行阶段部署的是提交 `fb561973ec15b1614e9ae086a86901e644772a36`（`res` 上的版本；`protocol_freeze.json` 冻结了当时的代码哈希）；本报告由提交 `fc16e874d52d4daf9d9f05f2319aa54856c7a326` 的分析代码生成。相对冻结时被改动的是 `lfa_aux.py`, `lfa_common.py`, `lfa_gates.py`, `lfa_main.py`, `lfa_manifest.py`, `lfa_report.py`。这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。
 
 | checkpoint | epoch | valid RMSE（身份记录） | sha256 | 身份+重放 | 重放 valid RMSE |
 | --- | --- | --- | --- | --- | --- |
