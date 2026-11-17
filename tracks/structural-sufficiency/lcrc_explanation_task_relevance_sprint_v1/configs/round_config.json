@@ -1,0 +1,29 @@
+{
+  "round_id": "lcrc_explanation_task_relevance_sprint_v1",
+  "dataset": "ogbg-mollipo",
+  "frozen_pairs": 823,
+  "seed": 20261117,
+  "discovery": {
+    "min_k": 2,
+    "max_k": 6,
+    "beam_width": 12,
+    "top_k": 3,
+    "primary": "Top-1",
+    "supplementary": "Top-3",
+    "score": "abs(sum_e g_e) / sqrt(k)",
+    "tie_break": ["score_desc", "fewer_bonds", "sorted_bond_tuple"],
+    "top3_jaccard_max": 0.5
+  },
+  "random_controls": {
+    "n_target": 16,
+    "n_min": 8,
+    "seed": 20261117,
+    "s2_match_rel_tol": 0.25
+  },
+  "models": {
+    "main_a": {"LCRC": "L_lipophilicity/Rf epoch 124", "GINE": "G0_lipophilicity/Rf epoch 183"},
+    "main_b": {"LCRC": "L_WC_LOGP epoch 333", "GINE": "T_WC_LOGP epoch 355"}
+  },
+  "budgets": {"gpu_hours_per_worker": 2.0, "workers": 2},
+  "statistics": {"bootstrap_replicates": 2000, "bootstrap_seed": 20261117, "low_support_components": 30}
+}

@@ -1,0 +1,44 @@
+id: lcrc-auto-subgraph-faithfulness-pilot-v1
+protocol: lcrc-auto-subgraph-faithfulness-pilot-v1
+active: true
+focus: true
+created: 2026-11-17
+
+question: >-
+  Can the frozen LCRC-C1 automatically find connected atom-bond subgraphs that the
+  prediction is sensitive to -- without any pre-specified functional group or SMARTS
+  pattern -- and does the frozen model's own forward computation confirm that these
+  subgraphs matter more than same-size, same-path-count random structures?
+
+baseline: >-
+  The reused arm-A checkpoint of lcrc-readout_context_pilot_small_v1 (the original
+  LCRC-C1) on official ogbg-molesol / ogbg-mollipo.  No model is retrained, no
+  explanation network is trained, and no extra readout is added.
+
+candidates:
+  - id: gradient-subgraph-discovery
+    status: active
+    note: >-
+      A(S) = |sum_{e in S} g[e]| / sqrt(|S|) over connected 2..6 bond subgraphs,
+      beam width 12, Top-3 with a Jaccard <= 0.5 constraint.
+  - id: matched-random-control
+    status: active
+    note: "same molecule, same bond count, S2-occurrence matched within 25%."
+  - id: atom-local-output-heuristic
+    status: active
+    note: "B(S) = sum_v |f(h_v)| / sqrt(|S|), same search rules, cheap comparison only."
+
+open_questions:
+  - Does the real masked response of the frozen function agree in sign and magnitude with the gradient-based discovery score?
+  - Is the discovered subgraph's response larger than matched random connected subgraphs of the same size and path count?
+  - Is the response carried by S1, by S2, by their interaction, or by the nonlinear full-graph readout rho?
+  - Are the two readouts (local sum, rho) frequently cancelling?
+
+guardrails:
+  - single reused checkpoint, single seed; no retraining, no best-of-N
+  - no new explanation network, no extra message passing, no attention, no extra readout
+  - the intervention is CONDITIONAL_S1_S2_EVIDENCE_MASK, never a chemical bond/group deletion
+  - search space limited to 2..6 bond connected subgraphs; no claim beyond it
+  - two official small tasks only; no extra dataset, no extra seed, no extra search space
+  - Test is DEVELOPMENT_TEST and never selects anything
+  - frozen sibling tracks are read-only

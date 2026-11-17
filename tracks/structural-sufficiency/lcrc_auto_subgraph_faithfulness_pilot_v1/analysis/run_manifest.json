@@ -1,0 +1,258 @@
+{
+  "code_sha256": {
+    "as_aggregate.py": "be1ca5169c2e2508e13cba8f2ae0832cfca51b78be8b40f6af5387ce69392618",
+    "as_common.py": "744ae1b16f9e794b21796e671559684371d28bd4ed5c5fc7f29bc36c023ea6c0",
+    "as_controls.py": "3c1b926effc2c9c00fd9451a36d72430a3cff1eda7254de0c39699e4c1c9c966",
+    "as_data.py": "b932ecec0f55753214ec489199ee708bda344cf655f1f033ed16ae451dfa34b6",
+    "as_figures.py": "07ec69bd5666d75b6a53556e1e4a60cba381e0e6e5e3c4bfe76e7807f0cb687e",
+    "as_gate.py": "6484fa48e5bc28019e02c7efba061dd3544c58e4c6a7c40f20e15a6966daeba4",
+    "as_intervene.py": "ab289b9e954a20d838969d371ade24e338c36228e2964d29805c2c25d58432ac",
+    "as_report.py": "45c819af166f0ed6bd715ef42f11ebc680a3236808e15c2bb578dce75d90129e",
+    "as_runner.py": "61153d00631a7d0d6265caff499afc33ddf2fb109d50c3ee5e9f1316de2ea47c",
+    "as_search.py": "891a0f4dd67c9f5ab72f19f301440e10f07e2ab0896711bf2ce3cd4424003e48",
+    "as_worker.py": "10f68a8c10e9d480d9162e8476d31efeaddbeef0bf58a99bad37d46a1177cf18"
+  },
+  "environment": {
+    "cpu_count": 16,
+    "env": {},
+    "git_branch": "lcrc-readout-context-pilot-small-v1",
+    "git_commit": "0baa611d7cdd20c57f60415881e82fbf00df7eb7",
+    "git_dirty_tracked": true,
+    "hostname": "main",
+    "nvidia_smi": null,
+    "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "torch": {
+      "cuda_available": false,
+      "cudnn_version": 90100,
+      "deterministic_algorithms": false,
+      "device_count": 0,
+      "device_uuid": [],
+      "devices": [],
+      "torch_cuda": "12.4"
+    },
+    "uv_lock_sha256": "d063dedc762d1f338661cbd67c59a7245a0efb2966a2b932836530cf5cba7033",
+    "versions": {
+      "matplotlib": "3.11.1",
+      "numpy": "2.1.3",
+      "ogb": "1.3.6",
+      "rdkit": "2026.09.1",
+      "scipy": "1.14.1",
+      "torch": "2.5.1+cu124",
+      "torch_geometric": "2.6.1",
+      "xgboost": "2.1.3"
+    }
+  },
+  "execution_provenance": {
+    "analysis_branch": "lcrc-readout-context-pilot-small-v1",
+    "analysis_commit": "0baa611d7cdd20c57f60415881e82fbf00df7eb7",
+    "analysis_worktree_dirty": true,
+    "available": true,
+    "note": "the per-molecule records under results/ were produced by the GPU workers listed in `runs` (their commit is the deployed revision, i.e. `results_commit`); this manifest was written afterwards by the CPU-only aggregate stage at `analysis_commit`. `analysis_worktree_dirty` is true whenever that stage regenerated tracked analysis artefacts (tables, figures, report) that were not yet committed at write time; it never indicates an edit to code that produced a number. The aggregate stage never changes a weight, a gate, a score or a per-molecule record.",
+    "results_commit": "2e202646b1560e857f92549e7fa72af55fe6ca85",
+    "runs": [
+      {
+        "backend": "process",
+        "command": "bash tracks/structural-sufficiency/lcrc_auto_subgraph_faithfulness_pilot_v1/run_remote.sh --purpose 'formal: automatic subgraph discovery + masked response on ogbg-mollipo (reused arm A, no training)' --set stage=dataset_worker --set dataset=ogbg-mollipo",
+        "created_at": "2026-11-17T12:19:10+08:00",
+        "driver_version": "550.163.01",
+        "experiment": "as-lipo",
+        "git_branch": "lcrc-readout-context-pilot-small-v1",
+        "git_commit": "2e202646b1560e857f92549e7fa72af55fe6ca85",
+        "git_dirty": false,
+        "gpu_names": [
+          "NVIDIA A100-SXM4-40GB",
+          "NVIDIA A100-SXM4-40GB"
+        ],
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "python_version": "3.12.14",
+        "run_id": "as-lipo-20261117-121910-f6371d9c",
+        "stage": "dataset_worker",
+        "state": "completed",
+        "torch_backend": "cu124"
+      },
+      {
+        "backend": "process",
+        "command": "bash tracks/structural-sufficiency/lcrc_auto_subgraph_faithfulness_pilot_v1/run_remote.sh --purpose 'formal: automatic subgraph discovery + masked response on ogbg-molesol (reused arm A, no training)' --set stage=dataset_worker --set dataset=ogbg-molesol",
+        "created_at": "2026-11-17T12:17:49+08:00",
+        "driver_version": "550.163.01",
+        "experiment": "as-mol",
+        "git_branch": "lcrc-readout-context-pilot-small-v1",
+        "git_commit": "2e202646b1560e857f92549e7fa72af55fe6ca85",
+        "git_dirty": false,
+        "gpu_names": [
+          "NVIDIA A100-SXM4-40GB",
+          "NVIDIA A100-SXM4-40GB"
+        ],
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "python_version": "3.12.14",
+        "run_id": "as-mol-20261117-121749-113cc7ec",
+        "stage": "dataset_worker",
+        "state": "completed",
+        "torch_backend": "cu124"
+      },
+      {
+        "backend": "process",
+        "command": "bash tracks/structural-sufficiency/lcrc_auto_subgraph_faithfulness_pilot_v1/run_remote.sh --purpose 'GPU preflight gate check: ogbg-molesol' --set stage=preflight --set dataset=ogbg-molesol",
+        "created_at": "2026-11-17T12:12:58+08:00",
+        "driver_version": "550.163.01",
+        "experiment": "as-pf0",
+        "git_branch": "lcrc-readout-context-pilot-small-v1",
+        "git_commit": "2e202646b1560e857f92549e7fa72af55fe6ca85",
+        "git_dirty": false,
+        "gpu_names": [
+          "NVIDIA A100-SXM4-40GB",
+          "NVIDIA A100-SXM4-40GB"
+        ],
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "python_version": "3.12.14",
+        "run_id": "as-pf0-20261117-121258-1b02e686",
+        "stage": "preflight",
+        "state": "completed",
+        "torch_backend": "cu124"
+      },
+      {
+        "backend": "process",
+        "command": "bash tracks/structural-sufficiency/lcrc_auto_subgraph_faithfulness_pilot_v1/run_remote.sh --purpose 'GPU preflight gate check: ogbg-mollipo' --set stage=preflight --set dataset=ogbg-mollipo",
+        "created_at": "2026-11-17T12:13:11+08:00",
+        "driver_version": "550.163.01",
+        "experiment": "as-pf1",
+        "git_branch": "lcrc-readout-context-pilot-small-v1",
+        "git_commit": "2e202646b1560e857f92549e7fa72af55fe6ca85",
+        "git_dirty": false,
+        "gpu_names": [
+          "NVIDIA A100-SXM4-40GB",
+          "NVIDIA A100-SXM4-40GB"
+        ],
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "python_version": "3.12.14",
+        "run_id": "as-pf1-20261117-121311-cba96be1",
+        "stage": "preflight",
+        "state": "completed",
+        "torch_backend": "cu124"
+      }
+    ],
+    "source": ".rr/pulled/*/meta.json (rr run records; local, not committed)"
+  },
+  "figures": {
+    "index": "tracks/structural-sufficiency/lcrc_auto_subgraph_faithfulness_pilot_v1/analysis/figures/index.json",
+    "n_molecule_figures": 40
+  },
+  "frozen_inputs": {
+    "caches": {
+      "ogbg-molesol": {
+        "graph_cache": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+        "lipo_raw": "a3ab9f7e22798a8f6fdc7f0913b1136b7cf59d4ffc7168faecc7f8b3094710b1"
+      },
+      "ogbg-mollipo": {
+        "graph_cache": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+        "lipo_raw": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3"
+      }
+    },
+    "checkpoints": {
+      "ogbg-molesol": "5a396b4675ff410a512c72365931d3231ef77038e51b86ddd307b1f8d285ab46",
+      "ogbg-mollipo": "1b96644df50a3dc88605114fbf8ba12828be61df5ba0306369f0b6638a55d81b"
+    },
+    "readonly_reuse": {
+      "tracks/structural-query-learning/code": "read-only",
+      "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code": "read-only",
+      "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/code": "read-only",
+      "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1": "read-only"
+    },
+    "trajectories": {
+      "ogbg-molesol": "a46eab882e7d3e7cc0fdb5f7e4c2d5569ee4139f81ef513d2805e737b61cd532",
+      "ogbg-mollipo": "384dfe74b1bbd856bb167c0c8d0bc7dce2dc1d51da5353d57cbb3950da4dce56"
+    }
+  },
+  "generated_at": "2026-11-17T04:33:38Z",
+  "git_branch": "lcrc-readout-context-pilot-small-v1",
+  "git_commit": "0baa611d7cdd20c57f60415881e82fbf00df7eb7",
+  "gpu": {
+    "ogbg-molesol": {
+      "budget": {
+        "compute_hours": 0.001706857303102475,
+        "compute_seconds": 6.1446862911689095,
+        "dataset": "ogbg-molesol",
+        "device": "cuda:0",
+        "guard_max_batch_atoms": 500000,
+        "guard_max_batch_bonds": 500000,
+        "hard_budget_hours": 1.0,
+        "max_bonds_per_molecule": 48,
+        "max_candidates_per_molecule": 346,
+        "n_candidates_logged": 29718,
+        "n_molecules_completed": 192,
+        "n_molecules_planned": 192,
+        "peak_rss_mb": 1233.7,
+        "soft_budget_hours": 0.5,
+        "stage": "dataset_worker",
+        "stopped_early_on_budget": false,
+        "wall_seconds": 16.763239733001683,
+        "within_soft_budget": true
+      },
+      "device": "cuda:0"
+    },
+    "ogbg-mollipo": {
+      "budget": {
+        "compute_hours": 0.0017531093810329267,
+        "compute_seconds": 6.311193771718536,
+        "dataset": "ogbg-mollipo",
+        "device": "cuda:0",
+        "guard_max_batch_atoms": 500000,
+        "guard_max_batch_bonds": 500000,
+        "hard_budget_hours": 1.0,
+        "max_bonds_per_molecule": 53,
+        "max_candidates_per_molecule": 320,
+        "n_candidates_logged": 38939,
+        "n_molecules_completed": 192,
+        "n_molecules_planned": 192,
+        "peak_rss_mb": 1368.9,
+        "soft_budget_hours": 0.5,
+        "stage": "dataset_worker",
+        "stopped_early_on_budget": false,
+        "wall_seconds": 48.03096157097025,
+        "within_soft_budget": true
+      },
+      "device": "cuda:0"
+    }
+  },
+  "protocol_file_sha256": "a357e7c64e34668d3cf7d62cf2eccc135b5204c480dec1b433463a5466f03430",
+  "protocol_hash": "5b2ed182d1a6077edd8dd902ed504f67da9e03eaeaec20cc235defeec1a58118",
+  "protocol_id": "lcrc-auto-subgraph-faithfulness-pilot-v1",
+  "round_id": "lcrc-auto-subgraph-faithfulness-pilot-v1",
+  "sample_selection": {
+    "ogbg-molesol": {
+      "test": {
+        "n_selected": 64,
+        "row_ids_sha256": "f75c68cc74655b54371c0d277ae7c3d01aac344cb3f28f48ee301f10f626b12f"
+      },
+      "train": {
+        "n_selected": 64,
+        "row_ids_sha256": "a591262dd898748db6ac6b8c05a32f2fce2b6bb1b0a6c2afd05ce8e0f76cee08"
+      },
+      "valid": {
+        "n_selected": 64,
+        "row_ids_sha256": "401f8881dd42f5d55bccdcd0c38c0435ec3477df83b084fb7616988cc12ca1d5"
+      }
+    },
+    "ogbg-mollipo": {
+      "test": {
+        "n_selected": 64,
+        "row_ids_sha256": "a44ac0789c4b45dc53c1bb2744b9c4dc93b9b44a2c3c242c4e3784067798defd"
+      },
+      "train": {
+        "n_selected": 64,
+        "row_ids_sha256": "befcb8c4a9de821e1cf9cb272b59a452d0baea3575eff08b6361410680d79170"
+      },
+      "valid": {
+        "n_selected": 64,
+        "row_ids_sha256": "6cbd2b9c375135cdcb65544c2086d7e6f941e0897850cde2e5227b40ea00d4b3"
+      }
+    }
+  },
+  "test_policy": "always",
+  "test_role": "DEVELOPMENT_TEST (evaluated, never used for any selection in this round)"
+}

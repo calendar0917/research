@@ -1,0 +1,24 @@
+# Frozen engineering configuration for round lcrc-auto-subgraph-faithfulness-pilot-v1.
+#
+# Only engineering knobs live here.  Every scientific constant (search space,
+# beam width, Top-k, Jaccard cap, control RNG/tolerances, dose point, bootstrap,
+# budget, effect floor) is frozen in code/as_common.FROZEN_CONSTANTS and hashed
+# into analysis/protocol_freeze.json.
+
+protocol_id: lcrc-auto-subgraph-faithfulness-pilot-v1
+round_id: lcrc-auto-subgraph-faithfulness-pilot-v1
+
+# The only training seed of the reused arm-A checkpoint (no retraining here).
+seed: 0
+
+# preflight | smoke | dataset_worker | aggregate
+stage: dataset_worker
+# one of ogbg-molesol / ogbg-mollipo, or "all" for preflight / aggregate
+dataset: ogbg-molesol
+
+# Logical device inside the pool; the pool decides which physical GPU this is.
+device: cuda:0
+
+# Optional engineering cap on the number of analysed molecules (never used for
+# a formal run; it exists so the smoke stage cannot silently become the run).
+limit: null

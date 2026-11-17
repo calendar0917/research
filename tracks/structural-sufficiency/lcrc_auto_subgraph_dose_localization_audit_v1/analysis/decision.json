@@ -1,0 +1,976 @@
+{
+  "datasets": {
+    "ogbg-molesol": {
+      "dose_matching_defect": {
+        "dataset": "ogbg-molesol",
+        "frac_old_controls_outside_affected_tol": 0.22796352583586627,
+        "grade": "SUBSTANTIVE",
+        "median_old_control_affected_minus_internal": 12.0,
+        "median_old_control_affected_rel_diff": 0.13333333333333333,
+        "median_old_control_internal_rel_diff": 0.0,
+        "median_top1_n_s2_affected": 22.0,
+        "median_top1_n_s2_internal": 12.0,
+        "n_old_controls": 2632,
+        "rule": {
+          "or_median_affected_rel_diff_gt": 0.25,
+          "substantive_if_control_fraction_outside_tol_at_least": 0.2
+        }
+      },
+      "localization": {
+        "test": {
+          "frac_outside_gt_0p5": 0.03125,
+          "median_affected_over_total": 0.3870967741935484,
+          "median_affected_root_outside_fraction": 0.2111111111111111,
+          "median_boundary_over_affected": 0.5,
+          "median_internal_over_total": 0.2,
+          "outside_fraction_median": 0.13980732453661693,
+          "verdict": "LOCAL_CONCENTRATED"
+        },
+        "train": {
+          "frac_outside_gt_0p5": 0.09375,
+          "median_affected_over_total": 0.6666666666666666,
+          "median_affected_root_outside_fraction": 0.21428571428571427,
+          "median_boundary_over_affected": 0.5,
+          "median_internal_over_total": 0.32575757575757575,
+          "outside_fraction_median": 0.12481252297309248,
+          "verdict": "LOCAL_CONCENTRATED"
+        },
+        "valid": {
+          "frac_outside_gt_0p5": 0.078125,
+          "median_affected_over_total": 0.4654761904761905,
+          "median_affected_root_outside_fraction": 0.25,
+          "median_boundary_over_affected": 0.5584415584415584,
+          "median_internal_over_total": 0.2,
+          "outside_fraction_median": 0.21234250067186747,
+          "verdict": "LOCAL_CONCENTRATED"
+        }
+      },
+      "pilot_replay_passed": true,
+      "pilot_vs_corrected": {},
+      "splits": {
+        "test": {
+          "corrected": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.7936507936507936
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.2618161579074174
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 63.0
+              }
+            },
+            "effect_advantage_ci_high": 0.6828514761806852,
+            "effect_advantage_ci_low": 0.2880844135871721,
+            "effect_ratio_ci_low": 1.2066819758912943,
+            "matched_success_rate": 0.984375,
+            "median_effect_advantage": 0.5262780141047045,
+            "median_effect_ratio": 1.2618161579074174,
+            "ratio_gt1_frac": 0.7936507936507936,
+            "split": "test",
+            "verdict": "ATTENUATED"
+          },
+          "paired_change": {
+            "advantage_delta_median": -6.159317811338383e-07,
+            "advantage_delta_median_changed_sets": -0.0300324641102776,
+            "frac_paired_identical_control_sets": 0.09836065573770492,
+            "frac_ratio_decreased": 0.5409836065573771,
+            "median_control_set_jaccard": 0.5238095238095238,
+            "n_matched_both": 61,
+            "n_matched_corrected_only": 2,
+            "n_matched_pilot_only": 0,
+            "n_paired_changed_control_sets": 55,
+            "n_paired_identical_control_sets": 6,
+            "n_paired_molecules": 61,
+            "ratio_delta_ci": {
+              "alpha": 0.05,
+              "ci_high": 7.916900734983301e-07,
+              "ci_low": -0.15353949152691304,
+              "median": -4.370569367750932e-06,
+              "n": 61,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_ci_changed_sets": {
+              "alpha": 0.05,
+              "ci_high": 1.1205801579983188e-06,
+              "ci_low": -0.240473211739904,
+              "median": -0.02100831320467078,
+              "n": 55,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_median": -4.370569367750932e-06,
+            "ratio_delta_median_changed_sets": -0.02100831320467078
+          },
+          "pilot": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.8360655737704918
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.385874308184026
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 61.0
+              }
+            },
+            "effect_advantage_ci_high": 0.8587609154720781,
+            "effect_advantage_ci_low": 0.3208650421204575,
+            "effect_ratio_ci_low": 1.246028169383882,
+            "matched_success_rate": 0.953125,
+            "median_effect_advantage": 0.5329551457691692,
+            "median_effect_ratio": 1.385874308184026,
+            "ratio_gt1_frac": 0.8360655737704918,
+            "split": "test",
+            "verdict": "ATTENUATED"
+          }
+        },
+        "train": {
+          "corrected": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.8222222222222222
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.2968536768452932
+              },
+              "enough_matched_controls": {
+                "passed": false,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 45.0
+              }
+            },
+            "effect_advantage_ci_high": 0.6242941641818791,
+            "effect_advantage_ci_low": 0.2723125564224027,
+            "effect_ratio_ci_low": 1.122223763204361,
+            "matched_success_rate": 0.703125,
+            "median_effect_advantage": 0.4946471762246647,
+            "median_effect_ratio": 1.2968536768452932,
+            "ratio_gt1_frac": 0.8222222222222222,
+            "split": "train",
+            "verdict": "ATTENUATED"
+          },
+          "paired_change": {
+            "advantage_delta_median": -3.695590689023476e-07,
+            "advantage_delta_median_changed_sets": -0.08449512321838526,
+            "frac_paired_identical_control_sets": 0.3409090909090909,
+            "frac_ratio_decreased": 0.5454545454545454,
+            "median_control_set_jaccard": 0.797979797979798,
+            "n_matched_both": 44,
+            "n_matched_corrected_only": 1,
+            "n_matched_pilot_only": 13,
+            "n_paired_changed_control_sets": 29,
+            "n_paired_identical_control_sets": 15,
+            "n_paired_molecules": 44,
+            "ratio_delta_ci": {
+              "alpha": 0.05,
+              "ci_high": 8.320408295681148e-08,
+              "ci_low": -0.044590852851284224,
+              "median": -1.438206760351335e-07,
+              "n": 44,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_ci_changed_sets": {
+              "alpha": 0.05,
+              "ci_high": 7.731646056718944e-08,
+              "ci_low": -0.19048820800402888,
+              "median": -0.11124516977055343,
+              "n": 29,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_median": -1.438206760351335e-07,
+            "ratio_delta_median_changed_sets": -0.11124516977055343
+          },
+          "pilot": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.7719298245614035
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.28663898361073
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 57.0
+              }
+            },
+            "effect_advantage_ci_high": 0.5097451424272172,
+            "effect_advantage_ci_low": 0.18049425069386382,
+            "effect_ratio_ci_low": 1.104042407046723,
+            "matched_success_rate": 0.890625,
+            "median_effect_advantage": 0.4025318681910528,
+            "median_effect_ratio": 1.28663898361073,
+            "ratio_gt1_frac": 0.7719298245614035,
+            "split": "train",
+            "verdict": "ATTENUATED"
+          }
+        },
+        "valid": {
+          "corrected": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.8360655737704918
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.2699149761816249
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 61.0
+              }
+            },
+            "effect_advantage_ci_high": 0.625483374469145,
+            "effect_advantage_ci_low": 0.27475856011166755,
+            "effect_ratio_ci_low": 1.223567052386764,
+            "matched_success_rate": 0.953125,
+            "median_effect_advantage": 0.4351573127119719,
+            "median_effect_ratio": 1.2699149761816249,
+            "ratio_gt1_frac": 0.8360655737704918,
+            "split": "valid",
+            "verdict": "ATTENUATED"
+          },
+          "paired_change": {
+            "advantage_delta_median": 5.851351927432802e-07,
+            "advantage_delta_median_changed_sets": 0.030652953787031034,
+            "frac_paired_identical_control_sets": 0.14754098360655737,
+            "frac_ratio_decreased": 0.45901639344262296,
+            "median_control_set_jaccard": 0.6,
+            "n_matched_both": 61,
+            "n_matched_corrected_only": 0,
+            "n_matched_pilot_only": 2,
+            "n_paired_changed_control_sets": 52,
+            "n_paired_identical_control_sets": 9,
+            "n_paired_molecules": 61,
+            "ratio_delta_ci": {
+              "alpha": 0.05,
+              "ci_high": 0.05979983576970649,
+              "ci_low": -1.3903794264802367e-07,
+              "median": 1.9850033114998666e-06,
+              "n": 61,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_ci_changed_sets": {
+              "alpha": 0.05,
+              "ci_high": 0.13398081738683804,
+              "ci_low": -1.1530914267865455e-07,
+              "median": 0.023876091548597933,
+              "n": 52,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_median": 1.9850033114998666e-06,
+            "ratio_delta_median_changed_sets": 0.023876091548597933
+          },
+          "pilot": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.8412698412698413
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.2931442276272755
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 63.0
+              }
+            },
+            "effect_advantage_ci_high": 0.6118018357880786,
+            "effect_advantage_ci_low": 0.29959163608782324,
+            "effect_ratio_ci_low": 1.210365717853055,
+            "matched_success_rate": 0.984375,
+            "median_effect_advantage": 0.4628597068925706,
+            "median_effect_ratio": 1.2931442276272755,
+            "ratio_gt1_frac": 0.8412698412698413,
+            "split": "valid",
+            "verdict": "ATTENUATED"
+          }
+        }
+      },
+      "top1_vs_heuristic": {
+        "test": {
+          "corrected_frac_top1_gt_heuristic": 0.671875,
+          "corrected_median_top1_minus_heuristic": 0.5702798264192814,
+          "heuristic_source": "pilot local_heuristic.effect reused verbatim (no re-search)",
+          "pilot_frac_top1_gt_heuristic": 0.671875
+        },
+        "train": {
+          "corrected_frac_top1_gt_heuristic": 0.71875,
+          "corrected_median_top1_minus_heuristic": 0.317325482349605,
+          "heuristic_source": "pilot local_heuristic.effect reused verbatim (no re-search)",
+          "pilot_frac_top1_gt_heuristic": 0.671875
+        },
+        "valid": {
+          "corrected_frac_top1_gt_heuristic": 0.703125,
+          "corrected_median_top1_minus_heuristic": 0.5698327677339234,
+          "heuristic_source": "pilot local_heuristic.effect reused verbatim (no re-search)",
+          "pilot_frac_top1_gt_heuristic": 0.703125
+        }
+      }
+    },
+    "ogbg-mollipo": {
+      "dose_matching_defect": {
+        "dataset": "ogbg-mollipo",
+        "frac_old_controls_outside_affected_tol": 0.3681002370470708,
+        "grade": "SUBSTANTIVE",
+        "median_old_control_affected_minus_internal": 10.0,
+        "median_old_control_affected_rel_diff": 0.2,
+        "median_old_control_internal_rel_diff": 0.0,
+        "median_top1_n_s2_affected": 14.0,
+        "median_top1_n_s2_internal": 6.0,
+        "n_old_controls": 2953,
+        "rule": {
+          "or_median_affected_rel_diff_gt": 0.25,
+          "substantive_if_control_fraction_outside_tol_at_least": 0.2
+        }
+      },
+      "localization": {
+        "test": {
+          "frac_outside_gt_0p5": 0.21875,
+          "median_affected_over_total": 0.16227781435154706,
+          "median_affected_root_outside_fraction": 0.30625,
+          "median_boundary_over_affected": 0.6428571428571429,
+          "median_internal_over_total": 0.05718954248366013,
+          "outside_fraction_median": 0.3459744838504533,
+          "verdict": "MIXED"
+        },
+        "train": {
+          "frac_outside_gt_0p5": 0.296875,
+          "median_affected_over_total": 0.1649659863945578,
+          "median_affected_root_outside_fraction": 0.3273809523809524,
+          "median_boundary_over_affected": 0.6666666666666666,
+          "median_internal_over_total": 0.06316489361702127,
+          "outside_fraction_median": 0.3476463988015738,
+          "verdict": "MIXED"
+        },
+        "valid": {
+          "frac_outside_gt_0p5": 0.234375,
+          "median_affected_over_total": 0.19210526315789472,
+          "median_affected_root_outside_fraction": 0.29583333333333334,
+          "median_boundary_over_affected": 0.6,
+          "median_internal_over_total": 0.07894736842105263,
+          "outside_fraction_median": 0.33663997959837955,
+          "verdict": "MIXED"
+        }
+      },
+      "pilot_replay_passed": true,
+      "pilot_vs_corrected": {},
+      "splits": {
+        "test": {
+          "corrected": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": false,
+                "rule": ">= 0.7",
+                "value": 0.5967741935483871
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.289391002804157
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 62.0
+              }
+            },
+            "effect_advantage_ci_high": 0.3553204334797165,
+            "effect_advantage_ci_low": -0.008754719553857315,
+            "effect_ratio_ci_low": 0.9834119947976411,
+            "matched_success_rate": 0.96875,
+            "median_effect_advantage": 0.17804345777654995,
+            "median_effect_ratio": 1.289391002804157,
+            "ratio_gt1_frac": 0.5967741935483871,
+            "split": "test",
+            "verdict": "NOT_SUPPORTED"
+          },
+          "paired_change": {
+            "advantage_delta_median": 9.224359412490779e-05,
+            "advantage_delta_median_changed_sets": 0.00018376505423145506,
+            "frac_paired_identical_control_sets": 0.016129032258064516,
+            "frac_ratio_decreased": 0.43548387096774194,
+            "median_control_set_jaccard": 0.45454545454545453,
+            "n_matched_both": 62,
+            "n_matched_corrected_only": 0,
+            "n_matched_pilot_only": 2,
+            "n_paired_changed_control_sets": 61,
+            "n_paired_identical_control_sets": 1,
+            "n_paired_molecules": 62,
+            "ratio_delta_ci": {
+              "alpha": 0.05,
+              "ci_high": 0.06112826729773069,
+              "ci_low": -6.349010672146438e-07,
+              "median": 0.00034965174221412987,
+              "n": 62,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_ci_changed_sets": {
+              "alpha": 0.05,
+              "ci_high": 0.06112826729773069,
+              "ci_low": -1.4461678827792923e-06,
+              "median": 0.0006985158636836353,
+              "n": 61,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_median": 0.00034965174221412987,
+            "ratio_delta_median_changed_sets": 0.0006985158636836353
+          },
+          "pilot": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": false,
+                "rule": ">= 0.7",
+                "value": 0.5625
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": false,
+                "rule": ">= 1.5",
+                "value": 1.286350522912965
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 64.0
+              }
+            },
+            "effect_advantage_ci_high": 0.3599228237566676,
+            "effect_advantage_ci_low": -0.0972205417767329,
+            "effect_ratio_ci_low": 0.8747443908043502,
+            "matched_success_rate": 1.0,
+            "median_effect_advantage": 0.14065446124396408,
+            "median_effect_ratio": 1.286350522912965,
+            "ratio_gt1_frac": 0.5625,
+            "split": "test",
+            "verdict": "NOT_SUPPORTED"
+          }
+        },
+        "train": {
+          "corrected": {
+            "all_conditions_passed": false,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": false,
+                "rule": ">= 0.7",
+                "value": 0.660377358490566
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": true,
+                "rule": ">= 1.5",
+                "value": 1.776896526831655
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 53.0
+              }
+            },
+            "effect_advantage_ci_high": 0.49699494513081055,
+            "effect_advantage_ci_low": 0.049433142601880586,
+            "effect_ratio_ci_low": 1.1121148043254787,
+            "matched_success_rate": 0.828125,
+            "median_effect_advantage": 0.40560729645769333,
+            "median_effect_ratio": 1.776896526831655,
+            "ratio_gt1_frac": 0.660377358490566,
+            "split": "train",
+            "verdict": "ATTENUATED"
+          },
+          "paired_change": {
+            "advantage_delta_median": 0.03904062309519318,
+            "advantage_delta_median_changed_sets": 0.03941947265438778,
+            "frac_paired_identical_control_sets": 0.018867924528301886,
+            "frac_ratio_decreased": 0.33962264150943394,
+            "median_control_set_jaccard": 0.45454545454545453,
+            "n_matched_both": 53,
+            "n_matched_corrected_only": 0,
+            "n_matched_pilot_only": 11,
+            "n_paired_changed_control_sets": 52,
+            "n_paired_identical_control_sets": 1,
+            "n_paired_molecules": 53,
+            "ratio_delta_ci": {
+              "alpha": 0.05,
+              "ci_high": 0.16697473416055164,
+              "ci_low": 1.0127121023995045e-06,
+              "median": 0.07572985831380458,
+              "n": 53,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_ci_changed_sets": {
+              "alpha": 0.05,
+              "ci_high": 0.16920882135394466,
+              "ci_low": 1.7235744733667957e-06,
+              "median": 0.07780412719479554,
+              "n": 52,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_median": 0.07572985831380458,
+            "ratio_delta_median_changed_sets": 0.07780412719479554
+          },
+          "pilot": {
+            "all_conditions_passed": true,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 1.0
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.703125
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": true,
+                "rule": ">= 1.5",
+                "value": 1.6724781118316003
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 64.0
+              }
+            },
+            "effect_advantage_ci_high": 0.5329454940839911,
+            "effect_advantage_ci_low": 0.1786169037232456,
+            "effect_ratio_ci_low": 1.335380304513461,
+            "matched_success_rate": 1.0,
+            "median_effect_advantage": 0.36082188060908166,
+            "median_effect_ratio": 1.6724781118316003,
+            "ratio_gt1_frac": 0.703125,
+            "split": "train",
+            "verdict": "SURVIVES"
+          }
+        },
+        "valid": {
+          "corrected": {
+            "all_conditions_passed": true,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 0.984375
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.7166666666666667
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": true,
+                "rule": ">= 1.5",
+                "value": 1.8266895311600928
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 60.0
+              }
+            },
+            "effect_advantage_ci_high": 0.6094135194504342,
+            "effect_advantage_ci_low": 0.1029780440888689,
+            "effect_ratio_ci_low": 1.2983821533267281,
+            "matched_success_rate": 0.9375,
+            "median_effect_advantage": 0.30220097724943473,
+            "median_effect_ratio": 1.8266895311600928,
+            "ratio_gt1_frac": 0.7166666666666667,
+            "split": "valid",
+            "verdict": "SURVIVES"
+          },
+          "paired_change": {
+            "advantage_delta_median": 0.007388884298881737,
+            "advantage_delta_median_changed_sets": 0.014777389477404146,
+            "frac_paired_identical_control_sets": 0.016666666666666666,
+            "frac_ratio_decreased": 0.4666666666666667,
+            "median_control_set_jaccard": 0.45454545454545453,
+            "n_matched_both": 60,
+            "n_matched_corrected_only": 0,
+            "n_matched_pilot_only": 4,
+            "n_paired_changed_control_sets": 59,
+            "n_paired_identical_control_sets": 1,
+            "n_paired_molecules": 60,
+            "ratio_delta_ci": {
+              "alpha": 0.05,
+              "ci_high": 0.10090070327043668,
+              "ci_low": -0.08090621019734223,
+              "median": 0.0019403999223126644,
+              "n": 60,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_ci_changed_sets": {
+              "alpha": 0.05,
+              "ci_high": 0.12455838097387062,
+              "ci_low": -0.08310158039754412,
+              "median": 0.0038803679477566154,
+              "n": 59,
+              "replicates": 2000,
+              "seed": 20261117,
+              "statistic": "median"
+            },
+            "ratio_delta_median": 0.0019403999223126644,
+            "ratio_delta_median_changed_sets": 0.0038803679477566154
+          },
+          "pilot": {
+            "all_conditions_passed": true,
+            "conditions": {
+              "effect_floor_fraction_ge_0p50": {
+                "passed": true,
+                "rule": ">= 0.5",
+                "value": 0.984375
+              },
+              "effect_ratio_gt1_fraction_ge_0p70": {
+                "passed": true,
+                "rule": ">= 0.7",
+                "value": 0.71875
+              },
+              "effect_ratio_median_ge_1p5": {
+                "passed": true,
+                "rule": ">= 1.5",
+                "value": 1.5676888973658194
+              },
+              "enough_matched_controls": {
+                "passed": true,
+                "rule": ">= max(32, 80% of interpreted molecules)",
+                "value": 64.0
+              }
+            },
+            "effect_advantage_ci_high": 0.5226835449266842,
+            "effect_advantage_ci_low": 0.10735725027221492,
+            "effect_ratio_ci_low": 1.2829179631151562,
+            "matched_success_rate": 1.0,
+            "median_effect_advantage": 0.29452401338075274,
+            "median_effect_ratio": 1.5676888973658194,
+            "ratio_gt1_frac": 0.71875,
+            "split": "valid",
+            "verdict": "SURVIVES"
+          }
+        }
+      },
+      "top1_vs_heuristic": {
+        "test": {
+          "corrected_frac_top1_gt_heuristic": 0.453125,
+          "corrected_median_top1_minus_heuristic": -0.12698679767871235,
+          "heuristic_source": "pilot local_heuristic.effect reused verbatim (no re-search)",
+          "pilot_frac_top1_gt_heuristic": 0.453125
+        },
+        "train": {
+          "corrected_frac_top1_gt_heuristic": 0.4375,
+          "corrected_median_top1_minus_heuristic": -0.08169160937344211,
+          "heuristic_source": "pilot local_heuristic.effect reused verbatim (no re-search)",
+          "pilot_frac_top1_gt_heuristic": 0.421875
+        },
+        "valid": {
+          "corrected_frac_top1_gt_heuristic": 0.5,
+          "corrected_median_top1_minus_heuristic": 0.020958549764552137,
+          "heuristic_source": "pilot local_heuristic.effect reused verbatim (no re-search)",
+          "pilot_frac_top1_gt_heuristic": 0.5
+        }
+      }
+    }
+  },
+  "engineering_gate": "PASS",
+  "generated_at": "2026-11-17T05:09:03Z",
+  "pilot_metric_replay_passed": true,
+  "round_id": "lcrc-auto-subgraph-dose-localization-audit-v1",
+  "rules_frozen_before_the_run": {
+    "dose_defect": {
+      "substantive_if_control_fraction_outside_tol_at_least": 0.2,
+      "tolerance": 0.25
+    },
+    "localization": {
+      "concentrated_max": 0.25,
+      "spread_min": 0.5
+    },
+    "signal": {
+      "effect_floor_fraction_min": 0.5,
+      "effect_ratio_gt1_fraction_min": 0.7,
+      "effect_ratio_median_min": 1.5,
+      "matched_coverage_fraction_min": 0.8,
+      "splits_required": [
+        "valid",
+        "test"
+      ]
+    }
+  },
+  "summary": {
+    "q1_dose_matching_defect": {
+      "ogbg-molesol": {
+        "frac_old_controls_outside_affected_tol": 0.22796352583586627,
+        "grade": "SUBSTANTIVE",
+        "median_old_control_affected_rel_diff": 0.13333333333333333,
+        "median_top1_n_s2_affected": 22.0,
+        "median_top1_n_s2_internal": 12.0
+      },
+      "ogbg-mollipo": {
+        "frac_old_controls_outside_affected_tol": 0.3681002370470708,
+        "grade": "SUBSTANTIVE",
+        "median_old_control_affected_rel_diff": 0.2,
+        "median_top1_n_s2_affected": 14.0,
+        "median_top1_n_s2_internal": 6.0
+      }
+    },
+    "q2_corrected_effect": {
+      "ogbg-molesol": {
+        "test": {
+          "effect_ratio_ci_low": 1.2066819758912943,
+          "effect_ratio_median": 1.2618161579074174,
+          "median_effect_advantage": 0.5262780141047045,
+          "ratio_gt1_fraction": 0.7936507936507936,
+          "verdict": "ATTENUATED"
+        },
+        "valid": {
+          "effect_ratio_ci_low": 1.223567052386764,
+          "effect_ratio_median": 1.2699149761816249,
+          "median_effect_advantage": 0.4351573127119719,
+          "ratio_gt1_fraction": 0.8360655737704918,
+          "verdict": "ATTENUATED"
+        }
+      },
+      "ogbg-mollipo": {
+        "test": {
+          "effect_ratio_ci_low": 0.9834119947976411,
+          "effect_ratio_median": 1.289391002804157,
+          "median_effect_advantage": 0.17804345777654995,
+          "ratio_gt1_fraction": 0.5967741935483871,
+          "verdict": "NOT_SUPPORTED"
+        },
+        "valid": {
+          "effect_ratio_ci_low": 1.2983821533267281,
+          "effect_ratio_median": 1.8266895311600928,
+          "median_effect_advantage": 0.30220097724943473,
+          "ratio_gt1_fraction": 0.7166666666666667,
+          "verdict": "SURVIVES"
+        }
+      }
+    },
+    "q3_top1_vs_controls": {
+      "ogbg-molesol": {
+        "corrected_verdict_test": "ATTENUATED",
+        "corrected_verdict_valid": "ATTENUATED",
+        "frac_top1_gt_heuristic_test": 0.671875,
+        "frac_top1_gt_heuristic_valid": 0.703125
+      },
+      "ogbg-mollipo": {
+        "corrected_verdict_test": "NOT_SUPPORTED",
+        "corrected_verdict_valid": "SURVIVES",
+        "frac_top1_gt_heuristic_test": 0.453125,
+        "frac_top1_gt_heuristic_valid": 0.5
+      }
+    },
+    "q4_localization": {
+      "ogbg-molesol": {
+        "test": {
+          "frac_outside_gt_0p5": 0.03125,
+          "median_affected_over_total": 0.3870967741935484,
+          "median_affected_root_outside_fraction": 0.2111111111111111,
+          "median_boundary_over_affected": 0.5,
+          "median_internal_over_total": 0.2,
+          "outside_fraction_median": 0.13980732453661693,
+          "verdict": "LOCAL_CONCENTRATED"
+        },
+        "train": {
+          "frac_outside_gt_0p5": 0.09375,
+          "median_affected_over_total": 0.6666666666666666,
+          "median_affected_root_outside_fraction": 0.21428571428571427,
+          "median_boundary_over_affected": 0.5,
+          "median_internal_over_total": 0.32575757575757575,
+          "outside_fraction_median": 0.12481252297309248,
+          "verdict": "LOCAL_CONCENTRATED"
+        },
+        "valid": {
+          "frac_outside_gt_0p5": 0.078125,
+          "median_affected_over_total": 0.4654761904761905,
+          "median_affected_root_outside_fraction": 0.25,
+          "median_boundary_over_affected": 0.5584415584415584,
+          "median_internal_over_total": 0.2,
+          "outside_fraction_median": 0.21234250067186747,
+          "verdict": "LOCAL_CONCENTRATED"
+        }
+      },
+      "ogbg-mollipo": {
+        "test": {
+          "frac_outside_gt_0p5": 0.21875,
+          "median_affected_over_total": 0.16227781435154706,
+          "median_affected_root_outside_fraction": 0.30625,
+          "median_boundary_over_affected": 0.6428571428571429,
+          "median_internal_over_total": 0.05718954248366013,
+          "outside_fraction_median": 0.3459744838504533,
+          "verdict": "MIXED"
+        },
+        "train": {
+          "frac_outside_gt_0p5": 0.296875,
+          "median_affected_over_total": 0.1649659863945578,
+          "median_affected_root_outside_fraction": 0.3273809523809524,
+          "median_boundary_over_affected": 0.6666666666666666,
+          "median_internal_over_total": 0.06316489361702127,
+          "outside_fraction_median": 0.3476463988015738,
+          "verdict": "MIXED"
+        },
+        "valid": {
+          "frac_outside_gt_0p5": 0.234375,
+          "median_affected_over_total": 0.19210526315789472,
+          "median_affected_root_outside_fraction": 0.29583333333333334,
+          "median_boundary_over_affected": 0.6,
+          "median_internal_over_total": 0.07894736842105263,
+          "outside_fraction_median": 0.33663997959837955,
+          "verdict": "MIXED"
+        }
+      }
+    },
+    "q5_scope": {
+      "not_supported": [
+        "任何跨 seed / 跨 checkpoint 的稳定性结论（本轮只有一个冻结 checkpoint）。",
+        "任何化学反事实解释：`atom_feat` / `atom_scalar` / `global` / 原子数特征并未被门控，屏蔽不是删键或删基团。",
+        "“模型不使用结构”或“架构必须修改”这类结论；本轮没有做架构对照。",
+        "新的 Top-1、新的搜索空间、新的架构或新的数据集。"
+      ],
+      "still_undetermined": [
+        "修正后的判定是否能外推到每划分 64 个分子之外。",
+        "外部根节点的响应对预测质量是否必要（本轮没有做去掉外部响应的对照）。",
+        "换一种匹配零假设（例如按边界比例或按权重质量匹配）是否会改变排序；本轮只跑了 affected 剂量匹配。"
+      ],
+      "supported": [
+        "原轮的随机对照确实按 `n_s2_internal`（两条键都在 S 内）匹配，而冻结门控 `w[p]=m[e1]*m[e2]` 实际移除的是 `n_s2_affected`（至少一条键在 S 内）；两者相差边界 occurrence。",
+        "在冻结前向上，`n_s2_affected` 恰好等于被置零的 S2 权重数（逐分子 1→0 集合比对通过），修正后的对照可以在同一模型上复现。",
+        "修正对照下逐分子的 effect ratio / advantage，以及分子级 bootstrap 区间；两数据集、三划分分开报告。",
+        "屏蔽引起的局部读出变化在根节点上的分解：子图内根节点与外部根节点各自的绝对响应、外部占比与闭合检查。"
+      ]
+    }
+  },
+  "top1_replay": {
+    "all": {
+      "max_abs_err": {
+        "delta_L": 2.4637271271998884e-06,
+        "delta_rho": 1.1554144287995172e-06,
+        "pred_raw_masked": 1.4442680360549076e-06,
+        "signed_delta": 2.956472553883316e-06
+      },
+      "n_failed": 0,
+      "n_molecules": 384
+    },
+    "ogbg-molesol": {
+      "max_abs_err": {
+        "delta_L": 2.4637271271998884e-06,
+        "delta_rho": 8.623044942535074e-07,
+        "pred_raw_masked": 1.3242533305479753e-06,
+        "signed_delta": 2.956472553883316e-06
+      },
+      "n_failed": 0,
+      "n_molecules": 192
+    },
+    "ogbg-mollipo": {
+      "max_abs_err": {
+        "delta_L": 1.4623213862030582e-06,
+        "delta_rho": 1.1554144287995172e-06,
+        "pred_raw_masked": 1.4442680360549076e-06,
+        "signed_delta": 1.8594950961237089e-06
+      },
+      "n_failed": 0,
+      "n_molecules": 192
+    }
+  },
+  "upstream_round_id": "lcrc-auto-subgraph-faithfulness-pilot-v1"
+}

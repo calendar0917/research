@@ -1,0 +1,98 @@
+{
+  "arm": "A",
+  "arm_definition": "sum_v f(h_v) + rho([g, mean(h), mean(h^2), log1p(n_atoms)])  (frozen LCRC-C1)",
+  "dataset": "ogbg-mollipo",
+  "expected_sha256": {
+    "checkpoint_best_val.pt": "1b96644df50a3dc88605114fbf8ba12828be61df5ba0306369f0b6638a55d81b",
+    "trajectory.json": "384dfe74b1bbd856bb167c0c8d0bc7dce2dc1d51da5353d57cbb3950da4dce56"
+  },
+  "pass": true,
+  "paths": {
+    "best_predictions.npz": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-mollipo/A/best_predictions.npz",
+    "checkpoint_best_val.pt": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-mollipo/A/checkpoint_best_val.pt",
+    "source_run_manifest.json": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/analysis/run_manifest.json",
+    "trajectory.json": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-mollipo/A/trajectory.json"
+  },
+  "per_epoch_split_coverage": {
+    "all_three_splits": true,
+    "n_epochs_with_test": 360,
+    "n_epochs_with_train": 360,
+    "n_epochs_with_valid": 360
+  },
+  "retrained": false,
+  "reuse": true,
+  "selection_rule": {
+    "argmin_epoch_recomputed": 275,
+    "argmin_valid_rmse_recomputed": 0.7086243164299489,
+    "matches_recorded": true,
+    "rule": "minimum Valid RMSE over the 360 epochs, strictly smaller replaces, ties keep the earlier epoch, epoch 0 excluded"
+  },
+  "sha256": {
+    "best_predictions.npz": "db34c6a5f518cf99a601c6c6200acd949cf4e53c2c6e7687ee51ed48ca07c345",
+    "checkpoint_best_val.pt": "1b96644df50a3dc88605114fbf8ba12828be61df5ba0306369f0b6638a55d81b",
+    "trajectory.json": "384dfe74b1bbd856bb167c0c8d0bc7dce2dc1d51da5353d57cbb3950da4dce56"
+  },
+  "source_manifest": {
+    "commit": "ee72310d9290",
+    "driver_version": "550.163.01",
+    "entry_found": true,
+    "node": "a100-2",
+    "pool": "res-gpu1",
+    "recorded_best_predictions_sha256": "db34c6a5f518cf99a601c6c6200acd949cf4e53c2c6e7687ee51ed48ca07c345",
+    "recorded_checkpoint_sha256": "1b96644df50a3dc88605114fbf8ba12828be61df5ba0306369f0b6638a55d81b",
+    "recorded_selected_epoch": 275,
+    "recorded_test_eval_count": 360,
+    "run_id": "lcrc-rc-mollipo-20261116-223149-6b1569e9",
+    "torch_version": "2.5.1+cu124"
+  },
+  "source_round": "lcrc-readout-context-pilot-small-v1",
+  "trajectory": {
+    "batch_size": 128,
+    "epochs": 360,
+    "final_epoch_metrics": {
+      "epoch": 360.0,
+      "test_mae_raw": 0.5418148239559428,
+      "test_rmse_raw": 0.7417874843494954,
+      "train_mae_raw": 0.19926735847445398,
+      "train_rmse_raw": 0.2667351760634824,
+      "valid_mae_raw": 0.5203491814904454,
+      "valid_rmse_raw": 0.7157591868348524
+    },
+    "git_commit": "ee72310d9290f1728bd1ff2149351cb57a83f5d9",
+    "n_curve_records": 360,
+    "recipe": {
+      "adam_betas": [
+        0.9,
+        0.999
+      ],
+      "adam_eps": 1e-08,
+      "amp": false,
+      "batch_size": 128,
+      "dropout": 0.1,
+      "early_stopping": false,
+      "ema": false,
+      "epochs": 360,
+      "eval_batch_size": 256,
+      "gradient_clip": 5.0,
+      "min_lr": 1e-05,
+      "optimizer": "AdamW",
+      "peak_lr": 0.0003,
+      "scheduler": "per_step_cosine",
+      "selection": "minimum Val RMSE; strictly smaller replaces, ties keep the earlier epoch",
+      "shuffle_generator": "np.random.default_rng(0).permutation over Train split-local rows, one per epoch",
+      "smoke_epochs": 2,
+      "soup": false,
+      "swa": false,
+      "warmup_epochs": 0,
+      "weight_decay": 0.001
+    },
+    "run_purpose": "formal",
+    "seed": 0,
+    "selected_epoch": 275,
+    "selected_test_rmse_raw": 0.7253920405078428,
+    "selected_train_rmse_raw": 0.26391576359906505,
+    "selected_valid_rmse_raw": 0.7086243164299489,
+    "signature": "e5eeff92871dcd231c4d99506babc8136eb10fad809a78c093070058f5540f2a",
+    "test_eval_count": 360
+  }
+}

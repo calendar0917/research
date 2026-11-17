@@ -1,0 +1,206 @@
+{
+  "all_verified": true,
+  "datasets": {
+    "ogbg-molesol": {
+      "arm": "A",
+      "arm_definition": "sum_v f(h_v) + rho([g, mean(h), mean(h^2), log1p(n_atoms)])  (frozen LCRC-C1)",
+      "dataset": "ogbg-molesol",
+      "expected_sha256": {
+        "checkpoint_best_val.pt": "5a396b4675ff410a512c72365931d3231ef77038e51b86ddd307b1f8d285ab46",
+        "trajectory.json": "a46eab882e7d3e7cc0fdb5f7e4c2d5569ee4139f81ef513d2805e737b61cd532"
+      },
+      "pass": true,
+      "paths": {
+        "best_predictions.npz": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-molesol/A/best_predictions.npz",
+        "checkpoint_best_val.pt": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-molesol/A/checkpoint_best_val.pt",
+        "source_run_manifest.json": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/analysis/run_manifest.json",
+        "trajectory.json": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-molesol/A/trajectory.json"
+      },
+      "per_epoch_split_coverage": {
+        "all_three_splits": true,
+        "n_epochs_with_test": 360,
+        "n_epochs_with_train": 360,
+        "n_epochs_with_valid": 360
+      },
+      "retrained": false,
+      "reuse": true,
+      "selection_rule": {
+        "argmin_epoch_recomputed": 248,
+        "argmin_valid_rmse_recomputed": 0.8752981180503214,
+        "matches_recorded": true,
+        "rule": "minimum Valid RMSE over the 360 epochs, strictly smaller replaces, ties keep the earlier epoch, epoch 0 excluded"
+      },
+      "sha256": {
+        "best_predictions.npz": "4766468a280d01bc27dc82cec403de7341807ba0f289b93c7d0ebaa73ab7dc56",
+        "checkpoint_best_val.pt": "5a396b4675ff410a512c72365931d3231ef77038e51b86ddd307b1f8d285ab46",
+        "trajectory.json": "a46eab882e7d3e7cc0fdb5f7e4c2d5569ee4139f81ef513d2805e737b61cd532"
+      },
+      "source_manifest": {
+        "commit": "ee72310d9290",
+        "driver_version": "550.163.01",
+        "entry_found": true,
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "recorded_best_predictions_sha256": "4766468a280d01bc27dc82cec403de7341807ba0f289b93c7d0ebaa73ab7dc56",
+        "recorded_checkpoint_sha256": "5a396b4675ff410a512c72365931d3231ef77038e51b86ddd307b1f8d285ab46",
+        "recorded_selected_epoch": 248,
+        "recorded_test_eval_count": 360,
+        "run_id": "lcrc-rc-molesol-20261116-223138-ad73b71e",
+        "torch_version": "2.5.1+cu124"
+      },
+      "source_round": "lcrc-readout-context-pilot-small-v1",
+      "trajectory": {
+        "batch_size": 128,
+        "epochs": 360,
+        "final_epoch_metrics": {
+          "epoch": 360.0,
+          "test_mae_raw": 0.7100781442157805,
+          "test_rmse_raw": 0.9053342918249933,
+          "train_mae_raw": 0.32110174526967394,
+          "train_rmse_raw": 0.4119492187008852,
+          "valid_mae_raw": 0.6909257201856114,
+          "valid_rmse_raw": 0.9343034464808364
+        },
+        "git_commit": "ee72310d9290f1728bd1ff2149351cb57a83f5d9",
+        "n_curve_records": 360,
+        "recipe": {
+          "adam_betas": [
+            0.9,
+            0.999
+          ],
+          "adam_eps": 1e-08,
+          "amp": false,
+          "batch_size": 128,
+          "dropout": 0.1,
+          "early_stopping": false,
+          "ema": false,
+          "epochs": 360,
+          "eval_batch_size": 256,
+          "gradient_clip": 5.0,
+          "min_lr": 1e-05,
+          "optimizer": "AdamW",
+          "peak_lr": 0.0003,
+          "scheduler": "per_step_cosine",
+          "selection": "minimum Val RMSE; strictly smaller replaces, ties keep the earlier epoch",
+          "shuffle_generator": "np.random.default_rng(0).permutation over Train split-local rows, one per epoch",
+          "smoke_epochs": 2,
+          "soup": false,
+          "swa": false,
+          "warmup_epochs": 0,
+          "weight_decay": 0.001
+        },
+        "run_purpose": "formal",
+        "seed": 0,
+        "selected_epoch": 248,
+        "selected_test_rmse_raw": 0.8544908812331979,
+        "selected_train_rmse_raw": 0.34892446840307656,
+        "selected_valid_rmse_raw": 0.8752981180503214,
+        "signature": "8d0a206674d32956f9432cb6ed407dc53c2c9929f5b4bd051390b2141703e2ca",
+        "test_eval_count": 360
+      }
+    },
+    "ogbg-mollipo": {
+      "arm": "A",
+      "arm_definition": "sum_v f(h_v) + rho([g, mean(h), mean(h^2), log1p(n_atoms)])  (frozen LCRC-C1)",
+      "dataset": "ogbg-mollipo",
+      "expected_sha256": {
+        "checkpoint_best_val.pt": "1b96644df50a3dc88605114fbf8ba12828be61df5ba0306369f0b6638a55d81b",
+        "trajectory.json": "384dfe74b1bbd856bb167c0c8d0bc7dce2dc1d51da5353d57cbb3950da4dce56"
+      },
+      "pass": true,
+      "paths": {
+        "best_predictions.npz": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-mollipo/A/best_predictions.npz",
+        "checkpoint_best_val.pt": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-mollipo/A/checkpoint_best_val.pt",
+        "source_run_manifest.json": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/analysis/run_manifest.json",
+        "trajectory.json": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/ogbg-mollipo/A/trajectory.json"
+      },
+      "per_epoch_split_coverage": {
+        "all_three_splits": true,
+        "n_epochs_with_test": 360,
+        "n_epochs_with_train": 360,
+        "n_epochs_with_valid": 360
+      },
+      "retrained": false,
+      "reuse": true,
+      "selection_rule": {
+        "argmin_epoch_recomputed": 275,
+        "argmin_valid_rmse_recomputed": 0.7086243164299489,
+        "matches_recorded": true,
+        "rule": "minimum Valid RMSE over the 360 epochs, strictly smaller replaces, ties keep the earlier epoch, epoch 0 excluded"
+      },
+      "sha256": {
+        "best_predictions.npz": "db34c6a5f518cf99a601c6c6200acd949cf4e53c2c6e7687ee51ed48ca07c345",
+        "checkpoint_best_val.pt": "1b96644df50a3dc88605114fbf8ba12828be61df5ba0306369f0b6638a55d81b",
+        "trajectory.json": "384dfe74b1bbd856bb167c0c8d0bc7dce2dc1d51da5353d57cbb3950da4dce56"
+      },
+      "source_manifest": {
+        "commit": "ee72310d9290",
+        "driver_version": "550.163.01",
+        "entry_found": true,
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "recorded_best_predictions_sha256": "db34c6a5f518cf99a601c6c6200acd949cf4e53c2c6e7687ee51ed48ca07c345",
+        "recorded_checkpoint_sha256": "1b96644df50a3dc88605114fbf8ba12828be61df5ba0306369f0b6638a55d81b",
+        "recorded_selected_epoch": 275,
+        "recorded_test_eval_count": 360,
+        "run_id": "lcrc-rc-mollipo-20261116-223149-6b1569e9",
+        "torch_version": "2.5.1+cu124"
+      },
+      "source_round": "lcrc-readout-context-pilot-small-v1",
+      "trajectory": {
+        "batch_size": 128,
+        "epochs": 360,
+        "final_epoch_metrics": {
+          "epoch": 360.0,
+          "test_mae_raw": 0.5418148239559428,
+          "test_rmse_raw": 0.7417874843494954,
+          "train_mae_raw": 0.19926735847445398,
+          "train_rmse_raw": 0.2667351760634824,
+          "valid_mae_raw": 0.5203491814904454,
+          "valid_rmse_raw": 0.7157591868348524
+        },
+        "git_commit": "ee72310d9290f1728bd1ff2149351cb57a83f5d9",
+        "n_curve_records": 360,
+        "recipe": {
+          "adam_betas": [
+            0.9,
+            0.999
+          ],
+          "adam_eps": 1e-08,
+          "amp": false,
+          "batch_size": 128,
+          "dropout": 0.1,
+          "early_stopping": false,
+          "ema": false,
+          "epochs": 360,
+          "eval_batch_size": 256,
+          "gradient_clip": 5.0,
+          "min_lr": 1e-05,
+          "optimizer": "AdamW",
+          "peak_lr": 0.0003,
+          "scheduler": "per_step_cosine",
+          "selection": "minimum Val RMSE; strictly smaller replaces, ties keep the earlier epoch",
+          "shuffle_generator": "np.random.default_rng(0).permutation over Train split-local rows, one per epoch",
+          "smoke_epochs": 2,
+          "soup": false,
+          "swa": false,
+          "warmup_epochs": 0,
+          "weight_decay": 0.001
+        },
+        "run_purpose": "formal",
+        "seed": 0,
+        "selected_epoch": 275,
+        "selected_test_rmse_raw": 0.7253920405078428,
+        "selected_train_rmse_raw": 0.26391576359906505,
+        "selected_valid_rmse_raw": 0.7086243164299489,
+        "signature": "e5eeff92871dcd231c4d99506babc8136eb10fad809a78c093070058f5540f2a",
+        "test_eval_count": 360
+      }
+    }
+  },
+  "generated_at": "2026-11-17T04:33:37Z",
+  "policy": "reuse only: no arm-A retraining was performed in this round. Both datasets' checkpoint, trajectory and prediction identity were verified against the source round's recorded SHA-256 before any explanation was computed.",
+  "retrained_datasets": [],
+  "reused_from": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/<dataset>/A",
+  "round_id": "lcrc-auto-subgraph-faithfulness-pilot-v1"
+}

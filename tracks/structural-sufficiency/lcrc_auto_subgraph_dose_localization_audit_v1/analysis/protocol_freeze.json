@@ -1,0 +1,107 @@
+{
+  "freeze_hash": "2d638f7d3f5aed55ce46642e74d1467c8caa24166c77fce6fd7a46d57d1ad5fc",
+  "frozen_constants": {
+    "bootstrap": {
+      "replicates": 2000,
+      "seed": 20261117,
+      "unit": "molecule"
+    },
+    "bootstrap_seed": 20261117,
+    "condition_name": "CONDITIONAL_S1_S2_EVIDENCE_MASK",
+    "control_seed": 20261117,
+    "controls": {
+      "denominator": "max(1, n_s2_affected(top1))",
+      "exclude_identical_to_top1": true,
+      "growth": "identical to the pilot's grow_connected_subgraph (same RNG stream, only the acceptance criterion changes)",
+      "match_quantity": "n_s2_affected",
+      "max_growth_attempts": 512,
+      "min_matched_random": 8,
+      "n_matched_random": 16,
+      "rng": "numpy SeedSequence([20261117, dataset_index, split_index, row_id])",
+      "s2_affected_rel_tol": 0.25,
+      "same_bond_count": true,
+      "same_molecule": true,
+      "shortfall_label": "INSUFFICIENT_MATCHED_NULL"
+    },
+    "datasets": [
+      "ogbg-molesol",
+      "ogbg-mollipo"
+    ],
+    "dose_defect_rule": {
+      "substantive_if_control_fraction_outside_tol_at_least": 0.2,
+      "tolerance": 0.25
+    },
+    "expected_split_sizes": {
+      "ogbg-molesol": {
+        "test": 113,
+        "train": 902,
+        "valid": 113
+      },
+      "ogbg-mollipo": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      }
+    },
+    "localization": {
+      "closure_checks": [
+        "sum_v delta_c_v == delta_L",
+        "delta_L + delta_rho == delta_total"
+      ],
+      "concentrated_max": 0.25,
+      "delta_c_v": "c_v(original) - c_v(masked)",
+      "inside": "atoms incident to at least one masked physical bond of the Top-1 subgraph",
+      "outside": "every other atom root of the same molecule",
+      "outside_fraction": "sum_outside |delta_c_v| / (sum_inside + sum_outside) |delta_c_v|",
+      "root_value": "c_v = f(h_v) for every atom root v, evaluated before and after the mask",
+      "spread_min": 0.5
+    },
+    "memory_guard": {
+      "max_forward_atoms": 200000,
+      "max_forward_bonds": 200000,
+      "max_variants_per_forward": 8
+    },
+    "n_samples_per_split": 64,
+    "protocol_id": "lcrc-auto-subgraph-dose-localization-audit-v1",
+    "replay_tolerance": {
+      "abs": 1e-05,
+      "rel": 1e-05
+    },
+    "reused": {
+      "checkpoint": "lcrc_readout_context_pilot_small_v1/results/<dataset>/A/checkpoint_best_val.pt",
+      "discovery_score": "pilot topk[*].score_A",
+      "gradient": "pilot results/<dataset>/<split>/molecules.json gradient.gradient_raw",
+      "heuristic": "pilot local_heuristic.effect (reused verbatim, no re-search)",
+      "search_log": "pilot results/<dataset>/candidates.npz",
+      "top1": "pilot results/<dataset>/<split>/molecules.json topk[0].bonds (never re-selected)"
+    },
+    "round_id": "lcrc-auto-subgraph-dose-localization-audit-v1",
+    "s2_dose_accounting": {
+      "identity": "n_s2_affected = n_s2_internal + n_s2_boundary",
+      "n_s2_affected": "e1 in S OR e2 in S (the occurrences the m[e1]*m[e2] gate actually removes)",
+      "n_s2_boundary": "exactly one of e1, e2 in S",
+      "n_s2_internal": "e1 in S AND e2 in S (pilot's matching quantity; NOT the affected dose)"
+    },
+    "sample_seed": 20261117,
+    "signal_rule": {
+      "effect_floor_fraction_min": 0.5,
+      "effect_ratio_gt1_fraction_min": 0.7,
+      "effect_ratio_median_min": 1.5,
+      "matched_coverage_fraction_min": 0.8,
+      "splits_required": [
+        "valid",
+        "test"
+      ]
+    },
+    "splits": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "upstream_round_id": "lcrc-auto-subgraph-faithfulness-pilot-v1"
+  },
+  "note": "constants were frozen before the audit ran; the audit re-selects nothing",
+  "protocol_file_sha256": "43f0836f3a55af4ae073e1d07632047ce661b112da8d2e1fbb3e719236204214",
+  "protocol_id": "lcrc-auto-subgraph-dose-localization-audit-v1",
+  "round_id": "lcrc-auto-subgraph-dose-localization-audit-v1"
+}

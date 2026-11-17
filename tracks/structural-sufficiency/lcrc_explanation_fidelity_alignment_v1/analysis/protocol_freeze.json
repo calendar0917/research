@@ -1,0 +1,99 @@
+{
+ "code_hashes": {
+  "lfa_aux.py": "80c181c70a51bbb65cb99a9b1f4f7ca8de67bf212af6d0ac7324d33687981413",
+  "lfa_common.py": "160aa6cbbc4a58baac4ce5773061c26c386fd7147872fbdd184c36697a27bd67",
+  "lfa_data.py": "3dbaa864973d59e968ee70c22b776075d26e11686b732990dc4beb168ddfe32e",
+  "lfa_fields.py": "a329c99f7f0feb800e0caa5395e15bda62274c104128d415595bb53802a4d9d6",
+  "lfa_gates.py": "7cdbd2068c5a1a2405077e22e0def98f9181ea888b6f1ed83e2d767e58f901bf",
+  "lfa_main.py": "476b8b6e78bbebe6ac18980a37ac1268c5ea24c335f8861813e7cf7c3a02b755",
+  "lfa_manifest.py": "3cf3e53c05e7d580f2cb8327ce3f6c137b6d223343d549df8006f8d90750cd1e",
+  "lfa_models.py": "b41d7ae01209649577be7e6065361c3d577089df6ee7b48f7fb39ca33fcadb99",
+  "lfa_pool.py": "ee240e679e503fa3d41b8a9ffbfdf7e156333e55bb1639f17d258464b82d59b9",
+  "lfa_pred.py": "c7dcdc6e801f0b1249c5320d1e4713b7d9c0e1b6807611698f21b0e8ef72ddd0",
+  "lfa_prepare.py": "eb8246e8373427f2f57a92ba9d9f75b571a6f8b5c0f32bfca7cdcdd390185177",
+  "lfa_report.py": "bcb56e4b98e11e857637496b5d87192f96af11d237c7973e300f313cfc98389b",
+  "lfa_search.py": "13980d0bc8e14151ac6d0e037edaafa0b8dbc9fadfa83c1de1f0eae599cfda77",
+  "lfa_select.py": "81a93d504a7c9df27323d8a6c0eea0ecd8e4ae1430ff862a0b21ee2e143c99a8"
+ },
+ "constants": {
+  "controls": {
+   "match": "same molecule, same physical-bond count, same atom count, not identical to Top-1",
+   "max_growth_attempts": 512,
+   "min_acceptable": 8,
+   "n_target": 16,
+   "seed": 20261117
+  },
+  "dataset": "ogbg-mollipo",
+  "description_split": "train",
+  "dose_gate_for_selection": 0.5,
+  "fidelity_evaluation_dose": 0.0,
+  "gates": {
+   "dose_path_steps": 64,
+   "fd_eps": 0.001,
+   "gate_check_molecules": 6
+  },
+  "generator_scores": {
+   "GINE_GRAD": "A(S)=|sum_e g_e|/sqrt(k) on the frozen GINE physical-bond gate gradient",
+   "LCRC_GRAD": "A(S)=|sum_e g_e|/sqrt(k) on the frozen LCRC all-ones gate gradient",
+   "LCRC_LOCAL": "B(S)=sum_{v in atoms(S)} |f(h_v)|/sqrt(k) on the frozen LCRC local output",
+   "TOPO_S2": "n_s2_affected(S) only (structure; no model, label or oracle)"
+  },
+  "generators": [
+   "LCRC_GRAD",
+   "LCRC_LOCAL",
+   "GINE_GRAD",
+   "TOPO_S2"
+  ],
+  "main_splits": [
+   "valid",
+   "test"
+  ],
+  "n_train_description": 128,
+  "pool": "union over the four generators of all retained level-k beams (k=2..6), deduplicated by sorted bond-id tuple",
+  "round_id": "lcrc-explanation-fidelity-alignment-v1",
+  "search": {
+   "beam_width": 12,
+   "k2_rule": "enumerate every pair of physical bonds sharing an endpoint",
+   "k3_to_k6_rule": "expand every retained level-(k-1) candidate by one adjacent physical bond",
+   "max_k": 6,
+   "min_k": 2,
+   "tie_break": "score desc, then fewer bonds, then sorted physical-bond-id tuple",
+   "top_k": 1
+  },
+  "selector_scores": {
+   "A_LCRC_GRAD": "|sum_{e in S} g_e| / sqrt(k)  (LCRC)",
+   "B_LCRC_LOCAL": "sum_{v in atoms(S)} |f(h_v)| / sqrt(k)  (LCRC)",
+   "C_LCRC_MASK50": "|y(1) - y(m_S=0.5)|  (LCRC)",
+   "D_TOPOLOGY": "n_s2_affected(S)  (structure only)",
+   "E_GINE_GRAD": "|sum_{e in S} g_e| / sqrt(k)  (GINE)",
+   "F_GINE_MASK50": "|y(1) - y(m_S=0.5)|  (GINE)"
+  },
+  "selectors": [
+   "A_LCRC_GRAD",
+   "B_LCRC_LOCAL",
+   "C_LCRC_MASK50",
+   "D_TOPOLOGY",
+   "E_GINE_GRAD",
+   "F_GINE_MASK50"
+  ],
+  "statistics": {
+   "aux_unit": "shared-endpoint connected component",
+   "concentration_max_share": 0.5,
+   "concentration_top_fraction": 0.05,
+   "main_unit": "molecule (independent within an official split)",
+   "replicates": 2000,
+   "seed": 20261117
+  },
+  "thresholds": {
+   "fidelity_advantage_std_min": 0.01,
+   "low_support_components": 30,
+   "min_evaluable_fraction": 0.8,
+   "oracle_enrichment_min": 0.02,
+   "paired_improvement_min": 0.02
+  }
+ },
+ "created_utc": "2026-11-17T09:12:11Z",
+ "freeze_hash": "f9e283bdb38b7e790bd2bac4f37f38a2fcd05a80fa7144a476324be9892e6040",
+ "git_commit": "fb561973ec15b1614e9ae086a86901e644772a36",
+ "round_id": "lcrc-explanation-fidelity-alignment-v1"
+}

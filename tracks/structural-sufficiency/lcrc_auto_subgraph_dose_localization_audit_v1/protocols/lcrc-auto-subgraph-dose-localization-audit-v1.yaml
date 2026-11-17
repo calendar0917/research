@@ -1,0 +1,138 @@
+# Comparability protocol for the LCRC automatic-subgraph dose/localisation audit.
+#
+# A protocol states rules, not a model.  This round is a read-only audit of
+# lcrc-auto-subgraph-faithfulness-pilot-v1: it corrects the random-null dose
+# quantity from n_s2_internal to n_s2_affected and localises the masked response
+# to atom roots.  It selects nothing and trains nothing.
+
+id: lcrc-auto-subgraph-dose-localization-audit-v1
+
+upstream:
+  round: lcrc-auto-subgraph-faithfulness-pilot-v1
+  commit: 147b1d81
+  reuse: [top1_bond_sets, gradients, discovery_scores, search_log, heuristic_results, checkpoint]
+  reselect: false
+  retrain: false
+
+dataset:
+  tasks:
+    - name: ogbg-molesol
+      expected_rows: 1128
+    - name: ogbg-mollipo
+      expected_rows: 4200
+  source_policy: official_ogb_graphproppred_only
+  loader: "committed label-free caches of PygGraphPropPredDataset + get_idx_split()"
+  forbidden_substitutes:
+    - ChemBench random122
+    - self-made random/scaffold splits
+
+split:
+  description: official OGB Train / Validation / Test (untouched, frozen indices)
+  sizes:
+    ogbg-molesol: {train: 902, valid: 113, test: 113}
+    ogbg-mollipo: {train: 3360, valid: 420, test: 420}
+  no_row_deletion: true
+  no_train_valid_merge: true
+
+samples:
+  per_split: 64
+  rule: "ascending sha256(20261117|dataset|split|official row id), ties by ascending row id"
+  identity: "re-selected and compared against the pilot samples.json (row ids, cache rows, sha256)"
+
+model:
+  identity: "lcrc_readout_context_pilot_small_v1 arm A (frozen LCRC-C1)"
+  readout: "sum_v f(h_v) + rho([g, mean(h), mean(h^2), log1p(n_atoms)])"
+  training: "reused 360-epoch trajectory, seed 0, no retraining in this round"
+  parameters: {total: 228674, readout: 15298}
+
+intervention:
+  name: CONDITIONAL_S1_S2_EVIDENCE_MASK
+  gating: "one scalar m[e] in [0,1] per deduplicated physical bond"
+  s1: "b_sum contributions of both endpoints and the two directed nbr_emb codes produced by that bond"
+  s2: "w[p] = m[e1]*m[e2] multiplies the whole occurrence contribution"
+  unchanged: [atom_feat, atom_scalar, global, atom counts, atom encodings, BondEncoder parameters, physical bond list]
+  not_a_chemical_counterfactual: true
+
+s2_dose:
+  internal: "e1 in S AND e2 in S (the pilot's null-matching quantity)"
+  boundary: "exactly one of e1, e2 in S"
+  affected: "e1 in S OR e2 in S (what the gate actually removes)"
+  identity: "affected = internal + boundary"
+  proof: "for every audited molecule: weight tensor zero-count == n_s2_affected, and the S2-masked forward equals the frozen forward with exactly those occurrences deleted"
+
+controls:
+  matched_random:
+    match_quantity: n_s2_affected
+    same_molecule: true
+    same_bond_count: true
+    exclude_identical: true
+    s2_affected_rel_tol: 0.25
+    n_target: 16
+    min_acceptable: 8
+    max_growth_attempts: 512
+    rng_seed: 20261117
+    generator: "the pilot's grow_connected_subgraph (same random stream, only the criterion changes)"
+    shortfall_label: INSUFFICIENT_MATCHED_NULL
+  local_heuristic:
+    score: "sum_v |f(h_v)| over the subgraph atoms / sqrt(|S|)"
+    reuse: "pilot local_heuristic record reused verbatim, no re-search"
+
+localization:
+  root_value: "c_v = f(h_v) for every atom root"
+  delta_c_v: "c_v(original) - c_v(masked)"
+  inside: "atoms incident to at least one masked physical bond"
+  outside: "the remaining atom roots"
+  outside_fraction: "sum_outside |delta_c_v| / (sum_inside + sum_outside) |delta_c_v|"
+  closures:
+    - "sum_v delta_c_v == delta_L"
+    - "delta_L + delta_rho == delta_total"
+  not_a_unique_contribution: true
+
+evaluation:
+  primary: "real forward response of the frozen function to the mask, in raw target units"
+  effect_floor: "1% of the Train target standard deviation (descriptive only)"
+  bootstrap: {replicates: 2000, seed: 20261117, unit: molecule}
+  comparisons:
+    - "corrected affected-matched random connected subgraphs"
+    - "pilot internal-matched null (re-used, reported separately, never pooled)"
+    - "atom local-output heuristic (re-used)"
+  forbidden_claims:
+    - "chemical counterfactual effect"
+    - "cross-seed stability"
+    - "unique causal per-atom contribution"
+    - "LCRC did not learn structure"
+    - "the architecture must be changed"
+
+verdicts:
+  engineering_gate: "all identity / replay / accounting / closure gates pass"
+  dose_defect:
+    substantive: ">= 20% of the pilot's accepted controls fall outside the affected 25% tolerance, or median affected rel diff > 0.25"
+    marginal: "some but below the substantive threshold"
+  corrected_signal:
+    rule: >-
+      for Valid and Test of a dataset: median effect_ratio >= 1.5, ratio>1 in
+      >= 70% of matched molecules, >= 50% of molecules reach the 1% std floor,
+      matched molecules >= max(32, 80% of interpreted), and the ratio bootstrap
+      CI low > 1 -> SURVIVES; ratio > 1 with CI low >= 1 -> ATTENUATED;
+      otherwise NOT_SUPPORTED
+  localization:
+    local_concentrated: "median outside fraction <= 0.25"
+    spread: "median outside fraction > 0.50"
+    mixed: "otherwise"
+
+test_policy: always
+test_role: "DEVELOPMENT_TEST: evaluated and reported, never used for any selection in this round"
+
+seeds:
+  training: 0
+  sample_selection: 20261117
+  controls: 20261117
+  bootstrap: 20261117
+
+budget:
+  compute: "CPU-first; a GPU is used only for the frozen forward pass if one is visible"
+  memory: "one small replicated batch per molecule, chunked; peak RSS recorded"
+
+comparability:
+  requires: [protocol_id, dataset_fingerprint, split_fingerprint, checkpoint_sha256, upstream_results_commit]
+  note: "single checkpoint, single seed; the pilot and corrected null protocols are different and never pooled"

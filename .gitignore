@@ -59,6 +59,11 @@ htmlcov/
 !tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/source/raw/lcrc_raw_v2/*.npz
 !tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/runs/*/*.npz
 !tracks/structural-sufficiency/lcrc_pcba_no_mp_sprint_v1/analysis/attention_pooled.npz
+# the auto-subgraph round ships its complete candidate search log: it is the audit
+# trail proving the Top-3 were not re-picked after seeing the real masked effect
+!tracks/structural-sufficiency/lcrc_auto_subgraph_faithfulness_pilot_v1/results/*/candidates.npz
+!tracks/structural-sufficiency/lcrc_auto_subgraph_dose_localization_audit_v1/results/*/candidates.npz
+!tracks/structural-sufficiency/lcrc_auto_subgraph_dose_localization_audit_v1/results/**/candidates.npz
 tracks/*/results/molhiv/*.npz
 
 # generated experiment outputs; keep small Markdown summaries and explicit manifests
@@ -165,6 +170,8 @@ tracks/structural-sufficiency/zinc_additive_reader_v1/runs/
 tracks/structural-sufficiency/zinc_support_weighted_objective_v1/runs/
 tracks/structural-sufficiency/zinc_additive_reader_v1/runs_smoke/
 tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/runs/
+tracks/structural-sufficiency/lcrc_auto_subgraph_dose_localization_audit_v1/runs/
+tracks/structural-sufficiency/lcrc_auto_subgraph_dose_localization_audit_v1/runs/**
 tracks/structural-sufficiency/zinc_adaptive_arch_search_v1/runs_smoke/
 tracks/structural-sufficiency/zinc_arch_discovery_v1/predictions/
 
@@ -373,3 +380,9 @@ tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/runs/
 tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/**/pred_matrix_*.npz
 tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/results/**/checkpoint_final.pt
 tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/analysis/_checkpoints/
+# explanation task-relevance sprint: frozen oracle contributions and checkpoints
+!tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/ogbg-mollipo.npz
+!tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/replay/*.npz
+# explanation task-relevance sprint: plain endpoint JSONL are local working copies;
+# the committed endpoints.jsonl.gz are identical decompressions.
+tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/*/endpoints.jsonl
