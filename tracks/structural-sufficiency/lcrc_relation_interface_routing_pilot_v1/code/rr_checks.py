@@ -338,6 +338,21 @@ def gate_relabelling(bundle, *, max_molecules: int = 24) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _checkpoint_cases(checkpoint_paths: Mapping[str, Any] | None) -> list[tuple[str, str, Any]]:
+    """``(label, variant, path)`` for every trained unit, plus a fresh-init case.
+
+    A checkpoint key may be ``"R1"`` (variant only) or ``"lipo/R1"`` (unit).
+    """
+    cases: list[tuple[str, str, Any]] = []
+    for key, path in (checkpoint_paths or {}).items():
+        variant = str(key).split("/")[-1]
+        cases.append((str(key), variant, path))
+    for variant in C.MODELS:
+        if not any(c[1] == variant for c in cases):
+            cases.append((f"init/{variant}", variant, None))
+    return cases
+
+
 def gates_ledger_and_gate(bundle, *, checkpoint_paths: Mapping[str, Any] | None = None, max_molecules: int = 32) -> dict[str, Any]:
     import torch
 
@@ -345,11 +360,9 @@ def gates_ledger_and_gate(bundle, *, checkpoint_paths: Mapping[str, Any] | None 
     canonical = M.canonical_trunk_state(spec, norm)
     out: dict[str, Any] = {"models": {}}
     all_pass = True
-    for variant in C.MODELS:
-        if checkpoint_paths and variant in checkpoint_paths:
-            model, _payload = T.load_model_from_checkpoint(
-                bundle, _task_of(checkpoint_paths[variant]), variant, checkpoint_paths[variant]
-            )
+    for label, variant, path in _checkpoint_cases(checkpoint_paths):
+        if path is not None:
+            model, _payload = T.load_model_from_checkpoint(bundle, _task_of(path), variant, path)
         else:
             model = M.build_model(variant, spec, norm, canonical, device="cpu")
         model.eval()
@@ -418,8 +431,10 @@ def gates_ledger_and_gate(bundle, *, checkpoint_paths: Mapping[str, Any] | None 
             definition="m_i=0 removes c_i and every c_ij with i as an endpoint, nothing else",
         )
         entry["pass"] = all(g["pass"] for g in entry["gates"].values())
+        entry["variant"] = variant
+        entry["checkpoint"] = str(path) if path is not None else "fresh_init"
         all_pass = all_pass and entry["pass"]
-        out["models"][variant] = entry
+        out["models"][label] = entry
     out["pass"] = bool(all_pass)
     return out
 
@@ -435,8 +450,6 @@ def _task_of(path) -> str:
 
 
 def gate_declaration(bundle) -> dict[str, Any]:
-    import gr_common  # frozen reference schedule of the route-clarification round
-
     spec, norm = bundle.spec, bundle.norm
     expected = M.expected_parameter_counts(int(spec.global_dim))
     canonical = M.canonical_trunk_state(spec, norm)
@@ -458,8 +471,9 @@ def gate_declaration(bundle) -> dict[str, Any]:
     shared = [k for k in states["R1"] if not k.startswith("context.")]
     same = all(bool(np.array_equal(states["R1"][k].numpy(), states["R2"][k].numpy())) for k in shared)
     n_train = int(bundle.split_sizes["train"])
-    steps = T.total_steps(n_train)
-    diffs = [abs(T.lr_at(s, n_train) - float(gr_common.lr_at("Rf", s, n_train))) for s in range(steps + 1)]
+    audit = T.schedule_audit(n_train)
+    steps = int(audit["n_steps"])
+    diffs = [float(audit["max_abs_diff"] or 0.0)]
     budget = bundle.extra.get("budget", {})
     cfg = {
         "seed": C.TRAIN_SEED,
@@ -684,8 +698,26 @@ def select_blocks(c_block, c_iface, iface_a, iface_b, blk_n_bonds, n_blocks, ifa
 # ---------------------------------------------------------------------------
 
 
+def discover_checkpoints() -> dict[str, Any]:
+    """Every trained unit that already has a selected checkpoint on this machine."""
+    found: dict[str, Any] = {}
+    for task in C.TASKS:
+        for model in C.MODELS:
+            path = C.task_results_dir(task, model) / "checkpoint_best_val.pt"
+            if path.is_file():
+                found[f"{task}/{model}"] = path
+    for model in C.MODELS:
+        path = C.RESULTS_DIR / "_smoke/lipo" / model / "checkpoint_best_val.pt"
+        if path.is_file():
+            found[f"smoke_lipo/{model}"] = path
+    return found
+
+
 def run_all(bundle, *, checkpoint_paths: Mapping[str, Any] | None = None) -> dict[str, Any]:
+    if checkpoint_paths is None:
+        checkpoint_paths = discover_checkpoints()
     out = {
+        "checked_checkpoints": {k: str(v) for k, v in checkpoint_paths.items()},
         "round_id": C.ROUND_ID,
         "routing_fingerprints": bundle.routing_fingerprints,
         "gates": {},

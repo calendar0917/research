@@ -193,14 +193,18 @@ def gating_table(core: Mapping[str, np.ndarray]) -> dict[str, np.ndarray]:
         delta[base + int(ia[k])] += float(c_iface[k])
         delta[base + int(ib[k])] += float(c_iface[k])
     score = np.abs(delta) / np.sqrt(np.maximum(1.0, n_bonds.astype(np.float64)))
+    # the ledger stores per-molecule interface endpoints; the frozen selector takes
+    # batch-global block indices and rebases them itself, so rebase explicitly here
+    n_ifaces = np.diff(iface_ptr)
+    base_per_iface = np.repeat(block_ptr[:-1], n_ifaces) if n_ifaces.size else np.zeros(0, np.int64)
     selected = select_blocks(
         c_block,
         c_iface,
-        ia,
-        ib,
+        ia + base_per_iface,
+        ib + base_per_iface,
         n_bonds,
         np.diff(block_ptr),
-        np.diff(iface_ptr),
+        n_ifaces,
     )
     return {
         "delta": delta,
@@ -278,6 +282,7 @@ def oracle_localisation(task: str, model: str, split: str, max_controls: int = C
 
     rows: list[dict[str, Any]] = []
     allocated_gap = 0.0
+    allocated_rel_gap = 0.0
     allocated_total = 0.0
     for g in range(n_mol):
         row_id = int(global_ids[int(core["cache_rows"][g])])
@@ -323,7 +328,9 @@ def oracle_localisation(task: str, model: str, split: str, max_controls: int = C
             for k in range(lo, hi):
                 alloc[int(belong_block[k])] += belong_weight[k] * atom_abs[v]
         allocated_total += float(alloc.sum())
-        allocated_gap = max(allocated_gap, abs(float(alloc.sum()) - total_mass))
+        gap = abs(float(alloc.sum()) - total_mass)
+        allocated_gap = max(allocated_gap, gap)
+        allocated_rel_gap = max(allocated_rel_gap, gap / max(1.0, total_mass))
         rows.append(
             {
                 "task": task,
@@ -348,11 +355,15 @@ def oracle_localisation(task: str, model: str, split: str, max_controls: int = C
                 "selected_allocated_mass": float(alloc[sel]),
             }
         )
+    # ``belong_weight`` is stored in float32 in the frozen cache, so the allocated
+    # ledger can only close to float32 precision; the check is relative.
     return {
         "available": True,
         "rows": rows,
-        "allocation_closes": bool(allocated_gap < 1e-8),
+        "allocation_closes": bool(allocated_rel_gap < 1e-6),
         "allocation_max_abs_gap": float(allocated_gap),
+        "allocation_max_rel_gap": float(allocated_rel_gap),
+        "allocation_tolerance": "1e-6 relative (belong_weight is float32 in the frozen cache)",
         "oracle_mass_total": float(allocated_total),
     }
 
@@ -362,47 +373,47 @@ def oracle_localisation(task: str, model: str, split: str, max_controls: int = C
 # ---------------------------------------------------------------------------
 
 
-def paired_bootstrap(err_a: np.ndarray, err_b: np.ndarray, *, draws: int = C.BOOTSTRAP_DRAWS, seed: int = C.BOOTSTRAP_SEED):
-    """Molecule-level paired bootstrap of the RMSE difference ``a - b``.
+def paired_bootstrap(
+    err_r1: np.ndarray,
+    err_r2: np.ndarray,
+    *,
+    draws: int = C.BOOTSTRAP_DRAWS,
+    seed: int = C.BOOTSTRAP_SEED,
+) -> dict[str, Any]:
+    """Molecule-level paired bootstrap of ``RMSE(R2) - RMSE(R1)``.
 
-    ``err_*`` are signed residuals in raw units; the same row resampling is used
-    for both models, which is what makes the comparison paired.
+    ``err_*`` are signed residuals in raw units; the same resampled molecule set
+    is used for both models, which is what makes the comparison paired.  A
+    negative ``diff`` means R2 is better.
     """
-    n = int(err_a.size)
+    n = int(err_r1.size)
     if n == 0:
         return {"n": 0}
     rng = np.random.default_rng(seed)
     diffs = np.empty(draws, dtype=np.float64)
-    for d in range(draws):
-        idx = rng.integers(0, n, size=n)
-        rmse_a = float(np.sqrt(np.mean(err_a[idx] ** 2)))
-        rmse_b = float(np.sqrt(np.mean(err_b[idx] ** 2)))
-        diffs[d] = rmse_a - rmse_b
-    point_a = float(np.sqrt(np.mean(err_a ** 2)))
-    point_b = float(np.sqrt(np.mean(err_b ** 2)))
-    return {
-        "n": n,
-        "rmse_a": point_a,
-        "rmse_b": point_b,
-        "diff": point_a - point_b,
-        "ratio": point_a / point_b if point_b else float("nan"),
-        "ci95": [float(np.percentile(diffs, 2.5)), float(np.percentile(diffs, 97.5))],
-        "prob_a_better": float(np.mean(diffs < 0.0)),
-        "draws": int(draws),
-        "seed": int(seed),
-    }
-
-
-def paired_bootstrap_ratio(err_a: np.ndarray, err_b: np.ndarray, *, draws: int = C.BOOTSTRAP_DRAWS, seed: int = C.BOOTSTRAP_SEED):
-    n = int(err_a.size)
-    rng = np.random.default_rng(seed)
     ratios = np.empty(draws, dtype=np.float64)
     for d in range(draws):
         idx = rng.integers(0, n, size=n)
-        rmse_a = float(np.sqrt(np.mean(err_a[idx] ** 2)))
-        rmse_b = float(np.sqrt(np.mean(err_b[idx] ** 2)))
-        ratios[d] = rmse_a / rmse_b if rmse_b else float("nan")
-    return [float(np.percentile(ratios, 2.5)), float(np.percentile(ratios, 97.5))]
+        rmse1 = float(np.sqrt(np.mean(err_r1[idx] ** 2)))
+        rmse2 = float(np.sqrt(np.mean(err_r2[idx] ** 2)))
+        diffs[d] = rmse2 - rmse1
+        ratios[d] = rmse2 / rmse1 if rmse1 else float("nan")
+    point1 = float(np.sqrt(np.mean(err_r1 ** 2)))
+    point2 = float(np.sqrt(np.mean(err_r2 ** 2)))
+    return {
+        "n": n,
+        "rmse_R1": point1,
+        "rmse_R2": point2,
+        "diff_R2_minus_R1": point2 - point1,
+        "ratio_R2_over_R1": point2 / point1 if point1 else float("nan"),
+        "ci95_R2_minus_R1": [float(np.percentile(diffs, 2.5)), float(np.percentile(diffs, 97.5))],
+        "ci95_ratio_R2_over_R1": [float(np.percentile(ratios, 2.5)), float(np.percentile(ratios, 97.5))],
+        # exact ties are counted as half, so two identical models give 0.5 rather
+        # than 0 (they are measure-zero for real residual vectors)
+        "prob_R2_better": float(np.mean(diffs < 0.0) + 0.5 * np.mean(diffs == 0.0)),
+        "draws": int(draws),
+        "seed": int(seed),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -420,6 +431,28 @@ def aggregate() -> dict[str, Any]:
     support = C.read_json(C.ANALYSIS_DIR / "partition_support.json")
     budget = C.read_json(C.ANALYSIS_DIR / "parameter_budget.json")
     freeze = C.read_json(C.ANALYSIS_DIR / "protocol_freeze.json")
+
+    for task in C.TASKS:
+        for model in C.MODELS:
+            src = C.task_results_dir(task, model) / "trajectory.json"
+            if not src.is_file():
+                continue
+            traj = C.read_json(src)
+            C.atomic_write_json(
+                C.ANALYSIS_DIR / f"trajectory_{task}_{model}.json",
+                {
+                    "task": task,
+                    "model": model,
+                    "selected": traj.get("selected"),
+                    "final": traj.get("final"),
+                    "last20": traj.get("last20"),
+                    "n_parameters": traj.get("n_parameters"),
+                    "signature": traj.get("signature"),
+                    "device": traj.get("device"),
+                    "environment": traj.get("environment"),
+                    "train_seconds": traj.get("train_seconds"),
+                },
+            )
 
     prediction_rows: list[dict[str, Any]] = []
     prediction_rows.extend(historical_baselines())
@@ -509,20 +542,23 @@ def aggregate() -> dict[str, Any]:
                     "row_id": int(core["row_id"][g]),
                     "n_blocks": int(b1 - b0),
                     "n_interfaces": int(i1 - i0),
-                    "bias": float(core["bias"][g]),
-                    "rho": float(core["rho"][g]),
-                    "block_sum": float(core["block_sum"][g]),
-                    "iface_sum": float(core["iface_sum"][g]),
+                    "bias_std": float(core["bias"][g]),
+                    "rho_std": float(core["rho"][g]),
+                    "block_sum_std": float(core["block_sum"][g]),
+                    "iface_sum_std": float(core["iface_sum"][g]),
                     "pred_raw": float(core["pred_raw"][g]),
                     "y_raw": float(core["y_raw"][g]),
                     "residual": float(core["pred_raw"][g] - core["y_raw"][g]),
+                    # closure is checked in the standardised space the model computes in
+                    # (bias/rho/c_i/c_ij are standardised; pred_raw is de-standardised once)
                     "ledger_closure_error": float(
                         abs(
-                            core["pred_raw"][g]
-                            - (
-                                (core["bias"][g] + core["block_sum"][g] + core["iface_sum"][g] + core["rho"][g])
-                            )
+                            core["pred_std"][g]
+                            - (core["bias"][g] + core["block_sum"][g] + core["iface_sum"][g] + core["rho"][g])
                         )
+                    ),
+                    "relative_rho": float(
+                        core["rho"][g] / max(1e-9, abs(core["block_sum"][g]) + abs(core["iface_sum"][g]))
                     ),
                     "max_abs_delta": float(abs_block[b0:b1].max()) if b1 > b0 else 0.0,
                     "sum_abs_delta": float(abs_block[b0:b1].sum()) if b1 > b0 else 0.0,
@@ -543,6 +579,7 @@ def aggregate() -> dict[str, Any]:
                     "abs_block_sum": float(abs(core["block_sum"][g])),
                     "abs_iface_sum": float(abs(core["iface_sum"][g])),
                     "abs_rho": float(abs(core["rho"][g])),
+                    "abs_selected_delta": float(abs(gating["delta"][b0 + sel])) if sel >= 0 else 0.0,
                     "n_blocks": int(b1 - b0),
                     "n_interfaces": int(i1 - i0),
                 }
@@ -551,8 +588,9 @@ def aggregate() -> dict[str, Any]:
         C.ANALYSIS_DIR / "block_ledger.csv",
         ledger_rows,
         columns=[
-            "task", "model", "split", "row_id", "n_blocks", "n_interfaces", "bias", "rho",
-            "block_sum", "iface_sum", "pred_raw", "y_raw", "residual", "ledger_closure_error",
+            "task", "model", "split", "row_id", "n_blocks", "n_interfaces",
+            "bias_std", "rho_std", "block_sum_std", "iface_sum_std",
+            "pred_raw", "y_raw", "residual", "ledger_closure_error",
             "max_abs_delta", "sum_abs_delta", "selected_block", "selected_delta",
             "selected_score", "selected_n_bonds",
         ],
@@ -572,8 +610,10 @@ def aggregate() -> dict[str, Any]:
                     "median_rms_iface": float(np.median([r["rms_iface"] for r in subset])),
                     "median_n_blocks": float(np.median([r["n_blocks"] for r in subset])),
                     "median_n_interfaces": float(np.median([r["n_interfaces"] for r in subset])),
-                    "mean_abs_delta_selected": float(np.mean([abs(r["selected_delta"]) for r in subset])),
-                    "max_ledger_closure_error": float(max(r["ledger_closure_error"] for r in subset)),
+                    "mean_abs_delta_selected": float(np.mean([r["abs_selected_delta"] for r in subset])),
+                    "max_ledger_closure_error": float(
+                max(r["ledger_closure_error"] for r in ledger_rows if (r["task"], r["model"], r["split"]) == (task, model, split))
+            ),
                 }
     C.atomic_write_json(C.ANALYSIS_DIR / "native_ledger_summary.json", block_scale)
 
@@ -599,13 +639,13 @@ def aggregate() -> dict[str, Any]:
                         "block_b": b_local,
                         "n_bonds_a": int(core["block_n_bonds"][b0 + a_local]),
                         "n_bonds_b": int(core["block_n_bonds"][b0 + b_local]),
-                        "c_iface": float(core["c_iface"][k]),
+                        "c_iface_std": float(core["c_iface"][k]),
                     }
                 )
     C.write_csv(
         C.ANALYSIS_DIR / "interface_ledger.csv",
         interface_rows,
-        columns=["task", "model", "split", "row_id", "block_a", "block_b", "n_bonds_a", "n_bonds_b", "c_iface"],
+        columns=["task", "model", "split", "row_id", "block_a", "block_b", "n_bonds_a", "n_bonds_b", "c_iface_std"],
     )
 
     # ---- oracle localisation (WC_LOGP only) ------------------------------
@@ -624,6 +664,8 @@ def aggregate() -> dict[str, Any]:
                 "matched_fraction": len(matched) / max(1, len(res["rows"])),
                 "allocation_closes": res["allocation_closes"],
                 "allocation_max_abs_gap": res["allocation_max_abs_gap"],
+                "allocation_max_rel_gap": res["allocation_max_rel_gap"],
+                "allocation_tolerance": res["allocation_tolerance"],
                 "mean_controls": float(np.mean([r["n_controls"] for r in res["rows"]])) if res["rows"] else 0.0,
                 "mean_enrichment_matched": float(np.mean([r["enrichment"] for r in matched])) if matched else float("nan"),
                 "median_enrichment_matched": float(np.median([r["enrichment"] for r in matched])) if matched else float("nan"),
@@ -639,6 +681,15 @@ def aggregate() -> dict[str, Any]:
                 "spearman_delta_vs_capture": _spearman(
                     [abs(r["delta"]) for r in res["rows"]], [r["capture"] for r in res["rows"]]
                 ),
+                "coverage": {
+                    "matched_fraction": len(matched) / max(1, len(res["rows"])),
+                    "n_matched": len(matched),
+                    "n_molecules": len(res["rows"]),
+                    "criterion": f">= {C.MIN_ORACLE_CONTROLS} distinct controls",
+                },
+                "enrichment_bootstrap": _bootstrap_mean([r["enrichment"] for r in matched]),
+                "capture_bootstrap": _bootstrap_mean([r["capture"] for r in matched]),
+                "control_capture_bootstrap": _bootstrap_mean([r["control_mean"] for r in matched]),
             }
     C.write_csv(
         C.ANALYSIS_DIR / "oracle_localization.csv",
@@ -668,13 +719,9 @@ def aggregate() -> dict[str, Any]:
             ea = ca["pred_raw"] - ca["y_raw"]
             eb = cb["pred_raw"] - cb["y_raw"]
             entry = paired_bootstrap(ea, eb)
-            entry["ci95_ratio"] = paired_bootstrap_ratio(ea, eb)
             entry["mean_abs_residual_R1"] = float(np.mean(np.abs(ea)))
             entry["mean_abs_residual_R2"] = float(np.mean(np.abs(eb)))
-            # per-molecule paired error difference (R1^2 - R2^2); positive = R2 better
-            sq = ea ** 2 - eb ** 2
-            entry["prob_R2_better"] = float(np.mean(sq > 0))
-            entry["n_positive"] = int((sq > 0).sum())
+            entry["n_rows_R2_better"] = int((np.abs(eb) < np.abs(ea)).sum())
             bootstrap[f"{task}/{split}"] = entry
     C.atomic_write_json(C.ANALYSIS_DIR / "bootstrap_r2_vs_r1.json", bootstrap)
 
@@ -690,6 +737,24 @@ def aggregate() -> dict[str, Any]:
         "oracle_matched_fraction": {k: v["matched_fraction"] for k, v in oracle_meta.items()},
     }
     return out
+
+
+def _bootstrap_mean(values: Sequence[float], *, draws: int = C.BOOTSTRAP_DRAWS, seed: int = C.BOOTSTRAP_SEED):
+    arr = np.asarray([v for v in values if np.isfinite(v)], dtype=np.float64)
+    if arr.size < 2:
+        return {"mean": float(arr.mean()) if arr.size else float("nan"), "ci95": [float("nan")] * 2, "n": int(arr.size)}
+    rng = np.random.default_rng(seed)
+    means = np.empty(draws, dtype=np.float64)
+    for d in range(draws):
+        idx = rng.integers(0, arr.size, size=arr.size)
+        means[d] = float(arr[idx].mean())
+    return {
+        "mean": float(arr.mean()),
+        "ci95": [float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))],
+        "n": int(arr.size),
+        "draws": int(draws),
+        "seed": int(seed),
+    }
 
 
 def _quantiles(values: Sequence[float]) -> dict[str, float]:
@@ -810,17 +875,21 @@ def build_decision(
             if key in bootstrap:
                 b = bootstrap[key]
                 inc[key] = {
-                    "diff_rmse_R2_minus_R1": b["diff"],
-                    "ci95": b["ci95"],
-                    "ratio": b["ratio"],
+                    "diff_R2_minus_R1": b["diff_R2_minus_R1"],
+                    "ci95_R2_minus_R1": b["ci95_R2_minus_R1"],
+                    "ratio_R2_over_R1": b["ratio_R2_over_R1"],
                     "prob_R2_better": b["prob_R2_better"],
-                    "excludes_zero": bool(b["ci95"][0] > 0 or b["ci95"][1] < 0),
-                    "favours_R2": bool(b["diff"] < 0),
+                    "excludes_zero": bool(b["ci95_R2_minus_R1"][0] > 0 or b["ci95_R2_minus_R1"][1] < 0),
+                    "favours_R2": bool(b["diff_R2_minus_R1"] < 0),
                 }
     incremental_signal = any(
         v["favours_R2"] and v["excludes_zero"] and v["prob_R2_better"] >= 0.95 for v in inc.values()
     )
-    no_regression = all((not v["favours_R2"]) or (v["prob_R2_better"] >= 0.05) for v in inc.values())
+    # a significant regression in favour of R1 is reported, not hidden
+    significant_regression = [
+        key for key, v in inc.items()
+        if (not v["favours_R2"]) and v["excludes_zero"] and v["prob_R2_better"] <= 0.05
+    ]
     oracle_signal = {}
     for model in C.MODELS:
         for split in ("valid", "test"):
@@ -852,6 +921,9 @@ def build_decision(
         flags["INTERFACE_CONTEXT_INCREMENT_NOT_SHOWN"] = True
     if incremental_signal and not flags["CAPACITY_CONFOUNDED"]:
         flags["INTERFACE_CONTEXT_PROMISING"] = True
+    flags["INTERFACE_CONTEXT_SIGNIFICANT_REGRESSION"] = bool(significant_regression)
+    if significant_regression:
+        flags["INTERFACE_CONTEXT_REGRESSION_WHERE"] = ", ".join(significant_regression)
     flags["ORACLE_LOCALISATION_SIGNAL"] = bool(oracle_positive)
     flags["RHO_DOMINATES_STRUCTURE"] = bool(
         any(v["rho_over_structural"] > 4.0 for v in rho_dominance.values())
@@ -872,6 +944,7 @@ def build_decision(
         "retention_ok": retention_ok,
         "baselines": {"c1_lipo_rf": c1, "gine_g0_lipo_rf": gine, "c1_wc_logp_r3": c1_wc},
         "interface_increment": inc,
+        "interface_significant_regression": significant_regression,
         "oracle_signal": oracle_signal,
         "rho_dominance": rho_dominance,
         "rho_only": rho_only,
@@ -883,6 +956,18 @@ def build_decision(
             "threshold": C.CAPACITY_CONFOUNDED_RATIO,
         },
         "next_stage_recommendation": next_stage,
+        "caveats": [
+            "Only the Lipophilicity unit has a directly comparable C1 baseline (recipe Rf, "
+            "seed 0, same split and scaler); the WC_LOGP baseline is recipe R3, so its "
+            "retention ratio mixes recipe and architecture.",
+            "The frozen architecture replaces the C1 readout as a whole: the 27-term atom "
+            "sum becomes a ~10-term block sum with block-internal weighted-mean pooling, and "
+            "rho(g, mean h, mean h^2, log1p n) becomes rho_g(g, log1p n). The measured gap is "
+            "the cost of that whole replacement, not of routing alone.",
+            "The oracle controls are matched on bond count and atom count, not on atom/bond "
+            "composition, so a block that is chemically atypical for its size can look good.",
+            "All numbers are single-seed DEVELOPMENT / DEVELOPMENT_TEST evaluations.",
+        ],
         "propositions": {
             "A_structure_routing_viable": {
                 "retention_ok": retention_ok,
@@ -970,7 +1055,6 @@ __all__ = [
     "gating_table",
     "oracle_localisation",
     "paired_bootstrap",
-    "paired_bootstrap_ratio",
     "aggregate",
     "build_decision",
     "run_manifest",

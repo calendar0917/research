@@ -220,9 +220,11 @@ def _stage_train(config: Mapping[str, Any], ledger, *, smoke: bool) -> dict[str,
 
 def _stage_aggregate(config: Mapping[str, Any], ledger) -> dict[str, Any]:
     import rr_analysis as A
+    import rr_report as RP
 
     with stage_timer(ledger, "aggregate", device="cpu", purpose="analysis"):
         out = A.aggregate()
+    out["reports"] = RP.write_reports()
     return out
 
 

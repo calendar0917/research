@@ -301,3 +301,80 @@ def test_study_and_config_parse() -> None:
     assert config["protocol_id"] == C.PROTOCOL_ID
     assert config["seed"] == 0
     assert config["model"] in C.MODELS
+
+
+# ---------------------------------------------------------------------------
+# analysis semantics (the artefacts behind REPORT.md)
+# ---------------------------------------------------------------------------
+
+
+def test_paired_bootstrap_sign_convention() -> None:
+    import rr_analysis as AN
+
+    rng = np.random.default_rng(0)
+    err_r1 = rng.normal(size=200) + 1.0  # R1 is worse
+    err_r2 = rng.normal(size=200)
+    out = AN.paired_bootstrap(err_r1, err_r2, draws=200, seed=20261117)
+    assert out["rmse_R2"] < out["rmse_R1"]
+    assert out["diff_R2_minus_R1"] < 0.0          # negative => R2 better
+    assert out["prob_R2_better"] == 1.0
+    assert out["ci95_R2_minus_R1"][1] < 0.0
+    assert abs(out["diff_R2_minus_R1"] - (out["rmse_R2"] - out["rmse_R1"])) < 1e-12
+    # identical models must not show a difference
+    same = AN.paired_bootstrap(err_r1, err_r1, draws=50, seed=1)
+    assert abs(same["diff_R2_minus_R1"]) < 1e-12
+    assert 0.0 < same["prob_R2_better"] < 1.0
+
+
+def test_selection_score_normalises_by_bond_count() -> None:
+    import rr_checks as K
+
+    # one molecule, two blocks with the same |delta| but 1 vs 4 bonds: the
+    # smaller block must win because the score divides by sqrt(n_bonds)
+    c_block = np.asarray([0.9, 0.9], dtype=np.float64)
+    sel = K.select_blocks(
+        c_block, np.zeros(0), np.zeros(0, np.int64), np.zeros(0, np.int64),
+        np.asarray([1, 4], dtype=np.int64), np.asarray([2], dtype=np.int64),
+        np.asarray([0], dtype=np.int64),
+    )
+    assert int(sel["selected_local_index"][0]) == 0
+    # ties keep the smallest local block index
+    tie = K.select_blocks(
+        np.asarray([0.5, 0.5, 0.5]), np.zeros(0), np.zeros(0, np.int64), np.zeros(0, np.int64),
+        np.asarray([2, 2, 2], dtype=np.int64), np.asarray([3], dtype=np.int64),
+        np.asarray([0], dtype=np.int64),
+    )
+    assert int(tie["selected_local_index"][0]) == 0
+
+
+def test_ledger_columns_declare_standardised_units() -> None:
+    import csv
+
+    path = C.ANALYSIS_DIR / "block_ledger.csv"
+    assert path.is_file(), "run the aggregate stage first"
+    with path.open(newline="") as handle:
+        header = next(csv.reader(handle))
+    for name in ("bias_std", "rho_std", "block_sum_std", "iface_sum_std"):
+        assert name in header
+    # the closure identity is only meaningful in the standardised space
+    rows = list(csv.DictReader(path.open(newline="")))
+    worst = max(abs(float(r["ledger_closure_error"])) for r in rows)
+    assert worst < C.TRACE_TOL_BASE
+
+
+def test_report_is_generated_from_artifacts() -> None:
+    import json
+
+    report = (C.ROUND_DIR / "REPORT.md")
+    decision = (C.ANALYSIS_DIR / "decision.json")
+    if not decision.is_file() or not report.is_file():
+        pytest.skip("aggregate stage has not run in this checkout")
+    text = report.read_text()
+    payload = json.loads(decision.read_text())
+    for model in C.MODELS:
+        ratio = payload["retention"][model]["lipo_valid_ratio_vs_c1_rf"]
+        # the exact ratio printed in the report must be the artefact's ratio
+        assert f"{ratio:.3f}" in text
+    for question in ("Q1", "Q2", "Q3", "Q4", "Q5"):
+        assert f"### {question}" in text
+    assert "DEVELOPMENT_TEST" in text
