@@ -1211,12 +1211,12 @@ def run(datasets: Sequence[str] = C.DATASETS) -> dict[str, Any]:
     decision = build_decision(list(datasets), detail, localization_detail)
     decision["engineering_gate"] = preflight["engineering_gate"]
     decision["pilot_metric_replay_passed"] = old_replay_passed
-    decision["top1_replay"] = {d: detail[d]["top1_replay"] for d in datasets}
+    decision["top1_replay"] = {d: detail[d]["build"]["top1_replay"] for d in datasets}
     decision["top1_replay"]["all"] = {
-        "n_molecules": sum(detail[d]["top1_replay"]["n_molecules"] for d in datasets),
-        "n_failed": sum(detail[d]["top1_replay"]["n_failed"] for d in datasets),
+        "n_molecules": sum(detail[d]["build"]["top1_replay"]["n_molecules"] for d in datasets),
+        "n_failed": sum(detail[d]["build"]["top1_replay"]["n_failed"] for d in datasets),
         "max_abs_err": {
-            k: max(detail[d]["top1_replay"]["max_abs_err"].get(k, 0.0) for d in datasets)
+            k: max(detail[d]["build"]["top1_replay"]["max_abs_err"].get(k, 0.0) for d in datasets)
             for k in ("signed_delta", "delta_L", "delta_rho", "pred_raw_masked")
         },
     }
