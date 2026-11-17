@@ -1,0 +1,60 @@
+id: lcrc-relation-role-preserving-pilot-v1
+protocol: lcrc-relation-role-preserving-pilot-v1
+active: true
+focus: true
+created: 2026-11-24
+
+question: >-
+  With the frozen C1 architecture and the complete C1 readout kept exactly as they
+  are, does splitting the 200-d S2 record into "same topology block" versus
+  "crosses a topology block boundary" and rescaling the two groups by trainable
+  per-channel gammas preserve the C1 prediction and beat an identical-capacity,
+  identical-init, label-free type-hash split of the same 200-d record?
+
+baseline: >-
+  Read-only.  C1 (LCRC local encoder + C1 readout, 228674 parameters) under recipe
+  Rf, seed 0, official split, as published by gnn_route_clarification_8h_v1, for
+  Lipophilicity.  C1 under recipe R3 for WC_LOGP (recipe differs, flagged, never
+  used as a threshold).  GINE under Rf as a reference row only.  No historical
+  model is retrained, re-selected or re-evaluated here.
+
+candidates:
+  - id: RR_REAL
+    status: active
+    note: >-
+      S2 record split by frozen topology block ownership of the two endpoint
+      bonds: owner(e1)==owner(e2) -> internal, otherwise cross.  2 x 200 gamma
+      parameters, initialised to 1.
+  - id: RR_CONTROL
+    status: active
+    note: >-
+      Same architecture, same parameter count, same initial state, same recipe.
+      S2 record split by blake2b(salt|path_cat|path_end63|path_closure) & 1, one
+      class per observed typed-S2 record.  Invariant under atom/bond relabelling,
+      blind to labels and to the oracle.
+
+frozen_reading:
+  - >-
+    The 200-d S2 record (typed 104-d + content 96-d) is atomic; it is never
+    decomposed, re-weighted or re-encoded by this round.
+  - >-
+    Every occurrence belongs to exactly one role group, so
+    Q_internal + Q_cross equals the frozen C1 aggregation on every atom and split.
+  - >-
+    With both gammas at 1 the two models are the frozen C1 model, bitwise.
+  - >-
+    The readout is the C1 readout, unchanged, namely
+    sum_v f(h_v) + rho([g, mean h, mean h^2, log1p n]).
+  - >-
+    The parameter delta over C1 is exactly 400 (2 x 200) for both models, so the
+    REAL vs CONTROL comparison is not a capacity comparison.
+
+open_questions:
+  - Does the frozen C1 readout tolerate an extra 400 parameters and two
+    multiplicative per-channel gates without losing the C1 accuracy?
+  - Is a real topology-block role boundary a better inductive bias for those gates
+    than an arbitrary but relabelling-invariant partition of the same records?
+  - Do the learned gammas move away from 1, and does that movement buy anything?
+  - On WC_LOGP, does the REAL model's native block-mask response localise the
+    oracle atom contributions better than the CONTROL model's?
+  - Is the answer driven by prediction or by external structural explanation?
