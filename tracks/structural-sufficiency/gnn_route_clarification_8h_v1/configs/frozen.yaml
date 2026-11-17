@@ -1,0 +1,82 @@
+# Frozen design of gnn-route-clarification-8h-v1 (copied from the task brief).
+# Code constants are authoritative; analysis/protocol_freeze.json carries the
+# full machine-readable freeze with hashes.
+round_id: gnn-route-clarification-8h-v1
+design_basis_commit: 7de32adf4c8941b7e5e0389738fe82c0f18586b2
+
+data:
+  datasets: [ogbg-molesol, ogbg-mollipo]
+  splits: {train: 902/3360, valid: 113/420, test: 113/420}
+  target_scaler: official Train only, ddof=0
+  feature_spec: lipo_v1  # atom_feat 51, atom_scalar 9, bond_feat 13, global 42
+  active_global: Train raw span > 1e-8  # molesol 34, mollipo 36
+  test_policy: always  # observed every epoch, never used for selection
+
+training:
+  seed: 0
+  epochs: 360
+  batch_size: 128
+  eval_batch_size: 256
+  last_partial_batch: kept
+  dropout: 0.10
+  grad_clip_norm: 5
+  no_early_stop: true
+  no_ema_swa_soup_pretrain: true
+  batch_order: np.random.default_rng(0).permutation over Train split-local rows, one per epoch
+  evaluation: full Train/Val/Test every epoch with model.eval()/no_grad
+  selection: minimum Val RMSE, exact ties keep the earlier epoch
+
+recipes:
+  R3: {optimizer: AdamW, peak_lr: 3.0e-4, weight_decay: 1.0e-3, warmup_epochs: 0, min_lr: 1.0e-5,
+       scheduler: "min + 0.5*(peak-min)*(1+cos(pi*s/S))"}
+  Rf: {optimizer: AdamW, peak_lr: 1.0e-3, weight_decay: 1.0e-5, warmup_epochs: 5, min_lr: 1.0e-5,
+       scheduler: "linear peak*(0.1+0.9*s/W) then cosine"}
+  adam: {betas: [0.9, 0.999], eps: 1.0e-8}
+
+stage1:
+  architectures: [L, G0, Gx]
+  L: LCRC-C1 unchanged, 228674 parameters
+  G0: repository GINE, 5x128, dense head 257->128->1
+  Gx: node concat(atom_feat51, atom_scalar9) 60->128 SiLU, edge bond_feat13 13->128 (no activation),
+      same 5 GINE/BN layers inherited from the G0 canonical state, dense head 299->128->1
+  grid: 3 architectures x 2 recipes x 2 datasets = 12
+
+stage2:
+  family: A (only one new readout family this round)
+  form: "t=dropout(SiLU(W h + b)); s=w_s.t; m=w_m.t; y=b+sum s+mean m+sum_j u_j(z_j)"
+  univariate: "u_j(z)=w2_j.[SiLU(w1_j z+b1_j)-SiLU(b1_j)], 16 hidden, no output bias"
+  budget: "P_A(H)=131H+48M+1; H minimises |P_A-P_dense(T)|, H in 1..1024, ties smaller"
+  units: 2 datasets x 2 recipes = 4
+
+stage3:
+  family: D (same head on the frozen T final representation)
+  epochs: 600
+  lr: 1e-3 -> 1e-5 cosine, no warmup
+  weight_decay: 0
+  selection: minimum Val teacher-fidelity RMSE, ties earlier
+  units: 2
+
+oracle:
+  properties: [WC_LOGP, MOLWT]
+  models: [L, T, A]
+  units: 6
+  truth: "sum_v c_v reproduces the graph value (1e-6 WC, 1e-5 MW)"
+
+gates:
+  A_VAL_GATE: 1.05
+  A_POINT_RETENTION: 1.05
+  bridge: {r_geo: 0.99, r_max: 1.10}
+  D: {fidelity_sigma: 0.02, real_ratio: 1.05}
+  oracle: {accuracy_sigma: 0.10, comparability_sigma: 0.02, explanation_improvement: 0.10}
+  low_support_components: 30
+  ig: {tol_rel: 1.0e-4, tol_abs: 1.0e-3, midpoint_points: [32, 64, 128, 256]}
+
+budget:
+  wall_soft_hours: 7
+  wall_hard_hours: 8
+  gpu_soft_hours: 14
+  gpu_hard_hours: 16
+  cap_core_small_tasks_gpu_hours: 5
+  cap_explanation_oracle_gpu_hours: 4
+  cap_molhiv_gpu_hours: 5
+  cap_engineering_gpu_hours: 2

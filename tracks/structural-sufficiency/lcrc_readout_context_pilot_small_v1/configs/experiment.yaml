@@ -1,0 +1,26 @@
+# Frozen engineering configuration for round lcrc-readout-context-pilot-small-v1.
+#
+# Only engineering knobs live here.  The scientific constants (readout forms,
+# parameter budget, context fields, init streams, R3 recipe, diagnostic
+# tolerances) live in the code modules and are hashed into
+# analysis/protocol_freeze.json at prepare time.
+
+protocol_id: lcrc-readout-context-pilot-small-v1
+round_id: lcrc-readout-context-pilot-small-v1
+
+# Single training seed for the whole round (no multi-seed claim).
+seed: 0
+
+# prepare | smoke | dataset_worker | aggregate
+stage: dataset_worker
+# one of ogbg-molesol / ogbg-mollipo, or "all" for prepare / aggregate
+dataset: ogbg-molesol
+
+# Logical device inside the pool; the pool decides which physical GPU this is.
+device: cuda:0
+
+# Resume a partially finished worker instead of redoing finished arms.
+resume: true
+
+# Smoke-stage budget (never reported as a scientific number).
+smoke_epochs: 3

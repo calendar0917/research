@@ -1,0 +1,53 @@
+id: lcrc-readout-context-pilot-small-v1
+protocol: lcrc-readout-context-pilot-small-v1
+active: true
+focus: true
+created: 2026-11-24
+
+question: >-
+  Can a *budget-matched* explicit additive readout that consumes named global
+  context fields (size, ring-atom fraction) through a two-factor interaction be
+  trained on the existing C1 / LCRC local encoder on the two official small OGB
+  molecular tasks — and, on Val RMSE, is it no worse than the original C1
+  readout while beating the same additive readout without the interaction?
+
+baseline: >-
+  Arm A = the repository C1 readout (L in sq-pilot-small-v1) on the shared local
+  trunk, byte-for-byte the frozen C1 head, retrained here under the frozen R3
+  recipe with seed 0.  Arm B = the same trunk plus an additive readout over
+  roots and all active global fields at the *same* readout parameter budget.
+  The frozen sq GINE numbers are reused unchanged as a performance coordinate
+  only (no retraining, no SOTA claim).
+
+candidates:
+  - id: A-c1-readout-unchanged
+    status: active
+    note: >-
+      Control.  f(h_v) summed over roots + rho([g, mean h, mean h^2, log1p n]);
+      15298 readout parameters, identical initialisation to the frozen C1 head.
+  - id: B-additive-roots-plus-globals
+    status: active
+    note: >-
+      b_global + sum_v c0(h_v) + sum_j u_j(z_j) over the M active global fields.
+  - id: C-additive-plus-context-interaction
+    status: active
+    note: >-
+      B + a_size(z_size) * sum_v c_size(h_v) + a_ring(z_ring) * sum_v c_ring(h_v),
+      two frozen named context fields, two single-variable factor families,
+      parameter count kept within one hidden-width step of A.
+
+open_questions:
+  - Does removing the C1 post-hoc pooling head (rho) and replacing it with additive roots cost performance on these two tasks?
+  - Is there any Val-visible performance increment from the two named context interactions at matched readout budget?
+  - Is that increment traceable — i.e. can every Val/Test prediction be reconstructed from exported per-molecule and per-root terms, and does a fixed-input intervention reproduce from the ledger?
+  - Do the learned factor functions actually respond to the context, or is the interaction numerically present but functionally weak / root-uniform?
+
+guardrails:
+  - test access is `always` for this round; Test is a development evaluation set and never selects a model state
+  - single training seed 0; no repeat, no best-of-N, no multi-seed claim
+  - the shared local trunk, the R3 recipe and the C1 head are frozen; no new loss, no distillation, no SSL, no extra labels, no MMP mining, no molecule generation
+  - no architecture / learning-rate / epoch search; one recipe for all three arms
+  - no literature search; the readout forms are fixed in advance in cr_models.py
+  - the frozen sq-pilot-small-v1 code, data and results are read-only
+  - two small tasks only; stop after them (no ZINC/PCBA, no second seed, no extra task)
+  - every reported difference is single-seed development evidence, not a significance claim

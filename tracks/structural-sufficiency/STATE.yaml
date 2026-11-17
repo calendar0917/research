@@ -2177,3 +2177,52 @@ zinc_perf_recipe_pilot_v1:
     GPU scheduling, not the loss.  The support finding (unseen radius-2 environments
     carry ~45% of test AE) is the object worth a *separately pre-registered* round,
     not a recipe tweak.
+
+# ---------------------------------------------------------------------------
+# latest readout-mechanism round (LCRC explicit context readout pilot)
+# ---------------------------------------------------------------------------
+latest_readout_round: lcrc_readout_context_pilot_small_v1
+latest_readout_round_verdict: TRACE_PASS__NEUTRAL_ON_MOLLIPO__LOSS_ON_MOLESOL__NO_STABLE_CONTEXT_GAIN
+latest_readout_round_report: tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/REPORT.md
+latest_readout_round_decision: tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/DECISION.md
+latest_readout_round_protocol: tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/protocols/lcrc-readout-context-pilot-small-v1.yaml
+latest_readout_round_budget: 0.659 A100-h of job wall (two parallel single-GPU workers, one dataset each) + 0.003 A100-h smoke; analysis CPU-only
+latest_readout_round_official_test: loaded every epoch under an explicit user override (test_policy=always); DEVELOPMENT_TEST only, never selected a checkpoint
+latest_readout_round_headline: >-
+  One frozen local trunk (C1 local path, R3 recipe, seed 0, 3e-4 peak LR, 360
+  epochs, full Train/Val/Test every epoch) and three readouts at a matched
+  ~15.3k-parameter budget on official ogbg-molesol (902/113/113) and
+  ogbg-mollipo (3360/420/420): A the unchanged C1 head (f(h) summed + rho), B
+  additive roots + one single-variable function per active global field
+  (M=34/36, H=207/206), C = B + a_size(z)*sum_v c_size(h_v) +
+  a_ring(z)*sum_v c_ring(h_v) with the two pre-declared context fields
+  log1p_n_atoms and ring_atom_fraction.  Selected-state raw RMSE (Val/Test):
+  molesol A 0.8753/0.8545, B 0.9184/1.3853, C 0.9980/1.1012; mollipo A
+  0.7086/0.7254, B 0.7589/0.7290, C 0.6967/0.7404.  All 25 preflight gates pass
+  on both tasks, including bitwise A == DissectLCRC("C1") and bitwise shared
+  trunk init across arms.  Retention: C is neutral vs A on mollipo (Val 0.983,
+  Test 1.021) and loses on molesol (1.140/1.289); the largest
+  selected-state gap is molesol/B where Test is 1.51x Val, so the 113-row Val
+  minimum is a noisy selector there.  Context increment (C vs B) flips sign
+  between splits on both tasks (molesol Val -8.7%/Test +20.5%, mollipo Val
+  +8.2%/Test -1.6%), so no context gain is claimed even though the learned
+  interaction is functionally resolved (RMS 0.19-1.05 target-sd on all four
+  field-task pairs, root std/RMS 0.64-0.99, i.e. not a constant multiplier).
+  Trace passes completely: every Val/Test prediction rebuilt from exported
+  per-molecule/per-root terms (max error 5.5e-7 raw), 32/32 fixed-input S2
+  removals reconstructed from the ledger, a_k x2 / c_k /2 exact, checkpoints
+  replay to 4e-6.  Arm A also reproduces the frozen L trajectory of
+  sq-pilot-small-v1 at the same epoch (epoch 248/275; Val +0.77%/+0.49%,
+  differing only in the frozen batch-order convention).  Against the reused
+  frozen GINE (no retraining): molesol Val/Test 0.9353/0.9354, so A is inside
+  the 5% band (0.936/0.913) while B and C are not; on mollipo every arm is
+  behind (A 1.163/1.124).  G runs a different input path and a stronger 1e-3
+  preset, so these are distance markers, not attributions.
+latest_readout_round_next_action: >-
+  Stop.  One seed, two tasks, no re-run with a friendlier configuration, no
+  second seed, no wider a_k, no third context field.  The reusable outcome is
+  the machinery (shared-trunk construction, budget-matched readouts,
+  ledger/intervention/scale-equivalence gates, analysis driver).  Any follow-up
+  on the context question needs its own pre-registration that separates 'the
+  number went in' from 'the structure is read differently' on a task where a
+  context field is known to matter.

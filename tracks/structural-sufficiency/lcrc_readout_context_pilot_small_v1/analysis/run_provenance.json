@@ -1,0 +1,54 @@
+{
+ "analysis_host": {
+  "device": "cpu",
+  "host": "local checkout"
+ },
+ "generated_at": "2026-11-16T23:07:55",
+ "note": "both formal workers ran the same commit, one logical cuda:0 per pool, one dataset per GPU; the analysis stage is CPU-only and reads only the pulled artefacts",
+ "round_id": "lcrc-readout-context-pilot-small-v1",
+ "runs": {
+  "lcrc-rc-molesol": {
+   "backend": "process",
+   "branch": "lcrc-readout-context-pilot-small-v1",
+   "command": "bash tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/run_remote.sh --purpose 'formal: ogbg-molesol arms A/B/C, 360 epochs, test_policy=always, seed 0' --set stage=dataset_worker --set dataset=ogbg-molesol",
+   "commit": "ee72310d9290",
+   "completed_at": "2026-11-16T22:39:35+08:00",
+   "cuda_visible_devices": "0",
+   "dirty": false,
+   "driver_version": "550.163.01",
+   "exit_code": 0,
+   "experiment": "lcrc-rc-molesol",
+   "host": "res",
+   "node": "a100-2",
+   "pool": "res-gpu0",
+   "purpose": null,
+   "run_id": "lcrc-rc-molesol-20261116-223138-ad73b71e",
+   "started_at": "2026-11-16T22:31:39+08:00",
+   "state": "completed",
+   "torch_cuda": "12.4",
+   "torch_version": "2.5.1+cu124"
+  },
+  "lcrc-rc-mollipo": {
+   "backend": "process",
+   "branch": "lcrc-readout-context-pilot-small-v1",
+   "command": "bash tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/run_remote.sh --purpose 'formal: ogbg-mollipo arms A/B/C, 360 epochs, test_policy=always, seed 0' --set stage=dataset_worker --set dataset=ogbg-mollipo",
+   "commit": "ee72310d9290",
+   "completed_at": "2026-11-16T23:03:29+08:00",
+   "cuda_visible_devices": "1",
+   "dirty": false,
+   "driver_version": "550.163.01",
+   "exit_code": 0,
+   "experiment": "lcrc-rc-mollipo",
+   "host": "res",
+   "node": "a100-2",
+   "pool": "res-gpu1",
+   "purpose": null,
+   "run_id": "lcrc-rc-mollipo-20261116-223149-6b1569e9",
+   "started_at": "2026-11-16T22:31:51+08:00",
+   "state": "completed",
+   "torch_cuda": "12.4",
+   "torch_version": "2.5.1+cu124"
+  }
+ },
+ "source": "rr status <experiment> --json (control-plane run records)"
+}
