@@ -320,23 +320,23 @@ def routed_collate(
     bond_idx, _ = _ranges(bond_ptr, rows)
     bond_mol = np.repeat(np.arange(n_mol, dtype=np.int64), bond_counts)
 
-    def _belong_to_batch(global_belong: np.ndarray, mol: np.ndarray) -> np.ndarray:
-        base_index = belong_ptr[atom_ptr[rows][mol]]
-        return global_belong - base_index + belong_off[mol]
+    def _local_to_batch(local_belong: np.ndarray, mol: np.ndarray) -> np.ndarray:
+        """Map a per-molecule ``(atom, block)`` membership slot to the batch CSR."""
+        return local_belong + belong_off[mol]
 
-    bond_bucket_u = _belong_to_batch(np.asarray(routing["bond_bucket_u"], dtype=np.int64)[bond_idx], bond_mol)
-    bond_bucket_v = _belong_to_batch(np.asarray(routing["bond_bucket_v"], dtype=np.int64)[bond_idx], bond_mol)
+    bond_bucket_u = _local_to_batch(np.asarray(routing["bond_bucket_u"], dtype=np.int64)[bond_idx], bond_mol)
+    bond_bucket_v = _local_to_batch(np.asarray(routing["bond_bucket_v"], dtype=np.int64)[bond_idx], bond_mol)
 
     # ---- S1 occurrences --------------------------------------------------
     nbr_idx, _ = _atom_ranges(np.asarray(cache["nbr_ptr"], dtype=np.int64), atom_ptr, rows)
     nbr_mol = torch.as_tensor(base["atom_batch"])[base["nbr_atom"]].detach().cpu().numpy()
-    nbr_bucket = _belong_to_batch(np.asarray(routing["nbr_bucket"], dtype=np.int64)[nbr_idx], nbr_mol)
+    nbr_bucket = _local_to_batch(np.asarray(routing["nbr_bucket"], dtype=np.int64)[nbr_idx], nbr_mol)
 
     # ---- S2 occurrences --------------------------------------------------
     path_idx, _ = _atom_ranges(np.asarray(cache["path_ptr"], dtype=np.int64), atom_ptr, rows)
     path_mol = torch.as_tensor(base["path_graph"]).detach().cpu().numpy()
     path_bucket_g = np.asarray(routing["path_bucket"], dtype=np.int64)[path_idx]
-    path_bucket = np.where(path_bucket_g >= 0, _belong_to_batch(np.maximum(path_bucket_g, 0), path_mol), -1)
+    path_bucket = np.where(path_bucket_g >= 0, _local_to_batch(np.maximum(path_bucket_g, 0), path_mol), -1)
     path_iface_g = np.asarray(routing["path_iface"], dtype=np.int64)[path_idx]
     iface_base = iface_ptr[rows][path_mol] if path_mol.size else np.zeros(0, dtype=np.int64)
     path_iface = np.where(path_iface_g >= 0, path_iface_g - iface_base + iface_off[path_mol], -1)
@@ -383,7 +383,46 @@ def routed_collate(
             "bond_off": _t(bond_off, np.int64),
         }
     )
+    _validate_buckets(
+        [
+            ("bond_bucket_u", bond_bucket_u, bond_mol),
+            ("bond_bucket_v", bond_bucket_v, bond_mol),
+            ("nbr_bucket", nbr_bucket, nbr_mol),
+            ("path_bucket", path_bucket[path_bucket >= 0], path_mol[path_bucket >= 0]),
+        ],
+        belong_off,
+        belong_counts,
+    )
     return out
+
+
+def _validate_buckets(
+    checks: Sequence[tuple[str, np.ndarray, np.ndarray]],
+    belong_off: np.ndarray,
+    belong_counts: np.ndarray,
+) -> None:
+    """Every routed membership slot must fall inside its own molecule's window.
+
+    A batched ``(atom, block)`` slot is a CSR position in the concatenated
+    per-molecule membership arrays, so a slot of molecule ``g`` must lie in
+    ``[belong_off[g], belong_off[g] + belong_counts[g])``.  Checking the window
+    (not just the global range) is what catches an offset that happens to be
+    right for the first molecule of a batch and wrong for every later one.
+    """
+    lo = np.asarray(belong_off, dtype=np.int64)
+    hi = lo + np.asarray(belong_counts, dtype=np.int64)
+    for name, values, mol in checks:
+        values = np.asarray(values, dtype=np.int64)
+        mol = np.asarray(mol, dtype=np.int64)
+        if values.size == 0:
+            continue
+        bad = (values < lo[mol]) | (values >= hi[mol])
+        if bool(bad.any()):
+            first = int(np.flatnonzero(bad)[0])
+            raise RuntimeError(
+                f"routed collate: {name}[{first}]={int(values[first])} is outside the membership "
+                f"window [{int(lo[mol[first]])}, {int(hi[mol[first]])}) of molecule {int(mol[first])}"
+            )
 
 
 # ---------------------------------------------------------------------------
