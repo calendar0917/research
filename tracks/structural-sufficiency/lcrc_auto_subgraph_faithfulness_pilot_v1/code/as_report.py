@@ -476,6 +476,11 @@ def write_report() -> Path:
     lines.append(f"* 搜索空间仅覆盖 {C.SEARCH_MIN_K}–{C.SEARCH_MAX_K} 条物理键的连通子图；更大的结构未被覆盖，不能据此断言模型不依赖它们。")
     lines.append("* 干预是条件性证据屏蔽：`atom_feat`、`atom_scalar`、`global`、原子数与原子编码保持不变，因此它不是化学反事实，也不是“模型没有学到结构信息”的证明。")
     lines.append("* 每划分只解释 64 个分子（固定种子哈希排序），覆盖全量划分的统计推断不在本轮范围。")
+    lines.append(
+        "* 执行顺序：8 分子/split 的工程 smoke 先在本地 CPU 上跑通（同一份代码、同一份冻结缓存），"
+        "随后在 `res` 上以 `stage=preflight` 在 GPU 上重跑全部等价/映射/有限差分/重编号/批量门禁；"
+        "两者都通过后才启动两个正式 worker。smoke 结果本身不进入任何报告指标。"
+    )
     lines.append("* 若某个分子无法解析或映射不一致，本轮记录原始 row id 与原因，不用另一个分子补齐。")
     lines.append("")
 
