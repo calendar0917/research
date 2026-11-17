@@ -26,6 +26,19 @@
       "formal_units_affected": [],
       "results_existed_at_fix_time": false,
       "rerun": "smoke re-run from scratch; still no formal unit launched"
+    },
+    {
+      "id": "FIX-03",
+      "file": "code/bc_train.py",
+      "frozen_sha256": "8195fda5bc1dbc691397a8386e22b408969c3d07f982314cda5653d9ac6b4c68",
+      "new_sha256": "ad2ba3f51a657ba96d97d187092ae39209aa464d68ca657154aa9065646bbeac",
+      "detected_in": "post-smoke bookkeeping check",
+      "symptom": "a smoke unit wrote into the same result directory as the formal unit and could not be told apart from it",
+      "change": "status.json now carries smoke/formal booleans; no numeric constant, model, recipe or data change",
+      "scientific_content_changed": false,
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": false,
+      "rerun": "none; the smoke directory is overwritten by the formal unit and every analysis asserts formal == True"
     }
   ]
 }

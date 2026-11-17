@@ -504,6 +504,8 @@ def run_unit(
         "variant": variant,
         "seed": int(seed),
         "epochs_run": int(epochs),
+        "smoke": bool(max_epochs is not None),
+        "formal": bool(max_epochs is None),
         "total_updates": int(update),
         "steps_per_epoch": int(steps_per_epoch),
         "selected_epoch": int(best["epoch"]),
