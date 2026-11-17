@@ -31,7 +31,7 @@
 | wc_glop_main_scope_closure | PASS |
 | wc_glop_pair_closure | PASS |
 
-执行阶段部署的提交：`aa2c0890`（fields；2 个阶段）、`fb561973`（pool, select；5 个阶段）；`protocol_freeze.json` 冻结了执行时的代码哈希。本报告由提交 `734fe69fbebb4195c601a5bc459ca37f7fc8664c` 的分析代码生成。相对冻结时被改动的是 `lfa_aux.py`, `lfa_common.py`, `lfa_gates.py`, `lfa_main.py`, `lfa_manifest.py`, `lfa_report.py`。这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。
+执行阶段部署的提交：`aa2c0890`（fields；2 个阶段）、`fb561973`（pool, select；5 个阶段）；`protocol_freeze.json` 冻结了执行时的代码哈希。本文件由 `lfa_report.py`（sha256 `71fdffa97143caa8…`）在提交 `ccb81736b28a42fbe1000da940ea1efd606367e9` 的工作树上生成；生成时的未提交文件记录在 `run_manifest.json` 的 `git_dirty_files`。相对冻结时被改动的是 `lfa_aux.py`, `lfa_common.py`, `lfa_gates.py`, `lfa_main.py`, `lfa_manifest.py`, `lfa_report.py`。这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。
 
 | checkpoint | epoch | valid RMSE（身份记录） | sha256 | 身份+重放 | 重放 valid RMSE |
 | --- | --- | --- | --- | --- | --- |
@@ -177,6 +177,8 @@ WC_LOGP 原子贡献闭合：图级 `max_abs_error = 0.00000000`；主范围 968
 | D TOPOLOGY（GINE 评价） | 420 | 173 | 39 | 139 | 69 | 41.2% |
 | E GINE-GRAD | 420 | 279 | 18 | 87 | 36 | 66.4% |
 | F GINE-MASK50 | 418 | 308 | 0 | 106 | 4 | 73.7% |
+
+F 的 `仅 oracle = 0`、`都未过 = 4` 是**构造性**的：F 用 m=0.5 的预测变化选子图，而同族忠实性用 m=0 评价，两者同族（见第 5 节剂量错配说明），几乎不可能选出“捕获了贡献却不影响预测”的子图。因此本表的行间比较只在同一选择口径内有意义（A/B/C 之间、E/F 之间），F 的高重合不能当作独立验证。
 
 “仅 oracle” 表示该方法的 Top-1 子图捕获了更多外部原子贡献，但在模型预测上并不比随机子图更敏感；“仅忠实性” 相反。两者大量分离即说明“模型依赖的结构”和“真实结构贡献所在”不是同一组键。
 

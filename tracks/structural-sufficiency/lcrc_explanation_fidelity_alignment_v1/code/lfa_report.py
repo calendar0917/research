@@ -215,31 +215,30 @@ def section_assets(identity: Mapping[str, Any], freeze: Mapping[str, Any]) -> st
     head = info.get("git_head_now") or info.get("git_head")
     frozen, now = info.get("frozen_execution_hashes") or {}, info.get("hashes") or {}
     changed = sorted(k for k in now if frozen.get(k) not in (None, now.get(k)))
-    if head:
-        groups: dict[str, list[str]] = {}
-        counts: dict[str, int] = {}
-        for stage in (manifest.get("stages") or []):
-            job = stage.get("job") or {}
-            pair = (job.get("commit") or "")[:8]
-            if not pair:
-                continue
-            name = str(stage.get("experiment") or "").replace("lfa-", "").split("-")[0]
-            groups.setdefault(pair, [])
-            counts[pair] = counts.get(pair, 0) + 1
-            if name not in groups[pair]:
-                groups[pair].append(name)
-        dep = "、".join(
-            f"`{c}`（{', '.join(v)}；{counts[c]} 个阶段）" if counts.get(c, 0) > 1 else f"`{c}`（{v[0]}）"
-            for c, v in groups.items()) or f"`{freeze.get('git_commit')}`"
-        lines.append(f"执行阶段部署的提交：{dep}；`protocol_freeze.json` 冻结了执行时的代码哈希。"
-                     f"本报告由提交 `{head}` 的分析代码生成"
-                     + _dirty_note(manifest)
-                     + "。"
-                     + (f"相对冻结时被改动的是 `{'`, `'.join(changed)}`。" if changed else "")
-                     + "这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、"
-                     "缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；"
-                     "`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。")
-        lines.append("")
+    groups: dict[str, list[str]] = {}
+    counts: dict[str, int] = {}
+    for stage in (manifest.get("stages") or []):
+        job = stage.get("job") or {}
+        pair = (job.get("commit") or "")[:8]
+        if not pair:
+            continue
+        name = str(stage.get("experiment") or "").replace("lfa-", "").split("-")[0]
+        groups.setdefault(pair, [])
+        counts[pair] = counts.get(pair, 0) + 1
+        if name not in groups[pair]:
+            groups[pair].append(name)
+    dep = "、".join(
+        f"`{c}`（{', '.join(v)}；{counts[c]} 个阶段）" if counts.get(c, 0) > 1 else f"`{c}`（{v[0]}）"
+        for c, v in groups.items()) or f"`{freeze.get('git_commit')}`"
+    here = Path(__file__).resolve()
+    lines.append(f"执行阶段部署的提交：{dep}；`protocol_freeze.json` 冻结了执行时的代码哈希。"
+                 f"本文件由 `{here.name}`（sha256 `{C.sha256_file(here)[:16]}…`）在提交 `{head}` 的工作树上生成"
+                 + ("；生成时的未提交文件记录在 `run_manifest.json` 的 `git_dirty_files`。" if manifest.get("git_dirty_tracked") else "。")
+                 + (f"相对冻结时被改动的是 `{'`, `'.join(changed)}`。" if changed else "")
+                 + "这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、"
+                 "缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；"
+                 "`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。")
+    lines.append("")
     rows = []
     for rec in ckpt.get("models", []):
         ident = rec.get("identity", {})
@@ -444,6 +443,11 @@ def section_alignment(summary: Mapping[str, Any]) -> str:
                      f(e.get("only_oracle")), f(e.get("only_fidelity")), f(e.get("neither")),
                      pct(e.get("both_positive_fraction"))])
     lines.append(table(["方法", "两项均可评", "两项均 >0", "仅 oracle", "仅忠实性", "两项都未过", "两项均 >0 比例"], rows))
+    lines.append("")
+    lines.append("F 的 `仅 oracle = 0`、`都未过 = 4` 是**构造性**的：F 用 m=0.5 的预测变化选子图，"
+                 "而同族忠实性用 m=0 评价，两者同族（见第 5 节剂量错配说明），几乎不可能选出"
+                 "“捕获了贡献却不影响预测”的子图。因此本表的行间比较只在同一选择口径内有意义"
+                 "（A/B/C 之间、E/F 之间），F 的高重合不能当作独立验证。")
     lines.append("")
     lines.append("“仅 oracle” 表示该方法的 Top-1 子图捕获了更多外部原子贡献，但在模型预测上并不比随机子图更敏感；"
                  "“仅忠实性” 相反。两者大量分离即说明“模型依赖的结构”和“真实结构贡献所在”不是同一组键。")
