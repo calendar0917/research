@@ -216,8 +216,23 @@ def section_assets(identity: Mapping[str, Any], freeze: Mapping[str, Any]) -> st
     frozen, now = info.get("frozen_execution_hashes") or {}, info.get("hashes") or {}
     changed = sorted(k for k in now if frozen.get(k) not in (None, now.get(k)))
     if head:
-        lines.append(f"执行阶段部署的是提交 `{freeze.get('git_commit')}`（`res` 上的版本；`protocol_freeze.json` 冻结了"
-                     f"当时的代码哈希）；本报告由提交 `{head}` 的分析代码生成"
+        groups: dict[str, list[str]] = {}
+        counts: dict[str, int] = {}
+        for stage in (manifest.get("stages") or []):
+            job = stage.get("job") or {}
+            pair = (job.get("commit") or "")[:8]
+            if not pair:
+                continue
+            name = str(stage.get("experiment") or "").replace("lfa-", "").split("-")[0]
+            groups.setdefault(pair, [])
+            counts[pair] = counts.get(pair, 0) + 1
+            if name not in groups[pair]:
+                groups[pair].append(name)
+        dep = "、".join(
+            f"`{c}`（{', '.join(v)}；{counts[c]} 个阶段）" if counts.get(c, 0) > 1 else f"`{c}`（{v[0]}）"
+            for c, v in groups.items()) or f"`{freeze.get('git_commit')}`"
+        lines.append(f"执行阶段部署的提交：{dep}；`protocol_freeze.json` 冻结了执行时的代码哈希。"
+                     f"本报告由提交 `{head}` 的分析代码生成"
                      + _dirty_note(manifest)
                      + "。"
                      + (f"相对冻结时被改动的是 `{'`, `'.join(changed)}`。" if changed else "")
