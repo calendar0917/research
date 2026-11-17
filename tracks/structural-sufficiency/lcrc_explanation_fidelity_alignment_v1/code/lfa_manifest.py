@@ -40,6 +40,14 @@ ANALYSIS_FILES = [
 ]
 
 
+def dirty_files() -> list[str]:
+    out = subprocess.run(["git", "status", "--porcelain", "--untracked-files=no"],
+                         capture_output=True, text=True)
+    if out.returncode != 0:
+        return []
+    return [line[3:].strip() for line in out.stdout.splitlines() if line.strip()]
+
+
 def load_jobs(path: Path | None) -> list[dict]:
     if path is None:
         out = subprocess.run(["rr", "jobs", "--json"], capture_output=True, text=True, check=True)
@@ -91,10 +99,12 @@ def run(*, jobs_path: Path | None = None, out_dir: Path | str = C.ANALYSIS_DIR) 
             record["status"] = "OK" if job.get("exit_code") == 0 else "FAILED"
         stages.append(record)
     artifacts = {}
-    for name in ANALYSIS_FILES:
+    for name in ANALYSIS_FILES:  # run_manifest.json is excluded on purpose (self-referential)
         path = out_dir / name
         if path.is_file():
             artifacts[C.relpath(path)] = C.sha256_file(path)
+    for path in sorted(C.FIELDS_DIR.glob("*.jsonl")):
+        artifacts[C.relpath(path)] = C.sha256_file(path)
     for path in sorted(C.POOL_DIR.glob("*.jsonl")):
         artifacts[C.relpath(path)] = C.sha256_file(path)
     for path in sorted(C.SELECT_DIR.glob("*.jsonl")):
@@ -105,8 +115,16 @@ def run(*, jobs_path: Path | None = None, out_dir: Path | str = C.ANALYSIS_DIR) 
         "git_commit": C.git_commit(),
         "git_branch": C.git_branch(),
         "git_dirty_tracked": C.git_dirty_tracked(),
+        "git_dirty_files": dirty_files(),
         "freeze_hash": C.freeze_hash(),
         "code_hashes": C.code_hashes(),
+        "analysis_code": {
+            "note": "hashes at report time; the execution-time hashes are frozen in protocol_freeze.json",
+            "git_head": C.git_commit(),
+            "git_head_now": C.git_head_now(),
+            "hashes": C.code_hashes(),
+            "frozen_execution_hashes": (C.read_json(C.ANALYSIS_DIR / "protocol_freeze.json") or {}).get("code_hashes", {}),
+        },
         "local_environment": C.environment(),
         "stages": stages,
         "gpu_hours": float(gpu_seconds / 3600.0),
@@ -114,6 +132,11 @@ def run(*, jobs_path: Path | None = None, out_dir: Path | str = C.ANALYSIS_DIR) 
         "notes": [
             "two execution regimes are not mixed: every stage ran on host res",
             "field/pool/select artifacts are pulled copies; the analysis stages re-hash them",
+            "failed launch lfa-pool-20261117-165758-48810cb9: dead-end matched-control proposal raised inside grow_matched; "
+            "fixed by returning None (rejected proposal, matching rule unchanged) and the stage was rerun as "
+            "lfa-pool-20261117-170211-c72a5a9c; the resumable writer discarded the torn tail, no partial row was used",
+            "rr deploy required moving four stale untracked sprint-round result files aside on the remote checkout "
+            "(deployment housekeeping only; no experiment was rerun because of it)",
         ],
     }
     C.write_json(out_dir / "run_manifest.json", manifest)

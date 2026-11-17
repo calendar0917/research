@@ -311,6 +311,7 @@ oracle_tolerance = XC.oracle_tolerance
 environment = XC.environment
 git_commit = XC.git_commit
 git_branch = XC.git_branch
+git_head_now = XC.git_commit
 git_dirty_tracked = XC.git_dirty_tracked
 component_bootstrap = XC.component_bootstrap
 relpath = XC.relpath

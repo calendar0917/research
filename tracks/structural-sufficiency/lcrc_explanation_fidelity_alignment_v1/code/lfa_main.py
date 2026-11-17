@@ -180,12 +180,19 @@ def _support(n_ok: int, n_total: int) -> tuple[float | None, str]:
     return float(frac), ("OK" if frac >= C.MIN_EVALUABLE_FRACTION else "INSUFFICIENT_SUPPORT")
 
 
+def in_split(row: Mapping[str, Any], split: str) -> bool:
+    """``train_description`` is a stratum of the official Train split."""
+    if split == "train_description":
+        return str(row.get("stratum")) == "train_description"
+    return str(row.get("split")) == split
+
+
 def method_summary(rows: Sequence[Mapping[str, Any]], *, split: str, n_scope: int) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for method in C.SELECTORS:
         models = ["LCRC", "GINE"] if METHOD_MODEL[method] == "BOTH" else [METHOD_MODEL[method]]
         for model in models:
-            sub = [r for r in rows if r["split"] == split and r["method"] == method
+            sub = [r for r in rows if in_split(r, split) and r["method"] == method
                    and r["fidelity_model"] == model and r.get("status") == "OK"]
             key = method if METHOD_MODEL[method] != "BOTH" else f"{method}@{model}"
             if not sub:
@@ -217,8 +224,8 @@ def method_summary(rows: Sequence[Mapping[str, Any]], *, split: str, n_scope: in
                 "fidelity_evaluable_fraction": frac_fid, "fidelity_support": support_fid,
                 "n_controls_missing_oracle": int(np.sum([bool(r.get("controls_missing")) for r in sub])),
                 "n_fidelity_missing": int(np.sum([bool(r.get("fidelity_missing")) for r in sub])),
-                "oracle_capture": boot_oracle["point"]["capture"],
-                "oracle_enrichment": boot_oracle["point"]["enrichment"],
+                "oracle_capture": (boot_oracle["point"].get("capture") or {}).get("mean"),
+                "oracle_enrichment": (boot_oracle["point"].get("enrichment") or {}).get("mean"),
                 "oracle_enrichment_ci": boot_oracle["ci95"]["enrichment"],
                 "oracle_capture_ci": boot_oracle["ci95"]["capture"],
                 "oracle_enrichment_quantiles": C.quantiles(enr[mask_oracle].tolist()),
@@ -227,9 +234,9 @@ def method_summary(rows: Sequence[Mapping[str, Any]], *, split: str, n_scope: in
                 "enrichment_eq0_fraction": float(np.mean(enr[mask_oracle] == 0)) if mask_oracle.any() else None,
                 "enrichment_lt0_fraction": float(np.mean(enr[mask_oracle] < 0)) if mask_oracle.any() else None,
                 "enrichment_concentration": conc_enr,
-                "fidelity_advantage_std": boot_fid["point"]["advantage_std"],
+                "fidelity_advantage_std": (boot_fid["point"].get("advantage_std") or {}).get("mean"),
                 "fidelity_advantage_std_ci": boot_fid["ci95"]["advantage_std"],
-                "abs_delta0_std": boot_fid["point"]["abs_delta0_std"],
+                "abs_delta0_std": (boot_fid["point"].get("abs_delta0_std") or {}).get("mean"),
                 "abs_delta0_std_ci": boot_fid["ci95"]["abs_delta0_std"],
                 "fidelity_advantage_quantiles": C.quantiles(adv[mask_fid].tolist()),
                 "advantage_gt0_fraction": float(np.mean(adv[mask_fid] > 0)) if mask_fid.any() else None,
@@ -242,6 +249,7 @@ def method_summary(rows: Sequence[Mapping[str, Any]], *, split: str, n_scope: in
                 "only_fidelity": only_fid, "neither": neither,
                 "both_positive_fraction": (both_ok / int(both.sum())) if int(both.sum()) else None,
                 "median_k": float(np.median([r["k"] for r in sub])) if sub else None,
+                "mean_k": float(np.mean([r["k"] for r in sub])) if sub else None,
                 "median_mask50_n_scanned": float(np.median([int(r["mask50_n_scanned"]) for r in sub
                                                             if int(r.get("mask50_n_scanned") or 0) > 0])) if any(
                     int(r.get("mask50_n_scanned") or 0) > 0 for r in sub) else None,
@@ -258,7 +266,7 @@ def stratified_by_k(rows: Sequence[Mapping[str, Any]], *, split: str) -> list[di
     for method in C.SELECTORS:
         models = ["LCRC", "GINE"] if METHOD_MODEL[method] == "BOTH" else [METHOD_MODEL[method]]
         for model in models:
-            sub = [r for r in rows if r["split"] == split and r["method"] == method
+            sub = [r for r in rows if in_split(r, split) and r["method"] == method
                    and r["fidelity_model"] == model and r.get("status") == "OK"]
             key = method if METHOD_MODEL[method] != "BOTH" else f"{method}@{model}"
             for k in range(C.SEARCH_MIN_K, C.SEARCH_MAX_K + 1):
@@ -289,10 +297,10 @@ def paired_differences(rows: Sequence[Mapping[str, Any]], *, split: str) -> list
             return key.split("@")[1] if "@" in key else METHOD_MODEL[key]
         def method_of(key: str) -> str:
             return key.split("@")[0]
-        sub_a = {int(r["cache_row"]): r for r in rows if r["split"] == split
+        sub_a = {int(r["cache_row"]): r for r in rows if in_split(r, split)
                  and r["method"] == method_of(a) and r["fidelity_model"] == model_of(a)
                  and r.get("status") == "OK"}
-        sub_b = {int(r["cache_row"]): r for r in rows if r["split"] == split
+        sub_b = {int(r["cache_row"]): r for r in rows if in_split(r, split)
                  and r["method"] == method_of(b) and r["fidelity_model"] == model_of(b)
                  and r.get("status") == "OK"}
         common = sorted(set(sub_a) & set(sub_b))
@@ -313,6 +321,8 @@ def paired_differences(rows: Sequence[Mapping[str, Any]], *, split: str) -> list
                 "mean_diff": boot["point"]["diff"]["mean"],
                 "median_diff": boot["point"]["diff"]["median"],
                 "ci95_mean": boot["ci95"]["diff"]["mean"],
+                "ci95_low": (boot["ci95"]["diff"]["mean"] or [None, None])[0],
+                "ci95_high": (boot["ci95"]["diff"]["mean"] or [None, None])[1],
                 "gt0_fraction": float(np.mean(diff[mask] > 0)) if mask.any() else None,
                 "same_fidelity_family": bool(model_of(a) == model_of(b)),
             })
@@ -327,8 +337,8 @@ def paired_differences(rows: Sequence[Mapping[str, Any]], *, split: str) -> list
 def _supported(entry: Mapping[str, Any], metric: str, floor: float) -> bool:
     if not entry or entry.get("n", 0) == 0:
         return False
-    if "enrichment" in metric:
-        point = (entry.get("oracle_enrichment") or {}).get("mean")
+    if metric.startswith("oracle"):
+        point = entry.get("oracle_enrichment")
         ci = (entry.get("oracle_enrichment_ci") or {}).get("mean")
         conc = (entry.get("enrichment_concentration") or {}).get("top_share")
         support = entry.get("oracle_support")
@@ -343,20 +353,44 @@ def _supported(entry: Mapping[str, Any], metric: str, floor: float) -> bool:
                 and (conc is None or conc <= C.CONCENTRATION_MAX_SHARE))
 
 
+def pair_diff(rows: Sequence[Mapping[str, Any]], a: str, b: str) -> dict[str, Any] | None:
+    """Oriented paired difference ``a - b`` from the frozen pairwise table."""
+    for row in rows:
+        if {row.get("method_a"), row.get("method_b")} != {a, b}:
+            continue
+        if row.get("method_a") == a:
+            return dict(row)
+        flipped = dict(row)
+        flipped["method_a"], flipped["method_b"] = a, b
+        if row.get("mean_diff") is not None:
+            flipped["mean_diff"] = -float(row["mean_diff"])
+        if row.get("median_diff") is not None:
+            flipped["median_diff"] = -float(row["median_diff"])
+        ci = row.get("ci95_mean")
+        if ci and ci[0] is not None:
+            flipped["ci95_mean"] = [-float(ci[1]), -float(ci[0])]
+        if row.get("ci95_low") is not None and row.get("ci95_high") is not None:
+            flipped["ci95_low"] = -float(row["ci95_high"])
+            flipped["ci95_high"] = -float(row["ci95_low"])
+        if row.get("gt0_fraction") is not None:
+            flipped["gt0_fraction"] = 1.0 - float(row["gt0_fraction"])
+        return flipped
+    return None
+
+
 def decide(summary: Mapping[str, Mapping[str, Any]], paired: Sequence[Mapping[str, Any]],
            checks: Mapping[str, Any]) -> dict[str, Any]:
     valid = summary.get("valid", {})
     test = summary.get("test", {})
     o_sup = {key: _supported(valid.get(key, {}), "oracle", C.ORACLE_ENRICHMENT_MIN) for key in valid}
     f_sup = {key: _supported(valid.get(key, {}), "fidelity", C.FIDELITY_ADVANTAGE_STD_MIN) for key in valid}
-    test_o = (test.get("B_LCRC_LOCAL") or {}).get("oracle_enrichment", {}) or {}
+    test_o = (test.get("B_LCRC_LOCAL") or {}).get("oracle_enrichment")
     test_f = (test.get("B_LCRC_LOCAL") or {}).get("fidelity_advantage_std")
-    valid_b_o = (valid.get("B_LCRC_LOCAL") or {}).get("oracle_enrichment", {}) or {}
+    valid_b_o = (valid.get("B_LCRC_LOCAL") or {}).get("oracle_enrichment")
     valid_b_f = (valid.get("B_LCRC_LOCAL") or {}).get("fidelity_advantage_std")
     test_sign_ok = bool(
-        (test_o.get("mean") is not None and valid_b_o.get("mean") is not None
-         and np.sign(test_o["mean"]) == np.sign(valid_b_o["mean"]))
-        and (test_f is not None and valid_b_f is not None and np.sign(test_f) == np.sign(valid_b_f))
+        test_o is not None and valid_b_o is not None and np.sign(test_o) == np.sign(valid_b_o)
+        and test_f is not None and valid_b_f is not None and np.sign(test_f) == np.sign(valid_b_f)
     )
     labels: list[str] = []
     reasons: list[str] = []
@@ -379,23 +413,24 @@ def decide(summary: Mapping[str, Mapping[str, Any]], paired: Sequence[Mapping[st
         labels.append("UNRESOLVED")
         reasons.append("local_oracle_not_supported")
 
-    ca = next((row for row in paired if row["metric"] == "oracle_enrichment"
-               and row["method_a"] == "C_LCRC_MASK50" and row["method_b"] == "A_LCRC_GRAD"), None)
+    ca = pair_diff([row for row in paired if row.get("metric") == "oracle_enrichment"],
+                   "C_LCRC_MASK50", "A_LCRC_GRAD")
     ca_ok = bool(ca and ca["ci95_mean"] and ca["ci95_mean"][0] is not None
                  and ca["ci95_mean"][0] > 0 and ca["mean_diff"] >= C.PAIRED_IMPROVEMENT_MIN)
     if ca_ok:
         labels.append("FINITE_MASK_IMPROVES_ALIGNMENT")
-    test_ca = next((row for row in paired if row["split"] == "test" and row["metric"] == "oracle_enrichment"
-                    and row["method_a"] == "C_LCRC_MASK50" and row["method_b"] == "A_LCRC_GRAD"), None)
+    test_ca = pair_diff([row for row in paired if row.get("split") == "test"
+                         and row.get("metric") == "oracle_enrichment"],
+                        "C_LCRC_MASK50", "A_LCRC_GRAD")
     if ca_ok and test_ca is not None and test_ca["mean_diff"] <= 0:
         reasons.append("finite_mask_valid_only")
 
     lcrc_best = max(("A_LCRC_GRAD", "B_LCRC_LOCAL", "C_LCRC_MASK50"),
-                    key=lambda k: (valid.get(k, {}).get("oracle_enrichment", {}) or {}).get("mean") or -1e9)
+                    key=lambda k: valid.get(k, {}).get("oracle_enrichment") or -1e9)
     gine_best = max(("E_GINE_GRAD", "F_GINE_MASK50"),
-                    key=lambda k: (valid.get(k, {}).get("oracle_enrichment", {}) or {}).get("mean") or -1e9)
-    cross = next((row for row in paired if row["metric"] == "oracle_enrichment"
-                  and row["method_a"] == lcrc_best and row["method_b"] == gine_best), None)
+                    key=lambda k: valid.get(k, {}).get("oracle_enrichment") or -1e9)
+    cross = pair_diff([row for row in paired if row.get("metric") == "oracle_enrichment"],
+                      lcrc_best, gine_best)
     lrc_adv = bool(cross and cross["ci95_mean"] and cross["ci95_mean"][0] is not None
                    and cross["ci95_mean"][0] > 0 and cross["mean_diff"] >= C.PAIRED_IMPROVEMENT_MIN)
     if not lrc_adv and support_ok:

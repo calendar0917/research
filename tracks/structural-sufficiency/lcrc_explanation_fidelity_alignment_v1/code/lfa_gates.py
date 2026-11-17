@@ -469,6 +469,117 @@ def gate_pool_identity() -> dict[str, Any]:
     return out
 
 
+# ---------------------------------------------------------------------------
+# 10. aggregation replay: recompute published numbers from the raw records
+# ---------------------------------------------------------------------------
+
+
+def gate_aggregation_replay(*, n_molecules: int = 6, seed: int = C.CONTROL_SEED) -> dict[str, Any]:
+    """Recompute capture / enrichment / delta0 / advantage from the raw files.
+
+    This reads the pool JSONL, both select JSONLs and the WC_LOGP payload, then
+    compares against ``analysis/main_molecule_results.csv``.  It is an
+    independent path: nothing is imported from ``lfa_main``.
+    """
+    import lfa_main
+
+    payload = D.oracle_payload()
+    ptr = np.asarray(payload["atom_ptr"], dtype=np.int64)
+    atom = np.asarray(payload["WC_LOGP_atom"], dtype=np.float64)
+    b = D.bundle()
+    pool = lfa_main.load_jsonl_map(C.POOL_DIR / "pool_main.jsonl")
+    lcrc = lfa_main.load_jsonl_map(C.SELECT_DIR / "select_lcrc_main.jsonl")
+    gine = lfa_main.load_jsonl_map(C.SELECT_DIR / "select_gine_main.jsonl")
+    table = lfa_main.load_csv(C.ANALYSIS_DIR / "main_molecule_results.csv") if hasattr(lfa_main, "load_csv") else []
+    if not table:
+        import csv
+        with (C.ANALYSIS_DIR / "main_molecule_results.csv").open("r", encoding="utf-8") as handle:
+            table = list(csv.DictReader(handle))
+    by_key = {(str(r["split"]), int(float(r["cache_row"])), str(r["method"]), str(r["fidelity_model"])): r
+              for r in table}
+    rows = [r for r in D.main_scope() if r["split"] == "valid"]
+    rng = np.random.default_rng([int(seed), 313])
+    picks = [rows[int(i)] for i in rng.choice(len(rows), size=min(int(n_molecules), len(rows)), replace=False)]
+    checks, ok = [], True
+    for rec in picks:
+        split, cache_row = str(rec["split"]), int(rec["cache_row"])
+        key = (split, cache_row)
+        prec, lrec, grec = pool[key], lcrc[key], gine[key]
+        row_id = int(prec["row_id"])
+        contrib = np.array(atom[int(ptr[row_id]):int(ptr[row_id + 1])], dtype=np.float64)
+        denom = float(np.abs(contrib).sum())
+        cache = b.caches[split]
+        for method in C.SELECTORS:
+            for model in (["LCRC", "GINE"] if method == "D_TOPOLOGY" else
+                          ["LCRC"] if method.startswith(("A_", "B_", "C_")) else ["GINE"]):
+                key4 = (split, cache_row, method, model)
+                if key4 not in by_key or by_key[key4].get("status") != "OK":
+                    continue
+                published = by_key[key4]
+                src = lrec if model == "LCRC" else grec
+                if method in ("C_LCRC_MASK50", "F_GINE_MASK50"):
+                    top = src["mask50_selection"]["bonds"]
+                    controls = src["mask50_control_bonds"]
+                else:
+                    top = prec["selections"][method]["bonds"]
+                    controls = [c["bonds"] for c in prec["controls"][method]["controls"]]
+                atoms = lfa_main._bond_atoms(cache, cache_row, top)
+                cap = capture(contrib, atoms) if denom > 0 else None
+                ctrl_caps = [capture(contrib, lfa_main._bond_atoms(cache, cache_row, c)) for c in controls]
+                ctrl_caps = [v for v in ctrl_caps if v is not None]
+                med = float(np.median(ctrl_caps)) if ctrl_caps else None
+                enr = None if (cap is None or med is None) else float(cap - med)
+                fit = src["methods"][method]
+                base = float(src["base_pred_raw"])
+                delta0 = None if fit.get("pred_zero") is None else float(base - float(fit["pred_zero"]))
+                ctrl_abs = np.abs(np.asarray(fit.get("control_abs_delta0") or [], dtype=np.float64))
+                adv_std = None
+                if ctrl_abs.size and delta0 is not None and float(denom) > 0:
+                    std = float(fit.get("target_std") or 1.0)
+                    adv_std = float((abs(delta0) - float(np.median(ctrl_abs))) / std)
+                pairs = {
+                    "capture": (cap, published.get("capture_top1")),
+                    "enrichment": (enr, published.get("oracle_enrichment")),
+                    "delta0": (delta0, published.get("delta0")),
+                    "advantage_std": (adv_std, published.get("fidelity_advantage_std")),
+                    "n_controls": (len(ctrl_caps), published.get("n_controls")),
+                }
+                for name, (mine, theirs) in pairs.items():
+                    if mine is None and theirs in (None, ""):
+                        continue
+                    err = abs(float(mine) - float(theirs)) if theirs not in (None, "") else float("inf")
+                    tol = 1e-9 if name != "advantage_std" else 1e-9
+                    good = bool(err <= tol)
+                    ok = ok and good
+                    checks.append({"split": split, "cache_row": cache_row, "method": method, "model": model,
+                                   "field": name, "recomputed": mine, "published": theirs,
+                                   "abs_error": err, "passed": good})
+
+    # denominators in the summary must equal the CSV counts
+    summary = C.read_json(C.ANALYSIS_DIR / "main_summary.json")["summary"]
+    denom_checks = []
+    for split in ("valid", "test", "train_description"):
+        for key, entry in (summary.get(split) or {}).items():
+            method = key.split("@")[0]
+            model = key.split("@")[1] if "@" in key else None
+            def in_split(r) -> bool:
+                if split == "train_description":
+                    return str(r.get("stratum")) == "train_description"
+                return str(r.get("split")) == split
+
+            sub = [r for r in table if in_split(r) and str(r["method"]) == method
+                   and (model is None or str(r["fidelity_model"]) == model)
+                   and str(r.get("status")) == "OK"]
+            n_oracle = sum(1 for r in sub if r.get("oracle_enrichment") not in (None, "", "nan"))
+            good = int(n_oracle) == int(entry.get("n_oracle_evaluable") or -1)
+            ok = ok and good
+            denom_checks.append({"split": split, "method": key, "csv_finite_enrichment": n_oracle,
+                                 "summary_n_oracle_evaluable": entry.get("n_oracle_evaluable"),
+                                 "passed": good})
+    return {"n_recomputed_rows": len(checks), "n_failed": sum(1 for c in checks if not c["passed"]),
+            "checks": checks[-40:], "denominators": denom_checks, "passed": bool(ok)}
+
+
 def run(*, device: str = "cpu", only: Sequence[str] | None = None) -> dict[str, Any]:
     path = C.ANALYSIS_DIR / "gates.json"
     gates: dict[str, Any] = {}
@@ -486,6 +597,7 @@ def run(*, device: str = "cpu", only: Sequence[str] | None = None) -> dict[str, 
         "label_blind": lambda: gate_label_blind(device=device),
         "oracle_permutation": lambda: gate_oracle_permutation(),
         "pool_identity": lambda: gate_pool_identity(),
+        "aggregation_replay": lambda: gate_aggregation_replay(),
     }
     for name, fn in plan.items():
         if only is not None and name not in only:

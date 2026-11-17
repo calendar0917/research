@@ -294,3 +294,26 @@ Aux **不做** fidelity 剂量实验（本轮不要求），只报告结构定�
 * 放宽随机对照的匹配条件或丢弃缺失分子；
 * 把 823 对当作 823 个独立样本；把 Test 称为未触碰的最终盲测；
 * 看到结果后修改指标、候选范围、阈值或 split。
+
+---
+
+## 12. 执行后记录（只记录发生了什么事，不改动上面任何规则）
+
+* 远程阶段（全部在 `res` 双 A100，pool `lr1`）：`fields-lcrc`、`fields-gine`、`pool`、
+  `select-{lcrc,gine}-{main,aux}`，共 7 个 run，全部 exit 0，累计 **0.2461 GPU·h**
+  （软预算 1 GPU·h/卡，硬预算 2 GPU·h/卡）。第一次 `pool` 启动因死端匹配控制崩溃
+  （`ValueError: a cannot be empty unless no samples are taken`），修复为“拒绝该提议并重采”
+  后重跑，匹配规则未放宽（见 `analysis/run_manifest.json` 的 `notes`）。
+* 候选池：`pool_main` 968 行（940 新算 + 28 断点续跑），新算 940 行平均 188.2 个候选（min 109 / max 231）；
+  `pool_aux` 704 行，平均 185.7（min 113 / max 229）。
+* 选择阶段 4 个 run 共写 968×4 + 704×4 行，错误 0；所有 run 都在入口校验了 pool SHA-256。
+* 正确性门禁 10/10 通过（`all_ones`、`gine_batched_reference`、`finite_difference`、
+  `renumbering`、`dose_path`、`weight_semantics`、`label_blind`、`oracle_permutation`、
+  `pool_identity`、`aggregation_replay`），其中 `aggregation_replay` 在 6 个抽样分子 ×
+  7 个 (方法, 模型) 上从原始记录重算了 capture / enrichment / delta0 / advantage / n_controls
+  （210 项，全部误差 0），并核对了 21 个 summary 分母；`analysis/gates.json` 保存原始结果。
+* 主实验可评性：Valid 420、Test 420、固定 Train 128 个分子全部有 `status=OK` 记录，`capture` 零分母为 0；
+  A/C/E/F 在 Valid/Test 上各有 0–2 条 (分子, 方法) 的 enrichment 因 `INSUFFICIENT_RANDOM`
+  （`n_controls = 0`：Top-1 过大，找不到同键数同原子数的不同连通子图）记为缺失，未放宽匹配。
+* 单分子结论未写入协议；协议冻结哈希 `f9e283bdb38b7e790bd2bac4f37f38a2fcd05a80fa7144a476324be9892e6040`
+  只覆盖到第 11 节。

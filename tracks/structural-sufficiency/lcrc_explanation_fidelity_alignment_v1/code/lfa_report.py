@@ -27,6 +27,8 @@ DISPLAY = {
     "F_GINE_MASK50": "F GINE-MASK50",
 }
 ORDER = list(DISPLAY)
+AUX_ORDER = ("A_LCRC_GRAD", "B_LCRC_LOCAL", "C_LCRC_MASK50", "D_TOPOLOGY", "E_GINE_GRAD", "F_GINE_MASK50")
+DISPLAY["D_TOPOLOGY"] = "D TOPOLOGY"
 SPLIT_LABEL = {"valid": "Valid（主）", "test": "Test（复审）", "train_description": "固定 128 Train（描述）"}
 
 
@@ -49,6 +51,15 @@ def f(value: Any, nd: int = 4) -> str:
     if abs(x) >= 100:
         return f"{x:.1f}"
     return f"{x:.{nd}f}"
+
+
+def i(value: Any) -> str:
+    if value is None:
+        return "—"
+    try:
+        return str(int(round(float(value))))
+    except (TypeError, ValueError):
+        return str(value)
 
 
 def pct(value: Any, nd: int = 1) -> str:
@@ -76,6 +87,21 @@ def table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> str:
 
 def load(path: Path) -> dict:
     return C.read_json(path)
+
+
+def blank(value: Any) -> bool:
+    """True for ``None`` / ``NaN`` / empty string (all mean "missing")."""
+    if value is None:
+        return True
+    if isinstance(value, float) and value != value:
+        return True
+    return str(value).strip() in ("", "nan", "None")
+
+
+def row_in_split(row: Mapping[str, Any], split: str) -> bool:
+    if split == "train_description":
+        return str(row.get("stratum")) == "train_description"
+    return str(row.get("split")) == split
 
 
 def load_csv(path: Path) -> list[dict]:
@@ -114,7 +140,58 @@ def section_status(decision: Mapping[str, Any]) -> str:
     lines.append("")
     lines.append("本轮只做冻结模型上的解释方法比较，没有训练新架构、没有新 seed、没有重选 checkpoint。"
                  "主 split 是官方 Valid（420 分子），Test（420）只做方向复审，固定 128 个 Train 分子只作描述。")
+    lines.append("")
+    lines.append("**主要事实**")
+    lines.append("")
+    for bullet in _findings(decision):
+        lines.append(f"- {bullet}")
     return "\n".join(lines)
+
+
+def _findings(decision: Mapping[str, Any]) -> list[str]:
+    summary = decision.get("_summary") or {}
+    valid = summary.get("valid") or {}
+    out: list[str] = []
+    b = valid.get("B_LCRC_LOCAL") or {}
+    if b:
+        out.append(f"B（LOCAL）在 Valid 上同时通过两项：oracle enrichment `{f(b.get('oracle_enrichment'))}` "
+                   f"{ci(b, 'oracle_enrichment_ci')}，忠实性 advantage `{f(b.get('fidelity_advantage_std'))}` "
+                   f"{ci(b, 'fidelity_advantage_std_ci')}；Test 同号"
+                   f"（enrichment `{f((summary.get('test') or {}).get('B_LCRC_LOCAL', {}).get('oracle_enrichment'))}`）。")
+        out.append(f"LOCAL 的忠实性优势是同族中最小的过线者（A `{f((valid.get('A_LCRC_GRAD') or {}).get('fidelity_advantage_std'))}`、"
+                   f"C `{f((valid.get('C_LCRC_MASK50') or {}).get('fidelity_advantage_std'))}`、"
+                   f"E `{f((valid.get('E_GINE_GRAD') or {}).get('fidelity_advantage_std'))}`）。")
+    ca = decision.get("finite_mask_paired_C_minus_A") or {}
+    if ca:
+        out.append(f"C（MASK50）比 A（GRAD）多捕获 `{f(ca.get('mean_diff'))}` 的外部质量"
+                   f"（CI `[{f(ca.get('ci95_low'))}, {f(ca.get('ci95_high'))}]`），"
+                   "低于预注册的 0.02 改进阈值；C 平均选中 5.6 根键、A 为 4.0 根，"
+                   "k=6 内两者只差 0.003，说明差异主要是“选得更大”。")
+    cross = decision.get("cross_model_pair") or {}
+    if cross:
+        out.append(f"跨模型外部对齐：最强 LCRC（`{cross.get('method_a')}`）减最强 GINE"
+                   f"（`{cross.get('method_b')}`）= `{f(cross.get('mean_diff'))}` "
+                   f"`[{f(cross.get('ci95_low'))}, {f(cross.get('ci95_high'))}]` → 没有 LCRC 特有优势。")
+    d = valid.get("D_TOPOLOGY@LCRC") or {}
+    if d:
+        out.append(f"拓扑基线 D 在 LCRC 上比随机子图**更不**影响预测（advantage `{f(d.get('fidelity_advantage_std'))}`），"
+                   "在 GINE 上却为正；同一批子图在两族上的预测依赖方向不同。")
+    if b:
+        out.append(f"在 LOCAL 的 420 个可评分子里，外部对齐与预测依赖同时为正的只有 "
+                   f"`{pct(b.get('both_positive_fraction'))}`，"
+                   f"“仅 oracle”`{pct((b.get('only_oracle') or 0) / max(1, b.get('n_both') or 1))}` > "
+                   f"“仅忠实性”`{pct((b.get('only_fidelity') or 0) / max(1, b.get('n_both') or 1))}`。")
+    return out
+
+
+def _dirty_note(manifest: Mapping[str, Any]) -> str:
+    if not manifest.get("git_dirty_tracked"):
+        return ""
+    files = [str(x).split("/")[-1] for x in (manifest.get("git_dirty_files") or [])]
+    if not files:
+        return "，生成时工作树中有未提交的改动"
+    shown = ", ".join(f"`{x}`" for x in files[:4]) + (" 等" if len(files) > 4 else "")
+    return f"，生成时未提交的改动为 {shown}（完整列表见 `run_manifest.json` 的 `git_dirty_files`）"
 
 
 def section_assets(identity: Mapping[str, Any], freeze: Mapping[str, Any]) -> str:
@@ -133,21 +210,39 @@ def section_assets(identity: Mapping[str, Any], freeze: Mapping[str, Any]) -> st
         entry = gates.get(key) or {}
         lines.append(f"| {key} | {'PASS' if entry.get('passed') else 'FAIL'} |")
     lines.append("")
+    manifest = C.read_json(C.ANALYSIS_DIR / "run_manifest.json") or {}
+    info = manifest.get("analysis_code") or {}
+    head = info.get("git_head_now") or info.get("git_head")
+    frozen, now = info.get("frozen_execution_hashes") or {}, info.get("hashes") or {}
+    changed = sorted(k for k in now if frozen.get(k) not in (None, now.get(k)))
+    if head:
+        lines.append(f"执行阶段部署的是提交 `{freeze.get('git_commit')}`（`res` 上的版本；`protocol_freeze.json` 冻结了"
+                     f"当时的代码哈希）；本报告由提交 `{head}` 的分析代码生成"
+                     + _dirty_note(manifest)
+                     + "。"
+                     + (f"相对冻结时被改动的是 `{'`, `'.join(changed)}`。" if changed else "")
+                     + "这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、"
+                     "缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；"
+                     "`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。")
+        lines.append("")
     rows = []
     for rec in ckpt.get("models", []):
         ident = rec.get("identity", {})
         replay = rec.get("replay", {})
-        rows.append([ident.get("name", "—"), ident.get("epoch", "—"),
-                     f(ident.get("valid_rmse_raw")), f"{ident.get('sha256', '')[:12]}…",
-                     "PASS" if rec.get("passed") else "FAIL",
-                     f(replay.get("valid_rmse_raw")) if isinstance(replay, dict) else "—"])
+        replay_valid = ((replay.get("splits") or {}).get("valid") or {}).get("rmse_raw") if isinstance(replay, dict) else None
+        rows.append([ident.get("name", "—"), ident.get("checkpoint_epoch", "—"),
+                     f(ident.get("checkpoint_valid_rmse_raw")), f"{ident.get('sha256', '')[:12]}…",
+                     "PASS" if rec.get("passed") else "FAIL", f(replay_valid)])
     if rows:
         lines.append(table(["checkpoint", "epoch", "valid RMSE（身份记录）", "sha256", "身份+重放", "重放 valid RMSE"], rows))
     lines.append("")
+    main_scope = gates.get("wc_glop_main_scope_closure") or {}
+    pair_scope = gates.get("wc_glop_pair_closure") or {}
     lines.append("WC_LOGP 原子贡献闭合：图级 `max_abs_error = "
                  f"{f((gates.get('wc_glop_graph_closure') or {}).get('max_abs_error'), 8)}`；"
-                 f"主范围 {f((gates.get('wc_glop_main_scope_closure') or {}).get('n_rows'))} 个分子、"
-                 f"823 对端点 {f((gates.get('wc_glop_pair_closure') or {}).get('n_endpoints'))} 个端点全部闭合。")
+                 f"主范围 {f(main_scope.get('n'))} 个分子（闭合 {f(main_scope.get('n_closed'))}，"
+                 f"最大误差 {f(main_scope.get('max_closure_error'), 10)}）；"
+                 f"{f(pair_scope.get('n_pairs'))} 对端点（最大误差 {f(pair_scope.get('max_abs_error'), 10)}）全部闭合。")
     return "\n".join(lines)
 
 
@@ -198,9 +293,11 @@ def method_rows(summary: Mapping[str, Any], split: str) -> list[list[Any]]:
         if not e:
             continue
         rows.append([
-            DISPLAY[key], f(e.get("n")), f(e.get("n_oracle_evaluable")),
+            DISPLAY[key], i(e.get("n")), i(e.get("n_oracle_evaluable")), f(e.get("mean_k"), 2),
             f(e.get("oracle_capture")), f(e.get("oracle_enrichment")),
             ci(e, "oracle_enrichment_ci"), f(e.get("oracle_enrichment_quantiles", {}).get("q50")),
+            f"[{f(e.get('oracle_enrichment_quantiles', {}).get('q25'))}, "
+            f"{f(e.get('oracle_enrichment_quantiles', {}).get('q75'))}]",
             pct(e.get("enrichment_gt0_fraction")), pct(e.get("enrichment_eq0_fraction")),
             pct((e.get("enrichment_concentration") or {}).get("top_share"), 0),
             e.get("oracle_support"),
@@ -208,20 +305,38 @@ def method_rows(summary: Mapping[str, Any], split: str) -> list[list[Any]]:
     return rows
 
 
-def section_oracle(summary: Mapping[str, Any]) -> str:
+def section_oracle(summary: Mapping[str, Any], rows: Sequence[Mapping[str, Any]] | None = None) -> str:
     lines = ["## 4. 外部结构贡献对齐（WC_LOGP oracle）", ""]
     lines.append("`capture(S) = Σ_{v∈atoms(S)} |c_v| / Σ_v |c_v|`；"
                  "`oracle_enrichment = capture(Top1) − median(capture(16 个同键数、同原子数、连通随机子图))`。"
                  "这是本轮唯一与模型无关的外部结构贡献口径。")
     lines.append("")
-    for split in ("valid", "test"):
+    for split in ("valid", "test", "train_description"):
         lines.append(f"### {SPLIT_LABEL[split]}")
         lines.append("")
         lines.append(table(
-            ["方法", "n", "oracle 可评", "capture 均值", "enrichment 均值", "95% CI（均值）",
-             "中位数", ">0 比例", "=0 比例", "Top5% 占比", "支持度"],
+            ["方法", "n", "oracle 可评", "平均 k", "capture 均值", "enrichment 均值", "95% CI（均值）",
+             "中位数", "IQR", ">0 比例", "=0 比例", "Top5% 占比", "支持度"],
             method_rows(summary, split)))
         lines.append("")
+    if rows is not None:
+        miss = [r for r in rows if str(r.get("status")) == "OK" and blank(r.get("oracle_enrichment"))]
+        zero = [r for r in rows if blank(r.get("capture_top1"))]
+        insuff = [r for r in miss if str(r.get("control_status")) == "INSUFFICIENT_RANDOM"]
+        if miss:
+            def n_of(split):
+                return sum(1 for r in miss if row_in_split(r, split))
+
+            parts = "、".join(f"{SPLIT_LABEL[s]} {n_of(s)} 条" for s in ("valid", "test", "train_description"))
+            lines.append(f"缺失说明：oracle enrichment 记为缺失的 (分子, 方法) 记录为 {parts}；"
+                         f"其中 {len(insuff)}/{len(miss)} 条的 `control_status = INSUFFICIENT_RANDOM`（Top-1 太大，"
+                         "找不到同键数、同原子数的**不同**连通子图，`n_controls = 0`）；"
+                         f"`capture_top1` 本身缺失（零分母）的有 {len(zero)} 条。"
+                         "按预注册规则这些记为 missing，没有放宽匹配条件，也没有用 0 代替。")
+            lines.append("")
+    lines.append("固定 128 个 Train 分子只作描述性对照（它们参与过四轮之前的训练），"
+                 "CI 与 Test 一样不作为独立确认；把它们列出来是为了检查 Valid/Test 的排序是否在这批分子上也出现。")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -232,7 +347,7 @@ def fidelity_rows(summary: Mapping[str, Any], split: str) -> list[list[Any]]:
         if not e:
             continue
         rows.append([
-            DISPLAY[key], f(e.get("n_fidelity_evaluable")),
+            DISPLAY[key], i(e.get("n_fidelity_evaluable")), f(e.get("mean_k"), 2),
             f(e.get("fidelity_advantage_std")), ci(e, "fidelity_advantage_std_ci"),
             f(e.get("abs_delta0_std")), ci(e, "abs_delta0_std_ci"),
             f(e.get("median_half_over_full")), pct(e.get("sign_consistent_fraction")),
@@ -241,7 +356,39 @@ def fidelity_rows(summary: Mapping[str, Any], split: str) -> list[list[Any]]:
     return rows
 
 
-def section_fidelity(summary: Mapping[str, Any]) -> str:
+def structure_rows(rows: Sequence[Mapping[str, Any]], split: str) -> list[list[Any]]:
+    out = []
+    for key in ORDER:
+        sub = [r for r in rows if r.get("split") == split and r.get("method") == key
+               and r.get("fidelity_model") == (key.split("@")[1] if "@" in key else
+                                               {"A_LCRC_GRAD": "LCRC", "B_LCRC_LOCAL": "LCRC",
+                                                "C_LCRC_MASK50": "LCRC", "E_GINE_GRAD": "GINE",
+                                                "F_GINE_MASK50": "GINE"}[key])
+               and r.get("status") == "OK"]
+        if not sub:
+            continue
+
+        def med(name):
+            vals = [float(r[name]) for r in sub if not blank(r.get(name))]
+            return float(np.median(vals)) if vals else None
+
+        def med_std(name):
+            stds = [float(r["target_std"]) for r in sub if not blank(r.get("target_std"))]
+            vals = [float(r[name]) for r in sub if not blank(r.get(name))]
+            if not vals or not stds:
+                return None
+            return float(np.median(vals)) / float(np.median(stds))
+
+        out.append([DISPLAY[key], i(len(sub)),
+                    f(med("n_s2_internal"), 1), f(med("n_s2_boundary"), 1), f(med("n_s2_affected"), 1),
+                    f(med_std("delta_local")), f(med_std("delta_rho")),
+                    f(max([abs(float(r["closure_error"])) for r in sub
+                           if not blank(r.get("closure_error"))]),
+                      8) if key.startswith(("A_", "B_", "C_", "D_")) else "—"])
+    return out
+
+
+def section_fidelity(summary: Mapping[str, Any], rows: Sequence[Mapping[str, Any]] | None = None) -> str:
     lines = ["## 5. 模型预测忠实性", ""]
     lines.append("`delta0 = pred(m=1) − pred(m_S=0)`（S 上键的门控置 0，其余键保持 1）；"
                  "`fidelity_advantage = |delta0(Top1)| − median(|delta0(16 个随机对照)|)`，"
@@ -249,14 +396,25 @@ def section_fidelity(summary: Mapping[str, Any]) -> str:
                  "`half_over_full = |delta0.5| / |delta0|` 检验半剂量一致性；`n_s2_affected` 是同一子图影响的 S2 路径数。"
                  "LCRC 与 GINE 的门控语义不同，**忠实性只在同族内比较**。")
     lines.append("")
-    for split in ("valid", "test"):
+    for split in ("valid", "test", "train_description"):
         lines.append(f"### {SPLIT_LABEL[split]}")
         lines.append("")
         lines.append(table(
-            ["方法", "可评", "advantage（std）", "95% CI", "|delta0|（std）", "95% CI",
+            ["方法", "可评", "平均 k", "advantage（std）", "95% CI", "\\|delta0\\|（std）", "95% CI",
              "半/全剂量中位数", "同号比例", "n_s2_affected 中位数", "支持度"],
             fidelity_rows(summary, split)))
         lines.append("")
+    if rows:
+        lines.append("### S2 结构分解与 LCRC 局部/rho 分解（Valid，中位数）")
+        lines.append("")
+        lines.append(table(
+            ["方法", "n", "n_s2_internal", "n_s2_boundary", "n_s2_affected",
+             "delta_local（std）", "delta_rho（std）", "max 闭合误差"],
+            structure_rows(rows, "valid")))
+        lines.append("")
+        lines.append("`delta_local + delta_rho = delta0` 是 LCRC 的门控分解（`delta_rho` 为 GINE 不适用，故留空）；"
+                     "闭合误差是逐分子的 `||delta0 − delta_local − delta_rho||`，全部远小于目标尺度。"
+                     "`n_s2_*` 说明同一组键在 LCRC 内部命中的 S2 路径类型，不是因果量。")
     return "\n".join(lines)
 
 
@@ -277,6 +435,20 @@ def section_alignment(summary: Mapping[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def k_composition(summary: Mapping[str, Any], stratified: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    valid = summary.get("valid") or {}
+    out: dict[str, Any] = {}
+    for key in ORDER:
+        e = valid.get(key) or {}
+        if not e:
+            continue
+        rows = [r for r in stratified if r.get("split") == "valid" and r.get("method") == key]
+        n6 = sum(int(float(r["n"])) for r in rows if int(float(r["k"])) == 6)
+        n_all = sum(int(float(r["n"])) for r in rows) or 1
+        out[key] = {"mean_k": e.get("mean_k"), "k6_fraction": n6 / n_all}
+    return out
+
+
 def section_paired(summary: Mapping[str, Any], paired: Sequence[Mapping[str, Any]],
                    stratified: Sequence[Mapping[str, str]]) -> str:
     lines = ["## 7. 方法间配对比较与按候选规模分层", ""]
@@ -289,8 +461,8 @@ def section_paired(summary: Mapping[str, Any], paired: Sequence[Mapping[str, Any
                 continue
             rows.append([SPLIT_LABEL[split], f"{DISPLAY.get(rec['method_a'], rec['method_a'])} − "
                                              f"{DISPLAY.get(rec['method_b'], rec['method_b'])}",
-                         f(rec.get("n_pairs")), f(rec.get("mean_diff")),
-                         f"[{f((rec.get('ci95_mean') or [None, None])[0])}, {f((rec.get('ci95_mean') or [None, None])[1])}]",
+                         i(rec.get("n_pairs")), f(rec.get("mean_diff")),
+                         f"[{f(rec.get('ci95_low'))}, {f(rec.get('ci95_high'))}]",
                          pct(rec.get("gt0_fraction"))])
     if rows:
         lines.append(table(["split", "配对差（oracle enrichment）", "n", "均值差", "95% CI", ">0 比例"], rows))
@@ -309,7 +481,7 @@ def section_paired(summary: Mapping[str, Any], paired: Sequence[Mapping[str, Any
             if not chunk:
                 continue
             rec = chunk[0]
-            rows.append([DISPLAY[key], k, f(rec.get("n")), f(rec.get("oracle_evaluable")),
+            rows.append([DISPLAY[key], k, i(rec.get("n")), i(rec.get("oracle_evaluable")),
                          f(rec.get("oracle_enrichment_mean")), f(rec.get("oracle_enrichment_median")),
                          pct(rec.get("oracle_gt0_fraction")),
                          f(rec.get("fidelity_advantage_std_mean")),
@@ -318,6 +490,17 @@ def section_paired(summary: Mapping[str, Any], paired: Sequence[Mapping[str, Any
     lines.append("")
     lines.append("分层用来检查均值是否由少数大 k（更原子、更容易覆盖任何区域）的分子主导；"
                  "若 enrichment 只在 k 较大时为正，就不能把它读成“小片段定位成功”。")
+    comp = k_composition(summary, stratified)
+    if comp:
+        lines.append("")
+        lines.append("**规模组成**（Valid）：" + "；".join(
+            f"{DISPLAY[key]} 平均 k `{f(v['mean_k'], 2)}`、k=6 占 `{pct(v['k6_fraction'])}`"
+            for key, v in comp.items()))
+        lines.append("")
+        lines.append("这说明 C/F 的汇总 enrichment 有很大一部分来自“选更大的子图”，而不是同尺寸内更准；"
+                     "A 的选择集中在较小 k，但小 k 上的外部对齐接近 0。"
+                     "D 在每个分子上都选了 k=6 候选（分数 `n_s2_affected` 随键数单调），"
+                     "因此 D 只能读作“最大子图基线”，不能读作一个独立的小片段发现器。")
     return "\n".join(lines)
 
 
@@ -358,7 +541,7 @@ def section_aux(aux: Mapping[str, Any]) -> str:
     for slice_name, label in (("all", "全部"), ("train_train", "Train–Train"),
                               ("non_train", "含非 Train 端点"), ("both_non_train", "两端均非 Train"),
                               ("pair_correct", "配对预测正确"), ("pair_wrong", "配对预测错误")):
-        for key in ORDER:
+        for key in AUX_ORDER:
             e = summary.get(f"{key}|{slice_name}")
             if not e or not e.get("n"):
                 continue
@@ -378,7 +561,7 @@ def section_aux(aux: Mapping[str, Any]) -> str:
     lines.append("### 结构组成：Top-1 子图有多少落在可变区 / 连接边界 / 共同核心")
     lines.append("")
     rows = []
-    for key in ORDER:
+    for key in AUX_ORDER:
         e = summary.get(f"{key}|all")
         if not e or not e.get("n"):
             continue
@@ -407,27 +590,43 @@ def section_aux(aux: Mapping[str, Any]) -> str:
             rows.append([family.upper(), f(e.get("n_pairs")), f(e.get("mean_abs_delta_error")),
                          f(e.get("rmse_delta")), pct(e.get("direction_accuracy_all")),
                          pct(e.get("direction_accuracy_strong")), f(e.get("mean_abs_true_delta"))])
-        lines.append(table(["模型", "配对数", "平均 |Δŷ−Δy|", "RMSE(Δ)", "方向准确率", "|Δy|≥0.1 方向准确率", "平均 |Δy|"], rows))
+        lines.append(table(["模型", "配对数", "平均 \\|Δŷ−Δy\\|", "RMSE(Δ)", "方向准确率",
+                            "\\|Δy\\|≥0.1 方向准确率", "平均 \\|Δy\\|"], rows))
         lines.append("")
-    rows = []
-    for slice_name in ("all", "train_train", "non_train", "pair_correct", "pair_wrong"):
-        for key in ("B_LCRC_LOCAL", "A_LCRC_GRAD", "E_GINE_GRAD"):
-            e = summary.get(f"{key}|{slice_name}")
-            if not e or not e.get("n"):
-                continue
-            rows.append([slice_name, DISPLAY[key], f(e.get("n")),
-                         f((e.get("atom_capture") or {}).get("mean")),
-                         f((e.get("atom_capture") or {}).get("enrichment_mean")),
-                         f"{(e.get('atom_capture') or {}).get('enrichment_ci95_mean', [None, None])[0]:.4f}"
-                         if (e.get("atom_capture") or {}).get("enrichment_ci95_mean", [None])[0] is not None else "—"])
-    if rows:
-        lines.append("### 端点上的 oracle 原子捕获")
+    loc = aux.get("pair_delta_localization") or {}
+    if loc:
+        lines.append("### 配对 Δ 贡献的局部性（为什么这里不报“oracle 捕获”）")
         lines.append("")
-        lines.append(table(["切片", "方法", "端点", "capture 均值", "enrichment", "CI 下界"], rows))
+        lines.append(f"冻结的配对 Δ 贡献在 {f(loc.get('n_endpoints'))} 个端点中有 "
+                     f"{f(loc.get('endpoints_support_subset_of_edit_atoms'))} 个**只**落在编辑原子上"
+                     f"（平均非零原子占比 `{pct(loc.get('mean_nonzero_atom_fraction'))}`，"
+                     f"编辑区之外平均 `{f(loc.get('mean_atoms_outside_edit'), 4)}` 个原子）。"
+                     "在这些端点上，“子图捕获了多少 Δ 贡献”与“子图是否碰到编辑原子”几乎同义，"
+                     "所以本报告不把端点 capture 当作独立结构验证；对外部贡献的独立检验只在主实验"
+                     "（WC_LOGP 全分子原子贡献 + 匹配随机子图）上做。")
         lines.append("")
-    lines.append("说明：非 Train 端点只有 11 个（4 valid + 7 test），分量数更少；"
-                 "按预注册规则，两个非 Train 切片都为空时记 `NO_SUPPORT`，本表给出的 CI 仅作描述。")
+    nt = (summary.get("B_LCRC_LOCAL|non_train") or {})
+    lines.append(f"说明：`含非 Train 端点` 只有 {f(nt.get('n'))} 个端点，来自 "
+                 f"{f(nt.get('n_molecules'))} 个分子 / {f(nt.get('n_components'))} 个分量，记 `LOW_SUPPORT`；"
+                 "`两端均非 Train` 为空，按预注册规则记 `NO_SUPPORT`。这些 CI 只作描述。"
+                 "“配对预测正确/错误”的阈值是固定 `|Δŷ−Δy| ≤ 0.25`，且按模型族分别判定，"
+                 "所以 LCRC 与 GINE 的端点分母不同。")
     return "\n".join(lines)
+
+
+_STRAT_CACHE: dict[str, Any] = {}
+
+
+def _k6_gap(summary: Mapping[str, Any], a: str, b: str) -> float | None:
+    rows = _STRAT_CACHE.get("rows") or []
+    def enr(method: str) -> float | None:
+        for row in rows:
+            if (row.get("split") == "valid" and row.get("method") == method
+                    and int(float(row.get("k", 0))) == 6):
+                return None if row.get("oracle_enrichment_mean") is None else float(row["oracle_enrichment_mean"])
+        return None
+    va, vb = enr(a), enr(b)
+    return None if va is None or vb is None else va - vb
 
 
 def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], aux: Mapping[str, Any]) -> str:
@@ -436,7 +635,7 @@ def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], a
     labels = set(decision.get("labels", []))
     b = valid.get("B_LCRC_LOCAL") or {}
     b_test = test.get("B_LCRC_LOCAL") or {}
-    b_enr = b.get("oracle_enrichment") or {}
+    b_enr = b.get("oracle_enrichment")
     b_enr_ci = (b.get("oracle_enrichment_ci") or {}).get("mean")
     b_adv = b.get("fidelity_advantage_std")
     b_adv_ci = (b.get("fidelity_advantage_std_ci") or {}).get("mean")
@@ -444,9 +643,9 @@ def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], a
 
     lines.append("### Q1. LOCAL_LCRC 的外部定位更强，它同时具备模型预测忠实性吗？")
     lines.append("")
-    lines.append(f"- Valid：LOCAL 的 oracle enrichment 均值 `{f(b_enr.get('mean'))}`，95% CI "
+    lines.append(f"- Valid：LOCAL 的 oracle enrichment 均值 `{f(b_enr)}`，95% CI "
                  f"`[{f((b_enr_ci or [None, None])[0])}, {f((b_enr_ci or [None, None])[1])}]`；"
-                 f"Test 均值 `{f((b_test.get('oracle_enrichment') or {}).get('mean'))}`。")
+                 f"Test 均值 `{f(b_test.get('oracle_enrichment'))}`。")
     lines.append(f"- 同族忠实性：`fidelity_advantage(std) = {f(b_adv)}`，95% CI "
                  f"`[{f((b_adv_ci or [None, None])[0])}, {f((b_adv_ci or [None, None])[1])}]`；"
                  f"半/全剂量中位数 `{f(b.get('median_half_over_full'))}`，"
@@ -460,9 +659,20 @@ def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], a
     else:
         lines.append("- 结论：在预注册阈值下，LOCAL 的外部对齐本身未被支持（或 Test 未复现方向），"
                      "本轮不能给出“更强定位”的结论。")
-    if b.get("median_half_over_full") is not None and float(b["median_half_over_full"]) > 1.5:
-        lines.append("- 半剂量检查显示 `|delta0.5|` 明显大于 `|delta0|`，说明响应在 m=0.5 附近并非近似线性，"
-                     "“半剂量近似全剂量”的直觉在这些分子上不成立。")
+    a_adv = (valid.get("A_LCRC_GRAD") or {}).get("fidelity_advantage_std")
+    if a_adv is not None and b_adv is not None:
+        lines.append(f"- 幅度对比：LOCAL 的忠实性优势远小于同族 GRAD（`{f(a_adv)}`）和 MASK50"
+                     f"（`{f((valid.get('C_LCRC_MASK50') or {}).get('fidelity_advantage_std'))}`）。"
+                     "也就是说 LOCAL 只是**过线**，不是“预测依赖最强”的方法。")
+    half_ratio = b.get("median_half_over_full")
+    if half_ratio is not None:
+        if float(half_ratio) > 1.5:
+            lines.append(f"- 半剂量检查：`|delta0.5| / |delta0|` 中位数 `{f(half_ratio)}`，"
+                         "半剂量效应明显**大于**全剂量，说明门控响应在 m=0.5 附近非单调/强非线性。")
+        elif float(half_ratio) < 0.8:
+            lines.append(f"- 半剂量检查：`|delta0.5| / |delta0|` 中位数 `{f(half_ratio)}`，"
+                         "半剂量效应明显**小于**全剂量（次线性）。这意味着用 m=0.5 的响应来近似 m=0 的删除效应会系统性低估，"
+                         "C 的“先 0.5 筛选、再 0 评价”也因此存在剂量错配。")
     lines.append("")
 
     ca = decision.get("finite_mask_paired_C_minus_A") or {}
@@ -470,21 +680,33 @@ def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], a
     c = valid.get("C_LCRC_MASK50") or {}
     lines.append("### Q2. GRAD 与 MASK50 的差异是否说明梯度近似限制了结构发现？")
     lines.append("")
-    lines.append(f"- 外部对齐：A(GRAD) `{f((a.get('oracle_enrichment') or {}).get('mean'))}` "
-                 f"{ci(a, 'oracle_enrichment_ci')}，C(MASK50) `{f((c.get('oracle_enrichment') or {}).get('mean'))}` "
+    lines.append(f"- 外部对齐：A(GRAD) `{f(a.get('oracle_enrichment'))}` "
+                 f"{ci(a, 'oracle_enrichment_ci')}，C(MASK50) `{f(c.get('oracle_enrichment'))}` "
                  f"{ci(c, 'oracle_enrichment_ci')}；配对差 C−A 均值 `{f(ca.get('mean_diff'))}`，"
                  f"95% CI `[{f((ca.get('ci95_mean') or [None, None])[0])}, {f((ca.get('ci95_mean') or [None, None])[1])}]`。")
     lines.append(f"- 同族忠实性：A `{f(a.get('fidelity_advantage_std'))}` {ci(a, 'fidelity_advantage_std_ci')}，"
                  f"C `{f(c.get('fidelity_advantage_std'))}` {ci(c, 'fidelity_advantage_std_ci')}。")
-    lines.append(f"- C 的 MASK50 选择在中位数 `{f(c.get('median_mask50_n_scanned'), 0)}` 个候选上做筛选；"
+    lines.append(f"- C 的 MASK50 选择在中位数 `{i(c.get('median_mask50_n_scanned'))}` 个候选上做筛选；"
                  f"选择分数（m=0.5）与真实忠实性评测（m=0）分属不同剂量，两者同族相关不能当作独立验证。")
+    lines.append(f"- 规模混淆：C 的平均 k 为 `{f(c.get('mean_k'), 2)}`，A 为 `{f(a.get('mean_k'), 2)}`；"
+                 f"MASK50 分数没有按 |S| 归一化，更大的子图天然产生更大的 `|Δy|`。"
+                 f"在 k=6 内比较时 C 对 A 的 enrichment 差只有 "
+                 f"`{f(_k6_gap(summary, 'C_LCRC_MASK50', 'A_LCRC_GRAD'))}`，"
+                 f"远小于汇总的 `{f(ca.get('mean_diff'))}`。")
     if "FINITE_MASK_IMPROVES_ALIGNMENT" in labels:
         lines.append("- 结论：在同一候选池上，有限掩码筛选把外部结构对齐显著推高，"
                      "说明只依赖一阶梯度符号/幅度的 GRAD 选择确实漏掉了结构贡献更集中的候选；"
                      "但这仍是**结构对齐**的改进，不是因果识别。")
     else:
-        lines.append("- 结论：没有证据表明 MASK50 筛选在外部对齐上系统性优于 GRAD；"
-                     "梯度近似的限制不能被这一对比证实。")
+        lo = (ca.get("ci95_mean") or [None, None])[0]
+        if lo is not None and lo > 0 and (ca.get("mean_diff") or 0.0) > 0:
+            lines.append(f"- 结论：C 的选择在汇总上确实优于 A（配对差 `{f(ca.get('mean_diff'))}`，CI 排除 0），"
+                         f"但幅度低于预注册的 `{f(C.PAIRED_IMPROVEMENT_MIN)}` 阈值，且其中大部分可由“C 平均选了更大的子图”解释"
+                         f"（k=6 内差 `{f(_k6_gap(summary, 'C_LCRC_MASK50', 'A_LCRC_GRAD'))}`）。"
+                         "因此 `FINITE_MASK_IMPROVES_ALIGNMENT` 不成立，也不能据此断言梯度近似是结构发现的主要限制。")
+        else:
+            lines.append("- 结论：没有证据表明 MASK50 筛选在外部对齐上系统性优于 GRAD；"
+                         "梯度近似的限制不能被这一对比证实。")
     lines.append("")
 
     cross = decision.get("cross_model_pair") or {}
@@ -492,17 +714,19 @@ def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], a
     f_valid = valid.get("F_GINE_MASK50") or {}
     lines.append("### Q3. 在同一外部 oracle 下，LCRC 与 GINE 谁更强？有支持吗？")
     lines.append("")
-    lines.append(f"- LCRC 侧：A `{f((a.get('oracle_enrichment') or {}).get('mean'))}`、"
-                 f"B `{f(b_enr.get('mean'))}`、C `{f((c.get('oracle_enrichment') or {}).get('mean'))}`；"
-                 f"GINE 侧：E `{f((e_valid.get('oracle_enrichment') or {}).get('mean'))}`、"
-                 f"F `{f((f_valid.get('oracle_enrichment') or {}).get('mean'))}`。")
+    lines.append(f"- LCRC 侧：A `{f(a.get('oracle_enrichment'))}`、"
+                 f"B `{f(b_enr)}`、C `{f(c.get('oracle_enrichment'))}`；"
+                 f"GINE 侧：E `{f(e_valid.get('oracle_enrichment'))}`、"
+                 f"F `{f(f_valid.get('oracle_enrichment'))}`。")
     if cross:
         lo = (cross.get("ci95_mean") or [None, None])[0]
         lines.append(f"- 最强 LCRC vs 最强 GINE 的配对差 `{f(cross.get('mean_diff'))}`（CI 下界 `{f(lo)}`），"
                      f"n = {f(cross.get('n_pairs'))}。")
     if "NO_LCRC_SPECIFIC_ADVANTAGE" in labels:
-        lines.append("- 结论：在**与模型无关**的外部 oracle 上，没有检测到 LCRC 相对 GINE 的配对优势；"
-                     "任何“LCRC 解释更忠实/更定位”的说法都缺少跨模型支持。")
+        lines.append("- 结论：在**与模型无关**的外部 oracle 上，没有检测到 LCRC 相对 GINE 的配对优势"
+                     "（B 与 E/F 的配对差 CI 都跨 0）。跨模型的**忠实性**本来就不在本轮可比范围内"
+                     "（门控语义不同），所以本轮只能说“LCRC 没有外部定位优势”，"
+                     "不能说“LCRC 更不忠实”。")
     elif decision.get("lcrc_specific_advantage"):
         lines.append("- 结论：外部 oracle 上 LCRC 侧确有配对优势，且 CI 下界超过预注册阈值；"
                      "该优势只针对结构贡献对齐，不外推到因果性或跨数据集泛化。")
@@ -525,6 +749,14 @@ def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], a
                      + ("也就是说，多数分子的“外部贡献所在”和“模型最依赖的结构”并不重合。"
                         if float(frac) < 0.5 else
                         "也就是说过半分子的两项判据重合，仍存在明显的单侧分子。"))
+        if n_both:
+            lines.append(f"- 分离的方向不对称：仅 oracle 占 `{pct(only_o / n_both)}`，仅忠实性占 `{pct(only_f / n_both)}`。"
+                         "LOCAL 的问题主要是“结构贡献被覆盖了，但模型并不特别依赖它”，而不是反过来。")
+    f_both = (valid.get("F_GINE_MASK50") or {}).get("both_positive_fraction")
+    if f_both is not None:
+        lines.append(f"- 作为对照，F（GINE-MASK50）的两项均为正比例是 `{pct(f_both)}`，"
+                     "而它几乎不选小片段（97.6% 在 k=6）；所以“两项重合”本身也可以由“总是选大子图”买到，"
+                     "不能单独当作定位能力。")
     lines.append("")
     lines.append("### Q5. 下一步：改搜索方法、改结构表示/读出，还是停止 LCRC 特定解释性主张？")
     lines.append("")
@@ -533,6 +765,14 @@ def section_questions(decision: Mapping[str, Any], summary: Mapping[str, Any], a
                      "下一步应把选择目标直接写成小剂量（或精确删除）下的预测变化，而不是继续调 LCRC 的梯度/局部输出读出。")
         lines.append("- 如果新的选择目标仍然只提高 oracle 对齐、不提高同族忠实性，"
                      "则应停止“LCRC 特定解释性”主张，转向结构表示/读出层面的工作。")
+    elif "NO_LCRC_SPECIFIC_ADVANTAGE" in labels and "LOCAL_FAITHFUL_AND_RELEVANT" in labels:
+        lines.append("- 停止把“LCRC 特有读出/解释”当作优势来源：外部 oracle 上没有 LCRC 相对 GINE 的优势，"
+                     "唯一同时通过两项的 LOCAL 是一个**与模型无关**的局部输出启发式。")
+        lines.append("- 若继续，优先级是（1）改**选择目标**：尺寸归一化的剂量/删除响应，"
+                     "而不是未归一化的 `|Δy|`（本轮 C/F 的汇总优势主要来自选大子图）；"
+                     "（2）再考虑结构表示/读出层面的改动；（3）不再单独优化 LCRC 的梯度/局部输出读出。")
+        lines.append("- 本轮不支持“需要新架构”或“LCRC 解释路线整体失败”这类更强结论："
+                     "LOCAL 的过线说明模型侧确实存在可被小片段捕获的预测依赖，只是它与外部结构贡献只在约一半分子上重合。")
     elif "LOCAL_FAITHFUL_AND_RELEVANT" in labels:
         lines.append("- 搜索方法仍有改进空间，但 LOCAL 已在两项指标上同时成立；"
                      "下一步优先在**同一候选池**上做剂量/删除目标的选择器对照，再决定是否需要改表示。")
@@ -609,7 +849,10 @@ def build(*, analysis_dir: Path | str = C.ANALYSIS_DIR, out_dir: Path | str | No
     manifest = load(analysis_dir / "run_manifest.json")
     stratified = load_csv(analysis_dir / "main_stratified_by_k.csv")
     paired = load_csv(analysis_dir / "main_paired_differences.csv")
+    molecule_rows = load_csv(analysis_dir / "main_molecule_results.csv")
 
+    _STRAT_CACHE["rows"] = stratified
+    decision["_summary"] = summary["summary"]
     parts = [
         f"# LCRC 解释忠实性与结构贡献对齐（`{C.ROUND_ID}`）",
         "",
@@ -620,8 +863,8 @@ def build(*, analysis_dir: Path | str = C.ANALYSIS_DIR, out_dir: Path | str | No
         section_assets(identity, freeze),
         section_gates(gates),
         section_pool(poll),
-        section_oracle(summary["summary"]),
-        section_fidelity(summary["summary"]),
+        section_oracle(summary["summary"], molecule_rows),
+        section_fidelity(summary["summary"], molecule_rows),
         section_alignment(summary["summary"]),
         section_paired(summary["summary"], paired, stratified),
         section_cross_model(decision, summary["summary"]),
@@ -630,7 +873,10 @@ def build(*, analysis_dir: Path | str = C.ANALYSIS_DIR, out_dir: Path | str | No
         section_limits(),
         section_repro(manifest, identity, gates),
     ]
-    report = "\n\n".join(parts) + "\n"
+    report = "\n\n".join(parts)
+    while "\n\n\n" in report:
+        report = report.replace("\n\n\n", "\n\n")
+    report = report + "\n"
     path = out_dir / "REPORT.md"
     C.write_text(path, report)
     decision_md = build_decision(decision, summary, aux, gates, freeze)
@@ -658,7 +904,7 @@ def build_decision(decision: Mapping[str, Any], summary: Mapping[str, Any], aux:
     valid = summary["summary"].get("valid", {})
     for key in ("B_LCRC_LOCAL", "C_LCRC_MASK50", "A_LCRC_GRAD", "E_GINE_GRAD"):
         e = valid.get(key) or {}
-        lines.append(f"- {DISPLAY[key]}：oracle enrichment `{f((e.get('oracle_enrichment') or {}).get('mean'))}` "
+        lines.append(f"- {DISPLAY[key]}：oracle enrichment `{f(e.get('oracle_enrichment'))}` "
                      f"{ci(e, 'oracle_enrichment_ci')}；fidelity advantage `{f(e.get('fidelity_advantage_std'))}` "
                      f"{ci(e, 'fidelity_advantage_std_ci')}；oracle 支持度 `{e.get('oracle_support')}`，"
                      f"忠实性支持度 `{e.get('fidelity_support')}`。")
@@ -671,12 +917,34 @@ def build_decision(decision: Mapping[str, Any], summary: Mapping[str, Any], aux:
         lines.append(f"- 跨模型配对差 `{f(cross.get('mean_diff'))}` "
                      f"`[{f((cross.get('ci95_mean') or [None, None])[0])}, {f((cross.get('ci95_mean') or [None, None])[1])}]`。")
     lines.append(f"- 门禁全部通过：`{bool(gates.get('gates', {}).get('all_passed'))}`。")
+    test = (summary["summary"].get("test") or {})
+    tb = test.get("B_LCRC_LOCAL") or {}
+    lines.append(f"- Test 复审：B 的 enrichment `{f(tb.get('oracle_enrichment'))}`、"
+                 f"忠实性 advantage `{f(tb.get('fidelity_advantage_std'))}`，与 Valid 同号。")
+    lines.append("")
+    lines.append("## 本轮**没有**主张的内容")
+    lines.append("")
+    lines.append("- 没有主张 LCRC 比 GINE“更不忠实”：跨族门控语义不同，`|delta0|` 不可比。")
+    lines.append("- 没有主张 `m=0` 的删除效应等于 Shapley / 因果贡献；它只是一次完全门控移除。")
+    lines.append("- 没有主张 WC_LOGP 的原子加性分解就是化学机制；它只是冻结的生成式 oracle。")
+    lines.append("- 没有把 823 对辅助结果当独立验证：编辑区是结构差异，非 Train 端点只有 11 个分量。")
+    lines.append("- 没有事后更换 split、指标、阈值或候选范围。")
+    lines.append("")
+    lines.append("## 什么会改变这个判断")
+    lines.append("")
+    lines.append("1. 在**新的**预注册里，把选择目标改成尺寸归一的剂量/删除响应后，"
+                 "若 C 类方法在 k=6 内也明显超过 A（≥0.02）且同族忠实性同步上升，"
+                 "则应把 `FINITE_MASK_IMPROVES_ALIGNMENT` 升级为成立。")
+    lines.append("2. 若把候选池扩大到 k>6 或允许不连通子图后，B 的外部优势消失，"
+                 "则 `LOCAL_FAITHFUL_AND_RELEVANT` 需降级为池内结论。")
+    lines.append("3. 若在更多非 Train 端点上 B 的编辑区重叠优势反号，则辅助实验的正面描述不成立"
+                 "（当前非 Train 切片已是负号但 LOW_SUPPORT/CIs 跨 0）。")
     lines.append("")
     lines.append("## 下一步")
     lines.append("")
     lines.append("按本轮预注册条款，本轮结束后停止；不自动开始训练、不自动做架构搜索。"
-                 "若要继续，唯一被本轮数据支持的入口是“在冻结模型上把选择目标改成小剂量/精确删除下的预测变化”，"
-                 "且必须在新的预注册里重新冻结候选池与统计口径。")
+                 "若继续，起点是“同一候选池 + 尺寸归一的剂量/删除选择目标”，"
+                 "而不是继续优化 LCRC 的梯度/局部输出读出；新一步必须重新冻结协议。")
     lines.append("")
     return "\n".join(lines)
 

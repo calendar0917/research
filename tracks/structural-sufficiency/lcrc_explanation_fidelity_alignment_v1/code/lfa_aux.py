@@ -312,6 +312,32 @@ def _slice(rows: Sequence[Mapping[str, Any]], name: str) -> list[Mapping[str, An
     return list(rows)
 
 
+def delta_localization() -> dict[str, Any]:
+    """How localized the frozen pair Δ contribution is (description only).
+
+    If the Δ contribution is non-zero only on the edit atoms, a "capture" of
+    that Δ over a candidate set carries no information beyond "does S touch the
+    edit atoms"; the report must say so instead of calling it independent.
+    """
+    endpoints, _ = load_endpoints()
+    fracs, outside, subset = [], [], 0
+    for ep in endpoints.values():
+        delta = np.abs(np.asarray(ep["oracle_delta"], dtype=np.float64))
+        nonzero = set(int(i) for i in np.flatnonzero(delta > 1e-12))
+        edit = set(int(i) for i in ep["edit_atoms"])
+        fracs.append(len(nonzero) / max(1, int(delta.size)))
+        outside.append(len(nonzero - edit))
+        subset += int(nonzero <= edit)
+    return {
+        "n_endpoints": len(fracs),
+        "mean_nonzero_atom_fraction": float(np.mean(fracs)),
+        "median_nonzero_atom_fraction": float(np.median(fracs)),
+        "endpoints_support_subset_of_edit_atoms": int(subset),
+        "mean_atoms_outside_edit": float(np.mean(outside)),
+        "max_atoms_outside_edit": int(np.max(outside)),
+    }
+
+
 def summarise(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for method in SELECTORS_ORDER:
@@ -469,6 +495,7 @@ def run(*, pool_dir: Path | str = C.POOL_DIR, select_dir: Path | str = C.SELECT_
         "pool_sha256": C.sha256_file(pool_path),
         "summary": summary,
         "paired": paired,
+        "pair_delta_localization": delta_localization(),
         "notes": [
             "edit region = structural difference between the two molecules, not causal property truth",
             "absence of Top-1 overlap alone is not evidence of unfaithfulness",
