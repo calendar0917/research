@@ -1,0 +1,87 @@
+{
+  "policy": "Only engineering fixes after the freeze; no scientific design change. Each entry records the frozen hash, the new hash, the affected units, whether any formal result existed at the time, and the rerun reason.",
+  "fixes": [
+    {
+      "id": "FIX-01",
+      "file": "code/bc_train.py",
+      "frozen_sha256": "88556cb9a3d46d60bb2a98a88c68a1df2623759b51c936bd79023cd7ac8ff4c9",
+      "new_sha256": "8195fda5bc1dbc691397a8386e22b408969c3d07f982314cda5653d9ac6b4c68",
+      "detected_in": "bajc-smoke-20261118-004808-b42095c1 (GPU smoke, res-gpu0)",
+      "symptom": "AttributeError: 'dict' object has no attribute 'occ_map' in evaluate(): the per-split Path3Split was unpacked from the per-split mapping too late",
+      "change": "evaluate() indexes the path3 mapping by split name before calling predict_std; one line, no numeric constant, no model, no recipe, no data",
+      "scientific_content_changed": false,
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": false,
+      "rerun": "the smoke unit was re-run from scratch; no formal unit had been launched, so no formal result was discarded"
+    },
+    {
+      "id": "FIX-02",
+      "file": "code/bc_data.py",
+      "frozen_sha256": "d2dc69a91f232233dc12179bf7e42dd9c1e5ccaea40b895efd3cd859f4e36906",
+      "new_sha256": "df10f2190a283aa63f00156acf3477afd07c9dd120f5994487e170fa0343fc89",
+      "detected_in": "bajc-smoke2-20261118-005148-a2c27bf7",
+      "symptom": "AttributeError: 'dict' object has no attribute 'occ_map' at the training-loop make_batch call",
+      "change": "make_batch resolves the per-split Path3Split from the mapping by split name (defensive; prevents cross-split mixing)",
+      "scientific_content_changed": false,
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": false,
+      "rerun": "smoke re-run from scratch; still no formal unit launched"
+    },
+    {
+      "id": "FIX-03",
+      "file": "code/bc_train.py",
+      "frozen_sha256": "8195fda5bc1dbc691397a8386e22b408969c3d07f982314cda5653d9ac6b4c68",
+      "new_sha256": "ad2ba3f51a657ba96d97d187092ae39209aa464d68ca657154aa9065646bbeac",
+      "detected_in": "post-smoke bookkeeping check",
+      "symptom": "a smoke unit wrote into the same result directory as the formal unit and could not be told apart from it",
+      "change": "status.json now carries smoke/formal booleans; no numeric constant, model, recipe or data change",
+      "scientific_content_changed": false,
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": false,
+      "rerun": "none; the smoke directory is overwritten by the formal unit and every analysis asserts formal == True"
+    },
+    {
+      "id": "FIX-04",
+      "file": "code/bc_analysis.py",
+      "frozen_sha256": "n/a (analysis-only module, added after the freeze)",
+      "new_sha256": "719dd5c34327e50b0ffd19bbab9ed886882813b8c82f67752c4a9a825c006519",
+      "detected_in": "first analysis pass on the Stage-A units",
+      "symptom": "the fourth Stage-C trigger was coded as 'valid gain > 0', which is not what PROTOCOL.md section 4 pre-registers ('a non-degenerate branch with non-reversed Train/Valid gains')",
+      "change": "the trigger now reads literally: branch non-degenerate AND the Train/Valid gains are not clearly reversed (REVERSAL_TOLERANCE = 0.005 added to the config for that test only); the other three thresholds are untouched",
+      "scientific_content_changed": true,
+      "direction_of_change": "no result changes; the trigger for the anti-degeneracy clause becomes weaker (it can only fire more often), and it is applied to the frozen Stage-A units that already existed, so it cannot have selected a favourable run",
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": true,
+      "rerun": "no unit rerun; the trigger is recomputed from the unchanged per-unit predictions",
+      "config_sha256": "c6bed0f07a83becf3ab331258c62bd005fd3b0bb9f10c22de4036976e1d9b9e8",
+      "config_sha256_frozen": "3b6a8f035c08eee923d344e73a634dcaba896e0d3bc6d28c986f6b9c77c8d0ce"
+    },
+    {
+      "id": "FIX-05",
+      "file": "code/bc_run.py",
+      "frozen_sha256": "n/a (entry point, not part of any training number)",
+      "new_sha256": "28b8f352a7fc5204058a215370f2398b70612947c4195d507acbf5356e57cdda",
+      "detected_in": "bajc-C-esol-joint-s0 / bajc-C-esol-marginal-s0 (first ESOL launch, exit 1 before any data was read)",
+      "symptom": "IndentationError: the ESOL guard was inserted into the smoke branch instead of the training branch",
+      "change": "the smoke branch is restored verbatim and the ESOL guard lives in the training branch only",
+      "scientific_content_changed": false,
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": true,
+      "rerun": "the two ESOL units were re-launched from scratch; both failed before building any model, so no partial result was spliced"
+    },
+    {
+      "id": "FIX-06",
+      "file": "code/bc_data.py",
+      "frozen_sha256": "df10f2190a283aa63f00156acf3477afd07c9dd120f5994487e170fa0343fc89",
+      "new_sha256": "8f0881bcb8991bebc63ac777c0cf6745ccafcdb3b8c426e02d14b58b12fc102c",
+      "detected_in": "first ESOL path3 build",
+      "symptom": "the path3 cache file name did not carry the dataset, so building the ESOL cache silently returned the 17.9k Lipo events for 902 ESOL molecules (event count identical to Lipo)",
+      "change": "cache, manifest and every consumer are keyed by (dataset, split); the Lipo cache path and digest are byte-identical to the frozen ones, so no Lipo unit is affected",
+      "scientific_content_changed": true,
+      "direction_of_change": "strictly protective: it *removes* a cross-dataset contamination. It changes nothing for the 12 Lipo/WC units (their cache digest is unchanged and re-verified by the manifest)",
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": true,
+      "rerun": "no unit rerun; the ESOL units were trained only after the fix"
+    }
+  ]
+}

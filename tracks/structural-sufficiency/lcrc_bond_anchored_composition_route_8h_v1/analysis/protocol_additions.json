@@ -1,0 +1,21 @@
+{
+  "round_id": "lcrc_bond_anchored_composition_route_8h_v1",
+  "policy": "Deviations that are *additions* rather than fixes. Each one is recorded with the time, the reason, and the guarantee that it cannot have selected a favourable run.",
+  "additions": [
+    {
+      "id": "ADD-01",
+      "what": "the ESOL transfer was run at seeds 0, 1 and 2 instead of seed 0 only",
+      "when": "2026-11-18T02:34 (+08:00), i.e. after the first ESOL pair (seed 0) had completed",
+      "reason": "the seed-0 ESOL pair showed JOINT better by +0.0104 on Valid, exactly at the pre-registered candidate threshold; a single seed on 113 Valid molecules cannot distinguish a route effect from seed noise, so the same frozen recipe was repeated unchanged",
+      "reporting_rule": "all three seeds are reported with their CIs; the seed that reverses the sign (seed 2) is reported with the same weight as the two that do not",
+      "cannot_select": "the recipe, the data, the epochs, the selection rule and the metric were untouched; only the seed list grew, and seeds 1/2 were not tried and then discarded"
+    },
+    {
+      "id": "ADD-02",
+      "what": "the explanation evaluation was also run on the E2E Lipo JOINT seed-0 model, not only on the confirmed institution",
+      "when": "2026-11-18T02:07 (+08:00), before the Stage-C confirmation units finished",
+      "reason": "the E2E model is the only one whose branch is actually live on the main task; the FROZEN model's branch is a 3-epoch residual",
+      "reporting_rule": "the FROZEN Lipo JOINT model is the primary explanation row (it is the only unit whose branch was trained against a fixed, known teacher); the E2E row is reported as a *second* row and every claim is checked against both"
+    }
+  ]
+}

@@ -1,0 +1,109 @@
+# Frozen scientific configuration — lcrc-bond-anchored-composition-route-8h-v1
+#
+# Every value here is a *research* constant, frozen before the first formal
+# training unit.  The file is SHA-256 hashed into analysis/protocol_freeze.json
+# together with code/*.py, tests/*.py and PROTOCOL.md.  Only engineering
+# fallbacks may change afterwards, and any change must be recorded in the
+# manifest with the affected units and the reason for the rerun.
+
+round_id: lcrc-bond-anchored-composition-route-8h-v1
+dataset: ogbg-mollipo
+splits: [train, valid, test]
+split_sizes: {train: 3360, valid: 420, test: 420}
+
+tasks:
+  lipo:
+    target: "official ogbg-mollipo experimental label (exp; experimental logD)"
+    teacher_checkpoint: L_lipophilicity
+  wc_logp:
+    target: "RDKit Wildman-Crippen logP (computed property; NOT experimental logD)"
+    teacher_checkpoint: L_WC_LOGP
+    oracle_atom_contributions: tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/ogbg-mollipo.npz
+
+models:
+  JOINT:
+    event: "undirected simple three-bond path (a,b,c,d); anchor bond (b,c)"
+    second_path: "the real adjacent S2 occurrence q=(b,c,d), plus the reverse (p_rev,q_rev); z_P is the mean of both directions"
+  MARGINAL:
+    event: "identical event list, anchor bond, first path, closure4 and 1/sqrt(n) normaliser"
+    second_path: "molecule-level mean of the raw 200-d second-path evidence per direction, then u(mean r); removes the per-event partner identity only"
+
+branch:
+  operator: "0.5*(psi(x(p,q,e)) + psi(x(p_rev,q_rev,e))) with the nonlinearity BEFORE the per-path aggregation"
+  u: "SiLU(Linear(200,32))"
+  v: "SiLU(Linear(96,16))"
+  psi: "Linear(64,32) after SiLU; input concat[u(r_p), u(r_q), u(r_p)*u(r_q), v(b_e), closure4] (113)"
+  readout: "Linear(32,1,bias=False), weight initialised to exactly zero, divided by sqrt(max(1,n_paths3(G)))"
+  delta_comp: "sum_P c_P; exactly zero at initialisation; switchable off (identical to C1 at the same weights)"
+  branch_parameters: 17392
+  branch_fraction_of_c1: 0.0761
+  budget: "branch parameters <= 15% of C1 (228674)"
+
+recipes:
+  FROZEN:
+    teacher_mode: "eval(); all C1 parameters and buffers frozen; epoch 0 == frozen C1"
+    optimizer: AdamW
+    lr: 1.0e-3
+    weight_decay: 1.0e-5
+    gradient_clip: 5.0
+    batch_size: 128
+    epochs: 180
+    branch_dropout: 0.10
+    branch_penalty: 0.02
+    selection: "minimum Val RMSE over epochs 0..180; epoch 0 is a legal candidate"
+  E2E:
+    init: "canonical C1 seed-0 state; never the trained teacher"
+    recipe: Rf (gnn_route_clarification_8h_v1)
+    epochs: 360
+    peak_lr: 1.0e-3
+    min_lr: 1.0e-5
+    warmup_epochs: 5
+    schedule: per-step linear warmup then cosine
+    weight_decay: 1.0e-5
+    batch_size: 128
+    dropout: 0.10
+    gradient_clip: 5.0
+    precision: fp32
+    branch_output_penalty: none (Rf has none; the FROZEN penalty is institution-specific)
+
+seeds:
+  branch_init: 20261118
+  branch_dropout: 20261119
+  train_default: 0
+  e2e_repeats: [0, 1]
+  stage_c_extra: 2
+  bootstrap: 20261118
+  oracle_control: 20261118
+
+statistics:
+  bootstrap_draws: 2000
+  paired: "same molecules, same row ids, same split"
+  comparison_policy: "every reported number is DEVELOPMENT; Test is read once per frozen model"
+
+decision_scales:
+  stage_c_joint_vs_marginal: 0.010
+  stage_c_joint_vs_c1: 0.015
+  stage_c_bootstrap_prob: 0.80
+  practical_joint_vs_c1: 0.020
+  practical_joint_vs_marginal: 0.010
+  min_pairing_support: 0.30
+  min_oracle_eligible_fraction: 0.70
+
+stage_order:
+  - stage0_preflight_and_freeze
+  - stageA_frozen_branch_lipo_and_wc_logp
+  - stageB_end_to_end_two_seeds
+  - stageB_trigger_rule
+  - stageC_only_if_triggered
+  - stageD_read_only_integration
+
+engineering_fallbacks:
+  - "if a batch cannot fit in memory, the composition events are summed in exact chunks (no sampling, no truncation)"
+  - "if the WC_LOGP C1 checkpoint cannot be identity-verified the whole WC_LOGP branch is marked WC_TEACHER_UNAVAILABLE and skipped (never retrained)"
+  - "a crashed unit is re-run from scratch as a new run id; results are never spliced"
+
+forbidden:
+  - "retraining any historical C1 / GINE / D-MPNN / R1 / R2 / RR_REAL / RR_CONTROL / oracle baseline"
+  - "any third hand-made null"
+  - "architecture search, extra widths, extra layers, extra seeds beyond the frozen list"
+  - "using Test for selection or tuning"

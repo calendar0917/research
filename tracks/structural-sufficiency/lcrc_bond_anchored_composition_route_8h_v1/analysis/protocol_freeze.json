@@ -1,0 +1,205 @@
+{
+  "body": {
+    "branch": {
+      "branch_dropout": 0.1,
+      "dropout_stream": "isolated torch.Generator seeded per epoch; the C1 stream is untouched",
+      "max_fraction_of_c1": 0.15,
+      "nonlinearity_placement": "before the per-path aggregation",
+      "normaliser": "1/sqrt(max(1,n_paths3(G)))",
+      "pair_input_dim": 113,
+      "params_expected": 17392,
+      "psi": "Linear(64,32) . SiLU . Linear(113,64)",
+      "readout": "Linear(32,1,bias=False), weight initialised to exactly zero",
+      "reversal": "z_P = 0.5*(psi(x(p,q,e)) + psi(x(p_rev,q_rev,e)))",
+      "u": "SiLU(Linear(200,32))",
+      "v": "SiLU(Linear(96,16))"
+    },
+    "budget": {
+      "gpu_hours_hard": 16.0,
+      "gpu_hours_soft": 14.0,
+      "gpus": [
+        "res-gpu0",
+        "res-gpu1"
+      ],
+      "one_gpu_process_per_card": true,
+      "wall_clock_hard_hours": 8.0,
+      "wall_clock_soft_hours": 7.5
+    },
+    "c1": {
+      "parameters": 228674,
+      "preserved_modules": [
+        "atom encoder",
+        "bond encoder",
+        "S1 neighbour embedding",
+        "typed S2 type/end/joint/closure/content",
+        "LocalMLP",
+        "LayerNorm",
+        "dropout",
+        "sum_v f(h_v)",
+        "rho([g, mean h, mean h^2, log1p n])"
+      ],
+      "readout_parameters": 15298,
+      "trunk_parameters": 213376
+    },
+    "dataset": "ogbg-mollipo",
+    "decision_scales": {
+      "min_oracle_eligible_fraction": 0.7,
+      "min_pairing_support": 0.3,
+      "practical_joint_vs_c1": 0.02,
+      "practical_joint_vs_marginal": 0.01,
+      "stage_c_bootstrap_prob": 0.8,
+      "stage_c_joint_vs_c1": 0.015,
+      "stage_c_joint_vs_marginal": 0.01
+    },
+    "engineering_fallbacks": [
+      "exact event chunking when a batch is large; never sampling or truncation",
+      "WC_TEACHER_UNAVAILABLE if the WC_LOGP C1 checkpoint fails identity verification",
+      "a failed unit is re-run as a whole under a new id; results are never spliced"
+    ],
+    "expected_split_sizes": {
+      "test": 420,
+      "train": 3360,
+      "valid": 420
+    },
+    "institutions": [
+      "FROZEN",
+      "E2E"
+    ],
+    "protocol_id": "lcrc-bond-anchored-composition-route-8h-v1",
+    "recipes": {
+      "E2E": {
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "amp": false,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "early_stopping": false,
+        "ema": false,
+        "epochs": 360,
+        "eval_batch_size": 256,
+        "gradient_clip": 5.0,
+        "min_lr": 1e-05,
+        "optimizer": "AdamW",
+        "peak_lr": 0.001,
+        "scheduler": "per_step_linear_warmup_then_cosine",
+        "selection": "minimum Val RMSE; strictly smaller replaces, an exact tie keeps the earlier epoch",
+        "shuffle_generator": "np.random.default_rng(0).permutation over Train split-local rows, one per epoch",
+        "soup": false,
+        "swa": false,
+        "target": "Train-only mean/std normalisation of the task label",
+        "warmup_epochs": 5,
+        "weight_decay": 1e-05
+      },
+      "FROZEN": {
+        "adam_betas": [
+          0.9,
+          0.999
+        ],
+        "adam_eps": 1e-08,
+        "batch_size": 128,
+        "branch_dropout": 0.1,
+        "branch_penalty": 0.02,
+        "epochs": 180,
+        "eval_batch_size": 256,
+        "gradient_clip": 5.0,
+        "lr": 0.001,
+        "optimizer": "AdamW",
+        "selection": "minimum Val RMSE over epochs 0..180; epoch 0 is a legal candidate",
+        "target": "full standardised prediction MSE (y_base frozen, only the residual is learnable)",
+        "teacher_mode": "eval(); every parameter and buffer frozen; epoch 0 == the frozen C1 prediction",
+        "weight_decay": 1e-05
+      }
+    },
+    "round_id": "lcrc-bond-anchored-composition-route-8h-v1",
+    "seeds": {
+      "bootstrap": 20261118,
+      "branch_dropout": 20261119,
+      "branch_init": 20261118,
+      "e2e_repeats": [
+        0,
+        1
+      ],
+      "oracle_control": 20261118,
+      "train_default": 0
+    },
+    "splits": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "stageC_selection_rule": [
+      "if E2E triggers, confirm E2E",
+      "else if FROZEN triggers, confirm FROZEN",
+      "both trigger -> E2E"
+    ],
+    "stage_order": [
+      "stage0_preflight_and_freeze",
+      "stageA_frozen_branch_lipo_and_wc_logp",
+      "stageB_end_to_end_two_seeds",
+      "stageB_trigger_rule_validation_only",
+      "stageC_only_if_triggered",
+      "stageD_read_only_integration"
+    ],
+    "statistics": {
+      "bootstrap_draws": 2000,
+      "paired": "same molecules, same official row ids",
+      "test_policy": "each frozen model reads DEVELOPMENT Test exactly once, after selection"
+    },
+    "tasks": {
+      "lipo": {
+        "target": "official ogbg-mollipo experimental label (exp, experimental logD)",
+        "teacher": "L_lipophilicity"
+      },
+      "wc_logp": {
+        "target": "RDKit Wildman-Crippen logP (computed property; not experimental logD)",
+        "teacher": "L_WC_LOGP"
+      }
+    },
+    "variants": {
+      "JOINT": "each three-bond path event uses its real second S2 occurrence (p,q) and (p_rev,q_rev)",
+      "MARGINAL": "identical events/anchors/first path/closure4/count; the second S2 occurrence is replaced by the molecule-level mean of the second-path representation per direction"
+    }
+  },
+  "file_hashes": {
+    "PROTOCOL.md": "2966c00bc0ddcfc5c7ad10ee937a0330429a8082d2c82989f7a45d6f157af1d2",
+    "code/bc_checks.py": "065724fbf7b4358a8edf01fcb8c07e1498d49acba3a68c0446ad3c82db26b0e1",
+    "code/bc_common.py": "3b6a8f035c08eee923d344e73a634dcaba896e0d3bc6d28c986f6b9c77c8d0ce",
+    "code/bc_data.py": "d2dc69a91f232233dc12179bf7e42dd9c1e5ccaea40b895efd3cd859f4e36906",
+    "code/bc_freeze.py": "9a0a9017a6cb6927529885b280643b06e966f6daf2b4612354e9f0cf212b9fec",
+    "code/bc_models.py": "fa8b12d780d7abe43fb2a0f245191d6e1d2a60c47af56f79910fd77cd3050161",
+    "code/bc_path3.py": "292465ca9f5a04ee80d92d50c2c5c4229cae506fd682c52265ab2e6065e2d2b2",
+    "code/bc_prepare.py": "80f4fe37ef283e40f3f40e60846ac703e5243a2234beee9f71f6f5daad336a99",
+    "code/bc_run.py": "1ea93ed0e65925e2d91947a4fd614f43d20e26a0004df66b022cc35d86a120bb",
+    "code/bc_train.py": "88556cb9a3d46d60bb2a98a88c68a1df2623759b51c936bd79023cd7ac8ff4c9",
+    "configs/frozen.yaml": "3644f56256225b446cdbd14981804f1d8423c56e5b2d937319c73c7d1b86dc0d",
+    "tests/test_bc_round.py": "90e9c9521c2a04d2e27711874a5e6e9b4586b605afb2665c683939d9f62736bd"
+  },
+  "frozen_at": "2026-11-18T00:45:31",
+  "git_branch": "exp/lcrc-explanation-task-relevance-v1",
+  "git_commit": "771a9edd9f8a4781e908b3c6039416f82082e71d",
+  "git_dirty_tracked": false,
+  "notes": [
+    "this file is written before the first formal training unit and is never edited afterwards",
+    "any later change is an engineering fix, recorded in analysis/compute_ledger.json with the affected units"
+  ],
+  "pairing_support": {
+    "by_split": {
+      "test": 1.0,
+      "train": 1.0,
+      "valid": 1.0
+    },
+    "min_valid": 1.0,
+    "paths3_sha256": {
+      "test": "47945399660ee1c7098f0b8925358825f3fc83c34af071924c6e6a1c70e0edcb",
+      "train": "9a864bd97751709440f77b25f3a308086b86978276d56d67362d4e731e25d8cb",
+      "valid": "0746e058fcf12f9d9b4ad174e2a7634e2c6ef869a7c59efccca1a9e7a9f46966"
+    },
+    "status": "PAIRING_SUPPORT_OK"
+  },
+  "protocol_hash": "a722872b4d08240d94c26b7f43d710858986bba8bba0391fcb6a191848cf950b",
+  "round_id": "lcrc-bond-anchored-composition-route-8h-v1",
+  "uv_lock_sha256": "d063dedc762d1f338661cbd67c59a7245a0efb2966a2b932836530cf5cba7033"
+}

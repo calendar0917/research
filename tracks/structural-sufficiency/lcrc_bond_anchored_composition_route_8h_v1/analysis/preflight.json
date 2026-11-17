@@ -1,0 +1,819 @@
+{
+  "all_pass": true,
+  "elapsed_seconds": 2.2775795459747314,
+  "failed": [],
+  "gate_names": {
+    "1": "C1 checkpoint parameters and normalisation identity",
+    "10": "residual off equals the C1 function at the same weights",
+    "11": "gradients follow the FROZEN / E2E definitions",
+    "12": "per-molecule delta_comp == sum_P c_P (raw-unit intercept handled)",
+    "13": "label permutation cannot change structure enumeration or the control",
+    "14": "WC_LOGP atom closure, split and Train-only scaler identity",
+    "2": "C1 prediction replay against the saved prediction table",
+    "3": "three-bond path coverage complete, no illegal duplicate-atom path",
+    "4": "both S2 occurrences of every event locate in the frozen C1 enumeration",
+    "5": "reversed composition representation gives the same event value",
+    "6": "atom / physical-bond renumbering equivalence",
+    "7": "single-graph and batched forward equivalence",
+    "8": "JOINT / MARGINAL event sets, counts and parameter counts identical",
+    "9": "epoch-0 residual strictly zero"
+  },
+  "gates": {
+    "10_residual_off": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "residual_off_equals_base",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "base_equals_frozen_c1_forward",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "residual_nonzero_when_switched_on",
+          "detail": {
+            "max_abs_delta": 0.16950899362564087
+          },
+          "ok": true
+        }
+      ]
+    },
+    "11_gradients": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "frozen_c1_has_no_gradient",
+          "detail": {
+            "n_with_grad": 0
+          },
+          "ok": true
+        },
+        {
+          "check": "frozen_branch_has_gradient",
+          "detail": {
+            "n": 9,
+            "n_with_grad": 1
+          },
+          "ok": true
+        },
+        {
+          "check": "e2e_c1_has_gradient",
+          "detail": {
+            "n": 31,
+            "n_with_grad": 31
+          },
+          "ok": true
+        },
+        {
+          "check": "e2e_branch_has_gradient",
+          "detail": {
+            "n": 9,
+            "n_with_grad": 9
+          },
+          "ok": true
+        }
+      ]
+    },
+    "12_event_additivity": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "single_graph_additivity_standardised",
+          "detail": {
+            "max_abs": 1.1059455573558807e-07
+          },
+          "ok": true
+        },
+        {
+          "check": "single_graph_additivity_raw_intercept_cancels",
+          "detail": {
+            "max_abs": 1.3398971129841009e-07,
+            "sigma": 1.211539840098397
+          },
+          "ok": true
+        },
+        {
+          "check": "no_event_molecule_delta_zero",
+          "detail": null,
+          "ok": true
+        }
+      ]
+    },
+    "13_label_permutation": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "structure_independent_of_label",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "path3_digest_reproducible",
+          "detail": {
+            "sha256": "0746e058fcf12f9d9b4ad174e2a7634e2c6ef869a7c59efccca1a9e7a9f46966"
+          },
+          "ok": true
+        },
+        {
+          "check": "marginal_control_structural_only",
+          "detail": {
+            "note": "the MARGINAL mean is computed from occurrence evidence only; no label is read"
+          },
+          "ok": true
+        }
+      ]
+    },
+    "14_wc_logp": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "wc_logp_labels_match_contribution_cache",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "wc_logp_atom_closure",
+          "detail": {
+            "test": 9.769962616701378e-15,
+            "train": 2.220446049250313e-14,
+            "valid": 2.4202861936828413e-14
+          },
+          "ok": true
+        },
+        {
+          "check": "wc_logp_scaler_is_train_only",
+          "detail": {
+            "n": 3360,
+            "source": "oracle:WC_LOGP:official-train"
+          },
+          "ok": true
+        },
+        {
+          "check": "wc_logp_scaler_differs_from_lipo",
+          "detail": {
+            "note": "WC_LOGP carries its own Train-only mean/std; the two tasks never share a scaler"
+          },
+          "ok": true
+        }
+      ],
+      "per_split": {
+        "test": {
+          "max_abs_atom_closure": 9.769962616701378e-15,
+          "max_abs_label_diff": 0.0,
+          "n": 420
+        },
+        "train": {
+          "max_abs_atom_closure": 2.220446049250313e-14,
+          "max_abs_label_diff": 0.0,
+          "n": 3360
+        },
+        "valid": {
+          "max_abs_atom_closure": 2.4202861936828413e-14,
+          "max_abs_label_diff": 0.0,
+          "n": 420
+        }
+      }
+    },
+    "1_lipo": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "checkpoint_sha256",
+          "detail": {
+            "expected": "9ef542e591963cf8ed012e95036d0f6f95e9a3c3d142a1838f28581bbbed10bc",
+            "sha256": "9ef542e591963cf8ed012e95036d0f6f95e9a3c3d142a1838f28581bbbed10bc"
+          },
+          "ok": true
+        },
+        {
+          "check": "parameter_count",
+          "detail": {
+            "expected": 228674,
+            "n": 228674
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_global_mean",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_global_scale",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_scalar_mean",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_scalar_scale",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "scaler_is_train_only",
+          "detail": {
+            "fit_split": "train",
+            "source": null
+          },
+          "ok": true
+        }
+      ],
+      "task": "lipo",
+      "teacher": {
+        "checkpoint_epoch": 124,
+        "checkpoint_valid_rmse_raw": 0.7068848410118609,
+        "name": "L_lipophilicity",
+        "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/checkpoints/L_lipophilicity_Rf_best.pt",
+        "sha256": "9ef542e591963cf8ed012e95036d0f6f95e9a3c3d142a1838f28581bbbed10bc",
+        "sha256_expected": "9ef542e591963cf8ed012e95036d0f6f95e9a3c3d142a1838f28581bbbed10bc",
+        "sha256_match": true,
+        "source_path": "results/stage1/ogbg-mollipo/L/Rf/checkpoint_best_val.pt",
+        "state_keys": 62
+      }
+    },
+    "1_wc_logp": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "checkpoint_sha256",
+          "detail": {
+            "expected": "4522a6361909b1b7d1aee317bdbead0798e07eee0dd3143a396ade64ea788a67",
+            "sha256": "4522a6361909b1b7d1aee317bdbead0798e07eee0dd3143a396ade64ea788a67"
+          },
+          "ok": true
+        },
+        {
+          "check": "parameter_count",
+          "detail": {
+            "expected": 228674,
+            "n": 228674
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_global_mean",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_global_scale",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_scalar_mean",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "buffer_scalar_scale",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "scaler_is_train_only",
+          "detail": {
+            "fit_split": "train",
+            "source": "oracle:WC_LOGP:official-train"
+          },
+          "ok": true
+        }
+      ],
+      "task": "wc_logp",
+      "teacher": {
+        "checkpoint_epoch": 333,
+        "checkpoint_valid_rmse_raw": 0.11440873206013732,
+        "name": "L_WC_LOGP",
+        "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/checkpoints/L_WC_LOGP_best.pt",
+        "sha256": "4522a6361909b1b7d1aee317bdbead0798e07eee0dd3143a396ade64ea788a67",
+        "sha256_expected": "4522a6361909b1b7d1aee317bdbead0798e07eee0dd3143a396ade64ea788a67",
+        "sha256_match": true,
+        "source_path": "results/oracle/ogbg-mollipo/L/WC_LOGP/selected/checkpoint_best_val.pt",
+        "state_keys": 62
+      }
+    },
+    "2_lipo": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "train_row_ids",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "train_replay_atol",
+          "detail": {
+            "max_abs_diff_raw": 1.7331216426441642e-06
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_row_ids",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "valid_replay_atol",
+          "detail": {
+            "max_abs_diff_raw": 1.4442680360549076e-06
+          },
+          "ok": true
+        },
+        {
+          "check": "test_row_ids",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "test_replay_atol",
+          "detail": {
+            "max_abs_diff_raw": 1.3720546343520823e-06
+          },
+          "ok": true
+        }
+      ],
+      "per_split": {
+        "test": {
+          "max_abs_diff_raw": 1.3720546343520823e-06,
+          "row_ids_match": true
+        },
+        "train": {
+          "max_abs_diff_raw": 1.7331216426441642e-06,
+          "row_ids_match": true
+        },
+        "valid": {
+          "max_abs_diff_raw": 1.4442680360549076e-06,
+          "row_ids_match": true
+        }
+      },
+      "replay_file": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/replay/L_lipophilicity_predictions.npz",
+      "task": "lipo"
+    },
+    "2_wc_logp": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "train_row_ids",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "train_replay_atol",
+          "detail": {
+            "max_abs_diff_raw": 3.0741323620020466e-06
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_row_ids",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "valid_replay_atol",
+          "detail": {
+            "max_abs_diff_raw": 9.222397081565248e-07
+          },
+          "ok": true
+        },
+        {
+          "check": "test_row_ids",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "test_replay_atol",
+          "detail": {
+            "max_abs_diff_raw": 1.0759463267007163e-06
+          },
+          "ok": true
+        }
+      ],
+      "per_split": {
+        "test": {
+          "max_abs_diff_raw": 1.0759463267007163e-06,
+          "row_ids_match": true
+        },
+        "train": {
+          "max_abs_diff_raw": 3.0741323620020466e-06,
+          "row_ids_match": true
+        },
+        "valid": {
+          "max_abs_diff_raw": 9.222397081565248e-07,
+          "row_ids_match": true
+        }
+      },
+      "replay_file": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/replay/L_WC_LOGP_predictions.npz",
+      "task": "wc_logp"
+    },
+    "3_path3_coverage": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "train_sample_invariants",
+          "detail": {
+            "failed": [],
+            "rows": 24
+          },
+          "ok": true
+        },
+        {
+          "check": "train_count_matches_independent_enumeration",
+          "detail": {
+            "cache_total": 179589,
+            "independent_total": 179589
+          },
+          "ok": true
+        },
+        {
+          "check": "train_no_event_without_atoms",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "valid_sample_invariants",
+          "detail": {
+            "failed": [],
+            "rows": 24
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_count_matches_independent_enumeration",
+          "detail": {
+            "cache_total": 23334,
+            "independent_total": 23334
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_no_event_without_atoms",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "test_sample_invariants",
+          "detail": {
+            "failed": [],
+            "rows": 24
+          },
+          "ok": true
+        },
+        {
+          "check": "test_count_matches_independent_enumeration",
+          "detail": {
+            "cache_total": 23796,
+            "independent_total": 23796
+          },
+          "ok": true
+        },
+        {
+          "check": "test_no_event_without_atoms",
+          "detail": null,
+          "ok": true
+        }
+      ],
+      "per_split": {
+        "test": {
+          "independent_total": 23796,
+          "n_events": 23796,
+          "n_molecules": 420,
+          "sample_failures": [],
+          "sample_rows_verified": 24
+        },
+        "train": {
+          "independent_total": 179589,
+          "n_events": 179589,
+          "n_molecules": 3360,
+          "sample_failures": [],
+          "sample_rows_verified": 24
+        },
+        "valid": {
+          "independent_total": 23334,
+          "n_events": 23334,
+          "n_molecules": 420,
+          "sample_failures": [],
+          "sample_rows_verified": 24
+        }
+      }
+    },
+    "4_path3_occurrences": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "train_ids_in_range",
+          "detail": {
+            "n_events": 179589,
+            "n_s2": 277312
+          },
+          "ok": true
+        },
+        {
+          "check": "train_occurrences_resolve",
+          "detail": {
+            "anchor": true,
+            "p": true,
+            "q": true,
+            "rev": true
+          },
+          "ok": true
+        },
+        {
+          "check": "train_no_duplicate_event",
+          "detail": {
+            "n_events": 179589,
+            "n_unique_within_molecule": 179589
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_ids_in_range",
+          "detail": {
+            "n_events": 23334,
+            "n_s2": 35554
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_occurrences_resolve",
+          "detail": {
+            "anchor": true,
+            "p": true,
+            "q": true,
+            "rev": true
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_no_duplicate_event",
+          "detail": {
+            "n_events": 23334,
+            "n_unique_within_molecule": 23334
+          },
+          "ok": true
+        },
+        {
+          "check": "test_ids_in_range",
+          "detail": {
+            "n_events": 23796,
+            "n_s2": 36128
+          },
+          "ok": true
+        },
+        {
+          "check": "test_occurrences_resolve",
+          "detail": {
+            "anchor": true,
+            "p": true,
+            "q": true,
+            "rev": true
+          },
+          "ok": true
+        },
+        {
+          "check": "test_no_duplicate_event",
+          "detail": {
+            "n_events": 23796,
+            "n_unique_within_molecule": 23796
+          },
+          "ok": true
+        }
+      ],
+      "detail": {
+        "test": {
+          "n_events": 23796,
+          "n_occurrence_ids_used": 35410
+        },
+        "train": {
+          "n_events": 179589,
+          "n_occurrence_ids_used": 270092
+        },
+        "valid": {
+          "n_events": 23334,
+          "n_occurrence_ids_used": 34844
+        }
+      }
+    },
+    "5_reverse_symmetry": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "valid_reversal_invariant_events",
+          "detail": {
+            "max_abs_diff": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_reversal_nonzero_events",
+          "detail": null,
+          "ok": true
+        }
+      ],
+      "detail": {
+        "valid": {
+          "max_abs_diff": 0.0,
+          "n_events": 1814
+        }
+      }
+    },
+    "6_relabeling": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "relabel_invariant",
+          "detail": {
+            "max_abs_diff": 7.152557373046875e-07,
+            "rows": [
+              0,
+              1,
+              2,
+              5,
+              11,
+              23,
+              41,
+              77
+            ]
+          },
+          "ok": true
+        }
+      ],
+      "detail": {
+        "max_abs_diff": 7.152557373046875e-07
+      }
+    },
+    "7_batch_equivalence": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "single_equals_batched",
+          "detail": {
+            "max_abs_diff": 2.384185791015625e-07
+          },
+          "ok": true
+        }
+      ],
+      "detail": {
+        "max_abs_diff": 2.384185791015625e-07
+      }
+    },
+    "8_paired_control": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "branch_parameter_counts_equal",
+          "detail": {
+            "joint": 17392,
+            "marginal": 17392
+          },
+          "ok": true
+        },
+        {
+          "check": "branch_parameter_shapes_equal",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "branch_init_hash_equal",
+          "detail": {
+            "joint": "5746781a030dfcb5e9407df2b2c126cf3d17055fd6e5e8f8d4eac6f6006b682a",
+            "marginal": "5746781a030dfcb5e9407df2b2c126cf3d17055fd6e5e8f8d4eac6f6006b682a"
+          },
+          "ok": true
+        },
+        {
+          "check": "train_event_sets_identical",
+          "detail": {
+            "n_events": 3422
+          },
+          "ok": true
+        },
+        {
+          "check": "valid_event_sets_identical",
+          "detail": {
+            "n_events": 3719
+          },
+          "ok": true
+        },
+        {
+          "check": "test_event_sets_identical",
+          "detail": {
+            "n_events": 3481
+          },
+          "ok": true
+        }
+      ],
+      "detail": {
+        "test": {
+          "identical": true,
+          "n_events": 3481
+        },
+        "train": {
+          "identical": true,
+          "n_events": 3422
+        },
+        "valid": {
+          "identical": true,
+          "n_events": 3719
+        }
+      }
+    },
+    "9_zero_residual": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "JOINT_delta_exactly_zero",
+          "detail": {
+            "max_abs": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "JOINT_pred_equals_base",
+          "detail": null,
+          "ok": true
+        },
+        {
+          "check": "MARGINAL_delta_exactly_zero",
+          "detail": {
+            "max_abs": 0.0
+          },
+          "ok": true
+        },
+        {
+          "check": "MARGINAL_pred_equals_base",
+          "detail": null,
+          "ok": true
+        }
+      ]
+    },
+    "numeric_operator_separation": {
+      "all_pass": true,
+      "checks": [
+        {
+          "check": "joint_marginal_differ",
+          "detail": {
+            "fraction_events_different": 0.9999571440815976,
+            "fraction_multi_event_molecules_distinct": 0.3047619047619048,
+            "max_abs_event_diff": 0.007846299733500928
+          },
+          "ok": true
+        },
+        {
+          "check": "difference_is_not_the_zero_readout",
+          "detail": {
+            "max_abs_event_diff": 0.007846299733500928
+          },
+          "ok": true
+        }
+      ],
+      "detail": {
+        "fraction_distinct_events_are_in_multi_event_molecules": 1.0,
+        "fraction_events_different": 0.9999571440815976,
+        "fraction_multi_event_molecules_distinct": 0.3047619047619048,
+        "max_abs_event_diff": 0.007846299733500928,
+        "n_events": 23334
+      }
+    }
+  },
+  "pairing_support_min_valid": 1.0,
+  "pairing_support_status": "PAIRING_SUPPORT_OK",
+  "paths3": {
+    "test": "47945399660ee1c7098f0b8925358825f3fc83c34af071924c6e6a1c70e0edcb",
+    "train": "9a864bd97751709440f77b25f3a308086b86978276d56d67362d4e731e25d8cb",
+    "valid": "0746e058fcf12f9d9b4ad174e2a7634e2c6ef869a7c59efccca1a9e7a9f46966"
+  },
+  "paths3_wc_logp": {
+    "test": "47945399660ee1c7098f0b8925358825f3fc83c34af071924c6e6a1c70e0edcb",
+    "train": "9a864bd97751709440f77b25f3a308086b86978276d56d67362d4e731e25d8cb",
+    "valid": "0746e058fcf12f9d9b4ad174e2a7634e2c6ef869a7c59efccca1a9e7a9f46966"
+  },
+  "stage0_seconds": 10.782750606536865
+}
