@@ -83,6 +83,9 @@ def molecule_row(mol: Mapping[str, Any], train_std: float) -> dict[str, Any]:
         "top1_score_A": (top1 or {}).get("score_A"),
         "top1_n_s2_occurrences": (top1 or {}).get("n_s2_occurrences"),
         "top1_n_s1_codes": (top1 or {}).get("n_s1_codes"),
+        "top1_s1_coverage": (
+            (top1 or {}).get("n_s1_codes", 0) / mol["n_s1_total"] if mol.get("n_s1_total") else None
+        ),
         "top1_s2_coverage": (
             (top1 or {}).get("n_s2_occurrences", 0) / mol["n_s2_total"] if mol.get("n_s2_total") else None
         ),
@@ -172,7 +175,8 @@ def _boot(values: Sequence[float], *, statistic: str = "median") -> dict[str, An
 
 
 def _quantiles(values: Sequence[float]) -> dict[str, float]:
-    return C.quantiles(values)
+    # q90 is used by the diagnostics, so it must be requested explicitly
+    return C.quantiles(values, qs=(0.05, 0.10, 0.25, 0.50, 0.75, 0.90, 0.95))
 
 
 # ---------------------------------------------------------------------------
@@ -274,10 +278,8 @@ def diag_table(rows: Sequence[Mapping[str, Any]], dataset: str, split: str) -> d
     local_share = [
         abs(r["top1_delta_L"]) / (abs(r["top1_delta_L"]) + abs(r["top1_delta_P"]) + 1e-12) for r in sub
     ]
-    s1_cov = [
-        (r["top1_n_s1_codes"] / r["n_s1_total"]) if r.get("n_s1_total") else None for r in sub
-    ]
-    s2_cov = [r["top1_s2_coverage"] for r in sub]
+    s1_cov = [r.get("top1_s1_coverage") for r in sub]
+    s2_cov = [r.get("top1_s2_coverage") for r in sub]
     over_std = [r["top1_abs_delta_over_train_std"] for r in sub]
     return {
         "dataset": dataset,
@@ -302,7 +304,7 @@ def diag_table(rows: Sequence[Mapping[str, Any]], dataset: str, split: str) -> d
         "base_rho_share_median": C.median([r["base_rho_share"] for r in sub]),
         "local_sum_abs_share_median": C.median(local_share),
         "top1_s1_coverage_median": C.median([x for x in s1_cov if x is not None]),
-        "top1_s2_coverage_median": C.median(s2_cov),
+        "top1_s2_coverage_median": C.median([x for x in s2_cov if x is not None]),
         "median_abs_delta_over_train_std": C.median(over_std),
         "p90_abs_delta_over_train_std": _quantiles(over_std).get("q90"),
     }
@@ -584,6 +586,72 @@ def merge_training_source(per_dataset: Mapping[str, Mapping[str, Any]]) -> dict[
     return payload
 
 
+def execution_provenance() -> dict[str, Any]:
+    """Execution-regime provenance of the GPU workers, from the control-plane records.
+
+    ``.rr/pulled/<run>/meta.json`` is written by ``rr`` itself (commit, pool, driver,
+    node, torch backend, state).  It is local bookkeeping, not part of the repo, so
+    this block is best-effort: a fresh clone without ``.rr/`` reports
+    ``available: false`` while every number in the round is unaffected.
+    """
+    root = C.REPO_ROOT / ".rr" / "pulled"
+    runs: list[dict[str, Any]] = []
+    if root.is_dir():
+        for meta in sorted(root.glob("*/meta.json")):
+            try:
+                payload = C.read_json(meta)
+            except Exception:                       # noqa: BLE001 - provenance only
+                continue
+            paths = payload.get("result_paths") or []
+            needle = C.ROUND_ID.replace("-", "_")      # repo dir uses underscores
+            if not any(needle in str(p) for p in paths):
+                continue
+            runtime = payload.get("runtime") or {}
+            command = str(payload.get("command") or "")
+            stage = None
+            for token in command.replace("'", " ").split():
+                if token.startswith("stage="):
+                    stage = token.split("=", 1)[1]
+            runs.append(
+                {
+                    "stage": stage,
+                    "experiment": payload.get("experiment"),
+                    "run_id": payload.get("run_id"),
+                    "state": payload.get("state"),
+                    "pool": payload.get("pool"),
+                    "backend": payload.get("backend"),
+                    "git_commit": payload.get("git_commit"),
+                    "git_branch": payload.get("git_branch"),
+                    "git_dirty": payload.get("git_dirty"),
+                    "torch_backend": payload.get("torch_backend"),
+                    "node": runtime.get("node"),
+                    "driver_version": runtime.get("driver_version"),
+                    "gpu_names": (runtime.get("gpus") or {}).get("names"),
+                    "python_version": runtime.get("python_version"),
+                    "created_at": payload.get("created_at"),
+                    "command": command or None,
+                }
+            )
+    worker_commits = sorted(
+        {r["git_commit"] for r in runs if r.get("stage") == "dataset_worker" and r.get("git_commit")}
+    )
+    return {
+        "available": bool(runs),
+        "results_commit": worker_commits[0] if len(worker_commits) == 1 else worker_commits,
+        "source": ".rr/pulled/*/meta.json (rr run records; local, not committed)",
+        "runs": runs,
+        "analysis_commit": C.git_commit(),
+        "analysis_branch": C.git_branch(),
+        "analysis_worktree_dirty": C.worktree_dirty(),
+        "note": (
+            "the per-molecule records under results/ were produced by the GPU workers listed in "
+            "`runs` (their commit is the deployed revision); this file was regenerated by the "
+            "CPU-only aggregate stage whose commit is `analysis_commit`. "
+            "The aggregate stage never changes a weight or a per-molecule record."
+        ),
+    }
+
+
 def write_run_manifest(per_dataset: Mapping[str, Mapping[str, Any]],
                        extra: Mapping[str, Any] | None = None) -> dict[str, Any]:
     import cr_data as SD
@@ -635,6 +703,7 @@ def write_run_manifest(per_dataset: Mapping[str, Mapping[str, Any]],
         },
         "test_policy": "always",
         "test_role": "DEVELOPMENT_TEST (evaluated, never used for any selection in this round)",
+        "execution_provenance": execution_provenance(),
     }
     if extra:
         payload.update(dict(extra))

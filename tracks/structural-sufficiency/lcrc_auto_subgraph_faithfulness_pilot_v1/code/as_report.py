@@ -139,12 +139,12 @@ def write_report() -> Path:
             ["训练", "复用既有 360-epoch 轨迹（seed 0），本轮**不重训**"],
             ["数据集", "官方 `ogbg-molesol` / `ogbg-mollipo`，OGB `get_idx_split()` 冻结索引"],
             ["解释样本", f"每数据集 Train/Valid/Test 各 {C.N_SAMPLES_PER_SPLIT} 个（共 {2 * 3 * C.N_SAMPLES_PER_SPLIT}）"],
-            ["样本选择", f"`sha256({C.SAMPLE_SEED}|dataset|split|row_id)` 升序取前 64，与标签/误差/梯度无关"],
+            ["样本选择", f"`sha256({C.SAMPLE_SEED} + dataset + split + row_id)` 升序取前 64，与标签/误差/梯度无关"],
             ["搜索空间", f"连通子图，物理键数 {C.SEARCH_MIN_K}–{C.SEARCH_MAX_K}，每层 beam {C.BEAM_WIDTH}，Top-{C.TOP_K_SUBGRAPHS}，Jaccard ≤ {C.JACCARD_MAX_OVERLAP}"],
-            ["发现分数", "`A(S) = |sum_{e in S} g[e]| / sqrt(|S|)`（有符号先求和再取绝对值）"],
+            ["发现分数", "`A(S) = abs(sum_e g[e]) / sqrt(k)`（有符号先求和再取绝对值，k = 键数）"],
             ["干预", f"`{C.CONDITION_NAME}`，门控 `m[e] ∈ [0,1]`，剂量点 m = {C.DOSE_GATE}"],
             ["对照 A", f"同分子同键数随机连通子图，匹配 S2 occurrence 数（相对差 ≤ {int(100 * C.S2_MATCH_REL_TOL)}%），RNG {C.CONTROL_SEED}，最多 {C.MAX_GROWTH_ATTEMPTS} 次尝试，取前 {C.N_MATCHED_RANDOM} 个"],
-            ["对照 B", "原子局部输出启发式 `B(S) = sum_v |f(h_v)| / sqrt(|S|)`（仅作廉价对比，不称因果）"],
+            ["对照 B", "原子局部输出启发式 `B(S) = sum_v abs(f(h_v)) / sqrt(k)`（仅作廉价对比，不称因果）"],
             ["效果分辨尺度", f"{100 * C.EFFECT_FLOOR_STD_FRACTION:.0f}% 的 Train 标签标准差（仅本轮 pilot 尺度）"],
             ["bootstrap", f"{C.BOOTSTRAP_REPLICATES} 次，分子为重采样单位，seed {C.BOOTSTRAP_SEED}"],
             ["预算", f"每 GPU worker 软上限 {C.GPU_BUDGET_SOFT_SECONDS / 3600:.1f} GPU·h，硬上限 {C.GPU_BUDGET_HARD_SECONDS / 3600:.1f} GPU·h"],
@@ -219,8 +219,9 @@ def write_report() -> Path:
     ))
     lines.append("")
     lines.append(
-        "* 全 1 门控与冻结 Arm A 的预测、`local_sum`、`rho` 在 Train/Valid/Test 行上**逐位一致**"
-        "（原始单位误差 0，见上表）。"
+        "* 全 1 门控与冻结 Arm A 的预测、`local_sum`、`rho` 在 Train/Valid/Test 行上**在冻结容差内一致**"
+        "（`1e-5 + 1e-6*max(1,|x|)`，原始单位；实测最大误差见上表，比容差小 1–2 个数量级，"
+        "残差来自门控乘法在浮点累加顺序上的差异，不是模型差异）。"
     )
     lines.append(
         "* S1/S2 occurrence 映射（含三角闭合路径与重复路径）逐项与冻结缓存比对；"
@@ -259,7 +260,7 @@ def write_report() -> Path:
             ])
     lines.append(_table(
         ["dataset", "split", "n", "coverage", "Top1 k", "Top1 atoms", "Top1 S2 occ",
-         "median |delta|", "median |delta|/std", "|delta| ≥ 1% std"],
+         "median abs(delta)", "median abs(delta)/std", "abs(delta) ≥ 1% std"],
         rows,
     ))
     lines.append("")
@@ -275,7 +276,7 @@ def write_report() -> Path:
                 _f(m, "linearisation_median_rel_err"),
             ])
     lines.append(_table(
-        ["dataset", "split", "sign agreement (Top1)", "sign agreement (Top1-3)", "median |linearisation err|", "median rel err"],
+        ["dataset", "split", "sign agreement (Top1)", "sign agreement (Top1-3)", "median abs(linearisation err)", "median rel err"],
         rows,
     ))
     lines.append("")
@@ -308,8 +309,8 @@ def write_report() -> Path:
             ])
     lines.append(_table(
         ["dataset", "split", "matched n", "success", "median effect_ratio", "ratio>1",
-         "median advantage", "random median |delta|", "ratio CI95",
-         "heuristic median |delta|", "advantage vs heuristic", "Top1 > heuristic"],
+         "median advantage", "random median abs(delta)", "ratio CI95",
+         "heuristic median abs(delta)", "advantage vs heuristic", "Top1 > heuristic"],
         rows,
     ))
     lines.append("")
@@ -324,7 +325,11 @@ def write_report() -> Path:
     lines.append(
         f"* `INSUFFICIENT_MATCHED_NULL` 分子数：{len(insufficient)} / {len(mol_rows)}"
         + (
-            "（row ids: " + ", ".join(f"`{r['dataset']}`/{r['split']}/{r['row_id']}" for r in insufficient[:12]) + "）"
+            "（row ids: "
+            + ", ".join(f"`{r['dataset']}`/{r['split']}/{r['row_id']}" for r in insufficient[:12])
+            + (f" … 其余 {len(insufficient) - 12} 个见 `analysis/molecule_table.csv` 的 `matched_status` 列"
+               if len(insufficient) > 12 else "")
+            + "）"
             if insufficient else "（全部分子都有 ≥ 8 个合格匹配对照）"
         )
     )
@@ -344,8 +349,8 @@ def write_report() -> Path:
                 _f(d, "signed_interaction_median"), _f(d, "abs_interaction_median"),
             ])
     lines.append(_table(
-        ["dataset", "split", "n", "median |S1_ONLY|", "median |S2_ONLY|", "median |S1_S2|",
-         "S2 > S1", "median interaction", "median |interaction|"],
+        ["dataset", "split", "n", "median abs(S1_ONLY)", "median abs(S2_ONLY)",
+         "median abs(S1_S2)", "S2 > S1", "median interaction", "median abs(interaction)"],
         rows,
     ))
     lines.append("")
@@ -383,8 +388,8 @@ def write_report() -> Path:
                 _f(d, "p90_abs_delta_over_train_std"),
             ])
     lines.append(_table(
-        ["dataset", "split", "dose same direction", "median |delta(0.5)|/|delta(0)|",
-         "median |delta|/std", "p90 |delta|/std"],
+        ["dataset", "split", "dose same direction", "median abs(delta at m=0.5)/abs(delta at m=0)",
+         "median abs(delta)/std", "p90 abs(delta)/std"],
         rows,
     ))
     lines.append("")
@@ -401,20 +406,27 @@ def write_report() -> Path:
     lines.append("")
     fh = data["failures"]["high_gradient_low_effect"]
     fl = data["failures"]["high_local_output_low_effect"]
-    lines.append(f"* 高梯度但低真实干预响应的案例：{len(fh)} 条（按 dataset×split 各取最差若干）。")
+    lines.append(
+        f"* 梯度线性预测大、真实屏蔽响应相对小的案例：{len(fh)} 条。"
+        "选法：每个 dataset×split 取 `abs(sum_e g[e])` 最大的四分位，再在其中按真实 `abs(delta)` 升序取 8 个"
+        "（结果驱动的诊断选择，不参与任何排序或筛选）。下表列出前 6 条。"
+    )
     for rec in fh[:6]:
         lines.append(
             f"  * `{rec['dataset']}`/{rec['split']} row {rec['row_id']}: "
-            f"预测 |delta| = {_fmt(abs(rec['predicted_delta_from_g']))}, "
-            f"真实 |delta| = {_fmt(rec['actual_abs_delta'])}, "
-            f"实际/预测 = {_fmt(rec['ratio_actual_to_predicted'], 3)}"
+            f"线性预测 abs(sum g) = {_fmt(abs(rec['predicted_delta_from_g']))}, "
+            f"真实屏蔽 abs(delta) = {_fmt(rec['actual_abs_delta'])}, "
+            f"实际/线性预测 = {_fmt(rec['ratio_actual_to_predicted'], 3)}"
         )
-    lines.append(f"* 高局部输出、低真实响应的案例：{len(fl)} 条。")
+    lines.append(
+        f"* 局部输出启发式选出的子图真实响应相对小的案例：{len(fl)} 条。"
+        "选法同上（先取启发式 `B(S)` 的 Top-1 真实响应最大四分位，再按真实 `abs(delta)` 升序取 8 个）。"
+    )
     for rec in fl[:6]:
         lines.append(
             f"  * `{rec['dataset']}`/{rec['split']} row {rec['row_id']}: "
-            f"启发式 |delta| = {_fmt(rec['heuristic_abs_delta'])}, "
-            f"发现子图 |delta| = {_fmt(rec['discovery_abs_delta'])}"
+            f"启发式子图 abs(delta) = {_fmt(rec['heuristic_abs_delta'])}, "
+            f"发现子图 abs(delta) = {_fmt(rec['discovery_abs_delta'])}"
         )
     lines.append("")
 
@@ -472,14 +484,32 @@ def write_report() -> Path:
     ]
     lines.append(_table(["path", "content"], art_rows))
     lines.append("")
+    prov = manifest.get("execution_provenance") or {}
     lines.append(
-        f"代码 commit：`{manifest.get('git_commit')}`；协议哈希 `{manifest.get('protocol_hash')}`；"
-        f"GPU 耗时：" + "；".join(
-            f"`{d}` {_fmt(manifest['gpu'][d]['budget']['compute_seconds'], 1)} s "
-            f"({_fmt(manifest['gpu'][d]['budget']['compute_hours'], 3)} GPU·h)"
-            for d in C.DATASETS
-        ) + "。"
+        f"* 产出逐分子记录的 GPU worker commit：`{prov.get('results_commit')}`"
+        f"（两个 worker 各占一个 GPU：`res-gpu0` = ogbg-molesol，`res-gpu1` = ogbg-mollipo）。"
+        f"本文件由 CPU 侧 aggregate 阶段在 commit `{manifest.get('git_commit')}` 上重新生成，"
+        "aggregate 不修改任何权重或逐分子记录。"
     )
+    lines.append(
+        f"* 协议哈希 `{manifest.get('protocol_hash')}`；GPU 耗时：" + "；".join(
+            f"`{d}` {_fmt(manifest['gpu'][d]['budget']['compute_seconds'], 1)} s "
+            f"({_fmt(manifest['gpu'][d]['budget']['compute_hours'], 4)} GPU·h)"
+            for d in C.DATASETS
+        ) + f"（软上限 {C.GPU_BUDGET_SOFT_SECONDS / 3600:.1f} GPU·h / 硬上限 "
+        f"{C.GPU_BUDGET_HARD_SECONDS / 3600:.1f} GPU·h per worker；未触发任何预算停止）。"
+    )
+    runs = prov.get("runs") or []
+    if runs:
+        lines.append(
+            "* 执行环境（来自 `rr` 的运行记录）："
+            + "；".join(
+                f"`{r['experiment']}` stage={r['stage']} pool={r['pool']} node={r['node']} "
+                f"driver={r['driver_version']} torch={r['torch_backend']} state={r['state']}"
+                for r in runs
+            )
+            + "。"
+        )
     lines.append("")
     lines.append(
         "完整图像只在 `analysis/figures/` 中保存有限张（每数据集固定 8 Valid + 8 Test + 4 诊断案例 + 2 分布图）；"
@@ -550,8 +580,8 @@ def write_decision() -> Path:
                 _f(m, "abs_delta_top1_median_over_train_std"),
             ])
     lines.append(_table(
-        ["dataset", "split", "median effect_ratio", "ratio>1", "|delta| ≥ 1% std",
-         "matched n", "median |delta|/std"],
+        ["dataset", "split", "median effect_ratio", "ratio>1", "abs(delta) ≥ 1% std",
+         "matched n", "median abs(delta)/std"],
         rows,
     ))
     lines.append("")

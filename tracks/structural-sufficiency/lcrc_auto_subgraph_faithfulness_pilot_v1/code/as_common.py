@@ -234,6 +234,14 @@ def git_branch() -> str | None:
     return SC.git_branch()
 
 
+def worktree_dirty() -> bool | None:
+    """True when tracked files differ from HEAD (uncommitted analysis edits)."""
+    try:
+        return bool(SC.git_dirty_tracked())
+    except Exception:                              # noqa: BLE001 - provenance only
+        return None
+
+
 def environment_snapshot() -> dict[str, Any]:
     return SC.environment_snapshot()
 

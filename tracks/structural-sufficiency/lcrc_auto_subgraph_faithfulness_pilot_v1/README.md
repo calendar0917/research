@@ -128,3 +128,33 @@ results/<dataset>/budget.json           GPU seconds actually spent
 * The figure stage renders a bounded set (8 Valid + 8 Test + 4 diagnostics +
   2 distribution panels per dataset). The several hundred raw molecules are not
   committed and can be regenerated from `results/<dataset>/`.
+* `lcrc_data.collate` returns CPU tensors and rejects duplicate row indices, so
+  `as_data.collate_gated` never moves a batch itself, `GatedBatch.to(device)` is a
+  cached no-op on CPU, and `replicate_molecule` tiles one molecule when a batched
+  intervention needs the same graph many times.
+
+### Engineering fix log (no frozen rule or number was changed)
+
+The formal GPU run was executed at code commit `2e202646`. Everything below was
+fixed **after** that run, in the CPU-only aggregate/report stage, and the aggregate
+was then re-run from the same per-molecule records (the GPU stage was not repeated,
+because none of these touch a forward pass, a gate, a score or a selection):
+
+| what broke | symptom | fix |
+|---|---|---|
+| `GatedBatch` carried CPU index tensors | CUDA arm + CPU batch → `addmm` device error on the GPU preflight | batch is moved to the arm's device inside `gated_parts` (cached per device); `reference_parts` moves its own batch |
+| `.numpy()` on CUDA tensors in the worker checks | `TypeError: can't convert cuda:0 device type tensor to numpy` | every worker conversion goes through `.detach().cpu()` |
+| `top1_s1_coverage` dropped from `molecule_row` | `architecture_diagnostics.csv` had `nan` in the S1 coverage column | recomputed from `n_s1_codes / n_s1_total` |
+| q90 was requested but not in the default quantile list | `p90_abs_delta_over_train_std` was always empty | aggregate asks for q90 explicitly |
+| raw `|` inside markdown table cells (`|delta|`, `A(S)=|sum g|`) | malformed tables in `REPORT.md` | `abs(...)` notation; report is table-validated before writing |
+| truncated `INSUFFICIENT_MATCHED_NULL` row-id list | listed 12 of 31 without saying so | states the remaining count and points at `molecule_table.csv` |
+| “逐位一致” wording for the all-ones check | claimed zero error although the GPU run shows ~5e-7 | states the frozen tolerance and the measured residual |
+| no execution-regime provenance in the manifest | commit/driver/node of the GPU workers only in `rr` state | `analysis/run_manifest.json` gains `execution_provenance` (worker commit, pool, node, driver, torch backend, state) |
+
+Memory guards added at the same time (implementation only): `MAX_BATCH_BONDS` /
+`MAX_BATCH_ATOMS` refuse a pathological allocation with an explicit error instead
+of OOM-ing, and `budget.json` records `peak_rss_mb`, `max_bonds_per_molecule` and
+the candidate-log size. Measured peaks: 459 MB (molesol) / 583 MB (mollipo) for a
+dataset worker on CPU, 1234 MB / 1369 MB on the GPU node, 712 MB for the aggregate
+stage; the largest explained molecule has 53 bonds and at most 346 evaluated
+candidates, so the candidate log is 29718 / 38943 rows (~0.3 MB compressed).
