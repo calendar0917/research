@@ -196,6 +196,8 @@ def evaluate(
     batch_size: int = 256,
     branch: bool = True,
 ) -> dict[str, Any]:
+    if isinstance(p3, Mapping):
+        p3 = p3[split]
     out = D.predict_std(model, b, p3, split, device=device, batch_size=batch_size, branch=branch)
     pred_raw = D.to_raw(out["pred_std"], scaler)
     base_raw = D.to_raw(out["base_std"], scaler)

@@ -1,0 +1,18 @@
+{
+  "policy": "Only engineering fixes after the freeze; no scientific design change. Each entry records the frozen hash, the new hash, the affected units, whether any formal result existed at the time, and the rerun reason.",
+  "fixes": [
+    {
+      "id": "FIX-01",
+      "file": "code/bc_train.py",
+      "frozen_sha256": "88556cb9a3d46d60bb2a98a88c68a1df2623759b51c936bd79023cd7ac8ff4c9",
+      "new_sha256": "8195fda5bc1dbc691397a8386e22b408969c3d07f982314cda5653d9ac6b4c68",
+      "detected_in": "bajc-smoke-20261118-004808-b42095c1 (GPU smoke, res-gpu0)",
+      "symptom": "AttributeError: 'dict' object has no attribute 'occ_map' in evaluate(): the per-split Path3Split was unpacked from the per-split mapping too late",
+      "change": "evaluate() indexes the path3 mapping by split name before calling predict_std; one line, no numeric constant, no model, no recipe, no data",
+      "scientific_content_changed": false,
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": false,
+      "rerun": "the smoke unit was re-run from scratch; no formal unit had been launched, so no formal result was discarded"
+    }
+  ]
+}
