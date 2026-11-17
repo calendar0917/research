@@ -1,0 +1,117 @@
+# Comparability protocol for the LCRC automatic connected-subgraph faithfulness pilot.
+#
+# A protocol states rules, not a model.  This round reuses one frozen
+# checkpoint and asks whether automatic connected subgraph discovery, verified by
+# the frozen model's own forward response, produces evidence that survives two
+# fixed controls on two official small OGB tasks.
+
+id: lcrc-auto-subgraph-faithfulness-pilot-v1
+
+dataset:
+  tasks:
+    - name: ogbg-molesol
+      role: small_task
+      expected_rows: 1128
+    - name: ogbg-mollipo
+      role: small_task
+      expected_rows: 4200
+  source_policy: official_ogb_graphproppred_only
+  loader: "committed label-free caches of PygGraphPropPredDataset + get_idx_split()"
+  forbidden_substitutes:
+    - ChemBench random122
+    - self-made random/scaffold splits
+
+split:
+  description: official OGB Train / Validation / Test (untouched, frozen indices)
+  sizes:
+    ogbg-molesol: {train: 902, valid: 113, test: 113}
+    ogbg-mollipo: {train: 3360, valid: 420, test: 420}
+  no_row_deletion: true
+  no_train_valid_merge: true
+
+model:
+  identity: "lcrc_readout_context_pilot_small_v1 arm A (frozen LCRC-C1)"
+  readout: "sum_v f(h_v) + rho([g, mean(h), mean(h^2), log1p(n_atoms)])"
+  training: "reused 360-epoch trajectory, seed 0, no retraining in this round"
+  parameters: {total: 228674, readout: 15298}
+
+intervention:
+  name: CONDITIONAL_S1_S2_EVIDENCE_MASK
+  gating: "one differentiable scalar m[e] in [0,1] per deduplicated physical bond"
+  s1: "b_sum contributions of both endpoints and the two directed nbr_emb codes produced by that bond"
+  s2: "w[p] = m[e1]*m[e2] multiplies type/end/joint/closure embeddings and the learned content gate of each non-backtracking 2-path occurrence"
+  unchanged: [atom_feat, atom_scalar, global, atom counts, atom encodings, BondEncoder parameters, physical bond list]
+  not_a_chemical_counterfactual: true
+
+search:
+  space: "connected subgraphs of 2..6 physical bonds"
+  k1: rank every physical bond
+  k2: "every pair sharing an endpoint (no k=1 prefilters)"
+  k3_to_k6: "expand each kept candidate of the previous level by one adjacent bond"
+  beam_width: 12
+  top_k: 3
+  jaccard_max_overlap: 0.5
+  discovery_score: "A(S) = |sum_{e in S} g[e]| / sqrt(|S|)"
+  control_score: "B(S) = sum_{v in atoms(S)} |f(h_v)| / sqrt(|S|)"
+  tie_break: "score desc, fewer bonds, sorted physical bond-id tuple"
+
+controls:
+  matched_random:
+    same_molecule: true
+    same_bond_count: true
+    exclude_identical: true
+    s2_occurrence_rel_tol: 0.25
+    n_target: 16
+    min_acceptable: 8
+    max_growth_attempts: 512
+    rng_seed: 20261117
+    shortfall_label: INSUFFICIENT_MATCHED_NULL
+  local_heuristic:
+    score: "sum_v |f(h_v)| over the subgraph atoms / sqrt(|S|)"
+    same_search_rules: true
+    note: "cheap direct comparison; c_v is not a causal per-atom contribution"
+
+sample_selection:
+  per_split: 64
+  datasets: [ogbg-molesol, ogbg-mollipo]
+  rule: "ascending sha256(20261117|dataset|split|official row id), ties by ascending row id"
+  forbidden_filters: [label magnitude, prediction error, functional groups, gradient magnitude, test outcome]
+  unresolvable_graph_policy: "record the raw row id and the reason; never backfill with another molecule"
+
+evaluation:
+  primary: "real forward response of the frozen function to the mask, in raw target units"
+  effect_floor: "1% of the Train target standard deviation (pilot resolution scale only)"
+  bootstrap: {replicates: 2000, seed: 20261117, unit: molecule}
+  comparisons: [matched random connected subgraphs, atom local-output heuristic]
+  forbidden_claims:
+    - "chemical counterfactual effect"
+    - "cross-seed stability"
+    - "unique causal per-atom contribution"
+    - "LCRC did not learn structure"
+
+verdicts:
+  engineering_gate: "all equivalence / mapping / replay / FD / renumbering tests pass"
+  discovery_signal:
+    rule: >-
+      for BOTH Valid and Test of a dataset: enough matched controls, median
+      effect_ratio >= 1.5, effect_ratio > 1 in >= 70% of matched molecules, and
+      >= 50% of molecules reach 1% of the Train target standard deviation
+    outputs: [PILOT_SIGNAL, WEAK_OR_INCONCLUSIVE]
+  architecture_diagnosis: "report rho_share, cancellation, S1/S2 interaction and coverage evidence only"
+
+test_policy: always
+test_role: "DEVELOPMENT_TEST: evaluated and reported, never used for any selection in this round"
+
+seeds:
+  training: 0
+  sample_selection: 20261117
+  controls: 20261117
+  bootstrap: 20261117
+
+budget:
+  soft_gpu_hours_per_worker: 0.5
+  hard_gpu_hours_per_worker: 1.0
+
+comparability:
+  requires: [protocol_id, dataset_fingerprint, split_fingerprint, checkpoint_sha256]
+  note: "single checkpoint, single seed; every number is development evidence"
