@@ -62,9 +62,7 @@ def main(argv=None) -> int:
     if args.stage == "smoke":
         import bc_train as T
 
-        if args.task == "esol" and args.institution != "E2E":
-        parser.error("the ESOL transfer task has no teacher; it is E2E only")
-    status = T.run_unit(
+        status = T.run_unit(
             institution=args.institution,
             task=args.task,
             variant=args.variant,
