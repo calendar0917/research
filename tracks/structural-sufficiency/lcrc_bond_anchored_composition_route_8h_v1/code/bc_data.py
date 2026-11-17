@@ -44,6 +44,9 @@ def bundle(task: str, *, verify: bool = True):
         return G.bundle(C.DATASET, verify=verify)
     if task == "wc_logp":
         return G.oracle_bundle(C.DATASET, C.TASK_ORACLE_PROPERTY[task])
+    if task == "esol":
+        # Stage C transfer task: official ogbg-molesol split, its own Train-only scaler
+        return G.bundle(C.DATASET_ESOL, verify=verify)
     raise KeyError(task)
 
 
@@ -87,13 +90,19 @@ def target_context(task: str, b) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def cache_paths(split: str) -> dict[str, Path]:
-    base = C.CACHE_DIR / f"paths3_{split}_{PATHS3_CACHE_VERSION}"
+def cache_paths(split: str, dataset: str | None = None) -> dict[str, Path]:
+    """Cache file per (dataset, split): a second dataset must never reuse another's."""
+    dataset = dataset or C.DATASET
+    tag = "" if dataset == C.DATASET else f"_{dataset.replace('-', '_')}"
+    base = C.CACHE_DIR / f"paths3_{split}{tag}_{PATHS3_CACHE_VERSION}"
     return {"npz": base.with_suffix(".npz"), "json": base.with_suffix(".json")}
 
 
-def manifest_path() -> Path:
-    return C.CACHE_DIR / PATHS3_MANIFEST
+def manifest_path(dataset: str | None = None) -> Path:
+    dataset = dataset or C.DATASET
+    if dataset == C.DATASET:
+        return C.CACHE_DIR / PATHS3_MANIFEST
+    return C.CACHE_DIR / f"paths3_manifest_{dataset.replace('-', '_')}_{PATHS3_CACHE_VERSION}.json"
 
 
 def _to_npz(p3: P3.Path3Split) -> dict[str, np.ndarray]:
@@ -177,21 +186,22 @@ def build_paths3(
     splits: Sequence[str] = C.SPLITS,
 ) -> dict[str, P3.Path3Split]:
     """Build (or verify-load) the three-bond-path cache for every split."""
-    manifest = C.read_json(manifest_path()) if manifest_path().is_file() else {}
+    dataset = str(getattr(b, "dataset", None) or C.DATASET)
+    manifest = C.read_json(manifest_path(dataset)) if manifest_path(dataset).is_file() else {}
     out: dict[str, P3.Path3Split] = {}
     updated = dict(manifest)
     for split in splits:
-        paths = cache_paths(split)
+        paths = cache_paths(split, dataset)
         cached_ok = False
         if not rebuild and paths["npz"].is_file():
-            p3 = _from_npz(paths["npz"], C.DATASET, split, b.spec)
+            p3 = _from_npz(paths["npz"], dataset, split, b.spec)
             digest = _digest(p3)
             expected = (manifest.get("splits", {}).get(split) or {}).get("sha256")
             if expected is None or digest == expected:
                 p3.sha256 = digest
                 cached_ok = True
         if not cached_ok:
-            p3 = P3.build_split(b.caches[split], b.spec, C.DATASET, split)
+            p3 = P3.build_split(b.caches[split], b.spec, dataset, split)
             p3.sha256 = _digest(p3)
             if write:
                 C.atomic_write_npz(paths["npz"], _to_npz(p3))
@@ -201,14 +211,14 @@ def build_paths3(
             "n_molecules": int(p3.n_molecules),
             "n_path3_events": int(p3.n_events),
             "n_s2_occurrences": int(p3.occ_map.n_s2_total.sum()),
-            "path": C.relpath(cache_paths(split)["npz"]),
+            "path": C.relpath(cache_paths(split, dataset)["npz"]),
             "verified_online": bool(p3.verification and p3.verification.get("all_paths_verified")),
         }
     updated["version"] = PATHS3_CACHE_VERSION
-    updated["dataset"] = C.DATASET
+    updated["dataset"] = dataset
     updated["n_bond_types"] = int(b.spec.n_bond_types)
     if write:
-        C.atomic_write_json(manifest_path(), updated)
+        C.atomic_write_json(manifest_path(dataset), updated)
     return out
 
 

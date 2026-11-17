@@ -1,0 +1,16 @@
+{
+  "written_at": "2026-11-18T01:32:00+08:00",
+  "when": "before any Stage-B readout (only training-progress log lines had been seen) and before any Stage-C explanation evaluation",
+  "why": "Stage D is the no-increment convergence branch; its slices must be fixed before the C1-GINE error structure is inspected in this round",
+  "source": "read-only historical predictions of the sprint round (L_lipophilicity, G0_lipophilicity) and the frozen path3 cache",
+  "slices": [
+    {"name": "atom_count_quartile", "definition": "quartiles of the heavy-atom count of the Valid molecules, equal-count bins", "why": "size is the first dimension the C1 readout compresses"},
+    {"name": "paths3_quartile", "definition": "quartiles of the number of three-bond paths of the molecule (the new structural object), equal-count bins", "why": "the composition route can only matter where the object exists in quantity"},
+    {"name": "ring_atom_fraction_bin", "definition": "fraction of ring atoms, binned as {0, (0,0.3], (0.3,0.6], (0.6,1]}", "why": "the fixed-topology-block family already failed here; a gap concentrated in ring-rich molecules would say the gap is topological, not compositional"},
+    {"name": "c1_error_decile", "definition": "deciles of |C1 residual| on Valid, equal-count bins", "why": "distinguishes 'GINE is uniformly better' from 'GINE only fixes the 10% worst molecules'"}
+  ],
+  "statistic": "per-slice RMSE of the read-only C1 and GINE predictions, the gap, and a 2000-draw paired molecule bootstrap CI of that gap",
+  "test_policy": "Valid only for the decision; the same table is produced once for Development Test as a read-once report column",
+  "no_gpu": true,
+  "no_retraining": true
+}

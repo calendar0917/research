@@ -1,0 +1,193 @@
+{
+  "anchors": {
+    "lipo": {
+      "C1": [
+        0.7069,
+        0.7293
+      ],
+      "GINE": [
+        0.6161,
+        0.68
+      ]
+    },
+    "wc_logp": {
+      "C1": [
+        0.7958,
+        0.9534
+      ],
+      "GINE": [
+        0.8587,
+        0.8902
+      ]
+    }
+  },
+  "compute": {
+    "total_elapsed_hours": 1.1530024607314004,
+    "total_gpu_hours": 1.1530024607314004,
+    "units": 6
+  },
+  "round_id": "lcrc-bond-anchored-composition-route-8h-v1",
+  "stage_decisions": {
+    "detail": [],
+    "generated_at": "2026-11-18T01:48:03",
+    "per_institution": {
+      "E2E": {
+        "rule": "for E2E at least one of seed0/seed1 must satisfy; all seeds are reported",
+        "seeds": [
+          {
+            "branch_nondegenerate": true,
+            "clearly_reversed": false,
+            "conditions": {
+              "A_marginal_ge_0.010": false,
+              "B_c1_ge_0.015": false,
+              "C_bootstrap_prob_ge_0.80": false,
+              "D_nondegenerate_positive": true
+            },
+            "joint_vs_c1_prob": 0.2435,
+            "joint_vs_c1_valid_delta": -0.010271275730696305,
+            "joint_vs_marginal_ci95": [
+              -0.05590821673176596,
+              0.010339278390978904
+            ],
+            "joint_vs_marginal_prob": 0.0925,
+            "joint_vs_marginal_valid_delta": -0.02271731172486724,
+            "seed": 0,
+            "train_gain_over_epoch0": 0.1745620874106189,
+            "triggered": true,
+            "valid_gain_over_epoch0": 0.07870400055607263
+          }
+        ],
+        "triggered": true
+      },
+      "FROZEN": {
+        "rule": "for E2E at least one of seed0/seed1 must satisfy; all seeds are reported",
+        "seeds": [
+          {
+            "branch_nondegenerate": true,
+            "clearly_reversed": false,
+            "conditions": {
+              "A_marginal_ge_0.010": false,
+              "B_c1_ge_0.015": false,
+              "C_bootstrap_prob_ge_0.80": false,
+              "D_nondegenerate_positive": true
+            },
+            "joint_vs_c1_prob": 0.7675,
+            "joint_vs_c1_valid_delta": 0.002227994723007609,
+            "joint_vs_marginal_ci95": [
+              -0.0034318598314150156,
+              0.0018464143955349644
+            ],
+            "joint_vs_marginal_prob": 0.283,
+            "joint_vs_marginal_valid_delta": -0.0007262963882952445,
+            "seed": 0,
+            "train_gain_over_epoch0": 0.006926971515979763,
+            "triggered": true,
+            "valid_gain_over_epoch0": 0.002227997064224607
+          }
+        ],
+        "triggered": true
+      }
+    },
+    "rule": "E2E confirmed when it triggers; FROZEN only when E2E does not; both -> E2E",
+    "stage_c_institution": "E2E",
+    "stage_c_required": true,
+    "thresholds": {
+      "bootstrap_prob": 0.8,
+      "joint_vs_c1": 0.015,
+      "joint_vs_marginal": 0.01
+    },
+    "validation_only": true
+  },
+  "units": [
+    {
+      "branch_off_valid_max_abs_diff": 1.1554144290215618e-06,
+      "delta_over_teacher_std_valid": 0.28462751995754937,
+      "epochs_run": 360,
+      "institution": "E2E",
+      "rmse_base_valid": 0.7958601172986298,
+      "rmse_test": 0.719997289570286,
+      "rmse_train": 0.1716564838317916,
+      "rmse_valid": 0.7171561167425572,
+      "seed": 0,
+      "selected_epoch": 207,
+      "task": "lipo",
+      "unit": "E2E/lipo/JOINT/seed0",
+      "variant": "JOINT"
+    },
+    {
+      "branch_off_valid_max_abs_diff": 8.665608217661713e-07,
+      "delta_over_teacher_std_valid": 0.00016240214902110212,
+      "epochs_run": 360,
+      "institution": "E2E",
+      "rmse_base_valid": 0.6944410668684977,
+      "rmse_test": 0.727669948961788,
+      "rmse_train": 0.26561210946200065,
+      "rmse_valid": 0.69443880501769,
+      "seed": 0,
+      "selected_epoch": 106,
+      "task": "lipo",
+      "unit": "E2E/lipo/MARGINAL/seed0",
+      "variant": "MARGINAL"
+    },
+    {
+      "branch_off_valid_max_abs_diff": 7.221340179164315e-07,
+      "delta_over_teacher_std_valid": 0.05338584536375638,
+      "epochs_run": 180,
+      "institution": "FROZEN",
+      "rmse_base_valid": 0.7068848433530779,
+      "rmse_test": 0.7302581866606531,
+      "rmse_train": 0.23214513377015955,
+      "rmse_valid": 0.7046568462888533,
+      "seed": 0,
+      "selected_epoch": 3,
+      "task": "lipo",
+      "unit": "FROZEN/lipo/JOINT/seed0",
+      "variant": "JOINT"
+    },
+    {
+      "branch_off_valid_max_abs_diff": 7.221340181384761e-07,
+      "delta_over_teacher_std_valid": 0.05988081427022789,
+      "epochs_run": 180,
+      "institution": "FROZEN",
+      "rmse_base_valid": 0.706884839779333,
+      "rmse_test": 0.7323790332839499,
+      "rmse_train": 0.22943592776464602,
+      "rmse_valid": 0.703930549900558,
+      "seed": 0,
+      "selected_epoch": 8,
+      "task": "lipo",
+      "unit": "FROZEN/lipo/MARGINAL/seed0",
+      "variant": "MARGINAL"
+    },
+    {
+      "branch_off_valid_max_abs_diff": 1.2296529430244618e-06,
+      "delta_over_teacher_std_valid": 0.01699838531700304,
+      "epochs_run": 180,
+      "institution": "FROZEN",
+      "rmse_base_valid": 0.11440874153419121,
+      "rmse_test": 0.08801536124059328,
+      "rmse_train": 0.01412383924456743,
+      "rmse_valid": 0.11058278187001443,
+      "seed": 0,
+      "selected_epoch": 176,
+      "task": "wc_logp",
+      "unit": "FROZEN/wc_logp/JOINT/seed0",
+      "variant": "JOINT"
+    },
+    {
+      "branch_off_valid_max_abs_diff": 1.2296529439126402e-06,
+      "delta_over_teacher_std_valid": 0.015685529390949075,
+      "epochs_run": 180,
+      "institution": "FROZEN",
+      "rmse_base_valid": 0.11440875039324658,
+      "rmse_test": 0.08866685047022943,
+      "rmse_train": 0.014096820669799564,
+      "rmse_valid": 0.11192412181003282,
+      "seed": 0,
+      "selected_epoch": 176,
+      "task": "wc_logp",
+      "unit": "FROZEN/wc_logp/MARGINAL/seed0",
+      "variant": "MARGINAL"
+    }
+  ]
+}

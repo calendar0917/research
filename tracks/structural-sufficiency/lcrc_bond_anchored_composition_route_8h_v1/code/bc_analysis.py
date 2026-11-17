@@ -263,6 +263,7 @@ def build_tables() -> dict[str, Any]:
                 "rmse_train": float(np.sqrt(np.mean((train["pred_raw"] - train["y_raw"]) ** 2))),
                 "rmse_test": float(np.sqrt(np.mean((test["pred_raw"] - test["y_raw"]) ** 2))),
                 "rmse_base_valid": float(np.sqrt(np.mean((valid["base_raw"] - valid["y_raw"]) ** 2))),
+                "rmse_base_train": float(np.sqrt(np.mean((train["base_raw"] - train["y_raw"]) ** 2))),
                 "branch_off": branch_off,
                 "mean_abs_delta_raw_valid": float(np.mean(np.abs(valid["delta_raw"]))),
                 "molecules_with_nonzero_delta": int(np.sum(np.abs(valid["delta_raw"]) > 1e-9)),

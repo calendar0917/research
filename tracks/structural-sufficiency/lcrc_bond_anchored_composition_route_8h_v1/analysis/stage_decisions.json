@@ -1,12 +1,41 @@
 {
   "detail": [],
-  "generated_at": "2026-11-18T01:26:25",
+  "generated_at": "2026-11-18T01:48:03",
   "per_institution": {
+    "E2E": {
+      "rule": "for E2E at least one of seed0/seed1 must satisfy; all seeds are reported",
+      "seeds": [
+        {
+          "branch_nondegenerate": true,
+          "clearly_reversed": false,
+          "conditions": {
+            "A_marginal_ge_0.010": false,
+            "B_c1_ge_0.015": false,
+            "C_bootstrap_prob_ge_0.80": false,
+            "D_nondegenerate_positive": true
+          },
+          "joint_vs_c1_prob": 0.2435,
+          "joint_vs_c1_valid_delta": -0.010271275730696305,
+          "joint_vs_marginal_ci95": [
+            -0.05590821673176596,
+            0.010339278390978904
+          ],
+          "joint_vs_marginal_prob": 0.0925,
+          "joint_vs_marginal_valid_delta": -0.02271731172486724,
+          "seed": 0,
+          "train_gain_over_epoch0": 0.1745620874106189,
+          "triggered": true,
+          "valid_gain_over_epoch0": 0.07870400055607263
+        }
+      ],
+      "triggered": true
+    },
     "FROZEN": {
       "rule": "for E2E at least one of seed0/seed1 must satisfy; all seeds are reported",
       "seeds": [
         {
           "branch_nondegenerate": true,
+          "clearly_reversed": false,
           "conditions": {
             "A_marginal_ge_0.010": false,
             "B_c1_ge_0.015": false,
@@ -22,6 +51,7 @@
           "joint_vs_marginal_prob": 0.283,
           "joint_vs_marginal_valid_delta": -0.0007262963882952445,
           "seed": 0,
+          "train_gain_over_epoch0": 0.006926971515979763,
           "triggered": true,
           "valid_gain_over_epoch0": 0.002227997064224607
         }
@@ -30,7 +60,7 @@
     }
   },
   "rule": "E2E confirmed when it triggers; FROZEN only when E2E does not; both -> E2E",
-  "stage_c_institution": "FROZEN",
+  "stage_c_institution": "E2E",
   "stage_c_required": true,
   "thresholds": {
     "bootstrap_prob": 0.8,

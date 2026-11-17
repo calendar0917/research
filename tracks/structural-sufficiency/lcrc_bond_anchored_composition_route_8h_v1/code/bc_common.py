@@ -97,6 +97,18 @@ TASK_TARGET_NAME = {
 TASK_ORACLE_PROPERTY = {"wc_logp": "WC_LOGP"}
 TASK_TEACHER = {"lipo": TEACHER_LIPO, "wc_logp": TEACHER_WC}
 
+# --- Stage C only: the conditional ESOL transfer ---------------------------
+#: ``esol`` is *not* part of the round's main comparison.  It is the pre-registered
+#: conditional transfer task of PROTOCOL.md section 4 and is only ever trained in
+#: the E2E institution (there is no ESOL teacher and no historical ESOL baseline is
+#: retrained or compared against).
+DATASET_ESOL = "ogbg-molesol"
+ESOL_SPLIT_SIZES = {"train": 902, "valid": 113, "test": 113}
+TASK_DATASET = {"lipo": DATASET, "wc_logp": DATASET, "esol": DATASET_ESOL}
+TASK_TARGET_NAME_EXTRA = {
+    "esol": "official ogbg-molesol label (ESOL aqueous solubility), its own Train-only scaler",
+}
+
 # ---------------------------------------------------------------------------
 # the two research models and the two training institutions
 # ---------------------------------------------------------------------------
