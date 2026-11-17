@@ -1,0 +1,512 @@
+{
+ "created_utc": "2026-11-17T08:33:49Z",
+ "environment": {
+  "cuda_available": false,
+  "cuda_device_count": 0,
+  "cuda_devices": [],
+  "cwd": "/home/calendar/code/research",
+  "git_branch": "exp/lcrc-explanation-task-relevance-v1",
+  "git_commit": "22d2e26c7ba12eec78b487d6328c5ba5b3126f9b",
+  "git_dirty_tracked": false,
+  "hostname": "main",
+  "platform": "Linux-6.18.59-x86_64-with-glibc2.44",
+  "python": "3.12.15",
+  "rdkit": "2026.09.1",
+  "time_utc": "2026-11-17T08:33:49Z",
+  "torch": "2.5.1+cu124",
+  "torch_cuda": "12.4",
+  "torch_geometric": "2.6.1"
+ },
+ "gates": {
+  "all_passed": true,
+  "asset_identity": {
+   "assets": {
+    "ogbg-mollipo.npz": {
+     "expected": "5690c0e3c7ba0ed51fbe30541e4a83a49abf174c6440aaebfb46a3c5cbc48257",
+     "match": true,
+     "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/ogbg-mollipo.npz",
+     "sha256": "5690c0e3c7ba0ed51fbe30541e4a83a49abf174c6440aaebfb46a3c5cbc48257"
+    },
+    "pair_catalog.jsonl.gz": {
+     "expected": "12376174e7d95a20a25c3f3ed5cca510850db1c71807b30cbd826005c21e11ba",
+     "match": true,
+     "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/pair_catalog.jsonl.gz",
+     "sha256": "12376174e7d95a20a25c3f3ed5cca510850db1c71807b30cbd826005c21e11ba"
+    },
+    "pair_endpoints.jsonl.gz": {
+     "expected": "4eaf852f3caf9aee442952da44fe535366fad33f4f8f891aea4e5d4ded52cacb",
+     "match": true,
+     "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/pair_endpoints.jsonl.gz",
+     "sha256": "4eaf852f3caf9aee442952da44fe535366fad33f4f8f891aea4e5d4ded52cacb"
+    },
+    "row_atom_mapping.jsonl.gz": {
+     "expected": "01e861f379dfdbdd83aaf4caee236eceb3bebd7e7d4568e191d55aa96043f64b",
+     "match": true,
+     "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/row_atom_mapping.jsonl.gz",
+     "sha256": "01e861f379dfdbdd83aaf4caee236eceb3bebd7e7d4568e191d55aa96043f64b"
+    }
+   },
+   "passed": true
+  },
+  "cache_identity": {
+   "caches": {
+    "ogbg_mollipo_sq-pilot-cache-v1.npz": {
+     "expected": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+     "match": true,
+     "path": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+     "sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c"
+    },
+    "ogbg_mollipo_sq-pilot-lipo-raw-v1.npz": {
+     "expected": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3",
+     "match": true,
+     "path": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-lipo-raw-v1.npz",
+     "sha256": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3"
+    }
+   },
+   "passed": true
+  },
+  "checkpoint_identity_and_replay": {
+   "models": [
+    {
+     "identity": {
+      "checkpoint_epoch": 333,
+      "checkpoint_epoch_expected": 333,
+      "checkpoint_valid_rmse_raw": 0.11440873206013732,
+      "epoch_match": true,
+      "exists": true,
+      "n_parameters": 228674,
+      "n_parameters_expected": 228674,
+      "name": "L_WC_LOGP",
+      "parameter_count_match": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/checkpoints/L_WC_LOGP_best.pt",
+      "sha256": "4522a6361909b1b7d1aee317bdbead0798e07eee0dd3143a396ade64ea788a67",
+      "sha256_expected": "4522a6361909b1b7d1aee317bdbead0798e07eee0dd3143a396ade64ea788a67",
+      "sha256_match": true,
+      "source_path": "results/oracle/ogbg-mollipo/L/WC_LOGP/selected/checkpoint_best_val.pt",
+      "state_sha256": "d3023452bfb845907c9daf16e1f829ff05edc6820869611f313780fe0a03635c",
+      "valid_rmse_expected": 0.11440873206013732
+     },
+     "name": "L_WC_LOGP",
+     "passed": true,
+     "replay": {
+      "name": "L_WC_LOGP",
+      "passed": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/replay/L_WC_LOGP_predictions.npz",
+      "splits": {
+       "test": {
+        "mae_raw": 0.04922113972201146,
+        "max_abs_pred_error": 1.0759463267007163e-06,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.09335165892149794,
+        "stored_rmse_raw": 0.0933516482267769,
+        "tolerance_max": 1.9919171841337076e-05
+       },
+       "train": {
+        "mae_raw": 0.021628910208293387,
+        "max_abs_pred_error": 3.0741323620020466e-06,
+        "n_rows": 3360,
+        "passed": true,
+        "rmse_raw": 0.027674845244756684,
+        "stored_rmse_raw": 0.027674842769137366,
+        "tolerance_max": 1.891477164200576e-05
+       },
+       "valid": {
+        "mae_raw": 0.05002134003104334,
+        "max_abs_pred_error": 9.222397081565248e-07,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.11440875268035847,
+        "stored_rmse_raw": 0.11440873206013732,
+        "tolerance_max": 2.0395287927922292e-05
+       }
+      }
+     }
+    },
+    {
+     "identity": {
+      "checkpoint_epoch": 355,
+      "checkpoint_epoch_expected": 355,
+      "checkpoint_valid_rmse_raw": 0.1032791933377434,
+      "epoch_match": true,
+      "exists": true,
+      "n_parameters": 377350,
+      "n_parameters_expected": 377350,
+      "name": "T_WC_LOGP",
+      "parameter_count_match": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/checkpoints/T_WC_LOGP_best.pt",
+      "sha256": "5e812d7e45813bbb9100e3b3b98ac9f0d320573d7370abbade8d5fa8417fc165",
+      "sha256_expected": "5e812d7e45813bbb9100e3b3b98ac9f0d320573d7370abbade8d5fa8417fc165",
+      "sha256_match": true,
+      "source_path": "results/oracle/ogbg-mollipo/T/WC_LOGP/selected/checkpoint_best_val.pt",
+      "state_sha256": "69417b9fe4cf3d70016fe356874023b6a1e737f644b293b767b41a5ce227e0b8",
+      "valid_rmse_expected": 0.1032791933377434
+     },
+     "name": "T_WC_LOGP",
+     "passed": true,
+     "replay": {
+      "name": "T_WC_LOGP",
+      "passed": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/replay/T_WC_LOGP_predictions.npz",
+      "splits": {
+       "test": {
+        "mae_raw": 0.05790172486635596,
+        "max_abs_pred_error": 1.2296529448008187e-06,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.11752828641810112,
+        "stored_rmse_raw": 0.11752829445407713,
+        "tolerance_max": 1.9908452341795354e-05
+       },
+       "train": {
+        "mae_raw": 0.027569614702661054,
+        "max_abs_pred_error": 1.844479417201228e-06,
+        "n_rows": 3360,
+        "passed": true,
+        "rmse_raw": 0.03444435955880025,
+        "stored_rmse_raw": 0.03444436175210952,
+        "tolerance_max": 1.886539369837543e-05
+       },
+       "valid": {
+        "mae_raw": 0.05645341697001461,
+        "max_abs_pred_error": 1.8444794163130496e-06,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.10327917326331557,
+        "stored_rmse_raw": 0.1032791933377434,
+        "tolerance_max": 2.017012002903129e-05
+       }
+      }
+     }
+    },
+    {
+     "identity": {
+      "checkpoint_epoch": 124,
+      "checkpoint_epoch_expected": 124,
+      "checkpoint_valid_rmse_raw": 0.7068848410118609,
+      "epoch_match": true,
+      "exists": true,
+      "n_parameters": 228674,
+      "n_parameters_expected": 228674,
+      "name": "L_lipophilicity",
+      "parameter_count_match": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/checkpoints/L_lipophilicity_Rf_best.pt",
+      "sha256": "9ef542e591963cf8ed012e95036d0f6f95e9a3c3d142a1838f28581bbbed10bc",
+      "sha256_expected": "9ef542e591963cf8ed012e95036d0f6f95e9a3c3d142a1838f28581bbbed10bc",
+      "sha256_match": true,
+      "source_path": "results/stage1/ogbg-mollipo/L/Rf/checkpoint_best_val.pt",
+      "state_sha256": "d6d4ea3517fd18af86ad8cd6e29f979082fa8d98c546c250313790c950407cbf",
+      "valid_rmse_expected": 0.7068848410118609
+     },
+     "name": "L_lipophilicity",
+     "passed": true,
+     "replay": {
+      "name": "L_lipophilicity",
+      "passed": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/replay/L_lipophilicity_predictions.npz",
+      "splits": {
+       "test": {
+        "mae_raw": 0.5323825618504983,
+        "max_abs_pred_error": 1.3720546343520823e-06,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.7293241969859101,
+        "stored_rmse_raw": 0.729324172249604,
+        "tolerance_max": 1.5465191025236206e-05
+       },
+       "train": {
+        "mae_raw": 0.17823748967449912,
+        "max_abs_pred_error": 1.7331216426441642e-06,
+        "n_rows": 3360,
+        "passed": true,
+        "rmse_raw": 0.23907210138928045,
+        "stored_rmse_raw": 0.2390721087031765,
+        "tolerance_max": 1.450304897829016e-05
+       },
+       "valid": {
+        "mae_raw": 0.5078731194451588,
+        "max_abs_pred_error": 1.4442680360549076e-06,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.7068848920120308,
+        "stored_rmse_raw": 0.7068848410118609,
+        "tolerance_max": 1.5031735280294845e-05
+       }
+      }
+     }
+    },
+    {
+     "identity": {
+      "checkpoint_epoch": 183,
+      "checkpoint_epoch_expected": 183,
+      "checkpoint_valid_rmse_raw": 0.616077290013576,
+      "epoch_match": true,
+      "exists": true,
+      "n_parameters": 377350,
+      "n_parameters_expected": 377350,
+      "name": "G0_lipophilicity",
+      "parameter_count_match": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/checkpoints/G0_lipophilicity_Rf_best.pt",
+      "sha256": "04282be531bdc5883e31684e79720d3b42f5c998b5442921b56e61aecfb559ca",
+      "sha256_expected": "04282be531bdc5883e31684e79720d3b42f5c998b5442921b56e61aecfb559ca",
+      "sha256_match": true,
+      "source_path": "results/stage1/ogbg-mollipo/G0/Rf/checkpoint_best_val.pt",
+      "state_sha256": "d3439dc14a2ad3532f870d7cd289024826a386c1ddae10c5ff02ea2504343d6f",
+      "valid_rmse_expected": 0.616077290013576
+     },
+     "name": "G0_lipophilicity",
+     "passed": true,
+     "replay": {
+      "name": "G0_lipophilicity",
+      "passed": true,
+      "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/results/replay/G0_lipophilicity_predictions.npz",
+      "splits": {
+       "test": {
+        "mae_raw": 0.5091728012127684,
+        "max_abs_pred_error": 8.665608217661713e-07,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.6800005658404299,
+        "stored_rmse_raw": 0.6800005736955725,
+        "tolerance_max": 1.4961706189472203e-05
+       },
+       "train": {
+        "mae_raw": 0.1941963328545296,
+        "max_abs_pred_error": 1.444268035832863e-06,
+        "n_rows": 3360,
+        "passed": true,
+        "rmse_raw": 0.25524746930961695,
+        "stored_rmse_raw": 0.2552474695004002,
+        "tolerance_max": 1.4582311996801008e-05
+       },
+       "valid": {
+        "mae_raw": 0.4669753133230468,
+        "max_abs_pred_error": 8.665608213220821e-07,
+        "n_rows": 420,
+        "passed": true,
+        "rmse_raw": 0.6160773039985735,
+        "stored_rmse_raw": 0.616077290013576,
+        "tolerance_max": 1.4931655015593417e-05
+       }
+      }
+     }
+    }
+   ],
+   "passed": true
+  },
+  "split_identity": {
+   "disjoint_and_cover": true,
+   "intersections": {
+    "train-test": 0,
+    "train-valid": 0,
+    "valid-test": 0
+   },
+   "main_scope": {
+    "by_stratum": {
+     "test": 420,
+     "train_description": 128,
+     "valid": 420
+    },
+    "cache_row_mapping_ok": true,
+    "n": 968,
+    "row_ids_sha256": "663437e5c3ecfe6b4d757d3c5067a43626e28f40a275fa8938c0b7793e633e4b",
+    "train_description_row_ids": [
+     618,
+     1000,
+     3347,
+     3709,
+     3298,
+     4080,
+     2765,
+     3726,
+     1854,
+     1218,
+     1461,
+     3902,
+     603,
+     673,
+     4130,
+     2067,
+     127,
+     735,
+     939,
+     1519,
+     1738,
+     1619,
+     3571,
+     666,
+     3886,
+     3448,
+     2193,
+     4009,
+     3388,
+     2997,
+     3550,
+     4021,
+     2182,
+     1984,
+     2219,
+     2289,
+     3914,
+     2509,
+     106,
+     3561,
+     2839,
+     3562,
+     3548,
+     1765,
+     1392,
+     2423,
+     4000,
+     3661,
+     2518,
+     3490,
+     2220,
+     2821,
+     3392,
+     1897,
+     882,
+     3370,
+     3529,
+     1145,
+     3727,
+     826,
+     2169,
+     1310,
+     4057,
+     2457,
+     2629,
+     1017,
+     3577,
+     3803,
+     895,
+     141,
+     1713,
+     2532,
+     1,
+     2224,
+     1925,
+     3305,
+     1489,
+     3600,
+     243,
+     3824,
+     1123,
+     3116,
+     57,
+     4090,
+     1680,
+     995,
+     2079,
+     620,
+     553,
+     445,
+     584,
+     3247,
+     3956,
+     3642,
+     1672,
+     1614,
+     3754,
+     3630,
+     3085,
+     644,
+     4041,
+     4062,
+     2998,
+     2117,
+     2293,
+     986,
+     1272,
+     3872,
+     3473,
+     1166,
+     2107,
+     2687,
+     1313,
+     1515,
+     2589,
+     2024,
+     933,
+     2187,
+     2011,
+     609,
+     1541,
+     3022,
+     3733,
+     2559,
+     2167,
+     2058,
+     4136,
+     3177
+    ]
+   },
+   "official_csv": {
+    "all_match": true,
+    "files": {
+     "test": {
+      "expected_n": 420,
+      "n": 420,
+      "official_ids_sha256": "c998e09cb223d104f5f9519d7f93c6b176fc419cbc8f5762c874f4100b08ffe9",
+      "order_match": true,
+      "path": "data/ogb/ogbg_mollipo/split/scaffold/test.csv.gz",
+      "row_ids_sha256": "c998e09cb223d104f5f9519d7f93c6b176fc419cbc8f5762c874f4100b08ffe9",
+      "set_match": true,
+      "sha256": "409b593b2927da0aca91bba1b19e4385e7e46636f0890df3d023540fead857d1"
+     },
+     "train": {
+      "expected_n": 3360,
+      "n": 3360,
+      "official_ids_sha256": "b49c8d9ca7c66652e6fcd22224a5c33955e4562ad5d74ac8b463c6a8c627598b",
+      "order_match": true,
+      "path": "data/ogb/ogbg_mollipo/split/scaffold/train.csv.gz",
+      "row_ids_sha256": "b49c8d9ca7c66652e6fcd22224a5c33955e4562ad5d74ac8b463c6a8c627598b",
+      "set_match": true,
+      "sha256": "427fbcbc7eb20f07b1ee958e7aa047d401dd27c06d2e9a65dcc4e6b29cc54026"
+     },
+     "valid": {
+      "expected_n": 420,
+      "n": 420,
+      "official_ids_sha256": "ebcbd43531f9eb2565fd74b9ffb518d7cafc77ff6fb400a1a232b132a5ee12eb",
+      "order_match": true,
+      "path": "data/ogb/ogbg_mollipo/split/scaffold/valid.csv.gz",
+      "row_ids_sha256": "ebcbd43531f9eb2565fd74b9ffb518d7cafc77ff6fb400a1a232b132a5ee12eb",
+      "set_match": true,
+      "sha256": "0a42d137aafcf2350f61028cf008e99443e43e2fdf4038ba4068f71d6850f8e1"
+     }
+    },
+    "split_dir": "data/ogb/ogbg_mollipo/split/scaffold"
+   },
+   "passed": true,
+   "sizes": {
+    "test": 420,
+    "train": 3360,
+    "valid": 420
+   },
+   "sizes_match": true,
+   "union_size": 4200
+  },
+  "wc_glop_graph_closure": {
+   "max_abs_error": 2.4202861936828413e-14,
+   "n_over_1e-6": 0,
+   "n_rows": 4200,
+   "passed": true
+  },
+  "wc_glop_main_scope_closure": {
+   "atom_counts_match": true,
+   "max_closure_error": 2.4202861936828413e-14,
+   "n": 968,
+   "n_closed": 968,
+   "n_zero_abs_mass": 0,
+   "passed": true,
+   "zero_abs_mass": []
+  },
+  "wc_glop_pair_closure": {
+   "max_abs_error": 4.884981308350689e-15,
+   "n_over_tolerance": 0,
+   "n_pairs": 823,
+   "passed": true
+  }
+ },
+ "round_id": "lcrc-explanation-fidelity-alignment-v1"
+}
