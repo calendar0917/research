@@ -91,6 +91,7 @@ def pilot_rows(dataset: str, split: str, records: Sequence[Mapping[str, Any]],
                 ),
                 "n_matched": int(matched.get("n_matched") or len(matched_effs)),
                 "matched_abs": [float(e["abs_delta"]) for e in matched_effs],
+                "matched_bonds": [tuple(sorted(int(b) for b in e["bonds"])) for e in matched_effs],
                 "matched_median_abs": (float(matched["median_abs_delta"]) if matched_effs else None),
                 "effect_ratio": float(ratio) if ratio is not None else None,
                 "effect_advantage": float(adv) if adv is not None else None,
@@ -129,6 +130,9 @@ def corrected_rows(dataset: str, split: str, records: Sequence[Mapping[str, Any]
                 ),
                 "n_matched": int(controls.get("n_matched") or 0),
                 "matched_abs": [float(r["effect"]["abs_delta_total"]) for r in controls.get("matched") or []],
+                "matched_bonds": [
+                    tuple(sorted(int(b) for b in r["bonds"])) for r in controls.get("matched") or []
+                ],
                 "matched_median_abs": float(summary["median_abs_delta"]) if summary else None,
                 "effect_ratio": float(summary["effect_ratio"]) if summary else None,
                 "effect_advantage": float(summary["effect_advantage"]) if summary else None,
@@ -711,6 +715,9 @@ def _paired_change(p_rows: Sequence[Mapping[str, Any]],
         c = by_id.get(int(r["row_id"]))
         if c is None or r["effect_ratio"] is None or c["effect_ratio"] is None:
             continue
+        a = set(r.get("matched_bonds") or [])
+        b = set(c.get("matched_bonds") or [])
+        union = a | b
         pairs.append(
             {
                 "row_id": int(r["row_id"]),
@@ -720,12 +727,28 @@ def _paired_change(p_rows: Sequence[Mapping[str, Any]],
                 "advantage_pilot": float(r["effect_advantage"]),
                 "advantage_corrected": float(c["effect_advantage"]),
                 "advantage_delta": float(c["effect_advantage"]) - float(r["effect_advantage"]),
+                "control_sets_identical": bool(a == b),
+                "control_set_jaccard": (len(a & b) / len(union)) if union else float("nan"),
             }
         )
     ratio_delta = [p["ratio_delta"] for p in pairs]
     adv_delta = [p["advantage_delta"] for p in pairs]
+    pilot_matched = {int(r["row_id"]) for r in p_rows if r["effect_ratio"] is not None}
+    corrected_matched = {int(r["row_id"]) for r in c_rows if r["effect_ratio"] is not None}
+    identical = [p for p in pairs if p["control_sets_identical"]]
+    changed = [p for p in pairs if not p["control_sets_identical"]]
     return {
         "n_paired_molecules": len(pairs),
+        "n_matched_pilot_only": len(pilot_matched - corrected_matched),
+        "n_matched_corrected_only": len(corrected_matched - pilot_matched),
+        "n_matched_both": len(pilot_matched & corrected_matched),
+        "n_paired_identical_control_sets": len(identical),
+        "frac_paired_identical_control_sets": (len(identical) / len(pairs)) if pairs else float("nan"),
+        "median_control_set_jaccard": C.median([p["control_set_jaccard"] for p in pairs]),
+        "n_paired_changed_control_sets": len(changed),
+        "ratio_delta_median_changed_sets": C.median([p["ratio_delta"] for p in changed]),
+        "advantage_delta_median_changed_sets": C.median([p["advantage_delta"] for p in changed]),
+        "ratio_delta_ci_changed_sets": C.bootstrap_median_ci([p["ratio_delta"] for p in changed]),
         "ratio_delta_median": C.median(ratio_delta),
         "ratio_delta_bootstrap": C.bootstrap_median_ci(ratio_delta),
         "advantage_delta_median": C.median(adv_delta),
@@ -857,10 +880,20 @@ def build_decision(datasets: Sequence[str], detail: Mapping[str, Any],
                 "corrected": signal_verdict(s["corrected"], split),
                 "paired_change": {
                     "n_paired_molecules": s["paired_change"]["n_paired_molecules"],
+                    "n_matched_both": s["paired_change"]["n_matched_both"],
+                    "n_matched_pilot_only": s["paired_change"]["n_matched_pilot_only"],
+                    "n_matched_corrected_only": s["paired_change"]["n_matched_corrected_only"],
                     "ratio_delta_median": s["paired_change"]["ratio_delta_median"],
                     "ratio_delta_ci": s["paired_change"]["ratio_delta_bootstrap"],
                     "advantage_delta_median": s["paired_change"]["advantage_delta_median"],
                     "frac_ratio_decreased": s["paired_change"]["frac_ratio_decreased"],
+                    "n_paired_identical_control_sets": s["paired_change"]["n_paired_identical_control_sets"],
+                    "frac_paired_identical_control_sets": s["paired_change"]["frac_paired_identical_control_sets"],
+                    "median_control_set_jaccard": s["paired_change"]["median_control_set_jaccard"],
+                    "n_paired_changed_control_sets": s["paired_change"]["n_paired_changed_control_sets"],
+                    "ratio_delta_median_changed_sets": s["paired_change"]["ratio_delta_median_changed_sets"],
+                    "advantage_delta_median_changed_sets": s["paired_change"]["advantage_delta_median_changed_sets"],
+                    "ratio_delta_ci_changed_sets": s["paired_change"]["ratio_delta_ci_changed_sets"],
                 },
             }
         entry["localization"] = {
@@ -922,21 +955,21 @@ def summarise_answers(decision: Mapping[str, Any]) -> dict[str, Any]:
         }
     answers["q5_scope"] = {
         "supported": [
-            "the pilot's null was matched on n_s2_internal, a different quantity from the S2 dose the gate removes",
-            "the corrected affected-matched null reproduces on the frozen function (n_s2_affected is exactly the 1->0 weight set)",
-            "the per-molecule effect ratio / advantage under the corrected null, with molecule-level bootstrap",
-            "where the masked local readout moves: inside the highlighted atoms vs the remaining roots",
+            "原轮的随机对照确实按 `n_s2_internal`（两条键都在 S 内）匹配，而冻结门控 `w[p]=m[e1]*m[e2]` 实际移除的是 `n_s2_affected`（至少一条键在 S 内）；两者相差边界 occurrence。",
+            "在冻结前向上，`n_s2_affected` 恰好等于被置零的 S2 权重数（逐分子 1→0 集合比对通过），修正后的对照可以在同一模型上复现。",
+            "修正对照下逐分子的 effect ratio / advantage，以及分子级 bootstrap 区间；两数据集、三划分分开报告。",
+            "屏蔽引起的局部读出变化在根节点上的分解：子图内根节点与外部根节点各自的绝对响应、外部占比与闭合检查。",
         ],
         "not_supported": [
-            "any cross-seed or cross-checkpoint stability claim (single frozen checkpoint)",
-            "any chemical counterfactual interpretation (atom_feat/atom_scalar/global/atom counts are not gated)",
-            "a claim that the model does not use structure, or that the architecture must change",
-            "a new Top-1, a new search space, a new architecture or a new dataset",
+            "任何跨 seed / 跨 checkpoint 的稳定性结论（本轮只有一个冻结 checkpoint）。",
+            "任何化学反事实解释：`atom_feat` / `atom_scalar` / `global` / 原子数特征并未被门控，屏蔽不是删键或删基团。",
+            "“模型不使用结构”或“架构必须修改”这类结论；本轮没有做架构对照。",
+            "新的 Top-1、新的搜索空间、新的架构或新的数据集。",
         ],
         "still_undetermined": [
-            "whether the corrected verdict generalises beyond the 64 sampled molecules per split",
-            "whether the outside-root response is necessary for prediction quality (not tested here)",
-            "whether a different matched-null definition would change the ranking (only affected-dose matching was run)",
+            "修正后的判定是否能外推到每划分 64 个分子之外。",
+            "外部根节点的响应对预测质量是否必要（本轮没有做去掉外部响应的对照）。",
+            "换一种匹配零假设（例如按边界比例或按权重质量匹配）是否会改变排序；本轮只跑了 affected 剂量匹配。",
         ],
     }
     return answers

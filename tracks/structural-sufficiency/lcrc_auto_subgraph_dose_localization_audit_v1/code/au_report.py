@@ -138,7 +138,7 @@ def write_report() -> Path:
         for split in ("valid", "test"):
             q2 = answers["q2_corrected_effect"][dataset][split]
             add(
-                f"{2 if split == 'valid' else 3}. **{split.upper()} 修正后的对照（molesol/mollipo 各自）**："
+                f"{2 if split == 'valid' else 3}. **{split.upper()}（修正对照）**："
                 f"median effect ratio = {_fmt(q2['effect_ratio_median'])}"
                 f"（bootstrap CI low {_fmt(q2['effect_ratio_ci_low'])}），"
                 f"ratio>1 = {_pct(q2['ratio_gt1_fraction'])}，"
@@ -305,6 +305,11 @@ def write_report() -> Path:
         "匹配分子数 ≥ max(32, 80%×已解释分子)。"
     )
     add("")
+    add(
+        "这里的 `SURVIVES/ATTENUATED/NOT_SUPPORTED` 是本轮为**两种协议并排比较**而冻结的三档映射，"
+        "不是原轮的 `PILOT_SIGNAL / WEAK_OR_INCONCLUSIVE` 二档标签；原轮自己的判定见其 `DECISION.md`。"
+    )
+    add("")
     add("### 3.2 分子级配对变化（同一分子、两个对照协议）")
     add("")
     rows = []
@@ -324,6 +329,47 @@ def write_report() -> Path:
         rows,
     ))
     add("")
+    rows = []
+    for dataset in C.DATASETS:
+        for split in C.SPLITS:
+            p = decision["datasets"][dataset]["splits"][split]["paired_change"]
+            rows.append([
+                f"`{dataset}`", split, p.get("n_matched_both"),
+                p.get("n_matched_pilot_only"), p.get("n_matched_corrected_only"),
+            ])
+    add(_table(
+        ["dataset", "split", "matched under both protocols", "pilot-only",
+         "corrected-only"],
+        rows,
+    ))
+    add("")
+    rows = []
+    for dataset in C.DATASETS:
+        for split in C.SPLITS:
+            p = decision["datasets"][dataset]["splits"][split]["paired_change"]
+            rows.append([
+                f"`{dataset}`", split,
+                _pct(p.get("frac_paired_identical_control_sets")),
+                _fmt(p.get("median_control_set_jaccard"), 3),
+                p.get("n_paired_changed_control_sets"),
+                _fmt(p.get("ratio_delta_median_changed_sets")),
+                f"[{_fmt((p.get('ratio_delta_ci_changed_sets') or {}).get('ci_low'))}, "
+                f"{_fmt((p.get('ratio_delta_ci_changed_sets') or {}).get('ci_high'))}]",
+            ])
+    add(_table(
+        ["dataset", "split", "paired molecules with identical accepted control set",
+         "median control-set Jaccard", "paired molecules with a changed set",
+         "median ratio delta on changed sets", "CI95"],
+        rows,
+    ))
+    add("")
+    add(
+        "配对差的中位数接近 0 是预期的：同一分子的随机流不变，只有接受准则改变，"
+        "因此多数分子的候选集合高度重叠甚至完全相同。聚合中位数的移动同时包含"
+        "**分子集合变化**（上表 pilot-only / corrected-only）、**对照集合变化**（本表）"
+        "与两个协议下不同的对照值，三者不能混为一谈。"
+    )
+    add("")
 
     # -- Q3 top1 vs heuristic ------------------------------------------------
     add("## 4. Q3 — Top-1 相对随机对照与局部启发式")
@@ -338,14 +384,13 @@ def write_report() -> Path:
                 _row_value(corrected, "median_top1_abs_delta"),
                 _row_value(corrected, "median_local_heuristic_abs_delta"),
                 _row_value(corrected, "median_top1_minus_heuristic"),
-                _pct(float(corrected["frac_top1_gt_local_heuristic"])) if corrected else "NA",
                 _pct(entry["pilot_frac_top1_gt_heuristic"]),
                 _pct(entry["corrected_frac_top1_gt_heuristic"]),
             ])
     add(_table(
         ["dataset", "split", "median Top1 abs(delta)", "median heuristic abs(delta)",
-         "median advantage", "Top1 > heuristic (recomputed Top1)",
-         "pilot record", "recomputed"],
+         "median advantage", "Top1 > heuristic (pilot record)",
+         "Top1 > heuristic (recomputed Top1)"],
         rows,
     ))
     add("")
@@ -472,7 +517,7 @@ def write_report() -> Path:
         f"`{'PASS' if decision.get('pilot_metric_replay_passed') else 'FAIL'}`")
     add(f"* 协议哈希：`{manifest['protocol_hash']}`")
     add(f"* PROTOCOL.md sha256：`{manifest.get('protocol_file_sha256')}`")
-    add(f"* 本轮 code commit：`{manifest.get('git_commit')}`；上游 results commit："
+    add(f"* 本轮实际运行 commit（audit + aggregate，工作区无未提交的 tracked 改动）：`{manifest.get('git_commit')}`；上游 results commit："
         f"`{(manifest.get('upstream') or {}).get('results_commit')}`")
     add("")
     rows = []
