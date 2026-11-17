@@ -295,14 +295,14 @@ def gradient_fd_check(arm, cache, occ, molecules: Sequence[int], *, sigma: float
         order = np.argsort(-np.abs(g_raw[:n_bonds]))[: int(bonds_per)]
         base = [np.ones(n_bonds, dtype=np.float64)]
         with torch.no_grad():
-            p0 = G.gated_parts(arm, gb, gb.gate_matrix(base))["pred_std"].numpy().astype(np.float64) * sigma + mu
+            p0 = G.gated_parts(arm, gb, gb.gate_matrix(base))["pred_std"].detach().cpu().numpy().astype(np.float64) * sigma + mu
             for e in order.tolist():
                 plus = [base[0].copy()]
                 minus = [base[0].copy()]
                 plus[0][e] += eps
                 minus[0][e] -= eps
-                pp = G.gated_parts(arm, gb, gb.gate_matrix(plus))["pred_std"].numpy().astype(np.float64) * sigma + mu
-                pm = G.gated_parts(arm, gb, gb.gate_matrix(minus))["pred_std"].numpy().astype(np.float64) * sigma + mu
+                pp = G.gated_parts(arm, gb, gb.gate_matrix(plus))["pred_std"].detach().cpu().numpy().astype(np.float64) * sigma + mu
+                pm = G.gated_parts(arm, gb, gb.gate_matrix(minus))["pred_std"].detach().cpu().numpy().astype(np.float64) * sigma + mu
                 fd = (float(pp[0]) - float(pm[0])) / (2.0 * eps)
                 auto = float(g_raw[e])
                 abs_err = abs(fd - auto)
@@ -421,11 +421,11 @@ def batching_check(arm, cache, occ, molecules: Sequence[int], *, sigma: float, m
     gb_batch = D.collate_gated(cache, chosen, occ)
     with torch.no_grad():
         parts = G.gated_parts(arm, gb_batch, gb_batch.gate_ones())
-        batch_pred = parts["pred_std"].numpy().astype(np.float64) * sigma + mu
+        batch_pred = parts["pred_std"].detach().cpu().numpy().astype(np.float64) * sigma + mu
         singles = []
         for row in chosen:
             gb1 = D.collate_gated(cache, [row], occ)
-            p = G.gated_parts(arm, gb1, gb1.gate_ones())["pred_std"].numpy().astype(np.float64) * sigma + mu
+            p = G.gated_parts(arm, gb1, gb1.gate_ones())["pred_std"].detach().cpu().numpy().astype(np.float64) * sigma + mu
             singles.append(float(p[0]))
     singles_arr = np.asarray(singles, dtype=np.float64)
     err = np.abs(batch_pred - singles_arr)
@@ -434,7 +434,7 @@ def batching_check(arm, cache, occ, molecules: Sequence[int], *, sigma: float, m
     order = list(range(len(chosen)))[::-1]
     gb_shuf = D.collate_gated(cache, [chosen[i] for i in order], occ)
     with torch.no_grad():
-        p_shuf = G.gated_parts(arm, gb_shuf, gb_shuf.gate_ones())["pred_std"].numpy().astype(np.float64) * sigma + mu
+        p_shuf = G.gated_parts(arm, gb_shuf, gb_shuf.gate_ones())["pred_std"].detach().cpu().numpy().astype(np.float64) * sigma + mu
     back = np.empty_like(p_shuf)
     for k, i in enumerate(order):
         back[i] = p_shuf[k]
@@ -484,14 +484,14 @@ def masked_twice_check(arm, cache, occ, molecules: Sequence[int], *, sigma: floa
         base = [np.ones(n, dtype=np.float64)]
         s2_masked = [G.bond_mask(n, (e1, e2), 0.0)]
         with torch.no_grad():
-            p_base = float(G.gated_parts(arm, gb, gb.gate_matrix(base))["pred_std"].numpy()[0])
+            p_base = float(G.gated_parts(arm, gb, gb.gate_matrix(base))["pred_std"].detach().cpu().numpy()[0])
             p_masked_s2 = float(
-                G.gated_parts(arm, gb, gb.gate_matrix(base), gb.gate_matrix(s2_masked))["pred_std"].numpy()[0]
+                G.gated_parts(arm, gb, gb.gate_matrix(base), gb.gate_matrix(s2_masked))["pred_std"].detach().cpu().numpy()[0]
             )
             dropped = (np.isin(omap.path_bond1, [e1, e2]) | np.isin(omap.path_bond2, [e1, e2]))
             cache2, occ2 = D.molecule_cache(mol, omap, drop_paths=dropped)
             gb2 = D.collate_gated(cache2, [0], occ2)
-            p_dropped = float(G.gated_parts(arm, gb2, gb2.gate_ones())["pred_std"].numpy()[0])
+            p_dropped = float(G.gated_parts(arm, gb2, gb2.gate_ones())["pred_std"].detach().cpu().numpy()[0])
         err_raw = abs((p_masked_s2 - p_dropped) * float(sigma))
         tol_raw = float(C.trace_tolerance(p_base * float(sigma) + float(mu)))
         this_ok = bool(err_raw <= tol_raw)
