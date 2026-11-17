@@ -528,8 +528,11 @@ def write_report() -> Path:
             f"delta_rho {_fmt(err.get('delta_rho'))}、pred_raw {_fmt(err.get('pred_raw_masked'))}"
             "（CPU↔GPU 浮点差，容差按原轮口径）。"
         )
-    add(f"* 本轮实际运行 commit（audit + aggregate，工作区无未提交的 tracked 改动）：`{manifest.get('git_commit')}`；上游 results commit："
-        f"`{(manifest.get('upstream') or {}).get('results_commit')}`")
+    add(
+        "* 运行 provenance（commit、工作区状态、代码/协议/输入哈希、环境与峰值内存）见 "
+        "`analysis/run_manifest.json`，不在本文件重复嵌入 commit（否则每次提交都会改变报告本身）。"
+    )
+    add(f"* 上游 results commit：`{(manifest.get('upstream') or {}).get('results_commit')}`")
     add("")
     rows = []
     for dataset in C.DATASETS:
