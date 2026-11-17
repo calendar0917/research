@@ -31,7 +31,7 @@
 | wc_glop_main_scope_closure | PASS |
 | wc_glop_pair_closure | PASS |
 
-执行阶段部署的提交：`aa2c0890`（fields；2 个阶段）、`fb561973`（pool, select；5 个阶段）；`protocol_freeze.json` 冻结了执行时的代码哈希。本文件由 `lfa_report.py`（sha256 `71fdffa97143caa8…`）在提交 `ccb81736b28a42fbe1000da940ea1efd606367e9` 的工作树上生成；生成时的未提交文件记录在 `run_manifest.json` 的 `git_dirty_files`。相对冻结时被改动的是 `lfa_aux.py`, `lfa_common.py`, `lfa_gates.py`, `lfa_main.py`, `lfa_manifest.py`, `lfa_report.py`。这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。
+执行阶段部署的提交：`aa2c0890`（fields；2 个阶段）、`fb561973`（pool, select；5 个阶段）；`protocol_freeze.json` 冻结了执行时的代码哈希。本文件由 `lfa_report.py`（sha256 `16047a992ea2597f…`）在提交 `4477a418043384fc69f160e0250f39ffcb2a98f8` 的工作树上生成；生成时的未提交文件记录在 `run_manifest.json` 的 `git_dirty_files`。相对冻结时被改动的是 `lfa_aux.py`, `lfa_common.py`, `lfa_gates.py`, `lfa_main.py`, `lfa_manifest.py`, `lfa_report.py`。这些改动只在聚合/门禁/报告层（`aggregation_replay` 门禁、Train-128 分层过滤、缺失计数、artifact 清单），不触及候选生成、选择分数或模型前向；`pool_main/pool_aux` 与四个 select 记录的 SHA-256 与执行时一致（第 12 节）。
 
 | checkpoint | epoch | valid RMSE（身份记录） | sha256 | 身份+重放 | 重放 valid RMSE |
 | --- | --- | --- | --- | --- | --- |

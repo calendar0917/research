@@ -929,7 +929,14 @@ def build_decision(decision: Mapping[str, Any], summary: Mapping[str, Any], aux:
                    gates: Mapping[str, Any], freeze: Mapping[str, Any]) -> str:
     labels = decision.get("labels", [])
     lines = [f"# 决策：`{C.ROUND_ID}`", ""]
-    lines.append(f"协议 `{freeze.get('freeze_hash')}`，提交 `{freeze.get('git_commit')}`。")
+    manifest = C.read_json(C.ANALYSIS_DIR / "run_manifest.json") or {}
+    pairs = []
+    for stage in (manifest.get("stages") or []):
+        commit = ((stage.get("job") or {}).get("commit") or "")[:8]
+        if commit and commit not in pairs:
+            pairs.append(commit)
+    lines.append(f"协议 `{freeze.get('freeze_hash')}`，执行提交 `{'` / `'.join(pairs) or freeze.get('git_commit')}`"
+                 f"（`analysis/run_manifest.json` 逐阶段记录）。")
     lines.append("")
     lines.append("## 状态")
     lines.append("")

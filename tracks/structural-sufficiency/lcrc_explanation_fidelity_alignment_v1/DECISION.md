@@ -1,6 +1,6 @@
 # 决策：`lcrc-explanation-fidelity-alignment-v1`
 
-协议 `f9e283bdb38b7e790bd2bac4f37f38a2fcd05a80fa7144a476324be9892e6040`，提交 `fb561973ec15b1614e9ae086a86901e644772a36`。
+协议 `f9e283bdb38b7e790bd2bac4f37f38a2fcd05a80fa7144a476324be9892e6040`，执行提交 `aa2c0890` / `fb561973`（`analysis/run_manifest.json` 逐阶段记录）。
 
 ## 状态
 
