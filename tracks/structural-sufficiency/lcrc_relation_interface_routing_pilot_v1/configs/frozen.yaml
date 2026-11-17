@@ -1,0 +1,36 @@
+# Frozen engineering configuration for round lcrc-relation-interface-routing-pilot-v1.
+#
+# Only engineering knobs live here.  Every scientific constant (the topology
+# partition rule, the S1/S2 routing rule, the block/interface token forms, the
+# gated readout, the shared architecture width, the Rf recipe, the parameter
+# budget rule, the frozen selection score, the oracle-control protocol and the
+# decision thresholds) lives in the code modules and is hashed into
+# analysis/protocol_freeze.json at prepare time.
+
+protocol_id: lcrc-relation-interface-routing-pilot-v1
+round_id: lcrc-relation-interface-routing-pilot-v1
+
+# Single training seed for the whole round (no multi-seed claim, no search).
+seed: 0
+
+# prepare | checks | train | smoke | aggregate
+stage: prepare
+
+# One of lipo / wc_logp (train stage only).
+task: lipo
+# One of R1 / R2 (train stage only).
+model: R1
+
+# Logical device inside the pool; the pool decides which physical GPU this is.
+device: cuda:0
+
+# Resume a partially finished unit instead of redoing finished epochs.
+resume: true
+
+# Rebuild the frozen routing caches (prepare stage only); both GPU workers must
+# keep this false so they consume the single CPU-generated cache.
+force: false
+
+# Smoke-stage budget (never reported as a scientific number).
+smoke_epochs: 3
+epochs: 360

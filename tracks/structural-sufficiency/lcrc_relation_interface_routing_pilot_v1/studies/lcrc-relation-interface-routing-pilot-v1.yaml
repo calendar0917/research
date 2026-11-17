@@ -1,0 +1,51 @@
+id: lcrc-relation-interface-routing-pilot-v1
+protocol: lcrc-relation-interface-routing-pilot-v1
+active: true
+focus: true
+created: 2026-11-24
+
+question: >-
+  If every LCRC S1 occurrence is routed to the topology block that owns its
+  bond, and every S2 occurrence is routed either to the single block that owns
+  both endpoint bonds or to the interface between the two owning blocks, do the
+  resulting block/interface summaries retain the predictive power of the frozen
+  C1 encoding — and does an interface that also sees *both* endpoint blocks beat
+  an interface that sees only its own routed evidence?
+
+baseline: >-
+  Read-only.  C1 (LCRC local encoder + C1 readout, 228674 parameters) and GINE
+  under recipe Rf, seed 0, official split, as already published by
+  gnn_route_clarification_8h_v1; the LCRC-C1 run under recipe R3 for WC_LOGP as
+  published by lcrc_lipo_oracle_task_relevance_public122_s0_v1.  No historical
+  model is retrained, re-selected or re-evaluated here.
+
+candidates:
+  - id: R1
+    status: active
+    note: >-
+      Block tokens from own-bond/own-S1/own-internal-S2 evidence; interface
+      tokens from cross-boundary S2 evidence only; prediction
+      bias + sum_i c_i + sum_ij c_ij + rho_g(g, log1p n_atoms).
+  - id: R2
+    status: active
+    note: >-
+      Identical block tokens and identical shared initial weights; the interface
+      additionally sees MLP_context([Z_i+Z_j, |Z_i-Z_j|, Z_i*Z_j]) and predicts
+      c_ij = f_interface(t_ij + context_ij).  16896 extra parameters (+6.99%).
+
+frozen_reading:
+  - Every bond is owned by exactly one block; blocks are connected; shared atoms
+    are allowed but shared bonds are not; the atom weights w(v,i) sum to 1.
+  - Each S1 occurrence goes to owner(e); each S2 occurrence goes exactly once to
+    the internal bucket of its single owner or to the interface of its two owners;
+    internal + cross == total on every split.
+  - The block gate is binary: y(m) = bias + rho_g + sum_i m_i c_i + sum_(i,j) m_i m_j c_ij.
+
+open_questions:
+  - Does fixed, non-learned topology routing cost accuracy against C1?
+  - Is the interface contribution large enough to be worth an explicit interface
+    object, or does the block token already absorb it?
+  - Does interface context from both endpoints (R2) add anything over R1?
+  - Does the block selected by |delta_i|/sqrt(n_bonds_i) localise the WC_LOGP
+    oracle mass better than a matched random connected subgraph?
+  - Is the readout actually structural, or is rho_g carrying the prediction?

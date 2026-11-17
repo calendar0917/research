@@ -1,0 +1,131 @@
+# Comparability protocol for the LCRC relation--interface routing pilot.
+#
+# A protocol states rules, not a model: dataset, split, metric, fitting scope,
+# selection policy, test policy, seed semantics, comparability.  This round is an
+# *architecture feasibility* pilot; every number is DEVELOPMENT and
+# DEVELOPMENT_TEST.
+
+id: lcrc-relation-interface-routing-pilot-v1
+
+dataset:
+  tasks:
+    - name: ogbg-mollipo
+      role: primary_round
+      target: official OGB lipophilicity label (logD at pH 7.4)
+      expected_rows: 4200
+      training_unit: lipo
+    - name: ogbg-mollipo
+      role: external_oracle_check
+      target: >-
+        RDKit Crippen Wildman WC_LOGP recomputed per molecule and verified to
+        sum exactly to the per-atom contributions cached by the oracle round
+      expected_rows: 4200
+      training_unit: wc_logp
+  source_policy: official_ogb_graphproppred_only
+  loader: "committed label-free graph cache of PygGraphPropPredDataset + get_idx_split()"
+  forbidden_substitutes:
+    - ChemBench random122
+    - DeepChem scaffold split rebuilds
+    - any self-made 80/10/10
+  fingerprint_policy: >-
+    the graph cache and the lipo-input cache are verified by SHA-256 of the real
+    file bytes on every machine at every stage; the prepare stage re-asserts the
+    official split sizes and index hashes.
+
+split:
+  description: official OGB Train / Validation / Test (scaffold split files shipped with the release)
+  sizes:
+    ogbg-mollipo: {train: 3360, valid: 420, test: 420}
+  no_row_deletion: true
+  no_train_valid_merge: true
+  row_deletion_note: >-
+    The topology partition owns every bond of every molecule; a molecule is never
+    dropped because its partition looks degenerate (zero-bond isolated-atom
+    blocks are legal blocks).
+
+metric:
+  ranking_metric: valid_rmse
+  metric_direction: lower_is_better
+  official_metric: rmse
+  reported_metrics: [train_rmse, valid_rmse, test_rmse, train_mae, valid_mae, test_mae]
+  unit: raw target units (de-standardised once, never twice)
+  evaluation_frequency: every epoch, all three splits, full splits
+  curve_summaries: [selected (min Val RMSE), final epoch, mean of the last 20 epochs]
+
+train_only_fitting_scope:
+  description: >-
+    The C1 atom/bond encoders, the shared LocalMLP, the block/interface heads, the
+    global rho_g term, the target mean/std (ddof=0) and the routing-independent
+    normalisation buffers are fitted on official Train only.  Val/Test labels
+    never enter selection, thresholds or any fitted statistic.
+  test_role: >-
+    The official Test split is a development evaluation set for this round and is
+    evaluated every epoch (test_policy=always).  It never selects a model state.
+
+validation_selection_policy:
+  selection: >-
+    minimum Val RMSE over the 360 epochs of the single frozen trajectory; a
+    strictly smaller Val RMSE replaces the current selection and an exact tie
+    keeps the earlier epoch.  Epoch 0 (initialisation) can never be selected.
+  reporting: >-
+    The Test column of that same frozen state is reported afterwards, together
+    with the final-epoch state and the mean of the last 20 epochs.
+  forbidden: selecting an epoch by Test RMSE and calling it Val selection
+
+test_policy: always
+
+seed_semantics:
+  seeds: [0]
+  note: >-
+    Single training seed for the whole round.  No repeat for better numbers, no
+    best-of-N, and no multi-seed stability claim.
+  rngs:
+    training_seed: 0
+    canonical_c1_init_subseed: 0
+    new_module_init_streams: {block: 2001, interface: 2002, rho: 2003, context: 2004}
+    bootstrap_seed: 20261117
+    oracle_control_seed: 20261117
+  init_note: >-
+    The four isolated init substreams generate modules of *one* model
+    configuration; they are not extra training seeds.  R1 and R2 draw every
+    shared tensor from the same tensor-level seed and the same substream, so
+    their non-context parameters start bit-identical.
+
+prototype_decision_scales:
+  note: >-
+    Pre-declared scales for this pilot only; not universal scientific
+    thresholds, and never reported in place of the numbers.
+  prediction_retention: >-
+    R1 and R2 Val RMSE within 1.10x the frozen C1 baseline on BOTH training
+    units (lipo against C1 under Rf; wc_logp against C1 under R3, flagged)
+  interface_increment: >-
+    paired molecule-level bootstrap of (RMSE_R2 - RMSE_R1), 2000 draws, seed
+    20261117: a signal requires the 95% CI to exclude 0 in favour of R2 on at
+    least one training unit, with P(R2 better) >= 0.95
+  capacity_confound: >-
+    |params(R2) - params(R1)| / params(R1) > 0.10 means the interface-context
+    comparison is confounded by capacity and no mechanism claim is made
+  oracle_enrichment: >-
+    a molecule is *matched* when at least 8 distinct random connected subgraphs
+    with the same bond count and the same atom count exist; enrichment is
+    capture(selected block) - mean capture(controls), capture being the share of
+    the molecule's total |WC_LOGP| atom mass inside the candidate atom set
+  oracle_signal: >-
+    at least one training unit shows >= 60% of matched molecules with positive
+    enrichment and a positive mean enrichment, on Valid or Test
+  rho_dominance: >-
+    report mean |rho_g| against the mean |sum_i c_i + sum_ij c_ij|; a ratio above
+    4 means the readout is carrying the prediction and the structure claim is weak
+  ledger_closure: >-
+    every Val/Test prediction reconstructed from bias + rho_g + sum_i c_i +
+    sum_ij c_ij within tol(x) = 1e-5 + 1e-6*max(1,|x|) raw units
+  incomplete_controls: a conclusion that depends on an incomplete control is not drawn
+
+comparability:
+  requires: [protocol_id, dataset_fingerprint, split_fingerprint]
+  ranking_metric: valid_rmse
+  note: >-
+    Only runs under this protocol, this dataset fingerprint and this split
+    fingerprint are comparable to each other.  Historical baselines are marked
+    DIRECTLY_COMPARABLE / RECIPE_DIFFERS / NOT_DIRECTLY_COMPARABLE per row in
+    analysis/prediction_comparison.csv and are never retrained here.
