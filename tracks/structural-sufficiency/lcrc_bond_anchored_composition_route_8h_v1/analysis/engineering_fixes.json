@@ -39,6 +39,22 @@
       "formal_units_affected": [],
       "results_existed_at_fix_time": false,
       "rerun": "none; the smoke directory is overwritten by the formal unit and every analysis asserts formal == True"
+    },
+    {
+      "id": "FIX-04",
+      "file": "code/bc_analysis.py",
+      "frozen_sha256": "n/a (analysis-only module, added after the freeze)",
+      "new_sha256": "719dd5c34327e50b0ffd19bbab9ed886882813b8c82f67752c4a9a825c006519",
+      "detected_in": "first analysis pass on the Stage-A units",
+      "symptom": "the fourth Stage-C trigger was coded as 'valid gain > 0', which is not what PROTOCOL.md section 4 pre-registers ('a non-degenerate branch with non-reversed Train/Valid gains')",
+      "change": "the trigger now reads literally: branch non-degenerate AND the Train/Valid gains are not clearly reversed (REVERSAL_TOLERANCE = 0.005 added to the config for that test only); the other three thresholds are untouched",
+      "scientific_content_changed": true,
+      "direction_of_change": "no result changes; the trigger for the anti-degeneracy clause becomes weaker (it can only fire more often), and it is applied to the frozen Stage-A units that already existed, so it cannot have selected a favourable run",
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": true,
+      "rerun": "no unit rerun; the trigger is recomputed from the unchanged per-unit predictions",
+      "config_sha256": "c6bed0f07a83becf3ab331258c62bd005fd3b0bb9f10c22de4036976e1d9b9e8",
+      "config_sha256_frozen": "3b6a8f035c08eee923d344e73a634dcaba896e0d3bc6d28c986f6b9c77c8d0ce"
     }
   ]
 }

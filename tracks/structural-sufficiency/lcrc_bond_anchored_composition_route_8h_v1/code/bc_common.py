@@ -203,6 +203,9 @@ PRACTICAL_JOINT_VS_C1 = 0.020
 PRACTICAL_JOINT_VS_MARGINAL = 0.010
 MIN_PAIRING_SUPPORT = 0.30
 MIN_ORACLE_ELIGIBLE_FRACTION = 0.70
+#: A Train gain that is paired with a Valid loss of at least this size counts as
+#: a *reversed* gain for the fourth (anti-degeneracy) Stage-C trigger.
+REVERSAL_TOLERANCE = 0.005
 
 
 # ---------------------------------------------------------------------------
