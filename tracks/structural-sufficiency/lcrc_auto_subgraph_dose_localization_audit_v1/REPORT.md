@@ -224,7 +224,8 @@ S2 门控权重是 `w[p] = m[e1] * m[e2]`，因此 `m[e]=0` 时实际被移除�
 * 协议哈希：`2d638f7d3f5aed55ce46642e74d1467c8caa24166c77fce6fd7a46d57d1ad5fc`
 * PROTOCOL.md sha256：`43f0836f3a55af4ae073e1d07632047ce661b112da8d2e1fbb3e719236204214`
 * Top-1 屏蔽预测与原轮逐分子比对：384 个分子中 0 个超出冻结容差；最大绝对偏差 signed_delta 2.9565e-06、delta_L 2.4637e-06、delta_rho 1.1554e-06、pred_raw 1.4443e-06（CPU↔GPU 浮点差，容差按原轮口径）。
-* 本轮实际运行 commit（audit + aggregate，工作区无未提交的 tracked 改动）：`733e6763685639866dc43f240c047374035e8056`；上游 results commit：`2e202646b1560e857f92549e7fa72af55fe6ca85`
+* 运行 provenance（commit、工作区状态、代码/协议/输入哈希、环境与峰值内存）见 `analysis/run_manifest.json`，不在本文件重复嵌入 commit（否则每次提交都会改变报告本身）。
+* 上游 results commit：`2e202646b1560e857f92549e7fa72af55fe6ca85`
 
 | dataset | gate | passed | detail |
 |---|---|---|---|
