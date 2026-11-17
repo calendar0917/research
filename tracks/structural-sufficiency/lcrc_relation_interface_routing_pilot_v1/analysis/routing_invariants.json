@@ -1,0 +1,686 @@
+{
+  "checked_checkpoints": {
+    "lipo/R1": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/lipo/R1/checkpoint_best_val.pt",
+    "lipo/R2": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/lipo/R2/checkpoint_best_val.pt",
+    "wc_logp/R1": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/wc_logp/R1/checkpoint_best_val.pt",
+    "wc_logp/R2": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/wc_logp/R2/checkpoint_best_val.pt"
+  },
+  "failing": [],
+  "gates": {
+    "gate10_declaration": {
+      "budget": {},
+      "declared_config": {
+        "amp": false,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs": 360,
+        "gradient_clip": 5.0,
+        "min_lr": 1e-05,
+        "optimizer": "AdamW",
+        "peak_lr": 0.001,
+        "scheduler": "per_step_linear_warmup_then_cosine",
+        "seed": 0,
+        "warmup_epochs": 5,
+        "weight_decay": 1e-05
+      },
+      "lr_schedule_max_abs_diff": 0.0,
+      "lr_schedule_reference": "gnn_route_clarification_8h_v1.gr_common.lr_at('Rf', step, n_train)",
+      "lr_schedule_steps_checked": 9721,
+      "models": {
+        "R1": {
+          "expected_total": 241860,
+          "matches": true,
+          "total": 241860,
+          "trunk_matches_canonical": true
+        },
+        "R2": {
+          "expected_total": 258756,
+          "matches": true,
+          "total": 258756,
+          "trunk_matches_canonical": true
+        }
+      },
+      "parameter_ratio": {
+        "capacity_confounded": false,
+        "r1_over_c1": 1.0576628737853888,
+        "r2_over_c1": 1.1315497170644673,
+        "r2_over_r1": 1.0698585958819151
+      },
+      "pass": true,
+      "shared_initial_state_identical": true,
+      "shared_parameter_tensors": 44,
+      "training_config": {
+        "amp": false,
+        "batch_size": 128,
+        "dropout": 0.1,
+        "epochs": 360,
+        "gradient_clip": 5.0,
+        "min_lr": 1e-05,
+        "optimizer": "AdamW",
+        "peak_lr": 0.001,
+        "scheduler": "per_step_linear_warmup_then_cosine",
+        "seed": 0,
+        "warmup_epochs": 5,
+        "weight_decay": 1e-05
+      },
+      "training_config_matches_declaration": true
+    },
+    "gate11_data_identity": {
+      "expected_split_sizes": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      },
+      "oracle_atom_sum_max_abs_error": 2.4202861936828413e-14,
+      "oracle_contrib_sha256": "5690c0e3c7ba0ed51fbe30541e4a83a49abf174c6440aaebfb46a3c5cbc48257",
+      "pass": true,
+      "scaler_detail": {
+        "lipo": {
+          "match": true,
+          "recomputed": {
+            "ddof": 0,
+            "fit_split": "train",
+            "max": 4.5,
+            "mean": 2.1621607144740187,
+            "min": -1.5,
+            "n": 3360,
+            "std": 1.211539840098397
+          },
+          "stored": {
+            "ddof": 0,
+            "fit_split": "train",
+            "max": 4.5,
+            "mean": 2.1621607144740187,
+            "min": -1.5,
+            "n": 3360,
+            "std": 1.211539840098397
+          }
+        },
+        "wc_logp": {
+          "match": true,
+          "recomputed": {
+            "ddof": 0,
+            "fit_split": "train",
+            "max": 8.948000000000002,
+            "mean": 3.2697958779761924,
+            "min": -5.621799999999977,
+            "n": 3360,
+            "std": 1.2893845656966016
+          },
+          "stored": {
+            "ddof": 0,
+            "fit_split": "train",
+            "max": 8.948000000000002,
+            "mean": 3.2697958779761924,
+            "min": -5.621799999999977,
+            "n": 3360,
+            "std": 1.2893845656966016
+          }
+        }
+      },
+      "split_detail": {
+        "test": {
+          "max": 949,
+          "min": 5,
+          "n": 420,
+          "sha256": "c998e09cb223d104f5f9519d7f93c6b176fc419cbc8f5762c874f4100b08ffe9"
+        },
+        "train": {
+          "max": 4199,
+          "min": 0,
+          "n": 3360,
+          "sha256": "b49c8d9ca7c66652e6fcd22224a5c33955e4562ad5d74ac8b463c6a8c627598b"
+        },
+        "valid": {
+          "max": 1905,
+          "min": 950,
+          "n": 420,
+          "sha256": "ebcbd43531f9eb2565fd74b9ffb518d7cafc77ff6fb400a1a232b132a5ee12eb"
+        }
+      },
+      "split_sizes": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      },
+      "splits_disjoint_and_complete": true,
+      "two_tasks_have_distinct_targets": true,
+      "wc_logp_label_sha256": "9d9a46cfe36e8592fb8f7e37f1997835cb20bc6e91e5f8af72a2387a926ef40f",
+      "wc_logp_labels_are_oracle_graph_values": true
+    },
+    "gate12_selection_blind": {
+      "forbidden_inputs": [
+        "targets",
+        "row ids' labels",
+        "edit regions",
+        "oracle contributions"
+      ],
+      "models": {
+        "R1": {
+          "score": [
+            0.2456290740519762,
+            0.43082369957119226,
+            0.15373568889506112,
+            0.6790743809898349,
+            0.32335340621131853,
+            0.7392724249897168,
+            0.4393248698286794,
+            0.598659643237424,
+            0.22853654928520484,
+            0.5606780014151777,
+            0.3460974128941662,
+            0.4256321042776108,
+            0.21307514508025108,
+            0.41607529670000076,
+            0.4256321042776108,
+            0.42875087074935436,
+            0.678704931390057,
+            0.7230931731633771,
+            0.7200311542163609,
+            0.4173800740391016,
+            0.4198665302246809,
+            0.4256321042776108,
+            0.47722860036460096,
+            0.43038102611899376,
+            0.4256321042776108,
+            0.21307514508025108,
+            0.4256321042776108,
+            0.4256321042776108,
+            0.7459830828011036,
+            0.4256321042776108,
+            0.678704931390057,
+            0.21261376225672834,
+            0.37704938277602196,
+            0.8131747683104873,
+            0.5606780014151777,
+            0.5451278441828433,
+            0.5963436770599184,
+            0.4173800740391016,
+            0.5788313577008507,
+            0.4965044092386961,
+            0.42876069620251656,
+            0.4467032604053975,
+            0.4354206118732691,
+            0.2011493785913774,
+            0.48790805988191255,
+            0.4401757884770632,
+            0.5196489384864691,
+            0.7021898326143547,
+            0.22391080483794212,
+            0.6828880543166448,
+            0.6352705124067687,
+            0.6108874112036244,
+            0.598659643237424,
+            0.18168223090469837,
+            0.22241326953160523,
+            0.6352705124067687,
+            0.412377517670393,
+            0.4401757884770632,
+            0.4393248698286794,
+            0.40693666409830015,
+            0.4401757884770632,
+            0.4256321042776108,
+            0.6347452883795975,
+            0.4256321042776108
+          ],
+          "selected_local_index": [
+            3,
+            5,
+            0,
+            0,
+            0,
+            7,
+            1,
+            1,
+            3,
+            2,
+            6,
+            8,
+            0,
+            9,
+            6,
+            9,
+            2,
+            2,
+            2,
+            4,
+            4,
+            5,
+            2,
+            8,
+            9,
+            0,
+            8,
+            6,
+            2,
+            9,
+            1,
+            1,
+            1,
+            6,
+            0,
+            0,
+            0,
+            9,
+            0,
+            3,
+            6,
+            7,
+            7,
+            1,
+            0,
+            4,
+            0,
+            0,
+            3,
+            0,
+            1,
+            1,
+            1,
+            6,
+            0,
+            1,
+            8,
+            5,
+            2,
+            0,
+            7,
+            9,
+            0,
+            6
+          ],
+          "stable_under_permutation": true
+        },
+        "R2": {
+          "score": [
+            0.5915788561105728,
+            0.44318704063783143,
+            0.5628096163272858,
+            0.7415184292817328,
+            0.47632971758450365,
+            0.6931208083452884,
+            0.4709516763687134,
+            0.6125328496946564,
+            0.47567890356499337,
+            0.5288963347185608,
+            0.29914372157896074,
+            0.40249797188664055,
+            0.3791116919332523,
+            0.40748075426054303,
+            0.3944697678089142,
+            0.5368143960532188,
+            0.9101887588318581,
+            0.8354721439774807,
+            0.7970010780211793,
+            0.352002422069176,
+            1.0816027522087097,
+            0.4589003551402085,
+            0.5894962195877922,
+            0.6494301732883638,
+            0.47949954867362976,
+            0.7061184122957699,
+            0.4148342875810652,
+            0.7960166931152344,
+            0.7973411778608958,
+            0.4756660817182586,
+            0.910188746665111,
+            0.4771603084127547,
+            0.5256791934370995,
+            0.851798877120018,
+            0.5330974395147149,
+            0.8946764596560367,
+            0.7446998150588795,
+            0.5963070839643478,
+            0.7892960649887624,
+            0.89575981721282,
+            0.4331935918000439,
+            0.6892404607916162,
+            0.6638524912174429,
+            0.32494670930798736,
+            0.5664616984126998,
+            0.4875283540951376,
+            0.6573883244474126,
+            0.8649589480543164,
+            0.2794960762971376,
+            0.8042204560802019,
+            0.7536305055644911,
+            0.7527010694983115,
+            0.611037427196189,
+            0.5691665709018707,
+            0.40191646582003215,
+            0.7536305055644911,
+            0.5214195203499269,
+            0.4598401771784408,
+            0.46365485101369414,
+            0.5548811107873917,
+            0.9493042826652527,
+            0.45926400341751655,
+            0.855820277317031,
+            0.5000907456295052
+          ],
+          "selected_local_index": [
+            3,
+            7,
+            1,
+            0,
+            0,
+            7,
+            7,
+            1,
+            7,
+            2,
+            6,
+            14,
+            4,
+            3,
+            4,
+            0,
+            2,
+            2,
+            0,
+            0,
+            4,
+            6,
+            2,
+            11,
+            13,
+            2,
+            2,
+            8,
+            2,
+            10,
+            1,
+            1,
+            3,
+            4,
+            0,
+            0,
+            0,
+            5,
+            13,
+            3,
+            0,
+            7,
+            10,
+            1,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            1,
+            4,
+            1,
+            1,
+            10,
+            7,
+            2,
+            2,
+            9,
+            11,
+            0,
+            1
+          ],
+          "stable_under_permutation": true
+        }
+      },
+      "note": "select_blocks() has no label/oracle/edit argument; the score is |delta_i| / sqrt(max(1, n_bonds_i)) with delta_i = c_i + sum_j c_ij",
+      "pass": true,
+      "selection_inputs": [
+        "c_block",
+        "c_iface",
+        "iface endpoints",
+        "block bond counts"
+      ]
+    },
+    "gate1_to_gate5_structure": {
+      "pass": true,
+      "splits": {
+        "test": {
+          "gates": {
+            "gate1_bond_unique_ownership": {
+              "pass": true
+            },
+            "gate2_blocks_connected": {
+              "pass": true
+            },
+            "gate3_s1_occurrence_conservation": {
+              "n_s1": 25506,
+              "pass": true,
+              "two_times_bonds": 25506
+            },
+            "gate4_s2_occurrence_conservation": {
+              "each_occurrence_single_destination": true,
+              "n_s2_cross": 14412,
+              "n_s2_internal": 21716,
+              "n_s2_total": 36128,
+              "pass": true
+            },
+            "gate5_atom_weight_sum": {
+              "isolated_atoms_ok": true,
+              "max_abs_deviation": 2.9802322387695312e-08,
+              "n_atoms": 11587,
+              "n_isolated_atoms": 0,
+              "pass": true,
+              "storage_dtype": "float32 (exact float64 identity asserted per molecule)",
+              "tolerance": 1e-06
+            }
+          },
+          "max_atom_block_multiplicity": 4,
+          "n_zero_bond_blocks": 0
+        },
+        "train": {
+          "gates": {
+            "gate1_bond_unique_ownership": {
+              "pass": true
+            },
+            "gate2_blocks_connected": {
+              "pass": true
+            },
+            "gate3_s1_occurrence_conservation": {
+              "n_s1": 197122,
+              "pass": true,
+              "two_times_bonds": 197122
+            },
+            "gate4_s2_occurrence_conservation": {
+              "each_occurrence_single_destination": true,
+              "n_s2_cross": 117160,
+              "n_s2_internal": 160152,
+              "n_s2_total": 277312,
+              "pass": true
+            },
+            "gate5_atom_weight_sum": {
+              "isolated_atoms_ok": true,
+              "max_abs_deviation": 2.9802322387695312e-08,
+              "n_atoms": 90514,
+              "n_isolated_atoms": 0,
+              "pass": true,
+              "storage_dtype": "float32 (exact float64 identity asserted per molecule)",
+              "tolerance": 1e-06
+            }
+          },
+          "max_atom_block_multiplicity": 4,
+          "n_zero_bond_blocks": 0
+        },
+        "valid": {
+          "gates": {
+            "gate1_bond_unique_ownership": {
+              "pass": true
+            },
+            "gate2_blocks_connected": {
+              "pass": true
+            },
+            "gate3_s1_occurrence_conservation": {
+              "n_s1": 25170,
+              "pass": true,
+              "two_times_bonds": 25170
+            },
+            "gate4_s2_occurrence_conservation": {
+              "each_occurrence_single_destination": true,
+              "n_s2_cross": 14410,
+              "n_s2_internal": 21144,
+              "n_s2_total": 35554,
+              "pass": true
+            },
+            "gate5_atom_weight_sum": {
+              "isolated_atoms_ok": true,
+              "max_abs_deviation": 2.9802322387695312e-08,
+              "n_atoms": 11467,
+              "n_isolated_atoms": 3,
+              "pass": true,
+              "storage_dtype": "float32 (exact float64 identity asserted per molecule)",
+              "tolerance": 1e-06
+            }
+          },
+          "max_atom_block_multiplicity": 4,
+          "n_zero_bond_blocks": 3
+        }
+      }
+    },
+    "gate6_relabelling_invariance": {
+      "block_bond_sets_map_bijectively": true,
+      "max_abs_prediction_diff": {
+        "R1": 9.5367431640625e-07,
+        "R2": 1.6689300537109375e-06
+      },
+      "max_abs_weight_diff": 0.0,
+      "n_molecules": 24,
+      "note": "atom order and physical-bond order are both permuted; labels/features are moved with the atoms",
+      "pass": true,
+      "rows": [
+        0,
+        18,
+        36,
+        54,
+        72,
+        91,
+        109,
+        127,
+        145,
+        163,
+        182,
+        200,
+        218,
+        236,
+        255,
+        273,
+        291,
+        309,
+        327,
+        346,
+        364,
+        382,
+        400,
+        419
+      ],
+      "tolerance": 1e-05
+    },
+    "gate7_to_gate9_ledger_and_gate": {
+      "models": {
+        "lipo/R1": {
+          "checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/lipo/R1/checkpoint_best_val.pt",
+          "gates": {
+            "gate7_ledger_closure": {
+              "definition": "pred == bias + sum_i c_i + sum_ij c_ij + rho",
+              "max_abs_error": 1.424923539161682e-07,
+              "pass": true,
+              "tolerance": 1e-05
+            },
+            "gate8_all_ones_gate_equals_forward": {
+              "max_abs_error": 2.384185791015625e-07,
+              "pass": true
+            },
+            "gate9_block_gate_semantics": {
+              "definition": "m_i=0 removes c_i and every c_ij with i as an endpoint, nothing else",
+              "max_abs_error": 2.384185791015625e-07,
+              "n_cases": 12,
+              "pass": true
+            }
+          },
+          "pass": true,
+          "variant": "R1"
+        },
+        "lipo/R2": {
+          "checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/lipo/R2/checkpoint_best_val.pt",
+          "gates": {
+            "gate7_ledger_closure": {
+              "definition": "pred == bias + sum_i c_i + sum_ij c_ij + rho",
+              "max_abs_error": 1.6647391021251678e-07,
+              "pass": true,
+              "tolerance": 1e-05
+            },
+            "gate8_all_ones_gate_equals_forward": {
+              "max_abs_error": 2.384185791015625e-07,
+              "pass": true
+            },
+            "gate9_block_gate_semantics": {
+              "definition": "m_i=0 removes c_i and every c_ij with i as an endpoint, nothing else",
+              "max_abs_error": 3.241002559661865e-07,
+              "n_cases": 12,
+              "pass": true
+            }
+          },
+          "pass": true,
+          "variant": "R2"
+        },
+        "wc_logp/R1": {
+          "checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/wc_logp/R1/checkpoint_best_val.pt",
+          "gates": {
+            "gate7_ledger_closure": {
+              "definition": "pred == bias + sum_i c_i + sum_ij c_ij + rho",
+              "max_abs_error": 2.3283064365386963e-07,
+              "pass": true,
+              "tolerance": 1e-05
+            },
+            "gate8_all_ones_gate_equals_forward": {
+              "max_abs_error": 4.76837158203125e-07,
+              "pass": true
+            },
+            "gate9_block_gate_semantics": {
+              "definition": "m_i=0 removes c_i and every c_ij with i as an endpoint, nothing else",
+              "max_abs_error": 4.76837158203125e-07,
+              "n_cases": 12,
+              "pass": true
+            }
+          },
+          "pass": true,
+          "variant": "R1"
+        },
+        "wc_logp/R2": {
+          "checkpoint": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/results/wc_logp/R2/checkpoint_best_val.pt",
+          "gates": {
+            "gate7_ledger_closure": {
+              "definition": "pred == bias + sum_i c_i + sum_ij c_ij + rho",
+              "max_abs_error": 1.0989606380462646e-07,
+              "pass": true,
+              "tolerance": 1e-05
+            },
+            "gate8_all_ones_gate_equals_forward": {
+              "max_abs_error": 2.384185791015625e-07,
+              "pass": true
+            },
+            "gate9_block_gate_semantics": {
+              "definition": "m_i=0 removes c_i and every c_ij with i as an endpoint, nothing else",
+              "max_abs_error": 2.384185791015625e-07,
+              "n_cases": 12,
+              "pass": true
+            }
+          },
+          "pass": true,
+          "variant": "R2"
+        }
+      },
+      "pass": true
+    }
+  },
+  "pass": true,
+  "round_id": "lcrc-relation-interface-routing-pilot-v1",
+  "routing_fingerprints": {
+    "test": "8cdaae5a092ad5fe5bfd1eb24c09872bac8fee3c100698cde2cbeb5f7eef54a8",
+    "train": "31238683192b53554fd68fcf70c47c88ddd70ff0cbfffb5f0e848902bc39e160",
+    "valid": "12dc6f35dc2c53dd21df9ce954f8d184f9c0f5ff34d7dfd057756e34153a41e5"
+  }
+}

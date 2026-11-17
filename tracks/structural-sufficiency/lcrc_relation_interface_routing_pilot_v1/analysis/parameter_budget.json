@@ -1,0 +1,76 @@
+{
+  "analytic": {
+    "R1_total": 241860,
+    "R2_total": 258756,
+    "bias": 1,
+    "c1_total": 228674,
+    "context_R2": 16896,
+    "f_block": 4353,
+    "f_interface": 4225,
+    "iface_mlp": 17024,
+    "r1_over_c1": 1.0576628737853888,
+    "r2_over_c1": 1.1315497170644673,
+    "r2_over_r1": 1.0698585958819151,
+    "rho_g": 2881,
+    "trunk": 213376
+  },
+  "budget_rule": "total parameters within +/-25% of the frozen C1 total",
+  "c1_reference_total": 228674,
+  "capacity_rule": "R2/R1 parameter ratio <= 1.1 else CAPACITY_CONFOUNDED",
+  "lr_schedule_check": {
+    "match": true,
+    "max_abs_diff": 0.0,
+    "n_steps_checked": 9721,
+    "reference": "gnn_route_clarification_8h_v1.gr_common.lr_at('Rf', ...)"
+  },
+  "models": {
+    "R1": {
+      "breakdown": {
+        "bias": 1,
+        "f_block": 4353,
+        "f_interface": 4225,
+        "iface_mlp": 17024,
+        "rho_g": 2881,
+        "trunk.atom_encoder": 19040,
+        "trunk.bond_encoder": 63776,
+        "trunk.local": 130560
+      },
+      "full_state_hash": "84c7acbb2f1f4b8d24f1f072d7863e7a784b3177d05d3a2479a653426c2d4432",
+      "matches_analytic": true,
+      "readout": 28484,
+      "readout_state_hash": "a449e72f042d74f2206c394121268f4c512133f61137305d661efff60f405f98",
+      "total": 241860,
+      "trunk": 213376,
+      "trunk_matches_canonical": true
+    },
+    "R2": {
+      "breakdown": {
+        "bias": 1,
+        "context": 16896,
+        "f_block": 4353,
+        "f_interface": 4225,
+        "iface_mlp": 17024,
+        "rho_g": 2881,
+        "trunk.atom_encoder": 19040,
+        "trunk.bond_encoder": 63776,
+        "trunk.local": 130560
+      },
+      "full_state_hash": "09ef4784b2b3fb6c03e1f8b1575dc94363c210b811940056f6b00032124bb7aa",
+      "matches_analytic": true,
+      "readout": 45380,
+      "readout_state_hash": "ba756d66873a35c87625904c37c3a675534dde44aac46ec9ffa5fa522ea7c3e1",
+      "total": 258756,
+      "trunk": 213376,
+      "trunk_matches_canonical": true
+    }
+  },
+  "ratio": {
+    "capacity_confounded": false,
+    "r1_over_c1": 1.0576628737853888,
+    "r2_over_c1": 1.1315497170644673,
+    "r2_over_r1": 1.0698585958819151,
+    "within_25pct_of_c1": true
+  },
+  "shared_initial_state_identical": true,
+  "shared_parameter_tensors": 44
+}

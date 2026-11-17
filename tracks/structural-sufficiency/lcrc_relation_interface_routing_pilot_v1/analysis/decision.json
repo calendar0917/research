@@ -1,0 +1,321 @@
+{
+  "baselines": {
+    "c1_lipo_rf": {
+      "test": 0.7293241722,
+      "valid": 0.706884841
+    },
+    "c1_wc_logp_r3": {
+      "test": 0.0780858997483722,
+      "valid": 0.06255465718351355
+    },
+    "gine_g0_lipo_rf": {
+      "test": 0.6800005737,
+      "valid": 0.61607729
+    }
+  },
+  "capacity": {
+    "params_C1": 228674,
+    "params_R1": 241860,
+    "params_R2": 258756,
+    "r2_over_r1": 1.0698585958819151,
+    "threshold": 1.1
+  },
+  "caveats": [
+    "Only the Lipophilicity unit has a directly comparable C1 baseline (recipe Rf, seed 0, same split and scaler); the WC_LOGP baseline is recipe R3, so its retention ratio mixes recipe and architecture.",
+    "The frozen architecture replaces the C1 readout as a whole: the 27-term atom sum becomes a ~10-term block sum with block-internal weighted-mean pooling, and rho(g, mean h, mean h^2, log1p n) becomes rho_g(g, log1p n). The measured gap is the cost of that whole replacement, not of routing alone.",
+    "The oracle controls are matched on bond count and atom count, not on atom/bond composition, so a block that is chemically atypical for its size can look good.",
+    "All numbers are single-seed DEVELOPMENT / DEVELOPMENT_TEST evaluations."
+  ],
+  "flags": {
+    "CAPACITY_CONFOUNDED": false,
+    "INTERFACE_CONTEXT_INCREMENT_NOT_SHOWN": true,
+    "INTERFACE_CONTEXT_REGRESSION_WHERE": "wc_logp/test",
+    "INTERFACE_CONTEXT_SIGNIFICANT_REGRESSION": true,
+    "OLD_MODELS_RETRAINED": false,
+    "ORACLE_LOCALISATION_SIGNAL": true,
+    "PREDICTION_RETENTION_FAIL": true,
+    "RHO_DOMINATES_STRUCTURE": false,
+    "TEST_USED_FOR_SELECTION": false,
+    "partition_gate": "PARTITION_USABLE"
+  },
+  "interface_increment": {
+    "lipo/test": {
+      "ci95_R2_minus_R1": [
+        -0.07300202639654346,
+        0.05704485887905372
+      ],
+      "diff_R2_minus_R1": -0.008824891337525953,
+      "excludes_zero": false,
+      "favours_R2": true,
+      "prob_R2_better": 0.5955,
+      "ratio_R2_over_R1": 0.9890058976574403
+    },
+    "lipo/valid": {
+      "ci95_R2_minus_R1": [
+        -0.09126593596205612,
+        0.038352202028522686
+      ],
+      "diff_R2_minus_R1": -0.02820786232713668,
+      "excludes_zero": false,
+      "favours_R2": true,
+      "prob_R2_better": 0.7765,
+      "ratio_R2_over_R1": 0.9664114784429757
+    },
+    "wc_logp/test": {
+      "ci95_R2_minus_R1": [
+        0.017856845436094445,
+        0.05603257043279823
+      ],
+      "diff_R2_minus_R1": 0.037197368332667596,
+      "excludes_zero": true,
+      "favours_R2": false,
+      "prob_R2_better": 0.0,
+      "ratio_R2_over_R1": 1.3180473472937968
+    },
+    "wc_logp/valid": {
+      "ci95_R2_minus_R1": [
+        -0.020105910709873626,
+        0.04347593490436086
+      ],
+      "diff_R2_minus_R1": 0.013967451243264567,
+      "excludes_zero": false,
+      "favours_R2": false,
+      "prob_R2_better": 0.2185,
+      "ratio_R2_over_R1": 1.0930687374692243
+    }
+  },
+  "interface_significant_regression": [
+    "wc_logp/test"
+  ],
+  "next_stage_recommendation": "PAUSE_FIXED_TOPOLOGY_PARTITION",
+  "oracle_signal": {
+    "R1/test": {
+      "fraction_positive": 0.7277936962750716,
+      "matched_fraction": 0.830952380952381,
+      "mean_enrichment": 0.025249715959937313,
+      "n_matched": 349
+    },
+    "R1/valid": {
+      "fraction_positive": 0.728021978021978,
+      "matched_fraction": 0.8666666666666667,
+      "mean_enrichment": 0.02704483549679367,
+      "n_matched": 364
+    },
+    "R2/test": {
+      "fraction_positive": 0.724233983286908,
+      "matched_fraction": 0.8547619047619047,
+      "mean_enrichment": 0.026165035759263877,
+      "n_matched": 359
+    },
+    "R2/valid": {
+      "fraction_positive": 0.7307692307692307,
+      "matched_fraction": 0.8666666666666667,
+      "mean_enrichment": 0.027718266209976947,
+      "n_matched": 364
+    }
+  },
+  "propositions": {
+    "A_structure_routing_viable": {
+      "any_retention": false,
+      "retention_ok": {
+        "R1": false,
+        "R2": false
+      },
+      "rho_dominance": {
+        "lipo/R1": {
+          "mean_abs_block_sum": 0.6403482596079508,
+          "mean_abs_iface_sum": 0.42253298528403754,
+          "mean_abs_rho": 0.2739506128288451,
+          "rho_over_structural": 0.2577433877447752
+        },
+        "lipo/R2": {
+          "mean_abs_block_sum": 0.5261948244291402,
+          "mean_abs_iface_sum": 0.4266833795345433,
+          "mean_abs_rho": 0.2814145696925975,
+          "rho_over_structural": 0.2953311016266281
+        },
+        "wc_logp/R1": {
+          "mean_abs_block_sum": 0.6038913634650055,
+          "mean_abs_iface_sum": 0.5027210076317369,
+          "mean_abs_rho": 0.5106415123634395,
+          "rho_over_structural": 0.4614456929099323
+        },
+        "wc_logp/R2": {
+          "mean_abs_block_sum": 0.5806674414802165,
+          "mean_abs_iface_sum": 0.41621026708522724,
+          "mean_abs_rho": 0.5177630451374821,
+          "rho_over_structural": 0.5193847155861963
+        }
+      }
+    },
+    "B_interface_context_increment": {
+      "capacity_confounded": false,
+      "incremental_signal": false,
+      "per_task_split": {
+        "lipo/test": {
+          "ci95_R2_minus_R1": [
+            -0.07300202639654346,
+            0.05704485887905372
+          ],
+          "diff_R2_minus_R1": -0.008824891337525953,
+          "excludes_zero": false,
+          "favours_R2": true,
+          "prob_R2_better": 0.5955,
+          "ratio_R2_over_R1": 0.9890058976574403
+        },
+        "lipo/valid": {
+          "ci95_R2_minus_R1": [
+            -0.09126593596205612,
+            0.038352202028522686
+          ],
+          "diff_R2_minus_R1": -0.02820786232713668,
+          "excludes_zero": false,
+          "favours_R2": true,
+          "prob_R2_better": 0.7765,
+          "ratio_R2_over_R1": 0.9664114784429757
+        },
+        "wc_logp/test": {
+          "ci95_R2_minus_R1": [
+            0.017856845436094445,
+            0.05603257043279823
+          ],
+          "diff_R2_minus_R1": 0.037197368332667596,
+          "excludes_zero": true,
+          "favours_R2": false,
+          "prob_R2_better": 0.0,
+          "ratio_R2_over_R1": 1.3180473472937968
+        },
+        "wc_logp/valid": {
+          "ci95_R2_minus_R1": [
+            -0.020105910709873626,
+            0.04347593490436086
+          ],
+          "diff_R2_minus_R1": 0.013967451243264567,
+          "excludes_zero": false,
+          "favours_R2": false,
+          "prob_R2_better": 0.2185,
+          "ratio_R2_over_R1": 1.0930687374692243
+        }
+      }
+    },
+    "C_meaningful_structural_explanation": {
+      "native_ledger_closes": true,
+      "note": "ledger closure is a property of the architecture, not evidence of chemical correctness",
+      "oracle_positive": true,
+      "oracle_signal": {
+        "R1/test": {
+          "fraction_positive": 0.7277936962750716,
+          "matched_fraction": 0.830952380952381,
+          "mean_enrichment": 0.025249715959937313,
+          "n_matched": 349
+        },
+        "R1/valid": {
+          "fraction_positive": 0.728021978021978,
+          "matched_fraction": 0.8666666666666667,
+          "mean_enrichment": 0.02704483549679367,
+          "n_matched": 364
+        },
+        "R2/test": {
+          "fraction_positive": 0.724233983286908,
+          "matched_fraction": 0.8547619047619047,
+          "mean_enrichment": 0.026165035759263877,
+          "n_matched": 359
+        },
+        "R2/valid": {
+          "fraction_positive": 0.7307692307692307,
+          "matched_fraction": 0.8666666666666667,
+          "mean_enrichment": 0.027718266209976947,
+          "n_matched": 364
+        }
+      }
+    },
+    "D_next_stage": {
+      "recommendation": "PAUSE_FIXED_TOPOLOGY_PARTITION"
+    }
+  },
+  "retention": {
+    "R1": {
+      "lipo_test": 0.8026932225598652,
+      "lipo_test_ratio_vs_c1_rf": 1.1005986818434224,
+      "lipo_valid": 0.8398066059196146,
+      "lipo_valid_ratio_vs_c1_rf": 1.1880387825711127,
+      "wc_logp_test": 0.11695546257146681,
+      "wc_logp_valid": 0.15007674495572748,
+      "wc_logp_valid_ratio_vs_c1_r3": 2.3991298444087805
+    },
+    "R2": {
+      "lipo_test": 0.7938683165135327,
+      "lipo_test_ratio_vs_c1_rf": 1.0884985672678802,
+      "lipo_valid": 0.8115987443433431,
+      "lipo_valid_ratio_vs_c1_rf": 1.148134317317102,
+      "wc_logp_test": 0.15415281331332903,
+      "wc_logp_valid": 0.16404415708129078,
+      "wc_logp_valid_ratio_vs_c1_r3": 2.6224131738112226
+    }
+  },
+  "retention_ok": {
+    "R1": false,
+    "R2": false
+  },
+  "retention_threshold": 1.1,
+  "rho_dominance": {
+    "lipo/R1": {
+      "mean_abs_block_sum": 0.6403482596079508,
+      "mean_abs_iface_sum": 0.42253298528403754,
+      "mean_abs_rho": 0.2739506128288451,
+      "rho_over_structural": 0.2577433877447752
+    },
+    "lipo/R2": {
+      "mean_abs_block_sum": 0.5261948244291402,
+      "mean_abs_iface_sum": 0.4266833795345433,
+      "mean_abs_rho": 0.2814145696925975,
+      "rho_over_structural": 0.2953311016266281
+    },
+    "wc_logp/R1": {
+      "mean_abs_block_sum": 0.6038913634650055,
+      "mean_abs_iface_sum": 0.5027210076317369,
+      "mean_abs_rho": 0.5106415123634395,
+      "rho_over_structural": 0.4614456929099323
+    },
+    "wc_logp/R2": {
+      "mean_abs_block_sum": 0.5806674414802165,
+      "mean_abs_iface_sum": 0.41621026708522724,
+      "mean_abs_rho": 0.5177630451374821,
+      "rho_over_structural": 0.5193847155861963
+    }
+  },
+  "rho_only": {
+    "lipo/R1/test": {
+      "full_rmse": 0.8026932133752825,
+      "rho_only_rmse": 1.0743254624263214
+    },
+    "lipo/R1/valid": {
+      "full_rmse": 0.8398066071246184,
+      "rho_only_rmse": 1.200869133419802
+    },
+    "lipo/R2/test": {
+      "full_rmse": 0.7938683220377566,
+      "rho_only_rmse": 1.1084199777245582
+    },
+    "lipo/R2/valid": {
+      "full_rmse": 0.8115987447974817,
+      "rho_only_rmse": 1.2010359392242196
+    },
+    "wc_logp/R1/test": {
+      "full_rmse": 0.11695544279546044,
+      "rho_only_rmse": 1.143920509031926
+    },
+    "wc_logp/R1/valid": {
+      "full_rmse": 0.15007672418338433,
+      "rho_only_rmse": 1.1840965878233773
+    },
+    "wc_logp/R2/test": {
+      "full_rmse": 0.15415281112812804,
+      "rho_only_rmse": 1.1460461786728986
+    },
+    "wc_logp/R2/valid": {
+      "full_rmse": 0.1640441754266489,
+      "rho_only_rmse": 1.1764460067797773
+    }
+  }
+}
