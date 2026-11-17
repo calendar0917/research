@@ -414,11 +414,19 @@ def wc_logp_closure(units: Mapping[tuple[str, str], dict[str, Any]], bundle) -> 
                 entry[split] = {"available": False}
                 continue
             led = _load_npz(ledger_path)
-            gap = led["pred_raw"] - (led["local_sum_raw"] + led["rho_raw"])
+            # the readout closes in standardised units (pred_std = sum_v f + rho);
+            # in raw units the frozen target scaler adds the constant mean(y_train),
+            # which is stored explicitly so the identity is auditable row by row
+            bias = float(led["bias_raw"][0]) if "bias_raw" in led else float(bundle.scaler("wc_logp")["mean"])
+            gap = led["pred_raw"] - (led["local_sum_raw"] + led["rho_raw"] + bias)
             entry[split] = {
                 "available": True,
                 "n_rows": int(led["pred_raw"].size),
+                "bias_raw": bias,
                 "max_abs_readout_closure_gap": float(np.abs(gap).max()),
+                "max_abs_gap_without_bias": float(
+                    np.abs(led["pred_raw"] - (led["local_sum_raw"] + led["rho_raw"])).max()
+                ),
                 "max_abs_pred_minus_saved_prediction": float(
                     np.abs(led["pred_raw"] - unit["predictions"][split]["pred_raw"]).max()
                 ),

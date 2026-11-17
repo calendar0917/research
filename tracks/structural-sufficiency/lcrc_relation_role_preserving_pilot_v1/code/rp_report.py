@@ -372,9 +372,15 @@ def _report(decision, retention, bootstrap, gamma, oracle, mask, closure, groups
             rows.append([variant, split, x.get("n_rows"), f(x.get("max_abs_readout_closure_gap"), 10),
                          f(x.get("max_abs_pred_minus_saved_prediction"), 10), f(x.get("rmse_recomputed"))])
     L.append(table(
-        ["model", "split", "rows", "max |pred − (Σf + rho)|", "max |pred − saved|", "RMSE recomputed"],
+        ["model", "split", "rows", "max |pred − (Σf + rho + bias)|", "max |pred − saved|", "RMSE recomputed"],
         rows,
     ))
+    bias_note = sorted({f(x.get("bias_raw")) for e in (closure.get("models", {}) or {}).values()
+                        for x in (e or {}).values() if isinstance(x, dict) and x.get("available")})
+    L.append("")
+    L.append(f"闭合恒等式在标准化空间成立（`pred_std = Σf + rho`），raw 空间的常数截距 "
+             f"`bias = mean(y_train)` 显式记入 `analysis/wc_logp_closure.json`（本 task 取 "
+             f"{', '.join(bias_note) if bias_note else '—'}；同一 task 两模型同值）。")
     L.append("")
     L.append("### 5.2 Oracle enrichment（冻结候选池 + 相同匹配对照）")
     L.append("")
@@ -490,6 +496,15 @@ def _report(decision, retention, bootstrap, gamma, oracle, mask, closure, groups
     if manifest:
         L.append("### 运行环境")
         L.append("")
+        training_commits = sorted(
+            {
+                str(((C.read_json(path).get("environment") or {}).get("git_commit")))
+                for path in sorted(C.ANALYSIS_DIR.glob("trajectory_*.json"))
+                if "_smoke" not in path.name
+            }
+        )
+        if training_commits:
+            L.append(f"- 四个训练单元的 commit: `{', '.join(training_commits)}`（分析/汇总在本 commit）")
         env = manifest.get("environment", {})
         L.append(f"- commit: `{env.get('git_commit')}` (branch `{env.get('git_branch')}`, dirty={env.get('git_dirty_tracked')})")
         L.append(f"- hostname: `{env.get('hostname')}`；platform: `{env.get('platform')}`")

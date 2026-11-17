@@ -148,8 +148,10 @@ Four units, one seed, no early stopping, no re-selection:
 * **gamma usage** — each frozen model is re-run with both gammas set to 1 (the
   exact C1 aggregation). A model that never moves away from 1 has no role
   mechanism to credit, whatever its RMSE.
-* **closure** — every Val/Test prediction is reconstructed from `Σ_v f(h_v)` and
-  `rho(·)` within `1e-5 + 1e-6·max(1,|x|)` raw units.
+* **closure** — every Val/Test prediction is reconstructed from `Σ_v f(h_v)`,
+  `rho(·)` and the frozen constant intercept `mean(y_train)` within
+  `1e-5 + 1e-6·max(1,|x|)` raw units (the readout closes exactly in standardised
+  units; the intercept is stored next to the gap in `analysis/wc_logp_closure.json`).
 
 Verdict (exactly one):
 
