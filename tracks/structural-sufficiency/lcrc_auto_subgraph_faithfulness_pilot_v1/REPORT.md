@@ -113,6 +113,13 @@
 
 `sign agreement` = 用 `sum_{e in S} g[e]` 的符号预测真实屏蔽差 `delta = y0 - yS` 的符号的比例；`linearisation err` = `|delta - sum g|`，即在 m=1 处的连续梯度近似与真实有限屏蔽之间的偏差。
 
+| dataset | n | Top-1 键数分布 (k:count) | 落在 6 键上限的比例 |
+|---|---|---|---|
+| `ogbg-molesol` | 192 | 2:15 3:7 4:15 5:23 6:132 | 68.8% |
+| `ogbg-mollipo` | 192 | 2:63 3:35 4:22 5:22 6:50 | 26.0% |
+
+落在 6 键上限的比例越高，说明该数据集的 `A(S)` 在冻结搜索空间边界上仍在增长；此时报告的真实屏蔽效果是**当前搜索空间下的下界**，而不是该分子的最优可解释结构。这是搜索范围的诊断，本轮不改变 2–6 键的冻结上限。
+
 ## 7. 相对两类对照
 
 | dataset | split | matched n | success | median effect_ratio | ratio>1 | median advantage | random median abs(delta) | ratio CI95 | heuristic median abs(delta) | advantage vs heuristic | Top1 > heuristic |
@@ -234,7 +241,7 @@
 | `analysis/figures/` | 分子高亮图 40 张 + 分布图 |
 | `results/<dataset>/` | 样本 ID、候选搜索全log、逐分子干预记录、预算 |
 
-* 产出逐分子记录的 GPU worker commit：`2e202646b1560e857f92549e7fa72af55fe6ca85`（两个 worker 各占一个 GPU：`res-gpu0` = ogbg-molesol，`res-gpu1` = ogbg-mollipo）。本文件由 CPU 侧 aggregate 阶段在 commit `e7bdbb226445c4344a05c138e888b8f113f246a2` 上重新生成，aggregate 不修改任何权重或逐分子记录。
+* 产出逐分子记录的 GPU worker commit：`2e202646b1560e857f92549e7fa72af55fe6ca85`（两个 worker 各占一个 GPU：`res-gpu0` = ogbg-molesol，`res-gpu1` = ogbg-mollipo）。本文件由 CPU 侧 aggregate 阶段在 commit `0baa611d7cdd20c57f60415881e82fbf00df7eb7` 上重新生成，aggregate 不修改任何权重或逐分子记录。
 * 协议哈希 `5b2ed182d1a6077edd8dd902ed504f67da9e03eaeaec20cc235defeec1a58118`；GPU 耗时：`ogbg-molesol` 6.1 s (0.0017 GPU·h)；`ogbg-mollipo` 6.3 s (0.0018 GPU·h)（软上限 0.5 GPU·h / 硬上限 1.0 GPU·h per worker；未触发任何预算停止）。
 * 执行环境（来自 `rr` 的运行记录）：`as-lipo` stage=dataset_worker pool=res-gpu1 node=a100-2 driver=550.163.01 torch=cu124 state=completed；`as-mol` stage=dataset_worker pool=res-gpu0 node=a100-2 driver=550.163.01 torch=cu124 state=completed；`as-pf0` stage=preflight pool=res-gpu0 node=a100-2 driver=550.163.01 torch=cu124 state=completed；`as-pf1` stage=preflight pool=res-gpu1 node=a100-2 driver=550.163.01 torch=cu124 state=completed。
 
