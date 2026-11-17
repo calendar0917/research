@@ -28,7 +28,9 @@ def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="BAJC formal unit runner")
     parser.add_argument("--stage", default="train", choices=["train", "prepare", "checks", "freeze", "smoke"])
     parser.add_argument("--institution", default="FROZEN", choices=list(C.INSTITUTIONS))
-    parser.add_argument("--task", default="lipo", choices=list(C.TASKS))
+    parser.add_argument("--task", default="lipo",
+                        choices=list(C.TASKS) + ["esol"],
+                        help="esol is the Stage-C transfer task and is E2E-only")
     parser.add_argument("--variant", default="JOINT", choices=list(C.VARIANTS))
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--device", default="cuda")
@@ -60,7 +62,9 @@ def main(argv=None) -> int:
     if args.stage == "smoke":
         import bc_train as T
 
-        status = T.run_unit(
+        if args.task == "esol" and args.institution != "E2E":
+        parser.error("the ESOL transfer task has no teacher; it is E2E only")
+    status = T.run_unit(
             institution=args.institution,
             task=args.task,
             variant=args.variant,
@@ -86,6 +90,8 @@ def main(argv=None) -> int:
                 file=sys.stderr,
             )
     t0 = time.time()
+    if args.task == "esol" and args.institution != "E2E":
+        parser.error("the ESOL transfer task has no teacher; it is E2E only")
     status = T.run_unit(
         institution=args.institution,
         task=args.task,
