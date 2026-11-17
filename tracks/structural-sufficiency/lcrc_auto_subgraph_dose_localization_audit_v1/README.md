@@ -35,6 +35,22 @@ uv run pytest -q tracks/structural-sufficiency/lcrc_auto_subgraph_dose_localizat
 * 不重新选择 Top-1，不重新训练，不换 seed，不改架构，不改搜索范围，不新增数据集。
 * 两种对照协议（`pilot_internal_matched` / `corrected_affected_matched`）永远分列，不混池。
 
+## 产物
+
+* `PROTOCOL.md`、`REPORT.md`、`DECISION.md`
+* `analysis/`: `old_vs_corrected.csv`、`matched_controls.csv`、`old_control_dose.csv`、
+  `localization.csv`、`localization_summary.json`、`bootstrap.json`、`decision.json`、
+  `preflight.json`、`run_manifest.json`、`protocol_freeze.json`
+* `results/<dataset>/<split>/`: `records.json`、`candidates.npz`（全部候选的三口径计数，
+  含被拒候选）、`atom_response.csv`、`summary.csv`
+
+## 内存与运行预算
+
+所有前向都分块（`MAX_VARIANTS_PER_FORWARD=8`、单次前向原子/键数上限 200000、torch 线程 4），
+逐 split 落盘，不在内存里累积全部候选的图。实测峰值 RSS：molesol **704 MB**、mollipo
+**797 MB**（192 分子/数据集，CPU，31 s / 58 s wall）；未使用 GPU，因此没有占用 `res`。
+预算与内存守卫参数记录在 `results/*/budget.json` 与 `analysis/run_manifest.json`。
+
 ## 代码结构
 
 | 模块 | 作用 |
