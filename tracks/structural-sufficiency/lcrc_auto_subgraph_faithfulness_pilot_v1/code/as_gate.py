@@ -162,9 +162,19 @@ def gated_parts(
 
 
 def reference_parts(arm: torch.nn.Module, batch: Mapping[str, torch.Tensor]) -> dict[str, Any]:
+    """The frozen arm's own forward, on whatever device the arm lives on.
+
+    ``lcrc_data.collate`` always returns CPU tensors; moving here means a caller
+    cannot silently compare a GPU model against a CPU batch.
+    """
     if arm.training:
         raise RuntimeError("reference forward requires the frozen model in eval() mode")
-    return arm.parts(batch)
+    device = next(arm.parameters()).device
+    moved = {
+        key: (value.to(device) if torch.is_tensor(value) else value)
+        for key, value in batch.items()
+    }
+    return arm.parts(moved)
 
 
 def equivalence_check(
