@@ -1213,6 +1213,15 @@ def run(datasets: Sequence[str] = C.DATASETS) -> dict[str, Any]:
     C.atomic_write_json(C.ANALYSIS_DIR / "localization_summary.json", localization_detail)
 
     old_replay_passed = bool(all(detail[d]["build"]["replay"]["pass"] for d in datasets))
+    if not old_replay_passed:
+        raise RuntimeError("pilot metric replay failed; refusing to aggregate")
+    for d in datasets:
+        rep = detail[d]["build"]["top1_replay"]
+        if rep["n_failed"] or rep["n_molecules"] != C.N_SAMPLES_PER_SPLIT * len(C.SPLITS):
+            raise RuntimeError(
+                f"{d}: Top-1 masked-effect replay does not reproduce the pilot record "
+                f"({rep['n_failed']} failed of {rep['n_molecules']}); stopping"
+            )
     decision = build_decision(list(datasets), detail, localization_detail)
     decision["engineering_gate"] = preflight["engineering_gate"]
     decision["pilot_metric_replay_passed"] = old_replay_passed
