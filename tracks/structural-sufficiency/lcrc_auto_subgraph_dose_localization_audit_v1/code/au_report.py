@@ -607,6 +607,11 @@ def write_decision() -> Path:
     add(f"原轮指标重放（用原轮记录重算 vs 原 `main_table.csv`）："
         f"`{'PASS' if decision.get('pilot_metric_replay_passed') else 'FAIL'}`")
     add("")
+    add(
+        "下文所有 `SURVIVES/ATTENUATED/NOT_SUPPORTED` 都是本轮为并排比较而冻结的三档映射，"
+        "不是原轮的 `PILOT_SIGNAL / WEAK_OR_INCONCLUSIVE` 二档标签。"
+    )
+    add("")
     add("## 2. 五问判定")
     add("")
     for dataset in C.DATASETS:
@@ -673,15 +678,15 @@ def write_decision() -> Path:
             rows,
         ))
         add("")
-        add("## 3. Q5 支持 / 不支持 / 仍无法判断")
+    add("## 3. Q5 支持 / 不支持 / 仍无法判断")
+    add("")
+    for key, title in (("supported", "支持"), ("not_supported", "不支持"),
+                       ("still_undetermined", "仍无法判断")):
+        add(f"**{title}**")
         add("")
-        for key, title in (("supported", "支持"), ("not_supported", "不支持"),
-                           ("still_undetermined", "仍无法判断")):
-            add(f"**{title}**")
-            add("")
-            for item in summary["q5_scope"][key]:
-                add(f"* {item}")
-            add("")
+        for item in summary["q5_scope"][key]:
+            add(f"* {item}")
+        add("")
     add("## 4. 明确不做的事")
     add("")
     add(
