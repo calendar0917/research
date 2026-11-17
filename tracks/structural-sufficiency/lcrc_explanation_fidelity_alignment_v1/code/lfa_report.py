@@ -490,6 +490,27 @@ def section_paired(summary: Mapping[str, Any], paired: Sequence[Mapping[str, Any
     lines.append("")
     lines.append("分层用来检查均值是否由少数大 k（更原子、更容易覆盖任何区域）的分子主导；"
                  "若 enrichment 只在 k 较大时为正，就不能把它读成“小片段定位成功”。")
+
+    def strat(method: str, k: int, field: str):
+        rec = by.get((method, k))
+        return None if not rec else rec[0].get(field)
+
+    b2, a2 = strat("B_LCRC_LOCAL", 2, "oracle_enrichment_mean"), strat("A_LCRC_GRAD", 2, "oracle_enrichment_mean")
+    c2 = strat("C_LCRC_MASK50", 2, "oracle_enrichment_mean")
+    if b2 is not None and a2 is not None:
+        lines.append("")
+        lines.append(f"- 小片段上差距最大：k=2 时 B 的 enrichment 为 `{f(b2)}`（>0 比例 `{pct(strat('B_LCRC_LOCAL', 2, 'oracle_gt0_fraction'))}`），"
+                     f"A 只有 `{f(a2)}`（`{pct(strat('A_LCRC_GRAD', 2, 'oracle_gt0_fraction'))}`）；"
+                     f"B 在 k=2–5 都稳定在 `{f(strat('B_LCRC_LOCAL', 3, 'oracle_enrichment_mean'))}`–"
+                     f"`{f(strat('B_LCRC_LOCAL', 4, 'oracle_enrichment_mean'))}` 一线，到 k=6 才回落到 "
+                     f"`{f(strat('B_LCRC_LOCAL', 6, 'oracle_enrichment_mean'))}`（k=6 的 227 个分子多是大候选，任何方法都容易命中）。")
+        if c2 is not None:
+            lines.append(f"- MASK50 在小片段上**反选**：k=2 时 C 的 enrichment 为 `{f(c2)}`，"
+                         f">0 比例 `{pct(strat('C_LCRC_MASK50', 2, 'oracle_gt0_fraction'))}`；它靠 k=6 的 334 个分子"
+                         f"（`{f(strat('C_LCRC_MASK50', 6, 'oracle_enrichment_mean'))}`）把总均值拉回正数。"
+                         "这与“未归一化的 |Δy| 偏好大子图”一致。")
+        lines.append("- 所以第 4/5 节的汇总均值必须与这张表一起读：LOCAL 的优势是真的出现在最小的候选上，"
+                     "而 C/F 的汇总优势主要来自 k=6。")
     comp = k_composition(summary, stratified)
     if comp:
         lines.append("")
