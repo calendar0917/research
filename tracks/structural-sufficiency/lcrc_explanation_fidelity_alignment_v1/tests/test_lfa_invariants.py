@@ -78,6 +78,28 @@ def test_scores_are_deterministic_and_scale_free():
     assert v1 == pytest.approx(abs(sum(grad[b] for b in bonds)) / math.sqrt(len(bonds)))
 
 
+def test_matched_growth_returns_none_on_dead_end():
+    class Mol:
+        """Two disconnected bonds: no k=2 connected control of 3 atoms exists."""
+        n_atoms = 4
+        n_bonds = 2
+        bond_u = np.asarray([0, 2])
+        bond_v = np.asarray([1, 3])
+
+        def bond_atoms(self, bonds):
+            return sorted({int(self.bond_u[b]) for b in bonds} | {int(self.bond_v[b]) for b in bonds})
+
+        def atoms_connected(self, bonds):
+            return False
+
+    rng = np.random.default_rng([C.CONTROL_SEED, 5])
+    for _ in range(32):
+        assert S.grow_matched(Mol(), 2, 3, rng) is None
+    report = S.matched_controls(Mol(), [0], seed=S.control_seed("valid", 0, "A_LCRC_GRAD"))
+    assert report["status"] == "INSUFFICIENT_RANDOM"
+    assert report["n_random"] == 0
+
+
 # ---------------------------------------------------------------------------
 # oracle capture and missing values
 # ---------------------------------------------------------------------------

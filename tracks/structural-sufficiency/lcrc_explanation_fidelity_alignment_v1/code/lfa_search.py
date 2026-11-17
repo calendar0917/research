@@ -160,6 +160,12 @@ def grow_matched(mol, k: int, target_atoms: int, rng: np.random.Generator,
             pick_from = extending
         else:
             pick_from = closing + extending
+        if not pick_from:
+            # dead end: the remaining budget cannot be spent without either
+            # adding an atom that the target size forbids or closing a cycle
+            # that does not exist.  ``None`` is a rejected proposal, not a
+            # relaxation of the matching rule.
+            return None
         e = int(rng.choice(np.asarray(pick_from, dtype=np.int64)))
         u, v = int(mol.bond_u[e]), int(mol.bond_v[e])
         before = len(covered)
