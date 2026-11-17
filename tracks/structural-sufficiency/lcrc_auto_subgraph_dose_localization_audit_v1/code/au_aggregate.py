@@ -603,7 +603,12 @@ def build_old_vs_corrected(dataset: str, pilot: Mapping[str, Any], new: Mapping[
                            train_std: float) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     replay = replay_pilot_metrics(dataset, pilot, train_std)
     rows: list[dict[str, Any]] = []
-    detail: dict[str, Any] = {"dataset": dataset, "replay": replay, "splits": {}}
+    detail: dict[str, Any] = {
+        "dataset": dataset,
+        "replay": replay,
+        "top1_replay": top1_replay_summary(new["records"]),
+        "splits": {},
+    }
     for split in C.SPLITS:
         p_rows = pilot_rows(dataset, split, pilot["molecules"][split], train_std)
         c_rows = corrected_rows(dataset, split, new["records"][split])
