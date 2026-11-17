@@ -72,7 +72,39 @@ Local tests: `uv run pytest tracks/structural-sufficiency/lcrc_relation_role_pre
 
 Nothing from any of these rounds is retrained, re-selected or re-evaluated here.
 
-## Verdict
+## Result (seed 0, official split, four units, DEVELOPMENT)
 
-See `DECISION.md` (verdict + flags) and `REPORT.md` (every table regenerated
-from `analysis/*.json|csv`).
+| unit | best-Valid epoch | Valid RMSE | Test RMSE (DEVELOPMENT_TEST) |
+|---|---|---|---|
+| C1(Rf), read-only baseline | 124 | 0.7069 | 0.7293 |
+| RR_REAL · Lipophilicity | 148 | 0.7071 (1.0004× C1) | 0.7610 |
+| RR_CONTROL · Lipophilicity | 115 | 0.6945 (0.9825× C1) | 0.7069 |
+| C1(R3), read-only baseline (recipe differs) | 237 | 0.0626 | 0.0781 |
+| RR_REAL · WC_LOGP | 340 | 0.1179 | 0.0966 |
+| RR_CONTROL · WC_LOGP | 220 | 0.1092 | 0.1049 |
+
+* Both models **recover** the frozen C1 prediction: +400 parameters and two
+  per-channel gates cost nothing measurable (REAL is 0.0003 RMSE above C1).
+* The real topology role does **not** beat the label-free type hash:
+  Lipophilicity paired bootstrap `RMSE(REAL) − RMSE(CONTROL)` is
+  +0.0126 [-0.0328, +0.0572] on Valid and +0.0541 [+0.0104, +0.1036] on Test,
+  i.e. if anything the CONTROL split is better on Test (P(REAL better) = 0.005).
+* WC_LOGP oracle enrichment is ~0 for both models (mean +0.002…+0.003, ~48–53 %
+  matched molecules positive, CI spanning 0) and the paired REAL−CONTROL
+  difference is −0.0006 [-0.0023, +0.0010] (Valid) / +0.0001 [−0.0011, +0.0013]
+  (Test): no localisation advantage.
+* The learned gammas do move (|γ−1| ≈ 0.07–0.09 per channel) but do not buy
+  anything: re-running the frozen models with both gammas at 1 gives
+  0.7015 (REAL) / 0.6940 (CONTROL) Valid RMSE, i.e. equal or slightly better.
+* The two models' native block-mask responses are nearly the same map
+  (per-molecule Spearman 0.90, same arg-max block 89 %).
+
+**Verdict: `ONLY_C1_READOUT_RECOVERY`** — keeping the C1 readout restores the C1
+prediction for both groupings, and the real structural role provides no
+pre-registered-strength prediction or explanation increment over an arbitrary
+label-free split of the same 200-d records. Per the frozen protocol the round
+stops here: no extra seed, no search, no new architecture.
+
+See `DECISION.md` (verdict + flags) and `REPORT.md` (every table generated from
+`analysis/*.json|csv`, with the gate list, the group sizes, the gamma ablations,
+the oracle controls and the mask-response comparison).
