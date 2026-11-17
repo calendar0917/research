@@ -214,6 +214,7 @@
 * 搜索空间仅覆盖 2–6 条物理键的连通子图；更大的结构未被覆盖，不能据此断言模型不依赖它们。
 * 干预是条件性证据屏蔽：`atom_feat`、`atom_scalar`、`global`、原子数与原子编码保持不变，因此它不是化学反事实，也不是“模型没有学到结构信息”的证明。
 * 每划分只解释 64 个分子（固定种子哈希排序），覆盖全量划分的统计推断不在本轮范围。
+* 执行顺序：8 分子/split 的工程 smoke 先在本地 CPU 上跑通（同一份代码、同一份冻结缓存），随后在 `res` 上以 `stage=preflight` 在 GPU 上重跑全部等价/映射/有限差分/重编号/批量门禁；两者都通过后才启动两个正式 worker。smoke 结果本身不进入任何报告指标。
 * 若某个分子无法解析或映射不一致，本轮记录原始 row id 与原因，不用另一个分子补齐。
 
 ## 12. 产物
@@ -233,7 +234,7 @@
 | `analysis/figures/` | 分子高亮图 40 张 + 分布图 |
 | `results/<dataset>/` | 样本 ID、候选搜索全log、逐分子干预记录、预算 |
 
-* 产出逐分子记录的 GPU worker commit：`2e202646b1560e857f92549e7fa72af55fe6ca85`（两个 worker 各占一个 GPU：`res-gpu0` = ogbg-molesol，`res-gpu1` = ogbg-mollipo）。本文件由 CPU 侧 aggregate 阶段在 commit `faaa32e60059544943a8d100c25c582c24d12e5c` 上重新生成，aggregate 不修改任何权重或逐分子记录。
+* 产出逐分子记录的 GPU worker commit：`2e202646b1560e857f92549e7fa72af55fe6ca85`（两个 worker 各占一个 GPU：`res-gpu0` = ogbg-molesol，`res-gpu1` = ogbg-mollipo）。本文件由 CPU 侧 aggregate 阶段在 commit `51c773f0682d0d923acebbc91ff45da5d39d1a3c` 上重新生成，aggregate 不修改任何权重或逐分子记录。
 * 协议哈希 `5b2ed182d1a6077edd8dd902ed504f67da9e03eaeaec20cc235defeec1a58118`；GPU 耗时：`ogbg-molesol` 6.1 s (0.0017 GPU·h)；`ogbg-mollipo` 6.3 s (0.0018 GPU·h)（软上限 0.5 GPU·h / 硬上限 1.0 GPU·h per worker；未触发任何预算停止）。
 * 执行环境（来自 `rr` 的运行记录）：`as-lipo` stage=dataset_worker pool=res-gpu1 node=a100-2 driver=550.163.01 torch=cu124 state=completed；`as-mol` stage=dataset_worker pool=res-gpu0 node=a100-2 driver=550.163.01 torch=cu124 state=completed；`as-pf0` stage=preflight pool=res-gpu0 node=a100-2 driver=550.163.01 torch=cu124 state=completed；`as-pf1` stage=preflight pool=res-gpu1 node=a100-2 driver=550.163.01 torch=cu124 state=completed。
 
