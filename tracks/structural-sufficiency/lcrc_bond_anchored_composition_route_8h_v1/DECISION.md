@@ -2,7 +2,7 @@
 
 **Verdict: `NO_COMPOSITION_ROUTE_ADVANCE`**
 
-Decided at `2026-11-18T02:58+08:00`, from the 16 formal units of
+Decided at `2026-11-18T02:58+08:00` (2.45 h of the 8 h budget), from the 16 formal units of
 `analysis/summary.json` and the three Stage-C measurements, all on their
 pre-registered scales. Nothing in this decision depends on Development Test.
 
@@ -36,7 +36,7 @@ monotone in `|c_P|` by 22–53× — and nothing more.
 
 Blocking and power were healthy: 0 failed gates out of the 14 pre-registered ones (plus
 the numerical operator-separation gate), teachers replayed to
-1.4e-6, 16/16 formal units completed, 21/21 `rr` runs accounted for, 2.75 GPU·h of 14,
+1.4e-6, 16/16 formal units completed, 21/21 `rr` runs accounted for, 2.66 GPU·h of 14,
 2.4 h of 8. The null is **measured**, not unmeasured:
 
 * the family of explanations that could rescue a small effect is closed off by an

@@ -1,8 +1,8 @@
 # Bond-Anchored S2 Joint Composition (BAJC) — 8 h route report
 
 Round `lcrc_bond_anchored_composition_route_8h_v1` · branch `exp/lcrc-explanation-task-relevance-v1`
-· wall clock `2026-11-18T00:33:38+08:00` → `2026-11-18T02:55+08:00` (≈ 2.4 h)
-· 16 formal units · **2.75 GPU·h** of the 14 GPU·h soft budget · 2 × A100-SXM4-40GB (`res-gpu0`, `res-gpu1`, one process per card)
+· wall clock `2026-11-18T00:33:38+08:00` → `2026-11-18T03:00+08:00` (≈ 2.45 h)
+· 16 formal units · **2.66 GPU·h** of the 14 GPU·h soft budget · 2 × A100-SXM4-40GB (`res-gpu0`, `res-gpu1`, one process per card)
 
 Every number below is **DEVELOPMENT**. Development Test was read exactly once per
 frozen model, after the checkpoint was selected on Valid, and it never re-entered a
@@ -222,7 +222,7 @@ or anti-correlated (E2E) with where the error actually is.
 | constraint | status |
 |---|---|
 | 8 h hard / 7.5 h soft wall clock | 2.4 h |
-| 14 GPU·h soft / 16 hard | 2.75 GPU·h (16 units, `analysis/compute_ledger.json`) |
+| 14 GPU·h soft / 16 hard | 2.66 GPU·h (16 units, `analysis/compute_ledger.json`) |
 | `res-gpu0` + `res-gpu1`, one GPU process per card | yes, 21 `rr` runs, never two units on a card (`analysis/rr_runs.json`) |
 | no retraining of C1 / GINE / D-MPNN / R1 / R2 / RR_REAL / RR_CONTROL / oracle baselines | none retrained (teachers loaded and SHA-256 verified) |
 | no literature work, no self-invented architecture | the composition is the protocol's own object; no external architecture adopted |
