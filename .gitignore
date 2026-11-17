@@ -58,6 +58,11 @@ htmlcov/
 # content-addressed evidence and every consumer re-verifies the sha256 recorded
 # in analysis/partition_support.json
 !tracks/structural-sufficiency/lcrc_relation_interface_routing_pilot_v1/cache/*.npz
+# the relation-role-preserving pilot ships its single CPU-generated CONTROL role
+# table: both GPU workers must read the *same* bytes, so the table is
+# content-addressed evidence and every consumer re-verifies the sha256 recorded
+# in cache/s2_control_type_hash_v1.json
+!tracks/structural-sufficiency/lcrc_relation_role_preserving_pilot_v1/cache/*.npz
 # the Sprint-02 LCRC benchmark ships its label-free raw-attribute artifact and its
 # per-run prediction/checkpoint files as content-addressed evidence (small, and every
 # consumer re-verifies the sha256 recorded in the manifests)

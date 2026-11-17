@@ -1,0 +1,12 @@
+# Checkpoints and optimiser state are reproducible from the committed code +
+# frozen caches; they are pulled into the local .rr/ store for analysis and are
+# not committed (four 360-epoch states).
+results/**/*.pt
+results/_smoke/
+results/**/*.npz
+# Trajectory JSONs inside results/ are small evidence and stay committed; the
+# single-file copies are in analysis/trajectory_<task>_<model>.json.
+# control-plane run records stay local; the committed evidence is analysis/,
+# results/<task>/<model>/*.json and the report pair
+runs/
+records/

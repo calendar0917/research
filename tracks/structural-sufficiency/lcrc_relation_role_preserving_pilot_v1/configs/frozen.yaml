@@ -1,0 +1,37 @@
+# Frozen engineering configuration for round lcrc-relation-role-preserving-pilot-v1.
+#
+# Only engineering knobs live here.  Every scientific constant (the frozen C1
+# architecture and readout, the S2 role rule, the CONTROL hash salt, the Rf
+# recipe, the parameter budget rule, the selection policy, the oracle-control
+# protocol and the decision thresholds) lives in the code modules and is hashed
+# into analysis/protocol_freeze.json at prepare time.
+
+protocol_id: lcrc-relation-role-preserving-pilot-v1
+round_id: lcrc-relation-role-preserving-pilot-v1
+
+# Single training seed for the whole round (no multi-seed claim, no search).
+seed: 0
+
+# prepare | checks | train | smoke | aggregate
+stage: prepare
+
+# One of lipo / wc_logp (train stage only).
+task: lipo
+# One of RR_REAL / RR_CONTROL (train stage only).
+model: RR_REAL
+
+# Logical device inside the pool; the pool decides which physical GPU this is.
+device: cuda:0
+# The aggregate stage is CPU-only evidence recomputation.
+analysis_device: cpu
+
+# Resume a partially finished unit instead of redoing finished epochs.
+resume: true
+
+# Rebuild the frozen CONTROL hash table (prepare stage only); both GPU workers
+# keep this false so they consume the single CPU-generated table.
+force: false
+
+# Smoke-stage budget (never reported as a scientific number).
+smoke_epochs: 3
+epochs: 360

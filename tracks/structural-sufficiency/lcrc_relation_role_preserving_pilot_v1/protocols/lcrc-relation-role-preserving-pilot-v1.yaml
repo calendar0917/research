@@ -1,0 +1,159 @@
+# Comparability protocol for the LCRC relation-role-preserving pilot.
+#
+# A protocol states rules, not a model: dataset, split, metric, fitting scope,
+# selection policy, test policy, seed semantics, comparability.  This round is an
+# *architecture feasibility* pilot; every number is DEVELOPMENT and
+# DEVELOPMENT_TEST.
+
+id: lcrc-relation-role-preserving-pilot-v1
+
+dataset:
+  tasks:
+    - name: ogbg-mollipo
+      role: primary_round
+      target: official OGB lipophilicity label (logD at pH 7.4)
+      expected_rows: 4200
+      training_unit: lipo
+    - name: ogbg-mollipo
+      role: external_oracle_check
+      target: >-
+        RDKit Crippen Wildman WC_LOGP recomputed per molecule and verified to
+        sum exactly to the per-atom contributions cached by the oracle round
+      expected_rows: 4200
+      training_unit: wc_logp
+  source_policy: official_ogb_graphproppred_only
+  loader: "committed label-free graph cache of PygGraphPropPredDataset + get_idx_split()"
+  forbidden_substitutes:
+    - ChemBench random122
+    - DeepChem scaffold split rebuilds
+    - any self-made 80/10/10
+  fingerprint_policy: >-
+    the graph cache, the two predecessor caches (squared-LCRC input cache and the
+    frozen topology-routing cache) and the WC_LOGP atom-contribution table are
+    verified by SHA-256 of the real file bytes on every machine at every stage;
+    the prepare stage re-asserts the official split sizes and index hashes and
+    *recomputes* the routing arrays from the frozen partition before trusting them.
+
+split:
+  description: official OGB Train / Validation / Test (scaffold split files shipped with the release)
+  sizes:
+    ogbg-mollipo: {train: 3360, valid: 420, test: 420}
+  no_row_deletion: true
+  no_train_valid_merge: true
+  row_deletion_note: >-
+    The role split owns every S2 occurrence of every molecule; no molecule is
+    dropped because one role group is empty (an S2-free molecule is legal).
+
+metric:
+  ranking_metric: valid_rmse
+  metric_direction: lower_is_better
+  official_metric: rmse
+  reported_metrics: [train_rmse, valid_rmse, test_rmse, train_mae, valid_mae, test_mae]
+  unit: raw target units (de-standardised once, never twice)
+  evaluation_frequency: every epoch, all three splits, full splits
+  curve_summaries: [selected (min Val RMSE), final epoch, mean of the last 20 epochs]
+
+train_only_fitting_scope:
+  description: >-
+    The C1 atom/bond encoders, the shared LocalMLP, the S1/S2 encoders, f, rho and
+    the two role vectors are fitted on official Train only.  The target mean/std
+    (ddof=0) and the input normalisation buffers are fitted on Train only.
+    Val/Test labels never enter selection, thresholds or fitted statistics.
+  test_role: >-
+    The official Test split is a development evaluation set for this round and is
+    evaluated every epoch (test_policy=always).  It never selects a model state.
+
+validation_selection_policy:
+  selection: >-
+    minimum Val RMSE over the 360 epochs of the single frozen trajectory; a
+    strictly smaller Val RMSE replaces the current selection and an exact tie
+    keeps the earlier epoch.  Epoch 0 (initialisation) can never be selected.
+  reporting: >-
+    The Test column of that same frozen state is reported afterwards, together
+    with the final-epoch state and the mean of the last 20 epochs.
+  forbidden: selecting an epoch by Test RMSE and calling it Val selection
+
+test_policy: always
+
+seed_semantics:
+  seeds: [0]
+  note: >-
+    Single training seed for the whole round.  No repeat for better numbers, no
+    best-of-N, and no multi-seed stability claim.
+  rngs:
+    training_seed: 0
+    canonical_c1_init_subseed: 0
+    bootstrap_seed: 20261117
+    oracle_control_seed: 20261117
+  init_note: >-
+    Both models are rebuilt from the *same* canonical C1 initial state of
+    lcrc_readout_context_pilot_small_v1 (seed 0).  No historical model weights are
+    loaded, resumed or fine-tuned.
+
+role_split:
+  description: >-
+    The 200-d S2 record of every occurrence (typed 104-d + content 96-d) is split
+    into exactly two groups.  The full record stays inside one group; only the
+    group assignment differs between the two models.
+  real: >-
+    Frozen topology block ownership of the two endpoint bonds: owner(e1)==owner(e2)
+    -> group 0 (internal), otherwise group 1 (cross).  Read from the frozen routing
+    cache of lcrc-relation-interface-routing-pilot-v1 and *recomputed* at prepare.
+  control: >-
+    blake2b(salt | path_cat | path_end63 | path_closure)[0] & 1 with a frozen salt,
+    i.e. one class per observed typed-S2 record.  No atom index, no bond id, no
+    row id, no label, no oracle.  Invariant under atom and bond relabelling.
+  aggregation: >-
+    Q = gamma_internal (.) Q_internal + gamma_cross (.) Q_cross, both gammas 200-d,
+    per-channel, elementwise, initialised exactly to 1.  gamma=1 is therefore
+    bitwise the frozen C1 aggregation Q_internal + Q_cross.
+  forbidden:
+    - atom index / bond id / row id in the CONTROL hash
+    - property label or oracle contribution in either role rule
+    - any role rule fitted or tuned on Valid/Test
+
+frozen_c1:
+  source_round: lcrc_readout_context_pilot_small_v1
+  note: >-
+    Atom encoder, bond encoder, S1, typed-S2, LocalMLP, LayerNorm, dropout, the
+    atom-sum term sum_v f(h_v) and the full rho([g, mean h, mean h^2, log1p n])
+    are consumed unchanged.  This round adds exactly 2 x 200 parameters (the two
+    gamma vectors) and changes nothing else.
+
+prototype_decision_scales:
+  note: >-
+    Pre-declared scales for this pilot only; not universal scientific thresholds,
+    and never reported in place of the numbers.
+  prediction_retention: >-
+    RR_REAL Lipophilicity Val RMSE <= 1.10 x the frozen C1 baseline under the same
+    recipe Rf (0.706884841).  The control model is reported next to it but is not
+    part of this criterion.
+  prediction_increment: >-
+    paired molecule-level bootstrap of (RMSE_REAL - RMSE_CONTROL), 2000 draws, seed
+    20261117: a signal requires the 95% CI to exclude 0 in favour of RR_REAL and
+    P(REAL better) >= 0.95 on Valid or Test of Lipophilicity.
+  oracle_increment: >-
+    the same paired bootstrap on per-molecule oracle enrichment on WC_LOGP.  A
+    signal additionally requires RR_REAL's own enrichment to be positive on
+    >= 60% of matched molecules with a positive mean, on Valid or Test.
+  mask_response: >-
+    for the candidates found by each model, both models are re-evaluated on the
+    same block mask; the report gives the paired |Delta| difference with CI and the
+    per-molecule Spearman agreement of the full |Delta| vector.
+  gamma_usage: >-
+    the frozen model's own use of the role scaling is measured by re-running it
+    with both gammas set to 1 (the exact C1 aggregation).  A model that never
+    leaves gamma=1 has no role mechanism to credit, whatever its RMSE.
+  ledger_closure: >-
+    every Val/Test prediction reconstructed from sum_v f(h_v) + rho(...) within
+    tol(x) = 1e-5 + 1e-6*max(1,|x|) raw units.
+  incomplete_controls: a conclusion that depends on an incomplete control is not drawn
+
+comparability:
+  requires: [protocol_id, dataset_fingerprint, split_fingerprint]
+  ranking_metric: valid_rmse
+  note: >-
+    Only runs under this protocol, this dataset fingerprint and this split
+    fingerprint are comparable to each other.  Historical baselines are marked
+    DIRECTLY_COMPARABLE / RECIPE_DIFFERS / NOT_DIRECTLY_COMPARABLE in
+    analysis/prediction_comparison.csv and are never retrained here.

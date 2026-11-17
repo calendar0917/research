@@ -1,0 +1,284 @@
+{
+  "caveats": [
+    "single training seed per unit; no multi-seed stability claim",
+    "official Test is DEVELOPMENT_TEST: evaluated every epoch, never used for selection",
+    "the historical C1(Rf) baseline is read-only and was not re-trained; the Lipophilicity comparison is DIRECTLY_COMPARABLE (same split/target/scaler/seed/recipe/canonical init)",
+    "the WC_LOGP C1 baseline is recipe R3 and is flagged RECIPE_DIFFERS",
+    "no historical architecture result of the previous round enters any decision rule",
+    "oracle controls are matched on bond and atom count only, not on composition"
+  ],
+  "flags": {
+    "CONTROL_ALSO_PRESERVED": true,
+    "OLD_MODELS_RETRAINED": false,
+    "ONLY_C1_READOUT_RECOVERY": true,
+    "ORACLE_LOCALISATION_SIGNAL": false,
+    "PREDICTION_PRESERVED": true,
+    "PREDICTION_RECOVERED_BOTH": true,
+    "ROLE_INCREMENT_ORACLE": false,
+    "ROLE_INCREMENT_PREDICTIVE": false,
+    "ROLE_INCREMENT_SHOWN": false,
+    "ROLE_NOT_SUPPORTED": false,
+    "TEST_USED_FOR_SELECTION": false
+  },
+  "gamma_response": {
+    "RR_CONTROL": {
+      "ablations": {
+        "test": {
+          "both_one": {
+            "delta_rmse_vs_learned": -0.006959392462254854,
+            "mae": 0.5073522567670875,
+            "rmse": 0.6999263486820342
+          },
+          "cross_one": {
+            "delta_rmse_vs_learned": -0.002682471530447761,
+            "mae": 0.5117716362783788,
+            "rmse": 0.7042032696138413
+          },
+          "internal_one": {
+            "delta_rmse_vs_learned": -0.0035056957590355875,
+            "mae": 0.5106790313325605,
+            "rmse": 0.7033800453852534
+          },
+          "learned": {
+            "delta_rmse_vs_learned": null,
+            "mae": 0.5136083086653819,
+            "rmse": 0.706885741144289
+          },
+          "swap": {
+            "delta_rmse_vs_learned": -0.005207449110009921,
+            "mae": 0.50716482778614,
+            "rmse": 0.7016782920342791
+          }
+        },
+        "valid": {
+          "both_one": {
+            "delta_rmse_vs_learned": -0.0005137095093035171,
+            "mae": 0.4887668331877387,
+            "rmse": 0.6940134960366044
+          },
+          "cross_one": {
+            "delta_rmse_vs_learned": 0.0005948756935451049,
+            "mae": 0.48795463754242174,
+            "rmse": 0.6951220812394531
+          },
+          "internal_one": {
+            "delta_rmse_vs_learned": -0.0002508891559991344,
+            "mae": 0.48971065109346923,
+            "rmse": 0.6942763163899088
+          },
+          "learned": {
+            "delta_rmse_vs_learned": null,
+            "mae": 0.4880295034228804,
+            "rmse": 0.694527205545908
+          },
+          "swap": {
+            "delta_rmse_vs_learned": 0.0038184413339824586,
+            "mae": 0.48836488072560014,
+            "rmse": 0.6983456468798904
+          }
+        }
+      },
+      "mean_abs_dev_from_one": {
+        "cross": 0.06416264235973358,
+        "internal": 0.07037423610687256
+      },
+      "role_response": {
+        "test": {
+          "max_abs_delta_pred_both_one_vs_learned": 0.36091658848554276,
+          "mean_abs_delta_pred_both_one_vs_learned": 0.05685080699862897,
+          "median_abs_delta_pred_both_one_vs_learned": 0.04519179676724294,
+          "rmse_change_both_one_minus_learned": -0.006959392462254854
+        },
+        "valid": {
+          "max_abs_delta_pred_both_one_vs_learned": 0.28837049954314997,
+          "mean_abs_delta_pred_both_one_vs_learned": 0.05512024758255744,
+          "median_abs_delta_pred_both_one_vs_learned": 0.04255324995225096,
+          "rmse_change_both_one_minus_learned": -0.0005137095093035171
+        }
+      }
+    },
+    "RR_REAL": {
+      "ablations": {
+        "test": {
+          "both_one": {
+            "delta_rmse_vs_learned": 0.00132103774195802,
+            "mae": 0.5592511489285856,
+            "rmse": 0.7622856469789414
+          },
+          "cross_one": {
+            "delta_rmse_vs_learned": 0.0026890260082786943,
+            "mae": 0.5572523110124915,
+            "rmse": 0.7636536352452621
+          },
+          "internal_one": {
+            "delta_rmse_vs_learned": -0.0012457521911611869,
+            "mae": 0.5566745689378524,
+            "rmse": 0.7597188570458222
+          },
+          "learned": {
+            "delta_rmse_vs_learned": null,
+            "mae": 0.5539561897685773,
+            "rmse": 0.7609646092369834
+          },
+          "swap": {
+            "delta_rmse_vs_learned": 0.011711432143712064,
+            "mae": 0.5666425036891897,
+            "rmse": 0.7726760413806955
+          }
+        },
+        "valid": {
+          "both_one": {
+            "delta_rmse_vs_learned": -0.005621681686118096,
+            "mae": 0.5171545501829363,
+            "rmse": 0.7015200230896289
+          },
+          "cross_one": {
+            "delta_rmse_vs_learned": -0.0016699979434379175,
+            "mae": 0.5199194316087048,
+            "rmse": 0.7054717068323091
+          },
+          "internal_one": {
+            "delta_rmse_vs_learned": -0.0034094501558538104,
+            "mae": 0.5188988126591594,
+            "rmse": 0.7037322546198932
+          },
+          "learned": {
+            "delta_rmse_vs_learned": null,
+            "mae": 0.5203197884947297,
+            "rmse": 0.707141704775747
+          },
+          "swap": {
+            "delta_rmse_vs_learned": -0.006273583144112638,
+            "mae": 0.511631844588928,
+            "rmse": 0.7008681216316344
+          }
+        }
+      },
+      "mean_abs_dev_from_one": {
+        "cross": 0.09464328557252884,
+        "internal": 0.0718535327911377
+      },
+      "role_response": {
+        "test": {
+          "max_abs_delta_pred_both_one_vs_learned": 0.45656403351745745,
+          "mean_abs_delta_pred_both_one_vs_learned": 0.05633755332407436,
+          "median_abs_delta_pred_both_one_vs_learned": 0.04246406188768981,
+          "rmse_change_both_one_minus_learned": 0.00132103774195802
+        },
+        "valid": {
+          "max_abs_delta_pred_both_one_vs_learned": 0.3549966060193559,
+          "mean_abs_delta_pred_both_one_vs_learned": 0.05690954124780021,
+          "median_abs_delta_pred_both_one_vs_learned": 0.04364680006240107,
+          "rmse_change_both_one_minus_learned": -0.005621681686118096
+        }
+      }
+    }
+  },
+  "not_done": [
+    "no historical model re-trained, re-selected or re-evaluated",
+    "no new seed, no hyper-parameter search, no extra dataset",
+    "no partition extension / learnable grouping",
+    "no Test-based selection or tuning"
+  ],
+  "oracle_increment": {
+    "test": {
+      "ci95": [
+        -0.001060683257059816,
+        0.0012832438835084865
+      ],
+      "credit": false,
+      "diff_mean": 0.0001434874820830436,
+      "n_shared": 303,
+      "prob_real_better": 0.5,
+      "real_oracle_signal": false
+    },
+    "valid": {
+      "ci95": [
+        -0.002317525591839449,
+        0.0009841205971225385
+      ],
+      "credit": false,
+      "diff_mean": -0.000600249341794724,
+      "n_shared": 299,
+      "prob_real_better": 0.5033444816053512,
+      "real_oracle_signal": false
+    }
+  },
+  "prediction_increment": {
+    "test": {
+      "ci95": [
+        0.010386800693418454,
+        0.10355342682910186
+      ],
+      "credit": false,
+      "diff": 0.054078911086315684,
+      "n": 420,
+      "prob_real_better": 0.0055
+    },
+    "train": {
+      "ci95": [
+        -0.016477642406429852,
+        0.00010844111476812713
+      ],
+      "credit": false,
+      "diff": -0.007894745754347732,
+      "n": 3360,
+      "prob_real_better": 0.9735
+    },
+    "valid": {
+      "ci95": [
+        -0.032776624500099855,
+        0.05720427434828167
+      ],
+      "credit": false,
+      "diff": 0.012614496944943543,
+      "n": 420,
+      "prob_real_better": 0.271
+    }
+  },
+  "retention": {
+    "baseline": {
+      "comparability": "DIRECTLY_COMPARABLE",
+      "epoch": 124,
+      "model": "C1 (frozen, Rf)",
+      "n_parameters": 228674,
+      "source": "tracks/structural-sufficiency/gnn_route_clarification_8h_v1/analysis/tables/stage1.csv",
+      "test_mae": 0.5323825586,
+      "test_rmse": 0.7293241722,
+      "train_rmse": 0.2390721087,
+      "valid_mae": 0.5078730957,
+      "valid_rmse": 0.706884841
+    },
+    "both_preserved": true,
+    "control_also_preserved": true,
+    "factor": 1.1,
+    "models": {
+      "RR_CONTROL": {
+        "available": true,
+        "passes_retention": true,
+        "selected_epoch": 115,
+        "test_abs_gap": -0.022438442870815756,
+        "test_ratio_over_c1": 0.9692339240544703,
+        "test_rmse": 0.7068857293291843,
+        "valid_abs_gap": -0.012357612473054003,
+        "valid_ratio_over_c1": 0.9825182098182044,
+        "valid_rmse": 0.694527228526946
+      },
+      "RR_REAL": {
+        "available": true,
+        "passes_retention": true,
+        "selected_epoch": 148,
+        "test_abs_gap": 0.03164046821549993,
+        "test_ratio_over_c1": 1.0433832710083593,
+        "test_rmse": 0.7609646404154999,
+        "valid_abs_gap": 0.0002568844718895402,
+        "valid_ratio_over_c1": 1.000363403565885,
+        "valid_rmse": 0.7071417254718896
+      }
+    },
+    "prediction_preserved": true,
+    "rule": "RR_REAL Lipophilicity Valid RMSE <= 1.1 x C1(Rf) Valid RMSE"
+  },
+  "round_id": "lcrc-relation-role-preserving-pilot-v1",
+  "verdict": "ONLY_C1_READOUT_RECOVERY"
+}

@@ -1,0 +1,211 @@
+{
+  "all_pass": true,
+  "dataset": "ogbg-mollipo",
+  "roles": {
+    "RR_CONTROL": {
+      "class_names": [
+        "hash0",
+        "hash1"
+      ],
+      "n_types": 124,
+      "rule": "label-free S2 type hash of (path_cat, path_end63, path_closure) -> group 0/1",
+      "salt": "lcrc-relation-role-preserving-pilot-v1/s2-type-hash/control"
+    },
+    "RR_REAL": {
+      "class_names": [
+        "internal",
+        "cross"
+      ],
+      "rule": "frozen topology block ownership: owner(e1)==owner(e2) -> group 0 (internal), else group 1 (cross)",
+      "source": "frozen routing cache path_cross (owner(e1) vs owner(e2))"
+    }
+  },
+  "splits": {
+    "test": {
+      "RR_CONTROL": {
+        "class_names": [
+          "hash0",
+          "hash1"
+        ],
+        "field": "path_role_control",
+        "fraction_group0": 0.7022807794508414,
+        "fraction_group1": 0.29771922054915856,
+        "n_group0": 25372,
+        "n_group1": 10756,
+        "n_molecules": 420,
+        "n_molecules_both_groups": 420,
+        "n_molecules_with_empty_group0": 0,
+        "n_molecules_with_empty_group1": 0,
+        "n_occurrences": 36128,
+        "pass": true,
+        "per_molecule_group0": {
+          "max": 134,
+          "mean": 60.40952380952381,
+          "median": 60.0
+        },
+        "per_molecule_group1": {
+          "max": 82,
+          "mean": 25.60952380952381,
+          "median": 25.0
+        },
+        "size_ratio_g1_over_g0": 0.42393189342582377
+      },
+      "RR_REAL": {
+        "class_names": [
+          "internal",
+          "cross"
+        ],
+        "field": "path_role_real",
+        "fraction_group0": 0.6010850310008857,
+        "fraction_group1": 0.39891496899911427,
+        "n_group0": 21716,
+        "n_group1": 14412,
+        "n_molecules": 420,
+        "n_molecules_both_groups": 420,
+        "n_molecules_with_empty_group0": 0,
+        "n_molecules_with_empty_group1": 0,
+        "n_occurrences": 36128,
+        "pass": true,
+        "per_molecule_group0": {
+          "max": 108,
+          "mean": 51.7047619047619,
+          "median": 50.0
+        },
+        "per_molecule_group1": {
+          "max": 110,
+          "mean": 34.31428571428572,
+          "median": 34.0
+        },
+        "size_ratio_g1_over_g0": 0.6636581322527169
+      },
+      "group_size_gap": {
+        "RR_CONTROL": 0.4045615589016829,
+        "RR_REAL": 0.20217006200177146
+      }
+    },
+    "train": {
+      "RR_CONTROL": {
+        "class_names": [
+          "hash0",
+          "hash1"
+        ],
+        "field": "path_role_control",
+        "fraction_group0": 0.6894039926148166,
+        "fraction_group1": 0.31059600738518345,
+        "n_group0": 191180,
+        "n_group1": 86132,
+        "n_molecules": 3360,
+        "n_molecules_both_groups": 3355,
+        "n_molecules_with_empty_group0": 0,
+        "n_molecules_with_empty_group1": 5,
+        "n_occurrences": 277312,
+        "pass": true,
+        "per_molecule_group0": {
+          "max": 208,
+          "mean": 56.898809523809526,
+          "median": 57.0
+        },
+        "per_molecule_group1": {
+          "max": 110,
+          "mean": 25.63452380952381,
+          "median": 25.0
+        },
+        "size_ratio_g1_over_g0": 0.450528297939115
+      },
+      "RR_REAL": {
+        "class_names": [
+          "internal",
+          "cross"
+        ],
+        "field": "path_role_real",
+        "fraction_group0": 0.577515578121394,
+        "fraction_group1": 0.422484421878606,
+        "n_group0": 160152,
+        "n_group1": 117160,
+        "n_molecules": 3360,
+        "n_molecules_both_groups": 3354,
+        "n_molecules_with_empty_group0": 0,
+        "n_molecules_with_empty_group1": 6,
+        "n_occurrences": 277312,
+        "pass": true,
+        "per_molecule_group0": {
+          "max": 174,
+          "mean": 47.66428571428571,
+          "median": 48.0
+        },
+        "per_molecule_group1": {
+          "max": 172,
+          "mean": 34.86904761904762,
+          "median": 34.0
+        },
+        "size_ratio_g1_over_g0": 0.731555022728408
+      },
+      "group_size_gap": {
+        "RR_CONTROL": 0.3788079852296331,
+        "RR_REAL": 0.15503115624278796
+      }
+    },
+    "valid": {
+      "RR_CONTROL": {
+        "class_names": [
+          "hash0",
+          "hash1"
+        ],
+        "field": "path_role_control",
+        "fraction_group0": 0.6960960792034652,
+        "fraction_group1": 0.30390392079653483,
+        "n_group0": 24749,
+        "n_group1": 10805,
+        "n_molecules": 420,
+        "n_molecules_both_groups": 420,
+        "n_molecules_with_empty_group0": 0,
+        "n_molecules_with_empty_group1": 0,
+        "n_occurrences": 35554,
+        "pass": true,
+        "per_molecule_group0": {
+          "max": 188,
+          "mean": 58.92619047619048,
+          "median": 57.5
+        },
+        "per_molecule_group1": {
+          "max": 97,
+          "mean": 25.726190476190474,
+          "median": 25.0
+        },
+        "size_ratio_g1_over_g0": 0.4365832962947998
+      },
+      "RR_REAL": {
+        "class_names": [
+          "internal",
+          "cross"
+        ],
+        "field": "path_role_real",
+        "fraction_group0": 0.5947010181695449,
+        "fraction_group1": 0.4052989818304551,
+        "n_group0": 21144,
+        "n_group1": 14410,
+        "n_molecules": 420,
+        "n_molecules_both_groups": 420,
+        "n_molecules_with_empty_group0": 0,
+        "n_molecules_with_empty_group1": 0,
+        "n_occurrences": 35554,
+        "pass": true,
+        "per_molecule_group0": {
+          "max": 118,
+          "mean": 50.34285714285714,
+          "median": 50.0
+        },
+        "per_molecule_group1": {
+          "max": 162,
+          "mean": 34.30952380952381,
+          "median": 32.0
+        },
+        "size_ratio_g1_over_g0": 0.6815172152856602
+      },
+      "group_size_gap": {
+        "RR_CONTROL": 0.39219215840693034,
+        "RR_REAL": 0.1894020363390898
+      }
+    }
+  }
+}

@@ -1,0 +1,276 @@
+{
+  "architecture": {
+    "c1_local_input_width": 433,
+    "dropout": "one shared dropout(0.10) on the local representation (unchanged)",
+    "gamma_init": "exactly one for every channel of both groups",
+    "gamma_scope": "shared across all molecules and all occurrences of a group",
+    "readout": "sum_v f(h_v) + rho([g, mean_v h_v, mean_v h^2_v, log1p n_v]) (unchanged)",
+    "role_grouping": {
+      "RR_CONTROL": "label-free S2 type hash of (path_cat, path_end63, path_closure) -> group 0/1",
+      "RR_REAL": "frozen topology block ownership: owner(e1)==owner(e2) -> group 0 (internal), else group 1 (cross)",
+      "control_hash": "blake2b(salt|path_cat|path_end63|path_closure, digest_size=8), low bit",
+      "control_salt": "lcrc-relation-role-preserving-pilot-v1/s2-type-hash/control",
+      "control_table_sha256": "7cf802171ff220a360ddb4cced4c6a8572361e69ba67a963c095bf7cffb94436"
+    },
+    "s2_content_dim": 96,
+    "s2_role_dim": 200,
+    "s2_typed_dim": 104,
+    "statement": "the frozen C1 function is unchanged; only the 200 S2 columns of the local input are split into two role groups and rescaled by two trainable per-channel vectors"
+  },
+  "budget": {
+    "analytic": {
+      "c1_total": 228674,
+      "delta_over_c1": 400,
+      "f": 4225,
+      "ratio_over_c1": 1.001749215039751,
+      "rho": 11073,
+      "role_gamma": 400,
+      "rr_total": 229074,
+      "trunk": 213376
+    },
+    "budget_rule": "identical total parameters for RR_REAL and RR_CONTROL; delta over C1 is exactly 2*200",
+    "c1_canonical_state_hash": "bde55cb3635e005d7c0c3761bdb208cb3c100efd880436ac06e7034bc7ef714e",
+    "c1_reference_total": 228674,
+    "full_initial_state_hash": "496b0b5adc2ce1b3161f180e504628f5350aec1504e1d9af78ce71b02ef70acf",
+    "initial_state_identical": true,
+    "lr_schedule_check": {
+      "first_step_lr": 0.0001,
+      "last_step_lr": 1.000002658830856e-05,
+      "max_abs_diff": 0.0,
+      "n_steps": 9720,
+      "peak_lr": 0.001,
+      "reference": "tracks/structural-sufficiency/gnn_route_clarification_8h_v1/code/gr_common.py:lr_at('Rf', ...)"
+    },
+    "models": {
+      "RR_CONTROL": {
+        "breakdown": {
+          "f": 4225,
+          "gamma_cross": 200,
+          "gamma_internal": 200,
+          "rho": 11073,
+          "trunk.atom_encoder": 19040,
+          "trunk.bond_encoder": 63776,
+          "trunk.local": 130560
+        },
+        "c1_part_matches_c1_total": true,
+        "c1_part_parameters": 228674,
+        "c1_part_state_hash": "cddd3cc4708c180771d0af3ed6af38921c473cf3b463984c74a6256a27f4669d",
+        "full_state_hash": "496b0b5adc2ce1b3161f180e504628f5350aec1504e1d9af78ce71b02ef70acf",
+        "gamma_all_ones": true,
+        "matches_analytic": true,
+        "readout": 15298,
+        "role_gamma": 400,
+        "total": 229074,
+        "trunk": 213376
+      },
+      "RR_REAL": {
+        "breakdown": {
+          "f": 4225,
+          "gamma_cross": 200,
+          "gamma_internal": 200,
+          "rho": 11073,
+          "trunk.atom_encoder": 19040,
+          "trunk.bond_encoder": 63776,
+          "trunk.local": 130560
+        },
+        "c1_part_matches_c1_total": true,
+        "c1_part_parameters": 228674,
+        "c1_part_state_hash": "cddd3cc4708c180771d0af3ed6af38921c473cf3b463984c74a6256a27f4669d",
+        "full_state_hash": "496b0b5adc2ce1b3161f180e504628f5350aec1504e1d9af78ce71b02ef70acf",
+        "gamma_all_ones": true,
+        "matches_analytic": true,
+        "readout": 15298,
+        "role_gamma": 400,
+        "total": 229074,
+        "trunk": 213376
+      }
+    },
+    "ratio": {
+      "control_over_c1": 1.001749215039751,
+      "identical_counts": true,
+      "real_over_c1": 1.001749215039751,
+      "real_over_control": 1.0
+    },
+    "role_dim": 200
+  },
+  "code_sha256": {
+    "reused/lcrc_cross_task_preparation_v1/adapters.py": "67f33874ece9198bc7f8fd88aa8b9983d419b72acda1a86da0e6fb941ca48553",
+    "reused/lcrc_cross_task_preparation_v1/feature_spec.py": "37f860a90bd805669b570d44394a791947c9eabdd7cc68a089264ced7c7a4260",
+    "reused/lcrc_cross_task_preparation_v1/lcrc_data.py": "fab6ce8ef61e4997f67516b2b2e5d861c72ed870d57a2599bc2787b8cd3ac3d3",
+    "reused/lcrc_cross_task_preparation_v1/molecular_graph.py": "59a49724c890efc5aa41f7eed8cb2d848fb782aab768ce990864d990cbbe46db",
+    "reused/lcrc_lipo_model_dissection_v1/dissect_common.py": "31fb40f27d108b2e946663a690137a396e8174013aa3d952b49ee228333a8482",
+    "reused/lcrc_lipo_model_dissection_v1/dissect_model.py": "22fc95b3d908c02b240ab6b7638832acf4afc96dbfddd48f65db71c1d588be1a",
+    "reused/lcrc_readout_context_pilot_small_v1/cr_common.py": "3a201d2933a73b76d533545e28cee809127a933c720084444f233d06fb99e5ca",
+    "reused/lcrc_readout_context_pilot_small_v1/cr_data.py": "2b3e945190a7112552a125a22cb0596f3295d7567e128089450c198c75ba47b6",
+    "reused/lcrc_readout_context_pilot_small_v1/cr_models.py": "e8e5f6d55e65d9e0bc134679773c989f73043319deb29f4be776cd51dde0185a",
+    "reused/lcrc_relation_interface_routing_pilot_v1/rr_data.py": "53a4b90500c7be4b25cc01e7bcd5735156c89b96848c525ae852c4d976305f0e",
+    "reused/lcrc_relation_interface_routing_pilot_v1/rr_partition.py": "3b30e93a17e398c70ffd0e8271a72ec27fe21a2e2dfa008032e71d45bbf82130",
+    "reused/lcrc_relation_interface_routing_pilot_v1/rr_routing.py": "fcc003ef12835c7dab308207749dde1f3220fd36723a762da2124339af350a32",
+    "reused/structural-query-learning/sq_common.py": "fe7333978fd748cf2a61fcdb4d3fa73bf855ebbdc6b05c439477b2c921b9d8cb",
+    "reused/structural-query-learning/sq_data.py": "89ad5436be3ddb8825fe877535e7fbb13679f4cb012a3a3073d63deaf9a83647",
+    "reused/structural-query-learning/sq_lcrc.py": "d8b12c51ae006d04e19ca50b18bc57423133ae020c65ef50039c9051914db351",
+    "rp_common.py": "ef8f11af538c5e0f40aadd18ce70927d8b17c783a57731b5e6b2a6f0c5e4801e",
+    "rp_data.py": "11a82f32371b77e7167463c8a6268c2035e3c7497903bccd11b5d9babbee4269",
+    "rp_models.py": "a1d0ca679197891c7b91aed4e3c4fcfe90b6f6b7f3ca7e7981fb0f7524cdb54a",
+    "rp_train.py": "d73df560fcddcc55b7486928e8ee8f1b55340d2f436350f9b04a0d253b661a2e"
+  },
+  "created_at": "2026-11-17T23:05:10",
+  "dataset": {
+    "frozen_reuse": {
+      "feature_spec_hash": "a65c67f9595d9190e7c913d2594ba984a07b51300d63916de865dccca434206c",
+      "graph_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+      "lipo_raw_sha256": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3",
+      "norm_fingerprint": "3c87249a325b1a59cba819d49dfca10df5004690efa7cc2ee22945aa548db4da",
+      "oracle_contrib_sha256": "5690c0e3c7ba0ed51fbe30541e4a83a49abf174c6440aaebfb46a3c5cbc48257",
+      "wc_logp_label_sha256": "9d9a46cfe36e8592fb8f7e37f1997835cb20bc6e91e5f8af72a2387a926ef40f"
+    },
+    "name": "ogbg-mollipo",
+    "split_sizes": {
+      "test": 420,
+      "train": 3360,
+      "valid": 420
+    },
+    "targets": {
+      "lipo": {
+        "description": "official ogbg-mollipo experimental label (exp)",
+        "scaler": {
+          "ddof": 0,
+          "fit_split": "train",
+          "max": 4.5,
+          "mean": 2.1621607144740187,
+          "min": -1.5,
+          "n": 3360,
+          "std": 1.211539840098397
+        }
+      },
+      "wc_logp": {
+        "description": "RDKit Wildman-Crippen logP (computed property)",
+        "scaler": {
+          "ddof": 0,
+          "fit_split": "train",
+          "max": 8.948000000000002,
+          "mean": 3.2697958779761924,
+          "min": -5.621799999999977,
+          "n": 3360,
+          "std": 1.2893845656966016
+        }
+      }
+    }
+  },
+  "decision_scales": {
+    "bootstrap_draws": 2000,
+    "bootstrap_seed": 20261117,
+    "increment_alpha": 0.05,
+    "increment_probability": 0.95,
+    "native_block_mask": "an S2 occurrence survives a block mask iff neither of its two owning blocks is the masked block; score_i = |delta_i| / sqrt(max(1, n_bonds_i)); ties -> smallest block index",
+    "oracle_control_seed": 20261117,
+    "oracle_controls": [
+      8,
+      16
+    ],
+    "oracle_positive_fraction": 0.6,
+    "retention_factor_lipo_valid": 1.1
+  },
+  "freeze_hash": "f29473873e7e3bd55b3657837d53a66050b6b87ec00d6b1fc2b952435ab60d2a",
+  "frozen_reuse_check": {
+    "all_pass": true,
+    "rebuild_arrays_checked_per_split": true,
+    "routing_cache_sha256": {
+      "test": "890407976d3e9b9c136b83eb5390c099af39358cfe91433914d6aec073fca6cd",
+      "train": "8fc85c7fba7c8bd11e230f0f278f9be53df70d181eae568eeedb29fbbc2500dc",
+      "valid": "5e43da2eb3bd99e36ae761c2bdef22833d6f263821172129fad5ec28967d1ec3"
+    },
+    "routing_fingerprint": {
+      "test": "8cdaae5a092ad5fe5bfd1eb24c09872bac8fee3c100698cde2cbeb5f7eef54a8",
+      "train": "31238683192b53554fd68fcf70c47c88ddd70ff0cbfffb5f0e848902bc39e160",
+      "valid": "12dc6f35dc2c53dd21df9ce954f8d184f9c0f5ff34d7dfd057756e34153a41e5"
+    },
+    "source_round": "lcrc_relation_interface_routing_pilot_v1"
+  },
+  "git": {
+    "branch": "exp/lcrc-explanation-task-relevance-v1",
+    "commit": "04f48e5ffddc7ba7be78ed708f071a79f5e7714f",
+    "dirty_tracked": false,
+    "lockfile_sha256": "d063dedc762d1f338661cbd67c59a7245a0efb2966a2b932836530cf5cba7033"
+  },
+  "protocol_id": "lcrc-relation-role-preserving-pilot-v1",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "amp": false,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "early_stopping": false,
+    "ema": false,
+    "epochs": 360,
+    "eval_batch_size": 256,
+    "gradient_clip": 5.0,
+    "lr_schedule_audit": {
+      "first_step_lr": 0.0001,
+      "last_step_lr": 1.000002658830856e-05,
+      "max_abs_diff": 0.0,
+      "n_steps": 9720,
+      "peak_lr": 0.001,
+      "reference": "tracks/structural-sufficiency/gnn_route_clarification_8h_v1/code/gr_common.py:lr_at('Rf', ...)"
+    },
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.001,
+    "scheduler": "per_step_linear_warmup_then_cosine",
+    "selection": "minimum Val RMSE; strictly smaller replaces, an exact tie keeps the earlier epoch",
+    "shuffle_generator": "np.random.default_rng(0).permutation over Train split-local rows, one per epoch",
+    "soup": false,
+    "swa": false,
+    "test_policy": "always (DEVELOPMENT_TEST; never used for selection or tuning)",
+    "warmup_epochs": 5,
+    "weight_decay": 1e-05
+  },
+  "role_groups": {
+    "test": {
+      "RR_CONTROL": {
+        "fraction_group0": 0.7022807794508414,
+        "fraction_group1": 0.29771922054915856,
+        "n_group0": 25372,
+        "n_group1": 10756
+      },
+      "RR_REAL": {
+        "fraction_group0": 0.6010850310008857,
+        "fraction_group1": 0.39891496899911427,
+        "n_group0": 21716,
+        "n_group1": 14412
+      }
+    },
+    "train": {
+      "RR_CONTROL": {
+        "fraction_group0": 0.6894039926148166,
+        "fraction_group1": 0.31059600738518345,
+        "n_group0": 191180,
+        "n_group1": 86132
+      },
+      "RR_REAL": {
+        "fraction_group0": 0.577515578121394,
+        "fraction_group1": 0.422484421878606,
+        "n_group0": 160152,
+        "n_group1": 117160
+      }
+    },
+    "valid": {
+      "RR_CONTROL": {
+        "fraction_group0": 0.6960960792034652,
+        "fraction_group1": 0.30390392079653483,
+        "n_group0": 24749,
+        "n_group1": 10805
+      },
+      "RR_REAL": {
+        "fraction_group0": 0.5947010181695449,
+        "fraction_group1": 0.4052989818304551,
+        "n_group0": 21144,
+        "n_group1": 14410
+      }
+    }
+  },
+  "round_id": "lcrc-relation-role-preserving-pilot-v1"
+}
