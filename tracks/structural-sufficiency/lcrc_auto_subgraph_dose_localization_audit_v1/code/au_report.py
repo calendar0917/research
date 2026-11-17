@@ -132,7 +132,7 @@ def write_report() -> Path:
             f"internal = {_fmt(q1['median_top1_n_s2_internal'])}, "
             f"affected = {_fmt(q1['median_top1_n_s2_affected'])}；"
             f"原已接受对照中 {_pct(q1['frac_old_controls_outside_affected_tol'])} 在修正后的 "
-            f"affected 口径下超出 25% 容差（affected 相对差中位 "
+            f"affected 口径下超出 25% 容差（三划分合并；分划分见 §2；affected 相对差中位 "
             f"{_fmt(q1['median_old_control_affected_rel_diff'])}）。"
         )
         for split in ("valid", "test"):
@@ -624,7 +624,8 @@ def write_decision() -> Path:
             f"* 原 Top-1 的 internal / affected occurrence 中位："
             f"{_fmt(q1['median_top1_n_s2_internal'])} / {_fmt(q1['median_top1_n_s2_affected'])}。"
             f"原已接受对照中 {_pct(q1['frac_old_controls_outside_affected_tol'])} 在 affected 口径下"
-            f"超出 25% 容差；affected 相对差中位 {_fmt(q1['median_old_control_affected_rel_diff'])}。"
+            f"超出 25% 容差（三划分合并；分划分见 REPORT §2）；affected 相对差中位 "
+            f"{_fmt(q1['median_old_control_affected_rel_diff'])}。"
         )
         add(
             "* 结论边界：原轮匹配的是**子图内部二跳路径数**，不是门控实际移除的 occurrence 数；"
