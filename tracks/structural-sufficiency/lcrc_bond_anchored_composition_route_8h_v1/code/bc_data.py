@@ -253,8 +253,14 @@ class Batch:
                      n_graphs=self.n_graphs, checks=self.checks)
 
 
-def make_batch(b: Any, split: str, rows: Sequence[int], p3: P3.Path3Split) -> Batch:
-    """Frozen collate + path3 bookkeeping in one batch."""
+def make_batch(b: Any, split: str, rows: Sequence[int], p3) -> Batch:
+    """Frozen collate + path3 bookkeeping in one batch.
+
+    ``p3`` may be the whole per-split mapping; it is resolved by split name so a
+    caller can never mix the events of one split with the graphs of another.
+    """
+    if isinstance(p3, Mapping) or hasattr(p3, "keys"):
+        p3 = p3[split]
     AD = C.modules()["as_data"]
     torch = __import__("torch")
     rows = np.asarray(rows, dtype=np.int64).reshape(-1)

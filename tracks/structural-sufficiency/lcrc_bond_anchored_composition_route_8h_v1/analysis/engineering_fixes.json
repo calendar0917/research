@@ -13,6 +13,19 @@
       "formal_units_affected": [],
       "results_existed_at_fix_time": false,
       "rerun": "the smoke unit was re-run from scratch; no formal unit had been launched, so no formal result was discarded"
+    },
+    {
+      "id": "FIX-02",
+      "file": "code/bc_data.py",
+      "frozen_sha256": "d2dc69a91f232233dc12179bf7e42dd9c1e5ccaea40b895efd3cd859f4e36906",
+      "new_sha256": "df10f2190a283aa63f00156acf3477afd07c9dd120f5994487e170fa0343fc89",
+      "detected_in": "bajc-smoke2-20261118-005148-a2c27bf7",
+      "symptom": "AttributeError: 'dict' object has no attribute 'occ_map' at the training-loop make_batch call",
+      "change": "make_batch resolves the per-split Path3Split from the mapping by split name (defensive; prevents cross-split mixing)",
+      "scientific_content_changed": false,
+      "formal_units_affected": [],
+      "results_existed_at_fix_time": false,
+      "rerun": "smoke re-run from scratch; still no formal unit launched"
     }
   ]
 }
