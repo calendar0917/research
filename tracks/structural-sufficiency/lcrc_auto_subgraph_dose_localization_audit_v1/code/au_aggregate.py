@@ -197,7 +197,8 @@ def protocol_metrics(rows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     }
 
 
-def dose_summary(rows: Sequence[Mapping[str, Any]], *, protocol: str) -> dict[str, Any]:
+def dose_summary(rows: Sequence[Mapping[str, Any]], *, protocol: str,
+                 candidate_stats: Mapping[str, float] | None = None) -> dict[str, Any]:
     """Distribution of the pilot's / corrected null's realised dose mismatch."""
     if protocol == "pilot_internal_matched":
         internal = [r["internal_rel_diff"] for r in rows]
@@ -226,6 +227,11 @@ def dose_summary(rows: Sequence[Mapping[str, Any]], *, protocol: str) -> dict[st
         "median_affected_minus_internal": C.median(diff),
         "median_top1_n_s2_internal": C.median(top1_i),
         "median_top1_n_s2_affected": C.median(top1_a),
+        "n_candidate_draws": (candidate_stats or {}).get("n_candidate_draws"),
+        "n_candidate_draws_rejected_affected": (candidate_stats or {}).get("n_candidate_draws_rejected_affected"),
+        "frac_candidate_draws_rejected_affected": (candidate_stats or {}).get(
+            "frac_candidate_draws_rejected_affected"
+        ),
     }
 
 
@@ -400,6 +406,7 @@ OLD_VS_COLUMNS = [
     "frac_top1_gt_local_heuristic",
     "median_control_internal_rel_diff", "median_control_affected_rel_diff",
     "frac_controls_outside_affected_tol",
+    "candidate_draws", "candidate_draws_rejected_affected", "frac_candidate_draws_rejected_affected",
     "median_top1_n_s2_internal", "median_top1_n_s2_affected",
     "pilot_metric_replay_passed", "note",
 ]
@@ -580,7 +587,7 @@ def build_old_vs_corrected(dataset: str, pilot: Mapping[str, Any], new: Mapping[
         c_rows = corrected_rows(dataset, split, new["records"][split])
         p_metrics = protocol_metrics(p_rows)
         c_metrics = protocol_metrics(c_rows)
-        p_dose = _flatten_old_dose_summary(pilot["molecules"][split])
+        p_dose = _flatten_old_dose_summary(new["records"][split])
         c_dose = _corrected_dose_summary(new["records"][split])
         for protocol, metrics, dose, note in (
             ("pilot_internal_matched", p_metrics, p_dose,
@@ -621,6 +628,9 @@ def build_old_vs_corrected(dataset: str, pilot: Mapping[str, Any], new: Mapping[
                     "median_control_internal_rel_diff": dose["median_internal_rel_diff"],
                     "median_control_affected_rel_diff": dose["median_affected_rel_diff"],
                     "frac_controls_outside_affected_tol": dose["frac_controls_outside_affected_tol"],
+                    "candidate_draws": dose.get("n_candidate_draws"),
+                    "candidate_draws_rejected_affected": dose.get("n_candidate_draws_rejected_affected"),
+                    "frac_candidate_draws_rejected_affected": dose.get("frac_candidate_draws_rejected_affected"),
                     "median_top1_n_s2_internal": dose["median_top1_n_s2_internal"],
                     "median_top1_n_s2_affected": dose["median_top1_n_s2_affected"],
                     "pilot_metric_replay_passed": bool(replay["pass"]),
@@ -663,8 +673,13 @@ def _flatten_old_dose_summary(records: Sequence[Mapping[str, Any]]) -> dict[str,
 
 def _corrected_dose_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
+    n_draws = 0
+    n_rejected = 0
     for mol in records:
         top1 = mol["top1"]["dose"]
+        controls = mol["controls"]
+        n_draws += int(controls.get("n_candidates") or 0)
+        n_rejected += int(controls.get("n_rejected_affected") or 0)
         for rec in mol["controls"].get("matched") or []:
             rows.append(
                 {
@@ -677,7 +692,15 @@ def _corrected_dose_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, A
                     "n_s2_internal": int(rec["n_s2_internal"]),
                 }
             )
-    return dose_summary(rows, protocol="corrected_affected_matched")
+    return dose_summary(
+        rows,
+        protocol="corrected_affected_matched",
+        candidate_stats={
+            "n_candidate_draws": int(n_draws),
+            "n_candidate_draws_rejected_affected": int(n_rejected),
+            "frac_candidate_draws_rejected_affected": (n_rejected / n_draws) if n_draws else float("nan"),
+        },
+    )
 
 
 def _paired_change(p_rows: Sequence[Mapping[str, Any]],
@@ -719,8 +742,9 @@ def _paired_change(p_rows: Sequence[Mapping[str, Any]],
 # ---------------------------------------------------------------------------
 
 
-def dose_verdict(dataset: str, pilot: Mapping[str, Any]) -> dict[str, Any]:
-    rows = _flatten_old_dose_summary([m for s in C.SPLITS for m in pilot["molecules"][s]])
+def dose_verdict(dataset: str, records: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[str, Any]:
+    """Grade the pilot's null dose with the corrected quantity (no pilot effect re-used)."""
+    rows = _flatten_old_dose_summary([m for s in C.SPLITS for m in records[s]])
     frac = float(rows["frac_controls_outside_affected_tol"])
     median_rel = float(rows["median_affected_rel_diff"])
     substantive = bool(
@@ -845,6 +869,8 @@ def build_decision(datasets: Sequence[str], detail: Mapping[str, Any],
                 "outside_fraction_median": localization[dataset]["splits"][split]["outside_fraction_median"],
                 "frac_outside_gt_0p5": localization[dataset]["splits"][split]["frac_outside_gt_0p5"],
                 "median_boundary_over_affected": localization[dataset]["splits"][split]["median_boundary_over_affected"],
+                "median_internal_over_total": localization[dataset]["splits"][split]["median_internal_over_total"],
+                "median_affected_over_total": localization[dataset]["splits"][split]["median_affected_over_total"],
                 "median_affected_root_outside_fraction": localization[dataset]["splits"][split]["median_affected_root_outside_fraction"],
             }
             for split in C.SPLITS
@@ -1111,7 +1137,7 @@ def run(datasets: Sequence[str] = C.DATASETS) -> dict[str, Any]:
         }
         detail[dataset] = {
             "build": build_detail,
-            "dose_verdict": dose_verdict(dataset, pilot),
+            "dose_verdict": dose_verdict(dataset, new["records"]),
             "new": {
                 "run_summary": new["run_summary"],
                 "budget": new["budget"],

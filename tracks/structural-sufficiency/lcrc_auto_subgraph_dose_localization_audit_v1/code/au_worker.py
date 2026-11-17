@@ -489,6 +489,7 @@ def analyse_molecule(
             "growth_exhausted": bool(controls["growth_exhausted"]),
             "n_matched": int(controls["n_matched"]),
             "n_candidates": int(controls["n_candidates"]),
+            "n_rejected_affected": int(controls["n_rejected_affected"]),
             "n_duplicate_draws": int(controls["n_duplicate_draws"]),
             "matched": control_records,
             "summary": matched_effect,

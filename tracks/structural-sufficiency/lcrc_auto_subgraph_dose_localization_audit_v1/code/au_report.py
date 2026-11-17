@@ -214,18 +214,30 @@ def write_report() -> Path:
                 _pct(float(p["frac_controls_outside_affected_tol"])) if p else "NA",
                 _row_value(c, "median_control_affected_rel_diff"),
                 _pct(float(c["frac_controls_outside_affected_tol"])) if c else "NA",
+                _row_value(c, "candidate_draws"),
+                _pct(float(c["frac_candidate_draws_rejected_affected"]))
+                if c and c.get("frac_candidate_draws_rejected_affected") else "NA",
             ])
     add(_table(
         ["dataset", "split", "Top1 n_s2_internal", "Top1 n_s2_affected",
          "pilot null: median internal rel diff", "pilot null: median affected rel diff",
          "pilot null: frac outside affected 25%", "corrected null: median affected rel diff",
-         "corrected null: frac outside affected 25%"],
+         "corrected null: frac outside affected 25%", "corrected null: distinct draws",
+         "corrected null: frac draws rejected by affected rule"],
         rows,
     ))
     add("")
     add(
         "`pilot null` 列来自对原轮**已接受**对照键集合的重新计数（不改动原轮存储的效果值）；"
-        "`corrected null` 列是本轮新生成的对照。"
+        "`corrected null` 列是本轮新生成的对照。修正对照的 `frac outside affected 25%` 恒为 0，"
+        "因为 25% 容差就是接受准则；它右侧的“候选拒绝率”才说明该准则有多严格。"
+    )
+    add("")
+    add(
+        "原轮**按它自己声明的规则执行是正确的**（pilot null 的 internal 相对差最大 0.25，"
+        "见 `analysis/old_control_dose.csv`）；问题在于它匹配的量不是门控实际移除的量："
+        "修正口径下原对照的 affected 剂量与 Top-1 相差一个边界项，"
+        "`boundary = affected - internal` 的典型规模见 `median_affected_minus_internal`。"
     )
     add("")
 
@@ -253,7 +265,7 @@ def write_report() -> Path:
                 ])
     add(_table(
         ["dataset", "split", "protocol", "matched n", "success", "median effect ratio",
-         "ratio CI95", "ratio>1", "median advantage", "advantage CI95", "median random |delta|"],
+         "ratio CI95", "ratio>1", "median advantage", "advantage CI95", "median random abs(delta)"],
         rows,
     ))
     add("")
@@ -331,7 +343,7 @@ def write_report() -> Path:
                 _pct(entry["corrected_frac_top1_gt_heuristic"]),
             ])
     add(_table(
-        ["dataset", "split", "median Top1 |delta|", "median heuristic |delta|",
+        ["dataset", "split", "median Top1 abs(delta)", "median heuristic abs(delta)",
          "median advantage", "Top1 > heuristic (recomputed Top1)",
          "pilot record", "recomputed"],
         rows,
@@ -411,7 +423,7 @@ def write_report() -> Path:
                 _fmt(corr["affected_root_outside_fraction"]["rho"], 3),
             ])
     add(_table(
-        ["dataset", "split", "Spearman vs k", "vs |score A|", "vs |delta_total|",
+        ["dataset", "split", "Spearman vs k", "vs abs(score A)", "vs abs(delta_total)",
          "vs n_s2_affected", "vs boundary/affected", "vs affected rooted outside"],
         rows,
     ))
@@ -431,7 +443,7 @@ def write_report() -> Path:
                 ])
     add(_table(
         ["dataset", "split", "Top1 k", "n", "outside fraction median",
-         "median |delta_total|", "median n_s2_affected", "median boundary/affected"],
+         "median abs(delta_total)", "median n_s2_affected", "median boundary/affected"],
         rows,
     ))
     add("")

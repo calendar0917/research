@@ -78,7 +78,16 @@ def matched_random_controls(
             break
         if tuple(cand) in seen:
             n_duplicates += 1
-            ledger.append({"bonds": list(cand), "reason": 2, "aff_bonds": 0, "affected": 0, "affected_rel": float("nan")})
+            ledger.append(
+                {
+                    "bonds": list(cand),
+                    "reason": 2,
+                    "n_s2_internal": 0,
+                    "n_s2_boundary": 0,
+                    "n_s2_affected": 0,
+                    "affected_rel": float("nan"),
+                }
+            )
             continue
         seen.add(tuple(cand))
         acc = S2.dose_accounting(mol, cand)
@@ -102,8 +111,9 @@ def matched_random_controls(
             {
                 "bonds": list(cand),
                 "reason": 0 if rec["accepted"] else 1,
-                "aff_bonds": int(acc.n_s2_internal),
-                "affected": int(acc.n_s2_affected),
+                "n_s2_internal": int(acc.n_s2_internal),
+                "n_s2_boundary": int(acc.n_s2_boundary),
+                "n_s2_affected": int(acc.n_s2_affected),
                 "affected_rel": float(rel),
             }
         )
@@ -132,7 +142,8 @@ def matched_random_controls(
         "growth_exhausted": bool(exhausted),
         "n_matched": len(matched),
         "n_duplicate_draws": int(n_duplicates),
-        "n_candidates": int(len(ledger)),
+        "n_candidates": int(len(ledger) - n_duplicates),
+        "n_rejected_affected": int(len(ledger) - n_duplicates - len(matched)),
         "matched": matched,
         "ledger": ledger,
     }
@@ -182,8 +193,9 @@ def ledger_arrays(entries: Sequence[Mapping[str, Any]]) -> dict[str, np.ndarray]
     mol_index = np.asarray([int(e["mol_index"]) for e in entries], dtype=np.int32)
     reason = np.asarray([int(e["reason"]) for e in entries], dtype=np.int8)
     k = np.asarray([len(e["bonds"]) for e in entries], dtype=np.int8)
-    internal = np.asarray([int(e["aff_bonds"]) for e in entries], dtype=np.int32)
-    affected = np.asarray([int(e["affected"]) for e in entries], dtype=np.int32)
+    internal = np.asarray([int(e["n_s2_internal"]) for e in entries], dtype=np.int32)
+    boundary = np.asarray([int(e["n_s2_boundary"]) for e in entries], dtype=np.int16)
+    affected = np.asarray([int(e["n_s2_affected"]) for e in entries], dtype=np.int32)
     rel = np.asarray([float(e["affected_rel"]) for e in entries], dtype=np.float64)
     ptr = np.concatenate([[0], np.cumsum(k)]).astype(np.int32) if entries else np.zeros(1, dtype=np.int32)
     flat = np.asarray([int(b) for e in entries for b in e["bonds"]], dtype=np.int16)
@@ -192,6 +204,7 @@ def ledger_arrays(entries: Sequence[Mapping[str, Any]]) -> dict[str, np.ndarray]
         "reason": reason,
         "k": k,
         "n_s2_internal": internal,
+        "n_s2_boundary": boundary,
         "n_s2_affected": affected,
         "affected_rel_diff": rel,
         "bond_ptr": ptr,
@@ -210,6 +223,7 @@ def decode_ledger(payload: Mapping[str, np.ndarray]) -> list[dict[str, Any]]:
                 "reason": MATCH_REASONS.get(int(payload["reason"][i]), "unknown"),
                 "bonds": flat[ptr[i]:ptr[i + 1]].tolist(),
                 "n_s2_internal": int(payload["n_s2_internal"][i]),
+                "n_s2_boundary": int(payload["n_s2_boundary"][i]),
                 "n_s2_affected": int(payload["n_s2_affected"][i]),
                 "affected_rel_diff": float(payload["affected_rel_diff"][i]),
             }
