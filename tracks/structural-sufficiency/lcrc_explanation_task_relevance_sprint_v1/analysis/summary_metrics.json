@@ -1,0 +1,202 @@
+{
+ "contribution_change_fraction": {
+  "fraction_pairs_core_zero": 0.543134872417983,
+  "fraction_pairs_variable_gt_0.9": 0.6998784933171325,
+  "mean_core": 0.07391926603439304,
+  "mean_variable": 0.926080733965607,
+  "median_core": 0.0,
+  "median_variable": 1.0,
+  "q25_variable": 0.8653091946282137,
+  "q75_variable": 1.0
+ },
+ "decision_labels": [
+  "CONTINUE_STRUCTURAL_EXPLANATION",
+  "CHEMICAL_RELEVANCE_UNRESOLVED",
+  "NO_UNIQUE_LCRC_ADVANTAGE_SHOWN"
+ ],
+ "failure_modes_csv": {
+  "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/failure_modes.csv",
+  "sha256": "64befe6c237573641d7f2925c8455bcb95365c3519741949cf65ef29c6220840"
+ },
+ "label_scope": {
+  "CHEMICAL_RELEVANCE_UNRESOLVED": [
+   "LCRC"
+  ],
+  "CONTINUE_STRUCTURAL_EXPLANATION": [
+   "GINE"
+  ],
+  "NO_UNIQUE_LCRC_ADVANTAGE_SHOWN": [
+   "LCRC",
+   "GINE"
+  ]
+ },
+ "local_heuristic": {
+  "note": "not a protocol decider; reported because it is a strong non-gradient local baseline",
+  "oracle_enrichment": {
+   "ci95": [
+    0.2875596492364508,
+    0.36488940724186925
+   ],
+   "point": 0.3244157231437236
+  }
+ },
+ "oracle": {
+  "GINE": {
+   "ci95": [
+    0.06652164954388763,
+    0.13415316629359872
+   ],
+   "n_components": 231,
+   "point": 0.09842991539062172,
+   "support": "OK"
+  },
+  "LCRC": {
+   "ci95": [
+    0.08954143200876825,
+    0.14846912214508542
+   ],
+   "n_components": 231,
+   "point": 0.11856718094437048,
+   "support": "OK"
+  }
+ },
+ "pair_support": {
+  "n_components": 231,
+  "n_molecules": 704,
+  "n_pairs": 823,
+  "split_combo_counts": {
+   "train-test": 27,
+   "train-train": 791,
+   "train-valid": 5
+  },
+  "split_pair_counts": {
+   "train-test": 27,
+   "train-train": 791,
+   "train-valid": 5
+  },
+  "split_pair_strata": {
+   "train-test": {
+    "n_components": 7,
+    "n_pairs": 27,
+    "support": "LOW_SUPPORT"
+   },
+   "train-train": {
+    "n_components": 228,
+    "n_pairs": 791,
+    "support": "OK"
+   },
+   "train-valid": {
+    "n_components": 4,
+    "n_pairs": 5,
+    "support": "LOW_SUPPORT"
+   }
+  },
+  "strata": {
+   "all": {
+    "label": "all evaluable pairs",
+    "n_components": 231,
+    "n_evaluable_components": 231,
+    "n_evaluable_pairs": 823,
+    "n_not_evaluable_pairs": 0,
+    "n_pairs": 823,
+    "pair_ids_sha256": "4b4b5586425440fa6fb48fc8bded00fbbaafafb3ff2ef9e1f5b7cb4270b44e03",
+    "support": "OK",
+    "support_evaluable": "OK"
+   },
+   "at_least_one_nontrain": {
+    "label": "at least one endpoint non-Train",
+    "n_components": 11,
+    "n_evaluable_components": 11,
+    "n_evaluable_pairs": 32,
+    "n_not_evaluable_pairs": 0,
+    "n_pairs": 32,
+    "pair_ids_sha256": "c69e90afe43abaad828403bbfbcafe99cdccd681fd25aaed908195252c4a4e5e",
+    "support": "LOW_SUPPORT",
+    "support_evaluable": "LOW_SUPPORT"
+   },
+   "both_nontrain": {
+    "label": "both endpoints non-Train (H)",
+    "n_components": 0,
+    "n_evaluable_components": 0,
+    "n_evaluable_pairs": 0,
+    "n_not_evaluable_pairs": 0,
+    "n_pairs": 0,
+    "pair_ids_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "support": "NO_SUPPORT",
+    "support_evaluable": "NO_SUPPORT"
+   },
+   "train_train": {
+    "label": "Train–Train",
+    "n_components": 228,
+    "n_evaluable_components": 228,
+    "n_evaluable_pairs": 791,
+    "n_not_evaluable_pairs": 0,
+    "n_pairs": 791,
+    "pair_ids_sha256": "e4ef24d613bfc7858fbf961f65ea6403dea7dde06062489bff7a6d250505edb6",
+    "support": "OK",
+    "support_evaluable": "OK"
+   }
+  },
+  "support_note": "The both-endpoints-non-Train stratum is empty in the frozen catalogue: NO_SUPPORT. The 823 pairs share molecules and components and are not independent samples."
+ },
+ "prediction": {
+  "GINE": {
+   "direction_accuracy_all": 0.8925170068027211,
+   "direction_accuracy_ci95": [
+    0.8626578647096197,
+    0.9165449022501867
+   ],
+   "test_rmse": 0.6800005658404299,
+   "valid_rmse": 0.6160773039985735
+  },
+  "LCRC": {
+   "direction_accuracy_all": 0.908843537414966,
+   "direction_accuracy_ci95": [
+    0.8846746263215457,
+    0.931269159051416
+   ],
+   "test_rmse": 0.7293241969859101,
+   "valid_rmse": 0.7068848920120308
+  }
+ },
+ "real_label": {
+  "GINE": {
+   "checks": {
+    "atom_jaccard_adv": true,
+    "bond_recall_adv": true,
+    "hit_boundary_adv": true
+   }
+  },
+  "LCRC": {
+   "checks": {
+    "atom_jaccard_adv": false,
+    "bond_recall_adv": false,
+    "hit_boundary_adv": false
+   }
+  }
+ },
+ "round_id": "lcrc-explanation-task-relevance-sprint-v1",
+ "zero_inflation": {
+  "GINE": {
+   "fraction_enrichment_gt_0": 0.1433778857837181,
+   "fraction_top1_gt_random_median": 0.1433778857837181,
+   "mean_enrichment": 0.09842991539027096,
+   "median_enrichment": 0.0,
+   "n": 1646
+  },
+  "LCRC": {
+   "fraction_enrichment_gt_0": 0.16707168894289187,
+   "fraction_top1_gt_random_median": 0.16707168894289187,
+   "mean_enrichment": 0.11856718094399452,
+   "median_enrichment": 0.0,
+   "n": 1646
+  },
+  "LOCAL_LCRC": {
+   "fraction_enrichment_gt_0": 0.34143377885783716,
+   "fraction_top1_gt_random_median": 0.34143377885783716,
+   "mean_enrichment": 0.3244157231436938,
+   "median_enrichment": 0.0,
+   "n": 1646
+  }
+ }
+}

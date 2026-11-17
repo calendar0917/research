@@ -462,7 +462,9 @@ def component_bootstrap(
         out["ci95"] = {k: [None, None] for k in point}
         out["boot"] = {k: [] for k in point}
         return out
-    comp_to_idx = {int(c): np.flatnonzero(components == c) for c in comps.tolist()}
+    # Only masked units may enter a bootstrap replicate.  Building this map
+    # from all rows would silently pull NaN/out-of-scope pairs back in.
+    comp_to_idx = {int(c): np.flatnonzero((components == c) & mask) for c in comps.tolist()}
     rng = np.random.default_rng(int(seed))
     draws: dict[str, list[float]] = {k: [] for k in point}
     for _ in range(int(n_boot)):

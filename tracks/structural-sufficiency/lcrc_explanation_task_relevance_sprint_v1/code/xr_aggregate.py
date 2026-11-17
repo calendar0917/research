@@ -29,7 +29,12 @@ import xr_models as M
 
 def _load_endpoint_records(path: Path) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
-    with open(path, "r", encoding="utf-8") as handle:
+    import gzip
+    actual = Path(path)
+    if not actual.is_file() and Path(str(path) + ".gz").is_file():
+        actual = Path(str(path) + ".gz")
+    opener = gzip.open if actual.suffix == ".gz" else open
+    with opener(actual, "rt", encoding="utf-8") as handle:
         for line in handle:
             if not line.strip():
                 continue
@@ -213,7 +218,7 @@ def build_tables(
                 }
 
         loc: dict[str, dict[str, Any]] = {}
-        for name, model in (("LCRC", "LCRC"), ("GINE", "GINE")):
+        for name, model in (("LCRC", "LCRC"), ("GINE", "GINE"), ("LOCAL_LCRC", "LOCAL_LCRC")):
             vals = {
                 "atom_jaccard": _pair_mean(ea, eb, model, ("top1", "atom_jaccard")),
                 "atom_recall": _pair_mean(ea, eb, model, ("top1", "atom_recall")),
@@ -310,7 +315,7 @@ def build_tables(
             "failure_mode_LCRC": fail_mode("LCRC"),
             "failure_mode_GINE": fail_mode("GINE"),
         }
-        for name in ("LCRC", "GINE"):
+        for name in ("LCRC", "GINE", "LOCAL_LCRC"):
             for key, val in loc[name].items():
                 row[f"{key}_{name}"] = val
             for key, val in oracle_pair[name].items():
@@ -428,6 +433,34 @@ def compare_models(
             "seed": bs["seed"],
         }
 
+    def add_single(metric: str, stratum: str, unit: str, vals: np.ndarray, comps: np.ndarray, mask: np.ndarray, note: str = "") -> None:
+        mask = np.asarray(mask, dtype=bool) & np.isfinite(vals)
+        if int(mask.sum()) == 0:
+            return
+        bs = _boot({"v": vals}, comps, mask)
+        point = bs["point"]["v"]
+        ci = bs["ci95"]["v"]
+        out.append({
+            "metric": metric,
+            "stratum": stratum,
+            "model": "LOCAL_LCRC",
+            "unit": unit,
+            "n_units": int(mask.sum()),
+            "n_components": int(np.unique(comps[mask]).size),
+            "support": _support(comps[mask], int(mask.sum())),
+            "point": point,
+            "ci_low": ci[0],
+            "ci_high": ci[1],
+            "diff_point": None,
+            "diff_ci_low": None,
+            "diff_ci_high": None,
+            "note": note,
+        })
+        summary["metrics"].setdefault(metric, {})[f"{stratum}:LOCAL_LCRC"] = {
+            "point": bs["point"], "ci95": bs["ci95"], "n_pairs": bs["n_pairs"],
+            "n_components": bs["n_components"], "n_boot": bs["n_boot"], "seed": bs["seed"],
+        }
+
     for stratum in STRATA:
         subset = _subset(pair_rows, stratum)
         if not subset:
@@ -459,8 +492,20 @@ def compare_models(
                 np.ones(n, dtype=bool),
                 "Top-1 minus mean same-size random controls",
             )
+        # local-output heuristic (LCRC atom output) as a non-gradient baseline
+        for metric in ("atom_jaccard_adv", "atom_recall_adv", "bond_recall_adv", "hit_boundary_adv"):
+            add_single(
+                f"{metric}_advantage",
+                stratum,
+                "pairs",
+                _metric_values(subset, f"{metric}_LOCAL_LCRC"),
+                comps,
+                np.ones(n, dtype=bool),
+                "local atom-output heuristic, same search and size controls",
+            )
         # oracle endpoint metrics
-        osub = [r for r in oracle_rows if r["stratum"] == stratum and r["model"] in ("LCRC", "GINE")]
+        pair_ids = {str(r["pair_id"]) for r in subset}
+        osub = [r for r in oracle_rows if str(r["pair_id"]) in pair_ids and r["model"] in ("LCRC", "GINE")]
         if osub:
             ocomps = np.asarray([int(r["component"]) for r in osub], dtype=np.int64)
             by_key: dict[tuple[str, str], dict[str, Any]] = {}
@@ -474,7 +519,7 @@ def compare_models(
                 mask2 = np.isfinite(lv2) & np.isfinite(gv2)
                 add_metric(metric, stratum, "endpoints", lv2, gv2, comps2, mask2, "component bootstrap over endpoints")
             # S2-matched LCRC only
-            s2 = [r for r in oracle_rows if r["stratum"] == stratum and r["model"] == "LCRC_s2_matched" and _f(r.get("oracle_enrichment")) is not None]
+            s2 = [r for r in oracle_rows if str(r["pair_id"]) in pair_ids and r["model"] == "LCRC_s2_matched" and _f(r.get("oracle_enrichment")) is not None]
             if s2:
                 comps3 = np.asarray([int(r["component"]) for r in s2], dtype=np.int64)
                 vals3 = np.asarray([_f(r["oracle_enrichment"]) for r in s2], dtype=np.float64)
@@ -495,6 +540,12 @@ def compare_models(
                     "diff_ci_high": None,
                     "note": "supplementary LCRC-only n_s2_affected-matched control",
                 })
+            local = [r for r in oracle_rows if str(r["pair_id"]) in pair_ids and r["model"] == "LOCAL_LCRC"]
+            if local:
+                lcomps = np.asarray([int(r["component"]) for r in local], dtype=np.int64)
+                for metric, key in (("oracle_enrichment", "oracle_enrichment"), ("oracle_top1_capture", "top1_capture")):
+                    vals = np.asarray([_f(r.get(key)) for r in local], dtype=np.float64)
+                    add_single(metric, stratum, "endpoints", vals, lcomps, np.ones(len(local), dtype=bool), "local atom-output heuristic baseline")
 
     # full-split RMSE rows
     for split in ("valid", "test"):
@@ -576,19 +627,53 @@ def decide(
     unique_lcrc = bool(primary is not None and primary["ci_low"] is not None and primary["ci_low"] > 0)
 
     labels: list[str] = []
-    if prediction_accurate and (oracle_reliable["LCRC"] or oracle_reliable["GINE"]) and (real_supported["LCRC"] or real_supported["GINE"]):
+    continue_models = [
+        m for m in ("LCRC", "GINE")
+        if prediction_accurate and oracle_reliable[m] and real_supported[m]
+    ]
+    unresolved_models = [
+        m for m in ("LCRC", "GINE")
+        if oracle_reliable[m] and not real_supported[m]
+    ]
+    if continue_models:
         labels.append("CONTINUE_STRUCTURAL_EXPLANATION")
     if prediction_accurate and not (oracle_reliable["LCRC"] or oracle_reliable["GINE"]):
         labels.append("EXPLANATION_METHOD_OR_REPRESENTATION_BOTTLENECK")
-    if (oracle_reliable["LCRC"] or oracle_reliable["GINE"]) and not (real_supported["LCRC"] or real_supported["GINE"]):
+    if unresolved_models:
         labels.append("CHEMICAL_RELEVANCE_UNRESOLVED")
     if not prediction_accurate:
         labels.append("PREDICTION_CONFOUNDED")
     if no_unique:
         labels.append("NO_UNIQUE_LCRC_ADVANTAGE_SHOWN")
 
+    label_scope: dict[str, list[str]] = {}
+    if "CONTINUE_STRUCTURAL_EXPLANATION" in labels:
+        label_scope["CONTINUE_STRUCTURAL_EXPLANATION"] = continue_models
+    if "CHEMICAL_RELEVANCE_UNRESOLVED" in labels:
+        label_scope["CHEMICAL_RELEVANCE_UNRESOLVED"] = unresolved_models
+    if "NO_UNIQUE_LCRC_ADVANTAGE_SHOWN" in labels:
+        label_scope["NO_UNIQUE_LCRC_ADVANTAGE_SHOWN"] = ["LCRC", "GINE"]
+
+    local_rows = [r for r in comparison_rows if r["metric"] == "oracle_enrichment" and r["stratum"] == "all" and r["model"] == "LOCAL_LCRC"]
+    local_heuristic = None if not local_rows else {
+        "oracle_enrichment": {"point": local_rows[0]["point"], "ci95": [local_rows[0]["ci_low"], local_rows[0]["ci_high"]]},
+        "note": "not a protocol decider; reported because it is a strong non-gradient local baseline",
+    }
     return {
         "labels": labels,
+        "label_scope": label_scope,
+        "model_status": {
+            m: {
+                "prediction_accurate": bool(prediction_accurate),
+                "oracle_localization_reliable": bool(oracle_reliable[m]),
+                "real_label_localization_supported": bool(real_supported[m]),
+                "continue_supported": bool(m in continue_models),
+                "chemical_relevance_unresolved": bool(m in unresolved_models),
+            }
+            for m in ("LCRC", "GINE")
+        },
+        "lcrc_interpretation": "PAUSE_LCRC_STRUCTURAL_CLAIM" if "LCRC" in unresolved_models else "CONTINUE_LCRC_STRUCTURAL_CLAIM",
+        "local_heuristic": local_heuristic,
         "thresholds": {
             "prediction_accurate": "both models Valid/Test RMSE <= 0.80 and direction accuracy on |Delta y|>=0.1 >= 0.75",
             "oracle_localization_reliable": "component-bootstrap 95% lower bound of oracle_enrichment > 0 and point >= 0.02",
@@ -653,11 +738,15 @@ def main() -> int:
         "bond_recall_GINE", "bond_recall_random_GINE", "bond_recall_adv_GINE",
         "hit_attachment_boundary_LCRC", "hit_boundary_random_LCRC", "hit_boundary_adv_LCRC",
         "hit_attachment_boundary_GINE", "hit_boundary_random_GINE", "hit_boundary_adv_GINE",
-        "localisation_success_LCRC", "localisation_success_GINE",
+        "localisation_success_LCRC", "localisation_success_GINE", "localisation_success_LOCAL_LCRC",
         "oracle_capture_LCRC", "oracle_random_median_LCRC", "oracle_enrichment_LCRC",
         "oracle_capture_GINE", "oracle_random_median_GINE", "oracle_enrichment_GINE",
         "oracle_capture_LCRC_s2", "oracle_enrichment_LCRC_s2",
         "oracle_capture_LOCAL_LCRC", "oracle_enrichment_LOCAL_LCRC",
+        "atom_jaccard_LOCAL_LCRC", "atom_jaccard_random_LOCAL_LCRC", "atom_jaccard_adv_LOCAL_LCRC",
+        "atom_recall_LOCAL_LCRC", "atom_recall_random_LOCAL_LCRC", "atom_recall_adv_LOCAL_LCRC",
+        "bond_recall_LOCAL_LCRC", "bond_recall_random_LOCAL_LCRC", "bond_recall_adv_LOCAL_LCRC",
+        "hit_attachment_boundary_LOCAL_LCRC", "hit_boundary_random_LOCAL_LCRC", "hit_boundary_adv_LOCAL_LCRC",
     ]
     measured_info = _write_csv(C.ANALYSIS_DIR / "measured_pair_results.csv", pair_rows, measured_cols)
     oracle_cols = [
@@ -685,6 +774,20 @@ def main() -> int:
         "pair_accurate": {model: int(sum(1 for r in pair_rows if r[f"pair_accurate_{model}"] is True)) for model in ("LCRC", "GINE")},
     }
     C.write_json(C.ANALYSIS_DIR / "decision.json", decision)
+    remote_runs_path = C.ANALYSIS_DIR / "remote_runs.json"
+    remote_runs = C.read_json(remote_runs_path) if remote_runs_path.is_file() else None
+    figures = []
+    for name in (
+        "localisation_and_oracle_forest.png",
+        "pair_prediction_scatter.png",
+        "failure_modes.png",
+        "oracle_capture_distribution.png",
+        "molecule_cases.png",
+    ):
+        path = C.FIGURES_DIR / name
+        if path.is_file():
+            figures.append({"path": C.relpath(path), "sha256": C.sha256_file(path)})
+    strata_path = C.ANALYSIS_DIR / "stratified_localization.csv"
     manifest = {
         "round_id": C.ROUND_ID,
         "created_utc": C.utc_now(),
@@ -696,14 +799,30 @@ def main() -> int:
             "model_replay_sha256": C.sha256_file(C.ANALYSIS_DIR / "model_replay.json"),
             "p1_gates_sha256": C.sha256_file(C.ANALYSIS_DIR / "p1_gates.json") if (C.ANALYSIS_DIR / "p1_gates.json").is_file() else None,
             "measured_records_sha256": C.sha256_file(Path(args.measured_dir) / "endpoints.jsonl"),
+            "measured_records_gz_sha256": C.sha256_file(Path(args.measured_dir) / "endpoints.jsonl.gz") if (Path(args.measured_dir) / "endpoints.jsonl.gz").is_file() else None,
+            "measured_candidate_log_sha256": C.sha256_file(Path(args.measured_dir) / "candidate_logs.jsonl.gz") if (Path(args.measured_dir) / "candidate_logs.jsonl.gz").is_file() else None,
             "oracle_records_sha256": C.sha256_file(Path(args.oracle_dir) / "endpoints.jsonl"),
+            "oracle_records_gz_sha256": C.sha256_file(Path(args.oracle_dir) / "endpoints.jsonl.gz") if (Path(args.oracle_dir) / "endpoints.jsonl.gz").is_file() else None,
+            "oracle_candidate_log_sha256": C.sha256_file(Path(args.oracle_dir) / "candidate_logs.jsonl.gz") if (Path(args.oracle_dir) / "candidate_logs.jsonl.gz").is_file() else None,
         },
         "outputs": {
             "measured_pair_results": measured_info,
             "oracle_localization_results": oracle_info,
             "model_comparison": comparison_info,
             "decision": {"path": C.relpath(C.ANALYSIS_DIR / "decision.json"), "sha256": C.sha256_file(C.ANALYSIS_DIR / "decision.json")},
+            "figures": figures,
+            "stratified_localization": None if not strata_path.is_file() else {"path": C.relpath(strata_path), "sha256": C.sha256_file(strata_path)},
         },
+        "execution": None if remote_runs is None else {
+            "host": "res",
+            "backend": "process",
+            "node": "a100-2",
+            "driver": "550.163.01",
+            "torch": "2.5.1+cu124",
+            "pools": {"measured": "res-gpu0", "oracle": "res-gpu1"},
+            "gpu_hours": remote_runs.get("gpu_hours"),
+        },
+        "remote_runs": remote_runs,
         "statistics": {"bootstrap_replicates": int(args.n_boot), "bootstrap_seed": C.BOOTSTRAP_SEED, "component_unit": "shared-endpoint connected component"},
         "status": "AGGREGATED",
     }

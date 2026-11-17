@@ -1,0 +1,63 @@
+{
+ "failure_modes": {
+  "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/figures/failure_modes.png"
+ },
+ "forest": {
+  "n_real_label_rows": 12,
+  "oracle": [
+   [
+    "LCRC",
+    0.1185671809,
+    0.08954143201,
+    0.1484691221
+   ],
+   [
+    "GINE",
+    0.09842991539,
+    0.06652164954,
+    0.1341531663
+   ],
+   [
+    "LOCAL_LCRC",
+    0.3244157231,
+    0.2875596492,
+    0.3648894072
+   ]
+  ],
+  "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/figures/localisation_and_oracle_forest.png"
+ },
+ "molecules": {
+  "cases": {
+   "failure": {
+    "pair_id": "p00765_01428",
+    "row_id": 1428,
+    "side": "b",
+    "smiles": "Cc1c(Sc2ccc(Cl)cc2)c3cc(ccc3n1CC(=O)O)S(=O)(=O)C"
+   },
+   "inconsistent": {
+    "pair_id": "p01216_03406",
+    "row_id": 1216,
+    "side": "a",
+    "smiles": "COc1cc(ccc1Nc2ncc(C)c(n2)c3cnc4ccccn34)N5CCN(CC5)C(=O)C"
+   },
+   "success": {
+    "pair_id": "p02719_03038",
+    "row_id": 2719,
+    "side": "b",
+    "smiles": "Clc1ccccc1C(=O)NCC23CC4CC(CC(C4)C2)C3"
+   }
+  },
+  "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/figures/molecule_cases.png",
+  "rules": {
+   "failure": "LCRC accurate_mislocalized; |Delta-y error| <= 0.01; |Delta y| >= 0.2; lowest LCRC atom recall",
+   "inconsistent": "LCRC accurate_mislocalized and GINE accurate_localized; both pair-accurate; largest GINE-minus-LCRC oracle enrichment",
+   "success": "LCRC and GINE both accurate_localized; atom recall >= 0.5 both; highest LCRC oracle enrichment"
+  }
+ },
+ "oracle_hist": {
+  "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/figures/oracle_capture_distribution.png"
+ },
+ "scatter": {
+  "path": "tracks/structural-sufficiency/lcrc_explanation_task_relevance_sprint_v1/analysis/figures/pair_prediction_scatter.png"
+ }
+}

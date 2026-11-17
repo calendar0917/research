@@ -1,23 +1,128 @@
 metric,stratum,model,unit,n_units,n_components,support,point,ci_low,ci_high,diff_point,diff_ci_low,diff_ci_high,note
-direction_accuracy,all,LCRC,pairs,735,221,OK,0,0,0,,,,only |Delta y| >= 0.1
-direction_accuracy,all,GINE,pairs,735,221,OK,0,0,0,,,,only |Delta y| >= 0.1
-direction_accuracy,all,LCRC_minus_GINE,pairs,735,221,OK,0,0,0,0,0,0,only |Delta y| >= 0.1
-direction_accuracy,train_train,LCRC,pairs,708,218,OK,0,0,0,,,,only |Delta y| >= 0.1
-direction_accuracy,train_train,GINE,pairs,708,218,OK,0,0,0,,,,only |Delta y| >= 0.1
-direction_accuracy,train_train,LCRC_minus_GINE,pairs,708,218,OK,0,0,0,0,0,0,only |Delta y| >= 0.1
-oracle_enrichment,train_train,LCRC,endpoints,3,1,LOW_SUPPORT,0,0,0,,,,component bootstrap over endpoints
-oracle_enrichment,train_train,GINE,endpoints,3,1,LOW_SUPPORT,0.6666666667,0.6666666667,0.6666666667,,,,component bootstrap over endpoints
-oracle_enrichment,train_train,LCRC_minus_GINE,endpoints,3,1,LOW_SUPPORT,-0.6666666667,-0.6666666667,-0.6666666667,-0.6666666667,-0.6666666667,-0.6666666667,component bootstrap over endpoints
-oracle_top1_capture,train_train,LCRC,endpoints,3,1,LOW_SUPPORT,0,0,0,,,,component bootstrap over endpoints
-oracle_top1_capture,train_train,GINE,endpoints,3,1,LOW_SUPPORT,0.6666666667,0.6666666667,0.6666666667,,,,component bootstrap over endpoints
-oracle_top1_capture,train_train,LCRC_minus_GINE,endpoints,3,1,LOW_SUPPORT,-0.6666666667,-0.6666666667,-0.6666666667,-0.6666666667,-0.6666666667,-0.6666666667,component bootstrap over endpoints
-oracle_enrichment_s2_matched,train_train,LCRC,endpoints,3,1,LOW_SUPPORT,-0.020037233,-0.020037233,-0.020037233,,,,supplementary LCRC-only n_s2_affected-matched control
-direction_accuracy,train_valid,LCRC,pairs,3,3,LOW_SUPPORT,0,0,0,,,,only |Delta y| >= 0.1
-direction_accuracy,train_valid,GINE,pairs,3,3,LOW_SUPPORT,0,0,0,,,,only |Delta y| >= 0.1
+pair_abs_delta_error,all,LCRC,pairs,823,231,OK,0.2583514998,0.2305031739,0.2872653328,,,,lower is better
+pair_abs_delta_error,all,GINE,pairs,823,231,OK,0.2866152169,0.2616642362,0.3130983883,,,,lower is better
+pair_abs_delta_error,all,LCRC_minus_GINE,pairs,823,231,OK,-0.02826371715,-0.04619722664,-0.008488977509,-0.02826371715,-0.04619722664,-0.008488977509,lower is better
+direction_accuracy,all,LCRC,pairs,735,221,OK,0.9088435374,0.8846746263,0.9312691591,,,,only |Delta y| >= 0.1
+direction_accuracy,all,GINE,pairs,735,221,OK,0.8925170068,0.8626578647,0.9165449023,,,,only |Delta y| >= 0.1
+direction_accuracy,all,LCRC_minus_GINE,pairs,735,221,OK,0.01632653061,-0.004920403234,0.037673508,0.01632653061,-0.004920403234,0.037673508,only |Delta y| >= 0.1
+atom_jaccard_adv_advantage,all,LCRC,pairs,823,231,OK,0.01567093595,-0.004849833066,0.03731289277,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,all,GINE,pairs,823,231,OK,0.02194234208,0.0002069876538,0.04533208532,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,all,LCRC_minus_GINE,pairs,823,231,OK,-0.006271406129,-0.03359325839,0.01954752097,-0.006271406129,-0.03359325839,0.01954752097,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,all,LCRC,pairs,823,231,OK,0.01684618435,-0.01351327443,0.04874135748,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,all,GINE,pairs,823,231,OK,0.05040565512,0.01500470813,0.08946910921,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,all,LCRC_minus_GINE,pairs,823,231,OK,-0.03355947077,-0.07767805067,0.01061989255,-0.03355947077,-0.07767805067,0.01061989255,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,all,LCRC,pairs,823,231,OK,0.01033282947,-0.01602474769,0.03759922412,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,all,GINE,pairs,823,231,OK,0.03891947651,0.01081260021,0.07117817612,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,all,LCRC_minus_GINE,pairs,823,231,OK,-0.02858664704,-0.06571982953,0.007505229068,-0.02858664704,-0.06571982953,0.007505229068,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,all,LCRC,pairs,823,231,OK,0.03092923682,-0.01666690085,0.08367771618,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,all,GINE,pairs,823,231,OK,0.08380164034,0.02612587884,0.1544701349,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,all,LCRC_minus_GINE,pairs,823,231,OK,-0.05287240352,-0.1177433353,0.0142338396,-0.05287240352,-0.1177433353,0.0142338396,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,all,LOCAL_LCRC,pairs,823,231,OK,0.0619330058,0.03220873629,0.09536604129,,,,"local atom-output heuristic, same search and size controls"
+atom_recall_adv_advantage,all,LOCAL_LCRC,pairs,823,231,OK,0.07523668489,0.03421016456,0.1206625753,,,,"local atom-output heuristic, same search and size controls"
+bond_recall_adv_advantage,all,LOCAL_LCRC,pairs,823,231,OK,0.08707219522,0.04837336148,0.1299663425,,,,"local atom-output heuristic, same search and size controls"
+hit_boundary_adv_advantage,all,LOCAL_LCRC,pairs,823,231,OK,0.01727673147,-0.02481752759,0.06309752404,,,,"local atom-output heuristic, same search and size controls"
+oracle_enrichment,all,LCRC,endpoints,1646,231,OK,0.1185671809,0.08954143201,0.1484691221,,,,component bootstrap over endpoints
+oracle_enrichment,all,GINE,endpoints,1646,231,OK,0.09842991539,0.06652164954,0.1341531663,,,,component bootstrap over endpoints
+oracle_enrichment,all,LCRC_minus_GINE,endpoints,1646,231,OK,0.02013726555,-0.02129080469,0.06112645389,0.02013726555,-0.02129080469,0.06112645389,component bootstrap over endpoints
+oracle_top1_capture,all,LCRC,endpoints,1646,231,OK,0.1221288724,0.09224254829,0.1523844752,,,,component bootstrap over endpoints
+oracle_top1_capture,all,GINE,endpoints,1646,231,OK,0.1049804486,0.07263125333,0.1414062096,,,,component bootstrap over endpoints
+oracle_top1_capture,all,LCRC_minus_GINE,endpoints,1646,231,OK,0.0171484238,-0.02308126211,0.05745572196,0.0171484238,-0.02308126211,0.05745572196,component bootstrap over endpoints
+oracle_enrichment_s2_matched,all,LCRC,endpoints,1646,231,OK,0.1181707892,0.08814325094,0.1489591899,,,,supplementary LCRC-only n_s2_affected-matched control
+oracle_enrichment,all,LOCAL_LCRC,endpoints,1646,231,OK,0.3244157231,0.2875596492,0.3648894072,,,,local atom-output heuristic baseline
+oracle_top1_capture,all,LOCAL_LCRC,endpoints,1646,231,OK,0.328947246,0.2916950056,0.3696557974,,,,local atom-output heuristic baseline
+pair_abs_delta_error,train_train,LCRC,pairs,791,228,OK,0.2494063474,0.2232974537,0.2767655933,,,,lower is better
+pair_abs_delta_error,train_train,GINE,pairs,791,228,OK,0.2787916704,0.2576330986,0.3014209599,,,,lower is better
+pair_abs_delta_error,train_train,LCRC_minus_GINE,pairs,791,228,OK,-0.02938532301,-0.04857887171,-0.01013823,-0.02938532301,-0.04857887171,-0.01013823,lower is better
+direction_accuracy,train_train,LCRC,pairs,708,218,OK,0.9096045198,0.8854002414,0.9320999706,,,,only |Delta y| >= 0.1
+direction_accuracy,train_train,GINE,pairs,708,218,OK,0.8940677966,0.865380094,0.9191451408,,,,only |Delta y| >= 0.1
+direction_accuracy,train_train,LCRC_minus_GINE,pairs,708,218,OK,0.01553672316,-0.004267104995,0.03623451719,0.01553672316,-0.004267104995,0.03623451719,only |Delta y| >= 0.1
+atom_jaccard_adv_advantage,train_train,LCRC,pairs,791,228,OK,0.01899421882,-0.001589734873,0.04046753319,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_train,GINE,pairs,791,228,OK,0.02414914109,0.002602866984,0.04669344414,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_train,LCRC_minus_GINE,pairs,791,228,OK,-0.00515492227,-0.0322685438,0.02074010049,-0.00515492227,-0.0322685438,0.02074010049,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_train,LCRC,pairs,791,228,OK,0.02006338671,-0.01046233525,0.05358570279,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_train,GINE,pairs,791,228,OK,0.05305652128,0.01783597908,0.0905884053,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_train,LCRC_minus_GINE,pairs,791,228,OK,-0.03299313457,-0.07784313334,0.009220542698,-0.03299313457,-0.07784313334,0.009220542698,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_train,LCRC,pairs,791,228,OK,0.01240223597,-0.01399292305,0.04038966354,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_train,GINE,pairs,791,228,OK,0.04175094817,0.01345623889,0.07225559007,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_train,LCRC_minus_GINE,pairs,791,228,OK,-0.0293487122,-0.06634362005,0.005218237037,-0.0293487122,-0.06634362005,0.005218237037,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_train,LCRC,pairs,791,228,OK,0.03395829571,-0.01457117706,0.08934632182,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_train,GINE,pairs,791,228,OK,0.08296460177,0.0278805064,0.1450276059,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_train,LCRC_minus_GINE,pairs,791,228,OK,-0.04900630606,-0.1134149231,0.01726318795,-0.04900630606,-0.1134149231,0.01726318795,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_train,LOCAL_LCRC,pairs,791,228,OK,0.06639354421,0.03536279822,0.0977127282,,,,"local atom-output heuristic, same search and size controls"
+atom_recall_adv_advantage,train_train,LOCAL_LCRC,pairs,791,228,OK,0.08054348399,0.0378502946,0.1252350377,,,,"local atom-output heuristic, same search and size controls"
+bond_recall_adv_advantage,train_train,LOCAL_LCRC,pairs,791,228,OK,0.09193004635,0.05223139836,0.133317442,,,,"local atom-output heuristic, same search and size controls"
+hit_boundary_adv_advantage,train_train,LOCAL_LCRC,pairs,791,228,OK,0.02097819216,-0.02134067504,0.06464673145,,,,"local atom-output heuristic, same search and size controls"
+oracle_enrichment,train_train,LCRC,endpoints,1582,228,OK,0.1218724025,0.09115015289,0.1521221038,,,,component bootstrap over endpoints
+oracle_enrichment,train_train,GINE,endpoints,1582,228,OK,0.09991866781,0.06705793535,0.1364675993,,,,component bootstrap over endpoints
+oracle_enrichment,train_train,LCRC_minus_GINE,endpoints,1582,228,OK,0.02195373467,-0.01964866204,0.06302574955,0.02195373467,-0.01964866204,0.06302574955,component bootstrap over endpoints
+oracle_top1_capture,train_train,LCRC,endpoints,1582,228,OK,0.1255781826,0.09468410858,0.1570142671,,,,component bootstrap over endpoints
+oracle_top1_capture,train_train,GINE,endpoints,1582,228,OK,0.1067342037,0.07404061427,0.1429513535,,,,component bootstrap over endpoints
+oracle_top1_capture,train_train,LCRC_minus_GINE,endpoints,1582,228,OK,0.01884397896,-0.02235424906,0.0599092398,0.01884397896,-0.02235424906,0.0599092398,component bootstrap over endpoints
+oracle_enrichment_s2_matched,train_train,LCRC,endpoints,1582,228,OK,0.1215752976,0.09064135402,0.1527521,,,,supplementary LCRC-only n_s2_affected-matched control
+oracle_enrichment,train_train,LOCAL_LCRC,endpoints,1582,228,OK,0.3282884665,0.2903737945,0.3665619499,,,,local atom-output heuristic baseline
+oracle_top1_capture,train_train,LOCAL_LCRC,endpoints,1582,228,OK,0.3327415651,0.2944127912,0.3715308785,,,,local atom-output heuristic baseline
+pair_abs_delta_error,train_valid,LCRC,pairs,5,4,LOW_SUPPORT,0.6315064665,0.3525857953,0.8176944223,,,,lower is better
+pair_abs_delta_error,train_valid,GINE,pairs,5,4,LOW_SUPPORT,0.3521111778,0.215299451,0.4915096889,,,,lower is better
+pair_abs_delta_error,train_valid,LCRC_minus_GINE,pairs,5,4,LOW_SUPPORT,0.2793952887,0.09404442598,0.3811169517,0.2793952887,0.09404442598,0.3811169517,lower is better
+direction_accuracy,train_valid,LCRC,pairs,3,3,LOW_SUPPORT,1,1,1,,,,only |Delta y| >= 0.1
+direction_accuracy,train_valid,GINE,pairs,3,3,LOW_SUPPORT,1,1,1,,,,only |Delta y| >= 0.1
 direction_accuracy,train_valid,LCRC_minus_GINE,pairs,3,3,LOW_SUPPORT,0,0,0,0,0,0,only |Delta y| >= 0.1
-direction_accuracy,train_test,LCRC,pairs,24,7,LOW_SUPPORT,0,0,0,,,,only |Delta y| >= 0.1
-direction_accuracy,train_test,GINE,pairs,24,7,LOW_SUPPORT,0,0,0,,,,only |Delta y| >= 0.1
-direction_accuracy,train_test,LCRC_minus_GINE,pairs,24,7,LOW_SUPPORT,0,0,0,0,0,0,only |Delta y| >= 0.1
+atom_jaccard_adv_advantage,train_valid,LCRC,pairs,5,4,LOW_SUPPORT,-0.1141547168,-0.1542534722,-0.06345486111,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_valid,GINE,pairs,5,4,LOW_SUPPORT,-0.01684659091,-0.1164806548,0.1504616477,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_valid,LCRC_minus_GINE,pairs,5,4,LOW_SUPPORT,-0.0973081259,-0.2835345644,0.0318452381,-0.0973081259,-0.2835345644,0.0318452381,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_valid,LCRC,pairs,5,4,LOW_SUPPORT,-0.168125,-0.22875,-0.08671875,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_valid,GINE,pairs,5,4,LOW_SUPPORT,-0.016875,-0.1875,0.316015625,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_valid,LCRC_minus_GINE,pairs,5,4,LOW_SUPPORT,-0.15125,-0.533203125,0.0859375,-0.15125,-0.533203125,0.0859375,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_valid,LCRC,pairs,5,4,LOW_SUPPORT,-0.1204166667,-0.1642361111,-0.0546875,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_valid,GINE,pairs,5,4,LOW_SUPPORT,0.01572916667,-0.1330208333,0.329296875,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_valid,LCRC_minus_GINE,pairs,5,4,LOW_SUPPORT,-0.1361458333,-0.483984375,0.06640625,-0.1361458333,-0.483984375,0.06640625,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_valid,LCRC,pairs,5,4,LOW_SUPPORT,-0.21875,-0.3046875,-0.109375,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_valid,GINE,pairs,5,4,LOW_SUPPORT,0,-0.25,0.3671875,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_valid,LCRC_minus_GINE,pairs,5,4,LOW_SUPPORT,-0.21875,-0.6640625,0.140625,-0.21875,-0.6640625,0.140625,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_valid,LOCAL_LCRC,pairs,5,4,LOW_SUPPORT,0.08088248557,-0.1178323413,0.2339346913,,,,"local atom-output heuristic, same search and size controls"
+atom_recall_adv_advantage,train_valid,LOCAL_LCRC,pairs,5,4,LOW_SUPPORT,0.1103125,-0.24765625,0.3489583333,,,,"local atom-output heuristic, same search and size controls"
+bond_recall_adv_advantage,train_valid,LOCAL_LCRC,pairs,5,4,LOW_SUPPORT,0.1020833333,-0.16796875,0.2821180556,,,,"local atom-output heuristic, same search and size controls"
+hit_boundary_adv_advantage,train_valid,LOCAL_LCRC,pairs,5,4,LOW_SUPPORT,0.06875,-0.390625,0.375,,,,"local atom-output heuristic, same search and size controls"
+oracle_enrichment,train_valid,LCRC,endpoints,10,4,LOW_SUPPORT,0.1,0,0.375,,,,component bootstrap over endpoints
+oracle_enrichment,train_valid,GINE,endpoints,10,4,LOW_SUPPORT,0.1236968215,0,0.375,,,,component bootstrap over endpoints
+oracle_enrichment,train_valid,LCRC_minus_GINE,endpoints,10,4,LOW_SUPPORT,-0.02369682152,-0.3,0.2289095355,-0.02369682152,-0.3,0.2289095355,component bootstrap over endpoints
+oracle_top1_capture,train_valid,LCRC,endpoints,10,4,LOW_SUPPORT,0.1,0,0.375,,,,component bootstrap over endpoints
+oracle_top1_capture,train_valid,GINE,endpoints,10,4,LOW_SUPPORT,0.1236968215,0,0.375,,,,component bootstrap over endpoints
+oracle_top1_capture,train_valid,LCRC_minus_GINE,endpoints,10,4,LOW_SUPPORT,-0.02369682152,-0.3,0.2289095355,-0.02369682152,-0.3,0.2289095355,component bootstrap over endpoints
+oracle_enrichment_s2_matched,train_valid,LCRC,endpoints,10,4,LOW_SUPPORT,0.08175591073,-0.05473226781,0.3521948884,,,,supplementary LCRC-only n_s2_affected-matched control
+oracle_enrichment,train_valid,LOCAL_LCRC,endpoints,10,4,LOW_SUPPORT,0.6,0.125,0.9285714286,,,,local atom-output heuristic baseline
+oracle_top1_capture,train_valid,LOCAL_LCRC,endpoints,10,4,LOW_SUPPORT,0.6364881785,0.1706102232,0.9285714286,,,,local atom-output heuristic baseline
+pair_abs_delta_error,train_test,LCRC,pairs,27,7,LOW_SUPPORT,0.4513085617,0.2085107756,0.6425985281,,,,lower is better
+pair_abs_delta_error,train_test,GINE,pairs,27,7,LOW_SUPPORT,0.5036872714,0.2160174988,0.7890323434,,,,lower is better
+pair_abs_delta_error,train_test,LCRC_minus_GINE,pairs,27,7,LOW_SUPPORT,-0.05237870974,-0.2073715126,0.1777735223,-0.05237870974,-0.2073715126,0.1777735223,lower is better
+direction_accuracy,train_test,LCRC,pairs,24,7,LOW_SUPPORT,0.875,0.7142857143,1,,,,only |Delta y| >= 0.1
+direction_accuracy,train_test,GINE,pairs,24,7,LOW_SUPPORT,0.8333333333,0.6470588235,1,,,,only |Delta y| >= 0.1
+direction_accuracy,train_test,LCRC_minus_GINE,pairs,24,7,LOW_SUPPORT,0.04166666667,-0.2857142857,0.2571428571,0.04166666667,-0.2857142857,0.2571428571,only |Delta y| >= 0.1
+atom_jaccard_adv_advantage,train_test,LCRC,pairs,27,7,LOW_SUPPORT,-0.05764715608,-0.08649720982,-0.006975859788,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_test,GINE,pairs,27,7,LOW_SUPPORT,-0.03552555983,-0.09313847248,0.05909824952,,,,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_test,LCRC_minus_GINE,pairs,27,7,LOW_SUPPORT,-0.02212159625,-0.120603355,0.05371460137,-0.02212159625,-0.120603355,0.05371460137,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_test,LCRC,pairs,27,7,LOW_SUPPORT,-0.04315200617,-0.08608250473,0.03596117424,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_test,GINE,pairs,27,7,LOW_SUPPORT,-0.01479552469,-0.1035940972,0.1323958333,,,,Top-1 minus mean same-size random controls
+atom_recall_adv_advantage,train_test,LCRC_minus_GINE,pairs,27,7,LOW_SUPPORT,-0.02835648148,-0.1565814568,0.07620614035,-0.02835648148,-0.1565814568,0.07620614035,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_test,LCRC,pairs,27,7,LOW_SUPPORT,-0.02608024691,-0.06730510753,0.05837339744,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_test,GINE,pairs,27,7,LOW_SUPPORT,-0.03973765432,-0.07157258065,0.0340625,,,,Top-1 minus mean same-size random controls
+bond_recall_adv_advantage,train_test,LCRC_minus_GINE,pairs,27,7,LOW_SUPPORT,0.01365740741,-0.04097403067,0.0715769849,0.01365740741,-0.04097403067,0.0715769849,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_test,LCRC,pairs,27,7,LOW_SUPPORT,-0.01157407407,-0.1029555377,0.08912037037,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_test,GINE,pairs,27,7,LOW_SUPPORT,0.1238425926,-0.1219512195,0.5658482143,,,,Top-1 minus mean same-size random controls
+hit_boundary_adv_advantage,train_test,LCRC_minus_GINE,pairs,27,7,LOW_SUPPORT,-0.1354166667,-0.5006727431,0.1125120192,-0.1354166667,-0.5006727431,0.1125120192,Top-1 minus mean same-size random controls
+atom_jaccard_adv_advantage,train_test,LOCAL_LCRC,pairs,27,7,LOW_SUPPORT,-0.0722534121,-0.09943841981,-0.04686200297,,,,"local atom-output heuristic, same search and size controls"
+atom_recall_adv_advantage,train_test,LOCAL_LCRC,pairs,27,7,LOW_SUPPORT,-0.08672839506,-0.1194755239,-0.05276442308,,,,"local atom-output heuristic, same search and size controls"
+bond_recall_adv_advantage,train_test,LOCAL_LCRC,pairs,27,7,LOW_SUPPORT,-0.05802469136,-0.09572368421,-0.03180732261,,,,"local atom-output heuristic, same search and size controls"
+hit_boundary_adv_advantage,train_test,LOCAL_LCRC,pairs,27,7,LOW_SUPPORT,-0.1006944444,-0.182296875,0.01398111979,,,,"local atom-output heuristic, same search and size controls"
+oracle_enrichment,train_test,LCRC,endpoints,54,7,LOW_SUPPORT,0.02517479856,0.001200068471,0.08334964945,,,,component bootstrap over endpoints
+oracle_enrichment,train_test,GINE,endpoints,54,7,LOW_SUPPORT,0.05013592682,0.005088497434,0.140120465,,,,component bootstrap over endpoints
+oracle_enrichment,train_test,LCRC_minus_GINE,endpoints,54,7,LOW_SUPPORT,-0.02496112826,-0.1015001538,0.04191969771,-0.02496112826,-0.1015001538,0.04191969771,component bootstrap over endpoints
+oracle_top1_capture,train_test,LCRC,endpoints,54,7,LOW_SUPPORT,0.02517479856,0.001200068471,0.08334964945,,,,component bootstrap over endpoints
+oracle_top1_capture,train_test,GINE,endpoints,54,7,LOW_SUPPORT,0.05013592682,0.005088497434,0.140120465,,,,component bootstrap over endpoints
+oracle_top1_capture,train_test,LCRC_minus_GINE,endpoints,54,7,LOW_SUPPORT,-0.02496112826,-0.1015001538,0.04191969771,-0.02496112826,-0.1015001538,0.04191969771,component bootstrap over endpoints
+oracle_enrichment_s2_matched,train_test,LCRC,endpoints,54,7,LOW_SUPPORT,0.02517479856,0.001200068471,0.08334964945,,,,supplementary LCRC-only n_s2_affected-matched control
+oracle_enrichment,train_test,LOCAL_LCRC,endpoints,54,7,LOW_SUPPORT,0.1599245621,0.1043690065,0.2200354105,,,,local atom-output heuristic baseline
+oracle_top1_capture,train_test,LOCAL_LCRC,endpoints,54,7,LOW_SUPPORT,0.1608357252,0.1052580312,0.2207294233,,,,local atom-output heuristic baseline
 full_split_rmse,valid,LCRC,molecules,420,,FULL_SPLIT,0.706884892,,,,,,official split; Test is DEVELOPMENT_TEST
 full_split_rmse,valid,GINE,molecules,420,,FULL_SPLIT,0.616077304,,,,,,official split; Test is DEVELOPMENT_TEST
 full_split_rmse,test,LCRC,molecules,420,,FULL_SPLIT,0.729324197,,,,,,official split; Test is DEVELOPMENT_TEST

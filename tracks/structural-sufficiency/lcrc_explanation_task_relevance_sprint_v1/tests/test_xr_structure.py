@@ -85,6 +85,15 @@ def test_component_bootstrap_resamples_components_not_pairs():
     assert len(out["boot"]["x"]) == 100
 
 
+def test_component_bootstrap_does_not_reintroduce_masked_nan():
+    values = {"x": np.asarray([1.0, 1.0, 2.0, np.nan])}
+    components = np.asarray([0, 0, 1, 1], dtype=np.int64)
+    mask = np.asarray([True, True, True, False])
+    out = C.component_bootstrap(values, components, lambda v: {"x": float(np.mean(v["x"]))}, mask=mask, n_boot=100, seed=20261117)
+    assert out["point"]["x"] == pytest.approx(4.0 / 3.0)
+    assert np.isfinite(out["ci95"]["x"]).all()
+
+
 def test_discovery_score_and_rank_rule():
     mods = C.source_modules()
     AS = mods["as_search"]
