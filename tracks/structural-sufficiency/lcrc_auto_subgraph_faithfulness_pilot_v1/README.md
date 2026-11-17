@@ -146,7 +146,7 @@ because none of these touch a forward pass, a gate, a score or a selection):
 | `.numpy()` on CUDA tensors in the worker checks | `TypeError: can't convert cuda:0 device type tensor to numpy` | every worker conversion goes through `.detach().cpu()` |
 | `top1_s1_coverage` dropped from `molecule_row` | `architecture_diagnostics.csv` had `nan` in the S1 coverage column | recomputed from `n_s1_codes / n_s1_total` |
 | q90 was requested but not in the default quantile list | `p90_abs_delta_over_train_std` was always empty | aggregate asks for q90 explicitly |
-| raw `|` inside markdown table cells (`|delta|`, `A(S)=|sum g|`) | malformed tables in `REPORT.md` | `abs(...)` notation; report is table-validated before writing |
+| raw pipe characters inside markdown table cells (`delta` bars, `A(S)` bars) | malformed tables in `REPORT.md` / `DECISION.md` | `abs(...)` notation; every generated table is validated before it is written |
 | truncated `INSUFFICIENT_MATCHED_NULL` row-id list | listed 12 of 31 without saying so | states the remaining count and points at `molecule_table.csv` |
 | “逐位一致” wording for the all-ones check | claimed zero error although the GPU run shows ~5e-7 | states the frozen tolerance and the measured residual |
 | no execution-regime provenance in the manifest | commit/driver/node of the GPU workers only in `rr` state | `analysis/run_manifest.json` gains `execution_provenance` (worker commit, pool, node, driver, torch backend, state) |

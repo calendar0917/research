@@ -43,10 +43,24 @@ def _pct(value: Any) -> str:
     return f"{100.0 * x:.1f}%"
 
 
+def _cell(value: Any, where: str) -> str:
+    """One markdown table cell; a raw pipe would silently break the table."""
+    text = str(value)
+    if "|" in text:
+        raise ValueError(f"markdown table cell contains a pipe ({where}): {text!r}")
+    return text
+
+
 def _table(headers: Sequence[str], rows: Sequence[Sequence[Any]]) -> str:
-    out = ["| " + " | ".join(headers) + " |", "|" + "|".join(["---"] * len(headers)) + "|"]
+    width = len(headers)
+    out = [
+        "| " + " | ".join(_cell(h, "header") for h in headers) + " |",
+        "|" + "|".join(["---"] * width) + "|",
+    ]
     for row in rows:
-        out.append("| " + " | ".join(str(c) for c in row) + " |")
+        if len(row) != width:
+            raise ValueError(f"table row has {len(row)} cells, header has {width}")
+        out.append("| " + " | ".join(_cell(c, f"row {len(out)}") for c in row) + " |")
     return "\n".join(out)
 
 
@@ -604,7 +618,7 @@ def write_decision() -> Path:
                 _pct(float(d["dose_same_direction_frac"])),
             ])
     lines.append(_table(
-        ["dataset", "split", "rho_share med", "cancellation med", "|S1| med", "|S2| med",
+        ["dataset", "split", "rho_share med", "cancellation med", "abs(S1) med", "abs(S2) med",
          "interaction med", "dose consistency"],
         rows,
     ))
