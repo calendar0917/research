@@ -72,15 +72,17 @@ def build() -> dict[str, Any]:
                     "p_c1": None if "joint_vs_c1" not in e else e["joint_vs_c1"]["prob_a_better"],
                     "top1pct": e["concentration"].get("top_1pct_share_of_abs_change"),
                     "frac_better": e["concentration"]["fraction_molecules_better"],
+                    "clean": "yes" if e["degenerate"]["clean_pairing"] else (
+                        "control dead" if e["degenerate"]["marginal_degenerate"] else "joint dead"),
                 }
             )
         (tbl / f"paired_{split}.md").write_text(
             _table(rows,
                    ["unit", "rmse_joint", "rmse_marginal", "rmse_c1", "rmse_gine", "d_marginal",
-                    "ci_marginal", "p_marginal", "d_c1", "p_c1", "top1pct", "frac_better"],
+                    "ci_marginal", "p_marginal", "d_c1", "p_c1", "top1pct", "frac_better", "clean"],
                    ["unit", "JOINT", "MARGINAL", "C1 anchor", "GINE anchor",
                     "Δ(J vs M)", "95% CI", "P(J<M)", "Δ(J vs C1)", "P(J<C1)",
-                    "top1% share", "frac better"])
+                    "top1% share", "frac better", "pairing"])
             + "\nΔ = RMSE(MARGINAL) - RMSE(JOINT): **positive means JOINT is better**.\n"
               "P(J<M) is the bootstrap probability that JOINT has the lower RMSE.\n")
 

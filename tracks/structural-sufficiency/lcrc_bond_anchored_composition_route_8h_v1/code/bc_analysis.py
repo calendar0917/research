@@ -28,10 +28,12 @@ HIST_LIPO = "L_lipophilicity"
 HIST_WC = "L_WC_LOGP"
 HIST_GINE = "G0_lipophilicity"
 
-COMPARISONS = {
-    "lipo": [("JOINT", "MARGINAL", "gain_null"), ("JOINT", "C1", "gain_base")],
-    "wc_logp": [("JOINT", "MARGINAL", "gain_null"), ("JOINT", "C1", "gain_base")],
-}
+#: ``esol`` is the conditional Stage-C transfer task: no anchor, no trigger, no
+#: historical comparison -- only the same-seed JOINT vs MARGINAL pairing.
+ANALYSIS_TASKS: tuple[str, ...] = tuple(C.TASKS) + ("esol",)
+#: A variant counts as *degenerate* when its branch contribution is numerically
+#: inert, in which case the pairing is reported but never read as a clean null.
+DEGENERATE_MEAN_ABS_DELTA = 1e-3
 
 
 # ---------------------------------------------------------------------------
@@ -190,7 +192,7 @@ def build_tables() -> dict[str, Any]:
         ("lipo", "GINE"): hist[HIST_GINE],
     }
     for institution in C.INSTITUTIONS:
-        for task in C.TASKS:
+        for task in ANALYSIS_TASKS:
             for seed in sorted({s for (inst, t, _v, s) in index if inst == institution and t == task}):
                 pair: dict[str, Any] = {"institution": institution, "task": task, "seed": int(seed)}
                 joint = index.get((institution, task, "JOINT", seed))
@@ -206,6 +208,17 @@ def build_tables() -> dict[str, Any]:
                     entry = {
                         "split": split,
                         "joint_vs_marginal": bootstrap_paired(err_j, err_m),
+                        "degenerate": {
+                            "joint_mean_abs_delta": float(np.mean(np.abs(jp["delta_raw"]))),
+                            "marginal_mean_abs_delta": float(np.mean(np.abs(mp["delta_raw"]))),
+                            "joint_degenerate": bool(
+                                np.mean(np.abs(jp["delta_raw"])) < DEGENERATE_MEAN_ABS_DELTA),
+                            "marginal_degenerate": bool(
+                                np.mean(np.abs(mp["delta_raw"])) < DEGENERATE_MEAN_ABS_DELTA),
+                            "clean_pairing": bool(
+                                np.mean(np.abs(jp["delta_raw"])) >= DEGENERATE_MEAN_ABS_DELTA
+                                and np.mean(np.abs(mp["delta_raw"])) >= DEGENERATE_MEAN_ABS_DELTA),
+                        },
                         "concentration": concentration(err_j, err_m),
                         "rmse_joint": float(np.sqrt(np.mean(err_j**2))),
                         "rmse_marginal": float(np.sqrt(np.mean(err_m**2))),
