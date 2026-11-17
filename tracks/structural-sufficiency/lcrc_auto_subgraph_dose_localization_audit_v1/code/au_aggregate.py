@@ -540,6 +540,24 @@ def old_control_rows(dataset: str, split: str, records: Sequence[Mapping[str, An
 # ---------------------------------------------------------------------------
 
 
+def top1_replay_summary(records: Mapping[str, Sequence[Mapping[str, Any]]]) -> dict[str, Any]:
+    """How closely the recomputed Top-1 masked effect tracks the pilot's stored one."""
+    n = 0
+    n_failed = 0
+    max_err: dict[str, float] = {}
+    for split in C.SPLITS:
+        for mol in records.get(split) or []:
+            check = ((mol.get("top1") or {}).get("pilot_effect_check") or {})
+            if not check:
+                continue
+            n += 1
+            if not check.get("passed"):
+                n_failed += 1
+            for name, field in (check.get("fields") or {}).items():
+                max_err[name] = max(max_err.get(name, 0.0), float(field["abs_err"]))
+    return {"n_molecules": n, "n_failed": n_failed, "max_abs_err": max_err}
+
+
 def replay_pilot_metrics(dataset: str, pilot: Mapping[str, Any], train_std: float) -> dict[str, Any]:
     """Recompute the pilot's own metrics from its records and check its table."""
     table = {(r["dataset"], r["split"]): r for r in pilot["main_rows"]}
@@ -1193,6 +1211,15 @@ def run(datasets: Sequence[str] = C.DATASETS) -> dict[str, Any]:
     decision = build_decision(list(datasets), detail, localization_detail)
     decision["engineering_gate"] = preflight["engineering_gate"]
     decision["pilot_metric_replay_passed"] = old_replay_passed
+    decision["top1_replay"] = {d: detail[d]["top1_replay"] for d in datasets}
+    decision["top1_replay"]["all"] = {
+        "n_molecules": sum(detail[d]["top1_replay"]["n_molecules"] for d in datasets),
+        "n_failed": sum(detail[d]["top1_replay"]["n_failed"] for d in datasets),
+        "max_abs_err": {
+            k: max(detail[d]["top1_replay"]["max_abs_err"].get(k, 0.0) for d in datasets)
+            for k in ("signed_delta", "delta_L", "delta_rho", "pred_raw_masked")
+        },
+    }
     C.atomic_write_json(C.ANALYSIS_DIR / "decision.json", decision)
 
     bootstrap = {

@@ -517,6 +517,17 @@ def write_report() -> Path:
         f"`{'PASS' if decision.get('pilot_metric_replay_passed') else 'FAIL'}`")
     add(f"* 协议哈希：`{manifest['protocol_hash']}`")
     add(f"* PROTOCOL.md sha256：`{manifest.get('protocol_file_sha256')}`")
+    rep = decision.get("top1_replay") or {}
+    allrep = rep.get("all") or {}
+    if allrep:
+        err = allrep.get("max_abs_err") or {}
+        add(
+            f"* Top-1 屏蔽预测与原轮逐分子比对：{allrep.get('n_molecules')} 个分子中 "
+            f"{allrep.get('n_failed')} 个超出冻结容差；最大绝对偏差 "
+            f"signed_delta {_fmt(err.get('signed_delta'))}、delta_L {_fmt(err.get('delta_L'))}、"
+            f"delta_rho {_fmt(err.get('delta_rho'))}、pred_raw {_fmt(err.get('pred_raw_masked'))}"
+            "（CPU↔GPU 浮点差，容差按原轮口径）。"
+        )
     add(f"* 本轮实际运行 commit（audit + aggregate，工作区无未提交的 tracked 改动）：`{manifest.get('git_commit')}`；上游 results commit："
         f"`{(manifest.get('upstream') or {}).get('results_commit')}`")
     add("")
