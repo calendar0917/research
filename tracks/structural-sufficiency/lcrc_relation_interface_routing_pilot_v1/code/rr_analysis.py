@@ -1033,6 +1033,11 @@ def run_manifest(started: str) -> dict[str, Any]:
             "dirty_tracked": C.git_dirty_tracked(),
             "lockfile_sha256": C.lockfile_sha256(),
         },
+        "git_note": (
+            "git.commit is the revision the aggregate stage ran from; this manifest file "
+            "itself is committed immediately after it, so the recorded commit is the "
+            "parent of the commit that carries analysis/run_manifest.json"
+        ),
         "code_sha256": T.code_hashes(),
         "routing_cache": routing,
         "frozen_inputs": frozen_inputs,

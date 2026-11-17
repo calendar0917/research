@@ -222,11 +222,11 @@ capture 用的是**未分摊**的候选原子集：`Σ_{v∈atoms(block)} |c_v| 
 
 | 项 | 值 |
 |---|---|
-| commit | `8f07115ee5e3049c4ee04345a151634d5427b060` |
+| commit | `559dcd8c36a77a35282aafd267e5bfe47c55a827` |
 | branch | `exp/lcrc-explanation-task-relevance-v1` |
 | freeze hash | `548b8ed6e4a34f611ddfb06c2686693208da98a862465c9a32e1db575081242f` |
 | lockfile sha256 | `d063dedc762d1f338661cbd67c59a7245a0efb2966a2b932836530cf5cba7033` |
-| started / finished | 2026-11-17T20:44:22 / 2026-11-17T20:46:39 |
+| started / finished | 2026-11-17T20:47:01 / 2026-11-17T20:49:16 |
 
 聚合环境（CPU，只读产物）：main，python 3.12.15，torch 2.5.1+cu124，numpy 2.1.3，rdkit 2026.09.1，cuda_available False。
 
@@ -255,7 +255,7 @@ capture 用的是**未分摊**的候选原子集：`Σ_{v∈atoms(block)} |c_v| 
 | `analysis/bootstrap_r2_vs_r1.json` | 是 | 2283 |
 | `analysis/rho_only_baseline.csv` | 是 | 813 |
 | `analysis/decision.json` | 是 | 10286 |
-| `analysis/run_manifest.json` | 是 | 16155 |
+| `analysis/run_manifest.json` | 是 | 16379 |
 
 ## 9. 本轮明确没有做的事
 
