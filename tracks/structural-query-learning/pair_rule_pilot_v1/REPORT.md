@@ -4,7 +4,7 @@
 
 ## 运行与协议
 
-- 训练代码 commit：`27a25b4bf83fa6857159c2ee194c7723316264b8`；聚合代码 commit：`18d0024ef40ab8a1104e334344fcd5c5992bee7b`
+- 训练代码 commit：`27a25b4bf83fa6857159c2ee194c7723316264b8`；聚合代码 commit：`97458ef6b43d727d36645a63dba2bcf5b42b48bb`
 - 协议：`sq-lipo-pair-rule-v1`，protocol hash `970bd76e274b87876fd509955e6f3d632ab7de56591239e205f0c5e37d8862ed`
 - rr run：prepare `sq-pair-prep-v2-20261118-102303-ed36fb05`，C1 `sq-pair-c1-v2-20261118-102436-331ce910`，rules `sq-pair-rules-v2-20261118-102436-fde5d663`
 - 设备：C1 GPU0 `cuda:0`；MLP GPU1 `cuda:0`；三条加性臂 CPU（BLAS ≤4 线程）
@@ -133,7 +133,7 @@ Bemis–Murcko 簇：valid 420 簇 / 420 行，解析失败 0；test 419 簇 / 4
 | prepare wall | 42.7804 |
 | C1 worker wall | 344.1043 |
 | rules worker wall | 116.2243 |
-| aggregate wall (local) | 3.3530 |
+| aggregate wall (local) | 3.2604 |
 | remote wall (first prep start → last worker finish) | 438.7376 |
 | GPU card reservation (prepare + C1 + rules) | 503.1090 |
 | GPU hours reservation | 0.1398 |
@@ -157,5 +157,6 @@ Bemis–Murcko 簇：valid 420 簇 / 420 行，解析失败 0；test 419 簇 / 4
 - 单一训练 seed=0；本轮不提供多 seed 稳定性结论。MLP 与 C1 的容量/优化器差异保留在表中，不能把 MLP 的差异单独归因于读出。
 - bootstrap 的对象是当前固定预测在留出分子上的不确定性（按 Bemis–Murcko 簇重抽），不是重新训练模型的不确定性。
 - 关系轴只在当前 512 个 Train 过滤后的槽位、180 epoch、该 lambda 和该 32 项预算下成立；词表外的结构关系没有被检验。
+- BASE-FULL / BASE-32 与 NULL-32 的 Val 最优落在固定 epoch 180，说明这两条轨迹在本轮预算末端尚未完全平台化；为保持冻结协议，本轮不延长训练，也不据此外推更长预算的结果。
 - 结论限于本轮求解条件与单种子范围；如果性能轴为 `NOT_NEAR_C1`，不能外推为“显式关系无用”，只能说明当前读出/预算/词表组合未达到 0.04 logD 门槛。
 
