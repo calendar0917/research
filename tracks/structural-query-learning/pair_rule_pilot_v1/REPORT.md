@@ -1,10 +1,10 @@
 # Lipo 显式结构关系小试验｜sq-lipo-pair-rule-v1
 
-官方 OGB `ogbg-mollipo`，官方 scaffold Train/Val/Test = 3360/420/420，单训练 seed=0，180 epoch，`test_policy: always`（Test 为本轮 DEVELOPMENT_TEST）。本文件由 `stage=aggregate` 从已拉回的冻结产物自动生成；所有数字均为 raw logD 单位。
+官方 OGB `ogbg-mollipo`，官方 scaffold Train/Val/Test = 3360/420/420，单训练 seed=0，180 epoch，`test_policy: always`（Test 为本轮 DEVELOPMENT_TEST）。本文件由 `stage=aggregate` 从已拉回的冻结产物自动生成；所有数字均为 raw logD 单位。所有模型状态只由 Val RMSE 选择，Test 仅作为 DEVELOPMENT_TEST 随同一状态报告，不参与任何选择。
 
 ## 运行与协议
 
-- 训练代码 commit：`27a25b4bf83fa6857159c2ee194c7723316264b8`；聚合代码 commit：`1732fcf500dfb0a3a402175b89c1e564d0edf7df`
+- 训练代码 commit：`27a25b4bf83fa6857159c2ee194c7723316264b8`；聚合代码 commit：`18d0024ef40ab8a1104e334344fcd5c5992bee7b`
 - 协议：`sq-lipo-pair-rule-v1`，protocol hash `970bd76e274b87876fd509955e6f3d632ab7de56591239e205f0c5e37d8862ed`
 - rr run：prepare `sq-pair-prep-v2-20261118-102303-ed36fb05`，C1 `sq-pair-c1-v2-20261118-102436-331ce910`，rules `sq-pair-rules-v2-20261118-102436-fde5d663`
 - 设备：C1 GPU0 `cuda:0`；MLP GPU1 `cuda:0`；三条加性臂 CPU（BLAS ≤4 线程）
@@ -97,7 +97,7 @@ Bemis–Murcko 簇：valid 420 簇 / 420 行，解析失败 0；test 419 簇 / 4
 - REAL-32 导出 `rules.json`：epoch 173，32 个活跃规则组；model hash `9f4c65364d1823af…`。
 - 官方指标从保存的 raw 预测独立重算：48 组，最大 RMSE 绝对差 0.000000000000，最大 MAE 绝对差 0.000000000000，行 ID 与标签逐项一致 → **yes**。
 - 独立规则重放（从原图重算共同项与关系项）：Val 最大绝对误差 0.00000000，Test 0.00000000；容差 1e-6 → **yes**。
-- 单项减一检查：Val row 950，规则 `REL::TP|5,5,1,1,0|7,5,0,0,0|4`，K 1→0；预测差 0.09534682，导出函数单项差 0.09534682，最大误差 0.0000000000 → **yes**。
+- 单项减一检查（Val 最小官方 row ID）：row 950，规则 `REL::TP|5,5,1,1,0|7,5,0,0,0|4`，K 1→0；预测差 0.09534682，导出函数单项差 0.09534682，最大误差 0.0000000000 → **yes**。
 
 | split | 有入库关系命中的分子比例 | REAL-32 关系项非零的分子比例 | 非零关系规则数中位数 | 非零规则总数中位数 | 关系项 \|贡献\| 和中位数 |
 | --- | --- | --- | --- | --- | --- |
@@ -133,7 +133,7 @@ Bemis–Murcko 簇：valid 420 簇 / 420 行，解析失败 0；test 419 簇 / 4
 | prepare wall | 42.7804 |
 | C1 worker wall | 344.1043 |
 | rules worker wall | 116.2243 |
-| aggregate wall (local) | 3.2979 |
+| aggregate wall (local) | 3.3530 |
 | remote wall (first prep start → last worker finish) | 438.7376 |
 | GPU card reservation (prepare + C1 + rules) | 503.1090 |
 | GPU hours reservation | 0.1398 |
