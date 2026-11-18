@@ -33,6 +33,9 @@ import css_data as D
 import css_model as M
 from pf_pipeline import PinnedStager
 
+#: how many batches the collation thread may build ahead of the GPU
+PREFETCH_DEPTH = 3
+
 CURVE_FIELDS = [
     "epoch",
     "global_step",
@@ -54,6 +57,10 @@ CURVE_FIELDS = [
     "step_ms_mean",
     "step_ms_p50",
     "step_ms_p90",
+    "collate_ms_p50",
+    "collate_ms_mean",
+    "pipeline_wait_ms_mean",
+    "prefetch_depth",
     "gpu_peak_allocated_bytes",
     "gpu_peak_reserved_bytes",
     "grad_norm_max",
@@ -179,6 +186,53 @@ def train_step(
 # ---------------------------------------------------------------------------
 # evaluation
 # ---------------------------------------------------------------------------
+
+
+def collate_one(dev: D.DevTask, rows: np.ndarray) -> tuple[np.ndarray, dict[str, Any], np.ndarray, float]:
+    """CPU side of one step: static structure objects + Train targets.
+
+    Pure function of ``rows`` (no RNG, no model state), so building it one batch
+    ahead in a worker thread cannot change what the model sees.
+    """
+    t0 = time.perf_counter()
+    batch = D.collate_batch(dev, rows)
+    y = np.asarray(dev.training_targets(rows), dtype=np.float32)
+    return rows, batch, y, (time.perf_counter() - t0)
+
+
+def _prefetched(
+    dev: D.DevTask, batches: Sequence[np.ndarray], depth: int
+) -> Any:
+    """Yield ``collate_one`` results in the exact plan order, ``depth`` ahead.
+
+    ``depth = 0`` is the fully synchronous path (collate inside the step).
+    Otherwise one worker thread builds the next batches while the GPU works.
+    The tensors, their order, their dtypes and their values are identical - only
+    the overlap changes.  Yields ``(rows, batch, targets, collate_s, wait_s)``.
+    """
+    if depth <= 0:
+        for rows in batches:
+            r, b, y, t = collate_one(dev, rows)
+            yield r, b, y, t, 0.0
+        return
+    from collections import deque
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="css-collate") as pool:
+        it = iter(batches)
+        pending: deque = deque()
+        for rows in it:
+            pending.append(pool.submit(collate_one, dev, rows))
+            if len(pending) >= int(depth):
+                break
+        while pending:
+            future = pending.popleft()
+            nxt = next(it, None)
+            if nxt is not None:
+                pending.append(pool.submit(collate_one, dev, nxt))
+            t0 = time.perf_counter()
+            rows_, batch_, y_, t_collate = future.result()
+            yield rows_, batch_, y_, t_collate, time.perf_counter() - t0
 
 
 def _array_sha(array: np.ndarray, dtype=np.float32) -> str:
@@ -424,6 +478,7 @@ def train(
     log_every: int = 200,
     steps_per_epoch: int | None = None,
     eval_limit: int | None = None,
+    prefetch_depth: int = PREFETCH_DEPTH,
 ) -> dict[str, Any]:
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -480,16 +535,21 @@ def train(
         if steps_per_epoch is not None:
             batches = batches[: int(steps_per_epoch)]
         step_ms: list[float] = []
+        collate_ms: list[float] = []
+        wait_ms: list[float] = []
         losses: list[float] = []
         grad_norms: list[float] = []
         clip_events = 0
         gate_diag = M.ForwardDiagnostics()
         t_train = time.perf_counter()
-        for i, rows in enumerate(batches):
+        for i, (rows, batch, y_np, t_collate, t_wait) in enumerate(
+            _prefetched(dev, batches, depth=prefetch_depth)
+        ):
             t_step = time.perf_counter()
-            batch = D.collate_batch(dev, rows)
+            collate_ms.append(t_collate * 1000.0)
+            wait_ms.append(t_wait * 1000.0)
             batch = transfer.batch(batch)
-            y = torch.as_tensor(dev.training_targets(rows), dtype=torch.float32, device=device)
+            y = torch.as_tensor(y_np, dtype=torch.float32, device=device)
             diag = gate_diag if i % 32 == 0 else None
             out = train_step(
                 model,
@@ -576,6 +636,10 @@ def train(
             "step_ms_mean": float(np.mean(step_ms)),
             "step_ms_p50": float(np.percentile(step_ms, 50)),
             "step_ms_p90": float(np.percentile(step_ms, 90)),
+            "collate_ms_p50": float(np.percentile(collate_ms, 50)) if collate_ms else 0.0,
+            "collate_ms_mean": float(np.mean(collate_ms)) if collate_ms else 0.0,
+            "pipeline_wait_ms_mean": float(np.mean(wait_ms)) if wait_ms else 0.0,
+            "prefetch_depth": int(prefetch_depth),
             "gpu_peak_allocated_bytes": C.gpu_peak(device)["peak_allocated_bytes"],
             "gpu_peak_reserved_bytes": C.gpu_peak(device)["peak_reserved_bytes"],
             "grad_norm_max": float(np.max(grad_norms)),

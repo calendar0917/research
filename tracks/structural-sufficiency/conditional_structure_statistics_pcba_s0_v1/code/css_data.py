@@ -219,6 +219,35 @@ def _adjacency_keys(bond_index: np.ndarray, n_atoms: int) -> np.ndarray:
     return np.sort(u * int(n_atoms) + v)
 
 
+def s2_counts_per_molecule(dev: DevTask) -> np.ndarray:
+    """Exact non-backtracking two-path count per molecule (no collation).
+
+    ``S2(v) = sum_{w in N(v)} (deg(w) - 1)`` summed over the roots ``v`` of one
+    molecule equals ``sum_{undirected bonds (u,v)} (deg(u) - 1) + (deg(v) - 1)``,
+    which is the closed form ``s2_count_closed_form`` checks on a single batch.
+    Used only for cost/volume reporting and for picking probe batches.
+    """
+    cached = getattr(dev, "_s2_per_molecule", None)
+    if cached is not None:
+        return cached
+    cache = dev.task.cache
+    n_mol = int(cache["n_molecules"])
+    bond_index = np.asarray(cache["bond_index"], dtype=np.int64)  # local to the molecule
+    bond_ptr = np.asarray(cache["bond_ptr"], dtype=np.int64)
+    atom_ptr = np.asarray(cache["atom_ptr"], dtype=np.int64)
+    n_atoms = int(atom_ptr.size - 1)
+    mol_of_bond = np.repeat(np.arange(n_mol, dtype=np.int64), np.diff(bond_ptr))
+    off = atom_ptr[mol_of_bond]
+    u = bond_index[:, 0] + off
+    v = bond_index[:, 1] + off
+    deg = np.bincount(np.concatenate([u, v]), minlength=n_atoms).astype(np.int64)
+    per_bond = (deg[u] - 1) + (deg[v] - 1)
+    out = np.bincount(mol_of_bond, weights=per_bond.astype(np.float64), minlength=n_mol)
+    out = np.rint(out).astype(np.int64)
+    setattr(dev, "_s2_per_molecule", out)
+    return out
+
+
 def collate_batch(dev: DevTask, rows: Sequence[int]) -> dict[str, Any]:
     """One batch with every static structural object the model needs."""
     rows = np.asarray(rows, dtype=np.int64).reshape(-1)

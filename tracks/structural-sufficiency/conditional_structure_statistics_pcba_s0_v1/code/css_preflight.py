@@ -54,16 +54,19 @@ def _batch(dev: D.DevTask, rows, device: torch.device) -> dict[str, Any]:
 
 
 def heaviest_batches(dev: D.DevTask, plan, *, n: int = 3) -> list[list[int]]:
+    """Batches with the largest real object volume (atoms + S1 + S2), from the
+    frozen plan itself so the probe measures the actual workload."""
     cache = dev.task.cache
     atom_ptr = np.asarray(cache["atom_ptr"])
-    path_ptr = np.asarray(cache["path_ptr"])
+    bond_ptr = np.asarray(cache["bond_ptr"])
+    s2 = D.s2_counts_per_molecule(dev)
     scored = []
     for record in plan[:2]:
         for rows in record["batches"]:
             r = np.asarray(rows, dtype=np.int64)
             atoms = int((atom_ptr[r + 1] - atom_ptr[r]).sum())
-            paths = int((path_ptr[r + 1] - path_ptr[r]).sum()) if path_ptr.size else 0
-            scored.append((paths + 2 * atoms, rows))
+            bonds = int((bond_ptr[r + 1] - bond_ptr[r]).sum())
+            scored.append((int(s2[r].sum()) + 2 * bonds + atoms, rows))
     scored.sort(key=lambda x: -x[0])
     return [list(rows) for _score, rows in scored[: int(n)]]
 
@@ -142,8 +145,7 @@ def gate_initial_states(dev: D.DevTask) -> dict[str, Any]:
 def gate_structures(dev: D.DevTask, plan) -> dict[str, Any]:
     atom_ptr = np.asarray(dev.task.cache["atom_ptr"])
     n_atoms = atom_ptr[1:] - atom_ptr[:-1]
-    path_ptr = np.asarray(dev.task.cache["path_ptr"])
-    n_paths = path_ptr[1:] - path_ptr[:-1]
+    n_paths = D.s2_counts_per_molecule(dev)
     row_sets: list[tuple[str, list[int]]] = [
         ("train_head", [int(x) for x in dev.train_rows[:32]]),
         ("largest_batch", [int(x) for x in max(plan[0]["batches"], key=len)]),
@@ -325,8 +327,7 @@ def gate_invariances(dev: D.DevTask, plan) -> dict[str, Any]:
         renumber_diff = float((base - model(ren)).abs().max())
     atom_ptr = np.asarray(dev.task.cache["atom_ptr"])
     n_atoms = atom_ptr[1:] - atom_ptr[:-1]
-    path_ptr = np.asarray(dev.task.cache["path_ptr"])
-    n_paths = path_ptr[1:] - path_ptr[:-1]
+    n_paths = D.s2_counts_per_molecule(dev)
     cases = {}
     for label, sel in (
         ("no_s2", np.flatnonzero(n_paths == 0)[:16]),
@@ -564,13 +565,18 @@ def gate_step_and_memory(dev: D.DevTask, plan, device: torch.device, *, steps: i
     heaviest = heaviest_batches(dev, plan, n=1)[0]
     cache = dev.task.cache
     atom_ptr = np.asarray(cache["atom_ptr"])
-    path_ptr = np.asarray(cache["path_ptr"])
     r = np.asarray(heaviest, dtype=np.int64)
+    # measured from the collated batch itself: the cache's path_ptr describes a
+    # different object family, so it is never used for the reported volume
+    probe = _batch(dev, heaviest, torch.device("cpu"))
     heaviest_volume = {
         "n_molecules": int(r.size),
         "n_atoms": int((atom_ptr[r + 1] - atom_ptr[r]).sum()),
-        "n_s2": int((path_ptr[r + 1] - path_ptr[r]).sum()),
+        "n_bonds": int(probe["n_bonds"]),
+        "n_s1": int(probe["n_s1"]),
+        "n_s2": int(probe["n_s2"]),
     }
+    del probe
     if device.type == "cuda":
         torch.cuda.reset_peak_memory_stats(device)
     times = []

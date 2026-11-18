@@ -301,3 +301,50 @@ def test_first_steps_gradient_reachability(dev_task, plan40) -> None:
     assert second["module_grad_norms"]["task_output"] > 0.0
     assert second["module_grad_norms"]["root_static"] > 0.0
     assert second["module_grad_norms"]["s2_event"] > 0.0
+
+
+@pytest.mark.slow
+def test_prefetch_matches_the_synchronous_pipeline(dev_task, plan40) -> None:
+    """Building batches one step ahead must not change a single loss value."""
+    import css_train as T
+
+    batches = plan40[0]["batches"][:4]
+    losses = {}
+    for depth in (0, T.PREFETCH_DEPTH):
+        model, _ = M.build_model("E", dev_task.task.norm)
+        opt, _ = T.build_optimizer(model)
+        gen = T.make_dropout_generator(torch.device("cpu"))
+        seen = []
+        for i, (_rows, batch, y, _t, _w) in enumerate(T._prefetched(dev_task, batches, depth=depth)):
+            out = T.train_step(
+                model,
+                opt,
+                batch,
+                torch.as_tensor(y, dtype=torch.float32),
+                global_step=i,
+                clip=5.0,
+                generator=gen,
+            )
+            seen.append(out["loss"])
+        losses[depth] = np.asarray(seen)
+    assert np.array_equal(losses[0], losses[T.PREFETCH_DEPTH])
+    assert losses[0].size == len(batches)
+
+
+@pytest.mark.slow
+def test_s2_volume_formula_matches_collation(dev_task, plan40) -> None:
+    import css_preflight as PF
+
+    per_molecule = D_s2(dev_task)
+    assert per_molecule.size == C.N_TRAIN + C.N_VALID + C.N_TEST
+    for rows in PF.heaviest_batches(dev_task, plan40, n=2):
+        batch = PF.D.collate_batch(dev_task, rows)
+        assert int(batch["n_s2"]) == int(per_molecule[np.asarray(rows, dtype=np.int64)].sum())
+    batch = PF.D.collate_batch(dev_task, dev_task.train_rows[:16])
+    assert int(batch["n_s2"]) == int(per_molecule[dev_task.train_rows[:16]].sum())
+
+
+def D_s2(dev_task):
+    import css_data as D
+
+    return D.s2_counts_per_molecule(dev_task)

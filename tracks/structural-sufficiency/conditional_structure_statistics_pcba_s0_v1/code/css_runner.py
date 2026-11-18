@@ -389,7 +389,7 @@ def _stage_train(config: Mapping[str, Any], ledger) -> dict[str, Any]:
     device_name = str(config.get("device", "cuda:0"))
     device = torch.device(device_name if torch.cuda.is_available() else "cpu")
     dev = D.load_task(with_cpc=True)
-    out_dir = C.RUNS / C.ARMS[arm]["name"]
+    out_dir = C.RUNS / str(config.get("out_subdir") or C.ARMS[arm]["name"])
     with C.stage_timer(ledger, f"train_{arm}", device=str(device), purpose="formal"):
         summary = T.train(
             dev,
@@ -400,6 +400,9 @@ def _stage_train(config: Mapping[str, Any], ledger) -> dict[str, Any]:
             task_chunk=int(config.get("task_chunk", C.TASK_CHUNK_DEFAULT)),
             resume=bool(config.get("resume", True)),
             log_every=int(config.get("log_every", 200)),
+            prefetch_depth=int(config.get("prefetch_depth", T.PREFETCH_DEPTH)),
+            steps_per_epoch=config.get("steps_per_epoch"),
+            eval_limit=config.get("eval_limit"),
         )
     _update_registry(arm, summary, run_id=str(getattr(ledger, "run_id", "")) or "")
     return {
