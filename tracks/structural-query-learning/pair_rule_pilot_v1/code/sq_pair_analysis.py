@@ -1028,6 +1028,8 @@ def _report(
         "官方 OGB `ogbg-mollipo`，官方 scaffold Train/Val/Test = 3360/420/420，"
         "单训练 seed=0，180 epoch，`test_policy: always`（Test 为本轮 DEVELOPMENT_TEST）。"
         "本文件由 `stage=aggregate` 从已拉回的冻结产物自动生成；所有数字均为 raw logD 单位。"
+        "所有模型状态只由 Val RMSE 选择，Test 仅作为 DEVELOPMENT_TEST 随同一状态报告，"
+        "不参与任何选择。"
     )
     lines.append("")
     prov = summary["provenance"]
@@ -1215,7 +1217,7 @@ def _report(
                  f"**{_fmt(replay['pass'])}**。")
     if decrement.get("applicable"):
         lines.append(
-            f"- 单项减一检查：Val row {decrement['row_id']}，规则 `{decrement['group_name']}`，"
+            f"- 单项减一检查（Val 最小官方 row ID）：row {decrement['row_id']}，规则 `{decrement['group_name']}`，"
             f"K {decrement['count_before']}→{decrement['count_after']}；预测差 "
             f"{_fmt(decrement['observed_delta'], 8)}，导出函数单项差 "
             f"{_fmt(decrement['expected_single_term_delta'], 8)}，最大误差 "
