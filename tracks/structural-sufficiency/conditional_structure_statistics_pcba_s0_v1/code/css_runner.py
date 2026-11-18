@@ -438,8 +438,14 @@ def _stage_analyze(config: Mapping[str, Any], ledger) -> dict[str, Any]:
     }
 
 
+def _registry_path(arm: str) -> Path:
+    """One registry per arm: the two primary arms train in parallel, so two
+    processes must never rewrite the same bookkeeping file."""
+    return C.ANALYSIS / f"run_registry_{arm}.json"
+
+
 def _update_registry(arm: str, summary: Mapping[str, Any], *, run_id: str) -> None:
-    path = C.ANALYSIS / "run_registry.json"
+    path = _registry_path(arm)
     registry = C.read_json(path) if path.is_file() else {"round_id": C.ROUND_ID, "runs": []}
     registry["runs"] = [
         r
@@ -472,7 +478,7 @@ def _update_registry(arm: str, summary: Mapping[str, Any], *, run_id: str) -> No
 
 def _write_resource_ledger(ledger, config: Mapping[str, Any], metrics: Mapping[str, Any]) -> None:
     summary = ledger.summary()
-    registry_path = C.ANALYSIS / "run_registry.json"
+    registry_path = _registry_path(str(config.get("arm", "run")))
     registry = C.read_json(registry_path) if registry_path.is_file() else {"runs": []}
     training_gpu_hours = float(sum(r.get("gpu_hours", 0.0) for r in registry.get("runs", [])))
     payload = {
@@ -487,7 +493,10 @@ def _write_resource_ledger(ledger, config: Mapping[str, Any], metrics: Mapping[s
         "budget": dict(C.BUDGET),
         "updated_utc": C.utcnow(),
     }
-    previous = C.ANALYSIS / "resource_ledger.json"
+    tag = "_".join(
+        str(x) for x in (config.get("stage"), config.get("arm")) if x
+    ) or "run"
+    previous = C.ANALYSIS / f"resource_ledger_{tag}.json"
     if previous.is_file():
         old = C.read_json(previous)
         merged = old.get("stage_entries", []) + payload["stage_entries"]
