@@ -45,6 +45,19 @@ SPLITS = C.SPLITS
 # ---------------------------------------------------------------------------
 
 
+def _infer_rr_run_id(path: Path, status: Mapping[str, Any] | None = None) -> str | None:
+    if status:
+        value = (status.get("run_provenance") or {}).get("rr_run_id")
+        if value:
+            return str(value)
+    parts = Path(path).parts
+    if "pulled" in parts:
+        index = parts.index("pulled")
+        if index + 1 < len(parts):
+            return str(parts[index + 1])
+    return None
+
+
 def _protocol_hash(prep_dir: Path) -> str:
     value = C.protocol_hash()
     if value and value != "unavailable":
@@ -280,6 +293,7 @@ def _rule_groups(
     prep_dir: Path,
     real_dir: Path,
     statuses: Mapping[str, Any],
+    training_commit: str | None,
 ) -> dict[str, Any]:
     vocab = C.read_json(Path(prep_dir) / "rules_vocabulary.json")
     scales = C.read_npz(Path(prep_dir) / "scales.npz")
@@ -348,7 +362,7 @@ def _rule_groups(
         "state": "best_valid",
         "epoch": epoch,
         "protocol_hash": _protocol_hash(prep_dir),
-        "git_commit": C.git_commit(),
+        "git_commit": training_commit,
         "prep_dir": str(prep_dir),
         "target_scaler": {"mean": mean, "std": std, "n": int(scaler["n"])},
         "raw_bias": float(raw_bias),
@@ -532,6 +546,12 @@ def _explanation_cases(
                 continue
             group = rules["groups"][k]
             basis = C.u_basis(np.asarray([counts[pos, k]], dtype=np.float64))[0]
+            support = _support_for_group(g, group)
+            if int(support["count"]) != int(counts[pos, k]):
+                raise AssertionError(
+                    f"support count {support['count']} != raw count {counts[pos, k]} "
+                    f"for row {row_id} group {group['name']}"
+                )
             top.append(
                 {
                     "group_index": int(group["group_index"]),
@@ -543,7 +563,7 @@ def _explanation_cases(
                     "raw_count_value": int(counts[pos, k]),
                     "scale": group["scale"],
                     "raw_coefficients": group["raw_coefficients"],
-                    "support": _support_for_group(g, group),
+                    "support": support,
                 }
             )
             if len(top) >= 3:
@@ -1013,7 +1033,10 @@ def _report(
     prov = summary["provenance"]
     lines.append("## 运行与协议")
     lines.append("")
-    lines.append(f"- 代码 commit：`{prov.get('git_commit')}`")
+    lines.append(
+        f"- 训练代码 commit：`{prov.get('training_git_commit')}`；聚合代码 commit："
+        f"`{prov.get('aggregate_git_commit')}`"
+    )
     lines.append(f"- 协议：`{C.ROUND_ID}`，protocol hash `{prov.get('protocol_hash')}`")
     lines.append(f"- rr run：prepare `{prov.get('rr_prep')}`，C1 `{prov.get('rr_c1')}`，rules `{prov.get('rr_rules')}`")
     lines.append(f"- 设备：C1 GPU0 `cuda:0`；MLP GPU1 `cuda:0`；三条加性臂 CPU（BLAS ≤4 线程）")
@@ -1021,6 +1044,18 @@ def _report(
     lines.append(f"- 规则规模：B={summary['prep']['n_b_records']}，S2={summary['prep']['n_s2_selected']}，"
                  f"真实关系槽={summary['prep']['n_relation_slots']}，共同列={summary['prep']['n_common_columns']}，"
                  f"扩展列={summary['prep']['n_extension_columns']}")
+    lines.append("")
+    lines.append("## 运行状态")
+    lines.append("")
+    lines.append(_md_table(summary.get("run_status", []), [
+        ("stage", "stage"), ("run_id", "rr run"), ("state", "state"),
+        ("node", "node"), ("device", "CUDA_VISIBLE_DEVICES"), ("wall_s", "wall s"),
+    ]))
+    lines.append("")
+    lines.append(
+        "三个远端阶段均通过 rr 进程后端在 `res` 的 A100 上执行；prepare/rules 使用 "
+        "GPU1，C1 使用 GPU0，两条 worker 并行。"
+    )
     lines.append("")
     lines.append("## 预定结论")
     lines.append("")
@@ -1044,6 +1079,28 @@ def _report(
         f"性能轴：REAL-32 相对 live C1 的 gap：Val {_fmt(decision['gap_REAL32_minus_C1']['valid'])}，"
         f"Test {_fmt(decision['gap_REAL32_minus_C1']['test'])} logD；规则重放通过 = "
         f"{_fmt(decision['replay_pass'])}。"
+    )
+    lines.append("")
+    g = decision["gains_best"]
+    ci = decision["ci95_best_valid"]
+    lines.append(
+        f"就数字本身：REAL-32 的 Val 比 BASE-32 好 {_fmt(g['vs_BASE-32_valid'])}（95% CI "
+        f"[{_fmt(ci['vs_BASE-32'][0])}, {_fmt(ci['vs_BASE-32'][1])}]），比 NULL-32 好 "
+        f"{_fmt(g['vs_NULL-32_valid'])}（[{_fmt(ci['vs_NULL-32'][0])}, "
+        f"{_fmt(ci['vs_NULL-32'][1])}]）；Test 对应 gain 为 {_fmt(g['vs_BASE-32_test'])} 与 "
+        f"{_fmt(g['vs_NULL-32_test'])}。也就是说，实际锚点对计数相对**边际 NULL**有可辨认的增量，"
+        f"但相对共同输入 BASE 的增量没有达到预定的 0.02、其 Val 区间也跨 0，因此关系轴只能记为 "
+        f"`UNRESOLVED_BINDING`，不能记为 `BINDING_SIGNAL`。"
+    )
+    lines.append(
+        f"性能轴没有接近 live C1：REAL FULL 的 Val {_fmt(decision['bottleneck_numbers']['REALFULL_best_valid'])} / "
+        f"Test {_fmt(decision['bottleneck_numbers']['REALFULL_best_test'])}，MLP 的 Val "
+        f"{_fmt(decision['bottleneck_numbers']['MLP_best_valid'])} / Test "
+        f"{_fmt(decision['bottleneck_numbers']['MLP_best_test'])}，C1 的 Val "
+        f"{_fmt(decision['bottleneck_numbers']['C1_best_valid'])} / Test "
+        f"{_fmt(decision['bottleneck_numbers']['C1_best_test'])}；live C1 与历史 0.7052 的差为 "
+        f"{_fmt(decision['live_c1_valid_rmse'] - decision['historical_c1_valid_rmse'])}，未触发 "
+        f"`WEAK_LIVE_REFERENCE`。"
     )
     lines.append("")
 
@@ -1146,6 +1203,12 @@ def _report(
     lines.append("")
     lines.append(f"- REAL-32 导出 `rules.json`：epoch {rules['epoch']}，{rules['n_groups']} 个活跃规则组；"
                  f"model hash `{rules['model_hash'][:16]}…`。")
+    mr = summary["metric_recheck"]
+    lines.append(
+        f"- 官方指标从保存的 raw 预测独立重算：{len(MODELS) * len(C.STATES) * len(SPLITS)} 组，"
+        f"最大 RMSE 绝对差 {_fmt(mr['max_rmse_abs_diff'], 12)}，最大 MAE 绝对差 "
+        f"{_fmt(mr['max_mae_abs_diff'], 12)}，行 ID 与标签逐项一致 → **{_fmt(mr['pass'])}**。"
+    )
     lines.append(f"- 独立规则重放（从原图重算共同项与关系项）：Val 最大绝对误差 "
                  f"{_fmt(replay['splits']['valid']['max_abs_error'], 8)}，Test "
                  f"{_fmt(replay['splits']['test']['max_abs_error'], 8)}；容差 1e-6 → "
@@ -1178,7 +1241,7 @@ def _report(
         ("split", "split"), ("hit_frac", "有入库关系命中的分子比例"),
         ("nonzero_frac", "REAL-32 关系项非零的分子比例"),
         ("rel_rules_med", "非零关系规则数中位数"), ("all_rules_med", "非零规则总数中位数"),
-        ("abs_contrib_med", "关系项 |贡献| 和中位数"),
+        ("abs_contrib_med", "关系项 \\|贡献\\| 和中位数"),
     ]))
     lines.append("")
     lines.append(
@@ -1245,6 +1308,17 @@ def _report(
     )
     lines.append("")
 
+    lines.append("## 产物与证据")
+    lines.append("")
+    lines.append("- `analysis/summary.json`：本轮结构化摘要、两轴判定、全部数字与运行 provenance。")
+    lines.append("- `analysis/rules.json`：REAL-32 最佳 Val 状态的 32 个规则组、尺度、raw 系数与 bias；`model_hash`/`candidate_hash` 可追溯。")
+    lines.append("- `analysis/replay_audit.json`：独立重放的最大绝对误差与单项减一检查。")
+    lines.append("- `analysis/metric_recheck.json`：48 个 model/state/split 组合的官方指标重算与记录值差异。")
+    lines.append("- `analysis/bootstrap.csv`：2000 次配对 cluster bootstrap 的全部比较。")
+    lines.append("- `analysis/explanation_cases.jsonl`：升序前 20 个 Val 分子的 top-3 逐规则贡献与支持对象。")
+    lines.append("- `analysis/resource_ledger.json`：阶段墙钟、占卡时间、CPU 求解时间。")
+    lines.append("- 远端原始产物：`.rr/pulled/<run_id>/result/tracks/structural-query-learning/pair_rule_pilot_v1/runs/{prep,c1,rules}`。")
+    lines.append("")
     lines.append("## 不确定性与边界")
     lines.append("")
     lines.append(
@@ -1335,7 +1409,13 @@ def aggregate(config: Mapping[str, Any], ledger) -> tuple[dict[str, Any], Path]:
         prep_dir=prep_dir,
         payload=payload,
     )
-    rules = _rule_groups(prep_dir=prep_dir, real_dir=rules_dir / "REAL", statuses=statuses)
+    training_commit = (prep_status.get("run_provenance") or {}).get("git_commit") or prep_status.get("git_commit")
+    rules = _rule_groups(
+        prep_dir=prep_dir,
+        real_dir=rules_dir / "REAL",
+        statuses=statuses,
+        training_commit=training_commit,
+    )
     replay = _replay_all(rules=rules, payload=payload, predictions=predictions)
     decrement = _decrement_check(rules=rules, payload=payload, replay=replay)
     cases = _explanation_cases(rules=rules, payload=payload, replay=replay)
@@ -1391,13 +1471,15 @@ def aggregate(config: Mapping[str, Any], ledger) -> tuple[dict[str, Any], Path]:
 
     # provenance summary
     provenance = {
-        "git_commit": C.git_commit(),
+        "training_git_commit": training_commit,
+        "aggregate_git_commit": C.git_commit(),
+        "git_commit": training_commit,
         "protocol_hash": _protocol_hash(prep_dir),
         "graph_cache_sha256": C.read_json(prep_dir / "hashes.json").get("graph_cache_sha256"),
         "lipo_raw_sha256": C.EXPECTED_CACHE_SHA256["lipo_raw"],
-        "rr_prep": (prep_status.get("run_provenance") or {}).get("rr_run_id"),
-        "rr_c1": (c1_status.get("run_provenance") or {}).get("rr_run_id"),
-        "rr_rules": (rules_status.get("run_provenance") or {}).get("rr_run_id"),
+        "rr_prep": _infer_rr_run_id(prep_dir, prep_status),
+        "rr_c1": _infer_rr_run_id(c1_dir, c1_status),
+        "rr_rules": _infer_rr_run_id(rules_dir, rules_status),
         "prep_dir": str(prep_dir),
         "c1_dir": str(c1_dir),
         "rules_dir": str(rules_dir),
@@ -1430,11 +1512,31 @@ def aggregate(config: Mapping[str, Any], ledger) -> tuple[dict[str, Any], Path]:
         "decision": decision,
     })
     C.write_json(analysis_dir / "resource_ledger.json", resource)
+    run_status = [
+        {
+            "stage": stage,
+            "run_id": {
+                "prepare": provenance.get("rr_prep"),
+                "worker_c1": provenance.get("rr_c1"),
+                "worker_rules": provenance.get("rr_rules"),
+            }[stage],
+            "state": status.get("state"),
+            "node": (status.get("run_provenance") or {}).get("hostname"),
+            "device": (status.get("run_provenance") or {}).get("cuda_visible_devices"),
+            "wall_s": float(status.get("wall_seconds", 0.0)),
+        }
+        for stage, status in (
+            ("prepare", prep_status),
+            ("worker_c1", c1_status),
+            ("worker_rules", rules_status),
+        )
+    ]
     summary = {
         "round_id": C.ROUND_ID,
         "dataset": C.DATASET,
         "provenance": provenance,
         "prep": prep_summary,
+        "run_status": run_status,
         "preflight": {
             "pass": bool(preflight.get("pass")),
             "n_failed": int(preflight.get("n_failed", 0)),
