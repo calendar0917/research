@@ -1,0 +1,41 @@
+id: sq-lipo-pair-rule-v1
+protocol: sq-lipo-pair-rule-v1
+active: true
+focus: true
+created: 2026-11-18
+
+question: >-
+  On official ogbg-mollipo, does an explicitly counted anchor-pair relation
+  (type pair x finite graph-distance bin) add predictive information beyond
+  (a) the same information as an exchangeable hypergeometric marginal and
+  (b) the common whole-graph / fixed-B-bank / local-path counts, when the reader
+  is a grouped sparse additive model with a 32-rule budget and the comparison
+  includes a live LCRC-C1 reference?
+
+baseline: >-
+  LIVE, retrained in this round on the same official splits and seed 0:
+  BASE (common input, FULL and -32), NULL (same relation slots, marginal
+  expectation, FULL and -32), the MLP probe on exactly the REAL input, and the
+  repository C1 / NO_BOND_MEAN with the Rf recipe. Historical sq-pilot-small-v1
+  Lipo numbers are background only; this round's gate uses the live C1.
+
+candidates:
+  - id: REAL-32
+    status: active
+    note: >-
+      The 32-group truncation of the REAL grouped sparse additive model; the
+      primary candidate for both the binding and the near-C1 axes.
+
+open_questions:
+  - Does the actual anchor-pair relation beat the marginal NULL at a fixed 32-rule budget?
+  - Is the additive readout close enough to live C1 on Val and development Test?
+  - Can the leading REAL-32 state be replayed exactly from the original graphs?
+
+guardrails:
+  - test access is `always`; Test is DEVELOPMENT_TEST and never selects a state
+  - single training seed 0; no multi-seed stability claim
+  - all filtering, vocabulary, scales, lambdas and model selection use Train only
+  - BASE / NULL / REAL share the same common columns and the same numeric lambda
+  - the relation slot order is locked before any Val/Test feature is built
+  - MLP uses exactly the REAL FULL input; C1 is the unmodified repository model
+  - report both Val-selected and fixed epoch-180 states for all five arms

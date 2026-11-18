@@ -1,0 +1,226 @@
+# Comparability protocol for the Lipo explicit structural-rule pilot.
+#
+# A protocol states rules, not a model: dataset, split, metric, fitting scope,
+# selection policy, test policy, seed semantics, the five frozen arms and the
+# pre-declared interpretation thresholds.
+
+id: sq-lipo-pair-rule-v1
+
+dataset:
+  tasks:
+    - name: ogbg-mollipo
+      role: only_task
+      expected_rows: 4200
+      expected_splits: {train: 3360, valid: 420, test: 420}
+      target_unit: official OGB target (logD at pH 7.4)
+  source_policy: official_ogb_graphproppred_only
+  identity_source: gr_data.bundle("ogbg-mollipo", verify=True)
+  loader: PygGraphPropPredDataset(name=ogbg-mollipo, root=data/ogb) + get_idx_split()
+  evaluator: "OGB Evaluator (official metric: rmse)"
+  cache_fingerprints:
+    graph_cache_sha256: fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c
+    lipo_raw_sha256: 3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3
+  row_identity: >-
+    All arms are aligned by official OGB row ID. New feature matrices are written
+    in ascending official row ID per split. The three splits must be disjoint,
+    must cover 0..4199 exactly once, and every arm must read the same per-row
+    labels. These are asserted before any formal worker starts.
+
+split:
+  description: official OGB scaffold Train / Validation / Test
+  sizes: {train: 3360, valid: 420, test: 420}
+  no_row_deletion: true
+  no_train_valid_merge: true
+
+metric:
+  ranking_metric: valid_rmse
+  metric_direction: lower_is_better
+  official_metric: rmse
+  secondary_metrics: [test_rmse, train_rmse, train_mae, valid_mae, test_mae]
+  unit: raw logD units (de-standardised exactly once)
+
+train_only_fitting_scope:
+  description: >-
+    Train only: target mean and population std (ddof=0), the B query bank and
+    its support filter, the S2 candidate filter, the REAL relation-slot filter,
+    every per-column scale, every lambda, the FISTA model, the MLP model and the
+    C1 model. Val/Test labels never enter any of these decisions.
+  test_role: >-
+    Official Test is a DEVELOPMENT_TEST set. It is observed every epoch and may
+    be inspected, but no model state, slot, threshold or hyperparameter is
+    selected by Test.
+
+validation_selection_policy:
+  selection: >-
+    Minimum Val RMSE over the 180 full-batch epochs, ties to the earlier epoch.
+    Additive arms select FULL and -32 independently; each epoch's -32 state is a
+    function of that epoch's fitted weights only.
+  reporting: >-
+    Every arm reports both its Val-selected state and the fixed epoch-180 state.
+    The Test column of the same frozen state travels with it.
+
+test_policy: always
+
+seed_semantics:
+  seeds: [0]
+  rngs:
+    training_seed: 0
+    mlp_batch_stream: "np.random.default_rng(0), one stream over local Train row indices"
+    bootstrap_seed: 1703
+  note: Single training seed; no multi-seed stability claim.
+
+arms:
+  BASE:
+    input: common
+    reader: grouped sparse additive (FISTA)
+    device: CPU
+    readouts: [FULL, "-32"]
+  NULL:
+    input: common + same relation slots represented by the hypergeometric marginal expectation
+    reader: grouped sparse additive (FISTA)
+    device: CPU
+    readouts: [FULL, "-32"]
+  REAL:
+    input: common + same relation slots represented by actual anchor-pair counts
+    reader: grouped sparse additive (FISTA)
+    device: CPU
+    readouts: [FULL, "-32"]
+  MLP:
+    input: exactly REAL FULL input, same column order and scaling
+    reader: "D -> 128 -> 64 -> 1 MLP, SiLU, dropout 0.10"
+    device: cuda:0 (GPU1 pool)
+  C1:
+    input: official OGB graph features through the repository LCRC-C1
+    reader: "gr_models.ModelSet(b).lcrc() (NO_BOND_MEAN)"
+    recipe: Rf
+    device: cuda:0 (GPU0 pool)
+    expected_parameters: 228674
+
+common_input:
+  groups_in_order:
+    - four_named_whole_graph_counts: [n_atoms, n_bonds, n_components, cycle_rank]
+    - b_query_bank: "sq_bank.build_base_bank(cap=512, min_molecules=8), original function order"
+    - s2_typed_local_two_bond_paths: "<=256, Train support >=16, non-constant, support desc then canonical key"
+    - type_pair_totals: "C_t for each t appearing in the final relation slots"
+    - distance_marginals: ["1","2","3","4","5","6","7","8","9+","unreachable"]
+  count_basis: "u(n) = [min(n,1), max(n-1,0)] per group"
+  ordering: >-
+    Groups are concatenated in the order above. B keeps the original bank order;
+    S2 and type-pair totals are sorted by their stable canonical string key;
+    distance bins are in the frozen bin order.
+
+relation_slots:
+  key: "(type_pair, finite_distance_bin)"
+  type: >-
+    t(v) = (atom_feat[0], atom_feat[3], atom_feat[7], atom_feat[8], role), using
+    OGB category indices. role=1 for a C double-bonded to O, role=2 for that O,
+    otherwise 0; the condition is recorded once per atom.
+  type_pair: "sorted(t(u), t(v)) over all unordered u < v anchor pairs"
+  finite_bins: ["3","4","5","6","7","8","9+"]
+  selection: >-
+    Train support >=16 molecules, raw counts non-constant on Train, sorted by
+    Train hit-molecule count descending then canonical key ascending, at most
+    512 slots. The slot order is locked for all splits and REAL/NULL/MLP.
+  real_basis: "u(K_(t,d)) with actual anchor-pair counts"
+  null_basis:
+    formula: >-
+      mean_K = C_t * H_d / T; p_hit = Hypergeom(T, H_d, C_t).sf(0);
+      [p_hit, mean_K - p_hit]
+    notes: >-
+      C_t is the number of anchor pairs of type t at any distance (including
+      unreachable), H_d is the whole-graph distance-marginal count, T is the
+      total number of anchor pairs. Both columns are zero when either marginal
+      is zero or T=0. The second column is clamped only for negative rounding
+      error with absolute value <= 1e-10; a larger negative value is a fault.
+  coverage_row: >-
+    A row is covered when any stored slot has any raw REAL/NULL basis column with
+    absolute difference > 1e-8, checked before scaling.
+
+additive_reader:
+  target_standardisation: "official Train mean and population std (ddof=0), de-standardised once"
+  column_scale: "max(sqrt(mean_train(column^2)), 0.1)"
+  objective: "||Xw+b-z||^2/(2*n_train) + lambda*sum_r ||w_r||_2"
+  bias: "unpenalised; eliminated analytically on Train and restored as mean(z) - mean_train(X) @ w"
+  lambda: "0.02 * lambda_max_REAL, where lambda_max_REAL is the maximum group gradient L2 norm of the full-Train centred smooth loss at zero weights"
+  solver: >-
+    Full-batch float64 FISTA, zero initialisation, t=1, L=1, one proximal update
+    per epoch, majorisation backtracking that doubles L on failure and carries
+    the accepted L. Group proximal is max(0, 1 - lambda/(L||v_r||)) v_r.
+  minus_32: >-
+    Keep at most 32 groups among those with ||w_r||_2 > 1e-10, ranked by the
+    Train standard deviation of that group's output descending, ties by the
+    pre-fixed group order. Group weights are unchanged; the Train bias is
+    recomputed with the retained groups only.
+
+mlp_reader:
+  structure: "D -> 128 -> 64 -> 1"
+  activation: SiLU
+  dropout: 0.10
+  initialisation: PyTorch Linear defaults after torch.manual_seed(0)
+  optimiser: "AdamW(betas=(0.9,0.999), eps=1e-8, weight_decay=1e-5)"
+  recipe: >-
+    Rf: peak lr 1e-3, 5 epoch warmup, cosine to 1e-5, batch 128 with tail,
+    standardised MSE, grad clip 5, FP32. lr_at("Rf", step, 3360, 180).
+  batch_order: "np.random.default_rng(0) single stream permuting local Train row indices"
+  eval: "eval mode, eval batch 256, all rows"
+
+c1_reader:
+  constructor: "gr_models.ModelSet(b).lcrc()"
+  expected_parameters: 228674
+  trajectory: "gr_train.run_trajectory with gr_common.STAGE1 and the Rf recipe"
+  epoch_budget: 180
+
+bootstrap:
+  resamples: 2000
+  seed: 1703
+  clusters: >-
+    Bemis-Murcko scaffold of the cached official SMILES, chirality dropped. A
+    valid but acyclic molecule whose scaffold is empty is grouped by its
+    canonical de-chirality SMILES. A parse failure is its own row-ID group and
+    is counted. For each resample the same number of clusters is drawn with
+    replacement, all rows of a drawn cluster are kept, and both models use the
+    identical sampled rows.
+  comparisons: ["REAL-32 vs BASE-32", "REAL-32 vs NULL-32", "REAL-32 vs C1", "REAL FULL vs MLP"]
+  interval: "2.5% / 97.5% quantiles of RMSE(reference) - RMSE(focal)"
+  splits: "official Val and Test kept separate"
+
+decision_rules:
+  axis_relation:
+    description: >-
+      Evaluate in order; the first satisfied row is the verdict. MAIN uses each
+      arm's minimum-Val-RMSE state. gain(control) = RMSE(control) - RMSE(REAL-32);
+      positive means REAL-32 is better.
+    rows:
+      - {condition: "Val coverage < 84 molecules", verdict: LOW_RELATION_COVERAGE}
+      - {condition: "coverage sufficient and no REAL-32 relation term has |contribution| > 1e-6 logD on Val", verdict: NO_ACTIVE_RELATION_32}
+      - {condition: "gain vs BASE-32 >= 0.02 and gain vs NULL-32 >= 0.02 on Val; both Val CI95 lower > 0; both Test gains > 0", verdict: BINDING_SIGNAL}
+      - {condition: "both Val gains > 0 but a Val CI95 lower <= 0 or a Test gain <= 0", verdict: UNRESOLVED_BINDING}
+      - {condition: "Val gain vs BASE-32 > 0 and Val gain vs NULL-32 <= 0", verdict: ADDITION_NOT_BINDING}
+      - {condition: otherwise, verdict: NO_CLEAR_BINDING_SIGNAL}
+  axis_performance:
+    gap: "RMSE(REAL-32) - RMSE(C1)"
+    near_c1: "Val and development Test gaps both <= 0.04 logD AND the REAL-32 rule replay passes"
+    verdicts: [NEAR_C1, NOT_NEAR_C1]
+  joint:
+    promising: "axis_relation == BINDING_SIGNAL and axis_performance == NEAR_C1"
+    weak_live_reference: >-
+      Appended when this round's live C1 best Val RMSE exceeds the historical
+      0.7052 by more than 0.04.
+  bottleneck:
+    interpretation_scale: 0.02 logD
+    compression: "Same weights without the 32-group budget lower RMSE by at least 0.02 -> locate compression"
+    readout: "MLP Val and Test both within 0.04 of C1 and Val at least 0.02 below REAL FULL -> locate readout/capacity/fit"
+    vocabulary: "both readouts trail C1 by more than 0.04 on Val -> record vocabulary feasibility limitation"
+    otherwise: "report differences, directions and intervals; do not claim a clear location"
+
+interpretation_thresholds:
+  min_val_coverage: 84
+  signal_gain_logD: 0.02
+  near_c1_gap_logD: 0.04
+  bottleneck_scale_logD: 0.02
+  historical_c1_valid_rmse: 0.7052
+  weak_reference_margin_logD: 0.04
+
+comparability:
+  requires: [protocol_id, graph_cache_sha256, lipo_raw_sha256, split_row_id_sha256]
+  note: Only runs under this protocol and these fingerprints are comparable.

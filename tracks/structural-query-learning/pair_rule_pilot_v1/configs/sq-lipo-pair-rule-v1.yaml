@@ -1,0 +1,40 @@
+# Frozen configuration for sq-lipo-pair-rule-v1.
+#
+# Only engineering knobs and output roots are here.  The scientific rules and
+# thresholds are frozen in PROTOCOL.md and protocols/sq-lipo-pair-rule-v1.yaml.
+
+protocol_id: sq-lipo-pair-rule-v1
+round_id: sq-lipo-pair-rule-v1
+
+# Single training seed for the whole round.
+seed: 0
+
+# prepare | worker_c1 | worker_rules | aggregate
+stage: prepare
+dataset: ogbg-mollipo
+epochs: 180
+
+# Output roots (relative to the repository root).
+prep_dir: tracks/structural-query-learning/pair_rule_pilot_v1/runs/prep
+c1_dir: tracks/structural-query-learning/pair_rule_pilot_v1/runs/c1
+rules_dir: tracks/structural-query-learning/pair_rule_pilot_v1/runs/rules
+analysis_dir: tracks/structural-query-learning/pair_rule_pilot_v1/analysis
+
+# In-process device for the stage that owns a GPU.  Pool pinning
+# (CUDA_VISIBLE_DEVICES) decides which physical A100 that is.
+device_c1: cuda:0
+device_mlp: cuda:0
+
+# CPU math-library cap for the three additive arms.
+cpu_threads: 4
+
+# Resume instead of restarting finished work.
+resume: true
+
+# Paired cluster bootstrap (frozen).
+bootstrap_resamples: 2000
+bootstrap_seed: 1703
+
+# Smoke budgets (never part of a formal trajectory/number).
+smoke_mlp_rows: 16
+smoke_c1_rows: 16
