@@ -178,7 +178,7 @@ def _stage_prepare(config: Mapping[str, Any], ledger) -> dict[str, Any]:
         }
         C.atomic_write_json(C.ANALYSIS / "frozen_config.json", frozen)
         C.atomic_write_json(
-            C.CONFIGS / "run_matrix.json",
+            C.ANALYSIS / "run_matrix.json",
             {
                 "round_id": C.ROUND_ID,
                 "arms": [
@@ -226,7 +226,7 @@ def _stage_prepare(config: Mapping[str, Any], ledger) -> dict[str, Any]:
             },
         )
         C.atomic_write_json(
-            C.CONFIGS / "identities.json",
+            C.ANALYSIS / "identities.json",
             {
                 "round_id": C.ROUND_ID,
                 "feature_spec_hash": C.FEATURE_SPEC_HASH,
