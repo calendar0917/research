@@ -1,0 +1,168 @@
+{
+  "arms": {
+    "E": {
+      "assigned_pool": "res-gpu0",
+      "conditioning": "per_occurrence_then_aggregate",
+      "name": "EARLY_TASK",
+      "role": "primary_arm",
+      "task_query": true
+    },
+    "L": {
+      "assigned_pool": "res-gpu1",
+      "conditioning": "aggregate_then_condition",
+      "name": "LATE_TASK",
+      "role": "primary_arm",
+      "task_query": true
+    },
+    "S": {
+      "assigned_pool": null,
+      "conditioning": "per_occurrence_then_aggregate",
+      "name": "EARLY_SHARED",
+      "role": "conditional_arm_purchased_by_gate",
+      "task_query": false
+    }
+  },
+  "budget": {
+    "gpu_hard_hours": 16.0,
+    "gpu_soft_hours": 12.0,
+    "preflight_gpu_hours": 0.25,
+    "wall_hard_hours": 10.0,
+    "wall_soft_hours": 6.0
+  },
+  "canonical_init_seed": 0,
+  "created_utc": "2026-11-18T04:54:34Z",
+  "dropout_generator_seed": 230000,
+  "expected_parameters": {
+    "E": 831088,
+    "L": 831088,
+    "S": 829040
+  },
+  "git_commit": "ebc093c39f76854b1271260852d8cf8a501b39f9",
+  "historical_anchors": {
+    "LCRC_CPC": {
+      "best_epoch": 36,
+      "best_valid_ap": 0.2659443284254145,
+      "parameters": 1043333,
+      "source": "tracks/structural-sufficiency/lcrc_pcba_cpc_v1/runs/LCRC_CPC/run.json"
+    },
+    "LCRC_RC_REAL": {
+      "best_epoch": 33,
+      "best_valid_ap": 0.2677177024413342,
+      "parameters": 1051022,
+      "source": "tracks/structural-sufficiency/lcrc_pcba_rc_v1/runs/REAL/run.json"
+    },
+    "W2": {
+      "best_state_test_ap": 0.253617,
+      "best_valid_ap": 0.26527331610028143,
+      "epoch40_test_ap": 0.250986,
+      "epoch40_valid_ap": 0.261867,
+      "parameters": 994324,
+      "source": "tracks/structural-sufficiency/lcrc_pcba_backbone_scaling_v1/runs/W2/run.json + lcrc_pcba_dynamic_v1/analysis/report_tables.md row 'W2 historical'"
+    },
+    "W2_DYNAMIC": {
+      "best_state_test_ap": 0.262226,
+      "best_valid_ap": 0.2750671855066329,
+      "epoch40_test_ap": 0.260136,
+      "epoch40_valid_ap": 0.268791,
+      "parameters": 1128468,
+      "source": "tracks/structural-sufficiency/lcrc_pcba_dynamic_v1/runs/W2_DYNAMIC/run.json + analysis/report_tables.md row 'W2-DYNAMIC'"
+    }
+  },
+  "identities": {
+    "cache_sha256": "caad3e90dd76d1f1483d2a01501eba23413072a7b5a2fc4b62780c315aa59035",
+    "cpc_cache_meta_sha256": "ef3246c1b3dbda3618549fd69cac9e2452bdd54879e108385509da2e3bcae503",
+    "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+    "label_artifact_sha256": "5c3b5fbe642d80113522832fe01090097b860010868c59f8696bc247d5027d01",
+    "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb",
+    "official_graph_label_sha256": "ae9430cf3c2c7697c0318ef1a9f32d6536e4ade48e7e09a81da9ade9fb7bb7a2",
+    "split_partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f"
+  },
+  "lr_schedule": {
+    "formula_phase12": "lr(s) = lo + (hi-lo)*0.5*(1+cos(pi*s/S40)); base 5e-5->1e-5, new 3e-4->3e-5",
+    "formula_phase3": "steps 0..2737 linear 3e-5->3e-4; then lo+(hi-lo)*0.5*(1+cos(pi*(s-2738)/(S40-2738)))",
+    "phase12": {
+      "base_step0": 5e-05,
+      "base_step12e": 4.1755705045849464e-05,
+      "base_step40e": 1e-05,
+      "new_step0": 0.0003,
+      "new_step12e": 0.00024435100905948387,
+      "new_step40e": 3e-05
+    },
+    "phase3": {
+      "post_warmup_first": 0.0003,
+      "step0": 3.0098612125639153e-05,
+      "step40e": 1e-05,
+      "warmup_last": 0.0003
+    },
+    "steps_per_epoch": 2738,
+    "total_steps_40_epochs": 109520
+  },
+  "math": {
+    "E": "z_f,v,t = sum_p w(s_p,t) v_f,p / sqrt(max(n_f(v),1))",
+    "L": "z_f,v,t = w(dot(mean_p k_f,p, q_G,t)/sqrt(16)) sum_p v_f,p / sqrt(max(n_f(v),1))",
+    "front_end": "atom 51->256->192; bond 589->320->192 (direction invariant); S1 576->192->96; S2 961->256->96; key 96->16 tanh; value 96->32",
+    "gate": "w(s) = 1 + 0.5 tanh(s), s = dot(k, q)/sqrt(16); no softmax, no learnable scale",
+    "query": "q=tanh(q0 + [qt_t] + Wc c_G), Wc bias-free, q0=qt=Wc=0 at init",
+    "readout": "p_G,t = [sum h/sqrt(n), mean h, mean h^2, c_G, log1p n]; r = MLP(235->192->96); logit = wout[t].r + bout[t]",
+    "root": "j = Linear_static([a_v, sum_e b_e, scalar_v]) + Linear_stat([z1,z2]); h = LayerNorm(SiLU(j)); dropout 0.10 on h during training only"
+  },
+  "parameter_breakdown": {
+    "atom": 62656,
+    "bond": 250432,
+    "graph_mlp": 63840,
+    "keys": 3104,
+    "layer_norm": 128,
+    "query": 2736,
+    "root_stat": 4096,
+    "root_static": 25216,
+    "s1_event": 129312,
+    "s2_event": 270944,
+    "task_output": 12416,
+    "values": 6208
+  },
+  "plan": {
+    "batch_size": 128,
+    "consumed40_prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+    "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+    "order_seed": 0,
+    "steps_per_epoch": 2738
+  },
+  "protocol_id": "css-pcba-s0-v1",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "early_stopping": false,
+    "end_lr": 1e-05,
+    "epochs": 40,
+    "gradient_clip": 5.0,
+    "learning_rate": 0.0003,
+    "loss": "masked BCEWithLogitsLoss over observed entries only",
+    "optimizer": "AdamW",
+    "precision": "fp32",
+    "scheduler": "1-epoch linear warmup then per-step cosine over the 40-epoch horizon",
+    "test_policy": "official Test targets are NaN in the label artifact and are never indexed",
+    "warmup_epochs": 1.0,
+    "warmup_start_lr": 3e-05,
+    "weight_decay": 0.001
+  },
+  "round_id": "css-pcba-s0-v1",
+  "s_gate": {
+    "cost_multiplier": 1.2,
+    "d40_early_min": 0.002,
+    "e_best_floor": 0.262273,
+    "e_best_high_min": 0.268273,
+    "gpu_hard_hours": 16.0,
+    "gpu_soft_hours": 12.0,
+    "w2_best_val_reference": 0.265273
+  },
+  "schema": "css-pcba-s0-v1-frozen-config-v1",
+  "seed": 0,
+  "study_id": "css-pcba-s0-v1",
+  "task_chunk_default": 16,
+  "test_role": "DEVELOPMENT_TEST"
+}

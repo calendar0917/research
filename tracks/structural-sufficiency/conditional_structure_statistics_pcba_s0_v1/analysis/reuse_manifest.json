@@ -1,0 +1,119 @@
+{
+  "created_utc": "2026-11-18T04:54:47Z",
+  "label_view": {
+    "label_source": {
+      "test": "data/ogb/ogbg_molpcba/raw/graph-label.csv.gz",
+      "test_sha256": "ae9430cf3c2c7697c0318ef1a9f32d6536e4ade48e7e09a81da9ade9fb7bb7a2",
+      "train_valid": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/analysis/pcba_labels_trainvalid.npy",
+      "train_valid_sha256": "5c3b5fbe642d80113522832fe01090097b860010868c59f8696bc247d5027d01"
+    },
+    "missing_labels_are_nan_and_masked": true,
+    "observed_entries": {
+      "test": 3376672,
+      "train": 27162842,
+      "valid": 3477656
+    },
+    "positive_entries": {
+      "test": 56698,
+      "train": 359975,
+      "valid": 55964
+    },
+    "split_sizes": {
+      "test": 43793,
+      "train": 350343,
+      "valid": 43793
+    },
+    "test_labels_enter_training": false,
+    "test_labels_read_from_official_release": true,
+    "test_role": "DEVELOPMENT_TEST",
+    "test_rows_sha256": "9171aa54ed4070dcbd6697b68d57560c7015c118168de4fa63b5e05a02c3cd62",
+    "train_rows_sha256": "16169ef35ce1812eac577af939fa0416e79c670c015ecf5aa7b848a25d412dd9",
+    "train_valid_equal_to_frozen_artifact": true,
+    "valid_rows_sha256": "fcad7abd938cf3328b6761cd78c8170cf6bd389bef4b6d1f94b5ed0b4aec21ed"
+  },
+  "not_reused_and_not_rebuilt": [
+    {
+      "asset": "historical LCRC backbones / W2 / W3 / Dynamic / CPC / RC checkpoints",
+      "reason": "this round's subject is from scratch; no weights are loaded, and no historical training is repeated. Their published Validation/Test numbers are cited as performance anchors only."
+    },
+    {
+      "asset": "missing historical per-epoch Train/Test curves",
+      "reason": "reported as missing; not re-trained to fill old curves"
+    }
+  ],
+  "reused": [
+    {
+      "asset": "lip_v1 PCBA feature cache (atom 51 / bond 13 / scalar 9 / global 42)",
+      "identity": {
+        "cache_sha256": "caad3e90dd76d1f1483d2a01501eba23413072a7b5a2fc4b62780c315aa59035",
+        "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee"
+      },
+      "source": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/cache/pcba_v1",
+      "verification": "inherited lr_data.load_task identity gates: feature spec hash, norm fingerprint, split partition hash, label artifact hash, cache file count/bytes/manifest sha; no rebuild"
+    },
+    {
+      "asset": "official ogbg-molpcba Train-only normalisation",
+      "identity": {
+        "norm_fingerprint": "6ce50f989fc0789d9573f7f787a44a49a282531ac5a2db09c6600c67dc3293fb"
+      },
+      "source": "pcba_scale_pilot_v1 analysis (fit_split=train_only, 350,343 rows)",
+      "verification": "norm_fingerprint equality (no re-fit)"
+    },
+    {
+      "asset": "official split (350,343 / 43,793 / 43,793)",
+      "identity": {
+        "split_partition_sha256": "c872bd6311796826db9365c5c739c4cee94c3baa78fbd18006616feefc67bf4f"
+      },
+      "source": "tracks/structural-sufficiency/lcrc_pcba_scale_pilot_v1/analysis/pcba_split.json",
+      "verification": "partition sha256 + inherited overlap/size gates"
+    },
+    {
+      "asset": "frozen 40-epoch seed-0 order plan",
+      "identity": {
+        "batch_size": 128,
+        "consumed40_prefix_sha256": "1a24dfca54898dd2b0e7c58d2b2f1956df67b233fdceaa7a376f81a2377a5f58",
+        "global_plan_sha256": "06f437299fa451e449202a990d28f3b8d101e7aec709bcd72a878c8de864b6f6",
+        "order_seed": 0,
+        "steps_per_epoch": 2738
+      },
+      "source": "sg_data.make_plan40 (regenerated, not copied)",
+      "verification": "global plan hash + consumed-40 prefix hash equality"
+    },
+    {
+      "asset": "rooted two-bond path (S2) structure cache incl. middle atom and both physical bond ids",
+      "identity": {
+        "meta_sha256": "ef3246c1b3dbda3618549fd69cac9e2452bdd54879e108385509da2e3bcae503"
+      },
+      "source": "tracks/structural-sufficiency/lcrc_pcba_cpc_v1/runs/cpc_cache",
+      "verification": "cache meta schema/rows/paths + per-batch structural audit (counts identity, bond endpoints, closure vs frozen path_closure); no rebuild"
+    },
+    {
+      "asset": "S1 directed occurrence index",
+      "identity": {
+        "derived": true
+      },
+      "source": "derived from the frozen bond_index/bond_batch at collate time",
+      "verification": "S1 == 2 x physical bonds and endpoint consistency on every audited batch"
+    },
+    {
+      "asset": "PinnedStager host-to-device transfer",
+      "source": "lcrc_pcba_pipeline_perf_v1/code/pf_pipeline.py",
+      "verification": "already gated in that round; unchanged tensors/dtypes"
+    },
+    {
+      "asset": "recipe + per-step LR schedule",
+      "source": "sg_common.SCRATCH_RECIPE / scheduled_lr(phase=3)",
+      "verification": "imported, not re-derived; audit printed in frozen_config.json"
+    },
+    {
+      "asset": "official Test targets",
+      "identity": {
+        "sha256": "ae9430cf3c2c7697c0318ef1a9f32d6536e4ade48e7e09a81da9ade9fb7bb7a2"
+      },
+      "source": "data/ogb/ogbg_molpcba/raw/graph-label.csv.gz",
+      "verification": "raw Train/Valid blocks reproduce the frozen artefact bit-for-bit; Test block read once into a separate development view"
+    }
+  ],
+  "round_id": "css-pcba-s0-v1",
+  "schema": "css-pcba-s0-v1-reuse-manifest-v1"
+}

@@ -1,0 +1,72 @@
+id: css-pcba-s0-v1
+protocol: css-pcba-s0-v1
+active: true
+focus: true
+created: 2026-12-01
+
+question: >-
+  On the official ogbg-molpcba split, with the same structural objects, the same
+  encoder, the same parameter count and the same 40-epoch training budget, does
+  conditioning each raw structural occurrence on the molecule's task context
+  (E / EARLY_TASK) beat applying the same conditioning only after the root
+  aggregation (L / LATE_TASK)?
+
+baseline: >-
+  The two primary arms are their own control (equal parameters, equal initial
+  state, equal training order; only the aggregation formula differs).  Historical
+  LCRC W2 (best-Val 0.265273, selected-state Test 0.253617; epoch-40 Val 0.261867,
+  Test 0.250986) and W2-DYNAMIC (best-Val 0.275067, selected-state Test 0.262226;
+  epoch-40 Val 0.268791, Test 0.260136) are cited as performance anchors only.
+  No historical model is trained, resumed or re-evaluated in this round.
+
+candidates:
+  - id: E
+    status: active
+    note: >-
+      EARLY_TASK.  Every S1/S2 occurrence is scored against the task query and the
+      gated value is aggregated at the root, so the collection order of the
+      occurrences changes the result.
+  - id: L
+    status: active
+    note: >-
+      LATE_TASK.  Keys and values are summed at the root first; the conditioning is
+      applied once to the root aggregate, so the same occurrences in a different
+      order give the same root state.
+  - id: S
+    status: gated
+    note: >-
+      EARLY_SHARED.  E without the 128x16 task query table (molecular background
+      context and the public query kept).  Purchased only if the pre-registered
+      S rule fires after both primary arms finish.
+
+frozen_reading:
+  - >-
+    The structure object family is fixed: S1 = both directions of every physical
+    bond; S2 = every rooted non-backtracking two-bond path with three distinct
+    atoms, multiplicity and triangles preserved, no sampling or truncation.
+  - >-
+    The front end runs exactly once per forward pass; conditioning, aggregation and
+    readout only ever consume those static objects.
+  - >-
+    E and L differ only in the placement of the conditioning; parameter names,
+    shapes, initial values and gradient steps are identical.
+  - >-
+    q0 = qt = Wc = 0 at initialisation, so all arms start as the same function and
+    the keys only start learning after the query has left zero.
+  - >-
+    The readout is graph statistics only (sum/sqrt(n), mean, mean square, context,
+    log1p n); there is no additive atom-output head and no extra prediction branch.
+
+open_questions:
+  - Does conditioning before aggregation buy Validation/Test AP over conditioning
+    after aggregation at identical parameter count and identical budget?
+  - If so, is the difference concentrated in a few tasks or spread across the
+    common task set, and is it consistent between Validation and Test?
+  - Do the task queries actually learn task-specific structural measurements
+    (per-task query spread, gate spread, permutation sensitivity), or do the arms
+    collapse to the same shared measurement?
+  - How far is this subject from the historical W2 / W2-DYNAMIC performance
+    position, given that it is a different architecture and not an equal-parameter
+    control of them?
+  - If S is purchased, how much of E's behaviour is due to the task-specific
+    query rather than the molecular-background context term?

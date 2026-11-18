@@ -1,0 +1,229 @@
+# Comparability protocol: conditional structure statistics on PCBA, seed 0.
+#
+# A protocol states rules, not a model.  This round is an architecture-candidate
+# screen: every number is DEVELOPMENT and every Test number is DEVELOPMENT_TEST.
+
+id: css-pcba-s0-v1
+
+dataset:
+  name: ogbg-molpcba
+  role: primary_round
+  target: official OGB PCBA activity label (128 binary tasks, NaN = missing)
+  expected_rows: 437929
+  official_split_sizes: {train: 350343, valid: 43793, test: 43793}
+  source_policy: official_ogb_graphproppred_only
+  loader: >-
+    inherited frozen lipo_v1 PCBA feature cache (atom 51 / bond 13 / atom_scalar 9 /
+    global 42) plus the inherited official split, Train-only normalisation and
+    NaN-masked Train/Valid label artefact.  The official Test block is read once
+    from data/ogb/ogbg_molpcba/raw/graph-label.csv.gz into a separate development
+    view; Train/Valid alignment is re-verified bit-for-bit.
+  forbidden_substitutes:
+    - any self-made split (random or scaffold)
+    - re-fitting the normalisation on Valid/Test
+    - re-parsing SMILES to rebuild the feature cache
+    - new materialised descriptors, external data, SSL, chirality repair, feature
+      selection or class rebalancing
+
+structure_objects:
+  S1: >-
+    both directions (v, u, e) of every physical bond; root v.  Exactly 2 x n_bonds
+    occurrences.  Derived from the frozen bond_index/bond_batch at collate time.
+  S2: >-
+    every rooted non-backtracking two-bond path (v, w, u, e1, e2) with the three
+    atoms pairwise distinct; different-middle multiplicity preserved; triangles
+    kept; no sampling, truncation, shortest-path filter or endpoint dedup.  Read
+    from the audited CPC structure cache (middle atom and both physical bond ids).
+  closure: >-
+    1 iff the root v and the end u are directly bonded; recomputed from the batch
+    adjacency and cross-checked against the frozen path_closure.
+  fitting_scope: structure only; no label is part of any structure index.
+
+metric:
+  ranking_metric: valid_ap
+  metric_direction: higher_is_better
+  official_metric: ap
+  official_evaluator: "OGB Evaluator('ogbg-molpcba') -- the only selection metric"
+  reported_metrics: [train_ap, valid_ap, test_ap, train_eval_bce, valid_bce, test_bce]
+  evaluation_frequency: every completed epoch, all three splits, full splits
+  curve_summaries: [best-Validation state, epoch 40, mean of the last 5 epochs]
+
+train_only_fitting_scope:
+  description: >-
+    Every parameter is fitted on official Train rows only.  The atom_scalar and
+    global standardisation buffers come from the inherited Train-only normalisation
+    (350,343 rows, no re-fit).  Validation selects the reported checkpoint; Test is
+    a development evaluation set and never selects anything.
+  forbidden: [Test-selected checkpoints, Valid/Test normalisation, Valid/Test loss]
+
+arms:
+  E:
+    name: EARLY_TASK
+    definition: >-
+      condition every raw occurrence with a task query, then aggregate at the root:
+      z_f,v,t = sum_{p in P_f(v)} [w(s_p,t) * v_f,p] / sqrt(max(n_f(v),1))
+    task_query: true
+  L:
+    name: LATE_TASK
+    definition: >-
+      aggregate first, then apply the same conditioning once:
+      kbar_f,v = mean_p k_f,p; Vsum_f,v = sum_p v_f,p;
+      z_f,v,t = w(dot(kbar_f,v, q_G,t)/sqrt(16)) * Vsum_f,v / sqrt(max(n_f(v),1))
+    task_query: true
+  S:
+    name: EARLY_SHARED
+    definition: E with qt removed (molecular context and the public query q0 kept)
+    task_query: false
+  equal_parameters: >-
+    E and L have identical parameter names, shapes, initial values and training
+    order (831,088 parameters each).  S is the same subject without the 128x16 task
+    query table (829,040 parameters); E-S is a configuration increment, not a
+    capacity-matched causal estimate.
+  conditioning:
+    gate: "w(s) = 1 + 0.5 * tanh(s); fixed 0.5, no learnable scale, no softmax"
+    score: "s = dot(k, q) / sqrt(16)"
+    query: "q_G,t = tanh(q0 + qt[t] + Wc c_G); S: q_G = tanh(q0 + Wc c_G)"
+    init: "q0 = 0, qt = 0, Wc.weight = 0; all other layers PyTorch default init"
+    consequence: >-
+      q = 0 makes w = 1, so E, L and S are the same function at initialisation;
+      keys receive gradient only once the query leaves zero.
+
+readout:
+  root: >-
+    Bsum_v = sum of the frozen direction-invariant bond encodings of the physical
+    bonds incident to v; x_v = [a_v, Bsum_v, scalar_v] (393);
+    j_v,t = Linear_static(x_v) + Linear_stat([z_1,v,t, z_2,v,t]);
+    h_v,t = LayerNorm_64(SiLU(j_v,t)); training-time dropout p = 0.10 on h only.
+  graph_statistics: >-
+    p_G,t = [sum_v h_v,t / sqrt(max(n_G,1)), mean_v h_v,t, mean_v (h_v,t)^2, c_G,
+    log1p(n_G)] (235); r_G,t = MLP(235->192->96); logit_G,t = wout[t].r_G,t + bout[t]
+  forbidden:
+    - message passing / node-level self-attention / recurrent hidden state
+    - pretrained weights, distillation, teacher, historical prediction bypass
+    - native additive atom-output head, extra rho or prediction branch
+    - "[paths, tasks, 961] raw input replication"
+
+training:
+  optimizer: AdamW
+  betas: [0.9, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-3
+  gradient_clip: 5.0
+  precision: fp32
+  tf32: false
+  batch_size: 128
+  drop_last: false
+  epochs: 40
+  steps_per_epoch: 2738
+  total_updates: 109520
+  lr: >-
+    one epoch of linear warmup 3e-5 -> 3e-4 (steps 0..2737), then per-step cosine
+    3e-4 -> 1e-5 to step 109,520; a single parameter group (sg_common.scheduled_lr,
+    phase=3)
+  loss: observed-entry mean BCEWithLogits (NaN targets masked before the loss)
+  empty_batch_rule: a batch without any observed label is recorded and skipped, never filled with negatives
+  order_plan: frozen seed-0 40-epoch plan (global hash 06f4372..., consumed-40 prefix 1a24dfca...)
+  no: [early stopping, EMA/SWA/soup, extra losses, pos_weight, hyper-parameter tuning, horizon extension]
+  dropout_rng: >-
+    one [n_atoms, 128, 64] inverted-dropout mask per Train batch from a dedicated
+    generator (seed 230000 + 0), sliced per task chunk; the generator state is
+    saved and restored.  Chunking therefore cannot change the dropout definition.
+  task_chunks: [16, 8, 4]
+  task_chunk_rule: >-
+    16 by default; before the formal start 16 -> 8 -> 4 may be tried in that fixed
+    order for memory only.  Every choice must pass the chunk-equivalence gate.
+
+validation_selection_policy:
+  selection: >-
+    maximum Validation AP over the 40 epochs; a strictly larger value replaces the
+    current selection and an exact tie keeps the earlier epoch.  Epoch 0
+    (initialisation) is never selectable.
+  reporting: >-
+    The Test column of the same frozen best-Validation state, the epoch-40 state and
+    the mean of the last 5 epochs are reported side by side.
+  forbidden: selecting an epoch by Test AP and calling it Validation selection
+
+test_policy: always
+test_role: DEVELOPMENT_TEST
+test_policy_note: >-
+  The official Test split is evaluated in full after every epoch by explicit user
+  authorisation for this round.  It never enters the loss, the optimiser, the
+  normalisation, the checkpoint choice or any threshold, and no additional
+  approval or isolation engineering is added.
+
+seed_semantics:
+  seeds: [0]
+  note: single training seed; no seed replication, no best-of-N, no stability claim
+  rngs:
+    training_seed: 0
+    canonical_init_seed: 0
+    dropout_generator_seed: 230000
+    order_plan_seed: 0
+    analysis_bootstrap_seed: 20261201
+  init_note: >-
+    All arms copy one canonical seed-0 initial state tensor-for-tensor; no
+    historical weights are loaded, resumed or fine-tuned.
+
+correctness_gates:
+  cpu:
+    - S1 == 2 x physical bonds; per-root S2 count == sum_{w in N(v)} (deg(w) - 1)
+    - middle / physical bond ids aligned; same molecule; closure correct
+    - atom renumbering and batch reordering leave the graph prediction unchanged
+    - isolated atoms, molecules without S2 and triangle closure stay finite
+    - q = 0 makes E = L = S; equal keys in a root and a single occurrence make E = L
+    - "non-exchange witness: two occurrences, scores (+1,-1), values (+1,-1), n = 2 -> E = tanh(1)/sqrt(2), L = 0"
+    - task chunk 16 / 8 / 4 equivalence (logits, Train loss, gradients)
+    - Test labels can never enter the optimiser, the normalisation or a query
+    - parameter counts, E/L initial equality, shared RNG, row alignment
+  gpu_preflight:
+    - "representative and heaviest real Train batch: memory and step time"
+    - "1/3/10/100 steps: query learns first, keys learn after the query leaves zero; values / root / graph MLP / head all receive gradient"
+    - recorded query norms, gate mean/std and between-task gate spread
+    - checkpoint continuation equivalence
+    - official OGB AP == independent sklearn recomputation on fixed predictions
+    - full Train/Valid/Test evaluation row counts, label sources and ordering
+  tolerances: {cpu: 1.0e-6, cuda: 1.0e-4}
+  invalid_rule: >-
+    an error that affected a result marks that result INVALID; it is never mixed
+    into the formal table, and the engineering fix precedes the formal run
+
+s_purchase_rule:
+  measured_after: both primary arms complete
+  statistics:
+    d40: valid_ap_E(epoch40) - valid_ap_L(epoch40)
+    e_best: E's best-Validation AP
+    historical_w2_best_valid_anchor: 0.265273
+  conditions:
+    - "d40 >= 0.002 OR e_best >= 0.268273"
+    - "e_best >= 0.262273"
+    - "used GPU-hours + 1.2 x projected S cost <= 16 GPU-hours"
+  else: >-
+    S is marked NOT_PURCHASED with the concrete reason; idle budget is not filled
+    with another model or a new seed.
+  not_a_significance_test: >-
+    the thresholds buy one extra explanatory trajectory; continuous values are
+    always reported next to the decision (0.0019 vs 0.0021 is not a scientific
+    difference).
+
+resource_budget:
+  wall_soft_hours: 6.0
+  wall_hard_hours: 10.0
+  gpu_soft_hours: 12.0
+  gpu_hard_hours: 16.0
+  gpu_preflight_target_hours: 0.25
+  pools: {E: res-gpu0, L: res-gpu1}
+  parallel_rule: one formal training process per GPU, no DDP for a single model
+  cost_gate: >-
+    if the two primary arms cannot finish inside the hard budget after at most
+    ~30 min of mathematically equivalent optimisation, the round is COST_BLOCKED
+    and delivers the implementation, the measured cost and a recoverable state
+
+comparability:
+  requires: [protocol_id, dataset_fingerprint, split_fingerprint]
+  ranking_metric: valid_ap
+  note: >-
+    Only runs under this protocol, this dataset fingerprint and this split
+    fingerprint are comparable to each other.  Historical W2 / W2-DYNAMIC / CPC /
+    RC numbers are cited as performance anchors only (single seed, different
+    architecture and evaluation cadence) and are never treated as equal-parameter
+    controls.
