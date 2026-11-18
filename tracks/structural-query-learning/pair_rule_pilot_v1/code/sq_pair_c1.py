@@ -59,7 +59,12 @@ def smoke_c1(b, device: str, *, n_rows: int = 16) -> dict[str, Any]:
     idx = order[: min(int(n_rows), order.size)]
     batch = GD.collate(b, "train", idx)
     batch = {key: (value.to(device) if hasattr(value, "to") else value) for key, value in batch.items()}
-    y_std = (targets - float(b.scaler["mean"])) / float(b.scaler["std"])
+    # ``targets`` is sorted in the same ascending row order as ``order``; take
+    # the prefix that matches the smoke rows (collate uses cache-local ``idx``).
+    if int(targets.size) != int(order.size):
+        raise RuntimeError("smoke target vector is not aligned with the split order")
+    smoke_targets = np.asarray(targets[: idx.size], dtype=np.float64)
+    y_std = (smoke_targets - float(b.scaler["mean"])) / float(b.scaler["std"])
     batch["y"] = torch.as_tensor(y_std, dtype=torch.float32, device=device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=1e-3)
     optimizer.zero_grad(set_to_none=True)
