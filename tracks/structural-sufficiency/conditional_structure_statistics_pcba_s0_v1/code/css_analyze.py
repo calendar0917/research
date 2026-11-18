@@ -253,13 +253,24 @@ def bootstrap_task_delta(
     split: str,
     draws: int = C.BOOTSTRAP_DRAWS,
     seed: int = C.BOOTSTRAP_SEED,
+    task_ids: Sequence[int] | None = None,
 ) -> dict[str, Any]:
+    """Resample tasks, not molecules.
+
+    ``task_ids`` restricts the resampling to a pre-specified task set (this round
+    uses the well-supported tasks: >= 20 positives in both Validation and Test),
+    so a reader can see how much of a macro difference survives dropping the
+    sparse tail where a single mis-ranking moves AP by 0.05.
+    """
     a = per_task_ap_from_predictions(arm_a, state, split)
     b = per_task_ap_from_predictions(arm_b, state, split)
+    keep = None if task_ids is None else {int(t) for t in task_ids}
     diffs = []
     for t in range(C.N_TASKS):
         va, vb = a["per_task_ap"][t], b["per_task_ap"][t]
         if va is None or vb is None:
+            continue
+        if keep is not None and t not in keep:
             continue
         diffs.append(float(va) - float(vb))
     diffs = np.asarray(diffs, dtype=np.float64)
@@ -275,6 +286,7 @@ def bootstrap_task_delta(
         "macro_delta": float(diffs.mean()),
         "ci95": [float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))],
         "p_delta_positive": float((means > 0).mean()),
+        "task_subset": "all common tasks" if task_ids is None else "well-supported tasks only",
         "interpretation": (
             "fixed-model sensitivity of the macro-AP difference to the task composition; "
             "not a molecule-level CI, not training variance, and not a substitute for a second seed"
@@ -469,6 +481,23 @@ def run_analysis(
         }
         for other in [a for a in arms if a != "E"]
     }
+    # the same resampling restricted to the tasks this round pre-specifies as
+    # well supported (>= 20 positives in both Validation and Test)
+    bootstrap_high_support = {
+        f"E_{other}": {
+            split: bootstrap_task_delta(
+                "E",
+                other,
+                state="epoch40",
+                split=split,
+                task_ids=comparisons[f"E_{other}" if split == "valid" else f"E_{other}_test"]["epoch40"][
+                    "high_support"
+                ]["task_ids"],
+            )
+            for split in ("valid", "test")
+        }
+        for other in [a for a in arms if a != "E"]
+    }
     mechanisms = {arm: mechanism_checks(arm, dev, device=device, n_rows=mechanism_rows) for arm in arms}
     by_arm = {row["arm"]: row for row in table}
     used_gpu_hours = float(sum(row["timing"]["gpu_hours"] for row in table))
@@ -489,6 +518,7 @@ def run_analysis(
         "main_table": table,
         "epoch_comparisons": comparisons,
         "task_bootstrap": bootstrap,
+        "task_bootstrap_high_support": bootstrap_high_support,
         "mechanism_checks": mechanisms,
         "s_gate": gate,
         "historical_anchors": dict(C.HISTORICAL),
