@@ -1,147 +1,86 @@
-# AI 使用规范
+# AI / Agent 执行规则
 
-本文件是本仓库中 AI/Agent 的工作规则。仓库目标是维护可复现、可审计的 GNN/KSVD 科研过程。
+本文件是仓库级 Agent 规则。科研内容与实验细节在各 track 内，不在这里堆积。
 
-## 开始工作（AI 快捷流程）
+## 1. 启动安全与 Git 工作区
 
-1. 先运行 `git status --short`；保留用户已有修改，不执行覆盖性整理。
-2. 运行 `uv run research context`（约 100–200 行）。
-   只读取 context 指向的 `STATE.yaml`、当前 `Study`、`Protocol` 与相关
-   `Claim`/`Decision`；不要默认读取全部 luyin16 result Markdown，也不要
-   默认读取全部 TRACK 或全部 research guide。
-3. 需要环境诊断或数据核对时运行 `uv run research doctor`；
-   需要科研记录 / STATE 一致性检查时运行 `uv run research verify`。
-4. 明确任务属于哪个 track、哪个 stage 和哪个 `protocol_id`，再改代码或运行实验。
+- 先运行 `git status`，确认当前分支、HEAD 和未提交文件。
+- 保留用户已有的修改和未跟踪文件。目标文件已有用户修改时，不覆盖；记录冲突并
+  停止该文件的修改。
+- 默认直接在 `main` 开发和提交，不为每个实验新建分支。复现依赖 commit SHA、
+  配置、数据身份和运行记录。
+- 只有确实需要隔离风险（并行冲突、可能失败的迁移等）时才用分支；用完后按下面
+  的安全条件清理。
+- 禁止 `git reset --hard`、`git clean -fd`、`git push --force`；不改写已有 Git 历史。
+- 分支清理只允许在全部条件可验证时进行：
+  1. `git fetch origin --prune`，确认最新 `origin/main`；
+  2. 枚举本地和远端的非 `main` 分支；
+  3. 只清理 tip 已被 `main` 完整包含（无独有提交）的分支；
+  4. 远端分支还须确认不是默认分支、不是受保护分支、没有未关闭 PR；
+  5. 使用普通删除（`git branch -d` / `git push origin --delete`），不得 force；
+  6. 条件无法验证或存在独有提交时保留，并记录原因。
+- 保留所有 tags；不删除提交、实验目录或科研文件。
 
-### 测试
+## 2. 上下文定位（按任务，而不是按全局状态）
 
-- 快速本地子集（约 15s）：`uv run pytest -q -m "not slow" tracks/ksvd/tests`。
-  注意：`slow` 只分类**已知耗时**的本地测试，**不代表**其余测试 fresh-clone
-  安全——许多未标记 `slow` 的测试仍需要 `data/`、`tracks/*/results/` 或本地
-  checkpoint。
-- 全量本地套件（较慢，约 110s）：`uv run pytest -q tracks/ksvd/tests`。
-- 加载 ZINC 数据 / checkpoint 或跑训练审计的模块会被自动打上 `slow` 标记
-  （见 `tracks/ksvd/tests/conftest.py`）；新增长耗时本地测试时把模块加入该列表。
-- **GitHub CI 不用 `-m "not slow"`**，而是跑一个显式的、逐个验证过的
-  fresh-clone-safe allowlist（`.github/workflows/research-integrity.yml`）：
-  CPU-only、无数据、无 checkpoint、无 results artifact、无 official test，
-  且用最小环境 `uv sync --frozen --no-default-groups --group dev`（不装
-  torch/CUDA）。想往 allowlist 加文件，必须先用同样的 fresh clone + 最小环境
-  验证它通过。
-- **已知的顺序敏感用例，能不跑就不跑**：
-  `tracks/ksvd/tests/test_e2e_dictenv_common_subspace_dictionary_v1.py::test_train_cssd_matches_frozen_loop`
-  在整包顺序运行中失败，单独运行同一用例则通过（2026-10-02 观察：全量
-  `-m "not slow"` 得 1832 passed / 1 failed，失败项即此用例；单独
-  `pytest <该 nodeid>` 通过）。它依赖 `data/` 的 ZINC 编码数据与
-  `tracks/ksvd/results/e2e_dictenv_p1/cache/env_train.pt`，并依赖跨测试的
-  全局/cache 状态，因此不是 CI 或整包回归的有效信号。默认跳过：
-  `uv run pytest -q -m "not slow" tracks/ksvd/tests \
-     --deselect tracks/ksvd/tests/test_e2e_dictenv_common_subspace_dictionary_v1.py::test_train_cssd_matches_frozen_loop`
-  只有明确需要验证该训练等价性时才单独运行该用例；不要为它改代码。
+- 以用户当前明确表达的任务和研究对象为准。
+- 用 `rg --files`、`rg`、相关路径的 `git log -- <path>` 发现代码和证据。
+- 优先读取与任务相关的 `DECISION.md`、`REPORT.md`、`PROTOCOL.md`，随后读取必要代码。
+- 只加载少量相关文件；不默认阅读整个文档树、大型 `TRACK.md` 或 `STATE.yaml`。
+- 不根据目录名称、`active` 标签、最近提交或旧 guide 单独推断“当前主力模型”或
+  “全仓研究方向”。仓库不设全局 `current_model`。
+- 不默认运行 KSVD 的 `uv run research context`；它是 `tracks/ksvd` 的专属工具。
+  只有处理 KSVD 控制平面任务时才使用 `research context/run/promote` 等流程。
+- 若用户未指定具体研究对象、证据又不足以确认焦点：给出相关候选和依据，不要伪造
+  确定性。
+- 遵守研究者的明确授权：不自主启动新训练、新实验，或扩大对 test 数据的访问。
 
-### 运行控制平面（tracks/ksvd）
+## 3. 代码与实验记录规范
 
-- 运行 scratch/screen/confirm/terminal 实验统一走
-  `uv run research run <runner> [--study ...] [--purpose "..."] [--set k=v] [--mode ...]`；
-  每个 run 自动落盘 `runs/YYYY/MM/DD/<run_id>/`（git-ignored，含
-  manifest/config.resolved/metrics/stdout/stderr/artifacts）。
-- 只有 `uv run research promote <run_id>` 才进入 `records/runs/`（Git 追踪、
-  不可变）。scratch 实验不会产生 Git 文件。
-- 协议声明 `test_policy: terminal` 时，非 terminal run 禁止访问 official test
-  （控制面强制，manifest 记录 `test_access`）。
-- 比较只看相同 `protocol_id` + dataset/split fingerprint：不一致默认
-  `INCOMPARABLE`，显式 `--override` 才会有 rank 并带 warning。
-- 重复 run（同 runner/config/protocol/seed/code state）默认拒绝，需 `--force`。
+- Track 是可选的组织单位；新实验或模型不必自动新建 track。
+- 新实验默认最少留下三样东西：
+  1. **事前可核验的实验定义**：问题、对照、数据与划分、评估、停止规则；正式实验
+     按需求冻结协议或配置。
+  2. **可追溯的运行事实**：代码版本、配置、环境、结果和必要的身份校验/哈希。
+  3. **一份简明结果说明**：观察、结论、局限、继续或停止的决定。
+- 正式实验可以用 `PROTOCOL.md` + `REPORT.md`，机器记录单独保存。不要为满足模板
+  默认同时创建 `PLAN.md`、`STUDY.md`、`LEDGER.md`、`DECISION.md` 和额外状态摘要。
+- `TRACK.md` 是 charter（问题/范围/入口），不是实验流水账；新结果写入实验目录的
+  `REPORT.md` / 决策记录，不追加到 `TRACK.md`。
+- 控制平面（如 KSVD `tracks/ksvd/`）需要的文件结构保持现有格式与兼容性。
+- 数据集、split、seed、特征与评估配置必须可 diff；不要写机器相关绝对路径，使用
+  环境变量（如 `PROJECT_DATA_DIR`）。
+- 共享代码只放无叙事的通用逻辑；模型与实验代码留在对应 track/实验目录。
 
-## 目录边界（ksvd 控制平面的 truth hierarchy）
+## 4. 必要科研安全边界
 
-- `tracks/<track>/runs/`：**本地执行真相**——每次实际运行的完整现场
-  （manifest / config / stdout / artifacts / git.diff / git.untracked）。
-  Git-ignored，按需生成。
-- `tracks/<track>/records/runs/`：**durable promoted scientific facts**——
-  被 promote 的 run 的不可变小记录（与 legacy backfill records）。
-  Git-tracked，跨机器 / fresh clone 可读，可 runs/show/compare。
-- `tracks/<track>/records/claims/`：当前科研判断/命题，可反驳、可升级。
-- `tracks/<track>/records/decisions/`：为什么继续/停止某条路线。
-- `tracks/<track>/STATE.yaml`：当前研究位置和 AI 导航入口（研究指针，
-  不是结果数据库）。
-- `tracks/<track>/results/luyin16/`：**legacy evidence archive**——
-  2026-09-07 前后的历史结果体系，保留只读；新 control-plane 实验不再
-  默认往这里增加 per-run result。
-- `tracks/<track>/code/`：代码；稳定且跨轨复用的逻辑才进入 `lib/`。
-- `tracks/<track>/configs/`：数据集、划分、种子和实验配置，必须可 diff。
-- `tracks/<track>/notes/`：定义、决策和实验意图，不堆大段结果表。
-- `docs/luyin/`：录音原文档案，不改写、不删除；整理结论写入 track notes 或 results。
-- `data/`、`artifacts/`：本地数据和生成物，默认不提交。
-  例外：**不可再生的上游/导师原始源码**不做生成物处理。若要长期审计，保持
-  `artifacts/` 不变，把源码逐字节 vendor 进对应 track（先例：
-  `tracks/ksvd/experiments/luyin16/mentor_upstream/v1_20260921/`、
-  `tracks/gsn-replication/code/vendor/`、
-  `tracks/ksvd/results/zinc_long_cycle_audit/upstream/`），并在同目录写
-  sha256 溯源与已知限制；不要就地修改被引用的原件。
-
-新实验流程：`research run` → `runs/`；有意义 → `research promote` →
-`records/runs/`。Legacy 历史结果（`results/luyin16/`）保留，不删除。
-
-## 实验纪律
-
-- 每次运行通过 `research run` 走控制平面；新实验入口以 runner 形式注册，
-  遵守 CLI → runner → feature/model/data/evaluation 的依赖方向。
-- 每个实验先写清问题、数据集、split、seed、指标、输入特征和停止条件。
 - 字典、标准化参数、特征选择和模型选择只能使用训练部分；验证/测试只做编码或评估。
-- 不把不同协议、不同数据集或不同阶段的结果混入同一主表。
-- 结果必须记录配置、代码版本、环境版本和输出路径；未经运行和核对不得声称结果。
-- 比较只读同一 metric semantics 的 runs：缺失 metric 不得替补，direction
-  冲突不得强排，protocol content（`protocol_hash`）不同视为 INCOMPARABLE。
-- luyin16 属于 legacy evidence archive：其结果只读、不动；新实验走
-  `research run` → `runs/` → `research promote` → `records/runs/`。
+- 不混用不同协议、数据集或阶段的结果；比较只在同一 metric semantics 与协议身份
+  下进行（不一致即 INCOMPARABLE）。
+- 结果必须记录配置、代码版本、环境版本和输出路径；未经实际运行和核对，不得声称
+  结果。
+- official/test 数据只在研究者授权时访问，并记录访问方式与一次性/终局规则。
+- 历史结果、冻结 checkpoint、纠错记录只读保留；需要修正时追加 ERRATA，不改写。
+- 不为了“整洁”删除历史实验；先标记 legacy/archived 并保留摘要和校验信息。
+- 不可再生的上游源码 vendor 进对应 track，逐字节保存并写 sha256 溯源，不就地修改
+  被引用的原件。
 
-## 环境
+## 5. 环境、测试与远端计算
 
-- 活跃 KSVD 主线统一使用 `uv run ...`；依赖只改根目录 `pyproject.toml`，并提交对应 `uv.lock`。
-- Python 版本由 `.python-version` 约束；不要在 Python 3.14 上假定 PyTorch/PyG 可用。
-- HOD-GNN 的官方旧环境是独立复现环境，不与 KSVD 锁文件强行合并。
-- 数据根目录使用环境变量（如 `PROJECT_DATA_DIR`），不得写机器相关绝对路径。
-- 数据集下载使用数据集官网或维护方提供的官方 URL；ZINC 只允许 PyG 官方
-  dataset/split URL，不借助清华 PyPI 镜像，并记录 split 大小与 raw SHA-256。
-- KSVD 自测脚本使用 `uv run python -m tracks.ksvd.code.test_<name>`；它们不是 pytest 风格测试函数。
+- 活跃代码统一 `uv run ...`；依赖只改根 `pyproject.toml` 并提交 `uv.lock`。
+  Python 版本由 `.python-version` 约束。
+- 快速本地子集：`uv run pytest -q -m "not slow" tracks/ksvd/tests`。`slow` 只标记
+  已知耗时用例，不代表其余用例 fresh-clone 安全（许多仍需要 `data/`、`results/`
+  或本地 checkpoint）。
+- CI 走显式 fresh-clone-safe allowlist（`.github/workflows/research-integrity.yml`，
+  CPU-only、最小环境）；未按同样方式验证前，不要往 allowlist 加文件。
+- `uv run research verify` 检查 KSVD 轨的 STATE 与 durable records 一致性。
+- 远端执行一律走 `rr`（`rr doctor/deploy/run/jobs/status/logs/cancel/pull`），
+  先读 `skills/remote-research-runner/SKILL.md`。主机：`res`（单机）与 `res-2`
+  （Slurm，离线 uv）。远端只 fetch 不 push；不要在远端手工改科研文件。
 
-## 远端计算（res / A100）
+## 6. 任务完成后的汇报
 
-- **统一入口：`skills/remote-research-runner/`（Skill + `rr` CLI）**。远端执行
-  一律走 `rr`（`rr doctor/deploy/run/jobs/status/logs/cancel/pull`），不要手工
-  `ssh` + `sbatch` / `nohup`。Skill 是 policy，`rr` 是执行机制；先读
-  `skills/remote-research-runner/SKILL.md`（该目录是从
-  `~/.pi/agent/skills/remote-research-runner` 逐字节镜像的副本，
-  以 Skill 目录为准同步）。主机：`res`（单机，process backend）与
-  `res-2`（Slurm 集群，离线 uv）。GPU 任务用 `res-2 --pool res2-cu124`
-  （c05/c06）；`res2-cpu` 无驱动约束，可能落到 510 节点导致
-  `torch.cuda.is_available()` 静默为 `False`。
-- 远端主机：SSH alias `res`（`hxy@a100-2`），仓库 checkout 在
-  `/home/hxy/cy/research`；本地是唯一 source of truth，远端只作 compute checkout。
-- 仓库现为 **私有**（2026-09-18 起）。远端用一把 **read-only deploy key**
-  （`~/.ssh/id_ed25519_github`，已注册为仓库 deploy key），
-  `origin = git@github.com:calendar0917/research.git`；`~/.ssh/config` 已配
-  `Host github.com` + `IdentitiesOnly yes`。不再使用 `gh-proxy` 等只读代理
-  （服务器可直连 `github.com:22` / `ssh.github.com:443`）。
-- 远端只 fetch、不 push（read-only key）；本地用你自己的账号 SSH 密钥 push。
-- `deploy.sh` 现在走正常路径（本地 push → 远端 `git fetch` + `merge --ff-only`
-  → `uv sync --frozen`），不再需要手工 `git bundle` 绕过代理。
-- 查看 / 回滚 deploy key：`gh api repos/calendar0917/research/keys` /
-  `gh api -X DELETE repos/calendar0917/research/keys/<id>`；撤销私有：
-  `gh api -X PATCH repos/calendar0917/research -F private=false`。
-
-## 修改与安全
-
-- 优先做小而可回滚的提交；移动文件前先建立索引并确认引用关系。
-- 不运行 `git reset --hard`、`git clean`、递归删除或覆盖用户文件。
-- 不为了“整洁”删除历史实验；先标记 `legacy`/`archived` 并保留摘要和校验信息。
-- `TRACK.md` 保持为 Track Charter；长实验流水不再追加到 TRACK，写入
-  `records/`（claim/decision）与 `runs/`/`reports/`。
-- 新增依赖、数据集或实验入口时，同时更新相应 README、配置和协议说明。
-
-## 交付格式
-
-完成任务时说明：改了什么、验证了什么、哪些仍受环境/数据/GPU限制，以及下一步入口。对不确定的录音转写、数据集名称和论文数字必须标注“待核对”。
-
-尽可能用中文阐释方案、架构、流程，讲解清晰。
+说明：改了什么文件、做了哪些验证、哪些受环境/数据/GPU 限制而未执行、下一步入口。
+对不确定的录音转写、数据集名称和论文数字标注“待核对”。不要用新规划文档代替
+实际修改。

@@ -55,20 +55,6 @@ for f in "$DEST/TRACK.md" "$DEST/docs/README.md"; do
   fi
 done
 
-# 站点侧短入口
-DOCS_TRACK="$ROOT/docs/tracks/${SLUG}.md"
-mkdir -p "$ROOT/docs/tracks"
-if [[ ! -f "$DOCS_TRACK" ]]; then
-  cat >"$DOCS_TRACK" <<EOF
-# ${TITLE}
-
-- Track 手册：[TRACK.md](../../tracks/${SLUG}/TRACK.md)
-- 状态：见 TRACK.md
-- 全局进度：[research_guide.md](../research_guide.md)
-EOF
-fi
-
 echo "已创建 track: $DEST"
 echo "  编辑: $DEST/TRACK.md"
-echo "  站点: $DOCS_TRACK"
 echo "  下一步: 写清问题/范围/协议，再开始 code/"

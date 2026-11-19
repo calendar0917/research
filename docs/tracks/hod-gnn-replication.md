@@ -1,6 +1,5 @@
 # HOD-GNN 基线复现审计
 
 - Track 手册：[TRACK.md](../../tracks/hod-gnn-replication/TRACK.md)
-- 状态：active
-- 环境：按轨内官方版本/容器独立复现，不并入 KSVD 根锁文件
-- 全局进度：[research_guide.md](../research_guide.md)
+- 证据与交付物：[results/](../../tracks/hod-gnn-replication/results/)、[deliverables/](../../tracks/hod-gnn-replication/deliverables/)
+- 环境说明见 `TRACK.md`：使用该轨独立的官方版本/容器，不并入根锁文件。

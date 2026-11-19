@@ -1,14 +1,13 @@
 # 图学习 · 研究工作台
 
-主线：Kernel → GNN → GSN → KSVD（结构如何被编码）  
-新增主线：**SSRC** — 显式结构充分性 → 关系计算（旧 CSCL 暂停为非主线，历史保留）
-
 | 入口 | 用途 |
 |------|------|
-| [工作手册](research_guide.md) | 规矩 · **全局进度** |
-| [概念与谱系](literature/deep/concepts.md) | 对照表（短） |
-| [tracks/](../tracks/) | 各课题 TRACK.md |
-| [HOD-GNN 复现](tracks/hod-gnn-replication.md) | 独立基线复现审计 |
-| [SSRC](tracks/structural-sufficiency.md) | 结构充分性 & 关系计算（主线；Phase 0） |
+| [README](../README.md) | 项目目标、目录、环境与复现原则 |
+| [AGENT.md](../AGENT.md) | Agent 执行规则（上下文定位、记录规范、安全边界） |
+| [科研工作手册](research_guide.md) | 稳定科研方法与文档定位原则 |
+| [概念与谱系](literature/deep/concepts.md) | 文献背景与对照（谱系不是主线指令） |
+| [tracks/](../tracks/) | 各 track 的 `TRACK.md`（可选组织单位，不代表主线） |
 | [录音 luyin](luyin/README.md) | 组会原文存档 |
+| [交付物](deliverables/README.md) | 对外材料 |
+| [模板](../templates/track/TRACK.md) | 新建 track 的脚手架说明 |
 | 旧仓 `../paper` | GNN 阶段完整代码与结果（只读） |

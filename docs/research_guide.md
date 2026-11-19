@@ -1,113 +1,84 @@
-# 工作手册（全局）
+# 科研工作手册（全局）
 
-> 规矩 + 当前进度。单篇公式细节放轨内 notes / 文献深读。  
-> 旧仓：`../paper`（只读，勿在那边开新专题）。
+> 只放稳定的科研方法与文档定位原则；不放实时进度、当前主线、全局下一步或
+> 各 track 状态表。进度与结论写在对应 track 的证据和 `REPORT.md` 里。
 
----
-
-## 0. 文档地图
+## 0. 文档定位
 
 | 路径 | 放什么 | 不要放 |
 |------|--------|--------|
-| **本文件** | 怎么做、全局进度、active 轨 | 实验数字明细 |
-| `tracks/*/TRACK.md` | 该课题问题/状态/禁止项 | 第二份全局计划 |
-| `docs/literature/deep/` | 概念谱系 + 精读（压缩版） | 堆论文 Acc |
-| `docs/luyin/` | 录音原文（只存档） | 平行「解读全集」 |
-| `docs/deliverables/` | 对外材料（导师页） | 按日堆 mentor_brief |
-| `tracks/*/results/` | 该轨 JSON / registry | 写进精读笔记 |
-| `../paper` | GNN 阶段完整代码与结果 | 继续扩张新线 |
+| `README.md` | 稳定项目入口：目标、目录、环境、复现原则 | 活跃状态表、近期进度 |
+| `AGENT.md` | Agent 执行规则：安全、上下文定位、记录规范 | 实验历史、机器配置流水 |
+| **本文件** | 稳定的科研方法与文档定位原则 | 实验数字明细、当前阶段 |
+| `docs/index.md` | 导航链接 | 研究进度 |
+| `docs/literature/` | 文献笔记与概念谱系 | 堆论文指标 |
+| `docs/luyin/` | 录音原文（只存档） | 平行“解读全集” |
+| `docs/deliverables/` | 对外材料 | 按日堆草稿 |
+| `tracks/<name>/TRACK.md` | 该轨问题、范围、入口 | 第二份全局计划、实验流水 |
+| `tracks/<name>/` | 该轨代码、协议、报告与证据 | 跨轨混表 |
+| `../paper` | GNN 阶段只读归档 | 继续扩张新线 |
 
-**一事一处。** 进度：全局 §2 + 轨内 TRACK；概念：`deep/concepts.md`。
+**一事一处。** 同一事实只维护一份；其它位置用链接引用。
 
----
+## 1. 研究谱系（背景，不是主线指令）
 
-## 1. 主线（跨轨）
+结构如何被编码的常见谱系：Graph Kernel（预定义结构特征 + 核）→ GNN/GIN
+（消息传递、≤1-WL）→ GSN（显式子结构计数 + MPNN）→ KSVD（从数据学结构原子）。
 
-结构如何被编码：
+这是文献背景，不是仓库必须遵循的主线。任务可以落在任一方向或全新的方向；
+不以目录、标签或旧文档推断“当前主力模型”。
 
-**Graph Kernel**（预定义结构特征 + 核）→ **GNN/GIN**（消息传递、≤1-WL）→ **GSN**（显式子结构计数 + MPNN）→ **KSVD**（字典学习出的结构原子）
-
-当前新增主线 **SSRC — Structural Sufficiency & Relational Computation**：
-显式结构表示 \(E_r\) 的信息充分性 → 学习式关系计算的必要性/可学习性。
-旧 `structure-contribution` 暂停为非主线，全部历史保留，不覆盖旧结论。
-
-各轨只做主线的一段；对照表见 [concepts.md](literature/deep/concepts.md)。
-
----
-
-## 2. 进度（改这一节）
-
-| Track | 状态 | 要点 |
-|-------|------|------|
-| gnn-gsn | **archived** | 双协议图分类 + 官方 GSN；[TRACK](../tracks/gnn-gsn/TRACK.md)；实现 `../paper` |
-| ksvd | **active** | luyin16：概念复现 → 机制研究 → 显式模型路线（MolHIV + ZINC）；主判 K-SVD=压缩器；总览 [`tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md`](../tracks/ksvd/results/luyin16/EXPERIMENT_ROUTE_SUMMARY_20260829_ONWARD.md)；[TRACK](../tracks/ksvd/TRACK.md) |
-| hod-gnn-replication | **active** | HOD-GNN 基线复现审计；[TRACK](../tracks/hod-gnn-replication/TRACK.md)；独立官方环境 |
-| **structural-sufficiency** | **active（主线）** | **SSRC**：精确 \(E_r\) 的信息充分性 vs 有限样本可学习性；Phase 0 = `REFRAME_NEEDED`（原“MP 是否必要”不新颖；重述后条件性 GO）；[TRACK](../tracks/structural-sufficiency/TRACK.md)；[Phase 0 REPORT](../tracks/structural-sufficiency/results/phase0/REPORT.md) |
-| structure-contribution | **paused（非主线）** | CSCL 旧主线暂停；历史、冻结结果与关闭决定全部保留，不覆盖、不改写；新主线见 SSRC；[TRACK](../tracks/structure-contribution/TRACK.md) |
-
-### 下一步
-
-1. **SSRC（主线）**：Phase 0 完成；等待用户裁决是否接受“信息充分性 vs 统计可学习性”的重述。接受 → 冻结 `ssrc-lipo-pilot-v1`；不接受 → 停止原表述。见 [REPORT](../tracks/structural-sufficiency/results/phase0/REPORT.md)。
-2. ksvd：luyin16 机制阶段已冻结（统计交互 + XGBoost）；显式模型路线最佳 ZINC `test 0.1346`（层级关系上下文）
-3. ksvd：两个待答问题 —— 跨中心交互在新骨架划分的稳定性；ZINC 0.13–0.18 差距来自 patch 身份 / 关系 / 读出还是全图上下文
-4. ksvd：待导师定稿 —— 正式论文表；K-SVD 在文中的定位（诊断/压缩器 vs 表征学习器）
-5. hod-gnn-replication：按 `TRACK.md` 维护 paper-seeds 与 official-seeds 两套协议
-6. 需要历史 GNN 数字 → `../paper` xlsx/registry（不拷进本仓主表）
-7. 录音 → `docs/luyin/`（当前 KSVD 阶段主来源：`luyin16`；历史机制：`luyin10`、`luyin3`/`luyin4`）
-
-
----
-
-## 3. 怎么做研究
-
-### 3.1 分层
+## 2. 怎么做研究
 
 ```
 问题意识 → 谱系动机 → 少而深精读 → 最小实验 → 缺口
 ```
 
-### 3.2 每篇四问
+阅读每篇论文至少回答四问：
 
-1. 旧方法缺陷？  
-2. 关键一步 / 假设与代价？  
-3. 目的？（A 表达力 / B 下游分类 / C 其它，**分表**）  
-4. 与主线（Kernel–GNN–GSN–KSVD）近远？
+1. 旧方法的缺陷是什么？
+2. 关键一步是什么？假设与代价是什么？
+3. 目的属于哪类：A 表达力 / B 下游预测 / C 其它（**分表**）？
+4. 与上述谱系中哪一段有关，关系有多近？
 
-### 3.3 AI
+宁少深读；AI 可以辅助检索、翻译和代码，但不能代替研究者形成判断。
+
+## 3. 实验与证据
+
+- 正式实验事前写清：问题、对照、数据与划分、评估、停止规则；按需冻结
+  `PROTOCOL.md` 或配置，事后不改口径。
+- 字典、标准化参数、特征选择和模型选择只能使用训练部分；验证/测试只做编码或评估。
+- 运行事实必须可追溯：代码版本（commit SHA）、配置、环境、结果、必要的数据/
+  协议哈希与身份校验。
+- 每个正式实验至少留一份简明结果说明：观察、结论、局限、继续或停止。负结果同样
+  是有价值的证据。
+- 正式实验可以用 `PROTOCOL.md` + `REPORT.md`，机器可读记录独立保存。不要为了
+  满足模板默认同时创建 `PLAN.md`、`STUDY.md`、`LEDGER.md`、`DECISION.md` 和
+  额外状态摘要。
+- 比较只在相同协议身份与 metric semantics 下进行；不同协议、数据集或阶段的数字
+  不混入同一主表。
+- 历史结果、冻结产物与纠错记录只读保留；需要修正时追加 ERRATA/纠错说明。
+
+## 4. Track 约定（可选）
+
+- Track 是可选组织单位；新实验或模型不必自动新建 track。
+- `TRACK.md` 只写：名称与研究问题、范围（做/不做）、核心代码与证据目录、必要的
+  协议或复现约定。不写实时进度、当前下一步或“主线位置”。
+- `active` / `paused` / `archived` 等标签只描述该 track 自身，不能用来认定全仓
+  当前研究方向。
+- 新建 track：`./scripts/init_track.sh <slug> "<标题>"`；脚本不再生成
+  `docs/tracks/` 镜像页。
+- KSVD 控制平面（`tracks/ksvd/`）保留自己的 `STATE.yaml`、study/protocol/records
+  结构；`uv run research context` 只适用于该轨，不是全局上下文工具。
+
+## 5. AI 边界
 
 | 可以 | 不行 |
 |------|------|
-| 翻译、检索、代码、润色、事后质检 | 代写四问终版、代判目的、只读 AI 综述称已读 |
+| 翻译、检索、代码、润色、事后质检 | 代写四问终版、代判目的、只读 AI 综述就称已读 |
 
-### 3.4 口诀
+## 6. 维护
 
-```
-不跳层；四问；宁少深读；AI 不代懂；
-主线过滤；结果只进轨内 results；不跨轨混协议。
-```
-
----
-
-## 4. Track 约定
-
-| 字段 | 含义 |
-|------|------|
-| `active` | 正在做 |
-| `paused` | 暂停 |
-| `archived` | 收工，只查不扩主结论 |
-| `pending` | 未 init 或仅占位 |
-
-新建：
-
-```bash
-./scripts/init_track.sh <slug> "<一句话标题>"
-```
-
----
-
-## 5. 新会话启动
-
-1. 读本文件 §2  
-2. 打开当前 active 轨的 `TRACK.md`  
-3. 实验只进该轨 `code/` + `results/`  
-4. 需要旧 GNN 细节 → 现行轨（`tracks/gsn-replication` 等；旧仓 `paper/docs/research_guide.md` 已不可访问）
+- 进度、下一步和停止决定写入对应 track 的 `REPORT.md` / 决策记录，不写回本文件。
+- 修改文档时保持 Markdown 相对链接有效；移动文件前先确认引用关系。
+- 历史实验、报告和 checkpoint 不删除、不改写、不移动。
