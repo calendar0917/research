@@ -1,0 +1,49 @@
+{
+  "round_id": "response_dictionary_lipo_followup_s0_v1",
+  "protocol_id": "rd-lipo-followup-s0-v1",
+  "parent_round": "response_dictionary_small_s0_v1",
+  "parent_commit": "185db2465b600b5260f5974a5a500a22c4ec78eb",
+  "task": "lipo",
+  "dataset": "ogbg-mollipo",
+  "seed": 0,
+  "epochs": 360,
+  "formal_units": 1,
+  "joint": {
+    "fusion": "T = sum_j w_j tanh((U z_S + V z_C)_j / sqrt(2)) / sqrt(16); s = b(C) + a(S) + T",
+    "expected_parameters": 198262,
+    "expected_init_state_hash": "ccc8171d4cdc47daadd226c382947a0e3e62f6c9266dcad6f952ba98a989072c",
+    "expected_train_order_sha256_prefix": "361af4df",
+    "reuse": "fragment cache, fixed <=4 views, encoder, a_head, b_head, U, V, w, fallback_head, recipe"
+  },
+  "dictionary_stress": {
+    "source_task": "lipo",
+    "source_arm": "RESP",
+    "source_state": "best_valid (epoch 63)",
+    "k_compressed_classes": 16,
+    "k_rule": "per tau class: K = 16 if train candidates > 64 else min(64, train candidates)",
+    "expected_words": 136,
+    "expected_candidates": 702,
+    "panel_size": 16,
+    "frank_wolfe_steps": 64,
+    "selectors": ["D_RESPONSE", "D_LATENT", "D_FREQ"]
+  },
+  "reference_gain": {
+    "val_gain_min": 0.02,
+    "fidelity_reduction_min": 0.20,
+    "property_rmse_delta_max_train_std_fraction": 0.01
+  },
+  "bootstrap": {
+    "n": 2000,
+    "seed": 1703
+  },
+  "edit_catalogue": {
+    "path": "tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/analysis/pairs.csv",
+    "rule": "canonical SMILES -> official OGB row; official labels; no re-mining; keep Train-Val/Train-Test"
+  },
+  "test_policy": "always",
+  "test_use": "DEVELOPMENT_TEST",
+  "budget": {
+    "gpu_hard_a100_hours": 1.0,
+    "wall_hard_hours": 2.0
+  }
+}
