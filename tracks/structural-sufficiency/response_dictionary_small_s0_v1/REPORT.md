@@ -211,7 +211,9 @@ Provenance:
 - Lipo units executed from commit `945d9881080b…`; ESOL units from `8f1badf28391…`. The only
   difference between those commits is `code/rd_analyze.py`; the executed training files have
   identical committed SHA-256 hashes (`rd_run.py c5ab23b8…`, `rd_train.py 7bf87269…`,
-  `rd_model.py 62672faf…`, etc., pinned per commit in `run_manifest.json`).
+  `rd_model.py 62672faf…`, etc., pinned per commit in `run_manifest.json`). The current
+  `rd_run.py` differs from the executed version only by the start-commit capture
+  (`a1497cbb…` working tree vs `c5ab23b8…` executed); training behaviour is unchanged.
 - All four units share init-state hash `ccc8171d4cdc47da…` and the same per-dataset train-order
   hash (`lipo 361af4df…`, `esol 36f0a997…`), so within a task the arms differ only in the fusion
   operator and the resulting optimization trajectory.
