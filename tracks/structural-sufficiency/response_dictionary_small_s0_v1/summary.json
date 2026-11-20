@@ -1,0 +1,1028 @@
+{
+  "analysis_working_tree_code_sha256": {
+    "rd_checks.py": "7918d5c17c8736f25176a5cb0c6b6ba2a9ceaa77229d448ea01f55319fa6feb9",
+    "rd_common.py": "a0d47b32400be65126696f2df9d70a2560c909ebe0953f6bdebed5922875452d",
+    "rd_dict_run.py": "f8e8f4dba3e57d529c4064987351074d3889c6a3f3c48677c1e48b641466d4b0",
+    "rd_dictionary.py": "5783d798251a94a26444de82bb0f27555d5df0fac59083b031cfbe1242d03328",
+    "rd_fragment.py": "38bf5f7918ec4e81799d18a05fd0fc03d940c7145d2a6600c0ffe155cbcb8f59",
+    "rd_model.py": "62672fafc37cf4db6a32ac6973bdd3db6499776977b2836a57df9132428fcc8c",
+    "rd_prepare.py": "4fbcac6f570170f05376300c593d7bf8db0d05565d5c5e2dd0988c1153092c59",
+    "rd_run.py": "a1497cbb6b08a5d0d712ee0e71aa07374e287593341df2fc41fcf528030aa1fb",
+    "rd_train.py": "7bf87269875cf2542bff262cc73895131009b89b1f6498d3a20536f9bc6162e4"
+  },
+  "bootstrap": {
+    "esol": {
+      "interval_2.5": -0.03631319744069647,
+      "interval_97.5": 0.12434181276196359,
+      "mean": 0.04304840673901049,
+      "metric": "RMSE_ADD - RMSE_RESP (raw units, Val molecules resampled with replacement)",
+      "n_bootstrap": 2000,
+      "note": "Molecule-row resampling at one fixed training state; not a training-seed interval.",
+      "point": 0.042505274884141575,
+      "seed": 1703,
+      "share_positive": 0.8425
+    },
+    "lipo": {
+      "interval_2.5": 0.01945579283169422,
+      "interval_97.5": 0.07569037970031327,
+      "mean": 0.04767058020305022,
+      "metric": "RMSE_ADD - RMSE_RESP (raw units, Val molecules resampled with replacement)",
+      "n_bootstrap": 2000,
+      "note": "Molecule-row resampling at one fixed training state; not a training-seed interval.",
+      "point": 0.047504924217182554,
+      "seed": 1703,
+      "share_positive": 1.0
+    }
+  },
+  "commit": "9b2f3848a0f64589efbaae61fdc3b77663973ac0",
+  "config_sha256": "8d0fd9ae8d578022ece87e549586bb25b10a938f695b15932f584dd049a22099",
+  "data_identity": {
+    "canonical_init_state_sha256": "f2256b0ef943fe02b7d4df6345c25c5a57eaec6f6986c649acb8a2b45528c9f1",
+    "fragment_cache_sha256": {
+      "ogbg-molesol": "fac644d0d7b73f8bc06239853c97fe65cd3010ab02ea539f9a6bdf4f4852a62d",
+      "ogbg-mollipo": "ba6e9a41990fc344e5962519caf02e616c9c67d299884843c8b67a5bbab0a1d8"
+    },
+    "official_cache_sha256": {
+      "ogbg_molesol_ecfp4_sq-pilot-cache-v1.npz": "653fb0190abc4af43822ec643bacbcbdbfdd7555f5e632574c9f61728d574f2e",
+      "ogbg_molesol_sq-pilot-cache-v1.npz": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+      "ogbg_molesol_sq-pilot-lipo-raw-v1.npz": "a3ab9f7e22798a8f6fdc7f0913b1136b7cf59d4ffc7168faecc7f8b3094710b1",
+      "ogbg_mollipo_ecfp4_sq-pilot-cache-v1.npz": "7990ce4c90a0fdb032897076e19221b62b1361fc98f36fea248cf097bb424ae4",
+      "ogbg_mollipo_sq-pilot-cache-v1.npz": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+      "ogbg_mollipo_sq-pilot-lipo-raw-v1.npz": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3"
+    }
+  },
+  "dictionaries": {
+    "esol": {
+      "cache_fidelity": {
+        "sample_view_check": {
+          "max_abs_score_diff": 0.0,
+          "n_checked": 64
+        },
+        "test": {
+          "cache_rmse_raw": 0.8994733958268551,
+          "max_abs_pred_diff_raw": 1.9709817014046394e-06,
+          "saved_rmse_raw": 0.8994734396817259
+        },
+        "train": {
+          "cache_rmse_raw": 0.3360529640914173,
+          "max_abs_pred_diff_raw": 1.4782362747212119e-06,
+          "saved_rmse_raw": 0.3360529894090703
+        },
+        "valid": {
+          "cache_rmse_raw": 0.7277788181074712,
+          "max_abs_pred_diff_raw": 1.3550499193826226e-06,
+          "saved_rmse_raw": 0.7277788291474365
+        }
+      },
+      "checkpoint": "../results/esol_RESP/best.pt",
+      "checkpoint_sha256": "6398f28579a3c1ca4af8e2160de86a856a8652e4439ba6cbbac6846a2bfb5d90",
+      "config_dictionary": {
+        "K": 64,
+        "frank_wolfe_steps": 64,
+        "max_val_rmse_delta_train_std": 0.01,
+        "min_support_view_fraction": 0.8,
+        "panel_size": 16
+      },
+      "dataset": "ogbg-molesol",
+      "dictionaries": {
+        "D_FREQ": {
+          "alpha_seconds": 0.011008316010702401,
+          "alpha_steps_mean": 29.181818181818183,
+          "compression_ratio_words_over_candidates": 0.7100591715976331,
+          "n_candidate_words_total": 169,
+          "n_classes": 11,
+          "n_classes_exact_storage": 10,
+          "n_words_total": 120,
+          "per_split": {
+            "dev_criterion": {
+              "delta_val_rmse": 0.010933364796207545,
+              "passes": true,
+              "support_view_fraction": 0.995575221238938,
+              "threshold_train_std": 0.020667241081324766,
+              "worst_val_fidelity": {
+                "abs_prediction_change_raw": 1.076928980053233,
+                "official_row_id": 1098,
+                "split_index": 104,
+                "val_rmse_dictionary_excluding_worst": 0.7262745890376928,
+                "val_rmse_resp_excluding_worst": 0.729294634275891
+              }
+            },
+            "test": {
+              "exact_word_view_fraction": 0.8972332015810277,
+              "fallback_molecule_fraction": 0.2920353982300885,
+              "fidelity_rmse_raw": 0.021065524025767442,
+              "mae_raw": 0.6816476731597978,
+              "n_molecules": 113,
+              "n_molecules_without_dictionary": 1,
+              "n_views": 253,
+              "resp_rmse_raw": 0.8994733958268551,
+              "rmse_raw": 0.896796174827777,
+              "supported_view_fraction": 0.9960474308300395,
+              "unsupported_view_fraction": 0.0039525691699604515
+            },
+            "train": {
+              "exact_word_view_fraction": 0.9809087437953418,
+              "fallback_molecule_fraction": 0.09201773835920177,
+              "fidelity_rmse_raw": 0.009752304630480536,
+              "mae_raw": 0.2604044586069447,
+              "n_molecules": 902,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 2619,
+              "resp_rmse_raw": 0.3360529640914173,
+              "rmse_raw": 0.33692416329695146,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "valid": {
+              "exact_word_view_fraction": 0.9026548672566371,
+              "fallback_molecule_fraction": 0.36283185840707965,
+              "fidelity_rmse_raw": 0.11258375133243202,
+              "mae_raw": 0.5721499929836834,
+              "n_molecules": 113,
+              "n_molecules_without_dictionary": 1,
+              "n_views": 226,
+              "resp_rmse_raw": 0.7277788181074712,
+              "rmse_raw": 0.7387121939436441,
+              "supported_view_fraction": 0.995575221238938,
+              "unsupported_view_fraction": 0.004424778761061954
+            }
+          }
+        },
+        "D_LATENT": {
+          "alpha_seconds": 0.012050770004861988,
+          "alpha_steps_mean": 29.181818181818183,
+          "compression_ratio_words_over_candidates": 0.7100591715976331,
+          "n_candidate_words_total": 169,
+          "n_classes": 11,
+          "n_classes_exact_storage": 10,
+          "n_words_total": 120,
+          "per_split": {
+            "dev_criterion": {
+              "delta_val_rmse": 0.010428900226084115,
+              "passes": true,
+              "support_view_fraction": 0.995575221238938,
+              "threshold_train_std": 0.020667241081324766,
+              "worst_val_fidelity": {
+                "abs_prediction_change_raw": 1.076928980053233,
+                "official_row_id": 1098,
+                "split_index": 104,
+                "val_rmse_dictionary_excluding_worst": 0.7257568963790876,
+                "val_rmse_resp_excluding_worst": 0.729294634275891
+              }
+            },
+            "test": {
+              "exact_word_view_fraction": 0.8537549407114624,
+              "fallback_molecule_fraction": 0.2920353982300885,
+              "fidelity_rmse_raw": 0.015004029399967832,
+              "mae_raw": 0.6844639766798798,
+              "n_molecules": 113,
+              "n_molecules_without_dictionary": 1,
+              "n_views": 253,
+              "resp_rmse_raw": 0.8994733958268551,
+              "rmse_raw": 0.8982344511680562,
+              "supported_view_fraction": 0.9960474308300395,
+              "unsupported_view_fraction": 0.0039525691699604515
+            },
+            "train": {
+              "exact_word_view_fraction": 0.8953799159984727,
+              "fallback_molecule_fraction": 0.09201773835920177,
+              "fidelity_rmse_raw": 0.004601763663298091,
+              "mae_raw": 0.2596076742105142,
+              "n_molecules": 902,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 2619,
+              "resp_rmse_raw": 0.3360529640914173,
+              "rmse_raw": 0.33603014217128274,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "valid": {
+              "exact_word_view_fraction": 0.8672566371681416,
+              "fallback_molecule_fraction": 0.36283185840707965,
+              "fidelity_rmse_raw": 0.11174042726643292,
+              "mae_raw": 0.5712031694703543,
+              "n_molecules": 113,
+              "n_molecules_without_dictionary": 1,
+              "n_views": 226,
+              "resp_rmse_raw": 0.7277788181074712,
+              "rmse_raw": 0.7382077293735206,
+              "supported_view_fraction": 0.995575221238938,
+              "unsupported_view_fraction": 0.004424778761061954
+            }
+          }
+        },
+        "D_RESPONSE": {
+          "alpha_seconds": 0.011517830993398093,
+          "alpha_steps_mean": 29.181818181818183,
+          "compression_ratio_words_over_candidates": 0.7100591715976331,
+          "n_candidate_words_total": 169,
+          "n_classes": 11,
+          "n_classes_exact_storage": 10,
+          "n_words_total": 120,
+          "per_split": {
+            "dev_criterion": {
+              "delta_val_rmse": 0.010764495276489483,
+              "passes": true,
+              "support_view_fraction": 0.995575221238938,
+              "threshold_train_std": 0.020667241081324766,
+              "worst_val_fidelity": {
+                "abs_prediction_change_raw": 1.076928980053233,
+                "official_row_id": 1098,
+                "split_index": 104,
+                "val_rmse_dictionary_excluding_worst": 0.7261012931402405,
+                "val_rmse_resp_excluding_worst": 0.729294634275891
+              }
+            },
+            "test": {
+              "exact_word_view_fraction": 0.7944664031620553,
+              "fallback_molecule_fraction": 0.2920353982300885,
+              "fidelity_rmse_raw": 0.016029016733671513,
+              "mae_raw": 0.6861627979538543,
+              "n_molecules": 113,
+              "n_molecules_without_dictionary": 1,
+              "n_views": 253,
+              "resp_rmse_raw": 0.8994733958268551,
+              "rmse_raw": 0.9009352689766257,
+              "supported_view_fraction": 0.9960474308300395,
+              "unsupported_view_fraction": 0.0039525691699604515
+            },
+            "train": {
+              "exact_word_view_fraction": 0.7602138220694922,
+              "fallback_molecule_fraction": 0.09201773835920177,
+              "fidelity_rmse_raw": 0.014069331838349233,
+              "mae_raw": 0.2598118383500527,
+              "n_molecules": 902,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 2619,
+              "resp_rmse_raw": 0.3360529640914173,
+              "rmse_raw": 0.33739898760034237,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "valid": {
+              "exact_word_view_fraction": 0.8407079646017699,
+              "fallback_molecule_fraction": 0.36283185840707965,
+              "fidelity_rmse_raw": 0.11229814661080824,
+              "mae_raw": 0.5716981251065195,
+              "n_molecules": 113,
+              "n_molecules_without_dictionary": 1,
+              "n_views": 226,
+              "resp_rmse_raw": 0.7277788181074712,
+              "rmse_raw": 0.738543324423926,
+              "supported_view_fraction": 0.995575221238938,
+              "unsupported_view_fraction": 0.004424778761061954
+            }
+          }
+        }
+      },
+      "frozen_seconds": 0.11553335200005677,
+      "inventory": {
+        "n_classes": 11,
+        "n_env_fragments": 1629,
+        "n_word_fragments": 169
+      },
+      "task": "esol",
+      "test_use": "DEVELOPMENT_TEST",
+      "total_seconds": 0.2577996059990255,
+      "unsupported": {
+        "labels": [
+          "DICTIONARY_UNSUPPORTED"
+        ],
+        "n_classes_with_dictionary": 11,
+        "n_classes_without_dictionary": 0,
+        "n_train_classes": 11,
+        "note": "The frozen model consumes independent branch descriptors and never re-splices a molecule, so within a tau class every (C_j, S) pair is a legal model input. Unsupported means: no Train word of that tau class, or no Train environment panel for it; those views keep the continuous interface and are counted."
+      }
+    },
+    "lipo": {
+      "cache_fidelity": {
+        "sample_view_check": {
+          "max_abs_score_diff": 0.0,
+          "n_checked": 64
+        },
+        "test": {
+          "cache_rmse_raw": 0.6760290385465776,
+          "max_abs_pred_diff_raw": 8.103932698233507e-07,
+          "saved_rmse_raw": 0.676029034037471
+        },
+        "train": {
+          "cache_rmse_raw": 0.3475098828918627,
+          "max_abs_pred_diff_raw": 1.1554144285774726e-06,
+          "saved_rmse_raw": 0.34750988030050467
+        },
+        "valid": {
+          "cache_rmse_raw": 0.6287435832956669,
+          "max_abs_pred_diff_raw": 1.1567285533864435e-06,
+          "saved_rmse_raw": 0.6287435855606264
+        }
+      },
+      "checkpoint": "../results/lipo_RESP/best.pt",
+      "checkpoint_sha256": "c42fc25f7080852cd482077dd761ae48770a2a263c169d214043e3f6bbaac77c",
+      "config_dictionary": {
+        "K": 64,
+        "frank_wolfe_steps": 64,
+        "max_val_rmse_delta_train_std": 0.01,
+        "min_support_view_fraction": 0.8,
+        "panel_size": 16
+      },
+      "dataset": "ogbg-mollipo",
+      "dictionaries": {
+        "D_FREQ": {
+          "alpha_seconds": 0.025484227007837035,
+          "alpha_steps_mean": 24.125,
+          "compression_ratio_words_over_candidates": 0.39886039886039887,
+          "n_candidate_words_total": 702,
+          "n_classes": 16,
+          "n_classes_exact_storage": 13,
+          "n_words_total": 280,
+          "per_split": {
+            "dev_criterion": {
+              "delta_val_rmse": -0.004659216565011559,
+              "passes": true,
+              "support_view_fraction": 1.0,
+              "threshold_train_std": 0.01211539840098397,
+              "worst_val_fidelity": {
+                "abs_prediction_change_raw": 0.41150265427257327,
+                "official_row_id": 1647,
+                "split_index": 308,
+                "val_rmse_dictionary_excluding_worst": 0.6157276203015792,
+                "val_rmse_resp_excluding_worst": 0.6166808824743256
+              }
+            },
+            "test": {
+              "exact_word_view_fraction": 0.8840947546531303,
+              "fallback_molecule_fraction": 0.08571428571428572,
+              "fidelity_rmse_raw": 0.022664999012741518,
+              "mae_raw": 0.5251739803535841,
+              "n_molecules": 420,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 1182,
+              "resp_rmse_raw": 0.6760290385465776,
+              "rmse_raw": 0.6782848205908332,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "train": {
+              "exact_word_view_fraction": 0.929558669335621,
+              "fallback_molecule_fraction": 0.06339285714285714,
+              "fidelity_rmse_raw": 0.014475645314254822,
+              "mae_raw": 0.2655580807704684,
+              "n_molecules": 3360,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 10491,
+              "resp_rmse_raw": 0.3475098828918627,
+              "rmse_raw": 0.3490522471351302,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "valid": {
+              "exact_word_view_fraction": 0.8995098039215687,
+              "fallback_molecule_fraction": 0.09285714285714286,
+              "fidelity_rmse_raw": 0.02547670753310503,
+              "mae_raw": 0.4804319748201687,
+              "n_molecules": 420,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 1224,
+              "resp_rmse_raw": 0.6287435832956669,
+              "rmse_raw": 0.6240843689956148,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            }
+          }
+        },
+        "D_LATENT": {
+          "alpha_seconds": 0.02638981099880766,
+          "alpha_steps_mean": 24.125,
+          "compression_ratio_words_over_candidates": 0.39886039886039887,
+          "n_candidate_words_total": 702,
+          "n_classes": 16,
+          "n_classes_exact_storage": 13,
+          "n_words_total": 280,
+          "per_split": {
+            "dev_criterion": {
+              "delta_val_rmse": -0.002145521022855146,
+              "passes": true,
+              "support_view_fraction": 1.0,
+              "threshold_train_std": 0.01211539840098397,
+              "worst_val_fidelity": {
+                "abs_prediction_change_raw": 0.5318202121718358,
+                "official_row_id": 989,
+                "split_index": 19,
+                "val_rmse_dictionary_excluding_worst": 0.6259476216826344,
+                "val_rmse_resp_excluding_worst": 0.6292932735771415
+              }
+            },
+            "test": {
+              "exact_word_view_fraction": 0.682741116751269,
+              "fallback_molecule_fraction": 0.08571428571428572,
+              "fidelity_rmse_raw": 0.04487407707775547,
+              "mae_raw": 0.5247935402248587,
+              "n_molecules": 420,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 1182,
+              "resp_rmse_raw": 0.6760290385465776,
+              "rmse_raw": 0.6773607637520579,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "train": {
+              "exact_word_view_fraction": 0.7105137737107997,
+              "fallback_molecule_fraction": 0.06339285714285714,
+              "fidelity_rmse_raw": 0.07744186364388173,
+              "mae_raw": 0.274148803069257,
+              "n_molecules": 3360,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 10491,
+              "resp_rmse_raw": 0.3475098828918627,
+              "rmse_raw": 0.3588995248679901,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "valid": {
+              "exact_word_view_fraction": 0.6895424836601307,
+              "fallback_molecule_fraction": 0.09285714285714286,
+              "fidelity_rmse_raw": 0.05526000108064369,
+              "mae_raw": 0.480731763668929,
+              "n_molecules": 420,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 1224,
+              "resp_rmse_raw": 0.6287435832956669,
+              "rmse_raw": 0.6265980645377712,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            }
+          }
+        },
+        "D_RESPONSE": {
+          "alpha_seconds": 0.02692430399474688,
+          "alpha_steps_mean": 24.125,
+          "compression_ratio_words_over_candidates": 0.39886039886039887,
+          "n_candidate_words_total": 702,
+          "n_classes": 16,
+          "n_classes_exact_storage": 13,
+          "n_words_total": 280,
+          "per_split": {
+            "dev_criterion": {
+              "delta_val_rmse": -0.004324454587849025,
+              "passes": true,
+              "support_view_fraction": 1.0,
+              "threshold_train_std": 0.01211539840098397,
+              "worst_val_fidelity": {
+                "abs_prediction_change_raw": 0.41150265427257327,
+                "official_row_id": 1647,
+                "split_index": 308,
+                "val_rmse_dictionary_excluding_worst": 0.6160677328021678,
+                "val_rmse_resp_excluding_worst": 0.6166808824743256
+              }
+            },
+            "test": {
+              "exact_word_view_fraction": 0.7258883248730964,
+              "fallback_molecule_fraction": 0.08571428571428572,
+              "fidelity_rmse_raw": 0.02547270265192632,
+              "mae_raw": 0.5241963815808698,
+              "n_molecules": 420,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 1182,
+              "resp_rmse_raw": 0.6760290385465776,
+              "rmse_raw": 0.6771068383029426,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "train": {
+              "exact_word_view_fraction": 0.7467352969211706,
+              "fallback_molecule_fraction": 0.06339285714285714,
+              "fidelity_rmse_raw": 0.017660373582055345,
+              "mae_raw": 0.26669951573761047,
+              "n_molecules": 3360,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 10491,
+              "resp_rmse_raw": 0.3475098828918627,
+              "rmse_raw": 0.34993797966563783,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            },
+            "valid": {
+              "exact_word_view_fraction": 0.7148692810457516,
+              "fallback_molecule_fraction": 0.09285714285714286,
+              "fidelity_rmse_raw": 0.029127292869180917,
+              "mae_raw": 0.4804037027913149,
+              "n_molecules": 420,
+              "n_molecules_without_dictionary": 0,
+              "n_views": 1224,
+              "resp_rmse_raw": 0.6287435832956669,
+              "rmse_raw": 0.6244191309727773,
+              "supported_view_fraction": 1.0,
+              "unsupported_view_fraction": 0.0
+            }
+          }
+        }
+      },
+      "frozen_seconds": 0.9545934260095237,
+      "inventory": {
+        "n_classes": 16,
+        "n_env_fragments": 9191,
+        "n_word_fragments": 702
+      },
+      "task": "lipo",
+      "test_use": "DEVELOPMENT_TEST",
+      "total_seconds": 1.2170141530077672,
+      "unsupported": {
+        "labels": [
+          "DICTIONARY_UNSUPPORTED"
+        ],
+        "n_classes_with_dictionary": 16,
+        "n_classes_without_dictionary": 0,
+        "n_train_classes": 16,
+        "note": "The frozen model consumes independent branch descriptors and never re-splices a molecule, so within a tau class every (C_j, S) pair is a legal model input. Unsupported means: no Train word of that tau class, or no Train environment panel for it; those views keep the continuous interface and are counted."
+      }
+    }
+  },
+  "executed_code_sha256": {
+    "8f1badf283918f94cb64db200788c7ea667e8b99": {
+      "rd_checks.py": "7918d5c17c8736f25176a5cb0c6b6ba2a9ceaa77229d448ea01f55319fa6feb9",
+      "rd_common.py": "59d57dac68121cfda26919716dec9ceba8afe3dbdb28f083eea6e872b5c636ce",
+      "rd_dict_run.py": "f8e8f4dba3e57d529c4064987351074d3889c6a3f3c48677c1e48b641466d4b0",
+      "rd_dictionary.py": "5783d798251a94a26444de82bb0f27555d5df0fac59083b031cfbe1242d03328",
+      "rd_fragment.py": "38bf5f7918ec4e81799d18a05fd0fc03d940c7145d2a6600c0ffe155cbcb8f59",
+      "rd_model.py": "62672fafc37cf4db6a32ac6973bdd3db6499776977b2836a57df9132428fcc8c",
+      "rd_prepare.py": "4fbcac6f570170f05376300c593d7bf8db0d05565d5c5e2dd0988c1153092c59",
+      "rd_run.py": "c5ab23b84bd13b9d416df0310473c58ef90edf404f6492996dff34675818e4e6",
+      "rd_train.py": "7bf87269875cf2542bff262cc73895131009b89b1f6498d3a20536f9bc6162e4"
+    },
+    "945d9881080b2658a15ab4f1cbc8f007d75cbcb2": {
+      "rd_checks.py": "7918d5c17c8736f25176a5cb0c6b6ba2a9ceaa77229d448ea01f55319fa6feb9",
+      "rd_common.py": "59d57dac68121cfda26919716dec9ceba8afe3dbdb28f083eea6e872b5c636ce",
+      "rd_dict_run.py": "f8e8f4dba3e57d529c4064987351074d3889c6a3f3c48677c1e48b641466d4b0",
+      "rd_dictionary.py": "5783d798251a94a26444de82bb0f27555d5df0fac59083b031cfbe1242d03328",
+      "rd_fragment.py": "38bf5f7918ec4e81799d18a05fd0fc03d940c7145d2a6600c0ffe155cbcb8f59",
+      "rd_model.py": "62672fafc37cf4db6a32ac6973bdd3db6499776977b2836a57df9132428fcc8c",
+      "rd_prepare.py": "4fbcac6f570170f05376300c593d7bf8db0d05565d5c5e2dd0988c1153092c59",
+      "rd_run.py": "c5ab23b84bd13b9d416df0310473c58ef90edf404f6492996dff34675818e4e6",
+      "rd_train.py": "7bf87269875cf2542bff262cc73895131009b89b1f6498d3a20536f9bc6162e4"
+    }
+  },
+  "fusion_subgroups": {
+    "esol": {
+      "test": {
+        "n_all": 113,
+        "n_fallback": 33,
+        "n_views": 80,
+        "subsets": {
+          "all": {
+            "ADD_rmse_raw": 0.9090709197871761,
+            "RESP_rmse_raw": 0.8994734396817259,
+            "gain_add_minus_resp": 0.009597480105450251
+          },
+          "fallback": {
+            "ADD_rmse_raw": 0.9016883652846543,
+            "RESP_rmse_raw": 1.0392004496731968,
+            "gain_add_minus_resp": -0.13751208438854245
+          },
+          "views": {
+            "ADD_rmse_raw": 0.9120988154864642,
+            "RESP_rmse_raw": 0.835052311239113,
+            "gain_add_minus_resp": 0.07704650424735116
+          }
+        }
+      },
+      "valid": {
+        "n_all": 113,
+        "n_fallback": 41,
+        "n_views": 72,
+        "subsets": {
+          "all": {
+            "ADD_rmse_raw": 0.7702841040315781,
+            "RESP_rmse_raw": 0.7277788291474365,
+            "gain_add_minus_resp": 0.042505274884141575
+          },
+          "fallback": {
+            "ADD_rmse_raw": 0.7812297100663539,
+            "RESP_rmse_raw": 0.7520410980904808,
+            "gain_add_minus_resp": 0.02918861197587308
+          },
+          "views": {
+            "ADD_rmse_raw": 0.7639811175029574,
+            "RESP_rmse_raw": 0.7135942901533031,
+            "gain_add_minus_resp": 0.05038682734965427
+          }
+        }
+      }
+    },
+    "lipo": {
+      "test": {
+        "n_all": 420,
+        "n_fallback": 36,
+        "n_views": 384,
+        "subsets": {
+          "all": {
+            "ADD_rmse_raw": 0.7120833732620929,
+            "RESP_rmse_raw": 0.676029034037471,
+            "gain_add_minus_resp": 0.03605433922462187
+          },
+          "fallback": {
+            "ADD_rmse_raw": 0.813562060897515,
+            "RESP_rmse_raw": 0.7360400991312229,
+            "gain_add_minus_resp": 0.07752196176629211
+          },
+          "views": {
+            "ADD_rmse_raw": 0.70181786022701,
+            "RESP_rmse_raw": 0.6701275260531099,
+            "gain_add_minus_resp": 0.0316903341739001
+          }
+        }
+      },
+      "valid": {
+        "n_all": 420,
+        "n_fallback": 39,
+        "n_views": 381,
+        "subsets": {
+          "all": {
+            "ADD_rmse_raw": 0.6762485097778089,
+            "RESP_rmse_raw": 0.6287435855606264,
+            "gain_add_minus_resp": 0.047504924217182554
+          },
+          "fallback": {
+            "ADD_rmse_raw": 0.6526897106079924,
+            "RESP_rmse_raw": 0.6793182009465178,
+            "gain_add_minus_resp": -0.026628490338525435
+          },
+          "views": {
+            "ADD_rmse_raw": 0.6786138977298868,
+            "RESP_rmse_raw": 0.6233351852831719,
+            "gain_add_minus_resp": 0.055278712446714895
+          }
+        }
+      }
+    }
+  },
+  "gains": {
+    "esol": {
+      "final": {
+        "test_gain": 0.05664663071922216,
+        "val_gain": 0.09590375669777162
+      },
+      "last10": {
+        "test_gain": 0.05481292753300748,
+        "val_gain": 0.09383033943803687
+      },
+      "reference_amplitude": 0.03,
+      "val_best": {
+        "add_val": 0.7702841040315781,
+        "resp_val": 0.7277788291474365,
+        "test_gain": 0.009597480105450251,
+        "val_gain": 0.042505274884141575
+      }
+    },
+    "lipo": {
+      "final": {
+        "test_gain": 0.03616835262020801,
+        "val_gain": 0.05873330286366796
+      },
+      "last10": {
+        "test_gain": 0.03647741199741361,
+        "val_gain": 0.05864404262151279
+      },
+      "reference_amplitude": 0.02,
+      "val_best": {
+        "add_val": 0.6762485097778089,
+        "resp_val": 0.6287435855606264,
+        "test_gain": 0.03605433922462187,
+        "val_gain": 0.047504924217182554
+      }
+    }
+  },
+  "historical": {
+    "esol": {
+      "source": "gnn_route_clarification_8h_v1 C1/L; sq-pilot-small-v1 C1/L=0.8686",
+      "test": 0.9534,
+      "val": 0.7958
+    },
+    "lipo": {
+      "source": "sq-pilot-small-v1 C1/L; gnn_route_clarification_8h_v1 C1/L=0.7069",
+      "test": 0.7139,
+      "val": 0.7052
+    }
+  },
+  "influence": {
+    "esol": {
+      "dropped_rows_top1": [
+        733
+      ],
+      "dropped_rows_top5": [
+        733,
+        790,
+        819,
+        861,
+        963
+      ],
+      "gain_after_dropping_top1": 0.02381628042660444,
+      "gain_after_dropping_top5": -0.01195159528511669,
+      "gain_full": 0.042505274884141575,
+      "largest_single_molecule_contribution": 3.258279128556714,
+      "share_of_total_gain_top1": 0.4528318396882535
+    },
+    "lipo": {
+      "dropped_rows_top1": [
+        1816
+      ],
+      "dropped_rows_top5": [
+        1816,
+        970,
+        1760,
+        1647,
+        1633
+      ],
+      "gain_after_dropping_top1": 0.04394333189980337,
+      "gain_after_dropping_top5": 0.031193144042701015,
+      "gain_full": 0.047504924217182554,
+      "largest_single_molecule_contribution": 2.1272845903782915,
+      "share_of_total_gain_top1": 0.08170145542511173
+    }
+  },
+  "labels": {
+    "esol": [
+      "CONDITIONAL_SIGNAL_S0",
+      "SAMPLE_UNCERTAIN",
+      "NEAR_HISTORICAL_C1"
+    ],
+    "lipo": [
+      "CONDITIONAL_SIGNAL_S0",
+      "NEAR_HISTORICAL_C1"
+    ]
+  },
+  "main_table_markdown": "| task | arm | best epoch | Train RMSE | Val RMSE | Test RMSE | Val MAE | Test MAE | fallback Val |\n|---|---|---:|---:|---:|---:|---:|---:|---:|\n| lipo | RESP | 63 | 0.3475 | 0.6287 | 0.6760 | 0.4821 | 0.5235 | 0.093 |\n| lipo | ADD | 91 | 0.3018 | 0.6762 | 0.7121 | 0.5010 | 0.5493 | 0.093 |\n| esol | RESP | 154 | 0.3361 | 0.7278 | 0.8995 | 0.5621 | 0.6864 | 0.363 |\n| esol | ADD | 105 | 0.4386 | 0.7703 | 0.9091 | 0.6103 | 0.7324 | 0.363 |",
+  "paired_edit_diagnostic": {
+    "catalogue": "tracks/structural-sufficiency/lcrc_lipo_amide_dependency_public122_v1/analysis/natural_pairs.csv",
+    "catalogue_rows": 74,
+    "note": "Catalogue is an existing amide-difference edit set; its own split column is not used. Support is small and restricted to the splits listed.",
+    "official_split_recomputed": true,
+    "per_split": {
+      "train": {
+        "ADD": {
+          "mean_signed_error": 0.06590754185812943,
+          "paired_difference_mae": 0.3136586548591025,
+          "paired_difference_rmse": 0.39092496023985135
+        },
+        "RESP": {
+          "mean_signed_error": 0.09442288180699782,
+          "paired_difference_mae": 0.35007751064326337,
+          "paired_difference_rmse": 0.47451553417722225
+        },
+        "n_pairs": 73
+      }
+    },
+    "state": "COVERED",
+    "support": {
+      "train": 73
+    }
+  },
+  "plot": "rmse_curves.png",
+  "protocol_hash": "861b778da2a7488db84579a29e9cc74d0703f2eb64b0583e6ed9d3850b9fcf17",
+  "resources": {
+    "hard_a100_hours": 6.0,
+    "note": "Each unit ran alone on one physical A100; wall time includes per-epoch three-split evaluation.",
+    "soft_a100_hours": 4.0,
+    "sum_unit_gpu_hours_estimate": 0.593561899334438,
+    "sum_unit_seconds": 2136.822837603977
+  },
+  "task_relevance": {
+    "label": "TASK_RELEVANCE_NOT_ESTABLISHED",
+    "reason": "The only real paired-edit set available has 73 pairs, all in the official Train split, and on those pairs ADD has the lower paired-difference RMSE; there is no Val/Test edit support."
+  },
+  "test_policy": "always",
+  "test_use": "DEVELOPMENT_TEST",
+  "units": {
+    "esol": {
+      "add_best_epoch": 105,
+      "add_diagnostics": {
+        "test": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.2920353982300885,
+          "n_molecules": 113,
+          "n_molecules_with_views": 80,
+          "n_views": 253,
+          "view_dispersion_raw": 0.3529845555106917,
+          "view_dispersion_std": 0.1707942313740434,
+          "view_fraction_molecules_with_cuts": 0.7079646017699115
+        },
+        "train": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.09201773835920177,
+          "n_molecules": 902,
+          "n_molecules_with_views": 819,
+          "n_views": 2619,
+          "view_dispersion_raw": 0.22160785941864977,
+          "view_dispersion_std": 0.1072266291115644,
+          "view_fraction_molecules_with_cuts": 0.9079822616407982
+        },
+        "valid": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.36283185840707965,
+          "n_molecules": 113,
+          "n_molecules_with_views": 72,
+          "n_views": 226,
+          "view_dispersion_raw": 0.3379812127853069,
+          "view_dispersion_std": 0.1635347511820104,
+          "view_fraction_molecules_with_cuts": 0.6371681415929203
+        }
+      },
+      "add_horizon": {
+        "best_epoch_in_last10": 356,
+        "best_epoch_in_last30": 346,
+        "comparison": "mean Val RMSE epochs 331-360 minus epochs 301-330",
+        "delta_last30_minus_prev30_valid": 4.1681079631872286e-05,
+        "horizon_limited": false,
+        "threshold": -0.010333620540662383
+      },
+      "init_hashes_identical": true,
+      "resp_best_epoch": 154,
+      "resp_diagnostics": {
+        "test": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.2920353982300885,
+          "n_molecules": 113,
+          "n_molecules_with_views": 80,
+          "n_views": 253,
+          "view_dispersion_raw": 0.21828632381685226,
+          "view_dispersion_std": 0.10561947913507387,
+          "view_fraction_molecules_with_cuts": 0.7079646017699115
+        },
+        "train": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.09201773835920177,
+          "n_molecules": 902,
+          "n_molecules_with_views": 819,
+          "n_views": 2619,
+          "view_dispersion_raw": 0.09844690940168312,
+          "view_dispersion_std": 0.047634277364017034,
+          "view_fraction_molecules_with_cuts": 0.9079822616407982
+        },
+        "valid": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.36283185840707965,
+          "n_molecules": 113,
+          "n_molecules_with_views": 72,
+          "n_views": 226,
+          "view_dispersion_raw": 0.19826165432120108,
+          "view_dispersion_std": 0.09593039222847859,
+          "view_fraction_molecules_with_cuts": 0.6371681415929203
+        }
+      },
+      "resp_horizon": {
+        "best_epoch_in_last10": 356,
+        "best_epoch_in_last30": 345,
+        "comparison": "mean Val RMSE epochs 331-360 minus epochs 301-330",
+        "delta_last30_minus_prev30_valid": 2.0459819117468747e-05,
+        "horizon_limited": false,
+        "threshold": -0.010333620540662383
+      }
+    },
+    "lipo": {
+      "add_best_epoch": 91,
+      "add_diagnostics": {
+        "test": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.08571428571428572,
+          "n_molecules": 420,
+          "n_molecules_with_views": 384,
+          "n_views": 1182,
+          "view_dispersion_raw": 0.2388603136779293,
+          "view_dispersion_std": 0.19715432028923613,
+          "view_fraction_molecules_with_cuts": 0.9142857142857143
+        },
+        "train": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.06339285714285714,
+          "n_molecules": 3360,
+          "n_molecules_with_views": 3147,
+          "n_views": 10491,
+          "view_dispersion_raw": 0.16027545024668996,
+          "view_dispersion_std": 0.13229069729450493,
+          "view_fraction_molecules_with_cuts": 0.9366071428571429
+        },
+        "valid": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.09285714285714286,
+          "n_molecules": 420,
+          "n_molecules_with_views": 381,
+          "n_views": 1224,
+          "view_dispersion_raw": 0.22268367109017478,
+          "view_dispersion_std": 0.18380218604457052,
+          "view_fraction_molecules_with_cuts": 0.9071428571428571
+        }
+      },
+      "add_horizon": {
+        "best_epoch_in_last10": 352,
+        "best_epoch_in_last30": 331,
+        "comparison": "mean Val RMSE epochs 331-360 minus epochs 301-330",
+        "delta_last30_minus_prev30_valid": -0.0006789645924858423,
+        "horizon_limited": false,
+        "threshold": -0.006057699200491985
+      },
+      "init_hashes_identical": true,
+      "resp_best_epoch": 63,
+      "resp_diagnostics": {
+        "test": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.08571428571428572,
+          "n_molecules": 420,
+          "n_molecules_with_views": 384,
+          "n_views": 1182,
+          "view_dispersion_raw": 0.18808161974596735,
+          "view_dispersion_std": 0.15524179521054135,
+          "view_fraction_molecules_with_cuts": 0.9142857142857143
+        },
+        "train": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.06339285714285714,
+          "n_molecules": 3360,
+          "n_molecules_with_views": 3147,
+          "n_views": 10491,
+          "view_dispersion_raw": 0.14789786289782664,
+          "view_dispersion_std": 0.12207428761551489,
+          "view_fraction_molecules_with_cuts": 0.9366071428571429
+        },
+        "valid": {
+          "effective_eval_batch": 0,
+          "eval_batch_reductions": 0,
+          "fallback_molecule_fraction": 0.09285714285714286,
+          "n_molecules": 420,
+          "n_molecules_with_views": 381,
+          "n_views": 1224,
+          "view_dispersion_raw": 0.18687716874001828,
+          "view_dispersion_std": 0.15424764630508625,
+          "view_fraction_molecules_with_cuts": 0.9071428571428571
+        }
+      },
+      "resp_horizon": {
+        "best_epoch_in_last10": 359,
+        "best_epoch_in_last30": 331,
+        "comparison": "mean Val RMSE epochs 331-360 minus epochs 301-330",
+        "delta_last30_minus_prev30_valid": 0.00023620715548045013,
+        "horizon_limited": false,
+        "threshold": -0.006057699200491985
+      }
+    }
+  },
+  "w0_probe": {
+    "esol": {
+      "note": "Fixed-weight dependence probe on the best-Val RESP state; not a post-hoc necessity proof.",
+      "test": {
+        "max_abs_prediction_change_raw": 1.024725704997778,
+        "prediction_change_rmse_raw": 0.4127114849694884,
+        "prediction_change_std_units": 0.19969355529627067,
+        "rmse_raw_trained": 0.8994734062711356,
+        "rmse_raw_w0": 0.9176396814908773
+      },
+      "train": {
+        "max_abs_prediction_change_raw": 1.0392405069895414,
+        "prediction_change_rmse_raw": 0.46759533268249986,
+        "prediction_change_std_units": 0.22624951769930537,
+        "rmse_raw_trained": 0.3360529621341004,
+        "rmse_raw_w0": 0.527661264356237
+      },
+      "valid": {
+        "max_abs_prediction_change_raw": 0.9148894236766203,
+        "prediction_change_rmse_raw": 0.4024412266619206,
+        "prediction_change_std_units": 0.19472421358919195,
+        "rmse_raw_trained": 0.7277788229465131,
+        "rmse_raw_w0": 0.7828216259143406
+      }
+    },
+    "lipo": {
+      "note": "Fixed-weight dependence probe on the best-Val RESP state; not a post-hoc necessity proof.",
+      "test": {
+        "max_abs_prediction_change_raw": 0.9745319530398302,
+        "prediction_change_rmse_raw": 0.287957715354232,
+        "prediction_change_std_units": 0.23767911365658853,
+        "rmse_raw_trained": 0.6760290394950884,
+        "rmse_raw_w0": 0.7249320017913278
+      },
+      "train": {
+        "max_abs_prediction_change_raw": 1.2666956179749111,
+        "prediction_change_rmse_raw": 0.3203018219425394,
+        "prediction_change_std_units": 0.2643758061778023,
+        "rmse_raw_trained": 0.3475098834916578,
+        "rmse_raw_w0": 0.5091410564908094
+      },
+      "valid": {
+        "max_abs_prediction_change_raw": 0.9118530311060284,
+        "prediction_change_rmse_raw": 0.2978416474094554,
+        "prediction_change_std_units": 0.24583727051457568,
+        "rmse_raw_trained": 0.6287435831424285,
+        "rmse_raw_w0": 0.6979240809327256
+      }
+    }
+  }
+}
