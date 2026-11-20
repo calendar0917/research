@@ -1,0 +1,438 @@
+{
+  "base_commit": "4fc17e33b6cc7fd2f301e05d705183787162e233",
+  "checkpoint": "tracks/structural-sufficiency/response_dictionary_small_s0_v1/results/lipo_RESP/best.pt",
+  "checkpoint_sha256": "c42fc25f7080852cd482077dd761ae48770a2a263c169d214043e3f6bbaac77c",
+  "compression": {
+    "inference_path": {
+      "alpha_storage": "for a stored prototype word alpha is one-hot; for an unseen S it is computed",
+      "molecule_F": "mean over the fixed views; fallback head for molecules without a cut",
+      "molecule_to_views": "bridge cuts + fixed <=4 view selection (structure processing)",
+      "per_view_score": "b(C) + a_words(S) + <q_words(S), k(C), w>/sqrt(latent)",
+      "stored_C": "b(C), k(C) from a Train-environment table if cached",
+      "stored_S": "a_words(S), q_words(S) from the 136-word table (one-hot alpha)",
+      "unseen_C": "encoder z_C -> b(C), k(C)",
+      "unseen_S": "encoder z_S -> a(S), q(S) -> response on the 16-env Train panel -> simplex projection to alpha over the stored prototypes; no GNN re-run per environment"
+    },
+    "latent": 16,
+    "n_classes": 16,
+    "n_encoder_parameters": 169187,
+    "n_env_fragments_observed_train": 9191,
+    "n_fragments_cached": 12369,
+    "n_model_parameters": 198262,
+    "n_non_encoder_parameters": 29075,
+    "n_stored_words": 136,
+    "n_train_word_candidates": 702,
+    "n_word_fragments_observed_all_splits": 820,
+    "panel_size": 16,
+    "storage_floats_if_materialised": {
+      "optional_alpha_cache_all_observed_S": 14658,
+      "panel_environment_ids": 256,
+      "prototype_response_matrix_P": 2176,
+      "train_C_b_k_table": 156247,
+      "word_a_q_table": 2312
+    },
+    "storage_note": "The 136 stored words 702 -> 136 do not remove the encoder. The encoder (and the a/q heads) is still required for a new S to compute alpha; k(C)/b(C) are still required for the C side. The tables above are materialised only if an application chooses to cache them; the model weights remain 198k parameters.",
+    "view_stats": {
+      "test": {
+        "fallback_molecule_fraction": 0.08571428571428572,
+        "n_fallback_molecules": 36,
+        "n_molecules": 420,
+        "n_views": 1182,
+        "stored_C_fraction": 0.07360406091370558,
+        "stored_C_views": 87,
+        "stored_S_distinct": 32,
+        "stored_S_fraction": 0.6302876480541455,
+        "stored_S_views": 745,
+        "stored_both_fraction": 0.005076142131979695,
+        "unseen_S_distinct": 185,
+        "unseen_S_views": 437
+      },
+      "train": {
+        "fallback_molecule_fraction": 0.06339285714285714,
+        "n_fallback_molecules": 213,
+        "n_molecules": 3360,
+        "n_views": 10491,
+        "stored_C_fraction": 1.0,
+        "stored_C_views": 10491,
+        "stored_S_distinct": 136,
+        "stored_S_fraction": 0.6659041082832904,
+        "stored_S_views": 6986,
+        "stored_both_fraction": 0.6659041082832904,
+        "unseen_S_distinct": 566,
+        "unseen_S_views": 3505
+      },
+      "valid": {
+        "fallback_molecule_fraction": 0.09285714285714286,
+        "n_fallback_molecules": 39,
+        "n_molecules": 420,
+        "n_views": 1224,
+        "stored_C_fraction": 0.06535947712418301,
+        "stored_C_views": 80,
+        "stored_S_distinct": 35,
+        "stored_S_fraction": 0.6315359477124183,
+        "stored_S_views": 773,
+        "stored_both_fraction": 0.006535947712418301,
+        "unseen_S_distinct": 191,
+        "unseen_S_views": 451
+      }
+    },
+    "view_stats_note": "`stored_S` means the S fragment is one of the 136 stored words; `stored_C` means the C fragment is one of the 9191 Train environment fragments. A pure lookup view needs both. The unseen-S fraction is not a generalisation claim: these fragments exist in Val/Test but were not Train words."
+  },
+  "executed_commit": "ecdb4f2abf8104c9a7a32460aff2a2ae518057d7",
+  "explanation": {
+    "D_RESPONSE_HP_CERTIFIED_ALL": {
+      "cell": "ALL",
+      "delta_full_mae": 0.3841315127070293,
+      "delta_full_median_abs": 0.27249748661679796,
+      "delta_full_p90_abs": 0.761430650032328,
+      "delta_full_rmse": 0.5793493412590706,
+      "delta_local_mae": 0.3812463131608153,
+      "delta_local_median_abs": 0.27194192198018774,
+      "delta_local_p90_abs": 0.7901062778503689,
+      "delta_local_rmse": 0.5535315082633598,
+      "delta_y_mae": 0.596186863084446,
+      "delta_y_median_abs": 0.4500000476837158,
+      "dictionary": "D_RESPONSE",
+      "error_full_component_equal_mae": 0.34065832518193045,
+      "error_full_mae": 0.3389446618944047,
+      "error_full_model_mae": 0.020730392709684183,
+      "error_full_model_rmse": 0.03255092804005584,
+      "error_full_rmse": 0.4341116958197832,
+      "error_local_mae": 0.3684064906362461,
+      "error_local_model_mae": 0.052697367367803755,
+      "error_local_model_rmse": 0.08634273849542477,
+      "error_local_rmse": 0.48119401932089834,
+      "error_resp_mae": 0.33781649485371,
+      "error_resp_rmse": 0.43147177267944864,
+      "low_support": false,
+      "n_components": 153,
+      "n_pairs": 396,
+      "remainder_component_equal_mae": 0.127071515133398,
+      "remainder_mae": 0.12916927614680468,
+      "remainder_max_abs": 0.7707979239476648,
+      "remainder_median_abs": 0.09909762324771876,
+      "remainder_median_abs_over_delta_full_median_abs": 0.36366435697469635,
+      "remainder_median_abs_over_train_std": 0.08179477056212234,
+      "remainder_minus_resp_mae": 0.04172064310343426,
+      "remainder_minus_resp_rmse": 0.06659780971916944,
+      "remainder_p90_abs": 0.28866623104254074,
+      "remainder_resp_mae": 0.12580269200450508,
+      "remainder_resp_median_abs": 0.09434866656474017,
+      "remainder_resp_p90_abs": 0.27256362614729246,
+      "remainder_resp_rmse": 0.16921497230359914,
+      "remainder_rmse": 0.17588464045185434,
+      "remainder_rmse_over_delta_full_rmse": 0.3035899550168007,
+      "remainder_rmse_over_train_std": 0.14517445867695908,
+      "train_label_std": 1.211539840098397,
+      "version": "HP_CERTIFIED",
+      "zero_change_mae": 0.596186863084446
+    },
+    "closure": {
+      "label": "WORD_ACCOUNT_CLOSES",
+      "max_abs_closure_error": 2.4980018054066022e-15,
+      "n_equations": 3564,
+      "note": "sum_k contribution_k = delta_local by linearity of a(S), q(S), b(C) and the bilinear term; this is an algebraic closure check, not a claim of explanatory correctness."
+    },
+    "coverage": [
+      {
+        "cell": "Train-Train",
+        "fraction_interpretable": 0.4740834386852086,
+        "n_components_all": 228,
+        "n_interpretable_components": 151,
+        "n_interpretable_pairs": 375,
+        "n_no_shared_both_fallback_endpoints": 15,
+        "n_no_shared_both_viewed": 369,
+        "n_no_shared_one_fallback_endpoint": 32,
+        "n_no_shared_selected_context": 416,
+        "n_non_train_endpoints": 0,
+        "n_non_train_pairs": 0,
+        "n_pairs": 791,
+        "n_shared_context_unsupported": 0
+      },
+      {
+        "cell": "Train-Valid",
+        "fraction_interpretable": 0.8,
+        "n_components_all": 4,
+        "n_interpretable_components": 3,
+        "n_interpretable_pairs": 4,
+        "n_no_shared_both_fallback_endpoints": 0,
+        "n_no_shared_both_viewed": 1,
+        "n_no_shared_one_fallback_endpoint": 0,
+        "n_no_shared_selected_context": 1,
+        "n_non_train_endpoints": 4,
+        "n_non_train_pairs": 5,
+        "n_pairs": 5,
+        "n_shared_context_unsupported": 0
+      },
+      {
+        "cell": "Train-Test",
+        "fraction_interpretable": 0.6296296296296297,
+        "n_components_all": 7,
+        "n_interpretable_components": 5,
+        "n_interpretable_pairs": 17,
+        "n_no_shared_both_fallback_endpoints": 0,
+        "n_no_shared_both_viewed": 9,
+        "n_no_shared_one_fallback_endpoint": 1,
+        "n_no_shared_selected_context": 10,
+        "n_non_train_endpoints": 7,
+        "n_non_train_pairs": 27,
+        "n_pairs": 27,
+        "n_shared_context_unsupported": 0
+      },
+      {
+        "cell": "ALL",
+        "fraction_interpretable": 0.48116646415552855,
+        "n_components_all": 231,
+        "n_interpretable_components": 153,
+        "n_interpretable_pairs": 396,
+        "n_no_shared_both_fallback_endpoints": 15,
+        "n_no_shared_both_viewed": 379,
+        "n_no_shared_one_fallback_endpoint": 33,
+        "n_no_shared_selected_context": 427,
+        "n_non_train_endpoints": 11,
+        "n_non_train_pairs": 32,
+        "n_pairs": 823,
+        "n_shared_context_unsupported": 0
+      }
+    ],
+    "identity": {
+      "cell_counts_reproduced": true,
+      "followup_edit_pairs_present": true,
+      "max_abs_diff_of_abs_error_RESP": 6.205755336274876e-07,
+      "mean_abs_diff_of_abs_error_RESP": 1.6338465436531207e-07,
+      "n_compared": 396,
+      "n_missing": 0,
+      "note": "The follow-up stores the native RESP delta on row_lo -> row_hi; this round orients A=row_a, B=row_b. Only absolute errors are compared. Any mismatch is reported, not forced to agree."
+    },
+    "labels": {
+      "HELDOUT_EDIT_SUPPORT_LOW": true,
+      "TASK_LAW_NOT_ESTABLISHED": true,
+      "WORD_ACCOUNT_CLOSES": true,
+      "WORD_ACCOUNT_LOCAL_ONLY": true
+    },
+    "mapping": {
+      "both_non_train_pairs": 0,
+      "catalogue": "tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/analysis/pairs.csv",
+      "catalogue_sha256": "1003f861dfd66456d5b2e99740dd19a7a9fa3a62a4163a122b6e0dec1f5dc78a",
+      "cell_counts_reproduced": true,
+      "cells": [
+        {
+          "cell": "Train-Train",
+          "n_components": 228,
+          "n_endpoints": 690,
+          "n_non_train_endpoints": 0,
+          "n_pairs": 791,
+          "non_train_endpoints_by_split": {
+            "test": 0,
+            "valid": 0
+          }
+        },
+        {
+          "cell": "Train-Valid",
+          "n_components": 4,
+          "n_endpoints": 9,
+          "n_non_train_endpoints": 4,
+          "n_pairs": 5,
+          "non_train_endpoints_by_split": {
+            "test": 0,
+            "valid": 4
+          }
+        },
+        {
+          "cell": "Train-Test",
+          "n_components": 7,
+          "n_endpoints": 34,
+          "n_non_train_endpoints": 7,
+          "n_pairs": 27,
+          "non_train_endpoints_by_split": {
+            "test": 7,
+            "valid": 0
+          }
+        }
+      ],
+      "duplicate_pairs": 0,
+      "expected_cell_counts": {
+        "Train-Test": 27,
+        "Train-Train": 791,
+        "Train-Valid": 5
+      },
+      "followup_cells": [
+        {
+          "cell": "Train-Test",
+          "low_support": true,
+          "n_components": 7,
+          "n_endpoints": 34,
+          "n_non_train_endpoints": 7,
+          "n_pairs": 27,
+          "n_train_endpoints": 27,
+          "non_train_endpoints_by_split": {
+            "test": 7,
+            "valid": 0
+          }
+        },
+        {
+          "cell": "Train-Train",
+          "low_support": false,
+          "n_components": 228,
+          "n_endpoints": 690,
+          "n_non_train_endpoints": 0,
+          "n_pairs": 791,
+          "n_train_endpoints": 690,
+          "non_train_endpoints_by_split": {
+            "test": 0,
+            "valid": 0
+          }
+        },
+        {
+          "cell": "Train-Valid",
+          "low_support": true,
+          "n_components": 4,
+          "n_endpoints": 9,
+          "n_non_train_endpoints": 4,
+          "n_pairs": 5,
+          "n_train_endpoints": 5,
+          "non_train_endpoints_by_split": {
+            "test": 0,
+            "valid": 4
+          }
+        }
+      ],
+      "followup_component_count": 231,
+      "followup_pair_count": 823,
+      "mapped_pairs": 823,
+      "n_components": 231,
+      "n_endpoints": 704,
+      "note": "The catalogue's split_a/split_b columns are not used; the official split is re-derived from the mapped OGB row id. 823 pairs / 704 endpoints / 231 components is the follow-up support, reused read-only.",
+      "orientation": "catalogue row_a -> row_b; delta = B - A",
+      "problems": [],
+      "rows_whose_stored_split_column_disagrees_with_official": 331,
+      "self_pairs": 0,
+      "source_rows": 823,
+      "stored_row_columns_agree_with_canonical_mapping": true,
+      "unmapped": 0
+    }
+  },
+  "gpu_a100_hours": 0.0,
+  "n_parameters": 198262,
+  "projection": {
+    "checks": {
+      "n_ambiguous_alpha_only": 54,
+      "n_both_qualified": 363,
+      "n_certificate_rows": 2004,
+      "n_fw64_pass": 193,
+      "n_primary_fw": 591,
+      "n_primary_uniform": 228,
+      "n_slsqp_fw_pass": 591,
+      "n_slsqp_uniform_pass": 591,
+      "n_unresolved_primary": 1185
+    },
+    "decision": {
+      "label": "RESPONSE_ADVANTAGE_SURVIVES_HIGH_PRECISION",
+      "note": "The 20% reduction is the frozen follow-up investment reference, not a general effect threshold. HP_CERTIFIED is the primary version; HP_SLSQP_ALL is an uncertified sensitivity on rows where the frozen SLSQP setting missed the 1e-8 gap certificate.",
+      "per_version": {
+        "FW64": {
+          "best_dictionary": {
+            "test": "D_RESPONSE",
+            "valid": "D_RESPONSE"
+          },
+          "better_baseline": {
+            "test": 0.06952102305477491,
+            "valid": 0.07691036897908629
+          },
+          "fidelity_rmse": {
+            "test": {
+              "D_FREQ": 0.06952102305477491,
+              "D_LATENT": 0.07653214134828618,
+              "D_RESPONSE": 0.040106851352915716
+            },
+            "valid": {
+              "D_FREQ": 0.07691036897908629,
+              "D_LATENT": 0.09648946789669778,
+              "D_RESPONSE": 0.03937156900070066
+            }
+          },
+          "relative_reduction_vs_better_baseline": {
+            "test": 0.42309750934884927,
+            "valid": 0.48808503296341355
+          },
+          "response_is_best_both": true
+        },
+        "HP_CERTIFIED": {
+          "best_dictionary": {
+            "test": "D_RESPONSE",
+            "valid": "D_RESPONSE"
+          },
+          "better_baseline": {
+            "test": 0.06692455699634763,
+            "valid": 0.0759196333224541
+          },
+          "fidelity_rmse": {
+            "test": {
+              "D_FREQ": 0.06692455699634763,
+              "D_LATENT": 0.07612618722626197,
+              "D_RESPONSE": 0.039887791043664106
+            },
+            "valid": {
+              "D_FREQ": 0.0759196333224541,
+              "D_LATENT": 0.09625898861679084,
+              "D_RESPONSE": 0.0386579683347881
+            }
+          },
+          "relative_reduction_vs_better_baseline": {
+            "test": 0.40398871753695786,
+            "valid": 0.4908040694744167
+          },
+          "response_is_best_both": true
+        },
+        "HP_SLSQP_ALL": {
+          "best_dictionary": {
+            "test": "D_RESPONSE",
+            "valid": "D_RESPONSE"
+          },
+          "better_baseline": {
+            "test": 0.06695042008372386,
+            "valid": 0.075536210848454
+          },
+          "fidelity_rmse": {
+            "test": {
+              "D_FREQ": 0.06695042008372386,
+              "D_LATENT": 0.07478322456061293,
+              "D_RESPONSE": 0.03800308523214112
+            },
+            "valid": {
+              "D_FREQ": 0.075536210848454,
+              "D_LATENT": 0.09538498136175935,
+              "D_RESPONSE": 0.036537696013225554
+            }
+          },
+          "relative_reduction_vs_better_baseline": {
+            "test": 0.43236972696187836,
+            "valid": 0.5162890009596851
+          },
+          "response_is_best_both": true
+        }
+      }
+    },
+    "fw64_predictions_max_abs_diff_vs_saved": 0.0,
+    "panel_underdetermination": {
+      "label": "PANEL_TIES_DO_NOT_MATERIALLY_CHANGE_READOUT",
+      "material_threshold_raw": 1e-06,
+      "max_abs_df_raw": 2.9491228673317596e-07,
+      "max_abs_ds_raw": 2.9491228673317596e-07,
+      "n_alpha_diff_gt_1e-8": 54,
+      "n_molecules_gt_1e-6": 0,
+      "n_panel_tied_rows": 363,
+      "n_views_gt_1e-6": 0,
+      "n_views_gt_1e-7": 4,
+      "n_with_readout_gt_1e-6": 0,
+      "n_with_readout_gt_1e-7": 4,
+      "n_with_val_or_test_views": 129,
+      "note": "Both SLSQP starts meet the frozen pass rule, so their panel objectives are tied within solver precision. The table lists the actual Val/Test readout difference of the two alphas, holding every other fragment fixed. A material difference (>1e-6 raw) means the panel does not identify a unique prediction; no new panel or tie-breaker is added. Nonzero but sub-1e-6 differences are reported, not hidden."
+    },
+    "replay_fw64_max_abs_diff_vs_saved": 1.1567285533864435e-06
+  },
+  "protocol_hash": "0bf400f60dd4d5d10cf372bfa8ee74ae12a5a4c01f786444b7727382c6dc7943",
+  "round_id": "response_dictionary_explanation_check_s0_v1",
+  "seconds": 8.946341382994433,
+  "test_use": "DEVELOPMENT_TEST"
+}

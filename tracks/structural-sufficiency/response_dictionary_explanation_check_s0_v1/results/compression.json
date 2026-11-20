@@ -1,0 +1,76 @@
+{
+  "inference_path": {
+    "alpha_storage": "for a stored prototype word alpha is one-hot; for an unseen S it is computed",
+    "molecule_F": "mean over the fixed views; fallback head for molecules without a cut",
+    "molecule_to_views": "bridge cuts + fixed <=4 view selection (structure processing)",
+    "per_view_score": "b(C) + a_words(S) + <q_words(S), k(C), w>/sqrt(latent)",
+    "stored_C": "b(C), k(C) from a Train-environment table if cached",
+    "stored_S": "a_words(S), q_words(S) from the 136-word table (one-hot alpha)",
+    "unseen_C": "encoder z_C -> b(C), k(C)",
+    "unseen_S": "encoder z_S -> a(S), q(S) -> response on the 16-env Train panel -> simplex projection to alpha over the stored prototypes; no GNN re-run per environment"
+  },
+  "latent": 16,
+  "n_classes": 16,
+  "n_encoder_parameters": 169187,
+  "n_env_fragments_observed_train": 9191,
+  "n_fragments_cached": 12369,
+  "n_model_parameters": 198262,
+  "n_non_encoder_parameters": 29075,
+  "n_stored_words": 136,
+  "n_train_word_candidates": 702,
+  "n_word_fragments_observed_all_splits": 820,
+  "panel_size": 16,
+  "storage_floats_if_materialised": {
+    "optional_alpha_cache_all_observed_S": 14658,
+    "panel_environment_ids": 256,
+    "prototype_response_matrix_P": 2176,
+    "train_C_b_k_table": 156247,
+    "word_a_q_table": 2312
+  },
+  "storage_note": "The 136 stored words 702 -> 136 do not remove the encoder. The encoder (and the a/q heads) is still required for a new S to compute alpha; k(C)/b(C) are still required for the C side. The tables above are materialised only if an application chooses to cache them; the model weights remain 198k parameters.",
+  "view_stats": {
+    "test": {
+      "fallback_molecule_fraction": 0.08571428571428572,
+      "n_fallback_molecules": 36,
+      "n_molecules": 420,
+      "n_views": 1182,
+      "stored_C_fraction": 0.07360406091370558,
+      "stored_C_views": 87,
+      "stored_S_distinct": 32,
+      "stored_S_fraction": 0.6302876480541455,
+      "stored_S_views": 745,
+      "stored_both_fraction": 0.005076142131979695,
+      "unseen_S_distinct": 185,
+      "unseen_S_views": 437
+    },
+    "train": {
+      "fallback_molecule_fraction": 0.06339285714285714,
+      "n_fallback_molecules": 213,
+      "n_molecules": 3360,
+      "n_views": 10491,
+      "stored_C_fraction": 1.0,
+      "stored_C_views": 10491,
+      "stored_S_distinct": 136,
+      "stored_S_fraction": 0.6659041082832904,
+      "stored_S_views": 6986,
+      "stored_both_fraction": 0.6659041082832904,
+      "unseen_S_distinct": 566,
+      "unseen_S_views": 3505
+    },
+    "valid": {
+      "fallback_molecule_fraction": 0.09285714285714286,
+      "n_fallback_molecules": 39,
+      "n_molecules": 420,
+      "n_views": 1224,
+      "stored_C_fraction": 0.06535947712418301,
+      "stored_C_views": 80,
+      "stored_S_distinct": 35,
+      "stored_S_fraction": 0.6315359477124183,
+      "stored_S_views": 773,
+      "stored_both_fraction": 0.006535947712418301,
+      "unseen_S_distinct": 191,
+      "unseen_S_views": 451
+    }
+  },
+  "view_stats_note": "`stored_S` means the S fragment is one of the 136 stored words; `stored_C` means the C fragment is one of the 9191 Train environment fragments. A pure lookup view needs both. The unseen-S fraction is not a generalisation claim: these fragments exist in Val/Test but were not Train words."
+}

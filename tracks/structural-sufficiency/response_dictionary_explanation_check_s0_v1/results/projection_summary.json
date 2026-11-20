@@ -1,0 +1,109 @@
+{
+  "decision": {
+    "label": "RESPONSE_ADVANTAGE_SURVIVES_HIGH_PRECISION",
+    "note": "The 20% reduction is the frozen follow-up investment reference, not a general effect threshold. HP_CERTIFIED is the primary version; HP_SLSQP_ALL is an uncertified sensitivity on rows where the frozen SLSQP setting missed the 1e-8 gap certificate.",
+    "per_version": {
+      "FW64": {
+        "best_dictionary": {
+          "test": "D_RESPONSE",
+          "valid": "D_RESPONSE"
+        },
+        "better_baseline": {
+          "test": 0.06952102305477491,
+          "valid": 0.07691036897908629
+        },
+        "fidelity_rmse": {
+          "test": {
+            "D_FREQ": 0.06952102305477491,
+            "D_LATENT": 0.07653214134828618,
+            "D_RESPONSE": 0.040106851352915716
+          },
+          "valid": {
+            "D_FREQ": 0.07691036897908629,
+            "D_LATENT": 0.09648946789669778,
+            "D_RESPONSE": 0.03937156900070066
+          }
+        },
+        "relative_reduction_vs_better_baseline": {
+          "test": 0.42309750934884927,
+          "valid": 0.48808503296341355
+        },
+        "response_is_best_both": true
+      },
+      "HP_CERTIFIED": {
+        "best_dictionary": {
+          "test": "D_RESPONSE",
+          "valid": "D_RESPONSE"
+        },
+        "better_baseline": {
+          "test": 0.06692455699634763,
+          "valid": 0.0759196333224541
+        },
+        "fidelity_rmse": {
+          "test": {
+            "D_FREQ": 0.06692455699634763,
+            "D_LATENT": 0.07612618722626197,
+            "D_RESPONSE": 0.039887791043664106
+          },
+          "valid": {
+            "D_FREQ": 0.0759196333224541,
+            "D_LATENT": 0.09625898861679084,
+            "D_RESPONSE": 0.0386579683347881
+          }
+        },
+        "relative_reduction_vs_better_baseline": {
+          "test": 0.40398871753695786,
+          "valid": 0.4908040694744167
+        },
+        "response_is_best_both": true
+      },
+      "HP_SLSQP_ALL": {
+        "best_dictionary": {
+          "test": "D_RESPONSE",
+          "valid": "D_RESPONSE"
+        },
+        "better_baseline": {
+          "test": 0.06695042008372386,
+          "valid": 0.075536210848454
+        },
+        "fidelity_rmse": {
+          "test": {
+            "D_FREQ": 0.06695042008372386,
+            "D_LATENT": 0.07478322456061293,
+            "D_RESPONSE": 0.03800308523214112
+          },
+          "valid": {
+            "D_FREQ": 0.075536210848454,
+            "D_LATENT": 0.09538498136175935,
+            "D_RESPONSE": 0.036537696013225554
+          }
+        },
+        "relative_reduction_vs_better_baseline": {
+          "test": 0.43236972696187836,
+          "valid": 0.5162890009596851
+        },
+        "response_is_best_both": true
+      }
+    }
+  },
+  "n_certificate_rows": 2004,
+  "n_fw64_pass": 193,
+  "n_unresolved": 1185,
+  "panel_underdetermination": {
+    "label": "PANEL_TIES_DO_NOT_MATERIALLY_CHANGE_READOUT",
+    "material_threshold_raw": 1e-06,
+    "max_abs_df_raw": 2.9491228673317596e-07,
+    "max_abs_ds_raw": 2.9491228673317596e-07,
+    "n_alpha_diff_gt_1e-8": 54,
+    "n_molecules_gt_1e-6": 0,
+    "n_panel_tied_rows": 363,
+    "n_views_gt_1e-6": 0,
+    "n_views_gt_1e-7": 4,
+    "n_with_readout_gt_1e-6": 0,
+    "n_with_readout_gt_1e-7": 4,
+    "n_with_val_or_test_views": 129,
+    "note": "Both SLSQP starts meet the frozen pass rule, so their panel objectives are tied within solver precision. The table lists the actual Val/Test readout difference of the two alphas, holding every other fragment fixed. A material difference (>1e-6 raw) means the panel does not identify a unique prediction; no new panel or tie-breaker is added. Nonzero but sub-1e-6 differences are reported, not hidden."
+  },
+  "seconds": 6.12707750799018,
+  "stage": "projection"
+}
