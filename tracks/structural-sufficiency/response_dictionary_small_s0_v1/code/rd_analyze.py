@@ -148,6 +148,87 @@ def w0_probe(summary: dict[str, Any], config: dict[str, Any], task: str) -> dict
     return out
 
 
+def paired_edit_diagnostic(units: dict[tuple[str, str], dict | None], pairs_path: Path | None) -> dict[str, Any]:
+    """Real paired property differences on full F(G), if a catalogue maps exactly.
+
+    The catalogue's own split labels are ignored; official split membership is
+    recomputed from the OGB row ids and checked against the frozen labels.
+    """
+    if pairs_path is None or not pairs_path.is_file():
+        return {"state": "NOT_COVERED", "reason": f"catalogue not found: {pairs_path}"}
+    import csv
+
+    resp = units.get(("lipo", "RESP"))
+    add = units.get(("lipo", "ADD"))
+    if resp is None and add is None:
+        return {"state": "NOT_COVERED", "reason": "no Lipo unit"}
+    pred_maps = {}
+    target_maps = {}
+    for arm, unit in (("RESP", resp), ("ADD", add)):
+        if unit is None:
+            continue
+        preds = unit["predictions_best"]
+        pm: dict[int, float] = {}
+        tm: dict[int, float] = {}
+        for split in ("train", "valid", "test"):
+            for row, pred, target in zip(
+                np.asarray(preds[f"{split}_row_ids"]).tolist(),
+                np.asarray(preds[f"{split}_pred_raw"]).tolist(),
+                np.asarray(preds[f"{split}_target_raw"]).tolist(),
+            ):
+                pm[int(row)] = float(pred)
+                tm[int(row)] = float(target)
+        pred_maps[arm] = pm
+        target_maps[arm] = tm
+    rows = list(csv.DictReader(pairs_path.open(encoding="utf-8")))
+    import sys as _sys
+
+    _sys.path.insert(0, str(RC.SQ_CODE))
+    import sq_common as SQ
+
+    payload = RC.dataset_cache("ogbg-mollipo")
+    official = np.empty(len(payload["row_ids"]), dtype=object)
+    for split in ("train", "valid", "test"):
+        official[np.asarray(payload[f"{split}_idx"], dtype=np.int64)] = split
+    labels = np.asarray(payload["labels"], dtype=np.float64)
+    by_split: dict[str, list[dict[str, float]]] = {}
+    for row in rows:
+        try:
+            a = int(row["row_a"])
+            b = int(row["row_b"])
+            ya = float(row["y_a"])
+            yb = float(row["y_b"])
+        except (KeyError, ValueError):
+            return {"state": "NOT_COVERED", "reason": "catalogue lacks row_a/row_b/y_a/y_b"}
+        if not (np.isfinite(ya) and np.isfinite(yb)):
+            continue
+        if abs(ya - labels[a]) > 1e-6 or abs(yb - labels[b]) > 1e-6:
+            return {"state": "NOT_COVERED", "reason": "catalogue labels do not match official rows"}
+        split = str(official[a])
+        if split != str(official[b]):
+            continue
+        by_split.setdefault(split, []).append({"a": a, "b": b, "dy": ya - yb})
+    out = {"state": "COVERED", "catalogue": str(pairs_path.relative_to(RC.REPO_ROOT)),
+           "catalogue_rows": len(rows), "official_split_recomputed": True,
+           "support": {split: len(values) for split, values in by_split.items()}, "per_split": {}}
+    for split, values in by_split.items():
+        entry = {"n_pairs": len(values)}
+        for arm, pm in pred_maps.items():
+            errors = [pm[v["a"]] - pm[v["b"]] - v["dy"] for v in values]
+            entry[arm] = {
+                "paired_difference_rmse": float(np.sqrt(np.mean(np.square(errors)))),
+                "paired_difference_mae": float(np.mean(np.abs(errors))),
+                "mean_signed_error": float(np.mean(errors)),
+            }
+        out["per_split"][split] = entry
+    if not by_split:
+        out["state"] = "NOT_COVERED"
+        out["reason"] = "no pair with both rows in one official split"
+    out["note"] = ("Catalogue is an existing amide-difference edit set; its own split column is not used. "
+                   "Support is small and restricted to the splits listed.")
+    return out
+
+
 def plot_curves(units: dict[tuple[str, str], dict], out: Path) -> Path | None:
     try:
         import matplotlib
@@ -202,6 +283,7 @@ def main(argv=None) -> int:
     parser.add_argument("--results", default=None)
     parser.add_argument("--out", default=str(RC.ROUND_DIR))
     parser.add_argument("--no-w0", action="store_true")
+    parser.add_argument("--edit-pairs", default="tracks/structural-sufficiency/lcrc_lipo_amide_dependency_public122_v1/analysis/natural_pairs.csv")
     args = parser.parse_args(argv)
     results = Path(args.results) if args.results else RC.results_root()
     out = Path(args.out)
@@ -310,6 +392,9 @@ def main(argv=None) -> int:
                 "support_view_fraction": per["valid"]["supported_view_fraction"],
                 "passes": bool(per["valid"]["rmse_raw"] - resp_val <= 0.01 * std and per["valid"]["supported_view_fraction"] >= 0.8),
             }
+    diagnostics["paired_edit_diagnostic"] = paired_edit_diagnostic(
+        units, (RC.REPO_ROOT / args.edit_pairs) if args.edit_pairs else None
+    )
     diagnostics["test_use"] = "DEVELOPMENT_TEST"
     diagnostics["test_policy"] = config["test_policy"]
     diagnostics["protocol_hash"] = RC.protocol_hash(config)
