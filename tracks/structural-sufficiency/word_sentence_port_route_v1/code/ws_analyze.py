@@ -65,6 +65,7 @@ def cmd_terminal(args) -> None:
     summary: dict[str, Any] = {"commit": C.git_commit(), "runs": {}}
     for run_id in args.runs:
         run = C.read_json(C.results_root() / run_id / "run.json")
+        run.setdefault("run_dir", str(C.results_root() / run_id))
         if run.get("terminal_test_scored"):
             raise SystemExit(f"{run_id} was already scored once; refusing a second Test read")
         dataset = cfg["datasets"][run["dataset"]]
