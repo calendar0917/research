@@ -1,0 +1,185 @@
+{
+  "L": {
+    "best_value": 0.7679514933143514,
+    "candidates": {
+      "full_code": 0.834950398531245,
+      "full_id": 0.8574356250295669,
+      "full_wgine": 0.7679514933143514
+    },
+    "selected_arm": "full_wgine",
+    "selected_encoder": "wgine",
+    "selected_run": "lipo_full_wgine_s0",
+    "tie_set": [
+      "full_wgine"
+    ]
+  },
+  "classification": {
+    "L_encoder": "wgine",
+    "L_run": "lipo_full_wgine_s0",
+    "L_valid": 0.7679514933143514,
+    "bag_valid": 0.7950138849439766,
+    "branch": "N",
+    "erased_run": "lipo_erased_wgine_s0",
+    "erased_valid": 0.7739559149547677,
+    "gain_L_bag": 0.027062391629625204,
+    "gain_L_erased": 0.006004421640416258,
+    "gain_L_ref": -0.13938482800858742,
+    "gine_ref_valid": 0.628566665305764,
+    "leave_one_out": {
+      "vs_bag": {
+        "best_molecule_index": 336,
+        "gain": 0.027062416076660156,
+        "leave_best_out_gain": 0.012694180011749268
+      },
+      "vs_erased": {
+        "best_molecule_index": 342,
+        "gain": 0.006004393100738525,
+        "leave_best_out_gain": 0.004570424556732178
+      }
+    },
+    "not_worse_than_ref_plus_band": false,
+    "robust_port_direction": false,
+    "robust_task_direction": true,
+    "within_ref_plus_2band": false
+  },
+  "created_utc": 1795197047.1657984,
+  "dataset": "ogbg-mollipo",
+  "finalist": {
+    "checkpoint": "state_best.pt",
+    "encoder": "wgine",
+    "run_id": "lipo_full_wgine_s0",
+    "selection_frozen_before_test": true,
+    "valid_rmse_raw": 0.7679514933143514
+  },
+  "git_commit": "d1f910902b87ec09048a1cc3597bff1c4779e33e",
+  "not_executed": {
+    "D1_esol": "P not reached",
+    "D2_para": "P not reached",
+    "N3_rootmean": "N3 not satisfied (CODE is better than WGINE on Train)",
+    "stage_c_extra_seeds": "P not reached (L is 0.139 worse than GINE_REF)"
+  },
+  "repair_checks": {
+    "N1_char_full": {
+      "L_valid": 0.7679514933143514,
+      "char_full_valid": 0.8433653796928007,
+      "satisfied": false,
+      "threshold_delta_task": 0.01211539840098397
+    },
+    "N2_optimisation_deficit": {
+      "L_selected_epoch": 40,
+      "L_selected_train_std_mse": 0.16380004519649854,
+      "better_other_train_std_mse": 0.03586653548419463,
+      "char_full_train_std_mse": 0.2627844201246448,
+      "epochs": 160,
+      "gine_ref_train_std_mse": 0.03586653548419463,
+      "ratio": 4.566932461839829,
+      "satisfied": true
+    },
+    "N3_code_rootmean": {
+      "code_train": 0.43703526459530906,
+      "code_valid": 0.834950398531245,
+      "id_train": 0.473519375347589,
+      "id_valid": 0.8574356250295669,
+      "satisfied": false,
+      "wgine_train": 0.490337048553114,
+      "wgine_valid": 0.7679514933143514
+    }
+  },
+  "repair_family_executed": "N2",
+  "repair_r1_family": {
+    "0": {
+      "delta_vs_original_L": 0.014659289679235687,
+      "erased": 0.7831230608846792,
+      "full": 0.7826107829935871,
+      "gain": 0.0005122778910920944
+    },
+    "1": {
+      "delta_vs_original_L": 0.06254824466135611,
+      "erased": 0.8284820258285157,
+      "full": 0.8304997379757075,
+      "gain": -0.002017712147191819
+    }
+  },
+  "rescue": {
+    "rule": "both seeds improve on original L, positive vs matched ERASED, mean within band of GINE_REF",
+    "status": "RESCUE_FAILED"
+  },
+  "selection_metric": "best-Valid RMSE (raw), strict improvement, earliest epoch on tie",
+  "stage_b_seed0": {
+    "bag": {
+      "best_epoch": 39,
+      "best_train": 0.5418273053996788,
+      "best_valid": 0.7950138849439766,
+      "n_parameters": 108637,
+      "run_id": "lipo_bag_s0",
+      "seconds": 135.39026947505772
+    },
+    "char_full": {
+      "best_epoch": 84,
+      "best_train": 0.6210656453902251,
+      "best_valid": 0.8433653796928007,
+      "n_parameters": 87772,
+      "run_id": "lipo_char_full_s0",
+      "seconds": 174.82340118999127
+    },
+    "erased_code": {
+      "best_epoch": 46,
+      "best_train": 0.41469566381075457,
+      "best_valid": 0.8331273766532261,
+      "n_parameters": 87772,
+      "run_id": "lipo_erased_code_s0",
+      "seconds": 152.72457027400378
+    },
+    "erased_wgine": {
+      "best_epoch": 40,
+      "best_train": 0.4951418877318205,
+      "best_valid": 0.7739559149547677,
+      "n_parameters": 89650,
+      "run_id": "lipo_erased_wgine_s0",
+      "seconds": 516.292634479003
+    },
+    "full_code": {
+      "best_epoch": 44,
+      "best_train": 0.43703526459530906,
+      "best_valid": 0.834950398531245,
+      "n_parameters": 87772,
+      "run_id": "lipo_full_code_s0",
+      "seconds": 543.2097064990085
+    },
+    "full_id": {
+      "best_epoch": 34,
+      "best_train": 0.473519375347589,
+      "best_valid": 0.8574356250295669,
+      "n_parameters": 90500,
+      "run_id": "lipo_full_id_s0",
+      "seconds": 538.8274906619918
+    },
+    "full_wgine": {
+      "best_epoch": 40,
+      "best_train": 0.490337048553114,
+      "best_valid": 0.7679514933143514,
+      "n_parameters": 89650,
+      "run_id": "lipo_full_wgine_s0",
+      "seconds": 170.4342661119299
+    },
+    "gine_ref": {
+      "best_epoch": 148,
+      "best_train": 0.22944701604353496,
+      "best_valid": 0.628566665305764,
+      "n_parameters": 391942,
+      "run_id": "lipo_gine_ref_s0",
+      "seconds": 157.1806911099702
+    }
+  },
+  "terminal_test_runs": [
+    "lipo_full_wgine_s0",
+    "lipo_gine_ref_s0"
+  ],
+  "test_policy": "TERMINAL_DEVELOPMENT_TEST",
+  "thresholds": {
+    "band": 0.04846159360393588,
+    "delta_port": 0.006057699200491985,
+    "delta_task": 0.01211539840098397,
+    "sigma": 1.211539840098397
+  }
+}

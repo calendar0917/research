@@ -514,6 +514,12 @@ def _manifest(args):
     A.cmd_manifest(args)
 
 
+def _finalist(args):
+    import ws_analyze as A
+
+    A.cmd_finalist(args)
+
+
 def _inspect(args):
     import ws_analyze as A
 
@@ -554,6 +560,10 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("manifest")
     p.add_argument("--jobs-json", default=None)
     p.set_defaults(func=_manifest)
+    p = sub.add_parser("finalist")
+    p.add_argument("--dataset", default="mollipo")
+    p.add_argument("--terminal-runs", nargs="+", required=True)
+    p.set_defaults(func=_finalist)
     p = sub.add_parser("inspect")
     p.add_argument("--run", required=True)
     p.add_argument("--dataset", default="mollipo")

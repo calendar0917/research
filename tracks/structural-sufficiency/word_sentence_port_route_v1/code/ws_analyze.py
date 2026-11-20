@@ -154,8 +154,8 @@ def subset_report(row_ids, pred_raw, target_raw, sup: Mapping[str, Any],
     pred = np.asarray(pred_raw)
     target = np.asarray(target_raw)
     pos = {int(r): i for i, r in enumerate(ids.tolist())}
-    new_layout = [r for r in sup["molecules_with_new_layout"] if int(r) in pos]
-    unknown = [r for r in sup["molecules_with_unknown_word"] if int(r) in pos]
+    new_layout = [int(ids[p]) for p in sup["molecules_with_new_layout"] if int(p) < len(ids)]
+    unknown = [int(ids[p]) for p in sup["molecules_with_unknown_word"] if int(p) < len(ids)]
     known = [int(r) for r in ids.tolist() if int(r) not in set(unknown)]
     def block(rows: Sequence[int]) -> dict[str, Any]:
         idx = [pos[int(r)] for r in rows]
@@ -364,62 +364,66 @@ def _load_model(run: Mapping[str, Any], payload: Mapping[str, Any], device: str)
 
 
 def forward_terms(model, data, device: str, *, extra: bool = False, hop: bool = False,
-                  intervention: str = "none", batch_size: int = 256):
-    """Per-word terms for one split, plus the reconstructed whole-molecule F."""
+                  intervention: str = "none", batch_size: int = 256,
+                  index: Sequence[int] | None = None):
+    """Per-word terms for one split, plus the whole-molecule F rebuilt from them.
+
+    ``graph_row`` maps every stored word to its official row id; ``f_reconstructed``
+    is the algebraic sum ``bias + sum_i mass_i (u_i+v_i+w_i+r_i)`` per row.
+    """
     import torch
 
     import ws_model as M
 
     model.eval()
+    pos = {int(r): i for i, r in enumerate(np.asarray(data.row_ids).tolist())}
+    n_rows = len(data.row_ids)
     store: dict[str, list[np.ndarray]] = {}
-    preds, rows = [], []
+    pred = np.full(n_rows, np.nan)
+    recon = np.full(n_rows, np.nan)
+    index = np.arange(n_rows) if index is None else np.asarray(index, dtype=np.int64)
+    bias = float(model.bias.detach().cpu()) if hasattr(model, "bias") else 0.0
     with torch.no_grad():
-        for start in range(0, len(data.row_ids), batch_size):
-            idx = np.arange(start, min(start + batch_size, len(data.row_ids)))
-            raw = M.pack_batch(data, idx, attrpair=extra, hop=hop)
+        for start in range(0, len(index), batch_size):
+            pick = index[start:start + batch_size]
+            raw = M.pack_batch(data, pick, attrpair=extra, hop=hop)
             if intervention == "erased":
                 raw["pair_R"] = raw["pair_ER"]
             batch = M.to_device(raw, device)
             out = model(batch)
-            n_graphs = int(batch["n_graphs"])
-            graph_of_word = np.asarray(raw["graph_of_word"])
-            mass = (np.asarray(batch["word_natoms"].detach().cpu())
-                    / np.asarray(batch["n_atoms_graph"].detach().cpu())[graph_of_word])
-            terms = {
-                "u": out["u"].detach().cpu().numpy(),
-                "v": out["v"].detach().cpu().numpy(),
-                "w": out["w"].detach().cpu().numpy(),
-                "r": out["r"].detach().cpu().numpy(),
-                "word_tmpl": np.asarray(raw["word_tmpl"]),
-                "graph_of_word": graph_of_word,
-                "mass": mass,
-                "bias": float(model.bias.detach().cpu()),
-                "pred": out["pred"].detach().cpu().numpy(),
-            }
-            if "n_inc" in out:
-                terms["n_inc"] = out["n_inc"].detach().cpu().numpy()
-            for key, value in terms.items():
+            rows = np.asarray(raw["row_ids"]).astype(np.int64)
+            gw = np.asarray(raw["graph_of_word"])
+            u = out["u"].detach().cpu().numpy()
+            v = out["v"].detach().cpu().numpy()
+            w = out["w"].detach().cpu().numpy()
+            r = out["r"].detach().cpu().numpy()
+            o = out["pred"].detach().cpu().numpy()
+            n_at = np.asarray(batch["word_natoms"].detach().cpu(), dtype=np.float64)
+            g_at = np.asarray(batch["n_atoms_graph"].detach().cpu(), dtype=np.float64)[gw]
+            mass = n_at / g_at
+            contrib = (u + v + w + r) * mass
+            for j, rid in enumerate(rows.tolist()):
+                sel = gw == j
+                recon[pos[rid]] = float(contrib[sel].sum()) + bias
+                pred[pos[rid]] = float(o[j])
+            payload = {"u": u, "v": v, "w": w, "r": r,
+                       "word_tmpl": np.asarray(raw["word_tmpl"]),
+                       "mass": mass, "word_natoms": n_at,
+                       "graph_row": rows[gw],
+                       "n_inc": np.asarray(out["n_inc"].detach().cpu())}
+            for key, value in payload.items():
                 store.setdefault(key, []).append(np.atleast_1d(value))
-            preds.append(terms["pred"])
-            rows.append(np.asarray(raw["row_ids"]))
     merged = {k: np.concatenate(v) for k, v in store.items()}
-    merged["bias"] = float(merged["bias"][0])
-    merged["row_ids"] = np.concatenate(rows)
-    merged["pred"] = np.concatenate(preds)
-    contrib = (merged["u"] + merged["v"] + merged["w"] + merged["r"]) * merged["mass"]
-    recon = np.zeros(int(len(data.row_ids)))
-    np.add.at(recon, merged["graph_of_word"], contrib)
-    merged["f_reconstructed"] = recon + merged["bias"]
-    merged["recon_max_abs_diff"] = float(np.max(np.abs(merged["f_reconstructed"] - merged["pred"])))
+    merged["bias"] = bias
+    merged["pred"] = pred
+    merged["f_reconstructed"] = recon
+    ok = ~np.isnan(pred)
+    merged["recon_max_abs_diff"] = float(np.max(np.abs(recon[ok] - pred[ok])))
     return merged
 
 
 def case_dump(run: Mapping[str, Any], payload: Mapping[str, Any], split: str, *,
               device: str = "cpu", n_support: int = 4, n_error: int = 4) -> dict[str, Any]:
-    import torch
-
-    import ws_model as M
-
     dataset = C.load_config()["datasets"][run["dataset"]]
     model, spec = _load_model(run, payload, device)
     extra = spec.extra == "attrpair"
@@ -427,58 +431,61 @@ def case_dump(run: Mapping[str, Any], payload: Mapping[str, Any], split: str, *,
     data = T.split_data(payload, run["partition"], split, with_hop=hop)
     scaler = C.target_scaler(C.dataset_cache(dataset))
     terms = forward_terms(model, data, device, extra=extra, hop=hop)
-    pred = T.evaluate_word(model, data, device, scaler, extra=extra, hop=hop)
-    pred_raw = pred["pred_std"] * scaler["std"] + scaler["mean"]
-    target_raw = pred["target_std"] * scaler["std"] + scaler["mean"]
-    rows = pred["row_ids"]
+    pos = {int(r): i for i, r in enumerate(np.asarray(data.row_ids).tolist())}
+    pred_raw = terms["pred"] * scaler["std"] + scaler["mean"]
+    target_raw = data.labels
     err = np.abs(pred_raw - target_raw)
     order = np.argsort(-err)
-    # structural-support cases: molecules whose words have >= 2 distinct ports
-    support = []
     gw = data.arrays["graph_word_ptr"]
     inc_ptr = data.arrays["inc_ptr"]
-    for g in range(len(rows)):
+    support = []
+    for g in range(len(data.row_ids)):
         lo, hi = int(gw[g]), int(gw[g + 1])
         ports = [int(inc_ptr[w + 1] - inc_ptr[w]) for w in range(lo, hi)]
         if ports and max(ports) >= 2:
             support.append((g, max(ports)))
-    support.sort(key=lambda item: (-item[1], int(rows[item[0]])))
+    support.sort(key=lambda item: (-item[1], int(data.row_ids[item[0]])))
     chosen = [("support", g) for g, _ in support[:n_support]]
     chosen += [("max_error", int(i)) for i in order[:n_error]]
+    canonical = table_templates_cached(dataset)
     out_cases = []
     for tag, g in chosen:
+        single = forward_terms(model, data, device, extra=extra, hop=hop,
+                               index=[g])
         lo, hi = int(gw[g]), int(gw[g + 1])
+        atom_base = int(data.arrays["graph_atom_ptr"][g])
         words = []
-        for w in range(lo, hi):
+        for wi, w in enumerate(range(lo, hi)):
             tid = int(data.arrays["word_tmpl"][w])
             atoms = data.arrays["word_atoms"][int(data.arrays["word_ptr_atom"][w]):
                                               int(data.arrays["word_ptr_atom"][w + 1])]
-            inc = []
+            ports = []
             for k in range(int(inc_ptr[w]), int(inc_ptr[w + 1])):
-                inc.append({"own_site": int(data.arrays["inc_own_site"][k]),
-                            "neighbour_word": int(data.arrays["inc_other"][k] - lo),
-                            "neighbour_site": int(data.arrays["inc_other_site"][k]),
-                            "bond_columns": [int(x) for x in data.bond_feat[int(data.arrays["inc_bond"][k])]],
-                            "own_atom": int(data.atoms_of_row(g, int(data.arrays["inc_own_atom"][k])))})
+                ports.append({
+                    "own_site": int(data.arrays["inc_own_site"][k]),
+                    "neighbour_word_offset": int(data.arrays["inc_other"][k] - lo),
+                    "neighbour_site": int(data.arrays["inc_other_site"][k]),
+                    "bond_columns": [int(x) for x in data.bond_feat[int(data.arrays["inc_bond"][k])]],
+                    "own_atom_row_local": int(data.arrays["inc_own_atom"][k]) - atom_base})
             words.append({
-                "word_index": w, "template_id": tid,
-                "template_canonical": table_templates_cached(C.load_config()["datasets"][run["dataset"]])[tid],
-                "word_atoms_row_local": [int(a) - int(data.arrays["graph_atom_ptr"][g]) for a in atoms],
-                "ports": inc,
-                "n_incidences": len(inc),
-                "u_raw": float(terms["u"][w]) * scaler["std"],
-                "v_raw": float(terms["v"][w]) * scaler["std"],
-                "w_raw": float(terms["w"][w]) * scaler["std"],
-                "r_raw": float(terms["r"][w]) * scaler["std"],
-                "mass": float(terms["mass"][w]),
-            })
+                "word_offset": wi, "template_id": tid,
+                "template_canonical": canonical[tid],
+                "word_atoms_row_local": [int(a) - atom_base for a in atoms],
+                "ports": ports, "n_incidences": len(ports),
+                "u_raw": float(single["u"][wi]) * scaler["std"],
+                "v_raw": float(single["v"][wi]) * scaler["std"],
+                "w_raw": float(single["w"][wi]) * scaler["std"],
+                "r_raw": float(single["r"][wi]) * scaler["std"],
+                "mass": float(single["mass"][wi])})
         out_cases.append({
-            "rule": tag, "valid_row_id": int(rows[g]),
+            "rule": tag, "row_id": int(data.row_ids[g]),
+            "scaffold": scaffold_map(dataset).get(int(data.row_ids[g])),
             "y_raw": float(target_raw[g]), "F_raw": float(pred_raw[g]),
             "intercept_raw": float(scaler["mean"] + scaler["std"] * terms["bias"]),
-            "n_atoms": int(data.graph_n_atoms[g]), "words": words})
-    return {"split": split, "run_id": run["run_id"], "recon_max_abs_diff": terms["recon_max_abs_diff"],
-            "cases": out_cases}
+            "abs_error": float(err[g]), "n_atoms": int(data.graph_n_atoms[g]),
+            "words": words})
+    return {"split": split, "run_id": run["run_id"],
+            "recon_max_abs_diff": terms["recon_max_abs_diff"], "cases": out_cases}
 
 
 _TABLE_CACHE: dict[str, tuple[W.TemplateTable, list[str]]] = {}
@@ -529,7 +536,7 @@ def choose_L(runs: Mapping[str, Mapping[str, Any]], thr: Mapping[str, float], se
             continue
         if run["spec"]["extra"] != "none" or run["spec"]["para"] != "none":
             continue
-        if run["partition"] != "word":
+        if run["partition"] != "word" or run.get("recipe_tag", "r0") != "r0":
             continue
         cands[run["arm"]] = run
     if not cands:
@@ -625,6 +632,7 @@ def cmd_summary(args) -> None:
         row = {"run_id": run_id, "dataset": run["dataset"], "arm": run["arm"],
                "encoder": _encoder_of(run), "mode": _mode_of(run),
                "extra": run["spec"]["extra"], "para": run["spec"]["para"],
+               "recipe_tag": run.get("recipe_tag", "r0"),
                "partition": run["partition"], "seed": run["seed"],
                "epochs": run.get("epochs") or run.get("n_curve_rows"), "n_parameters": run["n_parameters"],
                "seconds": round(run["seconds"], 1),
@@ -935,3 +943,93 @@ def cmd_inspect(args) -> None:
     C.write_json(analysis / f"inspect_{run['run_id']}.json", out)
     print(json.dumps({k: out[k] for k in ("intervention", "init_identity_full_vs_erased",
                                           "subsets_valid")}, indent=2)[:4000])
+
+
+def cmd_finalist(args) -> None:
+    cfg = C.load_config()
+    runs = find_runs()
+    root = C.ROUND_DIR
+    dataset = args.dataset
+    scaler = C.target_scaler(C.dataset_cache(cfg["datasets"][dataset]))
+    thr = _thr(scaler)
+    L = choose_L(runs, thr, dataset=dataset)
+    cls = classify_stage_b({k: v for k, v in runs.items() if v["dataset"] == dataset}, thr, L)
+    stage_b = {r["arm"]: {"run_id": r["run_id"], "best_valid": r["best"]["valid_rmse_raw"],
+                          "best_train": r["best"]["train_rmse_raw"],
+                          "best_epoch": r["best"]["epoch"], "seconds": r["seconds"],
+                          "n_parameters": r["n_parameters"]}
+               for r in runs.values()
+               if r["dataset"] == dataset and r["seed"] == 0 and r.get("recipe_tag") == "r0"
+               and r["spec"]["para"] == "none" and r["spec"]["extra"] == "none"}
+    sel = L["selected_encoder"]
+    n1_char = stage_b.get("char_full", {}).get("best_valid")
+    n1 = {"char_full_valid": n1_char, "L_valid": L["best_value"],
+          "threshold_delta_task": thr["delta_task"],
+          "satisfied": bool(n1_char is not None
+                            and n1_char <= L["best_value"] - thr["delta_task"])}
+    wg = stage_b.get("full_wgine", {})
+    ch = stage_b.get("char_full", {})
+    gr = stage_b.get("gine_ref", {})
+    mse = lambda x: (x / scaler["std"]) ** 2  # noqa: E731
+    n2 = {"L_selected_train_std_mse": mse(wg.get("best_train", float("nan"))),
+          "char_full_train_std_mse": mse(ch.get("best_train", float("nan"))),
+          "gine_ref_train_std_mse": mse(gr.get("best_train", float("nan"))),
+          "L_selected_epoch": wg.get("best_epoch"), "epochs": wg.get("best_epoch") and 160}
+    best_other = min(n2["char_full_train_std_mse"], n2["gine_ref_train_std_mse"])
+    n2["better_other_train_std_mse"] = best_other
+    n2["ratio"] = n2["L_selected_train_std_mse"] / best_other if best_other else None
+    n2["satisfied"] = bool(n2["ratio"] is not None and n2["ratio"] >= 1.25)
+    code_v, wg_v = stage_b.get("full_code", {}), stage_b.get("full_wgine", {})
+    code_id = stage_b.get("full_id", {})
+    n3 = {"code_valid": code_v.get("best_valid"), "code_train": code_v.get("best_train"),
+          "wgine_valid": wg_v.get("best_valid"), "wgine_train": wg_v.get("best_train"),
+          "id_valid": code_id.get("best_valid"), "id_train": code_id.get("best_train"),
+          "satisfied": bool(code_v and wg_v
+                            and code_v["best_valid"] - wg_v["best_valid"] >= thr["delta_task"]
+                            and code_v["best_train"] - wg_v["best_train"] >= thr["delta_task"])}
+    r1: dict[str, dict[tuple[str, int], dict[str, Any]]] = {}
+    for r in runs.values():
+        if (r["dataset"] != dataset or r["spec"]["encoder"] != sel
+                or r["spec"]["para"] != "none" or r["spec"]["extra"] != "none"):
+            continue
+        r1.setdefault(r.get("recipe_tag", "r0"), {})[(r["spec"]["mode"], r["seed"])] = {
+            "run_id": r["run_id"], "best_valid": r["best"]["valid_rmse_raw"],
+            "best_train": r["best"]["train_rmse_raw"], "best_epoch": r["best"]["epoch"]}
+    r1_gain = {}
+    for seed in (0, 1):
+        full = r1.get("r1", {}).get(("full", seed))
+        erased = r1.get("r1", {}).get(("erased", seed))
+        if full and erased:
+            r1_gain[str(seed)] = {"full": full["best_valid"], "erased": erased["best_valid"],
+                                  "gain": erased["best_valid"] - full["best_valid"],
+                                  "delta_vs_original_L": full["best_valid"] - L["best_value"]}
+    improved = [v["delta_vs_original_L"] < 0 for v in r1_gain.values()]
+    rescue_ok = bool(len(improved) == 2 and all(improved)
+                     and all(v["gain"] > 0 for v in r1_gain.values())
+                     and float(np.mean([v["full"] for v in r1_gain.values()]))
+                     <= gr.get("best_valid", float("inf")) + thr["band"])
+    manifest = {
+        "created_utc": __import__("time").time(),
+        "git_commit": C.git_commit(), "dataset": cfg["datasets"][dataset],
+        "test_policy": "TERMINAL_DEVELOPMENT_TEST",
+        "selection_metric": "best-Valid RMSE (raw), strict improvement, earliest epoch on tie",
+        "thresholds": thr,
+        "stage_b_seed0": stage_b,
+        "L": L, "classification": cls,
+        "repair_checks": {"N1_char_full": n1, "N2_optimisation_deficit": n2, "N3_code_rootmean": n3},
+        "repair_family_executed": "N2" if n2["satisfied"] else ("N1" if n1["satisfied"] else "N4"),
+        "repair_r1_family": r1_gain,
+        "rescue": {"status": "RESCUED_CANDIDATE" if rescue_ok else "RESCUE_FAILED",
+                   "rule": "both seeds improve on original L, positive vs matched ERASED, mean within band of GINE_REF"},
+        "finalist": {"run_id": L["selected_run"], "checkpoint": "state_best.pt",
+                     "encoder": sel, "valid_rmse_raw": L["best_value"],
+                     "selection_frozen_before_test": True},
+        "terminal_test_runs": args.terminal_runs,
+        "not_executed": {"stage_c_extra_seeds": "P not reached (L is 0.139 worse than GINE_REF)",
+                         "D1_esol": "P not reached", "D2_para": "P not reached",
+                         "N3_rootmean": "N3 not satisfied (CODE is better than WGINE on Train)"},
+    }
+    C.write_json(root / "finalist_manifest.json", manifest)
+    print(json.dumps({k: manifest[k] for k in ("L", "repair_checks", "repair_family_executed",
+                                               "repair_r1_family", "rescue", "finalist")},
+                     indent=2)[:3000])
