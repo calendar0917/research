@@ -1163,3 +1163,64 @@ def cmd_measure(args) -> None:
         out["runs"][run_id] = entry
     C.write_json(C.analysis_dir() / "efficiency.json", out)
     print(json.dumps(out, indent=2)[:4000])
+
+
+# ---------------------------------------------------------------------------
+# appendix: fixed real-edit catalogue, B-A difference error (no branch use)
+# ---------------------------------------------------------------------------
+
+
+def cmd_edits(args) -> None:
+    import csv
+
+    path = Path(args.pairs_csv)
+    with path.open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    models = list(args.models)
+    preds: dict[str, dict[int, float]] = {}
+    for model in models:
+        table: dict[int, float] = {}
+        for split in ("train", "valid"):
+            f = C.results_root() / model / f"preds_best_{split}.npz"
+            if f.is_file():
+                blob = load_preds({"run_dir": str(C.results_root() / model)}, split)
+                table.update(dict(zip(blob["row_ids"].tolist(), blob["pred_raw"].tolist())))
+        f = C.results_root() / "terminal" / model / "preds_test.npz"
+        if f.is_file():
+            with np.load(f, allow_pickle=False) as handle:
+                table.update(dict(zip(handle["row_ids"].tolist(), handle["pred_raw"].tolist())))
+        preds[model] = table
+    out: dict[str, Any] = {"commit": C.git_commit(), "catalogue": str(path),
+                           "note": "B-A difference error on the frozen real-edit catalogue; "
+                                   "appendix only, never used for selection",
+                           "scopes": {}}
+    for scope, column in (("E_T", "e_t"), ("E_HH_T", "e_hh_t"),
+                          ("E_STRICT", "e_strict_full")):
+        pairs = [r for r in rows if int(float(r[column] or 0))]
+        entry: dict[str, Any] = {"n_pairs": len(pairs),
+                                 "cells": {}}
+        for cell in sorted({f"{r['split_a']}-{r['split_b']}" for r in pairs}):
+            entry["cells"][cell] = sum(1 for r in pairs if f"{r['split_a']}-{r['split_b']}" == cell)
+        entry["models"] = {}
+        for model in models:
+            table = preds[model]
+            usable = [r for r in pairs if int(r["row_a"]) in table and int(r["row_b"]) in table]
+            if not usable:
+                entry["models"][model] = {"n_usable": 0}
+                continue
+            delta_pred = np.asarray([table[int(r["row_b"])] - table[int(r["row_a"])]
+                                     for r in usable])
+            delta_y = np.asarray([float(r["delta_y"]) for r in usable])
+            err = delta_pred - delta_y
+            entry["models"][model] = {
+                "n_usable": len(usable),
+                "rmse_delta": float(np.sqrt(np.mean(err ** 2))),
+                "mae_delta": float(np.mean(np.abs(err))),
+                "bias_delta": float(np.mean(err)),
+                "sign_agreement": float(np.mean(np.sign(delta_pred) == np.sign(delta_y))),
+                "corr_delta": float(np.corrcoef(delta_pred, delta_y)[0, 1]) if len(usable) > 2 else None,
+                "rmse_delta_Y0": float(np.sqrt(np.mean(delta_y ** 2))),
+            }
+        out["scopes"][scope] = entry
+    C.write_json(C.analysis_dir() / "edit_differences.json", out)
+    print(json.dumps(out, indent=2)[:4000])

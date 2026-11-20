@@ -517,6 +517,12 @@ def _manifest(args):
     A.cmd_manifest(args)
 
 
+def _edits(args):
+    import ws_analyze as A
+
+    A.cmd_edits(args)
+
+
 def _measure(args):
     import ws_analyze as A
 
@@ -573,6 +579,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dataset", default="mollipo")
     p.add_argument("--terminal-runs", nargs="+", required=True)
     p.set_defaults(func=_finalist)
+    p = sub.add_parser("edits")
+    p.add_argument("--pairs-csv", required=True)
+    p.add_argument("--models", nargs="+", required=True)
+    p.set_defaults(func=_edits)
     p = sub.add_parser("measure")
     p.add_argument("--runs", nargs="+", required=True)
     p.add_argument("--split", default="valid")

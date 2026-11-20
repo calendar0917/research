@@ -259,6 +259,11 @@ B ≤3.2 GPU·h、C ≤4.8、D ≤4.2、E 最后 ≥45min ≤0.3。
 保存路径为矩阵后补，已用 smoke 验证）。最终点指标/预测已保存（`preds_final_*.npz`、`curves.json`），
 所有报告数字与终局 Test 均只用 best checkpoint。
 
+**A6b 附录与额外报告**：§8 的可选附录（固定真实编辑目录 E_T/E_HH_T，复用
+`response_dictionary_task_transfer_s0_v1/analysis/pairs.csv`，不重新采样）已执行，写入
+`analysis/edit_differences.json` 与 `REPORT.md` §11b，**不参与任何选择**。另按要求单独报告了
+`ID` 编码器中 Train 未出现的单字段类别（未训练 embedding 行）及其在 Valid/Test 的命中率。
+
 **A6 判定结果**：L = `FULL_WGINE`（Valid 0.76795）→ 不满足 P/B → **N**；N1 不满足、**N2 满足并执行**
 （Train 标准化 MSE ratio 4.57）→ `RESCUE_FAILED`（两 seed 均未改善，+0.0147/+0.0626）；
 finalist = `lipo_full_wgine_s0`，Test RMSE 0.83606（`GINE_REF` 0.66312）。

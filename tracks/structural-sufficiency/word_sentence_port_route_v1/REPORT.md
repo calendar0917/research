@@ -360,6 +360,13 @@ Test 与 Valid 的相对差距（22% vs 26%）一致，说明 Valid 上的结论
 4. **编码器 Train 拟合 vs Valid 泛化**：`CODE` Train 最好（0.437）而 Valid 0.835；`WGINE` Train
    最差（0.490）而 Valid 0.768。**精确 canonical 身份被记忆化，泛化反而更差**；
    “把词压成 229 维精确码 + 64 维 MLP”是本轮最明显的 learning limitation。
+4b. **ID 编码器的未训练 embedding（按要求单独报告）**：`ID` 对多原子词用自由模板 embedding，
+   对单原子词用 3 个字段的因子化原子 embedding（不是把所有未见组合压成一个 UNK）。但 Train 里
+   **多数单字段类别没有出现**：`atom_0`（原子序数）119 类中只有 11 类出现（108 行 embedding 未训练），
+   `atom_1` 缺 [3,4]、`atom_2` 缺 8 类、`atom_3` 缺 9 类、`atom_4` 缺 6 类、`atom_5` 缺 5 类、
+   `atom_6` 缺 3 类、`bond_0` 缺 1 类、`bond_1` 缺 3 类。这些行保持初始化值，若在 Valid/Test 出现
+   就是噪声；实测 Valid 仅 **4/11,467 个原子（0.03%）** 的 9 字段组合未在 Train 出现，Test 为 **0/11,587**，
+   因此对 Q1 的排序没有影响。
 5. **原子字符对照**：`CHAR_FULL` 0.843（比 L 差 0.075）且 Train 只到 0.621（欠拟合）→
    **分词不是瓶颈**，瓶颈在词内容的编码与读出。
 6. **实例属性池化限制**：`a_i` 把词内原子属性做成 sum/mean（36 维 ×4）+ 键 sum/mean，`WGINE`
@@ -376,6 +383,24 @@ Test 与 Valid 的相对差距（22% vs 26%）一致，说明 Valid 上的结论
 > 也不因 CODE 能区分合成 3-正则模板就声称它在真实性质任务上应当更强（本轮实测相反）。
 
 ---
+
+## 11b. 附录：固定真实编辑目录上的 B−A 差值（任务相关性，不选择分支）
+
+复用 `response_dictionary_task_transfer_s0_v1/analysis/pairs.csv` 这份**固定**真实编辑目录
+（E_T = 301 对、E_HH_T = 41 对、E_STRICT = 2 对；不重新采样、不改 cut 阈值），用两个模型按 row id
+的既有预测算 `ΔF = F_B − F_A` 与 `Δy` 的差值误差（`analysis/edit_differences.json`）：
+
+| 目录 | 对数 | finalist ΔRMSE | finalist 符号一致率 | finalist corr | `GINE_REF` ΔRMSE | `GINE_REF` 符号一致率 | `GINE_REF` corr |
+|---|---|---|---|---|---|---|---|
+| **E_T** | 301 | **0.667** | 70% | 0.69 | **0.523** | 81% | 0.82 |
+| **E_HH_T** | 41 | **0.728** | 66% | 0.58 | **0.497** | 88% | 0.87 |
+| E_STRICT | 2（仅列案例） | 0.406 | 50% | — | 0.129 | 100% | — |
+
+* 差值误差的分母（`Δy` 的 RMSE）在 E_T 上是 0.920、E_HH_T 上是 0.903，所以两个模型都不是“零响应”。
+* **差值误差不是整分子误差**：同一 scaffold 的共享偏移会抵消，因此绝对值不能与 §5 的 RMSE 横比；
+  这里只做同一目录上的**模型间**比较。结论与主表一致：在真实编辑的响应方向上，本路线也**弱于**
+  同协议 `GINE_REF`（E_T 0.667 vs 0.523，符号一致率 70% vs 81%）。
+* E_STRICT 只有 2 对，仅作案例，不做比率推断。此项**未参与**任何分支或 checkpoint 选择。
 
 ## 12. 局限
 
@@ -462,6 +487,6 @@ rr jobs --json > /tmp/rr_jobs.json && uv run python $R/code/ws_run.py manifest -
 
 产物索引：`analysis/summary.json`、`analysis/main_table.csv`、`analysis/terminal_test.json`、
 `analysis/inspect_lipo_full_wgine_s0.json`、`analysis/structure_freeze_*.json`、
-`finalist_manifest.json`、`run_manifest.json`、`analysis/efficiency.json`、
+`finalist_manifest.json`、`run_manifest.json`、`analysis/efficiency.json`、`analysis/edit_differences.json`、
 `analysis/probes_mollipo.json`、`analysis/timing_mollipo.json`、
 `results/terminal/*/terminal_test.json`。
