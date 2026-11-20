@@ -1064,3 +1064,101 @@ def cmd_finalist(args) -> None:
     print(json.dumps({k: manifest[k] for k in ("L", "repair_checks", "repair_family_executed",
                                                "repair_r1_family", "rescue", "finalist")},
                      indent=2)[:3000])
+
+
+# ---------------------------------------------------------------------------
+# efficiency: inference cost and peak memory (measurement, not a training run)
+# ---------------------------------------------------------------------------
+
+
+def cmd_measure(args) -> None:
+    import resource
+    import time
+
+    import torch
+
+    import ws_model as M
+
+    cfg = C.load_config()
+    out: dict[str, Any] = {"commit": C.git_commit(), "device": args.device,
+                           "protocol": "warmup 3 batches, then full-split eval; "
+                                       "peak VRAM reset before the timed pass",
+                           "runs": {}}
+    for run_id in args.runs:
+        run = C.read_json(C.results_root() / run_id / "run.json")
+        run.setdefault("run_dir", str(C.results_root() / run_id))
+        dataset = cfg["datasets"][run["dataset"]]
+        payload, _ = T.load_prepared(dataset)
+        scaler = C.target_scaler(C.dataset_cache(dataset))
+        model, spec = _load_model(run, payload, args.device)
+        split = args.split
+        entry: dict[str, Any] = {"arm": run["arm"], "n_parameters": run["n_parameters"],
+                                 "split": split}
+        if spec.encoder == "gine_ref":
+            import sq_gine as SG
+            from torch_geometric.loader import DataLoader
+
+            dims = C.official_dims()
+            counts = {f"atom_{j}": int(dims["atom"][j]) for j in range(9)}
+            counts.update({f"bond_{j}": int(dims["bond"][j]) for j in range(3)})
+            counts["degree"] = 17
+            counts["ring"] = 14
+            frames = SG.build_data_list(_packed_from_payload(payload, split), counts, scaler)
+            for warm in (1, 2, 3):
+                for batch in DataLoader(frames, batch_size=64)[:1]:
+                    with torch.no_grad():
+                        model(batch.to(args.device))
+            torch.cuda.synchronize()
+            torch.cuda.reset_peak_memory_stats()
+            loader = DataLoader(frames, batch_size=64, shuffle=False)
+            t0 = time.perf_counter()
+            n = 0
+            with torch.no_grad():
+                for batch in loader:
+                    model(batch.to(args.device))
+                    n += int(batch.num_graphs)
+            torch.cuda.synchronize()
+            entry["seconds"] = time.perf_counter() - t0
+            entry["n_molecules"] = n
+            entry["peak_vram_mb"] = torch.cuda.max_memory_allocated() / 2 ** 20
+            entry["batch_sizes"] = [64]
+        else:
+            data = T.split_data(payload, run["partition"], split)
+            extra = spec.extra == "attrpair"
+            hop = spec.para != "none"
+            for _ in range(3):
+                with torch.no_grad():
+                    batch = M.to_device(M.pack_batch(data, np.arange(min(64, len(data.row_ids))),
+                                                     attrpair=extra, hop=hop), args.device)
+                    model(batch)
+            torch.cuda.synchronize()
+            torch.cuda.reset_peak_memory_stats()
+            entry["eval"] = {}
+            for bs in (1, 64):
+                t0 = time.perf_counter()
+                with torch.no_grad():
+                    for start in range(0, len(data.row_ids), bs):
+                        idx = np.arange(start, min(start + bs, len(data.row_ids)))
+                        model(M.to_device(M.pack_batch(data, idx, attrpair=extra, hop=hop),
+                                          args.device))
+                torch.cuda.synchronize()
+                seconds = time.perf_counter() - t0
+                entry["eval"][f"batch_{bs}"] = {"seconds": seconds,
+                                                "per_molecule_ms": 1000 * seconds / len(data.row_ids)}
+            entry["peak_vram_mb"] = torch.cuda.max_memory_allocated() / 2 ** 20
+            # one measured training step at the frozen batch size (memory only)
+            idx = np.arange(min(int(cfg["recipe"]["batch_size"]), len(data.row_ids)))
+            torch.cuda.reset_peak_memory_stats()
+            model.train()
+            batch = M.to_device(M.pack_batch(data, idx, attrpair=extra, hop=hop), args.device)
+            pred = model(batch)["pred"]
+            loss = torch.nn.functional.mse_loss(pred, batch["y"])
+            loss.backward()
+            torch.cuda.synchronize()
+            entry["train_step_batch"] = int(len(idx))
+            entry["train_step_peak_vram_mb"] = torch.cuda.max_memory_allocated() / 2 ** 20
+            model.zero_grad(set_to_none=True)
+        entry["rss_mb"] = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+        out["runs"][run_id] = entry
+    C.write_json(C.analysis_dir() / "efficiency.json", out)
+    print(json.dumps(out, indent=2)[:4000])

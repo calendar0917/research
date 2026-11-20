@@ -514,6 +514,12 @@ def _manifest(args):
     A.cmd_manifest(args)
 
 
+def _measure(args):
+    import ws_analyze as A
+
+    A.cmd_measure(args)
+
+
 def _finalist(args):
     import ws_analyze as A
 
@@ -564,6 +570,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--dataset", default="mollipo")
     p.add_argument("--terminal-runs", nargs="+", required=True)
     p.set_defaults(func=_finalist)
+    p = sub.add_parser("measure")
+    p.add_argument("--runs", nargs="+", required=True)
+    p.add_argument("--split", default="valid")
+    p.add_argument("--device", default="cuda:0")
+    p.set_defaults(func=_measure)
     p = sub.add_parser("inspect")
     p.add_argument("--run", required=True)
     p.add_argument("--dataset", default="mollipo")
