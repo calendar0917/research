@@ -112,13 +112,17 @@ def cmd_terminal(args) -> None:
         outdir.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(outdir / "preds_test.npz", row_ids=metrics["row_ids"],
                             pred_raw=metrics["pred_raw"], target_raw=metrics["target_raw"])
+        sup = support_sets(payload, "test")
+        scaf = scaffold_map(dataset)
         record = {"run_id": run_id, "dataset": run["dataset"], "split": "test",
                   "test_policy": "TERMINAL_DEVELOPMENT_TEST",
                   "test_rmse_raw": metrics["rmse_raw"], "test_mae_raw": metrics["mae_raw"],
                   "n": int(len(metrics["row_ids"])), "commit": C.git_commit(),
                   "checkpoint": "state_best.pt",
                   "best_valid_rmse_raw": run.get("best", {}).get("valid_rmse_raw"),
-                  "selected_before_test": True}
+                  "selected_before_test": True,
+                  "support_subsets": subset_report(metrics["row_ids"], metrics["pred_raw"],
+                                                   metrics["target_raw"], sup, scaf)}
         C.write_json(outdir / "terminal_test.json", record)
         run["terminal_test_scored"] = True
         C.write_json(Path(run["run_dir"]) / "run.json", run)
@@ -142,6 +146,37 @@ def _test_split(payload, raw, molecules, table, states):
         bond_feat=np.asarray(payload[f"{prefix}bond_feat"], dtype=np.int64),
         arrays=arrays)
     return data
+
+
+def subset_report(row_ids, pred_raw, target_raw, sup: Mapping[str, Any],
+                  scaf: Mapping[int, str]) -> dict[str, Any]:
+    ids = np.asarray(row_ids)
+    pred = np.asarray(pred_raw)
+    target = np.asarray(target_raw)
+    pos = {int(r): i for i, r in enumerate(ids.tolist())}
+    new_layout = [r for r in sup["molecules_with_new_layout"] if int(r) in pos]
+    unknown = [r for r in sup["molecules_with_unknown_word"] if int(r) in pos]
+    known = [int(r) for r in ids.tolist() if int(r) not in set(unknown)]
+    def block(rows: Sequence[int]) -> dict[str, Any]:
+        idx = [pos[int(r)] for r in rows]
+        if not idx:
+            return {"n_molecules": 0}
+        err = pred[idx] - target[idx]
+        return {"n_molecules": len(idx),
+                "n_scaffolds": len({scaf.get(int(r), f"row_{r}") for r in rows}),
+                "rmse": float(np.sqrt(np.mean(err ** 2))),
+                "mae": float(np.mean(np.abs(err))),
+                "bias": float(np.mean(err)),
+                "coverage": len(idx) / len(ids)}
+    return {"all": block([int(r) for r in ids.tolist()]),
+            "known_words": block(known),
+            "new_layout_known_content": block(new_layout),
+            "unknown_word_type": block(unknown),
+            "n_pairs": sup["n_pairs"], "new_layout_pairs": sup["new_layout_pairs"],
+            "new_layout_word_types": sup["new_layout_word_types"],
+            "new_layout_layouts": sup["new_layout_layouts"],
+            "train_layouts": sup["train_layouts"],
+            "train_word_types": sup["train_word_types"]}
 
 
 def _packed_from_payload(payload, split):
@@ -520,9 +555,12 @@ def classify_stage_b(runs: Mapping[str, Mapping[str, Any]], thr: Mapping[str, fl
                 and r["seed"] == 0), None)
     Lrun = runs[L["selected_run"]]
     enc = L["selected_encoder"]
-    erased = next((r for r in runs.values() if r["dataset"] == "mollipo" and r["seed"] == 0
+    same_recipe = [r for r in runs.values() if r["dataset"] == "mollipo" and r["seed"] == 0
                    and _mode_of(r) == "erased" and _encoder_of(r) == enc
-                   and r["spec"]["extra"] == "none"), None)
+                   and r["spec"]["extra"] == "none" and r["spec"]["para"] == "none"]
+    erased = next((r for r in same_recipe if r.get("recipe_tag") == Lrun.get("recipe_tag")), None)
+    if erased is None and same_recipe:
+        erased = same_recipe[0]
     out: dict[str, Any] = {"L_run": Lrun["run_id"], "L_encoder": enc,
                            "L_valid": Lrun["best"]["valid_rmse_raw"]}
     if ref is None or bag is None:
@@ -588,9 +626,9 @@ def cmd_summary(args) -> None:
                "encoder": _encoder_of(run), "mode": _mode_of(run),
                "extra": run["spec"]["extra"], "para": run["spec"]["para"],
                "partition": run["partition"], "seed": run["seed"],
-               "epochs": run["epochs"], "n_parameters": run["n_parameters"],
+               "epochs": run.get("epochs") or run.get("n_curve_rows"), "n_parameters": run["n_parameters"],
                "seconds": round(run["seconds"], 1),
-               "seconds_per_epoch": round(run["seconds"] / max(1, run["epochs"]), 2),
+               "seconds_per_epoch": round(run["seconds"] / max(1, run.get("epochs") or run.get("n_curve_rows")), 2),
                "best_epoch": run["best"]["epoch"],
                "best_train_rmse": run["best"]["train_rmse_raw"],
                "best_valid_rmse": run["best"]["valid_rmse_raw"],
@@ -788,7 +826,7 @@ def cmd_manifest(args) -> None:
     runs = []
     for run_id, run in sorted(find_runs().items()):
         runs.append({k: run.get(k) for k in ("run_id", "arm", "dataset", "partition", "seed",
-                                             "epochs", "n_parameters", "seconds", "spec",
+                                             "epochs", "n_curve_rows", "n_parameters", "seconds", "spec",
                                              "recipe", "device", "status", "cache_content_sha256",
                                              "config_sha256", "torch", "gpu", "init_state_hash",
                                              "shared_body_hash")} |
@@ -815,3 +853,85 @@ def cmd_manifest(args) -> None:
     C.write_json(root / "run_manifest.json", manifest)
     print(json.dumps({"gpu_hours": manifest["gpu_hours_total"], "n_runs": len(runs),
                       "n_jobs": len(ledger)}, indent=2))
+
+
+def init_identity(dataset: str, seed: int = 0, n: int = 64, device: str = "cpu") -> dict[str, Any]:
+    """FULL and ERASED must have identical initial whole-molecule predictions."""
+    import torch
+
+    import ws_model as M
+
+    payload, _ = T.load_prepared(dataset)
+    data = T.split_data(payload, "word", "valid")
+    idx = np.arange(min(n, len(data.row_ids)))
+    preds = {}
+    for mode in ("full", "erased"):
+        spec = M.ModelSpec(encoder="code", mode=mode, extra="none", para="none")
+        model = T.make_model(spec, payload, seed=seed, device=device)
+        model.eval()
+        with torch.no_grad():
+            raw = M.pack_batch(data, idx, attrpair=False, hop=False)
+            out = model(M.to_device(raw, device))
+        preds[mode] = out["pred"].detach().cpu().numpy()
+    return {"n_molecules": int(len(idx)),
+            "max_abs_pred_diff": float(np.max(np.abs(preds["full"] - preds["erased"]))),
+            "max_abs_pred": float(np.max(np.abs(preds["full"])))}
+
+
+def intervention(run: Mapping[str, Any], device: str = "cpu") -> dict[str, Any]:
+    payload, _ = T.load_prepared(C.load_config()["datasets"][run["dataset"]])
+    scaler = C.target_scaler(C.dataset_cache(C.load_config()["datasets"][run["dataset"]]))
+    model, spec = _load_model(run, payload, device)
+    data = T.split_data(payload, run["partition"], "valid")
+    base = forward_terms(model, data, device, extra=spec.extra == "attrpair")
+    swapped = forward_terms(model, data, device, extra=spec.extra == "attrpair",
+                            intervention="erased")
+    y = data.labels
+    pred = base["pred"] * scaler["std"] + scaler["mean"]
+    pred_i = swapped["pred"] * scaler["std"] + scaler["mean"]
+    delta = pred_i - pred
+    err = np.abs(pred - y)
+    err_i = np.abs(pred_i - y)
+    R = np.asarray(data.arrays["pair_R"])
+    ER = np.asarray(data.arrays["pair_ER"])
+    diff = np.max(np.abs(R - ER), axis=1)
+    return {"run_id": run["run_id"], "n_molecules": int(len(y)),
+            "rmse_original_raw": float(np.sqrt(np.mean((pred - y) ** 2))),
+            "rmse_intervened_raw": float(np.sqrt(np.mean((pred_i - y) ** 2))),
+            "rmse_change": float(np.sqrt(np.mean((pred_i - y) ** 2)) - np.sqrt(np.mean((pred - y) ** 2))),
+            "mean_abs_pred_change_raw": float(np.mean(np.abs(delta))),
+            "max_abs_pred_change_raw": float(np.max(np.abs(delta))),
+            "mean_error_change_abs": float(np.mean(err_i - err)),
+            "n_molecules_error_improved": int(np.sum(err_i < err)),
+            "n_molecules_error_worsened": int(np.sum(err_i > err)),
+            "fraction_pairs_R_differs_from_ER": float(np.mean(diff > 1e-6)),
+            "mean_pair_R_max_abs_diff": float(np.mean(diff)),
+            "f_model_recovery_max_abs_diff": base["recon_max_abs_diff"]}
+
+
+def cmd_inspect(args) -> None:
+    cfg = C.load_config()
+    dataset = cfg["datasets"][args.dataset]
+    runs = find_runs()
+    run = runs[args.run]
+    payload, _ = T.load_prepared(dataset)
+    analysis = C.analysis_dir()
+    analysis.mkdir(parents=True, exist_ok=True)
+    out: dict[str, Any] = {"run_id": run["run_id"], "commit": C.git_commit(),
+                           "dataset": dataset}
+    out["intervention"] = intervention(run, args.device)
+    out["init_identity_full_vs_erased"] = init_identity(dataset, seed=run["seed"], device=args.device)
+    if not args.cases:
+        C.write_json(analysis / f"inspect_{run['run_id']}.json", out)
+        print(json.dumps(out, indent=2)[:3000])
+        return
+    scaf = scaffold_map(dataset)
+    for split in ("valid",):
+        out[f"cases_{split}"] = case_dump(run, payload, split, device=args.device)
+        preds = load_preds(run, split)
+        sup = support_sets(payload, split)
+        out[f"subsets_{split}"] = subset_report(preds["row_ids"], preds["pred_raw"],
+                                                preds["target_raw"], sup, scaf)
+    C.write_json(analysis / f"inspect_{run['run_id']}.json", out)
+    print(json.dumps({k: out[k] for k in ("intervention", "init_identity_full_vs_erased",
+                                          "subsets_valid")}, indent=2)[:4000])

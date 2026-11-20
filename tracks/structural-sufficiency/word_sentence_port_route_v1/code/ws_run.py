@@ -496,6 +496,30 @@ def cmd_probe(args) -> None:
                       "health": out.get("health", {})}, indent=2, default=str))
 
 
+def _terminal(args):
+    import ws_analyze as A
+
+    A.cmd_terminal(args)
+
+
+def _summary(args):
+    import ws_analyze as A
+
+    A.cmd_summary(args)
+
+
+def _manifest(args):
+    import ws_analyze as A
+
+    A.cmd_manifest(args)
+
+
+def _inspect(args):
+    import ws_analyze as A
+
+    A.cmd_inspect(args)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="ws_run")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -521,6 +545,21 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--run-id", default=None)
     p.add_argument("--device", default="cuda:0")
     p.set_defaults(func=cmd_train)
+    p = sub.add_parser("terminal")
+    p.add_argument("--runs", nargs="+", required=True)
+    p.add_argument("--device", default="cuda:0")
+    p.set_defaults(func=_terminal)
+    p = sub.add_parser("summary")
+    p.set_defaults(func=_summary)
+    p = sub.add_parser("manifest")
+    p.add_argument("--jobs-json", default=None)
+    p.set_defaults(func=_manifest)
+    p = sub.add_parser("inspect")
+    p.add_argument("--run", required=True)
+    p.add_argument("--dataset", default="mollipo")
+    p.add_argument("--device", default="cpu")
+    p.add_argument("--cases", action="store_true")
+    p.set_defaults(func=_inspect)
     args = parser.parse_args(argv)
     args.func(args)
     return 0
