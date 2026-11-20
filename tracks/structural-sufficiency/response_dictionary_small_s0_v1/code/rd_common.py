@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Mapping
@@ -133,3 +134,12 @@ def source_hashes(paths) -> dict[str, str]:
 
 def jsonable(payload: Any) -> Any:
     return SQ.jsonable(payload)
+
+
+def git_blob_sha256(commit: str, relpath: str) -> str:
+    """SHA-256 of a file exactly as committed, for executed-code provenance."""
+    out = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "show", f"{commit}:{relpath}"],
+        check=True, capture_output=True,
+    ).stdout
+    return hashlib.sha256(out).hexdigest()

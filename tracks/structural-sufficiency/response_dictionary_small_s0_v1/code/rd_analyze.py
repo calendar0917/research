@@ -31,6 +31,12 @@ HISTORICAL = {
 }
 
 
+def execution_commit(summary: dict[str, Any]) -> str | None:
+    """Commit the process actually started from (``status.json`` is written first)."""
+    status = summary.get("status") or {}
+    return status.get("commit") or summary.get("commit")
+
+
 def load_unit(results: Path, task: str, arm: str) -> dict[str, Any] | None:
     base = results / f"{task}_{arm}"
     if not (base / "summary.json").is_file():
@@ -41,6 +47,7 @@ def load_unit(results: Path, task: str, arm: str) -> dict[str, Any] | None:
     summary["predictions_final"] = dict(np.load(base / "predictions_final.npz"))
     status = RC.read_json(base / "status.json") if (base / "status.json").is_file() else {}
     summary["status"] = status
+    summary["execution_commit"] = execution_commit(summary)
     return summary
 
 
@@ -320,7 +327,8 @@ def main(argv=None) -> int:
             "horizon_limited": unit["horizon"]["horizon_limited"],
             "init_state_hash": unit["init_state_hash"],
             "data_cache_sha256": unit["data_cache_sha256"],
-            "commit": unit["commit"],
+            "commit": unit["execution_commit"],
+            "checkout_commit_at_finish": unit["commit"],
             "status": unit["status"].get("state"),
         })
     RC.write_csv(out / "main_table.csv", rows)
@@ -384,13 +392,30 @@ def main(argv=None) -> int:
         unit = units.get((task, "RESP"))
         std = float(unit["target_std"]) if unit else float("nan")
         resp_val = float(unit["best_metrics"]["valid_rmse_raw"]) if unit else float("nan")
+        z = np.load(results / f"{task}_RESP" / "dictionary" / "dictionary_predictions.npz")
+        ds_name = "ogbg-mollipo" if task == "lipo" else "ogbg-molesol"
+        cache = RC.fragment_cache(ds_name)
         for name in ("D_RESPONSE", "D_LATENT", "D_FREQ"):
             per = payload["dictionaries"][name]["per_split"]
+            diff = np.abs(z[f"{name}_valid_pred_raw"] - z[f"{name}_valid_resp_pred_raw"])
+            worst = int(np.argmax(diff))
+            keep = np.ones(diff.size, bool)
+            keep[worst] = False
+            pred = z[f"{name}_valid_pred_raw"]
+            resp = z[f"{name}_valid_resp_pred_raw"]
+            target = z[f"{name}_valid_target_raw"]
             per["dev_criterion"] = {
                 "delta_val_rmse": float(per["valid"]["rmse_raw"] - resp_val),
                 "threshold_train_std": 0.01 * std,
                 "support_view_fraction": per["valid"]["supported_view_fraction"],
                 "passes": bool(per["valid"]["rmse_raw"] - resp_val <= 0.01 * std and per["valid"]["supported_view_fraction"] >= 0.8),
+                "worst_val_fidelity": {
+                    "split_index": worst,
+                    "official_row_id": int(cache["valid_mol_row_id"][worst]),
+                    "abs_prediction_change_raw": float(diff[worst]),
+                    "val_rmse_dictionary_excluding_worst": float(np.sqrt(np.mean((pred[keep] - target[keep]) ** 2))),
+                    "val_rmse_resp_excluding_worst": float(np.sqrt(np.mean((resp[keep] - target[keep]) ** 2))),
+                },
             }
     diagnostics["paired_edit_diagnostic"] = paired_edit_diagnostic(
         units, (RC.REPO_ROOT / args.edit_pairs) if args.edit_pairs else None
@@ -399,6 +424,152 @@ def main(argv=None) -> int:
     diagnostics["test_policy"] = config["test_policy"]
     diagnostics["protocol_hash"] = RC.protocol_hash(config)
     diagnostics["commit"] = RC.git_commit()
+    code_names = (
+        "rd_common.py", "rd_fragment.py", "rd_model.py", "rd_train.py", "rd_run.py",
+        "rd_dictionary.py", "rd_dict_run.py", "rd_prepare.py", "rd_checks.py",
+    )
+    diagnostics["analysis_working_tree_code_sha256"] = RC.source_hashes([RC.CODE_DIR / n for n in code_names])
+    exec_commits = sorted({u["execution_commit"] for u in loaded.values() if u.get("execution_commit")})
+    diagnostics["executed_code_sha256"] = {
+        commit: {
+            name: RC.git_blob_sha256(commit, f"tracks/structural-sufficiency/response_dictionary_small_s0_v1/code/{name}")
+            for name in code_names
+        }
+        for commit in exec_commits
+    }
+    diagnostics["task_relevance"] = {
+        "label": "TASK_RELEVANCE_NOT_ESTABLISHED",
+        "reason": "The only real paired-edit set available has 73 pairs, all in the official Train split, and on those pairs ADD has the lower paired-difference RMSE; there is no Val/Test edit support.",
+    }
+    diagnostics["config_sha256"] = RC.sha256_file(RC.CONFIG_PATH)
+    diagnostics["data_identity"] = {
+        "official_cache_sha256": RC.SQ.EXPECTED_CACHE_SHA256,
+        "fragment_cache_sha256": RC.EXPECTED_FRAGMENT_CACHE_SHA256,
+        "canonical_init_state_sha256": RC.sha256_file(RC.DATA_DIR / "canonical_init_state.pt"),
+    }
+    # Post-hoc subgroup read: molecules that actually use the fusion head vs the
+    # no-cut fallback head.  The formal endpoint remains the whole split; this
+    # decomposition only shows where an arm difference is generated.
+    fusion = {}
+    for task, cache_name in (("lipo", "ogbg-mollipo"), ("esol", "ogbg-molesol")):
+        cache = RC.fragment_cache(cache_name)
+        fusion[task] = {}
+        for split in ("valid", "test"):
+            fb = np.asarray(cache[f"{split}_mol_fallback"]) >= 0
+            entry = {"n_all": int(fb.size), "n_fallback": int(fb.sum()), "n_views": int((~fb).sum()), "subsets": {}}
+            for subset, mask in (("all", np.ones(fb.size, bool)), ("views", ~fb), ("fallback", fb)):
+                preds = {}
+                for arm in ("RESP", "ADD"):
+                    z = np.load(results / f"{task}_{arm}" / "predictions_best.npz")
+                    preds[arm] = (z[f"{split}_pred_raw"], z[f"{split}_target_raw"])
+                target = preds["RESP"][1]
+                row = {}
+                for arm in ("RESP", "ADD"):
+                    row[f"{arm}_rmse_raw"] = float(np.sqrt(np.mean((preds[arm][0][mask] - target[mask]) ** 2)))
+                row["gain_add_minus_resp"] = row["ADD_rmse_raw"] - row["RESP_rmse_raw"]
+                entry["subsets"][subset] = row
+            fusion[task][split] = entry
+    diagnostics["fusion_subgroups"] = fusion
+
+    diagnostics["resources"] = {
+        "sum_unit_seconds": float(sum(u["seconds"] for u in loaded.values())),
+        "sum_unit_gpu_hours_estimate": float(sum(u["seconds"] for u in loaded.values()) / 3600.0),
+        "soft_a100_hours": 4.0,
+        "hard_a100_hours": 6.0,
+        "note": "Each unit ran alone on one physical A100; wall time includes per-epoch three-split evaluation.",
+    }
+    runs = RC.read_json(RC.ROUND_DIR / "runs.json") if (RC.ROUND_DIR / "runs.json").is_file() else {}
+    manifest = {
+        "round_id": config["round_id"],
+        "protocol_id": config["protocol_id"],
+        "protocol_hash": diagnostics["protocol_hash"],
+        "config_path": str(RC.CONFIG_PATH.relative_to(RC.REPO_ROOT)),
+        "config_sha256": diagnostics["config_sha256"],
+        "analysis_commit": RC.git_commit(),
+        "analysis_working_tree_code_sha256": diagnostics["analysis_working_tree_code_sha256"],
+        "executed_code_sha256": diagnostics["executed_code_sha256"],
+        "data_identity": diagnostics["data_identity"],
+        "resources": diagnostics["resources"],
+        "test_policy": "always",
+        "test_use": "DEVELOPMENT_TEST",
+        "execution_registry": runs,
+        "units": {},
+    }
+    for (task, arm), unit in loaded.items():
+        st = unit["status"]
+        reg = (runs.get("formal_units") or {}).get(f"{task}_{arm}", {})
+        manifest["units"][f"{task}_{arm}"] = {
+            "run_id": reg.get("run_id") or st.get("run_id"),
+            "experiment": st.get("experiment"),
+            "execution_commit": unit["execution_commit"],
+            "checkout_commit_at_finish": unit["commit"],
+            "status": st.get("state"),
+            "started_at": st.get("started_at"),
+            "finished_at": st.get("finished_at"),
+            "seconds": unit["seconds"],
+            "best_epoch": unit["best"]["epoch"],
+            "best_metrics": unit["best_metrics"],
+            "final_metrics": unit["final_metrics"],
+            "last10_mean": unit["last10_mean"],
+            "init_state_hash": unit["init_state_hash"],
+            "train_order_sha256": st.get("train_order_sha256"),
+            "n_parameters": unit["n_parameters"],
+            "eval_batch_reductions": {k: unit["diagnostics"][k]["eval_batch_reductions"] for k in ("train", "valid", "test")},
+            "environment": unit.get("environment"),
+            "horizon": unit["horizon"],
+        }
+    RC.write_json(out / "run_manifest.json", manifest)
+    gain_rows = []
+    for task in ("lipo", "esol"):
+        g = diagnostics["gains"].get(task, {})
+        if "val_best" not in g:
+            continue
+        for state in ("val_best", "final", "last10"):
+            gain_rows.append({"task": task, "state": state, **g[state]})
+    RC.write_csv(out / "gains.csv", gain_rows)
+    boot_rows = []
+    for task, b in diagnostics.get("bootstrap", {}).items():
+        boot_rows.append({"task": task, **{k: v for k, v in b.items() if not isinstance(v, str) or k in ("metric", "note")}})
+    RC.write_csv(out / "bootstrap.csv", boot_rows)
+    dict_rows = []
+    for task, payload in diagnostics.get("dictionaries", {}).items():
+        if payload.get("state") == "NOT_RUN":
+            continue
+        for name, block in payload["dictionaries"].items():
+            for split in ("train", "valid", "test"):
+                q = block["per_split"][split]
+                dict_rows.append({
+                    "task": task,
+                    "dictionary": name,
+                    "split": split,
+                    "rmse_raw": q["rmse_raw"],
+                    "mae_raw": q["mae_raw"],
+                    "resp_rmse_raw": q["resp_rmse_raw"],
+                    "fidelity_rmse_raw": q["fidelity_rmse_raw"],
+                    "supported_view_fraction": q["supported_view_fraction"],
+                    "exact_word_view_fraction": q["exact_word_view_fraction"],
+                    "fallback_molecule_fraction": q["fallback_molecule_fraction"],
+                    "n_words_total": block["n_words_total"],
+                    "n_candidate_words_total": block["n_candidate_words_total"],
+                    "n_classes": block["n_classes"],
+                    "n_classes_exact_storage": block["n_classes_exact_storage"],
+                    "compression_ratio_words_over_candidates": block["compression_ratio_words_over_candidates"],
+                    "alpha_seconds": block["alpha_seconds"],
+                    "dev_pass_val": block["per_split"]["dev_criterion"]["passes"],
+                })
+    RC.write_csv(out / "dictionary_table.csv", dict_rows)
+    fusion_rows = []
+    for task, splits in diagnostics.get("fusion_subgroups", {}).items():
+        for split, entry in splits.items():
+            for subset, row in entry["subsets"].items():
+                fusion_rows.append({
+                    "task": task,
+                    "split": split,
+                    "subset": subset,
+                    "n_molecules": entry["n_all"] if subset == "all" else entry["n_fallback"] if subset == "fallback" else entry["n_views"],
+                    **row,
+                })
+    RC.write_csv(out / "fusion_subgroups.csv", fusion_rows)
     diagnostics["main_table_markdown"] = markdown_table({"units": units})
     path = plot_curves(units, out)
     diagnostics["plot"] = str(path) if path else None

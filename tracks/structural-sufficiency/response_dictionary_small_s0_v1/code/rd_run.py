@@ -51,6 +51,7 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     config = RC.load_config()
+    run_commit = RC.git_commit()
     import torch
 
     torch.backends.cuda.matmul.allow_tf32 = False
@@ -75,7 +76,7 @@ def main(argv=None) -> int:
         "dataset": dataset_name,
         "state": "running",
         "started_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
-        "commit": RC.git_commit(),
+        "commit": run_commit,
         "protocol_hash": RC.protocol_hash(config),
         "device": args.device,
         "argv": sys.argv,
@@ -144,7 +145,7 @@ def main(argv=None) -> int:
             log=log,
             eval_batch_size=int(config["eval_batch_size"]),
         )
-        _save_outputs(out_dir, result, dataset, config, args.task, log)
+        _save_outputs(out_dir, result, dataset, config, args.task, log, run_commit)
         status.update(
             {
                 "state": "completed",
@@ -180,7 +181,7 @@ def _load_state(path: Path) -> dict:
     return {k: v for k, v in state.items()}
 
 
-def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> None:
+def _save_outputs(out_dir: Path, result, dataset, config, task: str, log, run_commit: str) -> None:
     import torch
 
     curves = result["curves"]
@@ -231,7 +232,7 @@ def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> Non
         },
         "data_cache_sha256": dataset.cache_sha256,
         "protocol_hash": RC.protocol_hash(config),
-        "commit": RC.git_commit(),
+        "commit": run_commit,
         "environment": RC.environment_snapshot(),
         "artifact_sha256": {},
     }
