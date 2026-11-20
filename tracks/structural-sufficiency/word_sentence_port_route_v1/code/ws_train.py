@@ -187,8 +187,8 @@ def evaluate_word(model, data, device, scaler, *, extra: bool = False, hop: bool
             batch = M.to_device(M.pack_batch(data, idx, attrpair=extra, hop=hop), device)
             out = model(batch)
             preds.append(out["pred"].detach().cpu().numpy())
-            targets.append((np.asarray(batch["y"]) - scaler["mean"]) / scaler["std"])
-            rows.append(np.asarray(batch["row_ids"]))
+            targets.append((batch["y"].detach().cpu().numpy() - scaler["mean"]) / scaler["std"])
+            rows.append(batch["row_ids"].detach().cpu().numpy())
     return {"pred_std": np.concatenate(preds), "target_std": np.concatenate(targets),
             "row_ids": np.concatenate(rows)}
 
