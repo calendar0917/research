@@ -865,8 +865,32 @@ def cmd_manifest(args) -> None:
     probes = C.analysis_dir() / "probes_mollipo.json"
     if not probes.is_file():
         probes = C.results_root() / "probes_mollipo.json"
+    rel = root.name
+    commands = {
+        "train_template": ("rr run res <experiment> --pool <res-gpu0|res-gpu1> --result "
+                           f"tracks/structural-sufficiency/{rel}/results -- bash -lc "
+                           f"\"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py train "
+                           "--dataset <dataset> --arm <arm> --seed <seed> --epochs <epochs> "
+                           "--run-id <run_id> --device cuda:0\""),
+        "prepare": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py prepare --dataset mollipo --write-record",
+        "timing": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py timing --dataset mollipo --arms full_code full_wgine gine_ref --device cuda:0",
+        "probe": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py probe --dataset mollipo --device cuda:0",
+        "terminal": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py terminal --runs lipo_full_wgine_s0 lipo_gine_ref_s0 --device cuda:0",
+        "summary": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py summary",
+        "finalist": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py finalist --dataset mollipo --terminal-runs lipo_full_wgine_s0 lipo_gine_ref_s0",
+        "inspect": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py inspect --run lipo_full_wgine_s0 --dataset mollipo --cases",
+        "measure": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py measure --runs lipo_full_wgine_s0 lipo_gine_ref_s0 --device cuda:0",
+        "edits": f"uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py edits --pairs-csv tracks/structural-sufficiency/response_dictionary_task_transfer_s0_v1/analysis/pairs.csv --models lipo_full_wgine_s0 lipo_gine_ref_s0",
+        "manifest": f"rr jobs --json > /tmp/rr_jobs.json && uv run python tracks/structural-sufficiency/{rel}/code/ws_run.py manifest --jobs-json /tmp/rr_jobs.json",
+        "per_run": {run["run_id"]: ("uv run python "
+                                    f"tracks/structural-sufficiency/{rel}/code/ws_run.py train "
+                                    f"--dataset {run['dataset']} --arm {run['arm']} "
+                                    f"--seed {run['seed']} --epochs {run.get('epochs') or run.get('n_curve_rows')} "
+                                    f"--run-id {run['run_id']} --device cuda:0")
+                    for run in runs},
+    }
     manifest = {
-        "round_dir": str(root), "git_commit": C.git_commit(),
+        "round_dir": str(root), "git_commit": C.git_commit(), "commands": commands,
         "protocol_sha256": C.sha256_file(root / "PROTOCOL.md"),
         "config_sha256": C.sha256_file(root / "configs" / "ws_v1.json"),
         "wall_clock": {"T0_unix": float(cfg["budget"]["t0_monotonic_wall"]),

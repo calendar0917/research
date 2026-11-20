@@ -1,4 +1,31 @@
 {
+  "commands": {
+    "edits": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py edits --pairs-csv tracks/structural-sufficiency/response_dictionary_task_transfer_s0_v1/analysis/pairs.csv --models lipo_full_wgine_s0 lipo_gine_ref_s0",
+    "finalist": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py finalist --dataset mollipo --terminal-runs lipo_full_wgine_s0 lipo_gine_ref_s0",
+    "inspect": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py inspect --run lipo_full_wgine_s0 --dataset mollipo --cases",
+    "manifest": "rr jobs --json > /tmp/rr_jobs.json && uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py manifest --jobs-json /tmp/rr_jobs.json",
+    "measure": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py measure --runs lipo_full_wgine_s0 lipo_gine_ref_s0 --device cuda:0",
+    "per_run": {
+      "lipo_bag_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm bag --seed 0 --epochs 160 --run-id lipo_bag_s0 --device cuda:0",
+      "lipo_char_full_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm char_full --seed 0 --epochs 160 --run-id lipo_char_full_s0 --device cuda:0",
+      "lipo_erased_code_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm erased_code --seed 0 --epochs 160 --run-id lipo_erased_code_s0 --device cuda:0",
+      "lipo_erased_wgine_r1_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm erased_wgine_r1 --seed 0 --epochs 160 --run-id lipo_erased_wgine_r1_s0 --device cuda:0",
+      "lipo_erased_wgine_r1_s1": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm erased_wgine_r1 --seed 1 --epochs 160 --run-id lipo_erased_wgine_r1_s1 --device cuda:0",
+      "lipo_erased_wgine_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm erased_wgine --seed 0 --epochs 160 --run-id lipo_erased_wgine_s0 --device cuda:0",
+      "lipo_full_code_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm full_code --seed 0 --epochs 160 --run-id lipo_full_code_s0 --device cuda:0",
+      "lipo_full_id_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm full_id --seed 0 --epochs 160 --run-id lipo_full_id_s0 --device cuda:0",
+      "lipo_full_wgine_r1_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm full_wgine_r1 --seed 0 --epochs 160 --run-id lipo_full_wgine_r1_s0 --device cuda:0",
+      "lipo_full_wgine_r1_s1": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm full_wgine_r1 --seed 1 --epochs 160 --run-id lipo_full_wgine_r1_s1 --device cuda:0",
+      "lipo_full_wgine_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm full_wgine --seed 0 --epochs 160 --run-id lipo_full_wgine_s0 --device cuda:0",
+      "lipo_gine_ref_s0": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset mollipo --arm gine_ref --seed 0 --epochs 160 --run-id lipo_gine_ref_s0 --device cuda:0"
+    },
+    "prepare": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py prepare --dataset mollipo --write-record",
+    "probe": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py probe --dataset mollipo --device cuda:0",
+    "summary": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py summary",
+    "terminal": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py terminal --runs lipo_full_wgine_s0 lipo_gine_ref_s0 --device cuda:0",
+    "timing": "uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py timing --dataset mollipo --arms full_code full_wgine gine_ref --device cuda:0",
+    "train_template": "rr run res <experiment> --pool <res-gpu0|res-gpu1> --result tracks/structural-sufficiency/word_sentence_port_route_v1/results -- bash -lc \"uv run python tracks/structural-sufficiency/word_sentence_port_route_v1/code/ws_run.py train --dataset <dataset> --arm <arm> --seed <seed> --epochs <epochs> --run-id <run_id> --device cuda:0\""
+  },
   "config_sha256": "c7d39c917ee1328577b6ab5d1a3d32124e4617b38afcb5680e2aa32e854d98bc",
   "datasets": {
     "molesol": {
@@ -165,7 +192,7 @@
       }
     }
   },
-  "git_commit": "4575a54475cd64ada8b585d0d58d93925daa0d02",
+  "git_commit": "c2c656c1a4f788b81970aa9bfa63e0844420527b",
   "gpu_hours_budget": {
     "hard": 16.0,
     "soft": 14.0
@@ -1546,7 +1573,7 @@
   "timing_record": "analysis/timing_mollipo.json",
   "wall_clock": {
     "T0_unix": 1795190995.0,
-    "generated_unix": 1795199400.933802,
+    "generated_unix": 1795199481.0315733,
     "hard_deadline_unix": 1795219795.0,
     "stop_all_training_unix": 1795217095.0,
     "stop_launching_unix": 1795214996.2
