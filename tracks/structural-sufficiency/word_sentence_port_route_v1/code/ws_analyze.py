@@ -791,38 +791,48 @@ def _bootstrap_core(runs, cfg):
 # run manifest / resource ledger
 # ---------------------------------------------------------------------------
 
-EXPERIMENT_PREFIXES = ("lipo-", "esol-", "ws-", "lipo_", "esol_", "probe")
+def _parse_ts(value: str) -> float:
+    from datetime import datetime
+
+    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%S%z").timestamp()
 
 
 def cmd_manifest(args) -> None:
+    """Machine run record for *this* round only.
+
+    Jobs are selected by creation time (after ``T0`` minus 30 min), so earlier
+    rounds sharing the same experiment-name space cannot leak into the ledger.
+    """
     cfg = C.load_config()
     root = C.ROUND_DIR
+    t0 = float(cfg["budget"]["t0_monotonic_wall"])
+    cutoff = t0 - 1800.0
     jobs = []
     if args.jobs_json:
         blob = C.read_json(Path(args.jobs_json))
         jobs = blob.get("jobs", blob)
-    keep = [j for j in jobs if j.get("experiment", "").startswith(EXPERIMENT_PREFIXES)
-            and j.get("run_id", "").startswith(tuple(p.replace("-", "_") for p in ("lipo", "esol")) + ("ws", "probe"))]
     ledger = []
-    for job in keep:
+    for job in jobs:
+        created = job.get("created_at")
+        if not created or _parse_ts(created) < cutoff:
+            continue
         started, completed = job.get("started_at"), job.get("completed_at")
         seconds = None
         if started and completed:
-            from datetime import datetime
-
-            fmt = "%Y-%m-%dT%H:%M:%S%z"
-            seconds = (datetime.strptime(completed, fmt) - datetime.strptime(started, fmt)).total_seconds()
+            seconds = _parse_ts(completed) - _parse_ts(started)
         elif job.get("elapsed"):
             seconds = float(job["elapsed"])
+        pool = job.get("pool") or ""
+        uses_gpu = pool.startswith("res-gpu")
         ledger.append({
             "experiment": job.get("experiment"), "run_id": job.get("run_id"),
-            "pool": job.get("pool"), "state": job.get("state"), "commit": job.get("commit"),
-            "node": job.get("node"), "gpus_used": 1,
-            "driver_version": job.get("driver_version"), "torch_version": job.get("torch_version"),
+            "pool": pool, "uses_gpu": uses_gpu, "state": job.get("state"),
+            "commit": job.get("commit"), "node": job.get("node"),
+            "driver_version": job.get("driver_version"),
+            "torch_version": job.get("torch_version"),
             "cuda_visible_devices": job.get("cuda_visible_devices"),
-            "created_at": job.get("created_at"), "started_at": started,
-            "completed_at": completed, "seconds": seconds,
-            "gpu_hours": (seconds / 3600.0) if seconds else None,
+            "created_at": created, "started_at": started, "completed_at": completed,
+            "seconds": seconds, "gpu_hours": (seconds / 3600.0) if (seconds and uses_gpu) else None,
             "exit_code": job.get("exit_code"), "failure_reason": job.get("failure_reason")})
     gpu_hours = sum(item["gpu_hours"] or 0.0 for item in ledger)
     datasets = {}
@@ -831,15 +841,17 @@ def cmd_manifest(args) -> None:
         freeze = C.read_json(freeze_path)
         datasets[key] = {
             "dataset": dataset, "freeze_record": str(freeze_path.relative_to(root)),
-            "content_sha256": freeze["cache"]["content_sha256"],
-            "n_templates": freeze["templates"]["n_templates"],
-            "n_multi_atom": freeze["templates"]["n_multi_atom"],
+            "content_sha256": freeze["cache_sha256"],
+            "cache_file_sha256": freeze.get("cache_file_sha256"),
+            "n_templates": freeze["template_table"]["n_templates"],
+            "n_multi_atom": freeze["template_table"]["n_multi_atom_words"],
+            "n_monatomic": freeze["template_table"]["n_monatomic_base_types"],
             "n_merge_rounds": len(freeze["merge"]["history"]),
-            "coverage": freeze["support"]["coverage"],
-            "dual_site_support": freeze["support"]["dual_site_support"],
-            "expansion_triggered": freeze["support"]["expansion_triggered"],
-            "layout_support": freeze["support"]["layout_support"],
-            "split_sizes": freeze.get("sizes")}
+            "support_train": freeze["support"].get("train"),
+            "support_flag": freeze["support"].get("flag"),
+            "expansion": freeze.get("expansion"),
+            "split_sizes": freeze.get("split_sizes"),
+            "partition_check": freeze.get("partition_check")}
     runs = []
     for run_id, run in sorted(find_runs().items()):
         runs.append({k: run.get(k) for k in ("run_id", "arm", "dataset", "partition", "seed",
@@ -850,21 +862,31 @@ def cmd_manifest(args) -> None:
                     {"best": run.get("best"), "final": run.get("final"),
                      "last20": run.get("last20"),
                      "terminal_test_scored": bool(run.get("terminal_test_scored"))})
-    probes = C.results_root() / "probes_mollipo.json"
+    probes = C.analysis_dir() / "probes_mollipo.json"
+    if not probes.is_file():
+        probes = C.results_root() / "probes_mollipo.json"
     manifest = {
         "round_dir": str(root), "git_commit": C.git_commit(),
         "protocol_sha256": C.sha256_file(root / "PROTOCOL.md"),
         "config_sha256": C.sha256_file(root / "configs" / "ws_v1.json"),
-        "wall_clock": {"T0_utc": float(cfg["budget"]["t0_unix"]),
-                       "hard_deadline_utc": float(cfg["budget"]["t0_unix"]) + 8 * 3600,
-                       "generated_utc": __import__("time").time()},
+        "wall_clock": {"T0_unix": float(cfg["budget"]["t0_monotonic_wall"]),
+                       "hard_deadline_unix": float(cfg["budget"]["t0_monotonic_wall"])
+                       + float(cfg["budget"]["hard_deadline_hours"]) * 3600,
+                       "stop_launching_unix": float(cfg["budget"]["t0_monotonic_wall"])
+                       + float(cfg["budget"]["stop_launching_after_hours"]) * 3600,
+                       "stop_all_training_unix": float(cfg["budget"]["t0_monotonic_wall"])
+                       + float(cfg["budget"]["stop_all_training_after_hours"]) * 3600,
+                       "generated_unix": __import__("time").time()},
         "datasets": datasets, "runs": runs, "jobs": ledger,
         "gpu_hours_total": round(gpu_hours, 4),
-        "gpu_hours_budget": {"hard": cfg["budget"]["gpu_hours_hard"],
-                             "soft": cfg["budget"]["gpu_hours_soft"]},
+        "gpu_hours_budget": {"hard": cfg["budget"]["gpu_hard_hours"],
+                             "soft": cfg["budget"]["gpu_soft_hours"]},
+        "max_formal_units": cfg["budget"]["max_formal_units"],
         "n_formal_training_units": len([r for r in runs if r["arm"] not in ("gine_ref",)]),
         "n_reference_units": len([r for r in runs if r["arm"] == "gine_ref"]),
         "probes_record": str(probes.relative_to(root)) if probes.is_file() else None,
+        "timing_record": (str((C.analysis_dir() / "timing_mollipo.json").relative_to(root))
+                          if (C.analysis_dir() / "timing_mollipo.json").is_file() else None),
         "terminal_policy": "TERMINAL_DEVELOPMENT_TEST",
     }
     C.write_json(root / "run_manifest.json", manifest)

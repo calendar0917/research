@@ -215,3 +215,47 @@ B ≤3.2 GPU·h、C ≤4.8、D ≤4.2、E 最后 ≥45min ≤0.3。
   合并历史、df、provenance 与 exact canonical 串全部写入 freeze。
 * 结构扩容判定：两个数据集都在 128 后满足覆盖与双位点支持阈值，`triggered=false`，
   `LAYOUT_SUPPORT_OK`（Lipo 覆盖 0.931、双位点支持实例 4888；ESOL 覆盖 0.898、380）。
+
+---
+
+## 附录 A：执行记录（训练全部结束后追加；不修改 §0–§11 的任何规则）
+
+**A1 实际执行顺序与时刻（UTC）**
+
+| 时刻 | 事件 | 产物 |
+|---|---|---|
+| 16:09:55 | T0（预算起点） | `configs/ws_v1.json` `budget.t0_monotonic_wall` |
+| 16:35–16:40 | `prepare` 两数据集（Train-only 词表 + 冻结合并历史） | `analysis/structure_freeze_*.json` |
+| 16:41–16:45 | `timing`（FULL_CODE/FULL_WGINE/GINE_REF，2 warm + 5 timed） | `results/timing_mollipo.json` → **E = 160 冻结** |
+| 16:46–16:48 | Stage-A 探针（保真/重编号/内容/接口/健康性） | `results/probes_mollipo.json` |
+| 16:52–17:20 | Stage-B 八臂（Lipo seed0） | 8 个 run |
+| 17:17–17:40 | N2 修复族（R1 配方，FULL/ERASED × seed0/1） | 4 个 run |
+| 17:56–18:01 | 分析 + 终局 Test（finalist + GINE_REF 各一次） | `analysis/*`、`results/terminal/*` |
+
+**A2 与 §7 的偏差与补充（全部为“补齐/修复”，未新增科学假设）**
+
+1. **`ERASED_WGINE`（R0）在 N 判定之后补跑**。§7 要求“若 L 不是 CODE，再补一个同编码器的 ERASED
+   seed0”。L 只有在八臂全部完成后才能确定（= WGINE），因此该 run 晚于分支算术执行；
+   它只用于 §12.1 的 `L/ERASED` 报告与端口结论，**不参与任何分支判定**（P/B/N 的算术不依赖它，
+   见 `finalist_manifest.json` 的 `repair_checks`）。
+2. **Stage-A 探针重跑一次**：01:31 巡检发现 `results/probes_mollipo.json` 缺失（本地清理误删），
+   用同一冻结代码与配置重跑（`ws-probes-rerun-01`），数字与首轮一致（§10）。属工程检查，不计正式单元。
+3. **终局 Test 前两次脚本崩溃**：`ws-terminal-finalist`（run record 缺 `run_dir` 默认值）与
+   `ws-terminal-finalist-2`/`ws-terminal-diag`（Test 侧 support-subset 需要现场构建的数组）。
+   第二次崩溃发生在已算完 Test 预测、尚未写盘的位置；数值未写出、未被读取、未用于任何选择，
+   且同 checkpoint 的 eval 确定性（无 dropout，BN 用 running stats），第三次运行数字与之一致。
+   披露记录见 `REPORT.md` §9 与 `run_manifest.json` 的 failed jobs。
+
+**A3 §12.2 子集定义**：本 PROTOCOL 早期版本未收录该节，本轮按任务书 §12.2 原文实现
+（已知词 / 已知内容的新位点布局），只在 Valid 与终局 Test 做描述性报告，不用于重选。
+
+**A4 horizon**：360 epoch → 40.3 min、240 → 26.9 min 均超 24 min 上限，按 §6 规则全体冻结 **E = 160**
+（17.9 min 预估）。实测 FULL_CODE 543 s、FULL_WGINE 170 s、GINE_REF 157 s（含每 epoch Train+Valid 评估，
+两卡并行时受同机 CPU 竞争影响）。
+
+**A5 预算记账**：正式单元 11 + 参考 1；GPU 1.17 GPU·h（软 14 / 硬 16）；墙钟 ~1.9 h（硬 8 h）。
+
+**A6 判定结果**：L = `FULL_WGINE`（Valid 0.76795）→ 不满足 P/B → **N**；N1 不满足、**N2 满足并执行**
+（Train 标准化 MSE ratio 4.57）→ `RESCUE_FAILED`（两 seed 均未改善，+0.0147/+0.0626）；
+finalist = `lipo_full_wgine_s0`，Test RMSE 0.83606（`GINE_REF` 0.66312）。
+总体标签 `NO_TASK_ADVANTAGE_IN_THIS_FAMILY`，分层证据见 `REPORT.md`。
