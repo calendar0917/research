@@ -415,7 +415,10 @@ def cmd_train(args) -> None:
     outdir.mkdir(parents=True, exist_ok=True)
     import torch
 
+    final_state = out.pop("final_state", None)
     torch.save({"state": model.state_dict()}, outdir / "state_best.pt")
+    if final_state is not None:
+        torch.save({"state": final_state}, outdir / "state_final.pt")
     preds = out.pop("predictions_best")
     for split, values in preds.items():
         np.savez_compressed(outdir / f"preds_best_{split}.npz",

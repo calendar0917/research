@@ -335,6 +335,7 @@ def train_word(*, model, splits: Mapping[str, Any], scaler: Mapping[str, float],
                             "mean_train_step_seconds": float(np.mean(timed)),
                             "max_train_step_seconds": float(np.max(timed))}
         return result
+    result["final_state"] = copy.deepcopy(model.state_dict())
     if best_state is not None:
         model.load_state_dict(best_state)
     result.update(_summarise(curves, best, best_preds, final_preds, recipe.epochs))
@@ -408,6 +409,7 @@ def train_gine(*, model, gine: Mapping[str, Any], scaler: Mapping[str, float], r
                             "mean_train_step_seconds": float(np.mean(timed)),
                             "max_train_step_seconds": float(np.max(timed))}
         return result
+    result["final_state"] = copy.deepcopy(model.state_dict())
     if best_state is not None:
         model.load_state_dict(best_state)
     result.update(_summarise(curves, best, best_preds, final_preds, recipe.epochs))
