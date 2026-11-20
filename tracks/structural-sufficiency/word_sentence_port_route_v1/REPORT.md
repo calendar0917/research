@@ -421,6 +421,12 @@ Test 与 Valid 的相对差距（22% vs 26%）一致，说明 Valid 上的结论
 * 失败/重跑（全部保留在 `run_manifest.json`，资源已计入）：`lipo-full-code-s0`、`lipo-erased-code-s0`
   （早期 deploy 冲突，1–2 s 即退出）、`ws-terminal-finalist`/`-2`/`ws-terminal-diag`（代码 bug，见 §9 披露）。
 * 未完成项：Stage C、D1、D2、N1、N3（均因预注册条件未满足而**不应**执行）；ESOL 未训练。
+* **已知实现缺口（不影响任何报告数字）**：本轮 12 个 run 只落盘了 `state_best.pt`（每个 epoch 的
+  best 状态），最后一 epoch 的权重没有单独保存——`state_final.pt` 的保存路径是在矩阵跑完之后补的
+  （已在代码中实现并用 3-epoch smoke 验证）。最终点的指标与按 row id 的预测已经保存
+  （`run.json` 的 `final`/`last20`、`curves.json`、`preds_final_*.npz`），因此 final/last-20 的数字
+  可复核；但由于 `index_add_` 在 CUDA 上非确定性，重跑无法还原同一份 final 权重。
+  所有报告数字与终局 Test 都只用 **best** checkpoint，故结论不受影响。
 * Checkpoint/预测：`results/<run_id>/{state_best.pt,state_final.pt,curves.json,run.json,preds_*.npz}`
   按仓库 gitignore 不提交，但保留在结果存储（本地 `results/` + `res` 主机），并已 `rr pull` 回本地。
 

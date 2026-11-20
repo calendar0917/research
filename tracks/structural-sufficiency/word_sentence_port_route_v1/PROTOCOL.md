@@ -255,6 +255,10 @@ B ≤3.2 GPU·h、C ≤4.8、D ≤4.2、E 最后 ≥45min ≤0.3。
 
 **A5 预算记账**：正式单元 11 + 参考 1；GPU 1.17 GPU·h（软 14 / 硬 16）；墙钟 ~1.9 h（硬 8 h）。
 
+**A5b 保存状态**：本轮 12 个 run 落盘 `state_best.pt`；最后一 epoch 权重未单独落盘（`state_final.pt`
+保存路径为矩阵后补，已用 smoke 验证）。最终点指标/预测已保存（`preds_final_*.npz`、`curves.json`），
+所有报告数字与终局 Test 均只用 best checkpoint。
+
 **A6 判定结果**：L = `FULL_WGINE`（Valid 0.76795）→ 不满足 P/B → **N**；N1 不满足、**N2 满足并执行**
 （Train 标准化 MSE ratio 4.57）→ `RESCUE_FAILED`（两 seed 均未改善，+0.0147/+0.0626）；
 finalist = `lipo_full_wgine_s0`，Test RMSE 0.83606（`GINE_REF` 0.66312）。
