@@ -13,8 +13,8 @@
 在本轮 Lipo 的受控对照里，**“结构词（精确 canonical 内容）→ 局部句（真实端口布局 R）→ 整图”这条
 路线没有取得任务优势**：最好的局部模型 `FULL_WGINE` Valid/Test RMSE = **0.768 / 0.836**，比同协议
 重训的强整图参照 `GINE_REF`（**0.629 / 0.663**）差 0.139 / 0.173（≈2.9 个 `band`）。
-真实端口布局 R 在**重训**（FULL vs ERASED，两套配方、三个 seed）与**冻结干预**（R→ERASED 均值）两条
-证据线上**都没有带来误差改善**；句模型相对同词表词袋（`BAG`，0.795）的点估计增益 +0.027 在按 scaffold
+真实端口布局 R 在**重训**（FULL vs ERASED 共 4 组配对：R0 的 CODE/WGINE 各 seed0，R1 的 WGINE seed0/1）
+与**冻结干预**（R→ERASED 均值）两条证据线上**都没有带来误差改善**；句模型相对同词表词袋（`BAG`，0.795）的点估计增益 +0.027 在按 scaffold
 分组的 bootstrap 下 **CI 跨 0**；而精确 canonical 内容编码（`CODE` 0.835 / `ID` 0.857）反而比只做
 sum/mean 池化的属性编码器 `WGINE`（0.768）更差。
 总体标签：**`NO_TASK_ADVANTAGE_IN_THIS_FAMILY`**（分层标签见 §2）。
@@ -198,6 +198,20 @@ L ≤ GINE_REF + 2band= 0.62857 + 0.09692 = 0.72549                             
 | **N1** `CHAR_FULL` 优于 L ≥ `delta_task` | 0.84337 ≤ 0.76795 − 0.01212 = 0.75583 | **否**（CHAR 更差 0.0754） | 不满足 |
 | **N2** L 选中点 Train 标准化 MSE ≥ 1.25× min(CHAR, GINE_REF) | 0.1638 ≥ 1.25 × 0.03587 = 0.04483 | **是**（ratio **4.57**） | **满足 → 执行 N2** |
 | **N3** CODE 在 Train **与** Valid 都差于 ID/WGINE ≥ `delta_task` | Valid 差 0.067 ✓，Train CODE 0.437 **优于** WGINE 0.490 ✗ | **否** | 不满足 |
+
+**效率与内存（`analysis/efficiency.json`，实测，非训练 run）**
+
+| 指标 | finalist `FULL_WGINE` | `GINE_REF` |
+|---|---|---|
+| 推理 / 分子（batch 64，GPU） | **0.064 ms** | 0.074 ms |
+| 推理 / 分子（batch 1，GPU） | 3.42 ms（Python/打包开销主导） | — |
+| eval 峰值显存 | 15.1 MB | 27.2 MB |
+| 单个训练 step（batch 128）峰值显存 | 32.0 MB | — |
+| 进程峰值 RSS（含准备数据） | 1.13 GB | 1.27 GB |
+
+CPU 准备（`analysis/structure_freeze_*.json` 的 `timing_seconds`）：Lipo **23.3 s**
+（合并 14.6 / 张量 4.6 / 支撑回放 2.1），ESOL **3.8 s**。两卡并行 40 GB A100 上**没有任何 OOM 风险**，
+本轮也未发生 OOM（本地机器只做 CPU 准备/测试，未跑训练）。
 
 **N2 执行结果（唯一 R1 配方：peak 3e-4、wd 1e-3，其余同 R0，E = 160）**
 
@@ -442,5 +456,6 @@ rr jobs --json > /tmp/rr_jobs.json && uv run python $R/code/ws_run.py manifest -
 
 产物索引：`analysis/summary.json`、`analysis/main_table.csv`、`analysis/terminal_test.json`、
 `analysis/inspect_lipo_full_wgine_s0.json`、`analysis/structure_freeze_*.json`、
-`finalist_manifest.json`、`run_manifest.json`、`analysis/probes_mollipo.json`、`analysis/timing_mollipo.json`、
+`finalist_manifest.json`、`run_manifest.json`、`analysis/efficiency.json`、
+`analysis/probes_mollipo.json`、`analysis/timing_mollipo.json`、
 `results/terminal/*/terminal_test.json`。

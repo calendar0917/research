@@ -1,0 +1,38 @@
+{
+  "commit": "78e48d5c9be697eebbe235f44ba53d578ec5e7cc",
+  "device": "cuda:0",
+  "protocol": "warmup 3 batches, then full-split eval; peak VRAM reset before the timed pass",
+  "runs": {
+    "lipo_full_wgine_s0": {
+      "arm": "full_wgine",
+      "eval": {
+        "batch_1": {
+          "per_molecule_ms": 3.4191596596169154,
+          "seconds": 1.4360470570391044
+        },
+        "batch_64": {
+          "per_molecule_ms": 0.06378422618754917,
+          "seconds": 0.026789374998770654
+        }
+      },
+      "n_parameters": 89650,
+      "peak_vram_mb": 15.103515625,
+      "rss_mb": 1129.265625,
+      "split": "valid",
+      "train_step_batch": 128,
+      "train_step_peak_vram_mb": 31.962890625
+    },
+    "lipo_gine_ref_s0": {
+      "arm": "gine_ref",
+      "batch_sizes": [
+        64
+      ],
+      "n_molecules": 420,
+      "n_parameters": 391942,
+      "peak_vram_mb": 27.2158203125,
+      "rss_mb": 1265.18359375,
+      "seconds": 0.031008244957774878,
+      "split": "valid"
+    }
+  }
+}
