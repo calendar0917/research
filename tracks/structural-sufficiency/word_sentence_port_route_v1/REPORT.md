@@ -173,9 +173,12 @@ sum/mean 池化的属性编码器 `WGINE`（0.768）更差。
 | `lipo_char_full_s0` | CHAR_FULL | 87,772 | 1.09 | 84 | 0.62107 | **0.84337** | 0.85138 | 0.85126 |
 | `lipo_gine_ref_s0` | GINE_REF（参考） | 391,942 | 0.98 | 148 | 0.22945 | **0.62857** | 0.63523 | 0.63276 |
 
-¹ `s/epoch` 含每 epoch 的 Train+Valid 评估；两卡并行时受同机 CPU 竞争影响（同一臂在独占时为
-1.07 s/epoch，与独占时的其他臂 3.4 s/epoch 之差来自 pair head 的 279→64 MLP 在 43k pair 上的开销）。
-horizon 由 Stage-A 计时冻结为 **E = 160**（360 → 40.3 min、240 → 26.9 min 均超 24 min 上限）。
+¹ `s/epoch` 含每 epoch 的 Train+Valid 评估，**不能跨 run 比较**：两卡并行时两个作业共享同一主机的
+CPU（构图/打包在 CPU 上），同一臂在独占与共享下可差 3 倍（如 `full_wgine` 独占 1.07 s/epoch，
+与 `full_id` 同时在跑时 3.2–3.5 s/epoch）。horizon 依据的是**独占**计时
+（`analysis/timing_mollipo.json`，2 warm + 5 timed，每 epoch 27 个 step）：
+`full_code` 2.09 s/step、`full_wgine` 3.07 s/step、`gine_ref` 0.78 s/epoch →
+含评估余量后 360 → 40.3 min、240 → 26.9 min 均超 24 min 上限 ⇒ 冻结 **E = 160**（17.9 min 预估）。
 
 **L 的选择**（预注册规则：三种 FULL 中 best-Valid 最低，`0.002σ` 内按 CODE → ID → WGINE）：
 `L = FULL_WGINE`（0.76795；与 CODE 差 0.067 ≫ 0.0024，无需 tie-break）。
@@ -240,7 +243,6 @@ CPU 准备（`analysis/structure_freeze_*.json` 的 `timing_seconds`）：Lipo *
 | L(WGINE) vs GINE_REF | **−0.1394** | `[−0.2005, −0.0798]` | 明确更差 |
 | CODE vs ERASED_CODE | −0.0018 | `[−0.0257, +0.0213]` | 跨 0 |
 | CODE vs GINE_REF | −0.2064 | `[−0.2675, −0.1411]` | 明确更差 |
-| ID vs ERASED_CODE | −0.0243 | `[−0.0759, +0.0296]` | 跨 0 |
 | ID vs GINE_REF | −0.2289 | `[−0.3001, −0.1585]` | 明确更差 |
 
 每 seed 与 mean±sd：本轮只有 1 个 seed（P 未达，未进 Stage C），**seed 方差不可估**；
