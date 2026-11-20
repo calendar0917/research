@@ -1147,7 +1147,7 @@ def cmd_measure(args) -> None:
                                                 "per_molecule_ms": 1000 * seconds / len(data.row_ids)}
             entry["peak_vram_mb"] = torch.cuda.max_memory_allocated() / 2 ** 20
             # one measured training step at the frozen batch size (memory only)
-            idx = np.arange(min(int(cfg["recipe"]["batch_size"]), len(data.row_ids)))
+            idx = np.arange(min(int(cfg["recipe"]["batch"]), len(data.row_ids)))
             torch.cuda.reset_peak_memory_stats()
             model.train()
             batch = M.to_device(M.pack_batch(data, idx, attrpair=extra, hop=hop), args.device)
