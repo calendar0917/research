@@ -1,0 +1,66 @@
+{
+  "round_id": "response_dictionary_explanation_check_s0_v1",
+  "protocol_id": "rd-explanation-check-s0-v1",
+  "base_commit": "4fc17e33b6cc7fd2f301e05d705183787162e233",
+  "parent_round": "response_dictionary_small_s0_v1",
+  "followup_round": "response_dictionary_lipo_followup_s0_v1",
+  "task": "lipo",
+  "dataset": "ogbg-mollipo",
+  "source_state": {
+    "arm": "RESP",
+    "selection": "best_valid",
+    "epoch": 63,
+    "checkpoint_sha256_prefix": "c42fc25f"
+  },
+  "compressed_tau": [
+    "Z=5,chg=5,arom=0,b0=0,b1=0,b2=0",
+    "Z=6,chg=5,arom=0,b0=0,b1=0,b2=0",
+    "Z=5,chg=5,arom=1,b0=0,b1=0,b2=0"
+  ],
+  "expected": {
+    "n_words": 136,
+    "n_candidates": 702,
+    "n_classes": 16,
+    "n_classes_exact_storage": 13,
+    "k_compressed": 16,
+    "panel_size": 16
+  },
+  "projection": {
+    "certificate_rel_tol": 1e-08,
+    "simplex_abs_tol": 1e-10,
+    "sum_abs_tol": 1e-09,
+    "solver": "scipy.optimize.minimize",
+    "method": "SLSQP",
+    "ftol": 1e-12,
+    "maxiter": 2000,
+    "starts": [
+      "fw64",
+      "uniform"
+    ],
+    "regularisation": 0.0,
+    "selected_main_rule": "min f among qualified; tie within row tolerance -> fw64 start",
+    "unresolved_action": "keep fw64 alpha; flag NUMERICALLY_UNRESOLVED",
+    "versions": [
+      "FW64",
+      "HP_CERTIFIED",
+      "HP_SLSQP_ALL"
+    ],
+    "uncertified_sensitivity": "HP_SLSQP_ALL: unresolved rows use the smaller-f feasible SLSQP start; no precision claim"
+  },
+  "explanation": {
+    "pairs_csv": "tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/analysis/pairs.csv",
+    "orientation": "catalogue row_a -> row_b; delta = B - A",
+    "common_context": "same C fragment id and same cut-bond attributes in the fixed <=4 views; max C atoms, tie min canonical key",
+    "cases_max": 12,
+    "cases_non_train_first": 6,
+    "case_order": "pair_id ascending",
+    "low_support_components": 20
+  },
+  "test_policy": "always",
+  "test_use": "DEVELOPMENT_TEST",
+  "budget": {
+    "gpu_a100_hours": 0.0,
+    "wall_target_minutes": 30,
+    "wall_hard_minutes": 60
+  }
+}
