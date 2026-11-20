@@ -1104,10 +1104,11 @@ def cmd_measure(args) -> None:
             counts["degree"] = 17
             counts["ring"] = 14
             frames = SG.build_data_list(_packed_from_payload(payload, split), counts, scaler)
-            for warm in (1, 2, 3):
-                for batch in DataLoader(frames, batch_size=64)[:1]:
-                    with torch.no_grad():
-                        model(batch.to(args.device))
+            warm_loader = DataLoader(frames, batch_size=64, shuffle=False)
+            for batch in warm_loader:
+                with torch.no_grad():
+                    model(batch.to(args.device))
+                break
             torch.cuda.synchronize()
             torch.cuda.reset_peak_memory_stats()
             loader = DataLoader(frames, batch_size=64, shuffle=False)
