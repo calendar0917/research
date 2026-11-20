@@ -265,6 +265,8 @@ def cmd_prepare(args) -> None:
         "labels_used_for_vocabulary": False,
     }
     C.write_json(T.freeze_path(dataset), freeze)
+    if args.write_record:
+        C.write_json(T.record_path(dataset), freeze)
     print(json.dumps({"dataset": dataset, "cache": str(path), "content_sha256": content,
                       "file_sha256": digest,
                       "multi_words": len(set(history)), "rounds": len(history),
@@ -504,6 +506,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
     p = sub.add_parser("prepare")
     p.add_argument("--dataset", default="mollipo")
+    p.add_argument("--write-record", action="store_true")
     p.set_defaults(func=cmd_prepare)
     p = sub.add_parser("timing")
     p.add_argument("--dataset", default="mollipo")

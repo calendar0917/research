@@ -33,7 +33,13 @@ def cache_path(dataset: str) -> Path:
 
 
 def freeze_path(dataset: str) -> Path:
+    """Host-local freeze record written by ``prepare`` (git-ignored)."""
     return C.data_dir() / f"{dataset}_words_{CACHE_VERSION}_freeze.json"
+
+
+def record_path(dataset: str) -> Path:
+    """Committed copy of the frozen structure record (written only with --write-record)."""
+    return C.analysis_dir() / f"structure_freeze_{dataset.replace('ogbg-', '')}.json"
 
 
 def content_sha256(payload: Mapping[str, Any]) -> str:
@@ -50,11 +56,20 @@ def content_sha256(payload: Mapping[str, Any]) -> str:
     return digest.hexdigest()
 
 
+def record_path_for(dataset: str) -> Path:
+    return record_path(dataset)
+
+
 def load_prepared(dataset: str) -> tuple[dict[str, Any], dict[str, Any]]:
     path = cache_path(dataset)
     if not path.is_file():
         raise FileNotFoundError(f"prepared cache missing: {path}")
     freeze = C.read_json(freeze_path(dataset))
+    record_path = record_path_for(dataset)
+    if record_path.is_file():
+        record = C.read_json(record_path)
+        if record.get("cache_sha256") != freeze.get("cache_sha256"):
+            raise ValueError("host freeze disagrees with the committed structure record")
     with np.load(path, allow_pickle=False) as handle:
         payload = {key: handle[key] for key in handle.files}
     payload["file_sha256"] = C.sha256_file(path)
