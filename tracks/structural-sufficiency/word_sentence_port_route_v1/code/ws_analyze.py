@@ -730,3 +730,88 @@ def _bootstrap_core(runs, cfg):
             entries[f"{L}_vs_{other}"] = paired_bootstrap(a, b, y, groups)
         out[key] = entries
     return out
+
+
+# ---------------------------------------------------------------------------
+# run manifest / resource ledger
+# ---------------------------------------------------------------------------
+
+EXPERIMENT_PREFIXES = ("lipo-", "esol-", "ws-", "lipo_", "esol_", "probe")
+
+
+def cmd_manifest(args) -> None:
+    cfg = C.load_config()
+    root = C.ROUND_DIR
+    jobs = []
+    if args.jobs_json:
+        blob = C.read_json(Path(args.jobs_json))
+        jobs = blob.get("jobs", blob)
+    keep = [j for j in jobs if j.get("experiment", "").startswith(EXPERIMENT_PREFIXES)
+            and j.get("run_id", "").startswith(tuple(p.replace("-", "_") for p in ("lipo", "esol")) + ("ws", "probe"))]
+    ledger = []
+    for job in keep:
+        started, completed = job.get("started_at"), job.get("completed_at")
+        seconds = None
+        if started and completed:
+            from datetime import datetime
+
+            fmt = "%Y-%m-%dT%H:%M:%S%z"
+            seconds = (datetime.strptime(completed, fmt) - datetime.strptime(started, fmt)).total_seconds()
+        elif job.get("elapsed"):
+            seconds = float(job["elapsed"])
+        ledger.append({
+            "experiment": job.get("experiment"), "run_id": job.get("run_id"),
+            "pool": job.get("pool"), "state": job.get("state"), "commit": job.get("commit"),
+            "node": job.get("node"), "gpus_used": 1,
+            "driver_version": job.get("driver_version"), "torch_version": job.get("torch_version"),
+            "cuda_visible_devices": job.get("cuda_visible_devices"),
+            "created_at": job.get("created_at"), "started_at": started,
+            "completed_at": completed, "seconds": seconds,
+            "gpu_hours": (seconds / 3600.0) if seconds else None,
+            "exit_code": job.get("exit_code"), "failure_reason": job.get("failure_reason")})
+    gpu_hours = sum(item["gpu_hours"] or 0.0 for item in ledger)
+    datasets = {}
+    for key, dataset in cfg["datasets"].items():
+        freeze_path = C.analysis_dir() / f"structure_freeze_{dataset.replace('ogbg-', '')}.json"
+        freeze = C.read_json(freeze_path)
+        datasets[key] = {
+            "dataset": dataset, "freeze_record": str(freeze_path.relative_to(root)),
+            "content_sha256": freeze["cache"]["content_sha256"],
+            "n_templates": freeze["templates"]["n_templates"],
+            "n_multi_atom": freeze["templates"]["n_multi_atom"],
+            "n_merge_rounds": len(freeze["merge"]["history"]),
+            "coverage": freeze["support"]["coverage"],
+            "dual_site_support": freeze["support"]["dual_site_support"],
+            "expansion_triggered": freeze["support"]["expansion_triggered"],
+            "layout_support": freeze["support"]["layout_support"],
+            "split_sizes": freeze.get("sizes")}
+    runs = []
+    for run_id, run in sorted(find_runs().items()):
+        runs.append({k: run.get(k) for k in ("run_id", "arm", "dataset", "partition", "seed",
+                                             "epochs", "n_parameters", "seconds", "spec",
+                                             "recipe", "device", "status", "cache_content_sha256",
+                                             "config_sha256", "torch", "gpu", "init_state_hash",
+                                             "shared_body_hash")} |
+                    {"best": run.get("best"), "final": run.get("final"),
+                     "last20": run.get("last20"),
+                     "terminal_test_scored": bool(run.get("terminal_test_scored"))})
+    probes = C.results_root() / "probes_mollipo.json"
+    manifest = {
+        "round_dir": str(root), "git_commit": C.git_commit(),
+        "protocol_sha256": C.sha256_file(root / "PROTOCOL.md"),
+        "config_sha256": C.sha256_file(root / "configs" / "ws_v1.json"),
+        "wall_clock": {"T0_utc": float(cfg["budget"]["t0_unix"]),
+                       "hard_deadline_utc": float(cfg["budget"]["t0_unix"]) + 8 * 3600,
+                       "generated_utc": __import__("time").time()},
+        "datasets": datasets, "runs": runs, "jobs": ledger,
+        "gpu_hours_total": round(gpu_hours, 4),
+        "gpu_hours_budget": {"hard": cfg["budget"]["gpu_hours_hard"],
+                             "soft": cfg["budget"]["gpu_hours_soft"]},
+        "n_formal_training_units": len([r for r in runs if r["arm"] not in ("gine_ref",)]),
+        "n_reference_units": len([r for r in runs if r["arm"] == "gine_ref"]),
+        "probes_record": str(probes.relative_to(root)) if probes.is_file() else None,
+        "terminal_policy": "TERMINAL_DEVELOPMENT_TEST",
+    }
+    C.write_json(root / "run_manifest.json", manifest)
+    print(json.dumps({"gpu_hours": manifest["gpu_hours_total"], "n_runs": len(runs),
+                      "n_jobs": len(ledger)}, indent=2))
