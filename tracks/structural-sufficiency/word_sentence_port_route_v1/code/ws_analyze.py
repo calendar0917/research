@@ -1,0 +1,732 @@
+"""Terminal development-Test scoring and post-hoc analysis.
+
+``terminal``  one-shot Test scoring of frozen finalists (never used for selection).
+``summary``   main tables, paired scaffold bootstrap, support subsets, case dumps,
+              algebra recovery checks and the frozen-``R`` intervention.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+import numpy as np
+
+import ws_common as C
+import ws_probes as P
+import ws_train as T
+import ws_words as W
+
+BOOTSTRAP_SEED = 1703
+BOOTSTRAP_ROUNDS = 1000
+
+
+# ---------------------------------------------------------------------------
+# run discovery
+# ---------------------------------------------------------------------------
+
+
+def find_runs() -> dict[str, dict[str, Any]]:
+    root = C.results_root()
+    out: dict[str, dict[str, Any]] = {}
+    if not root.is_dir():
+        return out
+    for path in sorted(root.glob("*/run.json")):
+        record = C.read_json(path)
+        record.setdefault("run_dir", str(path.parent))
+        out[record["run_id"]] = record
+    return out
+
+
+def load_curve(run: Mapping[str, Any]) -> list[dict[str, Any]]:
+    return C.read_json(Path(run["run_dir"]) / "curves.json")["curves"]
+
+
+def load_preds(run: Mapping[str, Any], split: str, which: str = "best") -> dict[str, np.ndarray]:
+    path = Path(run["run_dir"]) / f"preds_{which}_{split}.npz"
+    with np.load(path, allow_pickle=False) as handle:
+        return {k: handle[k] for k in handle.files}
+
+
+# ---------------------------------------------------------------------------
+# terminal Test scoring
+# ---------------------------------------------------------------------------
+
+
+def cmd_terminal(args) -> None:
+    cfg = C.load_config()
+    out_root = C.results_root() / "terminal"
+    out_root.mkdir(parents=True, exist_ok=True)
+    import torch
+
+    import ws_model as M
+
+    summary: dict[str, Any] = {"commit": C.git_commit(), "runs": {}}
+    for run_id in args.runs:
+        run = C.read_json(C.results_root() / run_id / "run.json")
+        if run.get("terminal_test_scored"):
+            raise SystemExit(f"{run_id} was already scored once; refusing a second Test read")
+        dataset = cfg["datasets"][run["dataset"]]
+        payload, freeze = T.load_prepared(dataset)
+        raw = C.dataset_cache(dataset)
+        scaler = C.target_scaler(raw)
+        table = P.table_from_freeze(freeze)
+        history = list(freeze["merge"]["history"])
+        test_graphs = [int(i) for i in raw["test_idx"]]
+        partition = run["partition"]
+        molecules = W.load_molecules(raw)
+        if partition == "word":
+            states = W.replay_history(molecules, test_graphs, table, history)
+        else:
+            states = W.char_states(molecules, test_graphs, table)
+        data = _test_split(payload, raw, molecules, table, states)
+        spec = M.ModelSpec(**run["spec"])
+        model = T.make_model(spec, payload, seed=run["seed"], device=args.device)
+        state = torch.load(Path(run["run_dir"]) / "state_best.pt", map_location=args.device,
+                           weights_only=False)["state"]
+        model.load_state_dict(state)
+        model.eval()
+        extra = spec.extra == "attrpair"
+        hop = spec.para != "none"
+        if spec.encoder == "gine_ref":
+            import sq_data as SD
+            import sq_gine as SG
+            from torch_geometric.loader import DataLoader
+
+            dims = C.official_dims()
+            counts = {f"atom_{j}": int(dims["atom"][j]) for j in range(9)}
+            counts.update({f"bond_{j}": int(dims["bond"][j]) for j in range(3)})
+            counts["degree"] = 17
+            counts["ring"] = 14
+            packed = _packed_from_payload(payload, "test")
+            frames = SG.build_data_list(packed, counts, scaler)
+            loader = DataLoader(frames, batch_size=512, shuffle=False)
+            res = T.evaluate_gine(model, loader, args.device)
+        else:
+            data.hop = (M.build_hop_index(data.arrays["graph_word_ptr"], data.arrays["inc_ptr"],
+                                          data.arrays["inc_other"]) if hop else None)
+            res = T.evaluate_word(model, data, args.device, scaler, extra=extra, hop=hop)
+        metrics = T._metric_block(res, scaler)
+        outdir = out_root / run_id
+        outdir.mkdir(parents=True, exist_ok=True)
+        np.savez_compressed(outdir / "preds_test.npz", row_ids=metrics["row_ids"],
+                            pred_raw=metrics["pred_raw"], target_raw=metrics["target_raw"])
+        record = {"run_id": run_id, "dataset": run["dataset"], "split": "test",
+                  "test_policy": "TERMINAL_DEVELOPMENT_TEST",
+                  "test_rmse_raw": metrics["rmse_raw"], "test_mae_raw": metrics["mae_raw"],
+                  "n": int(len(metrics["row_ids"])), "commit": C.git_commit(),
+                  "checkpoint": "state_best.pt",
+                  "best_valid_rmse_raw": run.get("best", {}).get("valid_rmse_raw"),
+                  "selected_before_test": True}
+        C.write_json(outdir / "terminal_test.json", record)
+        run["terminal_test_scored"] = True
+        C.write_json(Path(run["run_dir"]) / "run.json", run)
+        summary["runs"][run_id] = record
+        print(json.dumps(record, indent=2), flush=True)
+    C.write_json(out_root / "summary.json", summary)
+
+
+def _test_split(payload, raw, molecules, table, states):
+    import ws_model as M
+
+    graphs = [int(i) for i in raw["test_idx"]]
+    arrays = W.build_split(molecules, graphs, states, table)
+    prefix = "base/test/"
+    data = M.SplitData(
+        name="test", row_ids=np.asarray(payload["row_ids/test"]),
+        labels=np.asarray(payload["labels/test"], dtype=np.float64),
+        graph_n_atoms=np.asarray(payload[f"{prefix}graph_n_atoms"]),
+        graph_n_bonds=np.asarray(payload[f"{prefix}graph_n_bonds"]),
+        atom_feat=np.asarray(payload[f"{prefix}atom_feat"], dtype=np.int64),
+        bond_feat=np.asarray(payload[f"{prefix}bond_feat"], dtype=np.int64),
+        arrays=arrays)
+    return data
+
+
+def _packed_from_payload(payload, split):
+    import sq_ast as SA
+
+    fields = {}
+    mapping = {"atom_feat": "atom_feat", "degree": "degree", "min_ring": "min_ring",
+               "in_cycle": "in_cycle", "node_graph": "node_graph", "bond_u": "bond_u",
+               "bond_v": "bond_v", "bond_feat": "bond_feat",
+               "graph_n_atoms": "graph_n_atoms", "graph_n_bonds": "graph_n_bonds",
+               "graph_n_components": "graph_n_components", "graph_cycle_rank": "graph_cycle_rank",
+               "row_ids": "row_ids", "labels": "labels"}
+    for key in mapping:
+        fields[key] = np.asarray(payload[f"base/{split}/{key}"])
+    fields["dataset"] = "ogbg"
+    fields["split"] = split
+    fields["n_graphs"] = int(len(fields["row_ids"]))
+    fields["n_nodes"] = int(len(fields["atom_feat"]))
+    fields["n_bonds"] = int(len(fields["bond_u"]))
+    fields["smiles"] = ["" for _ in range(fields["n_graphs"])]
+    return SA.PackedGraph(**fields)
+
+
+# ---------------------------------------------------------------------------
+# scaffolds (Bemis-Murcko) for grouped bootstrap
+# ---------------------------------------------------------------------------
+
+
+def scaffold_map(dataset: str) -> dict[int, str]:
+    path = C.analysis_dir() / f"scaffolds_{dataset.replace('ogbg-', '')}.json"
+    if path.is_file():
+        return {int(k): v for k, v in C.read_json(path).items()}
+    from rdkit import Chem, RDLogger
+    from rdkit.Chem.Scaffolds import MurckoScaffold
+
+    RDLogger.DisableLog("rdApp.*")
+    raw = C.dataset_cache(dataset)
+    out: dict[int, str] = {}
+    for row, smiles in enumerate(raw["smiles"]):
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            out[row] = f"unparsed_{row}"
+            continue
+        out[row] = MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=False)
+    C.write_json(path, out)
+    return out
+
+
+def paired_bootstrap(pred: np.ndarray, other: np.ndarray, target: np.ndarray,
+                     groups: Sequence[str], rounds: int = BOOTSTRAP_ROUNDS,
+                     seed: int = BOOTSTRAP_SEED) -> dict[str, Any]:
+    """Gain = RMSE(other) - RMSE(pred) with scaffolds as resampling units."""
+    keys = np.asarray(groups, dtype=object)
+    unique = np.asarray(sorted(set(keys.tolist())), dtype=object)
+    index = {k: i for i, k in enumerate(unique.tolist())}
+    codes = np.asarray([index[k] for k in keys.tolist()], dtype=np.int64)
+    err_a = (np.asarray(pred) - np.asarray(target)) ** 2
+    err_b = (np.asarray(other) - np.asarray(target)) ** 2
+    n_groups = len(unique)
+    members = [np.nonzero(codes == g)[0] for g in range(n_groups)]
+    rng = np.random.default_rng(seed)
+    samples = np.empty(rounds, dtype=np.float64)
+    point = float(np.sqrt(err_b.mean()) - np.sqrt(err_a.mean()))
+    for r in range(rounds):
+        pick = rng.integers(0, n_groups, n_groups)
+        idx = np.concatenate([members[g] for g in pick])
+        samples[r] = np.sqrt(err_b[idx].mean()) - np.sqrt(err_a[idx].mean())
+    return {"gain": point, "ci_low": float(np.quantile(samples, 0.025)),
+            "ci_high": float(np.quantile(samples, 0.975)),
+            "n_scaffolds": int(n_groups), "n_molecules": int(len(err_a)),
+            "rounds": int(rounds), "seed": int(seed)}
+
+
+def leave_one_out_gain(pred: np.ndarray, other: np.ndarray, target: np.ndarray) -> dict[str, Any]:
+    err_a = (np.asarray(pred) - np.asarray(target)) ** 2
+    err_b = (np.asarray(other) - np.asarray(target)) ** 2
+    base = float(np.sqrt(err_b.mean()) - np.sqrt(err_a.mean()))
+    worst = float((err_b - err_a).max())
+    if worst <= 0:
+        return {"gain": base, "leave_best_out_gain": base, "best_molecule_index": None}
+    i = int(np.argmax(err_b - err_a))
+    keep = np.ones(len(err_a), dtype=bool)
+    keep[i] = False
+    after = float(np.sqrt(err_b[keep].mean()) - np.sqrt(err_a[keep].mean()))
+    return {"gain": base, "leave_best_out_gain": after, "best_molecule_index": i}
+
+
+# ---------------------------------------------------------------------------
+# support subsets (section 12.2 definitions, frozen structure only)
+# ---------------------------------------------------------------------------
+
+
+def support_sets(payload: Mapping[str, Any], split: str) -> dict[str, Any]:
+    """Known words / known-content-new-layout membership per molecule."""
+    prefix = f"word/{split}/"
+    arr = {k[len(prefix):]: v for k, v in payload.items() if k.startswith(prefix)}
+    train_prefix = "word/train/"
+    tr = {k[len(train_prefix):]: v for k, v in payload.items() if k.startswith(train_prefix)}
+    gw = arr["graph_word_ptr"]
+    wt = arr["word_tmpl"]
+    inc_ptr = arr["inc_ptr"]
+    inc_other = arr["inc_other"]
+    inc_bond = arr["inc_bond"]
+    pair_ptr = arr["pair_ptr"]
+    pair_a, pair_b = arr["pair_a"], arr["pair_b"]
+    layouts = arr["pair_layout"]
+    bond_feat = np.asarray(payload[f"base/{split}/bond_feat"])
+    tr_bond_feat = np.asarray(payload["base/train/bond_feat"])
+
+    def signatures(wt_, inc_ptr_, inc_other_, inc_bond_, pair_ptr_, pair_a_, pair_b_, layout_,
+                   bond_feat_):
+        center, content, layout = [], [], []
+        for w in range(len(wt_)):
+            lo, hi = int(pair_ptr_[w]), int(pair_ptr_[w + 1])
+            for k in range(lo, hi):
+                a, b = int(pair_a_[k]), int(pair_b_[k])
+                nb = tuple(sorted((int(wt_[inc_other_[a]]), int(wt_[inc_other_[b]]))))
+                bonds = tuple(sorted((int(bond_feat_[inc_bond_[a]][0]),
+                                      int(bond_feat_[inc_bond_[b]][0]))))
+                center.append(int(wt_[w]))
+                content.append((int(wt_[w]), nb, bonds))
+                layout.append(str(layout_[k]))
+        return center, content, layout
+
+    tr_wt = tr["word_tmpl"]
+    tr_center, tr_content, tr_layout = signatures(
+        tr_wt, tr["inc_ptr"], tr["inc_other"], tr["inc_bond"], tr["pair_ptr"],
+        tr["pair_a"], tr["pair_b"], tr["pair_layout"], tr_bond_feat)
+    train_words = set(int(t) for t in tr_wt.tolist())
+    train_content = set(tr_content)
+    train_layout = set(tr_layout)
+    center, content, layout = signatures(wt, inc_ptr, inc_other, inc_bond, pair_ptr,
+                                         pair_a, pair_b, layouts, bond_feat)
+    new_layout_hits = [(c, l) for c, l in zip(content, layout)
+                       if l not in train_layout and c in train_content]
+    new_layout_centres = set(c for c, _ in new_layout_hits)
+    new_layouts = set(l for _, l in new_layout_hits)
+    # per-molecule aggregation
+    n_graphs = len(gw) - 1
+    unknown_word_mols, new_layout_mols = [], []
+    for g in range(n_graphs):
+        lo, hi = int(gw[g]), int(gw[g + 1])
+        words = wt[lo:hi]
+        if any(int(t) not in train_words for t in words):
+            unknown_word_mols.append(g)
+        for w in range(lo, hi):
+            if any((str(layouts[k]) not in train_layout) for k in
+                   range(int(pair_ptr[w]), int(pair_ptr[w + 1]))):
+                a = int(pair_ptr[w])
+                if a < int(pair_ptr[w + 1]):
+                    new_layout_mols.append(g)
+                break
+    return {
+        "split": split,
+        "train_word_types": len(train_words),
+        "train_content_signatures": len(train_content),
+        "train_layouts": len(train_layout),
+        "n_pairs": len(center),
+        "new_layout_pairs": int(len(new_layout_hits)),
+        "new_layout_word_types": int(len(new_layout_centres)),
+        "new_layout_layouts": int(len(new_layouts)),
+        "molecules_with_new_layout": sorted(set(new_layout_mols)),
+        "molecules_with_unknown_word": sorted(set(unknown_word_mols)),
+        "n_graphs": int(n_graphs),
+    }
+
+
+# ---------------------------------------------------------------------------
+# inspection: full F from terms, case dumps, frozen-R intervention
+# ---------------------------------------------------------------------------
+
+
+def _load_model(run: Mapping[str, Any], payload: Mapping[str, Any], device: str):
+    import torch
+
+    import ws_model as M
+
+    spec = M.ModelSpec(**run["spec"])
+    model = T.make_model(spec, payload, seed=run["seed"], device=device)
+    state = torch.load(Path(run["run_dir"]) / "state_best.pt", map_location=device,
+                       weights_only=False)["state"]
+    model.load_state_dict(state)
+    model.eval()
+    return model, spec
+
+
+def forward_terms(model, data, device: str, *, extra: bool = False, hop: bool = False,
+                  intervention: str = "none", batch_size: int = 256):
+    """Per-word terms for one split, plus the reconstructed whole-molecule F."""
+    import torch
+
+    import ws_model as M
+
+    model.eval()
+    store: dict[str, list[np.ndarray]] = {}
+    preds, rows = [], []
+    with torch.no_grad():
+        for start in range(0, len(data.row_ids), batch_size):
+            idx = np.arange(start, min(start + batch_size, len(data.row_ids)))
+            raw = M.pack_batch(data, idx, attrpair=extra, hop=hop)
+            if intervention == "erased":
+                raw["pair_R"] = raw["pair_ER"]
+            batch = M.to_device(raw, device)
+            out = model(batch)
+            n_graphs = int(batch["n_graphs"])
+            graph_of_word = np.asarray(raw["graph_of_word"])
+            mass = (np.asarray(batch["word_natoms"].detach().cpu())
+                    / np.asarray(batch["n_atoms_graph"].detach().cpu())[graph_of_word])
+            terms = {
+                "u": out["u"].detach().cpu().numpy(),
+                "v": out["v"].detach().cpu().numpy(),
+                "w": out["w"].detach().cpu().numpy(),
+                "r": out["r"].detach().cpu().numpy(),
+                "word_tmpl": np.asarray(raw["word_tmpl"]),
+                "graph_of_word": graph_of_word,
+                "mass": mass,
+                "bias": float(model.bias.detach().cpu()),
+                "pred": out["pred"].detach().cpu().numpy(),
+            }
+            if "n_inc" in out:
+                terms["n_inc"] = out["n_inc"].detach().cpu().numpy()
+            for key, value in terms.items():
+                store.setdefault(key, []).append(np.atleast_1d(value))
+            preds.append(terms["pred"])
+            rows.append(np.asarray(raw["row_ids"]))
+    merged = {k: np.concatenate(v) for k, v in store.items()}
+    merged["bias"] = float(merged["bias"][0])
+    merged["row_ids"] = np.concatenate(rows)
+    merged["pred"] = np.concatenate(preds)
+    contrib = (merged["u"] + merged["v"] + merged["w"] + merged["r"]) * merged["mass"]
+    recon = np.zeros(int(len(data.row_ids)))
+    np.add.at(recon, merged["graph_of_word"], contrib)
+    merged["f_reconstructed"] = recon + merged["bias"]
+    merged["recon_max_abs_diff"] = float(np.max(np.abs(merged["f_reconstructed"] - merged["pred"])))
+    return merged
+
+
+def case_dump(run: Mapping[str, Any], payload: Mapping[str, Any], split: str, *,
+              device: str = "cpu", n_support: int = 4, n_error: int = 4) -> dict[str, Any]:
+    import torch
+
+    import ws_model as M
+
+    dataset = C.load_config()["datasets"][run["dataset"]]
+    model, spec = _load_model(run, payload, device)
+    extra = spec.extra == "attrpair"
+    hop = spec.para != "none"
+    data = T.split_data(payload, run["partition"], split, with_hop=hop)
+    scaler = C.target_scaler(C.dataset_cache(dataset))
+    terms = forward_terms(model, data, device, extra=extra, hop=hop)
+    pred = T.evaluate_word(model, data, device, scaler, extra=extra, hop=hop)
+    pred_raw = pred["pred_std"] * scaler["std"] + scaler["mean"]
+    target_raw = pred["target_std"] * scaler["std"] + scaler["mean"]
+    rows = pred["row_ids"]
+    err = np.abs(pred_raw - target_raw)
+    order = np.argsort(-err)
+    # structural-support cases: molecules whose words have >= 2 distinct ports
+    support = []
+    gw = data.arrays["graph_word_ptr"]
+    inc_ptr = data.arrays["inc_ptr"]
+    for g in range(len(rows)):
+        lo, hi = int(gw[g]), int(gw[g + 1])
+        ports = [int(inc_ptr[w + 1] - inc_ptr[w]) for w in range(lo, hi)]
+        if ports and max(ports) >= 2:
+            support.append((g, max(ports)))
+    support.sort(key=lambda item: (-item[1], int(rows[item[0]])))
+    chosen = [("support", g) for g, _ in support[:n_support]]
+    chosen += [("max_error", int(i)) for i in order[:n_error]]
+    out_cases = []
+    for tag, g in chosen:
+        lo, hi = int(gw[g]), int(gw[g + 1])
+        words = []
+        for w in range(lo, hi):
+            tid = int(data.arrays["word_tmpl"][w])
+            atoms = data.arrays["word_atoms"][int(data.arrays["word_ptr_atom"][w]):
+                                              int(data.arrays["word_ptr_atom"][w + 1])]
+            inc = []
+            for k in range(int(inc_ptr[w]), int(inc_ptr[w + 1])):
+                inc.append({"own_site": int(data.arrays["inc_own_site"][k]),
+                            "neighbour_word": int(data.arrays["inc_other"][k] - lo),
+                            "neighbour_site": int(data.arrays["inc_other_site"][k]),
+                            "bond_columns": [int(x) for x in data.bond_feat[int(data.arrays["inc_bond"][k])]],
+                            "own_atom": int(data.atoms_of_row(g, int(data.arrays["inc_own_atom"][k])))})
+            words.append({
+                "word_index": w, "template_id": tid,
+                "template_canonical": table_templates_cached(C.load_config()["datasets"][run["dataset"]])[tid],
+                "word_atoms_row_local": [int(a) - int(data.arrays["graph_atom_ptr"][g]) for a in atoms],
+                "ports": inc,
+                "n_incidences": len(inc),
+                "u_raw": float(terms["u"][w]) * scaler["std"],
+                "v_raw": float(terms["v"][w]) * scaler["std"],
+                "w_raw": float(terms["w"][w]) * scaler["std"],
+                "r_raw": float(terms["r"][w]) * scaler["std"],
+                "mass": float(terms["mass"][w]),
+            })
+        out_cases.append({
+            "rule": tag, "valid_row_id": int(rows[g]),
+            "y_raw": float(target_raw[g]), "F_raw": float(pred_raw[g]),
+            "intercept_raw": float(scaler["mean"] + scaler["std"] * terms["bias"]),
+            "n_atoms": int(data.graph_n_atoms[g]), "words": words})
+    return {"split": split, "run_id": run["run_id"], "recon_max_abs_diff": terms["recon_max_abs_diff"],
+            "cases": out_cases}
+
+
+_TABLE_CACHE: dict[str, tuple[W.TemplateTable, list[str]]] = {}
+
+
+def table_from_freeze_cached(dataset: str):
+    if dataset not in _TABLE_CACHE:
+        payload, freeze = T.load_prepared(dataset)
+        table = P.table_from_freeze(freeze)
+        _TABLE_CACHE[dataset] = (table, [t.canon for t in table.templates])
+    return _TABLE_CACHE[dataset][0]
+
+
+def table_templates_cached(dataset: str):
+    table_from_freeze_cached(dataset)
+    return _TABLE_CACHE[dataset][1]
+
+
+# ---------------------------------------------------------------------------
+# summary tables and branch arithmetic
+# ---------------------------------------------------------------------------
+
+PRIORITY = {"code": 0, "id": 1, "wgine": 2, "gine_ref": 3}
+
+
+def _thr(scaler: Mapping[str, float]) -> dict[str, float]:
+    sigma = float(scaler["std"])
+    return {"sigma": sigma, "delta_task": 0.01 * sigma, "delta_port": 0.005 * sigma,
+            "band": 0.04 * sigma}
+
+
+def _encoder_of(run: Mapping[str, Any]) -> str:
+    return run["spec"]["encoder"]
+
+
+def _mode_of(run: Mapping[str, Any]) -> str:
+    return run["spec"]["mode"]
+
+
+def choose_L(runs: Mapping[str, Mapping[str, Any]], thr: Mapping[str, float], seeds=(0,),
+             dataset: str = "mollipo") -> dict[str, Any]:
+    """Lowest Valid RMSE among the three FULL encoders, with the frozen tie rule."""
+    cands = {}
+    for run in runs.values():
+        if run["dataset"] != dataset or run["seed"] not in seeds:
+            continue
+        if _mode_of(run) != "full" or _encoder_of(run) not in ("code", "id", "wgine"):
+            continue
+        if run["spec"]["extra"] != "none" or run["spec"]["para"] != "none":
+            continue
+        if run["partition"] != "word":
+            continue
+        cands[run["arm"]] = run
+    if not cands:
+        return {}
+    best_value = min(r["best"]["valid_rmse_raw"] for r in cands.values())
+    close = {k: v for k, v in cands.items() if v["best"]["valid_rmse_raw"] <= best_value + 0.002 * thr["sigma"]}
+    winner = sorted(close, key=lambda k: (PRIORITY[_encoder_of(close[k])], k))[0]
+    return {"candidates": {k: v["best"]["valid_rmse_raw"] for k, v in cands.items()},
+            "best_value": best_value, "tie_set": sorted(close),
+            "selected_arm": winner, "selected_run": close[winner]["run_id"],
+            "selected_encoder": _encoder_of(close[winner])}
+
+
+def classify_stage_b(runs: Mapping[str, Mapping[str, Any]], thr: Mapping[str, float],
+                     L: Mapping[str, Any]) -> dict[str, Any]:
+    if not L:
+        return {"branch": "UNDECIDED", "reason": "no FULL candidate runs"}
+    valid = {run["run_id"]: run["best"]["valid_rmse_raw"] for run in runs.values()
+             if run["dataset"] == "mollipo" and run["seed"] == 0}
+    ref = next((r for r in runs.values() if r["arm"] == "gine_ref" and r["dataset"] == "mollipo"
+                and r["seed"] == 0), None)
+    bag = next((r for r in runs.values() if r["arm"] == "bag" and r["dataset"] == "mollipo"
+                and r["seed"] == 0), None)
+    Lrun = runs[L["selected_run"]]
+    enc = L["selected_encoder"]
+    erased = next((r for r in runs.values() if r["dataset"] == "mollipo" and r["seed"] == 0
+                   and _mode_of(r) == "erased" and _encoder_of(r) == enc
+                   and r["spec"]["extra"] == "none"), None)
+    out: dict[str, Any] = {"L_run": Lrun["run_id"], "L_encoder": enc,
+                           "L_valid": Lrun["best"]["valid_rmse_raw"]}
+    if ref is None or bag is None:
+        out.update({"branch": "UNDECIDED", "reason": "missing GINE_REF or BAG"})
+        return out
+    out["gine_ref_valid"] = ref["best"]["valid_rmse_raw"]
+    out["bag_valid"] = bag["best"]["valid_rmse_raw"]
+    out["gain_L_bag"] = bag["best"]["valid_rmse_raw"] - Lrun["best"]["valid_rmse_raw"]
+    out["gain_L_ref"] = ref["best"]["valid_rmse_raw"] - Lrun["best"]["valid_rmse_raw"]
+    if erased is not None:
+        out["erased_run"] = erased["run_id"]
+        out["erased_valid"] = erased["best"]["valid_rmse_raw"]
+        out["gain_L_erased"] = erased["best"]["valid_rmse_raw"] - Lrun["best"]["valid_rmse_raw"]
+    delta_task, delta_port, band = thr["delta_task"], thr["delta_port"], thr["band"]
+    # leave-one-out on the favourable direction
+    pred_L = load_preds(Lrun, "valid") if Path(Lrun["run_dir"]).is_dir() else None
+    dirs = {}
+    if pred_L is not None:
+        target = pred_L["target_raw"]
+        if out["gain_L_bag"] > 0:
+            pb = load_preds(bag, "valid")
+            dirs["vs_bag"] = leave_one_out_gain(pred_L["pred_raw"], pb["pred_raw"], target)
+        if "erased_run" in out and out["gain_L_erased"] > 0:
+            pe = load_preds(erased, "valid")
+            dirs["vs_erased"] = leave_one_out_gain(pred_L["pred_raw"], pe["pred_raw"], target)
+    out["leave_one_out"] = dirs
+    robust_task = (out["gain_L_bag"] >= delta_task
+                   and dirs.get("vs_bag", {}).get("leave_best_out_gain", -1) > 0)
+    robust_port = (out.get("gain_L_erased", -1e9) >= delta_port
+                   and dirs.get("vs_erased", {}).get("leave_best_out_gain", -1) > 0
+                   and Lrun["best"]["valid_rmse_raw"] <= out["bag_valid"] + delta_port)
+    not_worse_ref = Lrun["best"]["valid_rmse_raw"] <= out["gine_ref_valid"] + band
+    boundary = Lrun["best"]["valid_rmse_raw"] <= out["gine_ref_valid"] + 2 * band
+    out.update({"robust_task_direction": bool(robust_task),
+                "robust_port_direction": bool(robust_port),
+                "not_worse_than_ref_plus_band": bool(not_worse_ref),
+                "within_ref_plus_2band": bool(boundary)})
+    if not_worse_ref and (robust_task or robust_port):
+        out["branch"] = "P"
+    elif boundary:
+        out["branch"] = "B"
+    else:
+        out["branch"] = "N"
+    return out
+
+
+def cmd_summary(args) -> None:
+    cfg = C.load_config()
+    runs = find_runs()
+    analysis = C.analysis_dir()
+    analysis.mkdir(parents=True, exist_ok=True)
+    out: dict[str, Any] = {"commit": C.git_commit(), "n_runs": len(runs),
+                           "results_root": str(C.results_root())}
+    thresholds = {}
+    for key, dataset in cfg["datasets"].items():
+        scaler = C.target_scaler(C.dataset_cache(dataset))
+        thresholds[key] = _thr(scaler) | {"mean": scaler["mean"], "std": scaler["std"]}
+    out["thresholds"] = thresholds
+    # main table
+    rows = []
+    for run_id, run in sorted(runs.items()):
+        row = {"run_id": run_id, "dataset": run["dataset"], "arm": run["arm"],
+               "encoder": _encoder_of(run), "mode": _mode_of(run),
+               "extra": run["spec"]["extra"], "para": run["spec"]["para"],
+               "partition": run["partition"], "seed": run["seed"],
+               "epochs": run["epochs"], "n_parameters": run["n_parameters"],
+               "seconds": round(run["seconds"], 1),
+               "seconds_per_epoch": round(run["seconds"] / max(1, run["epochs"]), 2),
+               "best_epoch": run["best"]["epoch"],
+               "best_train_rmse": run["best"]["train_rmse_raw"],
+               "best_valid_rmse": run["best"]["valid_rmse_raw"],
+               "best_valid_mae": run["best"]["valid_mae_raw"],
+               "final_valid_rmse": run["final"]["valid_rmse_raw"],
+               "last20_valid_rmse": run["last20"]["mean_last20_valid_rmse_raw"],
+               "last20_train_rmse": run["last20"]["mean_last20_train_rmse_raw"],
+               "init_state_hash": run.get("init_state_hash"),
+               "shared_body_hash": run.get("shared_body_hash")}
+        term = C.results_root() / "terminal" / run_id / "terminal_test.json"
+        if term.is_file():
+            rec = C.read_json(term)
+            row["test_rmse"] = rec["test_rmse_raw"]
+            row["test_mae"] = rec["test_mae_raw"]
+        rows.append(row)
+    C.write_csv(analysis / "main_table.csv", rows)
+    out["main_table"] = rows
+    out["stage_b"] = {}
+    for key in cfg["datasets"]:
+        L = choose_L(runs, thresholds[key], dataset=key)
+        if L:
+            out["stage_b"][key] = {"L": L, "classification": classify_stage_b(
+                {k: v for k, v in runs.items() if v["dataset"] == key}, thresholds[key], L)}
+    out["stage_c"] = _stage_c_summary(runs, thresholds)
+    out["stage_d"] = _stage_d_summary(runs, thresholds)
+    # support subsets (Valid only here; Test needs the terminal pass)
+    support = {}
+    for key, dataset in cfg["datasets"].items():
+        payload, _ = T.load_prepared(dataset)
+        support[key] = {"valid": support_sets(payload, "valid")}
+        try:
+            support[key]["train"] = support_sets(payload, "train")
+        except Exception as exc:  # noqa: BLE001 - record, never hide
+            support[key]["train_error"] = repr(exc)
+    out["support_sets"] = {k: {split: {kk: vv for kk, vv in val.items()
+                                       if not isinstance(vv, list)}
+                               for split, val in v.items()} for k, v in support.items()}
+    out["support_sets_full"] = {k: {split: {"molecules_with_new_layout": val["molecules_with_new_layout"],
+                                            "molecules_with_unknown_word": val["molecules_with_unknown_word"]}
+                                    for split, val in v.items()} for k, v in support.items()}
+    # bootstrap on core comparisons (Lipo Valid, seed0 and pooled seeds)
+    out["bootstrap"] = _bootstrap_core(runs, cfg)
+    C.write_json(analysis / "summary.json", out)
+    print(json.dumps({"n_runs": len(runs), "stage_b": out["stage_b"],
+                      "bootstrap_keys": list(out["bootstrap"])}, indent=2)[:4000])
+
+
+def _stage_c_summary(runs, thresholds):
+    out = {}
+    for key in thresholds:
+        key_runs = {k: v for k, v in runs.items() if v["dataset"] == key}
+        by_arm: dict[str, list[float]] = {}
+        for run in key_runs.values():
+            if run["spec"]["extra"] != "none" or run["spec"]["para"] not in ("none",):
+                continue
+            by_arm.setdefault(run["arm"], []).append(run["best"]["valid_rmse_raw"])
+        out[key] = {arm: {"values": sorted(vals), "mean": float(np.mean(vals)),
+                          "sd": float(np.std(vals, ddof=1)) if len(vals) > 1 else None,
+                          "n": len(vals)} for arm, vals in sorted(by_arm.items())}
+        delta_task = thresholds[key]["delta_task"]
+        delta_port = thresholds[key]["delta_port"]
+        band = thresholds[key]["band"]
+        L_arms = [a for a in out[key] if a.startswith("full_")]
+        core = {}
+        for L in L_arms:
+            for other in ("bag", "erased_" + L.replace("full_", ""), "gine_ref"):
+                if L in out[key] and other in out[key]:
+                    gains = [b - a for a, b in zip(out[key][L]["values"], out[key][other]["values"])]
+                    n = min(len(gains), len(out[key][L]["values"]), len(out[key][other]["values"]))
+                    if n == 0:
+                        continue
+                    same_sign = sum(1 for g in gains[:n] if g > 0)
+                    core[f"{L}_vs_{other}"] = {
+                        "gains": gains[:n], "mean_gain": float(np.mean(gains[:n])),
+                        "n_seeds": n, "n_positive": same_sign,
+                        "delta": delta_task if other == "bag" else delta_port if other.startswith("erased") else band,
+                    }
+        out[key]["core_gains"] = core
+    return out
+
+
+def _stage_d_summary(runs, thresholds):
+    out = {}
+    for key in thresholds:
+        rel = [r for r in runs.values() if r["dataset"] == key and r["spec"]["para"] == "rel"]
+        cap = [r for r in runs.values() if r["dataset"] == key and r["spec"]["para"] == "cap"]
+        if not rel and not cap:
+            continue
+        entry = {}
+        for name, group in (("para_rel", rel), ("para_cap", cap)):
+            vals = sorted(r["best"]["valid_rmse_raw"] for r in group)
+            entry[name] = {"values": vals, "mean": float(np.mean(vals)) if vals else None,
+                           "n": len(vals)}
+        if rel and cap:
+            n = min(len(rel), len(cap))
+            d = sorted(r["best"]["valid_rmse_raw"] for r in rel)[:n]
+            c = sorted(r["best"]["valid_rmse_raw"] for r in cap)[:n]
+            entry["rel_minus_cap"] = [a - b for a, b in zip(d, c)]
+        out[key] = entry
+    return out
+
+
+def _bootstrap_core(runs, cfg):
+    out = {}
+    for key, dataset in cfg["datasets"].items():
+        payload, _ = T.load_prepared(dataset)
+        scaf = scaffold_map(dataset)
+        by_arm: dict[str, dict[int, np.ndarray]] = {}
+        target = {}
+        for run in runs.values():
+            if run["dataset"] != key:
+                continue
+            if run["spec"]["extra"] != "none" or run["spec"]["para"] != "none":
+                continue
+            path = Path(run["run_dir"]) / "preds_best_valid.npz"
+            if not path.is_file():
+                continue
+            preds = load_preds(run, "valid")
+            arm = run["arm"] + ("" if run["seed"] == 0 else f"_s{run['seed']}")
+            by_arm[arm] = dict(zip(preds["row_ids"].tolist(), preds["pred_raw"].tolist()))
+            target = dict(zip(preds["row_ids"].tolist(), preds["target_raw"].tolist()))
+        pairs = []
+        for L in ("full_code", "full_id", "full_wgine"):
+            for other in ("bag", "erased_code", "erased_id", "erased_wgine", "gine_ref",
+                          "char_full"):
+                if L in by_arm and other in by_arm:
+                    pairs.append((L, other))
+        entries = {}
+        for L, other in pairs:
+            shared = sorted(set(by_arm[L]) & set(by_arm[other]) & set(target))
+            if len(shared) < 10:
+                continue
+            a = np.asarray([by_arm[L][r] for r in shared])
+            b = np.asarray([by_arm[other][r] for r in shared])
+            y = np.asarray([target[r] for r in shared])
+            groups = [scaf.get(r, f"row_{r}") for r in shared]
+            entries[f"{L}_vs_{other}"] = paired_bootstrap(a, b, y, groups)
+        out[key] = entries
+    return out

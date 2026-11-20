@@ -280,40 +280,37 @@ def cmd_prepare(args) -> None:
 # model spec resolution
 # ---------------------------------------------------------------------------
 
-ARM_SPECS = {
-    "full_id": ("id", "full", "none", "none"),
-    "full_code": ("code", "full", "none", "none"),
-    "full_wgine": ("wgine", "full", "none", "none"),
-    "erased_id": ("id", "erased", "none", "none"),
-    "erased_code": ("code", "erased", "none", "none"),
-    "erased_wgine": ("wgine", "erased", "none", "none"),
-    "bag": ("code", "bag", "none", "none"),
-    "char_full": ("code", "full", "none", "none"),
-    "gine_ref": ("gine_ref", "full", "none", "none"),
-    "full_code_attrpair": ("code", "full", "attrpair", "none"),
-    "erased_code_attrpair": ("code", "erased", "attrpair", "none"),
-    "full_code_rootmean": ("code", "full", "rootmean", "none"),
-    "erased_code_rootmean": ("code", "erased", "rootmean", "none"),
-    "full_code_para_rel": ("code", "full", "none", "rel"),
-    "full_code_para_cap": ("code", "full", "none", "cap"),
+BASE_ARMS = {
+    "full_id": ("id", "full"),
+    "full_code": ("code", "full"),
+    "full_wgine": ("wgine", "full"),
+    "erased_id": ("id", "erased"),
+    "erased_code": ("code", "erased"),
+    "erased_wgine": ("wgine", "erased"),
+    "bag": ("code", "bag"),
+    "char_full": ("code", "full"),
+    "gine_ref": ("gine_ref", "full"),
 }
 
 
 def arm_parts(arm: str):
-    """Resolve ``full_code_para_rel`` style names (plus ``_r1`` recipe suffix)."""
-    recipe_tag = "r0"
-    base = arm
+    """Parse ``full_wgine_attrpair`` style names (optional ``_r1`` recipe suffix)."""
+    base, recipe_tag = arm, "r0"
     if base.endswith("_r1"):
-        recipe_tag = "r1"
-        base = base[:-3]
-    if base in ARM_SPECS:
-        return ARM_SPECS[base], recipe_tag, base
-    for candidate in sorted(ARM_SPECS, key=len, reverse=True):
-        if base.startswith(candidate):
-            suffix = base[len(candidate):]
-            enc, mode, extra, para = ARM_SPECS[candidate]
-            return (enc, mode, extra, para), recipe_tag, candidate + suffix
-    raise KeyError(f"unknown arm {arm!r}")
+        recipe_tag, base = "r1", base[:-3]
+    extra, para = "none", "none"
+    if base.endswith("_para_rel"):
+        para, base = "rel", base[:-9]
+    elif base.endswith("_para_cap"):
+        para, base = "cap", base[:-9]
+    if base.endswith("_attrpair"):
+        extra, base = "attrpair", base[:-9]
+    elif base.endswith("_rootmean"):
+        extra, base = "rootmean", base[:-9]
+    if base not in BASE_ARMS:
+        raise KeyError(f"unknown arm {arm!r}")
+    enc, mode = BASE_ARMS[base]
+    return (enc, mode, extra, para), recipe_tag, base
 
 
 def build_spec(arm: str):
@@ -321,8 +318,6 @@ def build_spec(arm: str):
 
     (enc, mode, extra, para), recipe_tag, _ = arm_parts(arm)
     partition = "char" if arm.startswith("char") else "word"
-    if enc == "code" and extra == "none" and arm.startswith("bag"):
-        partition = "word"
     return M.ModelSpec(encoder=enc, mode=mode, extra=extra, para=para), recipe_tag, partition
 
 
