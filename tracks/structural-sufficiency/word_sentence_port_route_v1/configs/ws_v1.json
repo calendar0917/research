@@ -1,0 +1,55 @@
+{
+  "protocol_id": "word-sentence-port-route-v1",
+  "version": "2026-11-20/v1",
+  "datasets": {
+    "mollipo": "ogbg-mollipo",
+    "molesol": "ogbg-molesol"
+  },
+  "merge": {
+    "max_atoms": 6,
+    "min_df_abs": 3,
+    "min_df_frac": 0.002,
+    "base_cap": 128,
+    "expand_cap": 256,
+    "expand_coverage_floor": 0.30,
+    "expand_dual_site_support_floor": 200,
+    "max_rounds": 512
+  },
+  "recipe": {
+    "epochs_default": 360,
+    "epochs_alt": [240, 160],
+    "batch": 128,
+    "peak_lr": 0.001,
+    "weight_decay": 0.00001,
+    "warmup_epochs": 5,
+    "warmup_start_lr": 0.0001,
+    "min_lr": 0.00001,
+    "clip": 5.0,
+    "timing_warm": 2,
+    "timing_epochs": 5,
+    "timing_safety": 1.25,
+    "eval_allowance": 0.75,
+    "epoch_budget_minutes": 24.0,
+    "feasibility_minutes": 30.0,
+    "r1_peak_lr": 0.0003,
+    "r1_weight_decay": 0.001,
+    "model_param_cap": 500000,
+    "fallback_hidden": 48
+  },
+  "budget": {
+    "t0_monotonic_wall": 1795190995,
+    "hard_deadline_hours": 8.0,
+    "gpu_soft_hours": 14.0,
+    "gpu_hard_hours": 16.0,
+    "stop_launching_after_hours": 6.667,
+    "stop_all_training_after_hours": 7.25,
+    "max_formal_units": 32,
+    "gpu_pools": ["res-gpu0", "res-gpu1"]
+  },
+  "reference": {
+    "lipo_old_gine_valid": 0.6091,
+    "esol_old_gine_valid": 0.8587,
+    "calibration_factor": 1.10,
+    "max_extra_reference_runs": 2
+  }
+}
