@@ -60,8 +60,11 @@ def main(argv=None) -> int:
     RC.write_json(out / "influence_joint.json", influence)
 
     corrections = _corrections(units, Path(args.stress_dir))
-    _write_csv(out / "corrections.csv", corrections["rows"])
+    _write_csv(out / "corrections.csv", corrections["same_epoch_train_rmse"])
     RC.write_json(out / "corrections.json", corrections)
+    matched = _matched_epochs(units)
+    _write_csv(out / "matched_epochs.csv", matched["rows"])
+    RC.write_json(out / "matched_epochs.json", matched)
 
     stress = _read_json(Path(args.stress_dir) / "stress_summary.json") if (Path(args.stress_dir) / "stress_summary.json").is_file() else {}
     edits = _read_json(Path(args.edit_support)) if Path(args.edit_support).is_file() else {}
@@ -79,6 +82,7 @@ def main(argv=None) -> int:
         "bootstrap_joint": bootstrap,
         "influence_joint": influence,
         "corrections": corrections,
+        "matched_epochs": matched,
         "dictionary_stress": {
             "state": stress.get("decision", {}).get("label", "NOT_RUN"),
             "table": stress.get("table", []),
@@ -306,6 +310,35 @@ def _corrections(units, stress_dir: Path) -> dict[str, Any]:
     }
 
 
+def _matched_epochs(units) -> dict[str, Any]:
+    """Three-arm numbers at matched epochs (not only at each arm's selected state)."""
+    rows = []
+    checkpoints = (63, 85, 91, 120, 200, 360)
+    for epoch in checkpoints:
+        row: dict[str, Any] = {"epoch": epoch}
+        for arm in ARMS:
+            curve = units[arm]["curves"][epoch - 1]
+            for split, key in (("train", "train_rmse_raw"), ("valid", "valid_rmse_raw"), ("test", "test_rmse_raw")):
+                row[f"{arm}_{split}_rmse_raw"] = float(curve[key])
+        rows.append(row)
+    resp_val = np.asarray([float(r["valid_rmse_raw"]) for r in units["RESP"]["curves"]])
+    joint_val = np.asarray([float(r["valid_rmse_raw"]) for r in units["JOINT"]["curves"]])
+    resp_train = np.asarray([float(r["train_rmse_raw"]) for r in units["RESP"]["curves"]])
+    joint_train = np.asarray([float(r["train_rmse_raw"]) for r in units["JOINT"]["curves"]])
+    add_val = np.asarray([float(r["valid_rmse_raw"]) for r in units["ADD"]["curves"]])
+    return {
+        "rows": rows,
+        "n_epochs": int(resp_val.size),
+        "n_epochs_RESP_valid_below_JOINT": int((resp_val < joint_val).sum()),
+        "n_epochs_RESP_train_below_JOINT": int((resp_train < joint_train).sum()),
+        "n_epochs_RESP_valid_below_ADD": int((resp_val < add_val).sum()),
+        "note": ("Matched-epoch numbers from the committed per-epoch curves. They show that the "
+                 "selected-state comparison is not only an epoch-choice effect on Val, but they also "
+                 "show it is not epoch-invariant on Test (at epoch 85, JOINT's best-Val epoch, Test is "
+                 "0.6999 for JOINT vs 0.7095 for RESP while Val is 0.6555 vs 0.6642)."),
+    }
+
+
 def _labels(gain_rows, bootstrap, influence, stress, edits, follow) -> dict[str, Any]:
     best = next(r for r in gain_rows if r["state"] == "best")
     val_gain = best["gain_val_JOINT_minus_RESP"]
@@ -324,7 +357,7 @@ def _labels(gain_rows, bootstrap, influence, stress, edits, follow) -> dict[str,
     else:
         sample = "NO_VAL_ADVANTAGE"
     dictionary = stress.get("decision", {}).get("label", "BUDGET_NOT_RUN")
-    edit_label = "EDIT_REPLAY_BLOCKED" if not edits else "EDIT_SUPPORT_DESCRIBED"
+    edit_label = "EDIT_REPLAY_BLOCKED" if not edits else "HELDOUT_EDIT_SUPPORT_LOW"
     text = {
         "PRODUCT_SPECIFIC_SIGNAL_THIS_CONFIG": (
             "RESP beats the matched joint MLP by at least the pre-declared 0.02 Val margin, Test follows and "

@@ -1,0 +1,118 @@
+{
+  "device": "cuda:0",
+  "ok": true,
+  "parameters": {
+    "expected_parameters": 198262,
+    "identical_layout": true,
+    "modes": {
+      "ADD": {
+        "n_parameters": 198262,
+        "state_hash": "ccc8171d4cdc47daadd226c382947a0e3e62f6c9266dcad6f952ba98a989072c"
+      },
+      "JOINT": {
+        "n_parameters": 198262,
+        "state_hash": "ccc8171d4cdc47daadd226c382947a0e3e62f6c9266dcad6f952ba98a989072c"
+      },
+      "RESP": {
+        "n_parameters": 198262,
+        "state_hash": "ccc8171d4cdc47daadd226c382947a0e3e62f6c9266dcad6f952ba98a989072c"
+      }
+    },
+    "ok": true
+  },
+  "reproduce_epoch1": {
+    "abs_diff": {
+      "lr": 0.0,
+      "test_mae_raw": 2.0848091031311355e-08,
+      "test_rmse_raw": 2.2309868397130117e-08,
+      "train_loss": 6.622738246697679e-09,
+      "train_mae_raw": 1.8314088245929838e-08,
+      "train_rmse_raw": 1.4379146318077574e-08,
+      "valid_mae_raw": 1.2094362178416418e-08,
+      "valid_rmse_raw": 1.1034053892799989e-08
+    },
+    "device": "cuda:0",
+    "ok": true,
+    "reference": "parent results/lipo_RESP/curve.csv epoch 1 (commit 185db246)",
+    "reference_values": {
+      "lr": 0.00027333333333333333,
+      "test_mae_raw": 0.9099843542541023,
+      "test_rmse_raw": 1.1003343948787152,
+      "train_loss": 0.9668193680268747,
+      "train_mae_raw": 0.9523941610746812,
+      "train_rmse_raw": 1.1596809001531114,
+      "valid_mae_raw": 0.9812410649869018,
+      "valid_rmse_raw": 1.182735437326365
+    },
+    "reproduced": {
+      "lr": 0.00027333333333333333,
+      "test_mae_raw": 0.9099843751021933,
+      "test_rmse_raw": 1.1003344171885836,
+      "train_loss": 0.966819374649613,
+      "train_mae_raw": 0.9523941793887695,
+      "train_rmse_raw": 1.1596809145322577,
+      "valid_mae_raw": 0.981241077081264,
+      "valid_rmse_raw": 1.1827354483604189
+    },
+    "tolerance": 1e-05
+  },
+  "single_vs_batch": {
+    "arm": "JOINT",
+    "max_abs_diff": 1.1920928955078125e-07,
+    "molecule_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+    ],
+    "n_molecules": 8,
+    "ok": true,
+    "tolerance": 1e-05
+  },
+  "three_steps": {
+    "all_finite": true,
+    "arm": "JOINT",
+    "device": "cuda:0",
+    "losses": [
+      1.1389288902282715,
+      0.8564746379852295,
+      0.9891935586929321
+    ],
+    "ok": true,
+    "w_delta_norm": 0.0005413566250354052,
+    "w_norm": 0.0005413566250354052
+  },
+  "views_and_order": {
+    "dataset": "ogbg-mollipo",
+    "embedded_source_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "expected_fragment_cache_file_sha256": "ba6e9a41990fc344e5962519caf02e616c9c67d299884843c8b67a5bbab0a1d8",
+    "expected_source_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "expected_train_order_sha256_prefix": "361af4df",
+    "fragment_cache_file": "tracks/structural-sufficiency/response_dictionary_small_s0_v1/data/ogbg_mollipo_rd_frag_v1.npz",
+    "fragment_cache_file_sha256": "ba6e9a41990fc344e5962519caf02e616c9c67d299884843c8b67a5bbab0a1d8",
+    "max_views": 4,
+    "n_test": 420,
+    "n_train": 3360,
+    "n_valid": 420,
+    "n_views_train": 10491,
+    "ok": true,
+    "scaler": {
+      "mean": 2.1621607144740187,
+      "std": 1.211539840098397
+    },
+    "train_order_sha256": "361af4df6ce32e5493d9e47090971fba8e779b3b48ea22cdbc44b3db799d625d"
+  },
+  "w0_predictions": {
+    "n_train_subset": 32,
+    "n_valid": 420,
+    "ok": true,
+    "tolerance": 1e-06,
+    "train32_max_abs_diff_JOINT_vs_RESP": 5.960464477539063e-08,
+    "valid_max_abs_diff_JOINT_vs_ADD": 1.4442680340565062e-07,
+    "valid_max_abs_diff_JOINT_vs_RESP": 1.4442680384973983e-07
+  }
+}

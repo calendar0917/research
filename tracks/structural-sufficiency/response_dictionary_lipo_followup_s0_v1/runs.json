@@ -1,0 +1,64 @@
+{
+  "round_id": "response_dictionary_lipo_followup_s0_v1",
+  "parent_round": "response_dictionary_small_s0_v1",
+  "host": "res",
+  "backend": "process",
+  "formal_units": {
+    "lipo_JOINT": {
+      "experiment": "rd-lipo-joint-s0",
+      "run_id": "rd-lipo-joint-s0-20261120-150314-08f16566",
+      "pool": "res-gpu1",
+      "execution_commit": "15c338e9a014",
+      "command": "uv run python tracks/structural-sufficiency/response_dictionary_lipo_followup_s0_v1/code/fu_joint_run.py --device cuda:0 --out tracks/structural-sufficiency/response_dictionary_lipo_followup_s0_v1/results/lipo_JOINT",
+      "node": "a100-2",
+      "driver": "550.163.01",
+      "torch": "2.5.1+cu124",
+      "seconds": 597.6,
+      "a100_hours": 0.166,
+      "purpose": "the only new training unit: JOINT fusion, 360 epochs, pre-flight included",
+      "state": "completed"
+    }
+  },
+  "non_gpu_local_cpu": {
+    "dictionary_stress_k16": {
+      "script": "code/fu_dict_k16.py",
+      "device": "cpu",
+      "seconds": 2.1,
+      "purpose": "parent replay + K=16 stress test on the frozen S0 best-Val RESP",
+      "state": "completed"
+    },
+    "edit_replay": {
+      "script": "code/fu_edits.py",
+      "device": "cpu",
+      "seconds": 2.8,
+      "purpose": "823-pair official-split mapping and paired-difference metrics",
+      "state": "completed"
+    },
+    "aggregate": {
+      "script": "code/fu_analyze.py",
+      "device": "cpu",
+      "seconds": 2.0,
+      "purpose": "tables, curves, paired bootstrap, labels",
+      "state": "completed"
+    }
+  },
+  "parent_units": {
+    "lipo_RESP": {
+      "run_id": "rd-lipo-resp-s0-20261120-130756-69e349c3",
+      "execution_commit": "945d9881080b2658a15ab4f1cbc8f007d75cbcb2",
+      "state": "reused read-only"
+    },
+    "lipo_ADD": {
+      "run_id": "rd-lipo-add-s0-20261120-130756-bed58ba2",
+      "execution_commit": "945d9881080b2658a15ab4f1cbc8f007d75cbcb2",
+      "state": "reused read-only"
+    }
+  },
+  "budget": {
+    "gpu_hard_a100_hours": 1.0,
+    "wall_hard_hours": 2.0,
+    "used_a100_hours": 0.166,
+    "note": "one formal unit; no GPU smoke outside it and no retries; frozen analyses ran on local CPU"
+  },
+  "stop": "round definition completed; no extra seed, dataset, K sweep or configuration scan"
+}

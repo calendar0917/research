@@ -42,6 +42,22 @@
       }
     }
   ],
+  "labels": {
+    "HELDOUT_EDIT_SUPPORT_LOW": {
+      "Train-Test": {
+        "components": 7,
+        "non_train_endpoints": 7,
+        "pairs": 27
+      },
+      "Train-Valid": {
+        "components": 4,
+        "non_train_endpoints": 4,
+        "pairs": 5
+      }
+    },
+    "TASK_LAW_NOT_ESTABLISHED": true,
+    "note": "Held-out edit support is 7 Test components and 4 Valid components; per the frozen rule (component count < 20) all held-out cells are LOW_SUPPORT and descriptive only."
+  },
   "low_support_rule": "component count < 20 -> LOW_SUPPORT (descriptive only)",
   "mapping": {
     "duplicate_pairs": 0,
@@ -51,10 +67,18 @@
     "n_unique_pairs": 823,
     "note": "The catalogue's own split_a/split_b columns are not used: the official split is re-derived from the mapped OGB row id. row_a/row_b are kept only as a cross-check.",
     "problems": [],
-    "rows_whose_stored_split_column_is_not_train_train": 322,
+    "rows_whose_stored_split_column_disagrees_with_official": 331,
     "self_pairs": 0,
     "source_rows": 823,
     "stored_row_columns_agree_with_canonical_mapping": true,
+    "stored_split_combo_distribution": {
+      "test-test": 12,
+      "test-train": 147,
+      "test-valid": 19,
+      "train-train": 501,
+      "train-valid": 139,
+      "valid-valid": 5
+    },
     "unmapped": 0
   },
   "metrics": [
@@ -141,10 +165,53 @@
       "pair_rmse": 0.4498145639749112,
       "zero_change_component_equal_mae": 0.4674999564886093,
       "zero_change_pair_mae": 0.40399996042251585
+    },
+    {
+      "cell": "Train-Test",
+      "component_equal_mae": 0.3619355820541328,
+      "component_equal_rmse": 0.44199547170727316,
+      "low_support": true,
+      "mean_signed_error": 0.23426561180812963,
+      "model": "JOINT",
+      "n_components": 7,
+      "n_pairs": 27,
+      "pair_mae": 0.4096919674139129,
+      "pair_rmse": 0.49207167212915903,
+      "zero_change_component_equal_mae": 0.7052381058533986,
+      "zero_change_pair_mae": 0.7140740708068565
+    },
+    {
+      "cell": "Train-Train",
+      "component_equal_mae": 0.3166332552299365,
+      "component_equal_rmse": 0.413467691244628,
+      "low_support": false,
+      "mean_signed_error": 0.006050449334053364,
+      "model": "JOINT",
+      "n_components": 228,
+      "n_pairs": 791,
+      "pair_mae": 0.31196768853352663,
+      "pair_rmse": 0.40274203961058463,
+      "zero_change_component_equal_mae": 0.6419685799485745,
+      "zero_change_pair_mae": 0.6309355157704178
+    },
+    {
+      "cell": "Train-Valid",
+      "component_equal_mae": 0.2859927431391816,
+      "component_equal_rmse": 0.37708807033022146,
+      "low_support": true,
+      "mean_signed_error": 0.13009538926621578,
+      "model": "JOINT",
+      "n_components": 4,
+      "n_pairs": 5,
+      "pair_mae": 0.24737822399393578,
+      "pair_rmse": 0.3402544606340419,
+      "zero_change_component_equal_mae": 0.4674999564886093,
+      "zero_change_pair_mae": 0.40399996042251585
     }
   ],
   "models": {
     "ADD": "/home/calendar/code/research/tracks/structural-sufficiency/response_dictionary_small_s0_v1/results/lipo_ADD/predictions_best.npz",
+    "JOINT": "/home/calendar/code/research/tracks/structural-sufficiency/response_dictionary_lipo_followup_s0_v1/results/lipo_JOINT/predictions_best.npz",
     "RESP": "/home/calendar/code/research/tracks/structural-sufficiency/response_dictionary_small_s0_v1/results/lipo_RESP/predictions_best.npz"
   },
   "note": "Train-Train pairs share a Train endpoint with the training set; they are not held-out evidence. The only non-Train supports are the 27 Train-Test and 5 Train-Valid pairs, which are 7/4 Test/Valid molecules inside 7/4 components. This diagnostic cannot establish a chemical task law and is not a model-selection criterion."

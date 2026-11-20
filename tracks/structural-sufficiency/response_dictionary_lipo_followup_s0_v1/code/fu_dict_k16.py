@@ -326,7 +326,7 @@ def main(argv=None) -> int:
     RC.write_json(out / "panel_intervention.json", intervention)
 
     table = {(r["dictionary"], r["split"]): r for r in rows}
-    decision = _signal_decision(table, std, follow["reference_gain"])
+    decision = _signal_decision(table, std, follow["reference_gain"], alpha_info["summary"])
     summary = {
         "task": TASK, "dataset": DATASET,
         "parent_round": follow["parent_round"],
@@ -677,17 +677,17 @@ def _panel_mean_intervention(frozen, inventory, dataset, std, mean) -> dict[str,
     return out
 
 
-def _signal_decision(table, std, ref) -> dict[str, Any]:
+def _signal_decision(table, std, ref, alpha_summary=None) -> dict[str, Any]:
     fid = {split: {name: table[(name, split)]["fidelity_rmse_raw"] for name in DICT_NAMES}
            for split in ("valid", "test")}
     better = {split: min(fid[split]["D_LATENT"], fid[split]["D_FREQ"]) for split in ("valid", "test")}
     reduction = {split: 1.0 - fid[split]["D_RESPONSE"] / better[split] for split in ("valid", "test")}
     delta_val = {name: table[(name, "valid")]["delta_rmse_raw"] for name in DICT_NAMES}
     delta_test = {name: table[(name, "test")]["delta_rmse_raw"] for name in DICT_NAMES}
-    threshold = -float(ref["property_rmse_delta_max_train_std_fraction"]) * std
+    allowed_increase = float(ref["property_rmse_delta_max_train_std_fraction"]) * std
     passes = {
         "fidelity_20pct_val_and_test": bool(min(reduction.values()) >= float(ref["fidelity_reduction_min"])),
-        "property_val_delta_within": bool(delta_val["D_RESPONSE"] >= threshold),
+        "property_val_delta_within": bool(delta_val["D_RESPONSE"] <= allowed_increase),
     }
     label = ("RESPONSE_SELECTOR_ADVANTAGE_AT_THIS_RATE" if all(passes.values())
              else "NO_RESPONSE_SELECTOR_ADVANTAGE_AT_THIS_RATE")
@@ -695,8 +695,11 @@ def _signal_decision(table, std, ref) -> dict[str, Any]:
         "fidelity_rmse": fid, "best_baseline_fidelity": better,
         "relative_reduction_vs_better_baseline": reduction,
         "property_delta_val": delta_val, "property_delta_test": delta_test,
-        "property_delta_threshold": threshold,
+        "property_delta_allowed_increase": allowed_increase,
+        "property_delta_threshold_negative_side_unused": -allowed_increase,
         "checks": passes, "label": label,
+        "caveat_labels": ["PROJECTION_STEP_LIMITED"]
+        if alpha_summary and int(alpha_summary.get("n_classes_at_64_steps", 0)) else [],
         "note": ("20% fidelity reduction is this round's investment reference only; a small difference is "
                  "reported as is and never called equivalence."),
     }

@@ -64,7 +64,8 @@ def main(argv=None) -> int:
         raise SystemExit("canonical SMILES are not unique across the official rows")
     row_of = {c: i for i, c in enumerate(canon)}
 
-    pairs, mapping_report = _load_pairs(Path(args.pairs), row_of, Chem)
+    row2split = {int(i): str(official[int(i)]) for i in range(len(smiles))}
+    pairs, mapping_report = _load_pairs(Path(args.pairs), row_of, Chem, row2split)
     pairs, dedup_report = _dedup(pairs)
     components = _components(pairs)
     mapping_report.update(dedup_report)
@@ -78,7 +79,9 @@ def main(argv=None) -> int:
     _write_csv(out / "edit_pairs.csv", rows)
     _write_csv(out / "edit_metrics_by_cell.csv", metrics)
     _write_csv(out / "edit_cells.csv", cells)
+    labels = _labels(cells)
     RC.write_json(out / "edit_support.json", {
+        "labels": labels,
         "catalogue": str(Path(args.pairs)),
         "catalogue_sha256": RC.sha256_file(Path(args.pairs)),
         "mapping": mapping_report,
@@ -103,11 +106,13 @@ def main(argv=None) -> int:
 # ---------------------------------------------------------------------------
 
 
-def _load_pairs(path: Path, row_of: Mapping[str, int], Chem) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def _load_pairs(path: Path, row_of: Mapping[str, int], Chem,
+                row2split: Mapping[int, str] | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     rows = list(csv.DictReader(path.open(newline="", encoding="utf-8")))
     problems: list[str] = []
     stored_row_mismatch = 0
     split_relabelled = 0
+    stored_combo = defaultdict(int)
     out: list[dict[str, Any]] = []
     for r in rows:
         ca = Chem.MolToSmiles(Chem.MolFromSmiles(str(r["smiles_a"])))
@@ -118,8 +123,11 @@ def _load_pairs(path: Path, row_of: Mapping[str, int], Chem) -> tuple[list[dict[
             continue
         if (int(r["row_a"]), int(r["row_b"])) != (a, b):
             stored_row_mismatch += 1
-        if (r["split_a"], r["split_b"]) != ("train", "train"):
-            split_relabelled += 1
+        stored_combo[tuple(sorted((r["split_a"], r["split_b"])))] += 1
+        if row2split is not None:
+            actual = (row2split[a], row2split[b])
+            if (r["split_a"], r["split_b"]) != actual:
+                split_relabelled += 1
         out.append({"pair_id": str(r["pair_id"]), "row_a": int(a), "row_b": int(b),
                     "stored_split_a": r["split_a"], "stored_split_b": r["split_b"],
                     "class_id": r.get("class_id", ""), "core_smiles": r.get("core_smiles", "")})
@@ -129,7 +137,8 @@ def _load_pairs(path: Path, row_of: Mapping[str, int], Chem) -> tuple[list[dict[
         "unmapped": len(problems),
         "problems": problems[:10],
         "stored_row_columns_agree_with_canonical_mapping": stored_row_mismatch == 0,
-        "rows_whose_stored_split_column_is_not_train_train": split_relabelled,
+        "rows_whose_stored_split_column_disagrees_with_official": split_relabelled,
+        "stored_split_combo_distribution": {"-".join(k): v for k, v in sorted(stored_combo.items())},
         "note": ("The catalogue's own split_a/split_b columns are not used: the official split is "
                  "re-derived from the mapped OGB row id. row_a/row_b are kept only as a cross-check."),
     }
@@ -209,6 +218,21 @@ def _load_models(joint_results: str, payload, labels_all, official, wanted=MODEL
             "selected_epoch": int(np.load(pred_path)["selected_epoch"][0]),
         }
     return out
+
+
+def _labels(cells) -> dict[str, Any]:
+    held = {c["cell"]: c for c in cells if c["cell"] != "Train-Train"}
+    return {
+        "HELDOUT_EDIT_SUPPORT_LOW": {"Train-Test": {"pairs": held.get("Train-Test", {}).get("n_pairs", 0),
+                                                    "components": held.get("Train-Test", {}).get("n_components", 0),
+                                                    "non_train_endpoints": held.get("Train-Test", {}).get("n_non_train_endpoints", 0)},
+                                     "Train-Valid": {"pairs": held.get("Train-Valid", {}).get("n_pairs", 0),
+                                                     "components": held.get("Train-Valid", {}).get("n_components", 0),
+                                                     "non_train_endpoints": held.get("Train-Valid", {}).get("n_non_train_endpoints", 0)}},
+        "TASK_LAW_NOT_ESTABLISHED": True,
+        "note": ("Held-out edit support is 7 Test components and 4 Valid components; per the frozen rule "
+                 "(component count < 20) all held-out cells are LOW_SUPPORT and descriptive only."),
+    }
 
 
 def _cell_name(sa: str, sb: str) -> str:
