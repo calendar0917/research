@@ -358,21 +358,29 @@ def cmd_timing(args) -> None:
         results[arm] = out["timing"] | {"n_parameters": out["n_parameters"], "seconds": out["seconds"]}
         print(json.dumps({arm: results[arm]}, indent=2), flush=True)
     slowest = max(r["mean_train_step_seconds"] for r in results.values())
+    slowest_arm = max(results, key=lambda k: results[k]["mean_train_step_seconds"])
+    epoch_seconds = slowest * (1.0 + float(tr["eval_allowance"]))
     horizons = []
+    chosen = None
     for epochs in (int(tr["epochs_default"]), *[int(e) for e in tr["epochs_alt"]]):
-        minutes = slowest * epochs * float(tr["timing_safety"]) / 60.0
+        minutes = epoch_seconds * epochs * float(tr["timing_safety"]) / 60.0
         horizons.append({"epochs": epochs, "projected_minutes": minutes})
-        if minutes <= float(tr["epoch_budget_minutes"]):
+        if chosen is None and minutes <= float(tr["epoch_budget_minutes"]):
             chosen = epochs
-            break
-    else:
+    if chosen is None:
         chosen = int(tr["epochs_alt"][-1])
-    payload_out = {"dataset": dataset, "per_arm": results, "slowest_epoch_seconds": slowest,
+    payload_out = {"dataset": dataset, "per_arm": results, "slowest_arm": slowest_arm,
+                   "slowest_epoch_seconds": slowest,
+                   "epoch_seconds_with_eval_allowance": epoch_seconds,
+                   "eval_allowance": float(tr["eval_allowance"]),
+                   "timing_safety": float(tr["timing_safety"]),
                    "projections": horizons, "chosen_epochs": chosen,
                    "epochs_alt": [int(e) for e in tr["epochs_alt"]],
                    "commit": C.git_commit(), "environment": C.environment_snapshot()}
     C.write_json(C.results_root() / f"timing_{args.dataset}.json", payload_out)
-    print(json.dumps({"chosen_epochs": chosen, "slowest_epoch_seconds": slowest}, indent=2))
+    print(json.dumps({"chosen_epochs": chosen, "slowest_epoch_seconds": slowest,
+                      "slowest_arm": slowest_arm,
+                      "projections": horizons}, indent=2))
 
 
 def cmd_train(args) -> None:
