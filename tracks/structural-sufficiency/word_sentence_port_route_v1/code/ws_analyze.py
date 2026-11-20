@@ -113,7 +113,7 @@ def cmd_terminal(args) -> None:
         outdir.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(outdir / "preds_test.npz", row_ids=metrics["row_ids"],
                             pred_raw=metrics["pred_raw"], target_raw=metrics["target_raw"])
-        sup = support_sets(payload, "test")
+        sup = support_sets(payload, "test", data.arrays)
         scaf = scaffold_map(dataset)
         record = {"run_id": run_id, "dataset": run["dataset"], "split": "test",
                   "test_policy": "TERMINAL_DEVELOPMENT_TEST",
@@ -270,10 +270,18 @@ def leave_one_out_gain(pred: np.ndarray, other: np.ndarray, target: np.ndarray) 
 # ---------------------------------------------------------------------------
 
 
-def support_sets(payload: Mapping[str, Any], split: str) -> dict[str, Any]:
-    """Known words / known-content-new-layout membership per molecule."""
-    prefix = f"word/{split}/"
-    arr = {k[len(prefix):]: v for k, v in payload.items() if k.startswith(prefix)}
+def support_sets(payload: Mapping[str, Any], split: str,
+                 arrays: Mapping[str, np.ndarray] | None = None) -> dict[str, Any]:
+    """Known words / known-content-new-layout membership per molecule.
+
+    ``arrays`` may supply the packed split arrays directly (Test is built on the
+    fly and is never persisted in the prepared payload).
+    """
+    if arrays is None:
+        prefix = f"word/{split}/"
+        arr = {k[len(prefix):]: v for k, v in payload.items() if k.startswith(prefix)}
+    else:
+        arr = dict(arrays)
     train_prefix = "word/train/"
     tr = {k[len(train_prefix):]: v for k, v in payload.items() if k.startswith(train_prefix)}
     gw = arr["graph_word_ptr"]
