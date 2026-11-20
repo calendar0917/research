@@ -1,0 +1,99 @@
+{
+  "round_id": "response_dictionary_task_transfer_s0_v1",
+  "definition_id": "lipo-real-edit-transfer-s0-v1",
+  "base_commit": "e0a6386122c4407c1cb974b1c434bb13927030a7",
+  "task": "lipo",
+  "dataset": "ogbg-mollipo",
+  "seed": 0,
+  "test_policy": "always",
+  "test_use": "DEVELOPMENT_TEST",
+  "edit_definition": {
+    "molecule_scope": "all 4200 original rows; single connected component; no explicit-H node; no desalting, deduplication, stereo removal or graph rewriting",
+    "cut": "every bridge edge with OGB bond type SINGLE (0); bridge supplies non-ring",
+    "variable_side": "S has 1..8 heavy atoms",
+    "core": "C = complement of S; >= 10 heavy atoms and >= 75% of each parent's heavy atoms",
+    "core_identity": "exact coloured incidence graph of C using all 9 OGB atom columns, port colour and all 3 cut-bond columns; no WL-only, SMILES-only or approximate match",
+    "excluded_from_edits": "official row 1646 (valid) is the only multi-component molecule; no explicit-H molecule exists",
+    "one_definition_per_unordered_row_pair": [
+      "maximum core heavy-atom count",
+      "core canonical key (lexicographic)",
+      "sorted(s_key_a, s_key_b) (lexicographic)",
+      "sorted(cut_edge_a, cut_edge_b) (lexicographic)"
+    ],
+    "direction": "S native key (rd_fragment exact fragment key) lexicographic smaller end is A; delta = B - A",
+    "transformation_id": "ordered (S_A native key, S_B native key, cut-bond type/stereo/conjugated)",
+    "forbidden": [
+      "identical full canonical isomeric SMILES",
+      "identical S native identity",
+      "stereo deletion",
+      "multi-bond cuts",
+      "MCS or approximate matching"
+    ]
+  },
+  "support_components": {
+    "merge": [
+      "rows with identical full canonical isomeric SMILES",
+      "endpoints of every pair",
+      "all endpoints of pairs sharing the exact matched core_id"
+    ],
+    "unit": "pair-bearing component; molecules are never counted as independent experiments when they occur in one component"
+  },
+  "sets": {
+    "E_T": "pairs with at least one official Test endpoint",
+    "E_HH_T": "E_T pairs with neither endpoint in Train",
+    "E_STRICT": "E_HH_T pairs whose exact matched core_id occurs in no legal Train cut and whose transformation_id occurs in a Train-Train pair in another component",
+    "E_STRICT_C_ONLY": "descriptive variant using only the C graph key (not cut-bond columns) for Train-seen"
+  },
+  "frozen_models": {
+    "RESP": {"round": "response_dictionary_small_s0_v1", "state": "best_valid", "epoch": 63, "file": "results/lipo_RESP/predictions_best.npz"},
+    "JOINT": {"round": "response_dictionary_lipo_followup_s0_v1", "state": "best_valid", "epoch": 85, "file": "results/lipo_JOINT/predictions_best.npz"},
+    "ADD": {"round": "response_dictionary_small_s0_v1", "state": "best_valid", "epoch": 91, "file": "results/lipo_ADD/predictions_best.npz"},
+    "dictionaries": {
+      "round": "response_dictionary_explanation_check_s0_v1",
+      "version": "HP_CERTIFIED",
+      "file": "results/projection_predictions.npz",
+      "keys": "<dictionary>_cert_<split>_pred_raw",
+      "rule": "certified SLSQP row where available; otherwise the frozen FW64 alpha is retained"
+    }
+  },
+  "references": {
+    "ZERO": "delta_pred = 0",
+    "TRAIN_TRANSFORM_MEAN": {
+      "source": "Train-Train pairs only",
+      "rule": "for each transformation_id, average delta_y within each source component, then average over source components, excluding the evaluated pair's entire component",
+      "no_support": "NA; never filled with zero",
+      "subset": "comparisons with this reference use exactly the pairs where it is defined"
+    }
+  },
+  "metrics": {
+    "pair_equal": ["MAE", "RMSE"],
+    "component_equal": ["MAE"],
+    "gain_definition": "reference error minus candidate error; positive means the candidate is better",
+    "dictionary_split": "delta-fidelity to native RESP and error to true delta_y are separate tables",
+    "bootstrap": {"n": 2000, "seed": 1703, "unit": "pair-bearing component", "same_draws_for_all_models": true},
+    "ci": "2.5/97.5 percentiles; NA when fewer than 2 pair-bearing components in the scope",
+    "low_support_note": "small component/molecule counts are reported as limitations, not as an automatic decision label"
+  },
+  "influence": {
+    "scope": "E_T",
+    "rule": "remove one Test molecule and every E_T pair containing it; recompute the fixed gains; report range and sign reversals"
+  },
+  "coverage_fields": {
+    "shared_selected_core_view": "both endpoints have a fixed <=4 selected view with the same C exact key and cut-bond columns; coverage only, never a subset selector",
+    "s_in_inventory": "S native key belongs to the existing dictionary's 702 Train S-word candidates from fixed selected Train views"
+  },
+  "budget": {
+    "gpu_allowed": false,
+    "a100_hours": 0,
+    "wall_target_minutes": 15,
+    "wall_hard_minutes": 45
+  },
+  "stop_rules": [
+    "no training, optimizer update, new seed, new dataset, LR/K/rank/panel sweep",
+    "no change to official Train/Valid/Test, <=4 views, aggregation, fallback, dictionary, alpha or projector",
+    "no relaxation of the edit definition if held-out support is small",
+    "no claim of held-out generalisation from Train molecules",
+    "no substitute s(C,S_B)-s(C,S_A) for the full F(G)",
+    "small or empty E_STRICT is a valid final result"
+  ]
+}
