@@ -1,0 +1,46 @@
+{
+  "round_id": "response_dictionary_small_s0_v1",
+  "protocol_id": "rd-small-official-s0-v1",
+  "seed": 0,
+  "epochs": 360,
+  "batch_size": 128,
+  "eval_batch_size": 256,
+  "eval_batch_fallbacks": [128, 64],
+  "warmup_epochs": 5,
+  "peak_lr": 0.001,
+  "min_lr": 0.00001,
+  "weight_decay": 0.00001,
+  "betas": [0.9, 0.999],
+  "eps": 1e-08,
+  "grad_clip": 5.0,
+  "dropout": 0.10,
+  "hidden": 96,
+  "latent": 16,
+  "n_layers": 3,
+  "max_views_per_molecule": 4,
+  "max_fragment_atoms": 8,
+  "target_std_criterion": 0.005,
+  "datasets": {
+    "ogbg-mollipo": {
+      "task": "lipo",
+      "train_std_gain_reference": 0.02
+    },
+    "ogbg-molesol": {
+      "task": "esol",
+      "train_std_gain_reference": 0.03
+    }
+  },
+  "dictionary": {
+    "K": 64,
+    "panel_size": 16,
+    "frank_wolfe_steps": 64,
+    "min_support_view_fraction": 0.8,
+    "max_val_rmse_delta_train_std": 0.01
+  },
+  "test_policy": "always",
+  "test_use": "DEVELOPMENT_TEST",
+  "bootstrap": {
+    "n": 2000,
+    "seed": 1703
+  }
+}

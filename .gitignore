@@ -74,6 +74,13 @@ htmlcov/
 !tracks/structural-sufficiency/lcrc_auto_subgraph_faithfulness_pilot_v1/results/*/candidates.npz
 !tracks/structural-sufficiency/lcrc_auto_subgraph_dose_localization_audit_v1/results/*/candidates.npz
 !tracks/structural-sufficiency/lcrc_auto_subgraph_dose_localization_audit_v1/results/**/candidates.npz
+# the response-dictionary round ships its single CPU-generated fragment cache:
+# both GPU workers read the *same* bytes and every consumer re-verifies the sha256
+# recorded in the round manifest
+!tracks/structural-sufficiency/response_dictionary_small_s0_v1/data/*.npz
+!tracks/structural-sufficiency/response_dictionary_small_s0_v1/data/canonical_init_state.pt
+!tracks/structural-sufficiency/response_dictionary_small_s0_v1/data/canonical_init_state.sha256
+!tracks/structural-sufficiency/response_dictionary_small_s0_v1/data/fragment_cache_manifest.json
 tracks/*/results/molhiv/*.npz
 
 # generated experiment outputs; keep small Markdown summaries and explicit manifests
