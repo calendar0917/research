@@ -51,6 +51,12 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     config = RC.load_config()
+    import torch
+
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    torch.backends.cudnn.benchmark = False
+    torch.set_float32_matmul_precision("highest")
     dataset_name = TASK_DATASET[args.task]
     out_dir = Path(args.out) if args.out else RC.run_dir(args.task, args.arm)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -186,9 +192,12 @@ def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> Non
         for split, payload in pred.items():
             for key, value in payload.items():
                 arrays[f"{split}_{key}"] = np.asarray(value)
+        arrays["selected_epoch"] = np.asarray([result["best"]["epoch"] if tag == "best" else len(curves)], dtype=np.int64)
+        arrays["arm"] = np.asarray([result["arm"]])
         np.savez_compressed(out_dir / f"predictions_{tag}.npz", **arrays)
     last10 = [row for row in curves[-10:]]
     last30 = [row for row in curves[-30:]]
+    prev30 = [row for row in curves[-60:-30]] if len(curves) >= 60 else []
     first30 = [row for row in curves[:30]]
     std = float(dataset.scaler["std"])
     summary = {
@@ -202,6 +211,7 @@ def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> Non
         "final_metrics": _metrics_of(curves, len(curves)),
         "last10_mean": {f"{split}_rmse_raw": float(np.mean([r[f"{split}_rmse_raw"] for r in last10])) for split in ("train", "valid", "test")},
         "last30_mean": {f"{split}_rmse_raw": float(np.mean([r[f"{split}_rmse_raw"] for r in last30])) for split in ("train", "valid", "test")},
+        "prev30_mean": ({f"{split}_rmse_raw": float(np.mean([r[f"{split}_rmse_raw"] for r in prev30])) for split in ("train", "valid", "test")} if prev30 else None),
         "first30_mean": {f"{split}_rmse_raw": float(np.mean([r[f"{split}_rmse_raw"] for r in first30])) for split in ("train", "valid", "test")},
         "target_scaler": dataset.scaler,
         "target_std": std,
@@ -212,6 +222,13 @@ def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> Non
         "global_step": result["global_step"],
         "seconds": result["seconds"],
         "eval_batch_size": result["eval_batch_size"],
+        "precision": {
+            "dtype": "float32",
+            "tf32_matmul": False,
+            "tf32_cudnn": False,
+            "cudnn_benchmark": False,
+            "float32_matmul_precision": "highest",
+        },
         "data_cache_sha256": dataset.cache_sha256,
         "protocol_hash": RC.protocol_hash(config),
         "commit": RC.git_commit(),
@@ -220,16 +237,19 @@ def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> Non
     }
     # Horizon check (frozen rule, no continuation).
     late = summary["last30_mean"]["valid_rmse_raw"]
-    early = summary["first30_mean"]["valid_rmse_raw"]
+    early = summary["prev30_mean"]["valid_rmse_raw"] if summary["prev30_mean"] else None
     best_last30 = min(last30, key=lambda r: r["valid_rmse_raw"])
     best_last10 = min(last10, key=lambda r: r["valid_rmse_raw"])
+    delta = (late - early) if early is not None else None
     summary["horizon"] = {
-        "delta_last30_minus_first30_valid": late - early,
+        "comparison": "mean Val RMSE epochs 331-360 minus epochs 301-330" if early is not None else "not enough epochs",
+        "delta_last30_minus_prev30_valid": delta,
         "threshold": -float(config["target_std_criterion"]) * std,
         "best_epoch_in_last30": int(best_last30["epoch"]),
         "best_epoch_in_last10": int(best_last10["epoch"]),
         "horizon_limited": bool(
-            (late - early) <= -float(config["target_std_criterion"]) * std
+            delta is not None
+            and delta <= -float(config["target_std_criterion"]) * std
             and int(best_last10["epoch"]) >= len(curves) - 9
         ),
     }
@@ -244,8 +264,9 @@ def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> Non
         split = dataset.splits[split_name]
         n = len(split.row_id)
         model.eval()
-        scores_all = []
-        mol_disp = np.zeros(n)
+        sum_sq = 0.0
+        n_views_total = 0
+        n_mol_with_views = 0
         fb = np.zeros(n, dtype=bool)
         with torch.no_grad():
             for start in range(0, n, 256):
@@ -253,22 +274,23 @@ def _save_outputs(out_dir: Path, result, dataset, config, task: str, log) -> Non
                 mean_score, extras = RT.molecule_scores(model, dataset, split, idx, "cpu")
                 view_mol = np.repeat(np.arange(idx.size), extras["n_views_per_mol"])
                 view_scores = extras["view_score_std"]
-                sums = np.bincount(view_mol, weights=view_scores, minlength=idx.size)
-                cnt = np.bincount(view_mol, minlength=idx.size).astype(np.float64)
-                has = cnt > 0
-                d = np.zeros(idx.size)
-                d[has] = sums[has] / cnt[has]
-                dev = np.where(has[view_mol], view_scores - d[view_mol], 0.0) if view_scores.size else np.zeros(0)
-                mol_disp[idx] = np.sqrt(np.mean(dev ** 2)) if dev.size else 0.0
+                if view_scores.size:
+                    dev = view_scores - mean_score[view_mol]
+                    sum_sq += float(np.sum(dev ** 2))
+                    n_views_total += int(dev.size)
+                    n_mol_with_views += int(np.sum(extras["n_views_per_mol"] > 0))
                 fb[idx] = extras["fallback"]
-                scores_all.append(mean_score)
+        dispersion = float(np.sqrt(sum_sq / n_views_total)) if n_views_total else 0.0
         diag[split_name] = {
-            "view_dispersion_raw": float(np.mean(mol_disp) * std),
-            "view_dispersion_std": float(np.mean(mol_disp)),
+            "view_dispersion_raw": dispersion * std,
+            "view_dispersion_std": dispersion,
             "fallback_molecule_fraction": float(fb.mean()),
             "n_molecules": int(n),
-            "n_views": int(dataset.splits[split_name].view_s.size),
+            "n_molecules_with_views": int(n_mol_with_views),
+            "n_views": int(n_views_total),
             "view_fraction_molecules_with_cuts": float(1.0 - fb.mean()),
+            "eval_batch_reductions": int(RT._EVAL_BATCH_STATE.get("reductions", 0)),
+            "effective_eval_batch": int(RT._EVAL_BATCH_STATE.get("effective", 0)),
         }
     summary["diagnostics"] = diag
     summary["horizon_limited_candidate"] = summary["horizon"]["horizon_limited"]

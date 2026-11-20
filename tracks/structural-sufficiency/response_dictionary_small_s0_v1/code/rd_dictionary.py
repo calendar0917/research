@@ -96,11 +96,15 @@ def build_inventory(payload: Mapping[str, Any]) -> Inventory:
     env_mol_freq: dict[int, int] = {}
     n_mol = int(mol_ptr.size - 1)
     for mol in range(n_mol):
+        words_here: set[int] = set()
+        envs_here: set[int] = set()
         for view in range(int(mol_ptr[mol]), int(mol_ptr[mol + 1])):
-            s = int(s_ids[view])
-            c = int(c_ids[view])
-            word_mol_freq[s] = word_mol_freq.get(s, 0) + 1
-            env_mol_freq[c] = env_mol_freq.get(c, 0) + 1
+            words_here.add(int(s_ids[view]))
+            envs_here.add(int(c_ids[view]))
+        for frag in words_here:
+            word_mol_freq[frag] = word_mol_freq.get(frag, 0) + 1
+        for frag in envs_here:
+            env_mol_freq[frag] = env_mol_freq.get(frag, 0) + 1
 
     class_words: dict[tuple, list[int]] = {}
     for frag in sorted(word_mol_freq):
@@ -281,8 +285,13 @@ def response_matrix(frozen: Frozen, s_ids: Sequence[int], d0: int, envs: Sequenc
     return s_full - s0_full
 
 
-def farthest_first(vectors: np.ndarray, d0_local: int, k: int, metric: str) -> list[int]:
-    """``D0`` first, then the point farthest from the current selected set."""
+def farthest_first(vectors: np.ndarray, d0_local: int, k: int, metric: str,
+                   keys: Sequence[str] | None = None) -> list[int]:
+    """``D0`` first, then the point farthest from the current selected set.
+
+    Ties (including the all-zero far-distance case) choose the smallest exact
+    canonical key; the selection never silently stops before ``K``.
+    """
     n = vectors.shape[0]
     if n == 0:
         return []
@@ -295,6 +304,9 @@ def farthest_first(vectors: np.ndarray, d0_local: int, k: int, metric: str) -> l
         return selected
     chosen = np.zeros(n, dtype=bool)
     chosen[selected[0]] = True
+    key_list = list(keys) if keys is not None else None
+    if key_list is not None and len(key_list) != n:
+        raise ValueError("tie keys do not align with the candidate vectors")
 
     def distance(idx: int) -> np.ndarray:
         if metric == "l2":
@@ -306,9 +318,14 @@ def farthest_first(vectors: np.ndarray, d0_local: int, k: int, metric: str) -> l
     best = distance(selected[0])
     best[chosen] = -np.inf
     for _ in range(int(k) - 1):
-        nxt = int(np.argmax(best))
-        if not np.isfinite(best[nxt]) or best[nxt] <= 0:
+        max_val = float(np.max(best))
+        if not np.isfinite(max_val):
             break
+        tied = np.flatnonzero(best == max_val)
+        if key_list is not None and tied.size > 1:
+            nxt = int(min(tied.tolist(), key=lambda i: key_list[i]))
+        else:
+            nxt = int(tied[0])
         selected.append(nxt)
         chosen[nxt] = True
         best = np.minimum(best, distance(nxt))

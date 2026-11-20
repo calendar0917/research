@@ -114,6 +114,7 @@ def main(argv=None) -> int:
                 "n_molecules": int(len(target)),
                 "n_views": int(view_s.size),
                 "supported_view_fraction": float(supported_view.mean()) if supported_view.size else 0.0,
+                "unsupported_view_fraction": float(1.0 - supported_view.mean()) if supported_view.size else 0.0,
                 "exact_word_view_fraction": float(exact_view.mean()) if exact_view.size else 0.0,
                 "fallback_molecule_fraction": float(fb.mean()),
                 "n_molecules_without_dictionary": int(
@@ -127,6 +128,12 @@ def main(argv=None) -> int:
         results[name] = {
             "per_split": per_split,
             "n_words_total": int(sum(len(v) for v in dicts[name]["prototypes"].values())),
+            "n_candidate_words_total": int(sum(dicts[name]["n_candidates"].values())),
+            "compression_ratio_words_over_candidates": float(
+                sum(len(v) for v in dicts[name]["prototypes"].values())
+                / max(1, sum(dicts[name]["n_candidates"].values()))
+            ),
+            "alpha_seconds": float(dicts[name].get("alpha_seconds", 0.0)),
             "n_classes": int(len(dicts[name]["prototypes"])),
             "n_classes_exact_storage": int(sum(1 for k, v in dicts[name]["prototypes"].items() if len(v) >= dicts[name]["n_candidates"][k])),
             "alpha_steps_mean": float(np.mean([v.get("steps_used", 0) for v in dicts[name]["fw_steps"].values()])) if dicts[name]["fw_steps"] else 0.0,
@@ -234,9 +241,10 @@ def _build_dictionaries(frozen, inventory, config, limit: int = 0) -> dict[str, 
         latent = np.concatenate([frozen.a[cand][:, None], frozen.q[cand]], axis=1)
         latent_norm = np.linalg.norm(latent, axis=1, keepdims=True)
         latent_unit = latent / np.where(latent_norm > 0, latent_norm, 1.0)
+        tie_keys = [inventory.keys[int(f)] for f in cand]
         selections = {
-            "D_RESPONSE": RD.farthest_first(r_cand, d0_local, k, "l2"),
-            "D_LATENT": RD.farthest_first(latent_unit, d0_local, k, "cos"),
+            "D_RESPONSE": RD.farthest_first(r_cand, d0_local, k, "l2", keys=tie_keys),
+            "D_LATENT": RD.farthest_first(latent_unit, d0_local, k, "cos", keys=tie_keys),
             "D_FREQ": RD.frequency_selection(inventory, cand, d0_local, k),
         }
         for name, local_indices in selections.items():

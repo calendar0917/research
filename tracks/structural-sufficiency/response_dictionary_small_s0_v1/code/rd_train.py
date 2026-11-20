@@ -344,6 +344,7 @@ def train_arm(
             row[f"{split_name}_rmse_raw"] = RC.rmse(pred["pred_raw"], pred["target_raw"])
             row[f"{split_name}_mae_raw"] = RC.mae(pred["pred_raw"], pred["target_raw"])
         row["seconds"] = time.perf_counter() - t0
+        row["eval_batch_reductions"] = int(_EVAL_BATCH_STATE.get("reductions", 0))
         curves.append(row)
         if row["valid_rmse_raw"] < best["valid_rmse_raw"]:
             best = {"valid_rmse_raw": float(row["valid_rmse_raw"]), "epoch": int(epoch)}
