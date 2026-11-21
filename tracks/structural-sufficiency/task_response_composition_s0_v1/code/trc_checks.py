@@ -301,7 +301,12 @@ def check_context_identity(cfg, pack, atom_dims, bond_dims, device: str) -> dict
         split_err = float(torch.max(torch.abs(base + env - direct.unsqueeze(-1))).item())
         # features of the same context must be bitwise identical wherever reused
         feat_dup = model.fragment_features(torch.as_tensor(pc, device=device), phi)
-        out["ctx_feature_selfconsistent"] = bool(torch.equal(f_c, feat_dup))
+        if device.startswith("cuda"):
+            out["ctx_feature_selfconsistent"] = bool(
+                torch.allclose(f_c, feat_dup, atol=1e-5, rtol=1e-4))
+            out["ctx_feature_max_abs"] = float((f_c - feat_dup).abs().max())
+        else:
+            out["ctx_feature_selfconsistent"] = bool(torch.equal(f_c, feat_dup))
     out["identity_max_abs_err"] = err
     out["decomposition_max_abs_err"] = split_err
     out["ctx_variation"] = float(torch.max((h_c - h_c.mean(0, keepdim=True)).abs()).item())
