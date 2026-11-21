@@ -266,11 +266,12 @@ def write_summary(args) -> None:
             "gine_test": cfg["thresholds"]["historical_gine_test"],
         },
     }
-    C.write_json(C.analysis_dir() / "summary.json", C.jsonable(summary))
+    suffix = "" if dataset == "ogbg-mollipo" else "_" + dataset.replace("ogbg-mol", "")
+    C.write_json(C.analysis_dir() / f"summary{suffix}.json", C.jsonable(summary))
     columns = ["arm", "seed", "status", "partition", "best_epoch", "best_valid_rmse", "best_train_rmse",
                "final_valid_rmse", "final_train_rmse", "last20_train_rmse", "last20_valid_rmse",
                "n_parameters", "s_per_epoch_mean", "epochs_run", "wall_seconds", "device", "spec"]
-    C.write_csv(C.analysis_dir() / "main_table.csv", rows, columns)
+    C.write_csv(C.analysis_dir() / f"main_table{suffix}.csv", rows, columns)
     print(json.dumps({"runs": len(runs), "W": candidates["W"], "F": candidates["F"],
                       "core_pair": core, "mechanism_signal": diffs["mechanism_signal"],
                       "aggregate": {k: {"mean": round(v["mean"], 5) if v["mean"] is not None else None,
@@ -344,9 +345,8 @@ def bootstrap_block(dataset: str, index, cfg) -> dict[str, Any]:
         seeds = [s for s in (0, 1) if all((arm, s) in preds for arm in arms)]
         if seeds:
             usable[name] = seeds
-    rng = np.random.default_rng(1703)
-    n_boot = 1000
-    draws: dict[str, list[float]] = {name: [] for name in usable}
+    n_boot = 4000
+    draws: dict[str, list[float]] = {}
     point: dict[str, float] = {}
     for name in usable:
         coefs = dict(specs[[s[0] for s in specs].index(name)][1])
@@ -356,16 +356,17 @@ def bootstrap_block(dataset: str, index, cfg) -> dict[str, Any]:
             values.append(sum(coef * float(np.sqrt(np.mean((preds[(arm, seed)] - y) ** 2)))
                               for arm, coef in coefs.items()))
         point[name] = float(np.mean(values))
-    for _ in range(n_boot):
-        chosen = rng.choice(keys, size=len(keys), replace=True)
-        idx = np.concatenate([by_group[k] for k in chosen])
-        for name in usable:
-            coefs = dict(specs[[s[0] for s in specs].index(name)][1])
-            values = []
-            for seed in usable[name]:
-                values.append(sum(coef * float(np.sqrt(np.mean((preds[(arm, seed)][idx] - y[idx]) ** 2)))
-                                  for arm, coef in coefs.items()))
-            draws[name].append(float(np.mean(values)))
+        # a dedicated generator per contrast keeps every interval stable when the
+        # contrast list grows (same rows resampled, same stream, same count)
+        rng = np.random.default_rng(1703 + (abs(hash(name)) % 10007))
+        reps = []
+        for _ in range(n_boot):
+            chosen = rng.choice(keys, size=len(keys), replace=True)
+            idx = np.concatenate([by_group[k] for k in chosen])
+            per_seed = [sum(coef * float(np.sqrt(np.mean((preds[(arm, seed)][idx] - y[idx]) ** 2)))
+                            for arm, coef in coefs.items()) for seed in seeds]
+            reps.append(float(np.mean(per_seed)))
+        draws[name] = reps
     result: dict[str, Any] = {
         "available": True, "n_scaffolds": info["n_scaffolds"], "n_rows": int(len(y)),
         "n_boot": n_boot, "parse": info, "contrasts": {},
@@ -671,30 +672,21 @@ def write_finalist(args) -> None:
     index = arm_runs(runs)
     candidates = select_candidates(index, cfg, dataset)
     core = pick_core_pair(candidates, index, cfg)
-    w = candidates["W"]
-    chosen = [w]
-    if core.get("C"):
-        chosen.append(core["C"])
-    for arm in ("GINE_REF",):
-        if any((arm, s) in index for s in (0, 1)):
-            chosen.append(arm)
-    f = candidates["F"]
-    if f and f not in chosen:
-        chosen.append(f)
-    extra = []
-    for arm in ("SET_MEAN_SELF", "BIND_SELF_SCALAR", "GINE_RAW", "GLOBAL_CTX_BIND",
-                "GLOBAL_CTX_MEAN", "BAG_CAP", "RANDOM_PART"):
-        if arm in chosen:
-            continue
-        if any((arm, s) in index and index[(arm, s)]["status"] == "COMPLETE" for s in (0, 1)):
-            extra.append(arm)
-    chosen += extra[:2]
+    w, f = candidates["W"], candidates["F"]
     forced = [a for a in (getattr(args, "include", "") or "").split(",") if a]
-    for arm in forced:
-        if arm not in chosen:
-            chosen.append(arm)
+    order: list[str] = []
+    for arm in [w, core.get("C"), "GINE_REF", f] + forced:
+        if arm and arm in candidates["all_mean_valid"] and arm not in order:
+            order.append(arm)
+    for arm in ("SET_MEAN_SELF", "BIND_SELF_SCALAR", "GINE_RAW", "BAG_CAP",
+                "GLOBAL_CTX_BIND", "BIND_REL_random"):
+        if len(order) >= 6:
+            break
+        if arm in candidates["all_mean_valid"] and arm not in order:
+            order.append(arm)
+    order = order[:6]
     architecture_ids = []
-    for arm in chosen[:7]:
+    for arm in order:
         seeds = [s for s in (0, 1, 2) if (arm, s) in index and index[(arm, s)]["status"] == "COMPLETE"]
         entry = {"arm": arm, "seeds": seeds, "runs": {}}
         for seed in seeds:
@@ -703,40 +695,42 @@ def write_finalist(args) -> None:
             checkpoint = run_dir / "state_best.pt"
             entry["runs"][str(seed)] = {
                 "run_id": run["run_id"], "commit": run.get("commit"),
-                "spec": run.get("spec"), "best_epoch": run["best"]["epoch"],
+                "spec": run.get("spec"), "partition": run.get("partition", "frozen"),
+                "best_epoch": run["best"]["epoch"],
                 "best_valid_rmse": run["best"]["valid_rmse_raw"],
                 "checkpoint": str(checkpoint.relative_to(C.ROUND_DIR)),
                 "checkpoint_sha256": C.sha256_file(checkpoint) if checkpoint.is_file() else None,
             }
         architecture_ids.append(entry)
+    record = C.read_json(C.derived_record_path(dataset))
     manifest = {
         "frozen_before_terminal_test": True,
         "dataset": dataset,
         "commit": C.git_commit(),
         "config_sha256": C.sha256_json(cfg),
-        "inherited_word_cache_sha256": None,
-        "derived_sha256": None,
+        "inherited_word_cache_sha256": record.get("inherited_word_cache_sha256"),
+        "derived_sha256": record.get("derived_sha256"),
         "test_policy": "TERMINAL_DEVELOPMENT_TEST",
         "selection_basis": {
             "W_rule": "minimum mean best-Valid RMSE over the four matrix arms, seeds 0/1",
             "F_rule": "minimum mean best-Valid RMSE over every completed configuration, seeds 0/1",
             "core_pair_rule": "PROTOCOL section 6 / D4",
-            "forced_inclusions": [a for a in (getattr(args, "include", "") or "").split(",") if a],
-            "forced_inclusion_reason": (
-                "PROTOCOL section 4 makes the interaction the primary analysis, so both cells of "
-                "that interaction are scored on Test even though neither is W or C"),
             "candidates": candidates,
             "core_pair": core,
+            "forced_inclusions": forced,
+            "forced_inclusion_reason": (
+                "PROTOCOL section 4 makes the BIND x REL interaction the primary analysis, so both "
+                "cells of that interaction are scored on Test even though neither is W or C"),
+            "cap_note": "at most six architectures; the readout bridge lost the last slot to the "
+                        "instance-geometry bridge and the interaction pair",
         },
         "architectures": architecture_ids,
         "no_test_used_for_selection": True,
     }
-    record = C.read_json(C.derived_record_path(dataset))
-    manifest["inherited_word_cache_sha256"] = record.get("inherited_word_cache_sha256")
-    manifest["derived_sha256"] = record.get("derived_sha256")
     C.write_json(C.ROUND_DIR / "finalist_manifest.json", C.jsonable(manifest))
-    print(json.dumps({"finalist": [a["arm"] for a in architecture_ids],
-                      "W": w, "F": f, "C": core.get("C")}, indent=2))
+    print(json.dumps({"finalist": order, "W": w, "F": f, "C": core.get("C"),
+                      "mean_valid": {k: round(v, 5) for k, v in candidates["all_mean_valid"].items()}},
+                     indent=2))
 
 
 def build_test_split(dataset: str, derived_record: Mapping[str, Any]):
@@ -844,8 +838,9 @@ def run_terminal(args) -> None:
         for seed_text, info in architecture["runs"].items():
             checkpoint = C.ROUND_DIR / info["checkpoint"]
             payload = torch.load(checkpoint, map_location=args.device, weights_only=False)
-            if arm == "GINE_REF":
-                model = T.build_gine_model(raw, int(seed_text), args.device)
+            if arm in ("GINE_REF", "GINE_RAW"):
+                model = T.build_gine_model(raw, int(seed_text), args.device,
+                                           raw_features=arm == "GINE_RAW")
                 model.load_state_dict(payload["model"])
             else:
                 spec = M.ModelSpec(**info["spec"])
@@ -853,7 +848,7 @@ def run_terminal(args) -> None:
                                            hidden=cfg["model"]["hidden"])
                 model.load_state_dict(payload["model"])
             model.eval()
-            if arm == "GINE_REF":
+            if arm in ("GINE_REF", "GINE_RAW"):
                 res = T.evaluate_gine(model, T.gine_test_list(raw, scaler), args.device)
             else:
                 res = T.evaluate_word(model, test_split, args.device, scaler)
@@ -866,6 +861,7 @@ def run_terminal(args) -> None:
             }
             np.savez(Path(checkpoint).parent / "preds_test.npz",
                      row=metrics["row_ids"], pred=metrics["pred_raw"])
+            C.write_json(C.analysis_dir() / "terminal_test.json", C.jsonable(results))
             print(json.dumps({f"{arm}_s{seed_text}": results["scores"][f"{arm}_s{seed_text}"]}),
                   flush=True)
     C.write_json(C.analysis_dir() / "terminal_test.json", C.jsonable(results))

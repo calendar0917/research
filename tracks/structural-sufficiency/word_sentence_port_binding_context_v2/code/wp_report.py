@@ -189,6 +189,19 @@ def write_manifest(args) -> None:
             "units_partial": sum(1 for e in entries if e["status"] == "PARTIAL"),
         },
         "remote_jobs": [],
+        "remote_attempts": {
+            "tool": "rr CLI (deploy/launch path)",
+            "host": "res",
+            "pools": ["res-gpu0", "res-gpu1"],
+            "outcome": "unreachable from T0 to the end of Stage B; no remote job was ever created",
+            "evidence": ["rr doctor res -> Connection timed out during banner exchange",
+                         "ssh probe every 45 s -> ssh: connect to host pve-old.yulinsec.cn "
+                         "port 22: Connection timed out"],
+        },
+        "null_fields_note": (
+            "torch/max_rss_mb/cpu_seconds were added to the run payload at 02:51Z, after the 12 core "
+            "units had launched, so they are null for those units; wall_seconds, epoch timing and "
+            "artifact hashes are present for every unit."),
         "failures": _failures(),
         "runs": entries,
     }

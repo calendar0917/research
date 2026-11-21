@@ -1,0 +1,1505 @@
+{
+  "budget": {
+    "cpu_worker_hours": 3.084,
+    "gpu_hours_used": 0.0,
+    "units_complete": 20,
+    "units_launched": 20,
+    "units_partial": 0
+  },
+  "code_hashes": {
+    "wp_analyze.py": "0597b19a0032e9a1258da23dcad4c0331954addccc5e7c20532d19222eaed687",
+    "wp_common.py": "67ca3e79428416f0c65afe41bdccf88d744f862a77995b2d9fdffa4638f20ef2",
+    "wp_data.py": "6ba38406fb9dcf7e9ad9bede9aca36dc0918416959361d3a1346ce055b255b18",
+    "wp_launch.sh": "92bd3a7ebc4cf15cde5c6e660d216c356bc81b83e3e8b3be7f4ede43cf1d5b97",
+    "wp_model.py": "02017742750619dedf5f4f59a20d1214ff1a3a66250540e6e9cd58ce4742d60c",
+    "wp_probes.py": "998ff05f641720d9296a5ab6e67f51d75b65340502af78a45e8a5d1e4c1f953a",
+    "wp_queue.sh": "7bfd97ef8482a3021ddd4b7e6d8cdf90746ace4a6925c3ed560557c80e1608e5",
+    "wp_random_part.py": "548ce647ef0f4a8ab4c9730c11e87d225e98d085360887e5986dd5d728fb6ce8",
+    "wp_report.py": "30bfe4c37dd1723bf6df1c41f1744c9fcc5a14a870f6ea36fe9cb3adc4506791",
+    "wp_run.py": "3ea9d2a64fa5ae87c3a0fd8fa05bc8d3af0747a7755f4c934ba961c44dd3e95a",
+    "wp_train.py": "e21a2dca012e6571cdbf357bd0a69994c964aacd2d4a1618d24d7996c68f4bc1",
+    "wp_v2.json": "7338bb3acc18accb3dd2a4a7828f9fc30593518660fe194a9a243d38b80eaf33"
+  },
+  "commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+  "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+  "execution_regime": "LOCAL_CPU",
+  "failures": [],
+  "generated_utc": "2026-11-21T03:32:15Z",
+  "hard_stop_utc": "2026-11-21T09:22:31Z",
+  "host": {
+    "cpu_count": 16,
+    "memory_mb": 39.01171875,
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "processor": ""
+  },
+  "inputs": {
+    "ogbg-molesol": {
+      "derived_content_sha256": "b988a092d4f629f701c6ffdd0f7c6001052c7a3683deec4920696a212140dc89",
+      "derived_file": "/home/calendar/code/research/tracks/structural-sufficiency/word_sentence_port_binding_context_v2/data/ogbg-molesol_portbind_portbind-v2.npz",
+      "derived_file_sha256": "1c91ae8fee0d28346ef7df419a01a4e887ceb52f7bdd575e15631a51a4ad469f",
+      "inherited_word_cache": "/home/calendar/code/research/tracks/structural-sufficiency/word_sentence_port_route_v1/data/ogbg-molesol_words_ws-word-route-v1.npz",
+      "inherited_word_cache_sha256": "0ca999908f4a15344187af4e66db3bbefa0e1470b2ab71f484ec828dea701672",
+      "inherited_word_record": "/home/calendar/code/research/tracks/structural-sufficiency/word_sentence_port_route_v1/analysis/structure_freeze_molesol.json",
+      "labels_used": false,
+      "split_sizes": {
+        "test": 113,
+        "train": 902,
+        "valid": 113
+      }
+    },
+    "ogbg-mollipo": {
+      "derived_content_sha256": "21d5aee072d083b9b07daf602e5cebd4423adba8b5ca375c7165b2b3cc687fc2",
+      "derived_file": "/home/calendar/code/research/tracks/structural-sufficiency/word_sentence_port_binding_context_v2/data/ogbg-mollipo_portbind_portbind-v2.npz",
+      "derived_file_sha256": "955a4c90e8c5289bc49e02d335a948c77ab5fc58aa0f3a9d08e0093b6dccbb7d",
+      "inherited_word_cache": "/home/calendar/code/research/tracks/structural-sufficiency/word_sentence_port_route_v1/data/ogbg-mollipo_words_ws-word-route-v1.npz",
+      "inherited_word_cache_sha256": "42aa4fc909956e9065afc9453f1a9d728a84e7ac5cb11b5ca3e548b01df8d3fc",
+      "inherited_word_record": "/home/calendar/code/research/tracks/structural-sufficiency/word_sentence_port_route_v1/analysis/structure_freeze_mollipo.json",
+      "labels_used": false,
+      "split_sizes": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      }
+    }
+  },
+  "regime_deviation": {
+    "evidence": [
+      "rr doctor res -> 'Connection timed out during banner exchange' (proxied through pve-old.yulinsec.cn:22)",
+      "repeated ssh probes every 45 s from T0 to the launch of Stage B: 'ssh: connect to host pve-old.yulinsec.cn port 22: Connection timed out'",
+      "local egress verified healthy (ICMP and HTTPS to unrelated hosts succeed)"
+    ],
+    "impact": [
+      "No remote GPU provenance (driver/node) is available for this round; the execution regime is recorded as LOCAL_CPU.",
+      "Wall-clock budget was preserved by running two workers of 7 torch threads each on the local host, mirroring the one-task-per-GPU concurrency of the original plan.",
+      "All arms share the same regime, so cross-arm condition differences remain internally comparable; absolute numbers are not comparable to the round-1 GPU numbers."
+    ],
+    "reason": "SSH to the research host failed continuously from T0 with transport-level errors (see evidence); the rr CLI could not reach the box, so the frozen round was executed on the local host instead of the two remote GPUs."
+  },
+  "remote_jobs": [],
+  "round": "word_sentence_port_binding_context_v2",
+  "runs": [
+    {
+      "arm": "BAG_CAP",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BAG_CAP_s0/preds_best.npz",
+          "sha256": "3fb83077a8d99582d60d3e4ca8748b889198639606363366c03b974fdf09a8e8"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BAG_CAP_s0/preds_final.npz",
+          "sha256": "e6be75b94d97157e7c94ab8876d1bc9eefecdbe7a856fc44a4614293528c8f55"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BAG_CAP_s0/state_best.pt",
+          "sha256": "d00f15061c547d84cc82ed5b52f92bd922de00d828954c3b4b0a3656b3be2bd4"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BAG_CAP_s0/state_final.pt",
+          "sha256": "1654c217eca18245db9cebc1c76079ceca5dd245fac718fc7676498c5b499582"
+        }
+      },
+      "best": {
+        "epoch": 76,
+        "train_mae_raw": 0.23660706569041526,
+        "train_rmse_raw": 0.3093383553187284,
+        "valid_mae_raw": 0.5627242380664462,
+        "valid_rmse_raw": 0.7510107383549117
+      },
+      "command": "bash code/wp_launch.sh BAG_CAP 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 3318.7574590000004,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.07751290379535584,
+        "train_rmse_raw": 0.11468540335331612,
+        "valid_mae_raw": 0.5908309388728369,
+        "valid_rmse_raw": 0.791047996863627
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.07868364167000566,
+        "mean_last20_train_rmse_raw": 0.1157167524621179,
+        "mean_last20_valid_mae_raw": 0.5914256549449194,
+        "mean_last20_valid_rmse_raw": 0.7913392936469346
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": 880.83203125,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BAG_CAP_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": true,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 498.58889109501615
+    },
+    {
+      "arm": "BAG_CAP",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BAG_CAP_s1/preds_best.npz",
+          "sha256": "3c4e2b0063065ea5d1c82bc7dcda99a51e00bed02e2a87f27606aa5c8e236f21"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BAG_CAP_s1/preds_final.npz",
+          "sha256": "cc47d68723a83f356799883028e4d34b68f7d44b178496eb0806b83babd7ade5"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BAG_CAP_s1/state_best.pt",
+          "sha256": "add04fa2ee02acce0e1589e815cb382918f8c09f57884b95b0750fac30aff77b"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BAG_CAP_s1/state_final.pt",
+          "sha256": "3d3b72cd3b20e0dc4334b662b0ab52172e60918fe23dcd14765234185a5c748c"
+        }
+      },
+      "best": {
+        "epoch": 80,
+        "train_mae_raw": 0.23333086882318768,
+        "train_rmse_raw": 0.30747808084843625,
+        "valid_mae_raw": 0.540757466781707,
+        "valid_rmse_raw": 0.7142243590835615
+      },
+      "command": "bash code/wp_launch.sh BAG_CAP 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 3320.9528149999996,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.07505644744350796,
+        "train_rmse_raw": 0.11294158980036735,
+        "valid_mae_raw": 0.5552420698461078,
+        "valid_rmse_raw": 0.760415546819667
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.07586743386728423,
+        "mean_last20_train_rmse_raw": 0.1137101558598205,
+        "mean_last20_valid_mae_raw": 0.554536072129295,
+        "mean_last20_valid_rmse_raw": 0.7597609362176121
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": 881.28125,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BAG_CAP_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": true,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 498.7379013529862
+    },
+    {
+      "arm": "BIND_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s0/preds_best.npz",
+          "sha256": "6ed7f4cc087d5e81a2494d5732915ab0c6a41f479b0edc49cea5e940eea3e3ef"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s0/preds_final.npz",
+          "sha256": "058a9d73e37e4c547dc5c28b2677bb197a99bcbc12f1c6516ec78e8433472ba0"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BIND_REL_s0/state_best.pt",
+          "sha256": "df4552a7dbf1341a7bc2a8e4c7f5cf2b76c396a23b7b8afa62d1235a6dbb89a2"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BIND_REL_s0/state_final.pt",
+          "sha256": "34739e0aec08793893464a498ed9ba46fb74717dfddde42cd500bce20d5cae09"
+        }
+      },
+      "best": {
+        "epoch": 69,
+        "train_mae_raw": 0.20917134061455728,
+        "train_rmse_raw": 0.2742384123326264,
+        "valid_mae_raw": 0.5471616211391631,
+        "valid_rmse_raw": 0.7089139801739928
+      },
+      "command": "bash code/wp_launch.sh BIND_REL 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.0499409987458161,
+        "train_rmse_raw": 0.078070916035577,
+        "valid_mae_raw": 0.5728565167813074,
+        "valid_rmse_raw": 0.7560729723037511
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.05099424206784793,
+        "mean_last20_train_rmse_raw": 0.07904576749840087,
+        "mean_last20_valid_mae_raw": 0.5726974931501208,
+        "mean_last20_valid_rmse_raw": 0.7554177494578849
+      },
+      "launch_commit": "fc19f8e42089c7fa81cc408164cb1f178ca6981c",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_REL_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 611.5224558199989
+    },
+    {
+      "arm": "BIND_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s1/preds_best.npz",
+          "sha256": "d05ec1f9307f27c5a8d29deaa404ec96c5f2a1166bac28ccc478e736929ed0d8"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s1/preds_final.npz",
+          "sha256": "1417fee82ac77b7d1fd4219db295767dff5da53dbb565f7868730ba6402a6c6b"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BIND_REL_s1/state_best.pt",
+          "sha256": "13973c652bdb28fc02924f6c3fefb9c32a155eade25991aea677f3d12bdabdc3"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BIND_REL_s1/state_final.pt",
+          "sha256": "afbee42be628579f4ca0e669fbde420d2edd2985c7bb7cb5087e17b5900b86b3"
+        }
+      },
+      "best": {
+        "epoch": 53,
+        "train_mae_raw": 0.26017309696901414,
+        "train_rmse_raw": 0.3387755370954213,
+        "valid_mae_raw": 0.5489330243496667,
+        "valid_rmse_raw": 0.717146130215152
+      },
+      "command": "bash code/wp_launch.sh BIND_REL 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.05364652687595004,
+        "train_rmse_raw": 0.08560348718676634,
+        "valid_mae_raw": 0.5848968344075339,
+        "valid_rmse_raw": 0.7695636621054397
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.05474451540304082,
+        "mean_last20_train_rmse_raw": 0.08640150453944817,
+        "mean_last20_valid_mae_raw": 0.5841973348032861,
+        "mean_last20_valid_rmse_raw": 0.7694273525829187
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_REL_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 492.44961577098
+    },
+    {
+      "arm": "BIND_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_s0/preds_best.npz",
+          "sha256": "4e2defbba2f4be29463f6b3f2208fd4a410644120e9122205865f0af64918e44"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_s0/preds_final.npz",
+          "sha256": "ac88c24ef5d1e4b76740910b50e75c03dd517948d5e22682d40286cfcdbc2d27"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BIND_SELF_s0/state_best.pt",
+          "sha256": "5cbe5e26dbce9ab26070bf6f25ed2d8f00e8d5e0ce77113c92d72b6b219edd4e"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BIND_SELF_s0/state_final.pt",
+          "sha256": "3ca549ec5b47099a3e2ffb8cbfbac7b654b61c768625dbb69063b78fd3edf6df"
+        }
+      },
+      "best": {
+        "epoch": 57,
+        "train_mae_raw": 0.2503969517492113,
+        "train_rmse_raw": 0.3315663853651943,
+        "valid_mae_raw": 0.5583957848094758,
+        "valid_rmse_raw": 0.7488057897401559
+      },
+      "command": "bash code/wp_launch.sh BIND_SELF 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.05666939995828129,
+        "train_rmse_raw": 0.0863300144665937,
+        "valid_mae_raw": 0.6223686831338066,
+        "valid_rmse_raw": 0.8316486462978798
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.05775872379186607,
+        "mean_last20_train_rmse_raw": 0.0872117608717846,
+        "mean_last20_valid_mae_raw": 0.6219531930912108,
+        "mean_last20_valid_rmse_raw": 0.8308042442957879
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_SELF_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 495.64236397697823
+    },
+    {
+      "arm": "BIND_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_s1/preds_best.npz",
+          "sha256": "55b598350be8dbb8663b26a7c733e9d5e59eda79c9c1d1cb5308b0b6c48607d3"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_s1/preds_final.npz",
+          "sha256": "378665db451590e89b9b8ee9ef5646528bdcc3a3db14f1215236e0c5b680d140"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BIND_SELF_s1/state_best.pt",
+          "sha256": "c72abf0c1cf625ce8ffa44d2de8b703374f431fbf7dc7898f99519820e9afd44"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BIND_SELF_s1/state_final.pt",
+          "sha256": "58399c5c9e7c227fd0b72be233003d00108da15f84d2c956fb01aa70b5536066"
+        }
+      },
+      "best": {
+        "epoch": 37,
+        "train_mae_raw": 0.36744876567806517,
+        "train_rmse_raw": 0.4839975966992332,
+        "valid_mae_raw": 0.5808708503132775,
+        "valid_rmse_raw": 0.746752499485049
+      },
+      "command": "bash code/wp_launch.sh BIND_SELF 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.0656233507962454,
+        "train_rmse_raw": 0.10538328766027348,
+        "valid_mae_raw": 0.5895454159804753,
+        "valid_rmse_raw": 0.803312311419538
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.06589020693053801,
+        "mean_last20_train_rmse_raw": 0.10561788990409363,
+        "mean_last20_valid_mae_raw": 0.5894126576752889,
+        "mean_last20_valid_rmse_raw": 0.8031815416507584
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_SELF_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 567.5641732399818
+    },
+    {
+      "arm": "BIND_SELF_SCALAR",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s0/preds_best.npz",
+          "sha256": "a1fed6fc6d072067bf2d586e2ec178a17929a52d10d0a601fa43d199b3b18577"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s0/preds_final.npz",
+          "sha256": "b168748ac751fe56597064aa05634f42658ae4eb14f5430e77f24e376db67960"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s0/state_best.pt",
+          "sha256": "8eff5211ec8b4b8c2995f22292aa5e6c4adc2a714434d09df5965d66073d7d43"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s0/state_final.pt",
+          "sha256": "bcba204807458a708581a3518d9b7b60f91c0dbf8c7fdedefb8e1573ae9ff58a"
+        }
+      },
+      "best": {
+        "epoch": 45,
+        "train_mae_raw": 0.3390401706809089,
+        "train_rmse_raw": 0.4487302234227378,
+        "valid_mae_raw": 0.5742030458790915,
+        "valid_rmse_raw": 0.7606457369807751
+      },
+      "command": "bash code/wp_launch.sh BIND_SELF_SCALAR 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.07484675606801397,
+        "train_rmse_raw": 0.11583161611303566,
+        "valid_mae_raw": 0.6289939329737708,
+        "valid_rmse_raw": 0.8374174741188535
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.07604679979029154,
+        "mean_last20_train_rmse_raw": 0.11687510751911916,
+        "mean_last20_valid_mae_raw": 0.628274780483473,
+        "mean_last20_valid_rmse_raw": 0.8370535249882517
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_SELF_SCALAR_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "scalar"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 495.69970668599126
+    },
+    {
+      "arm": "BIND_SELF_SCALAR",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s1/preds_best.npz",
+          "sha256": "d0df5755e9398ced97f0e4e0a5074141fd3bba58e2eb12d4f977845f08744d94"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s1/preds_final.npz",
+          "sha256": "3aa949e3251b360a43e68d9d823a058c1198a37e229c8f7b3a559cd8ec050f3a"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s1/state_best.pt",
+          "sha256": "678a2f5fa39fbff2281dc171d7e84b5b93ae4d3f7573339060c4b02bb21cd06f"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_BIND_SELF_SCALAR_s1/state_final.pt",
+          "sha256": "cdedae355bff285005fbebc66b90e6b9791e321e798c2b4765587517e62f1f2c"
+        }
+      },
+      "best": {
+        "epoch": 39,
+        "train_mae_raw": 0.37996031567454336,
+        "train_rmse_raw": 0.5030232263345392,
+        "valid_mae_raw": 0.5687595285120465,
+        "valid_rmse_raw": 0.7364789714126709
+      },
+      "command": "bash code/wp_launch.sh BIND_SELF_SCALAR 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.07966368397076924,
+        "train_rmse_raw": 0.12058677160430237,
+        "valid_mae_raw": 0.5858960009756542,
+        "valid_rmse_raw": 0.793477762918269
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.08059415217134214,
+        "mean_last20_train_rmse_raw": 0.12138552923203945,
+        "mean_last20_valid_mae_raw": 0.5863260005059695,
+        "mean_last20_valid_rmse_raw": 0.7941889521800204
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_SELF_SCALAR_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "scalar"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 509.39329867699416
+    },
+    {
+      "arm": "GINE_RAW",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_RAW_s0/preds_best.npz",
+          "sha256": "1a5718c1cf01e2dfb42875eb39006afa99cf79474efd1671bf51cf372d2c9300"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_RAW_s0/preds_final.npz",
+          "sha256": "9b2c943035cfc96dff44fdbd6c8da714accc2340a73c913dcd65b2bfbec83d58"
+        },
+        "state_best.pt": {
+          "bytes": 1578722,
+          "path": "results/mollipo_GINE_RAW_s0/state_best.pt",
+          "sha256": "db799e2ef0b654026720e44893e3e296957fdfabe30c304e334114bb1442a258"
+        },
+        "state_final.pt": {
+          "bytes": 1578728,
+          "path": "results/mollipo_GINE_RAW_s0/state_final.pt",
+          "sha256": "d31827c2916395d284aa9d2e4a737af257fd33010672cf53a7a1588130418699"
+        }
+      },
+      "best": {
+        "epoch": 216,
+        "train_mae_raw": 0.14490659134018988,
+        "train_rmse_raw": 0.2004424994769371,
+        "valid_mae_raw": 0.45562543272972106,
+        "valid_rmse_raw": 0.6181796725875821
+      },
+      "command": "bash code/wp_launch.sh GINE_RAW 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 4829.067127,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.1409868235034602,
+        "train_rmse_raw": 0.19548869047052975,
+        "valid_mae_raw": 0.4615058061622438,
+        "valid_rmse_raw": 0.6242992492621678
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.14233402312511492,
+        "mean_last20_train_rmse_raw": 0.19715796047033468,
+        "mean_last20_valid_mae_raw": 0.4628813257245791,
+        "mean_last20_valid_rmse_raw": 0.6266233253485691
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 913.89453125,
+      "n_parameters": 387974,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_GINE_RAW_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 750.6371038920188
+    },
+    {
+      "arm": "GINE_RAW",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_RAW_s1/preds_best.npz",
+          "sha256": "28a60f25fa59d892c12b0bab98ae985780a57110901368c469e515b9ed3ec94e"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_RAW_s1/preds_final.npz",
+          "sha256": "22a6f1c64123f7db884f85a9778fc40608251aa3ed2f79955902854468e15580"
+        },
+        "state_best.pt": {
+          "bytes": 1578722,
+          "path": "results/mollipo_GINE_RAW_s1/state_best.pt",
+          "sha256": "84475b542fae7b6812f8bddb060299c34c35b6322a24a850e458a12c86c984c1"
+        },
+        "state_final.pt": {
+          "bytes": 1578728,
+          "path": "results/mollipo_GINE_RAW_s1/state_final.pt",
+          "sha256": "01c544772353743a6d0ae76d463c4b4ac88daeff651aadcf84747b6a216c84eb"
+        }
+      },
+      "best": {
+        "epoch": 168,
+        "train_mae_raw": 0.2043652193177314,
+        "train_rmse_raw": 0.27362022811925574,
+        "valid_mae_raw": 0.4483446904591152,
+        "valid_rmse_raw": 0.609025538415045
+      },
+      "command": "bash code/wp_launch.sh GINE_RAW 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 4837.121758,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.16366976276040077,
+        "train_rmse_raw": 0.22609328927442257,
+        "valid_mae_raw": 0.45902665654818214,
+        "valid_rmse_raw": 0.6217231412586608
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.1652393774031883,
+        "mean_last20_train_rmse_raw": 0.22782354126855645,
+        "mean_last20_valid_mae_raw": 0.4579681971953029,
+        "mean_last20_valid_rmse_raw": 0.6193729215883238
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 914.30859375,
+      "n_parameters": 387974,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_GINE_RAW_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 753.4748748400016
+    },
+    {
+      "arm": "GINE_REF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_REF_s0/preds_best.npz",
+          "sha256": "19f5573e6bfbb336085c6f30562f04545264d8f8df9dd1a065d6a80be8ecb97c"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_REF_s0/preds_final.npz",
+          "sha256": "baebcd485c9748a21f28190d5d2e587f9ec40a879e887cd6bffdfa12c246fdbf"
+        },
+        "state_best.pt": {
+          "bytes": 1595234,
+          "path": "results/mollipo_GINE_REF_s0/state_best.pt",
+          "sha256": "af3b3227ea1d9649186f83b13b4d00b6c799c04837ae0ca85e1628cc56c2e350"
+        },
+        "state_final.pt": {
+          "bytes": 1595306,
+          "path": "results/mollipo_GINE_REF_s0/state_final.pt",
+          "sha256": "2a9c6465afa116e94248812f1ac8366c8d2a351a43100cf3d5d095ba575b407e"
+        }
+      },
+      "best": {
+        "epoch": 176,
+        "train_mae_raw": 0.1599082461780026,
+        "train_rmse_raw": 0.21677935443302346,
+        "valid_mae_raw": 0.4729805495057787,
+        "valid_rmse_raw": 0.618124615886888
+      },
+      "command": "bash code/wp_launch.sh GINE_REF 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.13044137724098706,
+        "train_rmse_raw": 0.18213523290568442,
+        "valid_mae_raw": 0.47002393149194266,
+        "valid_rmse_raw": 0.6256120038942939
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.13101482775062323,
+        "mean_last20_train_rmse_raw": 0.18309490465482955,
+        "mean_last20_valid_mae_raw": 0.4700608460818018,
+        "mean_last20_valid_rmse_raw": 0.6258620069527772
+      },
+      "launch_commit": "fc19f8e42089c7fa81cc408164cb1f178ca6981c",
+      "max_rss_mb": null,
+      "n_parameters": 391942,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_GINE_REF_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 668.6841528869991
+    },
+    {
+      "arm": "GINE_REF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_REF_s1/preds_best.npz",
+          "sha256": "f0c6a91f380de8ca58e5f547edc887f985c72ddb9bff8eca943681304964d58b"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GINE_REF_s1/preds_final.npz",
+          "sha256": "71c53c72beb17347ffa0906ec59b50b77185eedc4154461cad52a3e2f620b9b4"
+        },
+        "state_best.pt": {
+          "bytes": 1595234,
+          "path": "results/mollipo_GINE_REF_s1/state_best.pt",
+          "sha256": "dca901ae746ea15285608420b565105b8c299c68aa77869d79a656a45082e89f"
+        },
+        "state_final.pt": {
+          "bytes": 1595306,
+          "path": "results/mollipo_GINE_REF_s1/state_final.pt",
+          "sha256": "92273cdbcddf6c3102ae75d930006f134e87b96882b5e40901e3ba24f47349e6"
+        }
+      },
+      "best": {
+        "epoch": 111,
+        "train_mae_raw": 0.25300087974894614,
+        "train_rmse_raw": 0.33305312741426807,
+        "valid_mae_raw": 0.46866304051308405,
+        "valid_rmse_raw": 0.625723743507331
+      },
+      "command": "bash code/wp_launch.sh GINE_REF 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.14752512478402682,
+        "train_rmse_raw": 0.20620478391765718,
+        "valid_mae_raw": 0.475602027064278,
+        "valid_rmse_raw": 0.6463175667497617
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.14982835844159126,
+        "mean_last20_train_rmse_raw": 0.20864356697254527,
+        "mean_last20_valid_mae_raw": 0.4756650406406039,
+        "mean_last20_valid_rmse_raw": 0.6466846402112654
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 391942,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_GINE_REF_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 606.4189769189979
+    },
+    {
+      "arm": "GLOBAL_CTX_BIND",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s0/preds_best.npz",
+          "sha256": "9b54bb188b762fc2487361f577726021b8d0137fb068b3786d4e6345e528dc5e"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s0/preds_final.npz",
+          "sha256": "f9f147b96a002f85756c46b8b44451768422885d486a5cea1242cab9fd3ebc46"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s0/state_best.pt",
+          "sha256": "44f3ec2de9899dd86e9da1450d35c7298a9ad5dbb1441f17fe8010832b0bbc62"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s0/state_final.pt",
+          "sha256": "a2763823ef52bfdd56a80280a209be86bf0d3b87a4e95dd14652ec8183512042"
+        }
+      },
+      "best": {
+        "epoch": 68,
+        "train_mae_raw": 0.24184788653538342,
+        "train_rmse_raw": 0.3153607117910824,
+        "valid_mae_raw": 0.5640443492503393,
+        "valid_rmse_raw": 0.733214297184918
+      },
+      "command": "bash code/wp_launch.sh GLOBAL_CTX_BIND 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 3388.087583,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.052473248399439315,
+        "train_rmse_raw": 0.08222106177476302,
+        "valid_mae_raw": 0.5712425975572495,
+        "valid_rmse_raw": 0.7683641651970324
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.05386521834880113,
+        "mean_last20_train_rmse_raw": 0.08312830578342276,
+        "mean_last20_valid_mae_raw": 0.5720473066256159,
+        "mean_last20_valid_rmse_raw": 0.7689923610084468
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 887.69921875,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_GLOBAL_CTX_BIND_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "global",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 509.38357134899707
+    },
+    {
+      "arm": "GLOBAL_CTX_BIND",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s1/preds_best.npz",
+          "sha256": "bbb1f3d6699a486202b534be83e77f851adc5e625315409f58184b5030ea297d"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s1/preds_final.npz",
+          "sha256": "8687154b639b7eb3288e11f035af451df709f11736be8f71e8ffbd420ce1f77e"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s1/state_best.pt",
+          "sha256": "3a6f67b7b9615523010bb44f17e7b41c61773827b583d29cabe61906dd315cdd"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_GLOBAL_CTX_BIND_s1/state_final.pt",
+          "sha256": "bebb3391d728583926c24cf250b2a9a118a5624635e62faecc8e0215bbb843bd"
+        }
+      },
+      "best": {
+        "epoch": 73,
+        "train_mae_raw": 0.21490684240346863,
+        "train_rmse_raw": 0.2796284705904926,
+        "valid_mae_raw": 0.5513342828977675,
+        "valid_rmse_raw": 0.7267557249600347
+      },
+      "command": "bash code/wp_launch.sh GLOBAL_CTX_BIND 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 3370.595302,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.04921240863345918,
+        "train_rmse_raw": 0.08305144165572545,
+        "valid_mae_raw": 0.5784196280297779,
+        "valid_rmse_raw": 0.7626406243331437
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.05075217612619911,
+        "mean_last20_train_rmse_raw": 0.084109511238499,
+        "mean_last20_valid_mae_raw": 0.5776200559593382,
+        "mean_last20_valid_rmse_raw": 0.7617239911389146
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 875.046875,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_GLOBAL_CTX_BIND_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "global",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 506.6776211510005
+    },
+    {
+      "arm": "MEAN_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_REL_s0/preds_best.npz",
+          "sha256": "b8cf723cf47b09cb32fec6bfedd0aad13c1140ea20ba127277ff24348b18d041"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_REL_s0/preds_final.npz",
+          "sha256": "bcfbb30f884d5c6c081f5bbb11bd3a51a829fd2c9e61f186d1efa205374bfb10"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_MEAN_REL_s0/state_best.pt",
+          "sha256": "170dcc60b2ac937f8548b0c522e17234887c8baa06f1406b5cd6fd98ca2a3ec3"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_MEAN_REL_s0/state_final.pt",
+          "sha256": "d0007a105c8595df181ed54d9245e56e4a8fd7839d778a2a68f64477f1d3e27a"
+        }
+      },
+      "best": {
+        "epoch": 63,
+        "train_mae_raw": 0.23685185763807523,
+        "train_rmse_raw": 0.304868093361302,
+        "valid_mae_raw": 0.5555296761648996,
+        "valid_rmse_raw": 0.7274608640772731
+      },
+      "command": "bash code/wp_launch.sh MEAN_REL 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.049767780162039255,
+        "train_rmse_raw": 0.0791503429840037,
+        "valid_mae_raw": 0.5853727528027126,
+        "valid_rmse_raw": 0.7763416784155817
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.050540536260675804,
+        "mean_last20_train_rmse_raw": 0.08005998188376855,
+        "mean_last20_valid_mae_raw": 0.5842555523912112,
+        "mean_last20_valid_rmse_raw": 0.7744600159930759
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_MEAN_REL_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 546.1716209849983
+    },
+    {
+      "arm": "MEAN_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_REL_s1/preds_best.npz",
+          "sha256": "aea1df86a8f58e28bf8e2e5ef78a1b8c8c0f245b14004e876a37844068fbe021"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_REL_s1/preds_final.npz",
+          "sha256": "3fdff5c19ff51e77a7a0a2855e3c923289c02830029cac6baec4d27a06fefef2"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_MEAN_REL_s1/state_best.pt",
+          "sha256": "23d83eef241f28e71c68363175d708f2918bde074c1805ddde7e4c3813e98b1b"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_MEAN_REL_s1/state_final.pt",
+          "sha256": "51ab3a4bfc2304eae1a0f662ff98e1faa5a26820f3ea78884d8744dc2d52edae"
+        }
+      },
+      "best": {
+        "epoch": 53,
+        "train_mae_raw": 0.27333401111619815,
+        "train_rmse_raw": 0.3570727892094039,
+        "valid_mae_raw": 0.5445950510955992,
+        "valid_rmse_raw": 0.7146300246966742
+      },
+      "command": "bash code/wp_launch.sh MEAN_REL 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.05637166127562523,
+        "train_rmse_raw": 0.09202678928667545,
+        "valid_mae_raw": 0.5559857376984187,
+        "valid_rmse_raw": 0.7468913236423023
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.057706259760473465,
+        "mean_last20_train_rmse_raw": 0.09301022746525221,
+        "mean_last20_valid_mae_raw": 0.5553574568884714,
+        "mean_last20_valid_rmse_raw": 0.7470722524549593
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_MEAN_REL_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 514.526785916998
+    },
+    {
+      "arm": "MEAN_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_SELF_s0/preds_best.npz",
+          "sha256": "ca0516259b954cce3925d1d19b40eccae26cc0d4bd8dccc522b6b29805c263f4"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_SELF_s0/preds_final.npz",
+          "sha256": "613160fe38a43bc7c83f41bf70a22f3269cef54e43fca76b73cbdbf7457e5e3a"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_MEAN_SELF_s0/state_best.pt",
+          "sha256": "db728086a962f13b95b89d254c5b153dd7c7d4d8968f3cdde2fcda0be2ba091a"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_MEAN_SELF_s0/state_final.pt",
+          "sha256": "075c4cc2069350b925b5ed683b9c72b9e8966da8e201ae4f35b10c16e1577902"
+        }
+      },
+      "best": {
+        "epoch": 59,
+        "train_mae_raw": 0.2754296086373783,
+        "train_rmse_raw": 0.35878414942006426,
+        "valid_mae_raw": 0.5577552290189833,
+        "valid_rmse_raw": 0.7199647129407775
+      },
+      "command": "bash code/wp_launch.sh MEAN_SELF 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.06396637349611237,
+        "train_rmse_raw": 0.09673744648763362,
+        "valid_mae_raw": 0.5731842384451912,
+        "valid_rmse_raw": 0.7612537354424793
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.06517326227078836,
+        "mean_last20_train_rmse_raw": 0.097869589411232,
+        "mean_last20_valid_mae_raw": 0.5731491936814217,
+        "mean_last20_valid_rmse_raw": 0.7603636836723675
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_MEAN_SELF_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 554.4922891850001
+    },
+    {
+      "arm": "MEAN_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_SELF_s1/preds_best.npz",
+          "sha256": "c4ae2db5598cbce2e742506af231f7cddb4a47237d87970ddbb76b9e0d087ead"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_MEAN_SELF_s1/preds_final.npz",
+          "sha256": "7714010df45829a2385be89c6928458d8a36414ac778bb2333a8f069ad2fbc88"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_MEAN_SELF_s1/state_best.pt",
+          "sha256": "dade089818256b1729da5819c2d4668294061d8ebbd5aafa1c719202cc95ccf9"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_MEAN_SELF_s1/state_final.pt",
+          "sha256": "eb75105957fd2ce82d50fc59a485bba8baf534233d9046b972e6587dbda8f76d"
+        }
+      },
+      "best": {
+        "epoch": 64,
+        "train_mae_raw": 0.25220009769712176,
+        "train_rmse_raw": 0.32952230755686746,
+        "valid_mae_raw": 0.5349486728509267,
+        "valid_rmse_raw": 0.6989811783186147
+      },
+      "command": "bash code/wp_launch.sh MEAN_SELF 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.069977788378795,
+        "train_rmse_raw": 0.10712678480264598,
+        "valid_mae_raw": 0.5583814098721459,
+        "valid_rmse_raw": 0.7462144905291562
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.07105949283355759,
+        "mean_last20_train_rmse_raw": 0.10792944759347485,
+        "mean_last20_valid_mae_raw": 0.5592706955898374,
+        "mean_last20_valid_rmse_raw": 0.7470005090747223
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_MEAN_SELF_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 522.3756274829793
+    },
+    {
+      "arm": "SET_MEAN_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_SET_MEAN_SELF_s0/preds_best.npz",
+          "sha256": "41660f7b38ed9f0650a6cd8d82082f971663842b96162b9267b83b0abf3ed924"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_SET_MEAN_SELF_s0/preds_final.npz",
+          "sha256": "86f5d7f434622745ad9ad5ede1b79bf4378ddc6a1d0586803c0b137340b739a6"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_SET_MEAN_SELF_s0/state_best.pt",
+          "sha256": "c9742821fa2905a92fd75a67602f4485605559f42f421898bb68bd13ab717200"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_SET_MEAN_SELF_s0/state_final.pt",
+          "sha256": "8bc543405b8fb4dd0853982f8e5c9b1fbea98b17bd05bec36880cce158c5a24a"
+        }
+      },
+      "best": {
+        "epoch": 53,
+        "train_mae_raw": 0.3030178984006246,
+        "train_rmse_raw": 0.3975813355108751,
+        "valid_mae_raw": 0.5487265629427773,
+        "valid_rmse_raw": 0.7220478851400792
+      },
+      "command": "bash code/wp_launch.sh SET_MEAN_SELF 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.07390495886405309,
+        "train_rmse_raw": 0.11729788880839244,
+        "valid_mae_raw": 0.6001558462778728,
+        "valid_rmse_raw": 0.7899273954098746
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.07519804657569953,
+        "mean_last20_train_rmse_raw": 0.11827950808870813,
+        "mean_last20_valid_mae_raw": 0.6002830458396957,
+        "mean_last20_valid_rmse_raw": 0.78998108258359
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_SET_MEAN_SELF_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "set",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 489.1176394329814
+    },
+    {
+      "arm": "SET_MEAN_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_SET_MEAN_SELF_s1/preds_best.npz",
+          "sha256": "fed1eeda7790f3963fc189632b01cb11076e1096ac66b83f95079b32244ec873"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_SET_MEAN_SELF_s1/preds_final.npz",
+          "sha256": "83293879fa3bc71db266e1450e226ada93c558a800874a37702dcd373ceded0f"
+        },
+        "state_best.pt": {
+          "bytes": 1374913,
+          "path": "results/mollipo_SET_MEAN_SELF_s1/state_best.pt",
+          "sha256": "55de5978327cd8b6f63ef404927d8507fb1648765a378078ed823e71410e57e6"
+        },
+        "state_final.pt": {
+          "bytes": 1374984,
+          "path": "results/mollipo_SET_MEAN_SELF_s1/state_final.pt",
+          "sha256": "cc2b0f9419ff363b026ae5acbb4636343cedd882efe3eee44d077a22acba721c"
+        }
+      },
+      "best": {
+        "epoch": 48,
+        "train_mae_raw": 0.3211852998960586,
+        "train_rmse_raw": 0.4205914150102396,
+        "valid_mae_raw": 0.558840179727191,
+        "valid_rmse_raw": 0.7402287213726789
+      },
+      "command": "bash code/wp_launch.sh SET_MEAN_SELF 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": null,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.071328009948844,
+        "train_rmse_raw": 0.1123768863484931,
+        "valid_mae_raw": 0.5824802844297319,
+        "valid_rmse_raw": 0.8030617205984483
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.07251681478250595,
+        "mean_last20_train_rmse_raw": 0.11332532752586019,
+        "mean_last20_valid_mae_raw": 0.5823926277103879,
+        "mean_last20_valid_rmse_raw": 0.8022324007645306
+      },
+      "launch_commit": "658ef8dd9eb50a6eeba4962e0222cf19ab2e8634",
+      "max_rss_mb": null,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_SET_MEAN_SELF_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "set",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": null,
+      "wall_seconds": 512.5942710310046
+    }
+  ],
+  "stop_launching_after_utc": "2026-11-21T07:52:31Z",
+  "t0_monotonic": 1795224151,
+  "t0_utc": "2026-11-21T01:22:31Z"
+}

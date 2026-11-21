@@ -186,3 +186,52 @@ Train/Valid/终局 Test 分别报告：兼容位点集合 ≥2 的 incidence 数
 ---
 
 ## 附录 A：执行记录（训练结束后追加，不改 §0–§9）
+
+### A.1 执行 regime 偏差（最大偏差）
+
+`res` 从 T0 起不可达：`rr doctor res` 报 `Connection timed out during banner exchange`，随后每 45 s 的
+SSH 探针持续报 `ssh: connect to host pve-old.yulinsec.cn port 22: Connection timed out`，直到 Stage B
+启动时仍未恢复（本地出网正常）。因此**全部正式单元在本机 CPU 上执行**：两个 worker，每个
+`WP_THREADS=OMP_NUM_THREADS=MKL_NUM_THREADS=7`，与“每 GPU 一个任务”的并发度一致。
+记录于 `analysis/execution_regime.json`：`regime = LOCAL_CPU`、`gpu_hours = 0`、driver/node = null。
+**影响**：四格与所有对照共享同一 regime，跨臂比较内部有效；绝对数值不与上一轮 GPU 数值直接对照
+（`GINE_REF` 同协议重训 0.618/0.626 与上一轮 0.629 接近，可作弱一致性检查，但不作受控结论）。
+
+### A.2 正式单元前的工程修复（均不影响已记录的历史结论）
+
+1. `derive_core` 的兼容位点分组按 `(word, 9 列)` 全局 `unique`，跨词合并 → 改 `lexsort` 连续分组，
+   断言 `word_group_ptr` 与组数一致。
+2. `bond_u/bond_v` 已是 split 全局偏移，端口/边偏移不得再加 `atom_off`（双重偏移）。
+3. `pack_batch` 的 `word_site_off` 必须用“批内首 site”重算；`pack_molecules` 的 bond 偏移同理。
+4. `evaluate_word` 曾把**原始**标签当作已标准化目标送入 `metric_block`（无效 Valid/MAE、双标准化）。
+   在正式队列启动前修复（`targets.append((raw - mean)/std)`）。本次修复前有一次**临时验证 run**
+   （`BIND_REL` seed 0，直接调用 `wp_launch.sh`）在 epoch ~120 时被终止，未写 `run.json`，其
+   `state_last.pt` 被随后的正式 run 逐 epoch 覆盖；**正式 12 个单元全部在修复之后启动**
+   （`BIND_REL_s0` 的 `started_unix = 1795225783`，修复提交早于该时间戳）。
+5. `_layout_support` 的占位实现与 `paired_bootstrap` 死代码在支持统计定稿前删除/重写。
+
+`analysis/checks.json` 与 `analysis/probes.json` 记录了 Stage A 的工程检查与 A1/A2 探针结果
+（保真度、重编号/重排/batch 不变性、四格逐位同初值、健康梯度、A1 端口绑定可学、A2 句间组合可学）。
+
+### A.3 冻结时点与偏差
+
+* 计时在 GPU 上未测；CPU 上 `t_epoch_max_median = 1.506 s/epoch`，E=240 投影 7.5 min ≤ 25 min，
+  故按 §4 规则取 **E = 240**（`analysis/timing_mollipo.json`，写于任何正式单元之前）。
+* 分支执行：Stage B 7 臂 seed 0 → Stage C 四格 seed 1 → Stage D（`SET_MEAN_SELF`/`BIND_SELF_SCALAR`
+  补 seed 1；`BAG_CAP`、`GLOBAL_CTX_BIND`、`GINE_RAW` 各 2 seed；`BIND_REL` 随机连通分块 2 seed）。
+  未改动 §0–§9 的任何规则、阈值、选择顺序。
+* **ESOL 触发判定（按 §5 机械判定，未自行改规则）**：W = `MEAN_SELF` ⇒ 核心配对 C = null
+  （§6：W 为 `MEAN_SELF` 时 C 不存在）。§5 规定“选定的 W/C 比较必须自身满足可重复机制信号，
+  否则跳过 ESOL”，故按规则**跳过**。为避免“看到结果再决定”，此处记录判定时间点：
+  当时 12 个核心单元已全部完成，四格均值已知（`summary.json` 首版生成于 03:00Z 之前）。
+* 补充：为回答“交互是否在第二个数据集复现”，另以**同一冻结配方**跑了 ESOL 的**完整四格 + GINE_REF**
+  （每臂 2 seed，对称、无选择），并在报告中明确标注 `EXPLORATORY_REPLICATION_OUTSIDE_FROZEN_TRIGGER`；
+  它不参与 §6 的选择规则，也不改变 §0–§9。
+
+### A.4 预算与产物
+
+* 正式单元：Stage B/C 12 + Stage D 10 + ESOL 10（探索复现）= 32，等于 §9 上限；GPU·h = 0。
+* 墙钟：核心 12 单元 1.82 h CPU·worker；全轮 < 4 h。
+* 权重/预测保存在 `results/<run_id>/`（`state_best.pt`、`state_final.pt`、`preds_best.npz`、
+  `preds_final.npz`，终局另有 `preds_test.npz`）；`.gitignore` 只忽略 `*.pt`/`*.npz`，
+  文本产物（`run.json`、`train.log`、jobs、queue.log）入库。

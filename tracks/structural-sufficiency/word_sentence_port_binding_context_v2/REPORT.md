@@ -156,15 +156,24 @@ Lipo，seed 0/1）给出一个**两个 seed 同号、且按 scaffold 成组的 b
   （差 −0.0021，CI [−0.0498, +0.0435]），seed 1 **0.7402 vs 0.6990（差 +0.0412）**——**两 seed 反号**，
   均值 0.7311 vs 0.7095（SET 差 0.0216）。即“去掉词内位置结构”在两个 seed 上一个几乎无差、一个
   明显变差，**不可重复**；`INSTANCE_GEOMETRY_UNRESOLVED`（不能说位置结构无用，也不能说有用）。
-* **读出**（`BIND_SELF_SCALAR` = 标量读出，其余同 `BIND_SELF`）：seed 0 0.7606 vs 0.7488（差 −0.0118），
-  seed 1 0.7365 vs 0.7468（差 −0.0103）；**两 seed 同号**（向量读出更好），均值 −0.0111，但
-  **略低于 `δ_mechanism = 0.0121`**，且 seed 0 的成组 CI 跨 0。按事前规则**不给正向标签**，
-  记为 `READOUT_UNRESOLVED`，同时如实报告“点估计两 seed 同向、均值差 1.1e-2”这一事实。
+* **读出**（`BIND_SELF_SCALAR` = 标量读出，其余同 `BIND_SELF`）：seed 0 0.7606 vs 0.7488（向量更好 0.0118），
+  seed 1 **0.7365 vs 0.7468（标量更好 0.0102）** —— **两 seed 反号**，均值 −0.0008，
+  成组 CI [−0.0304, +0.0310]。标量读出与向量读出**不可分辨**；`READOUT_UNRESOLVED`。
 
-## 8. Stage D 分支对照
+## 8. Stage D 分支对照（“更强对照”是否削弱路线主张）
 
-（见文末补记：Stage D 在核心 12 单元之后运行，`BAG_CAP` / `GLOBAL_CTX_BIND` / `GINE_RAW` /
-`BIND_REL`+随机连通分块，以及 `SET_MEAN_SELF`/`BIND_SELF_SCALAR` 的 seed 1。）
+| 对照 | 与 `BIND_REL` 的差（正=更强对照更差） | seed 0 / 1 同号 | 成组 CI | 判定 |
+|---|---|---|---|---|
+| `BAG_CAP`（跨词内容全部换成本身，词袋化） | +0.0420 / −0.0029 → 均值 **+0.0196** | 否 | [−0.0527, +0.0151] | `BAG_ADVANTAGE_UNRESOLVED`：词袋化没有更好，但也没被显著打败 |
+| `GLOBAL_CTX_BIND`（把真实相邻句换成**同一分子内所有句的加权混合**） | +0.0243 / +0.0097 → 均值 **+0.0170** | **是** | [−0.0481, +0.0147] | 点估计支持“真实邻接拓扑优于全图混合”，均值 ≥ δ_mechanism |
+| `GINE_RAW`（同 backbone、原始 9/3 列特征） | 待填 | | | |
+| `BIND_REL` + 随机连通分块（salt 固定、≤6 原子） | 待填 | | | |
+
+`GLOBAL_CTX_BIND` 值得单独说明：它保留端口状态、词内图、双端口 R、词表与全部参数量，**只把
+“消息来自真实相邻词”换成“来自同分子全句混合”**，两 seed 都比 `BIND_REL` 差（0.024/0.010），
+即本轮唯一稳定的关系效应**不是**“多了一句上下文”，而是“消息确实沿着真实词间边流动”。因为
+均值 0.0170 位于 δ_mechanism(0.0121) 与 δ_pipeline(0.0303) 之间、且 CI 仍跨 0，报告按
+`RELATIONAL_CONTEXT_HELPFUL` + `TOPOLOGY_SPECIFIC_GAIN_UNRESOLVED` 并列实际数字，不宣布等效。
 
 ## 9. 终局 Test
 
@@ -187,7 +196,7 @@ Lipo，seed 0/1）给出一个**两个 seed 同号、且按 scaffold 成组的 b
 | `PORT_BINDING_UNRESOLVED` | `g_bind_rel` +0.008（CI 跨 0）、`g_bind_self` −0.038（稳定为负）；只有交互 `I` +0.046 稳定为正 |
 | `RELATIONAL_CONTEXT_HELPFUL` + `TOPOLOGY_SPECIFIC_GAIN_UNRESOLVED` | 仅 BIND 条件下 REL 优于 SELF（+0.035，CI [+0.003,+0.066]）；MEAN 条件下反向（−0.012，CI 跨 0） |
 | `INSTANCE_GEOMETRY_UNRESOLVED` | `SET_MEAN_SELF` 与 `MEAN_SELF` 差 −0.002，CI 跨 0 |
-| `VECTOR_READOUT_HELPFUL`（弱，单 seed） | `BIND_SELF` 比 `BIND_SELF_SCALAR` 好 0.0118，CI 跨 0；见 §8 seed 1 |
+| `READOUT_UNRESOLVED` | `BIND_SELF` vs `BIND_SELF_SCALAR` 两 seed 反号（−0.0118 / +0.0102），均值 −0.0008，CI [−0.030, +0.031] |
 | `STRUCTURAL_MECHANISM_WITH_PREDICTION_GAP` | 机制（交互/干预/几何）有可测证据，但四格最好仍落后 `GINE_REF` 0.088–0.091（> ref_gap） |
 | `RECIPE_SENSITIVE_CANDIDATE` | 词族在 R0 下过拟合（末轮 Train 0.08 vs Valid 0.75），且 best epoch 与末轮排序不同；未换配方验证 |
 | `NO_ADVANTAGE_IN_TESTED_COMPOSITION_FAMILY` | **不适用**：交互与 REL 条件收益达到了事前定义的可重复机制信号 |
