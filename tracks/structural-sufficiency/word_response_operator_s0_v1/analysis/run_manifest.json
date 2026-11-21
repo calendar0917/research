@@ -1,0 +1,111 @@
+{
+  "protocol_id": "word-response-operator-s0-v1",
+  "commit": null,
+  "budget": {
+    "t0_local": "2026-11-21T13:14:52+08:00",
+    "hard_wall_hours": 4.0,
+    "gpu_hours_cap": 4.0,
+    "stop_launching_after_hours": 3.0,
+    "stop_training_after_hours": 3.3333,
+    "max_formal_units": 7,
+    "gpu_pools": [
+      "res-gpu0",
+      "res-gpu1"
+    ]
+  },
+  "units": [
+    {
+      "unit": "prepare",
+      "kind": "structure",
+      "arm": null,
+      "seconds": 23.0,
+      "gpu_hours": 0.006388888888888889,
+      "n_parameters": null,
+      "best_valid_rmse": null,
+      "best_epoch": null,
+      "final_valid_rmse": null,
+      "epochs": null,
+      "note": "res CPU, no GPU"
+    },
+    {
+      "unit": "timing",
+      "kind": "timing",
+      "arm": "FULL/LOCAL/ATOMIC",
+      "seconds": 142.0,
+      "gpu_hours": 0.03944444444444444,
+      "n_parameters": null,
+      "best_valid_rmse": null,
+      "best_epoch": null,
+      "final_valid_rmse": null,
+      "epochs": null,
+      "note": "2 warm + 3 timed epochs, 3 arms, one GPU"
+    },
+    {
+      "unit": "FULL_WORD_OP",
+      "kind": "formal",
+      "arm": "FULL_WORD_OP",
+      "seconds": 690.9978132920805,
+      "gpu_hours": 0.19194383702557793,
+      "n_parameters": 13621,
+      "best_valid_rmse": 0.968155684954448,
+      "best_epoch": 63,
+      "final_valid_rmse": 0.9708703424611458,
+      "epochs": 80
+    },
+    {
+      "unit": "LOCAL_WORD_OP",
+      "kind": "formal",
+      "arm": "LOCAL_WORD_OP",
+      "seconds": 229.69616706797387,
+      "gpu_hours": 0.06380449085221497,
+      "n_parameters": 13621,
+      "best_valid_rmse": 0.9760104455081567,
+      "best_epoch": 58,
+      "final_valid_rmse": 0.9791953392698864,
+      "epochs": 80
+    },
+    {
+      "unit": "ATOMIC_OP_CAP_width32",
+      "kind": "engineering_error",
+      "arm": "ATOMIC_OP_CAP",
+      "seconds": 611.1918006599881,
+      "gpu_hours": 0.16977550018333,
+      "n_parameters": 13817,
+      "best_valid_rmse": 1.0016789297993594,
+      "best_epoch": 51,
+      "final_valid_rmse": 1.004623698690563,
+      "epochs": 80,
+      "note": "wrong width (32 instead of frozen 96); excluded from the table"
+    },
+    {
+      "unit": "GINE_RAW_REF",
+      "kind": "formal",
+      "arm": "GINE_RAW_REF",
+      "seconds": 205.4,
+      "gpu_hours": 0.057055555555555554,
+      "n_parameters": 387974,
+      "best_valid_rmse": 0.634627611301308,
+      "best_epoch": 143,
+      "final_valid_rmse": 0.6409139561421707,
+      "epochs": null
+    },
+    {
+      "unit": "ATOMIC_OP_CAP",
+      "kind": "formal",
+      "arm": "ATOMIC_OP_CAP",
+      "seconds": 627.1717175780796,
+      "gpu_hours": 0.174214365993911,
+      "n_parameters": 13817,
+      "best_valid_rmse": 1.0016789297993594,
+      "best_epoch": 51,
+      "final_valid_rmse": 1.004623698690563,
+      "epochs": 80,
+      "note": "width 96, frozen selection; replaces the width-32 run"
+    }
+  ],
+  "n_formal_units": 4,
+  "max_formal_units": 7,
+  "total_gpu_hours": 0.7026270829439228,
+  "total_wall_seconds": 2529.457498598122,
+  "note": "ATOMIC width-32 run is a recorded engineering error and is not part of the table"
+}
