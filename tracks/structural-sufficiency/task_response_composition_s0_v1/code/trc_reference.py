@@ -219,7 +219,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     }
     C.write_json(out / "manifest.json", manifest)
     log(f"done best_epoch={best['epoch']} valid={best['valid_rmse']:.4f} "
-        f"test={best['test_rmse']:.4f} wall={(time.perf_counter() - t_start) / 60:.1f}min")
+        f"test={best['metrics']['test']['rmse']:.4f} wall={(time.perf_counter() - t_start) / 60:.1f}min")
     return 0
 
 
