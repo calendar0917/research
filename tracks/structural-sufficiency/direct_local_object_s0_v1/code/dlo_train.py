@@ -51,6 +51,10 @@ def state_hash(state: Mapping[str, Any]) -> str:
     return digest.hexdigest()
 
 
+def parameter_hash(model) -> str:
+    return state_hash({name: p for name, p in model.named_parameters()})
+
+
 def to_tensors(pack: Mapping[str, Any], device: str):
     out: dict[str, Any] = {}
     for key, value in pack.items():
@@ -334,6 +338,7 @@ def stage_a(args) -> None:
     C.set_deterministic(int(cfg["recipe"]["seed"]))
     tf32 = C.enable_tf32(bool(cfg["recipe"]["tf32"]))
     model, support = build_fresh(cfg, payload, stats, args.arm, device)
+    init_param_hash = parameter_hash(model)
     init_hash = state_hash(model.state_dict())
     train_rows = cache.split_rows["train"]
     rec = cfg["recipe"]
@@ -374,6 +379,7 @@ def stage_a(args) -> None:
         "epoch_times": result["epoch_times"],
         "wall_seconds": result["wall_seconds"],
         "init_state_hash": init_hash,
+        "init_parameter_hash": init_param_hash,
         "support": support,
         "best": {k: v for k, v in result["best"].items() if k != "state"},
         "best_state": result["best"]["state"],
@@ -383,7 +389,8 @@ def stage_a(args) -> None:
     torch.save(ckpt, out_dir / "state_epoch5.pt")
     C.write_csv(out_dir / "curves_stage_a.csv", result["curves"])
     _save_run(out_dir, cfg, args.arm, cache, result["model"], result, init_hash, support,
-              cost, device, tf32, " ".join(os.sys.argv), extra={"stage_a_cost": cost})
+              cost, device, tf32, " ".join(os.sys.argv),
+              extra={"stage_a_cost": cost, "init_parameter_hash": init_param_hash})
     print(f"[{args.arm}] stage A done: {result['stopped_at']} epochs, median {median:.2f}s, "
           f"est240 {cost['estimate_240_minutes']:.1f} min, est160 {cost['estimate_160_minutes']:.1f} min", flush=True)
 
@@ -400,6 +407,7 @@ def continue_run(args) -> None:
     stage_a_cost = C.read_json(out_dir / "stage_a_cost.json")
     device = args.device
     model, support = build_fresh(cfg, payload, stats, args.arm, device)
+    init_param_hash = parameter_hash(model)
     model.load_state_dict(ckpt["model"])
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=float(cfg["recipe"]["peak_lr"]),
@@ -436,7 +444,8 @@ def continue_run(args) -> None:
     result["steps_per_epoch"] = steps_per_epoch
     ground = _save_run(out_dir, cfg, args.arm, cache, model, result, str(ckpt["init_state_hash"]),
                        support, stage_a_cost, device, tf32, " ".join(os.sys.argv),
-                       extra={"stage_a_cost": stage_a_cost})
+                       extra={"stage_a_cost": stage_a_cost, "init_parameter_hash": init_param_hash,
+                              "stage_a_init_parameter_hash": ckpt.get("init_parameter_hash")})
     _intervention(out_dir, cache, cfg, model, device)
     print(f"[{args.arm}] done at epoch {result['stopped_at']}/{args.horizon} "
           f"best={ground['best_valid_rmse']:.6f}@{ground['best_epoch']}", flush=True)
