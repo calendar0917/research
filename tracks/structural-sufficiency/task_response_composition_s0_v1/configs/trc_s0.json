@@ -1,0 +1,116 @@
+{
+  "protocol_id": "task-response-composition-s0-v1",
+  "version": "2026-11-21/v1",
+  "dataset": "ogbg-mollipo",
+  "raw_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+  "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "raw_cache_esol": "tracks/structural-query-learning/data/ogbg_molesol_sq-pilot-cache-v1.npz",
+  "raw_cache_esol_sha256": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+  "seed": 0,
+  "cuts": {
+    "max_object_atoms": 4,
+    "max_side_atoms": 8,
+    "distance_buckets": 6,
+    "bucket_labels": ["d0", "d1", "d2", "d3", "d4plus", "unreachable"],
+    "null_cut_dim": 8
+  },
+  "dims": {
+    "atom_fields": 9,
+    "bond_fields": 3,
+    "cat_dim": 4,
+    "atom_concat": 36,
+    "atom_hidden": 32,
+    "atom_out": 16,
+    "bond_concat": 12,
+    "bond_hidden": 16,
+    "bond_out": 8,
+    "slots": 4,
+    "pairs": 6,
+    "frame_atom": 64,
+    "frame_bond": 48,
+    "frame_mask": 4,
+    "frame_edge_mask": 6,
+    "frame_adj": 6,
+    "frame_size_onehot": 4,
+    "frame_input": 132,
+    "frame_hidden": 128,
+    "frame_out": 32,
+    "fragment_input": 394,
+    "fragment_hidden": 192,
+    "fragment_out": 128,
+    "fragment_dropout": 0.1,
+    "state_rank": 32,
+    "hidden": 128
+  },
+  "heads": {
+    "FACTOR": {"a": [128, 64, 1], "q": [136, 64, 32], "r": [136, 64, 32], "b": [8, 1]},
+    "DIRECT": {"head": [264, 96, 48, 1]},
+    "ADD": {"a_add": [128, 128, 96, 1]},
+    "GLOBAL": {"global_head": [263, 256, 128, 1], "buckets": [1, 2, 3, 4]}
+  },
+  "recipe": {
+    "seed": 0,
+    "peak_lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.0001,
+    "batch_molecules": 64,
+    "batch_pairs": 16,
+    "aux_weight": 0.25,
+    "clip_norm": 5.0,
+    "warmup_epochs": 5,
+    "epochs_default": 240,
+    "epochs_fallback": 160,
+    "eval_batch": 64,
+    "dropout_fragment": 0.1,
+    "dropout_global": 0.1,
+    "aux_tau2_floor": 0.25
+  },
+  "pair_directory": {
+    "repeat_pool_weight": 0.8,
+    "all_pool_weight": 0.2,
+    "sampler_seed": 0,
+    "tau2_mc_samples": 100000
+  },
+  "runs": {
+    "core": [
+      "LIPO_FACTOR_CUTRESP_R0",
+      "LIPO_DIRECT_CUTRESP_R0",
+      "LIPO_FACTOR_NONE_R0",
+      "LIPO_DIRECT_NONE_R0",
+      "LIPO_GLOBAL_NONE_R0",
+      "LIPO_FACTOR_MOLPAIR_R0",
+      "LIPO_ADD_CUTRESP_R0"
+    ],
+    "arm": {
+      "LIPO_FACTOR_CUTRESP_R0": "FACTOR",
+      "LIPO_DIRECT_CUTRESP_R0": "DIRECT",
+      "LIPO_FACTOR_NONE_R0": "FACTOR",
+      "LIPO_DIRECT_NONE_R0": "DIRECT",
+      "LIPO_GLOBAL_NONE_R0": "GLOBAL",
+      "LIPO_FACTOR_MOLPAIR_R0": "FACTOR",
+      "LIPO_ADD_CUTRESP_R0": "ADD"
+    },
+    "supervision": {
+      "LIPO_FACTOR_CUTRESP_R0": "CUTRESP",
+      "LIPO_DIRECT_CUTRESP_R0": "CUTRESP",
+      "LIPO_FACTOR_NONE_R0": "NONE",
+      "LIPO_DIRECT_NONE_R0": "NONE",
+      "LIPO_GLOBAL_NONE_R0": "NONE",
+      "LIPO_FACTOR_MOLPAIR_R0": "MOLPAIR",
+      "LIPO_ADD_CUTRESP_R0": "CUTRESP"
+    }
+  },
+  "budget": {
+    "wall_hours": 8,
+    "gpu_hours_max": 16,
+    "max_formal_units": 20,
+    "max_engineering_reruns": 2
+  },
+  "reference_values": {
+    "WORD_PREFIX": {"valid_rmse": 0.6990918679, "test_rmse": 0.6890631591},
+    "BAG_CONT": {"valid_rmse": 0.6923730579, "test_rmse": 0.6980443659},
+    "MATCHED_W34": {"valid_rmse": 0.6566511786, "test_rmse": 0.7246976400},
+    "DIRECT_S56": {"valid_rmse": 0.7387240197, "test_rmse": 0.7753282116},
+    "GINE_RAW_REF": {"valid_rmse": 0.6101478703, "test_rmse": 0.6722007300}
+  }
+}
