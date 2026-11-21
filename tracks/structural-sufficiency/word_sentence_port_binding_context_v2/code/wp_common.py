@@ -20,6 +20,7 @@ ROUND_DIR = CODE_DIR.parent
 REPO_ROOT = ROUND_DIR.parents[2]
 CONFIG_PATH = ROUND_DIR / "configs" / "wp_v2.json"
 
+REFERENCE_COMMIT = "60285ae8"
 OLD_ROUND = REPO_ROOT / "tracks" / "structural-sufficiency" / "word_sentence_port_route_v1"
 OLD_CODE = OLD_ROUND / "code"
 RD_CODE = REPO_ROOT / "tracks" / "structural-sufficiency" / "response_dictionary_small_s0_v1" / "code"

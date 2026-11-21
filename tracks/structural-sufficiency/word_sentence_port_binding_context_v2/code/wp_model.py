@@ -49,6 +49,10 @@ ARMS: dict[str, ModelSpec] = {
     "BIND_REL": ModelSpec("bind", "rel", "graph", "vector"),
     "SET_MEAN_SELF": ModelSpec("mean", "self", "set", "vector"),
     "BIND_SELF_SCALAR": ModelSpec("bind", "self", "graph", "scalar"),
+    # branch arms (PROTOCOL section 5, D5/D6)
+    "BAG_CAP": ModelSpec("bind", "rel", "graph", "vector", bag=True),
+    "GLOBAL_CTX_BIND": ModelSpec("bind", "global", "graph", "vector"),
+    "GLOBAL_CTX_MEAN": ModelSpec("mean", "global", "graph", "vector"),
 }
 CONTEXT_ARMS = ("rel", "self", "global")
 PORT_ARMS = ("bind", "mean")

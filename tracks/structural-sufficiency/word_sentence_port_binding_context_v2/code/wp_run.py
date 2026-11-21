@@ -44,6 +44,22 @@ def _load(dataset: str):
     return D.load_dataset(dataset)
 
 
+def _max_rss_mb() -> float | None:
+    import resource
+
+    try:
+        return float(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss) / 1024.0
+    except Exception:  # pragma: no cover
+        return None
+
+
+def _cpu_seconds() -> float | None:
+    import resource
+
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    return float(usage.ru_utime + usage.ru_stime)
+
+
 def cmd_train(args) -> None:
     import torch
 
@@ -79,11 +95,12 @@ def cmd_train(args) -> None:
     else:
         splits = {split: D.make_split(data, split) for split in ("train", "valid")}
         if args.partition == "random":
-            splits = build_random_partition(data, splits, name, cfg)
+            splits, tmpl = build_random_partition(data, splits, name, cfg)
         model = T.build_word_model(spec, tmpl, args.seed, device, hidden=cfg["model"]["hidden"])
         kind = "word"
     n_params = int(sum(p.numel() for p in model.parameters()))
     run_id = args.run_id or f"{name.replace('ogbg-', '')}_{args.arm}_s{args.seed}" + \
+        ("_random" if args.partition != "frozen" else "") + \
         (f"_{args.recipe}" if args.recipe != "R0" else "")
     init_hash = None
     if kind == "word":
@@ -109,6 +126,9 @@ def cmd_train(args) -> None:
         "order_seed": T.ORDER_SEED_BASE + args.seed,
         "scaler": scaler, "init_hash": init_hash,
         "device_name": _device_name(device),
+        "torch": torch.__version__,
+        "max_rss_mb": _max_rss_mb(),
+        "cpu_seconds": _cpu_seconds(),
         "timing": result.get("timing"),
         "curves": result["curves"],
         "epoch_seconds_including_eval": result.get("epoch_seconds_including_eval"),
@@ -168,7 +188,10 @@ def build_random_partition(data: Mapping[str, Any], splits: Mapping[str, Any], d
     """D3: fixed-salt random connected partition (see PROTOCOL §5 D3)."""
     import wp_random_part as R
 
-    return R.rebuild_splits(data, splits, cfg)
+    rebuilt, template = R.rebuild_splits(data, splits, cfg)
+    path = C.analysis_dir() / f"random_partition_{dataset.replace('ogbg-', '')}.json"
+    C.write_json(path, C.jsonable(R.summary(rebuilt, template)))
+    return rebuilt, template
 
 
 def cmd_smoke(args) -> None:
@@ -315,6 +338,36 @@ def cmd_terminal(args) -> None:
     A.run_terminal(args)
 
 
+def cmd_freeze(args) -> None:
+    import wp_report as R
+
+    R.write_freeze(args)
+
+
+def cmd_manifest(args) -> None:
+    import wp_report as R
+
+    R.write_manifest(args)
+
+
+def cmd_intervene(args) -> None:
+    import wp_report as R
+
+    R.write_interventions(args)
+
+
+def cmd_test_support(args) -> None:
+    import wp_analyze as A
+
+    A.write_test_support(args)
+
+
+def cmd_cases(args) -> None:
+    import wp_report as R
+
+    R.write_cases(args)
+
+
 def _configure_threads() -> None:
     """Optional thread cap so two local workers do not oversubscribe the CPU."""
     import os
@@ -395,11 +448,38 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("finalist")
     p.add_argument("--frozen-dir", default="")
+    p.add_argument("--include", default="")
     p.set_defaults(func=cmd_finalist)
 
     p = sub.add_parser("terminal")
     p.add_argument("--device", default="cuda:0")
     p.set_defaults(func=cmd_terminal)
+
+    p = sub.add_parser("test-support")
+    p.add_argument("--dataset", default="lipo")
+    p.set_defaults(func=cmd_test_support)
+
+    p = sub.add_parser("freeze")
+    p.add_argument("--dataset", default="lipo")
+    p.set_defaults(func=cmd_freeze)
+
+    p = sub.add_parser("manifest")
+    p.add_argument("--dataset", default="lipo")
+    p.set_defaults(func=cmd_manifest)
+
+    p = sub.add_parser("intervene")
+    p.add_argument("--tag", default="")
+    p.add_argument("--dataset", default="lipo")
+    p.add_argument("--arm", default="BIND_REL")
+    p.add_argument("--seed", type=int, default=0)
+    p.set_defaults(func=cmd_intervene)
+
+    p = sub.add_parser("cases")
+    p.add_argument("--dataset", default="lipo")
+    p.add_argument("--arm-a", default="")
+    p.add_argument("--arm-b", default="")
+    p.add_argument("--seed", type=int, default=0)
+    p.set_defaults(func=cmd_cases)
 
     args = ap.parse_args(argv)
     args.func(args)

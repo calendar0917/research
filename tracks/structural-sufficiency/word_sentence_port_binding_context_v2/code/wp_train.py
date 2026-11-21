@@ -150,17 +150,31 @@ def build_gine_model(raw: Mapping[str, Any], seed: int, device: str, *, raw_feat
     return model.to(device)
 
 
-def gine_data_lists(raw: Mapping[str, Any], scaler: Mapping[str, float]):
-    import sq_data as SD
-    import sq_gine as SG
-
+def _gine_counts() -> dict[str, int]:
     dims = C.official_dims()
     counts = {f"atom_{j}": int(dims["atom"][j]) for j in range(9)}
     counts.update({f"bond_{j}": int(dims["bond"][j]) for j in range(3)})
     counts["degree"] = 17
     counts["ring"] = 14
+    return counts
+
+
+def gine_data_lists(raw: Mapping[str, Any], scaler: Mapping[str, float],
+                    splits: Sequence[str] = ("train", "valid")):
+    import sq_data as SD
+    import sq_gine as SG
+
+    counts = _gine_counts()
     return {split: SG.build_data_list(SD.packed_split(raw, split), counts, scaler)
-            for split in ("train", "valid")}
+            for split in splits}
+
+
+def gine_test_list(raw: Mapping[str, Any], scaler: Mapping[str, float]):
+    """Test molecules for the strong reference (built only at terminal scoring)."""
+    import sq_data as SD
+    import sq_gine as SG
+
+    return SG.build_data_list(SD.packed_split(raw, "test"), _gine_counts(), scaler)
 
 
 # ---------------------------------------------------------------------------
@@ -180,7 +194,8 @@ def evaluate_word(model, data: D.SplitData, device: str, scaler: Mapping[str, fl
             batch = D.to_device(D.pack_batch(data, idx), device)
             out = model(batch)
             preds.append(out["pred"].detach().cpu().numpy())
-            targets.append(batch["y"].detach().cpu().numpy())
+            raw = batch["y"].detach().cpu().numpy()
+            targets.append((raw - scaler["mean"]) / scaler["std"])
             rows.append(batch["row_ids"].detach().cpu().numpy())
     return {"pred_std": np.concatenate(preds), "target_std": np.concatenate(targets),
             "row_ids": np.concatenate(rows)}

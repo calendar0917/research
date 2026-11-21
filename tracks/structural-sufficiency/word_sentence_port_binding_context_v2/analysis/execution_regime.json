@@ -1,0 +1,40 @@
+{
+  "round": "word_sentence_port_binding_context_v2",
+  "regime": "LOCAL_CPU",
+  "intended_regime": "REMOTE_GPU(res, rr CLI, one task per GPU)",
+  "t0_utc": "2026-11-21T01:22:31Z",
+  "t0_monotonic": 1795224151,
+  "deviation": {
+    "reason": "SSH to the research host failed continuously from T0 with transport-level errors (see evidence); the rr CLI could not reach the box, so the frozen round was executed on the local host instead of the two remote GPUs.",
+    "evidence": [
+      "rr doctor res -> 'Connection timed out during banner exchange' (proxied through pve-old.yulinsec.cn:22)",
+      "repeated ssh probes every 45 s from T0 to the launch of Stage B: 'ssh: connect to host pve-old.yulinsec.cn port 22: Connection timed out'",
+      "local egress verified healthy (ICMP and HTTPS to unrelated hosts succeed)"
+    ],
+    "impact": [
+      "No remote GPU provenance (driver/node) is available for this round; the execution regime is recorded as LOCAL_CPU.",
+      "Wall-clock budget was preserved by running two workers of 7 torch threads each on the local host, mirroring the one-task-per-GPU concurrency of the original plan.",
+      "All arms share the same regime, so cross-arm condition differences remain internally comparable; absolute numbers are not comparable to the round-1 GPU numbers."
+    ]
+  },
+  "environment": {
+    "driver": null,
+    "node": "local workstation (nix-os), no GPU used",
+    "torch": "2.5.1+cu124",
+    "device": "cpu",
+    "workers": 2,
+    "torch_threads_per_worker": 7,
+    "python": "uv-managed virtualenv at repo root"
+  },
+  "budget": {
+    "gpu_hours_used": 0.0,
+    "cpu_worker_hours_used": null,
+    "units_launched": null,
+    "stop_launching_after_utc": "2026-11-21T07:52:31Z",
+    "hard_stop_utc": "2026-11-21T09:22:31Z"
+  },
+  "notes": [
+    "wp_run.py records commit, device name, torch version and wall seconds in every run.json.",
+    "analyse.py output (analysis/summary.json) carries the same commit and the config sha256."
+  ]
+}
