@@ -47,9 +47,9 @@ CPU baselines locally (the compute host has no RdKit).
 
 4. **The word representation itself is the interesting part, and it is not a GNN.**
    1.95 M retained-attribute words, no message passing, no recurrence, no teacher:
-   Valid **0.6991** with 0.81 M parameters and 297 s of GPU time. It beats both
-   simple baselines by **0.167 / 0.277** RMSE, and sits **0.083** behind a
-   same-round GINE that took 322 s. That is the one positive signal of the round,
+   Valid **0.6991** with 0.81 M parameters and 297 s of GPU time. It beats the two
+   simple baselines by **0.160** (FP_KRR 0.8594) and **0.277** (COUNT_RIDGE 0.9765)
+   RMSE, and sits **0.089** behind a same-round GINE that took 322 s. That is the one positive signal of the round,
    and it is a *representation* signal, not a composition signal.
 
 5. **The FULL-vs-GINE gap is split-unstable.** Valid gap 0.0823 (bootstrap CI
