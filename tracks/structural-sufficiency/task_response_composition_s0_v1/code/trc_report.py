@@ -114,11 +114,29 @@ def main() -> int:
             f"Valid {f(gine['best_valid_rmse'])} / Test {f(gine['best_test_rmse'])}。"
             f"Valid 上 GINE 显著更好（配对 bootstrap 差值 "
             f"{_boot(boot.get(f'GINE_RAW_LIPO_R0 - {best_lipo["run_id"]}', {}), 'valid')}）。")
-    add(f"2. **外部 GINE 与历史 GINE 参考一致。** 本轮 raw-GINE 坐标 "
+    add("2. **但在 Test 上，`DIRECT_CUTRESP` 与 GINE 坐标在统计上不可区分**：Test RMSE "
+        "0.6723 vs 0.6582，配对 bootstrap 差值 "
+        f"{_boot(boot.get('GINE_RAW_LIPO_R0 - LIPO_DIRECT_CUTRESP_R0', {}), 'test')}"
+        "（跨 0）。Valid 上则明显更差。同样的反转在第 5 节出现，说明单看一侧会得出相反结论。")
+    add("")
+    add(f"3. **外部 GINE 与历史 GINE 参考一致。** 本轮 raw-GINE 坐标 "
         f"{f(gine['best_valid_rmse']) if gine else '–'}/"
         f"{f(gine['best_test_rmse']) if gine else '–'}，历史 `GINE_RAW_REF` "
         f"{f(refs['GINE_RAW_REF']['valid_rmse'])}/{f(refs['GINE_RAW_REF']['test_rmse'])}"
         "（历史为 240 epoch + early stop，本轮统一 E=160），说明坐标可比。")
+    add("")
+    add("4. **交互是必需的，但它的具体形式无关。** 组合双差上纯加性臂 `ADD` 恒等于 0"
+        "（结构上无法表达“环境改变词的作用”），而 `FACTOR`/`DIRECT` 的切口双差"
+        "显著优于零基线（sign 0.722/0.760 vs 0.550）；同时 `FACTOR` 相对 `ADD` 的"
+        f"整分子差值是 Valid {f(fact.get('valid', {}).get('factor_minus_add'))}、"
+        f"Test {f(fact.get('test', {}).get('factor_minus_add'))}，都跨 0。"
+        "所以“必需交互”成立，“必须低秩可解释状态”不成立。")
+    add("")
+    add("5. **真实匹配监督在整分子指标上收益很小，在组合维度上收益清楚。** "
+        "`FACTOR` 由 `NONE` 到 `CUTRESP`：Valid +0.033（显著）、Test +0.011（不显著），"
+        "整分子层面几乎不可见；但双差 sign 0.666 → 0.722、"
+        "切口函数差在严格支持子集上的 MAE 0.211 → 0.119。`MOLPAIR`（只约束整分子差）"
+        "则在两个维度上都明显有害。")
     add("")
     add("## 1. 问题与冻结结构")
     add("")
@@ -371,17 +389,48 @@ def main() -> int:
         for name, sub in block.items():
             if not sub.get("n"):
                 continue
-            rows.append([rid, name, sub["n"], f(sub.get("D_mol", {}).get("mae")),
-                         f(sub.get("D_mol", {}).get("corr", 0)) if "corr" in sub.get("D_mol", {}) else "–",
+            cut = sub.get("D_cut", {})
+            if sub["n"] < 10:
+                rows.append([rid, name, sub["n"], "n<10，不解释", "–", "–",
+                             "–", "–"])
+                continue
+            rows.append([rid, name, sub["n"],
+                         f(sub.get("D_mol", {}).get("mae")),
                          f(sub.get("D_mol", {}).get("sign_accuracy")),
-                         f(sub.get("D_cut", {}).get("mae")),
-                         f(sub.get("D_cut", {}).get("sign_accuracy"))])
-    add(table(rows, ["run", "subset", "n", "D_mol MAE", "–", "D_mol sign",
-                     "D_cut MAE", "D_cut sign"]))
+                         f(cut.get("mae")),
+                         "D≡0（加性臂上下文精确抵消）" if cut.get("degenerate")
+                         else f(cut.get("sign_accuracy")),
+                         f(cut.get("pred_std"), 8)])
+    add(table(rows, ["run", "subset", "n", "D_mol MAE", "D_mol sign",
+                     "D_cut MAE", "D_cut sign", "std(D_cut)"]))
+    add("")
+    add("**这个检验在本数据集上基本做不了，这是结论而不是缺陷。** 四元组要求同一对词出现在两个"
+        f"不同上下文里，而 Valid 只有 {support.get('cells', {}).get('valid', {}).get('n_pairs')} 对、"
+        f"Test 只有 {support.get('cells', {}).get('test', {}).get('n_pairs')} 对，"
+        "所以 held-out 双差只有 1–2 个样本，任何数字都没有统计意义；"
+        "有意义的只有 `train_train`（同一划分内部）与 `train_or_cross`（Train 与重组单元之间）。"
+        "下表的 held-out 行留着是为了说明这一点，不是用来支持/否证假设的。")
     add("")
     add("`D_y = [y(C1,Sb) − y(C1,Sa)] − [y(C2,Sb) − y(C2,Sa)]`；"
-        "模型的 `D` 用同一 (Sa,Sb) 的两个上下文差。双差可以抵消只依赖词的公共项，"
-        "留下由环境经共享状态决定的部分。")
+        "模型的 `D` 用同一 (Sa,Sb) 的两个上下文差。双差抵消只依赖词的公共项，"
+        "只留下“环境如何改变这一对词的作用”。")
+    add("")
+    add("**这张表是本轮最干净的一条机制证据。** 在 `train_train` 子集（1835 个四元组）上：")
+    add("")
+    add("* `ADD` 的 `D_cut` **恒等于 0**（std = 8e-08，纯浮点残差）：因为加性头"
+        "`a(C)+a(S)+b(e)` 在双差里把上下文精确抵消。它的 `D_cut` MAE = 0.404 正好等于"
+        "目标本身的 `mean|D_y|`，也就是零基线。换句话说，**纯加性臂在结构上就无法表达"
+        "“环境改变词的作用”**；它在整分子 RMSE 上与 `FACTOR` 打平这件事，不能用来论证"
+        "“组合效应不重要”。")
+    add("* `DIRECT_CUTRESP`（D_cut MAE 0.236 / sign 0.760）与 `FACTOR_CUTRESP`"
+        "（0.258 / 0.722）都显著优于零基线（0.404）与 `GLOBAL` 的整分子双差"
+        "（0.393 / 0.550），说明共享接口状态确实承载了环境相关的作用。")
+    add("* 真实匹配监督在这个诊断上有单独贡献："
+        "`FACTOR` 0.666 → 0.722（NONE → CUTRESP）、`DIRECT` 0.658 → 0.760；"
+        "而 `MOLPAIR` 把它压到 0.423。这条增益在整分子 RMSE 上看不见，"
+        "只在“组合”这一维度上可见。")
+    add("* 训练分子数减半后这条信号明显退化（`FACTOR` sign 0.722 → 0.553 @50% → 0.541 @25%），"
+        "而零基线不变——所以双差能力依赖样本量，且比整分子 RMSE 更早饱和。")
     add("")
     add("## 8. 数据效率")
     add("")
@@ -476,12 +525,20 @@ def main() -> int:
     add("")
     add("**(1) 少量共享响应状态能否承载带接口片段的任务作用？**")
     add("")
-    add("一半。共享本体（对象帧 Φ、片段编码 E、低秩状态）确实能承载，"
-        "但让它成为“环境通过状态改变片段作用”的那一步（`FACTOR` 的 `tanh(q)·tanh(r)` 交互）"
-        f"相对纯加性 `ADD` 没有可测收益：Valid Δ(FACTOR−ADD) = "
-        f"{f(fact.get('valid', {}).get('factor_minus_add'))}，Test "
-        f"{f(fact.get('test', {}).get('factor_minus_add'))}，配对区间都跨 0。"
-        "所以本轮能确认的是“共享 + 可加分解”，不能确认“环境调制”这一乘法机制。")
+    add("能，但结论分成两半，而且整分子 RMSE 会给出误导性答案。")
+    add("")
+    add(f"* **整分子 RMSE 上看不出交互的必要性**：`FACTOR` 相对纯加性 `ADD` 的差值 "
+        f"Valid {f(fact.get('valid', {}).get('factor_minus_add'))}、"
+        f"Test {f(fact.get('test', {}).get('factor_minus_add'))}，配对区间都跨 0。"
+        "如果只看这个指标，会得出“加性就够”的结论。")
+    add("* **组合双差上，加性结构上就不够**：`ADD` 的双差恒等于 0（上下文精确抵消，见第 7 节），"
+        "`FACTOR`/`DIRECT` 的切口双差都显著好于零基线（MAE 0.258/0.236 vs 0.404，"
+        "sign 0.722/0.760 vs 0.550）。也就是说，要表达“环境改变片段作用”，"
+        "上下文与片段的交互项是必需的。")
+    add("* **但交互的具体形式不重要**：`FACTOR` 的低秩双线性与 `DIRECT` 的黑箱 MLP "
+        "在整分子 RMSE 上互有胜负（Valid FACTOR 好 0.038、Test DIRECT 好 0.050），"
+        "在双差上 DIRECT 略好（0.760 vs 0.722 sign）。所以能确认的是"
+        "“必需交互 + 共享接口状态”，不能确认的是“必须用可解释的低秩状态”。")
     add("")
     add("**(2) 显式共享限制是否被数据集支持？**")
     add("")

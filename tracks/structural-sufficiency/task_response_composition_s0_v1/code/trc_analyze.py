@@ -471,6 +471,8 @@ def cross_combinations(pack, cfg, labels, models: Mapping[str, Any],
         "train_test_any_test": (np.isin(c1, (0, 2)) & np.isin(c2, (0, 2))
                                 & ((c1 == 2) | (c2 == 2))),
         "all_held_out": (np.isin(c1, (1, 2)) & np.isin(c2, (1, 2))),
+        "train_train": ((c1 == 0) & (c2 == 0)),
+        "train_or_cross": (np.isin(c1, (0, 3)) & np.isin(c2, (0, 3))),
     }
     out["sets"] = {k: int(v.sum()) for k, v in eval_sets.items()}
     out["n_unique_molecules"] = int(len({int(x) for x in np.concatenate(
@@ -495,16 +497,22 @@ def cross_combinations(pack, cfg, labels, models: Mapping[str, Any],
     return out
 
 
-def _dd_score(pred: np.ndarray, target: np.ndarray, mask: np.ndarray) -> dict[str, float]:
+def _dd_score(pred: np.ndarray, target: np.ndarray, mask: np.ndarray) -> dict[str, Any]:
     p = pred[mask]
     t = target[mask]
     ok = np.isfinite(p) & np.isfinite(t)
     if ok.sum() == 0:
         return {"n": 0}
     p, t = p[ok], t[ok]
-    return {"n": int(p.size), "mae": float(np.mean(np.abs(p - t))),
-            "rmse": float(math.sqrt(np.mean((p - t) ** 2))),
-            "sign_accuracy": float(np.mean(np.sign(p) == np.sign(t)))}
+    spread = float(np.std(p))
+    degenerate = bool(p.size >= 10 and spread < 1e-6)
+    out = {"n": int(p.size), "mae": float(np.mean(np.abs(p - t))),
+           "rmse": float(math.sqrt(np.mean((p - t) ** 2))),
+           "pred_std": spread, "target_mae": float(np.mean(np.abs(t))),
+           "degenerate": bool(degenerate)}
+    out["sign_accuracy"] = (None if degenerate
+                            else float(np.mean(np.sign(p) == np.sign(t))))
+    return out
 
 
 # ---------------------------------------------------------------------------
