@@ -1,0 +1,89 @@
+{
+  "protocol_id": "direct-local-object-s0-v1",
+  "version": "2026-11-21/v1",
+  "dataset": "ogbg-mollipo",
+  "raw_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+  "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "old_base_cache": "tracks/structural-sufficiency/structural_word_functions_s0_v1/data/swf_base.npz",
+  "old_base_cache_sha256": "5931fe043a3bc7aa393ef908b4757d65961d4accace38640d3c902afc633b22b",
+  "old_sent_cache": "tracks/structural-sufficiency/structural_word_functions_s0_v1/data/swf_sent.npz",
+  "old_sent_cache_sha256": "31af04d4c421264b4da5042abe52e759bbced5bc208989da6d70797cc5a16538",
+  "old_results": {
+    "WORD_PREFIX": "tracks/structural-sufficiency/structural_word_functions_s0_v1/results/lipo_WORD_PREFIX_s0/predictions_best.npz",
+    "BAG_CONT": "tracks/structural-sufficiency/structural_word_functions_s0_v1/results/lipo_BAG_CONT_s0/predictions_best.npz",
+    "GINE_RAW_REF": "tracks/structural-sufficiency/structural_word_functions_s0_v1/results/lipo_GINE_RAW_REF/predictions_best.npz"
+  },
+  "reference_values": {
+    "WORD_PREFIX": {"valid_rmse": 0.6990918679, "test_rmse": 0.6890631591},
+    "BAG_CONT": {"valid_rmse": 0.6923730579, "test_rmse": 0.6980443659},
+    "GINE_RAW_REF": {"valid_rmse": 0.6101478703, "test_rmse": 0.6722007300}
+  },
+  "seed": 0,
+  "objects": {
+    "max_atoms": 6,
+    "edge_pairs": [[0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [1, 2], [1, 3], [1, 4], [1, 5], [2, 3], [2, 4], [2, 5], [3, 4], [3, 5], [4, 5]],
+    "arms": {
+      "DIRECT_S56": {"core_sizes": [5, 6], "pad_component_max": 4, "bucket_split": 5},
+      "MATCHED_W34": {"core_sizes": [3, 4], "pad_component_max": 2, "bucket_split": 3}
+    }
+  },
+  "dims": {
+    "atom_fields": 9,
+    "bond_fields": 3,
+    "atom_cat_dim": 8,
+    "bond_cat_dim": 8,
+    "atom_concat": 72,
+    "atom_hidden": 64,
+    "atom_out": 32,
+    "bond_concat": 24,
+    "bond_hidden": 32,
+    "bond_out": 16,
+    "slots": 6,
+    "pairs": 15,
+    "frame_atom": 192,
+    "frame_bond": 240,
+    "frame_input": 474,
+    "frame_hidden": 256,
+    "frame_out": 128,
+    "graph_input": 516,
+    "graph_hidden1": 256,
+    "graph_hidden2": 128,
+    "graph_dropout": 0.1
+  },
+  "recipe": {
+    "seed": 0,
+    "batch": 64,
+    "eval_batch": 64,
+    "peak_lr": 0.001,
+    "min_lr": 0.00001,
+    "warmup_start_lr": 0.0001,
+    "warmup_epochs": 5,
+    "weight_decay": 0.0001,
+    "clip": 5.0,
+    "order_rng_seed": 20261121,
+    "default_horizon": 240,
+    "short_horizon": 160,
+    "cost_safety": 1.25,
+    "cost_threshold_minutes": 45.0,
+    "probe_epochs": 5,
+    "steady_epochs": [3, 4, 5],
+    "tf32": true
+  },
+  "budget": {
+    "t0_local": "2026-11-21T21:23:58+08:00",
+    "t0_epoch": 1795267438,
+    "hard_wall_minutes": 120,
+    "stop_launching_after_minutes": 90,
+    "stop_training_after_minutes": 105,
+    "reserve_minutes": 15,
+    "max_gpu_hours": 2.0,
+    "max_training_units": 2,
+    "max_engineering_reruns": 1,
+    "gpu1_pool": "res-gpu1",
+    "gpu0_pool": "res-gpu0",
+    "gpu_uuid": {
+      "0": "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f",
+      "1": "GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d"
+    }
+  }
+}
