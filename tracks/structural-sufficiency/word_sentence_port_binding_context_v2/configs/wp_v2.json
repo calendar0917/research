@@ -1,0 +1,64 @@
+{
+  "protocol_id": "word-sentence-port-binding-context-v2",
+  "version": "2026-11-21/v2",
+  "datasets": {
+    "mollipo": "ogbg-mollipo",
+    "molesol": "ogbg-molesol"
+  },
+  "model": {
+    "hidden": 64,
+    "instance_layers": 3,
+    "context_layers": 2,
+    "dropout": 0.1,
+    "dist_bins": 6,
+    "dist_dim": 8,
+    "param_cap": 500000,
+    "fallback_hidden": 48
+  },
+  "recipe": {
+    "epochs_default": 240,
+    "epochs_alt": 160,
+    "batch": 128,
+    "peak_lr": 0.001,
+    "weight_decay": 0.00001,
+    "r_g_weight_decay": 0.001,
+    "warmup_epochs": 5,
+    "warmup_start_lr": 0.0001,
+    "min_lr": 0.00001,
+    "clip": 5.0,
+    "eval_batch": 512,
+    "timing": "2+5",
+    "timing_safety": 1.25,
+    "epoch_budget_minutes": 25.0,
+    "order_seed_base": 20261121
+  },
+  "thresholds": {
+    "delta_mechanism_sigma": 0.01,
+    "delta_pipeline_sigma": 0.025,
+    "tie_sigma": 0.002,
+    "ref_gap_sigma": 0.06,
+    "train_sigma": {
+      "ogbg-mollipo": 1.211539840098397,
+      "ogbg-molesol": 2.0667233099370007
+    },
+    "historical_full_wgine_valid": 0.767951,
+    "historical_full_wgine_test": 0.836062,
+    "historical_gine_valid": 0.628567,
+    "historical_gine_test": 0.663119
+  },
+  "budget": {
+    "t0_unix": 1795224151,
+    "t0_utc": "2026-11-21T01:22:31Z",
+    "hard_deadline_hours": 8.0,
+    "gpu_soft_hours": 14.0,
+    "gpu_hard_hours": 16.0,
+    "stop_launching_after_hours": 6.5,
+    "stop_all_training_after_hours": 7.1667,
+    "max_formal_units": 32,
+    "gpu_pools": ["res-gpu0", "res-gpu1"]
+  },
+  "random_partition": {
+    "salt": "20261121",
+    "max_atoms": 6
+  }
+}
