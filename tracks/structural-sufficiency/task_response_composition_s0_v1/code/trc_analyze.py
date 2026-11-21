@@ -552,6 +552,8 @@ def factorial(runs: Mapping[str, dict]) -> dict[str, Any]:
             block["cutresp_minus_molpair"] = f_mol - f_resp
         if None not in (f_resp, a_resp):
             block["factor_minus_add"] = a_resp - f_resp
+        if None not in (g_none, f_none):
+            block["global_minus_factor"] = g_none - f_none
         out[split] = block
     return out
 

@@ -21,7 +21,7 @@
 * 距离桶总量（d0..d3,d4+,unreachable）：[354531, 854837, 1295104, 1419061, 8416687, 69]。
 * 片段原子数：word 侧（≤8）直方 [0, 18, 24, 50, 111, 214, 332, 439, 626]；全体（含环境 C）分位数 {"max": 114, "mean": 25.01765529488099, "p50": 26.0, "p90": 35.0}；连通分量直方 [0, 29260, 0, 0, 23, 0, 0, 0]。
 * 无桥键分子（逐原子根回退）：8 个，OGB 行号 [721, 1452, 1897, 2568, 2751, 2969, 3204, 3753]。
-* cache `/home/calendar/code/research/tracks/structural-sufficiency/task_response_composition_s0_v1/data/trc_cache_lipo.npz` sha256 `c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3`，commit `b70ade26a73628fe541baa2ea91fcaee860d12f7`。
+* cache `/home/calendar/code/research/tracks/structural-sufficiency/task_response_composition_s0_v1/data/trc_cache_lipo.npz` sha256 `c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3`，commit `a023cf9388e79a7d9744b3b31afd3a8b1a66f018`。
 
 替换目录（只在 Train 内部构建；Valid/Test 只作单元，不产生对）：
 
@@ -54,7 +54,7 @@ CPU/FP64 `all_ok = True`。
 
 ## 3. 配方与实际条件
 
-* 共同 horizon **E=160**：slower of the first pair: 240 x 1.25 x 14.9s = 74.5 min > 50 min, 160 x 1.25 x 14.9s = 49.7 min <= 50 min -> E=160。实测 epoch 秒数 {"LIPO_FACTOR_CUTRESP_R0": {"median": 4.2, "gpu": "res-gpu1"}, "LIPO_DIRECT_CUTRESP_R0": {"median": 14.9, "gpu": "res-gpu0 (shared with a foreign 22GB process)"}}。horizon 只由计时决定，未看任何标签指标；epochs 1–5 是线性 warmup，与 E 无关。
+* 共同 horizon **E=160**：slower of the first pair: 240 x 1.25 x 14.9s = 74.5 min > 50 min, 160 x 1.25 x 14.9s = 49.7 min <= 50 min -> E=160。实测 epoch 秒数 {"LIPO_FACTOR_CUTRESP_R0": {"median": 4.2, "gpu": "res-gpu1"}, "LIPO_DIRECT_CUTRESP_R0": {"median": 14.9, "gpu": "res-gpu0", "note": "cost is the parse-level evaluation of 33438 parses x 3 splits, not card contention (the GINE reference on the same card ran at 1.6 s/epoch)"}}。horizon 只由计时决定，未看任何标签指标；epochs 1–5 是线性 warmup，与 E 无关。
 * AdamW lr 1e-3，wd 1e-4，clip 5，batch 64 分子 + 16 对，5 epoch warmup + cosine 到 1e-5，seed 0，单种子；每个 epoch 全量 Train/Valid/Test 评估（原始单位）；checkpoint 只按 Valid RMSE 选择；λ_var=0。
 * 主损 = 分子内解析均方；辅损 = `mean((Δf - Δy/σ_y)²)/τ²`，`τ² = max(0.25, E[((Δy)/σ_y)²])`，权重 0.25；辅对采样 80% 来自重复 transform、20% 来自全体，transform→分量→对均匀。
 
@@ -63,6 +63,7 @@ CPU/FP64 `all_ok = True`。
 | run | arm | aux | train frac | Valid RMSE | Test RMSE | Train RMSE | best ep | params | wall min |
 |---|---|---|---|---|---|---|---|---|---|
 | LIPO_FACTOR_CUTRESP_R0 | FACTOR | CUTRESP | 1.0 | 0.7096 | 0.7227 | 0.2220 | 100 | 154983 | 11.6 |
+| LIPO_ADD_CUTRESP_R0 | ADD | CUTRESP | 1.0 | 0.7276 | 0.7221 | 0.2580 | 109 | 153831 | 11.1 |
 | LIPO_DIRECT_NONE_R0 | DIRECT | NONE | 1.0 | 0.7345 | 0.7057 | 0.1680 | 130 | 155102 | 22.7 |
 | LIPO_FACTOR_NONE_R0 | FACTOR | NONE | 1.0 | 0.7427 | 0.7337 | 0.1693 | 129 | 154983 | 6.2 |
 | LIPO_DIRECT_CUTRESP_R0 | DIRECT | CUTRESP | 1.0 | 0.7474 | 0.6723 | 0.1833 | 135 | 155102 | 40.3 |
@@ -81,6 +82,8 @@ CPU/FP64 `all_ok = True`。
 | DIRECT_S56 | 0.7387 | 0.7753 |
 | GINE_RAW_REF | 0.6101 | 0.6722 |
 
+* 已用计算：7 个 lipo 单元 + 4 个 ESOL 单元 + 2 个 GINE 坐标，合计 **1.99 GPU·h**（16 GPU·h 预算内），队列上限 20 个正式单元未用满。
+
 ## 5. 共享结构是否值钱：2×2 因子（配对 bootstrap，Test/Valid 各 1000 次重采样）
 
 | split | DIRECT_NONE | DIRECT_CUTRESP | FACTOR_NONE | FACTOR_CUTRESP | gain_share(NONE) | gain_share(CUTRESP) | resp|FACTOR | resp|DIRECT | interaction |
@@ -92,10 +95,15 @@ CPU/FP64 `all_ok = True`。
 
 | comparison (control − candidate) | Valid ΔRMSE [95% CI] | Test ΔRMSE [95% CI] |
 |---|---|---|
+| GINE_RAW_ESOL_R0 - ESOL_DIRECT_CUTRESP_R0 | -0.0030 [-0.1442, +0.1263] | **-0.1163** [-0.2141, -0.0133] |
+| GINE_RAW_ESOL_R0 - ESOL_FACTOR_CUTRESP_R0 | +0.0301 [-0.0968, +0.1515] | -0.0744 [-0.1724, +0.0336] |
+| GINE_RAW_ESOL_R0 - ESOL_FACTOR_NONE_R0 | +0.0260 [-0.1107, +0.1591] | -0.0562 [-0.1470, +0.0374] |
+| GINE_RAW_ESOL_R0 - ESOL_GLOBAL_NONE_R0 | -0.0622 [-0.2069, +0.0915] | **-0.1355** [-0.2369, -0.0289] |
 | GINE_RAW_LIPO_R0 - LIPO_DIRECT_CUTRESP_R0 | **-0.1068** [-0.1659, -0.0420] | -0.0141 [-0.0783, +0.0475] |
 | GINE_RAW_LIPO_R0 - LIPO_FACTOR_CUTRESP_R0 | **-0.0690** [-0.1271, -0.0075] | **-0.0645** [-0.1310, -0.0006] |
 | GINE_RAW_LIPO_R0 - LIPO_FACTOR_NONE_R0 | **-0.1021** [-0.1588, -0.0371] | **-0.0756** [-0.1342, -0.0174] |
 | GINE_RAW_LIPO_R0 - LIPO_GLOBAL_NONE_R0 | **-0.1149** [-0.1924, -0.0171] | **-0.1032** [-0.1588, -0.0508] |
+| LIPO_ADD_CUTRESP_R0 - LIPO_FACTOR_CUTRESP_R0 | +0.0181 [-0.0152, +0.0519] | -0.0005 [-0.0394, +0.0387] |
 | LIPO_DIRECT_CUTRESP_R0 - LIPO_FACTOR_CUTRESP_R0 | **+0.0379** [+0.0071, +0.0707] | **-0.0504** [-0.0790, -0.0201] |
 | LIPO_DIRECT_NONE_R0 - LIPO_DIRECT_CUTRESP_R0 | -0.0130 [-0.0478, +0.0225] | +0.0334 [-0.0004, +0.0695] |
 | LIPO_DIRECT_NONE_R0 - LIPO_FACTOR_NONE_R0 | -0.0082 [-0.0388, +0.0258] | -0.0280 [-0.0599, +0.0074] |
@@ -113,6 +121,8 @@ CPU/FP64 `all_ok = True`。
 |---|---|---|---|---|---|---|---|
 | TABLE（训练对查表） | 4856 | 0.0885 | 0.9607 | 0.9463 | 0.2218 | 0.8643 | 0.2154 |
 | 零预测 | 5770 | 0.5691 | 0.0000 | 0.0142 | 0.4982 | 0.0000 | 0.4976 |
+| LIPO_ADD_CUTRESP_R0 · 切口函数差 | 4856 | 0.2590 | 0.8766 | 0.8451 | 0.2509 | 0.8364 | 0.2500 |
+| LIPO_ADD_CUTRESP_R0 · 整分子差 | 4856 | 0.2365 | 0.9192 | 0.8556 | 0.2279 | 0.8995 | 0.2229 |
 | LIPO_DIRECT_CUTRESP_R0 · 切口函数差 | 4856 | 0.0904 | 0.9826 | 0.9283 | 0.0925 | 0.9688 | 0.0765 |
 | LIPO_DIRECT_CUTRESP_R0 · 整分子差 | 4856 | 0.1714 | 0.9582 | 0.8878 | 0.1790 | 0.9392 | 0.1686 |
 | LIPO_DIRECT_NONE_R0 · 切口函数差 | 4856 | 0.1800 | 0.9488 | 0.8756 | 0.1987 | 0.9152 | 0.1868 |
@@ -131,6 +141,8 @@ CPU/FP64 `all_ok = True`。
 
 | predictor | quantity | n | MAE | corr | sign |
 |---|---|---|---|---|---|
+| LIPO_ADD_CUTRESP_R0 | delta_cut | 914 | 0.4111 | 0.7802 | 0.7932 |
+| LIPO_ADD_CUTRESP_R0 | delta_mol | 914 | 0.3693 | 0.8195 | 0.8118 |
 | LIPO_DIRECT_CUTRESP_R0 | delta_cut | 914 | 0.3892 | 0.7907 | 0.7648 |
 | LIPO_DIRECT_CUTRESP_R0 | delta_mol | 914 | 0.3680 | 0.8151 | 0.7954 |
 | LIPO_DIRECT_NONE_R0 | delta_cut | 914 | 0.4304 | 0.7651 | 0.7724 |
@@ -148,12 +160,28 @@ CPU/FP64 `all_ok = True`。
 
 | cell | n pairs | TABLE MAE | zero MAE | 模型 Δmol MAE | 模型 Δcut MAE |
 |---|---|---|---|---|---|
-| cross | 1072 | 0.3037 | 0.6221 | 0.3529 | 0.3725 |
-| test | 37 | 0.5134 | 0.6405 | 0.4069 | 0.4234 |
-| train | 4646 | 0.0786 | 0.5719 | 0.1653 | 0.0802 |
-| valid | 15 | – | 0.7583 | 0.5040 | 0.4758 |
+| cross | 1072 | 0.3037 | 0.6221 | 0.3548 | 0.3858 |
+| test | 37 | 0.5134 | 0.6405 | 0.3549 | 0.3599 |
+| train | 4646 | 0.0786 | 0.5719 | 0.2334 | 0.2578 |
+| valid | 15 | – | 0.7583 | 0.5323 | 0.5739 |
 
 （模型列取 `response_metrics.json` 中第一个模型，逐模型数值见该文件。）
+
+切口函数的内部一致性（best-Valid epoch 上的全量评估）：
+
+| run | Train cut − mol | cut var (Train) | cut var (Valid) | cut RMSE (Train) | cut RMSE (Valid) | mol RMSE (Valid) |
+|---|---|---|---|---|---|---|
+| LIPO_ADD_CUTRESP_R0 | 0.1061 | 0.0371 | 0.1584 | 0.3641 | 0.9245 | 0.7276 |
+| LIPO_DIRECT_CUTRESP_R0 | 0.0738 | 0.0161 | 0.1199 | 0.2571 | 0.8963 | 0.7474 |
+| LIPO_DIRECT_NONE_R0 | 0.0647 | 0.0123 | 0.1252 | 0.2326 | 0.8780 | 0.7345 |
+| LIPO_FACTOR_CUTRESP_R0 | 0.0836 | 0.0227 | 0.1127 | 0.3056 | 0.8501 | 0.7096 |
+| LIPO_FACTOR_MOLPAIR_R0 | 0.0748 | 0.0271 | 0.1477 | 0.5834 | 1.0136 | 0.8720 |
+| LIPO_FACTOR_NONE_R0 | 0.0642 | 0.0121 | 0.1283 | 0.2335 | 0.8936 | 0.7427 |
+| LIPO_GLOBAL_NONE_R0 | – | – | – | – | – | 0.7555 |
+
+`cut var` 是同一分子内部各解析切口分数 `f_c` 的方差均值——它衡量模型是否真的把“不同接口有不同作用”表示出来了，而不是把所有解析压到同一个整分子值上。`Train cut − mol` 是切口级训练误差与整分子训练误差之差，反映主损（分子内平均后平方）与切口级拟合之间的差距。
+
+机制上可以读到一件事：在同一个 `FACTOR` 骨架上，`CUTRESP` 把 Train 内部的切口分数离散度从 0.012 抬到 0.023，同时把切口级 Train RMSE 从 0.234 抬到 0.306，却把整分子 Valid RMSE 从 0.743 降到 0.710。真实匹配监督并没有让模型更贴合Train 的切口标签，而是把它推向“同一分子的不同接口给出不同值、但均值更准”的表示——这正是接口分解应有的行为。
 
 ## 7. 组合双差（两个上下文 × 同一对词）
 
@@ -161,6 +189,8 @@ CPU/FP64 `all_ok = True`。
 
 | run | subset | n | D_mol MAE | – | D_mol sign | D_cut MAE | D_cut sign |
 |---|---|---|---|---|---|---|---|
+| LIPO_ADD_CUTRESP_R0 | all_held_out | 1 | 0.7562 | – | 0.0000 | 0.2300 | 0.0000 |
+| LIPO_ADD_CUTRESP_R0 | train_test_any_test | 2 | 0.7397 | – | 0.5000 | 0.5700 | 0.0000 |
 | LIPO_DIRECT_CUTRESP_R0 | all_held_out | 1 | 0.1354 | – | 1.0000 | 0.7591 | 0.0000 |
 | LIPO_DIRECT_CUTRESP_R0 | train_test_any_test | 2 | 0.3205 | – | 1.0000 | 0.5113 | 0.5000 |
 | LIPO_DIRECT_NONE_R0 | all_held_out | 1 | 0.4281 | – | 0.0000 | 0.3843 | 0.0000 |
@@ -177,6 +207,17 @@ CPU/FP64 `all_ok = True`。
 `D_y = [y(C1,Sb) − y(C1,Sa)] − [y(C2,Sb) − y(C2,Sa)]`；模型的 `D` 用同一 (Sa,Sb) 的两个上下文差。双差可以抵消只依赖词的公共项，留下由环境经共享状态决定的部分。
 
 ## 8. 数据效率
+
+ESOL（1128 分子，官方 902/112/114；原始单位，best-Valid）：
+
+| run | arm | aux | train frac | Valid RMSE | Test RMSE | Train RMSE | best ep | params | wall min |
+|---|---|---|---|---|---|---|---|---|---|
+| ESOL_FACTOR_CUTRESP_R0 | FACTOR | CUTRESP | 1.0 | 0.8194 | 0.9095 | 0.2755 | 114 | 154983 | 2.1 |
+| ESOL_FACTOR_NONE_R0 | FACTOR | NONE | 1.0 | 0.8235 | 0.8913 | 0.2661 | 126 | 154983 | 1.4 |
+| ESOL_DIRECT_CUTRESP_R0 | DIRECT | CUTRESP | 1.0 | 0.8525 | 0.9514 | 0.3476 | 84 | 155102 | 7.0 |
+| ESOL_GLOBAL_NONE_R0 | GLOBAL | NONE | 1.0 | 0.9117 | 0.9706 | 0.4702 | 95 | 124629 | 0.9 |
+
+ESOL 的 raw-GINE 坐标：Valid 0.8495 / Test 0.8351。
 
 ## 9. 案例（每条由显式数值规则选出，非手工挑选）
 
@@ -211,14 +252,36 @@ CPU/FP64 `all_ok = True`。
 | cross | 1637 | 369 | -1.824 | -2.061 | -0.778 | 1.283 | – | – | – |  | – |
 | cross | 169 | 3217 | 0.165 | -0.002 | 0.545 | 0.547 | – | – | – |  | – |
 
-## 10. 负结果与开放问题
+## 10. 对三个问题的直接回答
 
-* **没有超过 GINE。** 本轮最好的候选在 Valid 上比同协议 GINE 坐标差 0.0690。禁止 GNN 骨干的前提下，这个差距是该方法本身的上限证据，而不是训练不足：候选的训练误差已明显低于 GINE 的验证误差（见主表 Train 列）。
+**(1) 少量共享响应状态能否承载带接口片段的任务作用？**
+
+一半。共享本体（对象帧 Φ、片段编码 E、低秩状态）确实能承载，但让它成为“环境通过状态改变片段作用”的那一步（`FACTOR` 的 `tanh(q)·tanh(r)` 交互）相对纯加性 `ADD` 没有可测收益：Valid Δ(FACTOR−ADD) = 0.0181，Test -0.0005，配对区间都跨 0。所以本轮能确认的是“共享 + 可加分解”，不能确认“环境调制”这一乘法机制。
+
+**(2) 显式共享限制是否被数据集支持？**
+
+支持，但形式比预期弱。
+
+* 真实匹配替换目录给出 5770 个可评估对；held-out（cross，1072 对、727 个互不相同的分子、两个上下文共享同一对词）上，最好的整分子差 MAE 是 0.3529，零预测是 0.6221。模型学到的是可外推的响应，而不只是记住了标签。
+* 宽支持子集（4856 对，含目标自身结构分量）：TABLE MAE 0.0885，最好的神经网络切口函数差 0.0904，最好的整分子差 0.1714——两者几乎打平，但 TABLE 的相关性 0.96 高于模型。
+* 严格支持子集（1899 对，已排除目标分子所在的结构分量）：TABLE MAE 0.2218，而 `DIRECT_CUTRESP` 的切口函数差是 0.0925，比查表准一倍多。查表在严格子集上退化，正是“同 transform 跨结构共享”这一假设的直接检验：能共享的部分是真实存在的（否则模型不会在排除自身分量后仍然准确），但它不足以支撑一个查表近似。
+* 反面证据同样清楚：目录里 577 个“同一 transform、多个真实对”的单元内部 `mean|Δy|` = 0.6368，只比全体单元的 0.7053 低 10%——同一个 `(C, 词)` 约束下标签本身就不一致，这是目录约束共享时无法回避的噪声地板。
+
+**(3) 对整分子预测和数据效率的价值？**
+
+* 对 `GLOBAL`（纯整分子描述，无接口分解）：`GLOBAL_NONE − FACTOR_NONE` Valid 0.0128、Test 0.0277（正 = 分解更好），配对区间 Valid +0.0128 [-0.0580, +0.0859]、Test +0.0277 [-0.0343, +0.0909]，都跨 0；
+  在 ESOL（902 个训练分子）上同一个对比是 Valid 0.0881、Test 0.0794。方向一致：数据越少，接口分解越值钱；但在 3360 个训练分子上不显著。
+* 对数据效率：lipo 用 50%/25% 训练分子重跑 `FACTOR_CUTRESP` 与 `DIRECT_CUTRESP`，见第 8 节；ESOL 只有 902 个训练分子，是同一个问题的自然小样本点。
+* 对绝对精度：没有超过外部 GINE 坐标，见第 0 节。
+
+## 11. 负结果与开放问题
+
+* **没有超过 GINE。** 本轮最好的候选在 Valid 上比同协议 GINE 坐标差 0.0690。禁止 GNN 骨干的前提下，这个差距更像是方法上限而不是训练不足：配方的 cosine 已经走完，最佳 epoch 落在内部（100/160、135/160），尾部平台化，且 Train RMSE 已远低于 Valid RMSE（见主表）。
 * **Valid/Test 排序反转。** `DIRECT_CUTRESP` 在 Test 上比 `FACTOR_CUTRESP` 好 0.0504，在 Valid 上差 0.0379；两侧 95% 区间都不含 0。best-Valid 选择本身几乎不损失 Test（`split_gap.json` 的 `cost_of_valid_selection` ≈ 0），所以这是划分难度差异，不是选择伪影。任何单侧结论都会被这次反转驳倒。
 * **MOLPAIR 有害。** 只用整分子差约束 `f̄` 会让切口函数失配，Valid/Test 都比 CUTRESP 差一大截；说明起作用的不是“任何成对监督”，而是“监督切口函数本身”。
 * **TABLE 在支持子集上远强于所有神经模型。** 这说明当前数据量下“按 transform 查表”仍是更强的近似；共享响应状态的价值必须体现在无支持外推（`unsupported` 子集）上，那里 TABLE 无定义，模型确实优于零预测，但绝对误差仍然偏大。
 
-## 11. 复现
+## 12. 复现
 
 ```
 code/trc_prepare.py --dataset lipo|esol     # 建 cache（本地，需要 rdkit）

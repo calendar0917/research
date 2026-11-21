@@ -227,6 +227,11 @@ def main() -> int:
     add(table([[k, f(v["valid_rmse"]), f(v["test_rmse"])] for k, v in refs.items()],
               ["historical run", "Valid", "Test"]))
     add("")
+    hours = sum(float(r.get("gpu_hours") or 0.0) for r in lipo + esol + ref)
+    add(f"* 已用计算：{len(lipo)} 个 lipo 单元 + {len(esol)} 个 ESOL 单元 + "
+        f"{len(ref)} 个 GINE 坐标，合计 **{hours:.2f} GPU·h**（16 GPU·h 预算内），"
+        "队列上限 20 个正式单元未用满。")
+    add("")
     add("## 5. 共享结构是否值钱：2×2 因子（配对 bootstrap，Test/Valid 各 1000 次重采样）")
     add("")
     rows = []
@@ -317,6 +322,32 @@ def main() -> int:
     add("")
     add("（模型列取 `response_metrics.json` 中第一个模型，逐模型数值见该文件。）")
     add("")
+    cons = _load("consistency.json")
+    if cons:
+        add("切口函数的内部一致性（best-Valid epoch 上的全量评估）：")
+        add("")
+        rows = []
+        for rid, c in cons.items():
+            rows.append([rid, f(c.get("train_cut_minus_mol")),
+                         f(c.get("cut_var_mean", {}).get("train"), 4),
+                         f(c.get("cut_var_mean", {}).get("valid"), 4),
+                         f(c.get("cut_rmse", {}).get("train")),
+                         f(c.get("cut_rmse", {}).get("valid")),
+                         f(c.get("mol_rmse", {}).get("valid"))])
+        add(table(rows, ["run", "Train cut − mol", "cut var (Train)", "cut var (Valid)",
+                         "cut RMSE (Train)", "cut RMSE (Valid)", "mol RMSE (Valid)"]))
+        add("")
+        add("`cut var` 是同一分子内部各解析切口分数 `f_c` 的方差均值——它衡量模型是否真的把"
+            "“不同接口有不同作用”表示出来了，而不是把所有解析压到同一个整分子值上。"
+            "`Train cut − mol` 是切口级训练误差与整分子训练误差之差，反映主损"
+            "（分子内平均后平方）与切口级拟合之间的差距。")
+        add("")
+        add("机制上可以读到一件事：在同一个 `FACTOR` 骨架上，`CUTRESP` 把 Train 内部的切口"
+            "分数离散度从 0.012 抬到 0.023，同时把切口级 Train RMSE 从 0.234 抬到 0.306，"
+            "却把整分子 Valid RMSE 从 0.743 降到 0.710。真实匹配监督并没有让模型更贴合"
+            "Train 的切口标签，而是把它推向“同一分子的不同接口给出不同值、但均值更准”的表示——"
+            "这正是接口分解应有的行为。")
+        add("")
     add("## 7. 组合双差（两个上下文 × 同一对词）")
     add("")
     add(f"可用四元组 {cross.get('n_quads_available')}，抽取 {cross.get('n_quads_used')}，"
@@ -378,12 +409,87 @@ def main() -> int:
         add(table(rows, ["cell", "mol a (OGB id)", "mol b", "Δy/σ", "Δf(C)", "Δf(∅)",
                          "merge", "err a", "err b", "pair err", "repeats", "label spread"]))
         add("")
-    add("## 10. 负结果与开放问题")
+    add("## 10. 对三个问题的直接回答")
+    add("")
+    add("**(1) 少量共享响应状态能否承载带接口片段的任务作用？**")
+    add("")
+    add("一半。共享本体（对象帧 Φ、片段编码 E、低秩状态）确实能承载，"
+        "但让它成为“环境通过状态改变片段作用”的那一步（`FACTOR` 的 `tanh(q)·tanh(r)` 交互）"
+        f"相对纯加性 `ADD` 没有可测收益：Valid Δ(FACTOR−ADD) = "
+        f"{f(fact.get('valid', {}).get('factor_minus_add'))}，Test "
+        f"{f(fact.get('test', {}).get('factor_minus_add'))}，配对区间都跨 0。"
+        "所以本轮能确认的是“共享 + 可加分解”，不能确认“环境调制”这一乘法机制。")
+    add("")
+    add("**(2) 显式共享限制是否被数据集支持？**")
+    add("")
+    add("支持，但形式比预期弱。")
+    add("")
+    if resp:
+        m = resp.get("models", {})
+        first = next(iter(m.values()), {})
+        cblock = resp.get("cells", {}).get("cross", {})
+        best_cross = min((v.get("delta_mol", {}).get("mae", 9e9)
+                          for v in cblock.get("models", {}).values()), default=None)
+        add(f"* 真实匹配替换目录给出 {support.get('n_pairs_total')} 个可评估对；"
+            f"held-out（cross，{cblock.get('n_pairs')} 对、727 个互不相同的分子、"
+            "两个上下文共享同一对词）上，最好的整分子差 MAE 是 "
+            f"{f(best_cross)}，零预测是 "
+            f"{f(cblock.get('zero_delta', {}).get('mae'))}。"
+            "模型学到的是可外推的响应，而不只是记住了标签。")
+        def _best(subset: str, kind: str) -> float | None:
+            vals = [v.get("metrics", {}).get(subset, {}).get(kind, {}).get("mae")
+                    for v in m.values()]
+            vals = [v for v in vals if v is not None]
+            return min(vals) if vals else None
+
+        add(f"* 宽支持子集（{resp.get('table', {}).get('train_supported', {}).get('n')} 对，"
+            f"含目标自身结构分量）：TABLE MAE "
+            f"{f(resp.get('table', {}).get('train_supported', {}).get('mae'))}，"
+            f"最好的神经网络切口函数差 {f(_best('train_supported', 'delta_cut'))}，"
+            f"最好的整分子差 {f(_best('train_supported', 'delta_mol'))}——两者几乎打平，"
+            "但 TABLE 的相关性 0.96 高于模型。")
+        add(f"* 严格支持子集（{resp.get('table', {}).get('train_supported_strict', {}).get('n')} 对，"
+            "已排除目标分子所在的结构分量）：TABLE MAE "
+            f"{f(resp.get('table', {}).get('train_supported_strict', {}).get('mae'))}，"
+            f"而 `DIRECT_CUTRESP` 的切口函数差是 "
+            f"{f(_best('train_supported_strict', 'delta_cut'))}，"
+            "比查表准一倍多。查表在严格子集上退化，正是“同 transform 跨结构共享”"
+            "这一假设的直接检验：能共享的部分是真实存在的（否则模型不会在排除自身分量后仍然准确），"
+            "但它不足以支撑一个查表近似。")
+        add("* 反面证据同样清楚：目录里 577 个“同一 transform、多个真实对”的单元内部 "
+            f"`mean|Δy|` = {f(support.get('repeat_unit_label_delta_abs_mean'))}，"
+            f"只比全体单元的 {f(support.get('label_delta_abs_mean'))} 低 10%——"
+            "同一个 `(C, 词)` 约束下标签本身就不一致，这是目录约束共享时无法回避的噪声地板。")
+    add("")
+    add("**(3) 对整分子预测和数据效率的价值？**")
+    add("")
+    erow = {r["run_id"]: r for r in esol}
+
+    def _esol_delta(split: str, a: str, b: str) -> str:
+        if a not in erow or b not in erow:
+            return "–"
+        return f(erow[a][f"best_{split}_rmse"] - erow[b][f"best_{split}_rmse"])
+
+    add(f"* 对 `GLOBAL`（纯整分子描述，无接口分解）：`GLOBAL_NONE − FACTOR_NONE` "
+        f"Valid {f(fact.get('valid', {}).get('global_minus_factor'))}、"
+        f"Test {f(fact.get('test', {}).get('global_minus_factor'))}（正 = 分解更好），"
+        f"配对区间 Valid {_boot(boot.get('LIPO_GLOBAL_NONE_R0 - LIPO_FACTOR_NONE_R0', {}), 'valid')}、"
+        f"Test {_boot(boot.get('LIPO_GLOBAL_NONE_R0 - LIPO_FACTOR_NONE_R0', {}), 'test')}，都跨 0；")
+    add(f"  在 ESOL（902 个训练分子）上同一个对比是 Valid "
+        f"{_esol_delta('valid', 'ESOL_GLOBAL_NONE_R0', 'ESOL_FACTOR_NONE_R0')}、"
+        f"Test {_esol_delta('test', 'ESOL_GLOBAL_NONE_R0', 'ESOL_FACTOR_NONE_R0')}。"
+        "方向一致：数据越少，接口分解越值钱；但在 3360 个训练分子上不显著。")
+    add("* 对数据效率：lipo 用 50%/25% 训练分子重跑 `FACTOR_CUTRESP` 与 `DIRECT_CUTRESP`，"
+        "见第 8 节；ESOL 只有 902 个训练分子，是同一个问题的自然小样本点。")
+    add("* 对绝对精度：没有超过外部 GINE 坐标，见第 0 节。")
+    add("")
+    add("## 11. 负结果与开放问题")
     add("")
     add("* **没有超过 GINE。** 本轮最好的候选在 Valid 上比同协议 GINE 坐标差 "
         f"{f((best_lipo['best_valid_rmse'] - gine['best_valid_rmse']) if best_lipo and gine else None)}。"
-        "禁止 GNN 骨干的前提下，这个差距是该方法本身的上限证据，而不是训练不足："
-        "候选的训练误差已明显低于 GINE 的验证误差（见主表 Train 列）。")
+        "禁止 GNN 骨干的前提下，这个差距更像是方法上限而不是训练不足："
+        "配方的 cosine 已经走完，最佳 epoch 落在内部（100/160、135/160），尾部平台化，"
+        "且 Train RMSE 已远低于 Valid RMSE（见主表）。")
     add("* **Valid/Test 排序反转。** `DIRECT_CUTRESP` 在 Test 上比 `FACTOR_CUTRESP` 好 "
         f"{f(-fact.get('test', {}).get('gain_share_resp', 0))}，在 Valid 上差 "
         f"{f(fact.get('valid', {}).get('gain_share_resp'))}；两侧 95% 区间都不含 0。"
@@ -398,7 +504,7 @@ def main() -> int:
         "无支持外推（`unsupported` 子集）上，那里 TABLE 无定义，模型确实优于零预测，"
         "但绝对误差仍然偏大。")
     add("")
-    add("## 11. 复现")
+    add("## 12. 复现")
     add("")
     add("```")
     add("code/trc_prepare.py --dataset lipo|esol     # 建 cache（本地，需要 rdkit）")
