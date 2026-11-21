@@ -70,6 +70,13 @@ def _boot(block: Mapping[str, Any], split: str) -> str:
     return f"{mark}{entry['delta']:+.4f}{mark} [{lo:+.4f}, {hi:+.4f}]"
 
 
+def _ck_evidence(res: Mapping[str, Any]) -> str:
+    keep = {k: v for k, v in res.items()
+            if k.endswith("max_abs") or k.endswith("_bad") or k.endswith("_diff")
+            or k in ("frames_edge_mask_ok", "ctx_feature_selfconsistent")}
+    return json.dumps(keep, ensure_ascii=False)
+
+
 def main() -> int:
     main_tab = _load("main_table.json")
     boot = _load("bootstrap.json")
@@ -192,12 +199,16 @@ def main() -> int:
     add("")
     cuda = checks.get("cuda")
     if cuda:
-        add(f"GPU/FP32 复跑：`all_ok = {cuda.get('all_ok')}`；重编号预测最大差 "
-            f"{json.dumps(cuda.get('renumber', {}).get('prediction_max_abs_diff'), ensure_ascii=False)}，"
-            f"容差 {cuda.get('renumber', {}).get('tolerance')}。")
+        add(f"GPU/FP32 复跑（`--skip renumber`：该子项需要在算力机上重建 mini pack，"
+            f"而远端 venv 没有 rdkit，见偏差日志）：`all_ok = {cuda.get('all_ok')}`。")
+        add("")
+        add(table([[n, cuda.get(n, {}).get("ok"),
+                    _ck_evidence(cuda.get(n, {}))] for n in
+                   ("inputs", "context", "port", "batching", "batch")],
+                  ["check", "ok (cuda/fp32)", "evidence"]))
+        add("")
     else:
-        add("GPU/FP32 复跑在结果冻结前未执行（见偏差日志）；训练本身每个 epoch 都在 CUDA/FP32 上"
-            "跑同一前向，重编号不变性由结构签名（与数值路径无关）覆盖。")
+        add("GPU/FP32 复跑在结果冻结前未执行（见偏差日志）。")
     add(f"CPU/FP64 `all_ok = {ck and all(ck.values())}`。")
     add("")
     add("## 3. 配方与实际条件")
@@ -230,7 +241,8 @@ def main() -> int:
     hours = sum(float(r.get("gpu_hours") or 0.0) for r in lipo + esol + ref)
     add(f"* 已用计算：{len(lipo)} 个 lipo 单元 + {len(esol)} 个 ESOL 单元 + "
         f"{len(ref)} 个 GINE 坐标，合计 **{hours:.2f} GPU·h**（16 GPU·h 预算内），"
-        "队列上限 20 个正式单元未用满。")
+        "队列上限 20 个正式单元未用满。这个数只累加每个单元自己的 wall time，"
+        "不含两次作废的重跑和排队空转。")
     add("")
     add("## 5. 共享结构是否值钱：2×2 因子（配对 bootstrap，Test/Valid 各 1000 次重采样）")
     add("")
@@ -250,7 +262,8 @@ def main() -> int:
         "`resp|arm = NONE − CUTRESP`（正 = 真实匹配监督有用）；"
         "`interaction = resp|FACTOR − resp|DIRECT`（正 = 响应监督只在共享因式下有用）。")
     add("")
-    add(table([[k, _boot(b, "valid"), _boot(b, "test")] for k, b in boot.items()],
+    ordered = sorted(boot.items(), key=lambda kv: ("ESOL" in kv[0], kv[0]))
+    add(table([[k, _boot(b, "valid"), _boot(b, "test")] for k, b in ordered],
               ["comparison (control − candidate)", "Valid ΔRMSE [95% CI]", "Test ΔRMSE [95% CI]"]))
     add("")
     add("Δ>0 表示 candidate 更好；**粗体**表示 95% 区间不含 0。")
@@ -400,15 +413,27 @@ def main() -> int:
         add("")
         add("读法：在相同训练分子数下比较不同臂，才是在问“哪一种接口表示更省样本”；"
             "不同臂的 100%→50%→25% 退化斜率可以直接对比，因为子集是同一批分子。")
+        add("")
+        add("事实：两种臂的退化斜率几乎一样（Valid 上 FACTOR +0.145/+0.248、"
+            "DIRECT +0.090/+0.247），所以“更省样本”在两个臂之间没有差别；"
+            "而 Valid/Test 的反转在 100%、50%、25% 三个数据量上都存在"
+            "（50% 时 DIRECT 在 Valid 领先 0.017、FACTOR 在 Test 领先 0.020；"
+            "25% 时 FACTOR 在 Valid 领先 0.037、DIRECT 在 Test 领先 0.016，"
+            "但 25% 两边都接近训练集规模，绝对值已不可用于比较）。"
+            "所以这个反转是划分的性质，不是样本量的性质。")
     add("## 9. 案例（每条由显式数值规则选出，非手工挑选）")
     add("")
-    for key, block in cases.items():
+    for key in ("merge", "redirect", "composed", "pathological"):
+        block = cases.get(key)
         if not isinstance(block, dict):
             continue
         picks = block.get("picks") or []
         if not picks:
             continue
-        add(f"**{key}** — {block.get('rule')}")
+        rule = block.get("rule")
+        if key == "composed":
+            rule += "（“预测得好”指 cross 单元内误差最小的 40%，该单元本身最难，"                     "所以绝对误差仍有 1–2 kcal/mol）"
+        add(f"**{key}** — {rule}")
         add("")
         rows = []
         for p in picks:
@@ -419,8 +444,33 @@ def main() -> int:
                          f(p.get("molecule_a_abs_error"), 3), f(p.get("molecule_b_abs_error"), 3),
                          f(p.get("pair_delta_abs_error"), 3),
                          p.get("repeat_count", ""), f(p.get("label_delta_spread_sigma"), 3)])
-        add(table(rows, ["cell", "mol a (OGB id)", "mol b", "Δy/σ", "Δf(C)", "Δf(∅)",
-                         "merge", "err a", "err b", "pair err", "repeats", "label spread"]))
+        if key == "redirect":
+            rows = [[p.get("molecule_a_ogb_id"), p.get("molecule_b_ogb_id"),
+                     p.get("flip_side"), f(p.get("word_a_with_context"), 3),
+                     f(p.get("word_a_isolated"), 3), f(p.get("word_b_with_context"), 3),
+                     f(p.get("word_b_isolated"), 3), f(p.get("delta_y_sigma"), 3),
+                     f(p.get("merge_magnitude"), 3),
+                     f(p.get("context_shift_a"), 3), f(p.get("context_shift_b"), 3)]
+                    for p in picks]
+            add(table(rows, ["mol a", "mol b", "flip side", "f(Sa|C)", "f(Sa|∅)",
+                             "f(Sb|C)", "f(Sb|∅)", "Δy/σ", "merge", "shift a", "shift b"]))
+        elif key == "pathological":
+            rows = [[p.get("cell"), p.get("repeat_count"),
+                     f(p.get("label_delta_spread_sigma"), 3),
+                     str(p.get("label_deltas_sigma")), p.get("molecule_pairs_ogb")]
+                    for p in picks]
+            add(table(rows, ["cell", "repeats in cell", "label spread σ",
+                             "Δy/σ of every repeat", "molecule pairs (OGB id)"]))
+            add("")
+            for p in picks:
+                add(f"* 同 transform 的两个词：`{p['transform_words'][0]}` / "
+                    f"`{p['transform_words'][1]}`")
+            add("")
+            continue
+        else:
+            add(table(rows, ["cell", "mol a (OGB id)", "mol b", "Δy/σ", "Δf(C)", "Δf(∅)",
+                             "merge", "err a", "err b", "pair err", "repeats",
+                             "label spread"]))
         add("")
     add("## 10. 对三个问题的直接回答")
     add("")

@@ -116,15 +116,26 @@ def build_cases(pack, cfg, labels, model, row_ids: np.ndarray) -> dict[str, Any]
         "rule": "largest |delta_full - delta_isolated| on held-out pairs",
         "picks": [describe(int(i)) for i in order[:3]],
     }
-    flip = np.nonzero((np.sign(ctx["a"]) * np.sign(iso["a"]) < 0) & held)[0]
+    flip_a = (np.sign(ctx["a"]) * np.sign(iso["a"]) < 0) & held
+    flip_b = (np.sign(ctx["b"]) * np.sign(iso["b"]) < 0) & held
+    flip = np.nonzero(flip_a | flip_b)[0]
     if flip.size:
-        best = flip[np.argsort(shift_a[flip])[::-1][:3]]
-        block = []
+        best = flip[np.argsort(np.maximum(shift_a[flip], shift_b[flip]))[::-1]]
+        block, seen = [], set()
         for i in best.tolist():
+            key = (int(pa[i]), int(pb[i]))
+            if key in seen:
+                continue
+            seen.add(key)
             entry = describe(int(i))
             entry["word_a_with_context"] = float(ctx["a"][i])
             entry["word_a_isolated"] = float(iso["a"][i])
+            entry["word_b_with_context"] = float(ctx["b"][i])
+            entry["word_b_isolated"] = float(iso["b"][i])
+            entry["flip_side"] = "a" if flip_a[i] else "b"
             block.append(entry)
+            if len(block) == 3:
+                break
         out["redirect"] = {"rule": "context flips the sign of the word's action",
                            "n_sign_flips": int(flip.size), "picks": block}
     mol_pred = _molecule_scores(model, len(y))

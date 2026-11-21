@@ -21,7 +21,7 @@
 * 距离桶总量（d0..d3,d4+,unreachable）：[354531, 854837, 1295104, 1419061, 8416687, 69]。
 * 片段原子数：word 侧（≤8）直方 [0, 18, 24, 50, 111, 214, 332, 439, 626]；全体（含环境 C）分位数 {"max": 114, "mean": 25.01765529488099, "p50": 26.0, "p90": 35.0}；连通分量直方 [0, 29260, 0, 0, 23, 0, 0, 0]。
 * 无桥键分子（逐原子根回退）：8 个，OGB 行号 [721, 1452, 1897, 2568, 2751, 2969, 3204, 3753]。
-* cache `/home/calendar/code/research/tracks/structural-sufficiency/task_response_composition_s0_v1/data/trc_cache_lipo.npz` sha256 `c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3`，commit `10c683cf37968d4e3632bfb8e16671a6fc02ac80`。
+* cache `/home/calendar/code/research/tracks/structural-sufficiency/task_response_composition_s0_v1/data/trc_cache_lipo.npz` sha256 `c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3`，commit `241f268f3c67be928ace307c749a54fe72dd1c1d`。
 
 替换目录（只在 Train 内部构建；Valid/Test 只作单元，不产生对）：
 
@@ -49,7 +49,16 @@
 | batching | True | 批/单条、乱序、稀疏 vs 显式循环 max|Δ|=0.00 |
 | batch | True | 真实批次主/辅损失有限、梯度非零 |
 
-GPU/FP32 复跑在结果冻结前未执行（见偏差日志）；训练本身每个 epoch 都在 CUDA/FP32 上跑同一前向，重编号不变性由结构签名（与数值路径无关）覆盖。
+GPU/FP32 复跑（`--skip renumber`：该子项需要在算力机上重建 mini pack，而远端 venv 没有 rdkit，见偏差日志）：`all_ok = True`。
+
+| check | ok (cuda/fp32) | evidence |
+|---|---|---|
+| inputs | True | {"frames_edge_mask_ok": true, "local_edge_index_bad": 0, "parse_bond_endpoint_bad": 0, "parse_bridge_bad": 0, "parse_recombination_bad": 0} |
+| context | True | {"ctx_feature_max_abs": 2.86102294921875e-06, "ctx_feature_selfconsistent": true} |
+| port | True | {"max_port_change_diff": 3.332204510175204, "min_port_change_diff": 0.49247648509779385, "reconstruction_max_abs": 9.934107481068821e-09} |
+| batching | True | {"batch_vs_single_max_abs": 1.4901161193847656e-08, "permuted_batch_max_abs": 2.9802322387695312e-08, "reversed_batch_max_abs": 1.4901161193847656e-08, "sparse_vs_explicit_max_abs": 1.5742485128811268e-06} |
+| batch | True | {} |
+
 CPU/FP64 `all_ok = True`。
 
 ## 3. 配方与实际条件
@@ -68,9 +77,11 @@ CPU/FP64 `all_ok = True`。
 | LIPO_FACTOR_NONE_R0 | FACTOR | NONE | 1.0 | 0.7427 | 0.7337 | 0.1693 | 129 | 154983 | 6.2 |
 | LIPO_DIRECT_CUTRESP_R0 | DIRECT | CUTRESP | 1.0 | 0.7474 | 0.6723 | 0.1833 | 135 | 155102 | 40.3 |
 | LIPO_GLOBAL_NONE_R0 | GLOBAL | NONE | 1.0 | 0.7555 | 0.7614 | 0.4723 | 92 | 124629 | 5.0 |
+| LIPO_DIRECT_CUTRESP_F50_R0 | DIRECT | CUTRESP | 0.5 | 0.8370 | 0.8055 | 0.1875 | 112 | 155102 | 20.7 |
 | LIPO_FACTOR_CUTRESP_F50_R0 | FACTOR | CUTRESP | 0.5 | 0.8544 | 0.7854 | 0.2377 | 98 | 154983 | 5.9 |
 | LIPO_FACTOR_MOLPAIR_R0 | FACTOR | MOLPAIR | 1.0 | 0.8720 | 0.8523 | 0.5087 | 144 | 154983 | 6.4 |
 | LIPO_FACTOR_CUTRESP_F25_R0 | FACTOR | CUTRESP | 0.25 | 0.9571 | 0.9748 | 0.2354 | 97 | 154983 | 3.1 |
+| LIPO_DIRECT_CUTRESP_F25_R0 | DIRECT | CUTRESP | 0.25 | 0.9940 | 0.9591 | 0.2865 | 97 | 155102 | 10.8 |
 
 外部 GINE 坐标（同划分、同目标缩放、同评估协议，raw 特征，5 层 128 维，sum+mean readout，387974 参数）：**Valid 0.6406 / Test 0.6582**（best epoch 128，wall 4.2 min）。
 
@@ -84,7 +95,7 @@ CPU/FP64 `all_ok = True`。
 | DIRECT_S56 | 0.7387 | 0.7753 |
 | GINE_RAW_REF | 0.6101 | 0.6722 |
 
-* 已用计算：9 个 lipo 单元 + 4 个 ESOL 单元 + 2 个 GINE 坐标，合计 **2.14 GPU·h**（16 GPU·h 预算内），队列上限 20 个正式单元未用满。
+* 已用计算：11 个 lipo 单元 + 4 个 ESOL 单元 + 2 个 GINE 坐标，合计 **2.67 GPU·h**（16 GPU·h 预算内），队列上限 20 个正式单元未用满。这个数只累加每个单元自己的 wall time，不含两次作废的重跑和排队空转。
 
 ## 5. 共享结构是否值钱：2×2 因子（配对 bootstrap，Test/Valid 各 1000 次重采样）
 
@@ -97,10 +108,6 @@ CPU/FP64 `all_ok = True`。
 
 | comparison (control − candidate) | Valid ΔRMSE [95% CI] | Test ΔRMSE [95% CI] |
 |---|---|---|
-| GINE_RAW_ESOL_R0 - ESOL_DIRECT_CUTRESP_R0 | -0.0030 [-0.1442, +0.1263] | **-0.1163** [-0.2141, -0.0133] |
-| GINE_RAW_ESOL_R0 - ESOL_FACTOR_CUTRESP_R0 | +0.0301 [-0.0968, +0.1515] | -0.0744 [-0.1724, +0.0336] |
-| GINE_RAW_ESOL_R0 - ESOL_FACTOR_NONE_R0 | +0.0260 [-0.1107, +0.1591] | -0.0562 [-0.1470, +0.0374] |
-| GINE_RAW_ESOL_R0 - ESOL_GLOBAL_NONE_R0 | -0.0622 [-0.2069, +0.0915] | **-0.1355** [-0.2369, -0.0289] |
 | GINE_RAW_LIPO_R0 - LIPO_DIRECT_CUTRESP_R0 | **-0.1068** [-0.1659, -0.0420] | -0.0141 [-0.0783, +0.0475] |
 | GINE_RAW_LIPO_R0 - LIPO_FACTOR_CUTRESP_R0 | **-0.0690** [-0.1271, -0.0075] | **-0.0645** [-0.1310, -0.0006] |
 | GINE_RAW_LIPO_R0 - LIPO_FACTOR_NONE_R0 | **-0.1021** [-0.1588, -0.0371] | **-0.0756** [-0.1342, -0.0174] |
@@ -112,6 +119,10 @@ CPU/FP64 `all_ok = True`。
 | LIPO_FACTOR_MOLPAIR_R0 - LIPO_FACTOR_CUTRESP_R0 | **+0.1624** [+0.1099, +0.2138] | **+0.1296** [+0.0782, +0.1818] |
 | LIPO_FACTOR_NONE_R0 - LIPO_FACTOR_CUTRESP_R0 | **+0.0331** [+0.0015, +0.0639] | +0.0110 [-0.0252, +0.0461] |
 | LIPO_GLOBAL_NONE_R0 - LIPO_FACTOR_NONE_R0 | +0.0128 [-0.0580, +0.0859] | +0.0277 [-0.0343, +0.0909] |
+| GINE_RAW_ESOL_R0 - ESOL_DIRECT_CUTRESP_R0 | -0.0030 [-0.1442, +0.1263] | **-0.1163** [-0.2141, -0.0133] |
+| GINE_RAW_ESOL_R0 - ESOL_FACTOR_CUTRESP_R0 | +0.0301 [-0.0968, +0.1515] | -0.0744 [-0.1724, +0.0336] |
+| GINE_RAW_ESOL_R0 - ESOL_FACTOR_NONE_R0 | +0.0260 [-0.1107, +0.1591] | -0.0562 [-0.1470, +0.0374] |
+| GINE_RAW_ESOL_R0 - ESOL_GLOBAL_NONE_R0 | -0.0622 [-0.2069, +0.0915] | **-0.1355** [-0.2369, -0.0289] |
 
 Δ>0 表示 candidate 更好；**粗体**表示 95% 区间不含 0。
 
@@ -125,6 +136,10 @@ CPU/FP64 `all_ok = True`。
 | 零预测 | 5770 | 0.5691 | 0.0000 | 0.0142 | 0.4982 | 0.0000 | 0.4976 |
 | LIPO_ADD_CUTRESP_R0 · 切口函数差 | 4856 | 0.2590 | 0.8766 | 0.8451 | 0.2509 | 0.8364 | 0.2500 |
 | LIPO_ADD_CUTRESP_R0 · 整分子差 | 4856 | 0.2365 | 0.9192 | 0.8556 | 0.2279 | 0.8995 | 0.2229 |
+| LIPO_DIRECT_CUTRESP_F25_R0 · 切口函数差 | 4856 | 0.4888 | 0.5453 | 0.6763 | 0.4194 | 0.5665 | 0.4155 |
+| LIPO_DIRECT_CUTRESP_F25_R0 · 整分子差 | 4856 | 0.4516 | 0.6058 | 0.6921 | 0.4006 | 0.5845 | 0.3978 |
+| LIPO_DIRECT_CUTRESP_F50_R0 · 切口函数差 | 4856 | 0.3269 | 0.7825 | 0.7858 | 0.2857 | 0.7788 | 0.2795 |
+| LIPO_DIRECT_CUTRESP_F50_R0 · 整分子差 | 4856 | 0.3319 | 0.7966 | 0.7924 | 0.3110 | 0.7727 | 0.3084 |
 | LIPO_DIRECT_CUTRESP_R0 · 切口函数差 | 4856 | 0.0904 | 0.9826 | 0.9283 | 0.0925 | 0.9688 | 0.0765 |
 | LIPO_DIRECT_CUTRESP_R0 · 整分子差 | 4856 | 0.1714 | 0.9582 | 0.8878 | 0.1790 | 0.9392 | 0.1686 |
 | LIPO_DIRECT_NONE_R0 · 切口函数差 | 4856 | 0.1800 | 0.9488 | 0.8756 | 0.1987 | 0.9152 | 0.1868 |
@@ -149,6 +164,10 @@ CPU/FP64 `all_ok = True`。
 |---|---|---|---|---|---|
 | LIPO_ADD_CUTRESP_R0 | delta_cut | 914 | 0.4111 | 0.7802 | 0.7932 |
 | LIPO_ADD_CUTRESP_R0 | delta_mol | 914 | 0.3693 | 0.8195 | 0.8118 |
+| LIPO_DIRECT_CUTRESP_F25_R0 | delta_cut | 914 | 0.6788 | 0.3461 | 0.5963 |
+| LIPO_DIRECT_CUTRESP_F25_R0 | delta_mol | 914 | 0.5973 | 0.4289 | 0.6171 |
+| LIPO_DIRECT_CUTRESP_F50_R0 | delta_cut | 914 | 0.4729 | 0.6735 | 0.7199 |
+| LIPO_DIRECT_CUTRESP_F50_R0 | delta_mol | 914 | 0.4578 | 0.6830 | 0.7407 |
 | LIPO_DIRECT_CUTRESP_R0 | delta_cut | 914 | 0.3892 | 0.7907 | 0.7648 |
 | LIPO_DIRECT_CUTRESP_R0 | delta_mol | 914 | 0.3680 | 0.8151 | 0.7954 |
 | LIPO_DIRECT_NONE_R0 | delta_cut | 914 | 0.4304 | 0.7651 | 0.7724 |
@@ -182,6 +201,8 @@ CPU/FP64 `all_ok = True`。
 | run | Train cut − mol | cut var (Train) | cut var (Valid) | cut RMSE (Train) | cut RMSE (Valid) | mol RMSE (Valid) |
 |---|---|---|---|---|---|---|
 | LIPO_ADD_CUTRESP_R0 | 0.1061 | 0.0371 | 0.1584 | 0.3641 | 0.9245 | 0.7276 |
+| LIPO_DIRECT_CUTRESP_F25_R0 | 0.1187 | 0.0420 | 0.2048 | 0.4052 | 1.1507 | 0.9940 |
+| LIPO_DIRECT_CUTRESP_F50_R0 | 0.0955 | 0.0222 | 0.1600 | 0.2830 | 1.0188 | 0.8370 |
 | LIPO_DIRECT_CUTRESP_R0 | 0.0738 | 0.0161 | 0.1199 | 0.2571 | 0.8963 | 0.7474 |
 | LIPO_DIRECT_NONE_R0 | 0.0647 | 0.0123 | 0.1252 | 0.2326 | 0.8780 | 0.7345 |
 | LIPO_FACTOR_CUTRESP_F25_R0 | 0.1068 | 0.0331 | 0.2013 | 0.3422 | 1.1189 | 0.9571 |
@@ -203,6 +224,10 @@ CPU/FP64 `all_ok = True`。
 |---|---|---|---|---|---|---|---|
 | LIPO_ADD_CUTRESP_R0 | all_held_out | 1 | 0.7562 | – | 0.0000 | 0.2300 | 0.0000 |
 | LIPO_ADD_CUTRESP_R0 | train_test_any_test | 2 | 0.7397 | – | 0.5000 | 0.5700 | 0.0000 |
+| LIPO_DIRECT_CUTRESP_F25_R0 | all_held_out | 1 | 0.0210 | – | 1.0000 | 0.3924 | 0.0000 |
+| LIPO_DIRECT_CUTRESP_F25_R0 | train_test_any_test | 2 | 0.4714 | – | 0.5000 | 0.7277 | 0.0000 |
+| LIPO_DIRECT_CUTRESP_F50_R0 | all_held_out | 1 | 0.4477 | – | 0.0000 | 0.6448 | 0.0000 |
+| LIPO_DIRECT_CUTRESP_F50_R0 | train_test_any_test | 2 | 0.4616 | – | 0.5000 | 0.3411 | 0.5000 |
 | LIPO_DIRECT_CUTRESP_R0 | all_held_out | 1 | 0.1354 | – | 1.0000 | 0.7591 | 0.0000 |
 | LIPO_DIRECT_CUTRESP_R0 | train_test_any_test | 2 | 0.3205 | – | 1.0000 | 0.5113 | 0.5000 |
 | LIPO_DIRECT_NONE_R0 | all_held_out | 1 | 0.4281 | – | 0.0000 | 0.3843 | 0.0000 |
@@ -239,24 +264,22 @@ ogbg-mollipo 小样本（嵌套 sha256 子集：25% ⊂ 50% ⊂ 100%，各臂共
 
 | run | arm | aux | train frac | Valid RMSE | Test RMSE | Train RMSE | best ep | params | wall min |
 |---|---|---|---|---|---|---|---|---|---|
+| LIPO_DIRECT_CUTRESP_F50_R0 | DIRECT | CUTRESP | 0.5 | 0.8370 | 0.8055 | 0.1875 | 112 | 155102 | 20.7 |
 | LIPO_FACTOR_CUTRESP_F50_R0 | FACTOR | CUTRESP | 0.5 | 0.8544 | 0.7854 | 0.2377 | 98 | 154983 | 5.9 |
 | LIPO_FACTOR_CUTRESP_F25_R0 | FACTOR | CUTRESP | 0.25 | 0.9571 | 0.9748 | 0.2354 | 97 | 154983 | 3.1 |
+| LIPO_DIRECT_CUTRESP_F25_R0 | DIRECT | CUTRESP | 0.25 | 0.9940 | 0.9591 | 0.2865 | 97 | 155102 | 10.8 |
 
 | arm/aux | train frac | Valid | Test | ΔValid vs 100% | ΔTest vs 100% |
 |---|---|---|---|---|---|
+| DIRECT/CUTRESP | 0.50 | 0.8370 | 0.8055 | 0.0895 | 0.1333 |
+| DIRECT/CUTRESP | 0.25 | 0.9940 | 0.9591 | 0.2466 | 0.2868 |
 | FACTOR/CUTRESP | 0.50 | 0.8544 | 0.7854 | 0.1448 | 0.0627 |
 | FACTOR/CUTRESP | 0.25 | 0.9571 | 0.9748 | 0.2476 | 0.2521 |
 
 读法：在相同训练分子数下比较不同臂，才是在问“哪一种接口表示更省样本”；不同臂的 100%→50%→25% 退化斜率可以直接对比，因为子集是同一批分子。
+
+事实：两种臂的退化斜率几乎一样（Valid 上 FACTOR +0.145/+0.248、DIRECT +0.090/+0.247），所以“更省样本”在两个臂之间没有差别；而 Valid/Test 的反转在 100%、50%、25% 三个数据量上都存在（50% 时 DIRECT 在 Valid 领先 0.017、FACTOR 在 Test 领先 0.020；25% 时 FACTOR 在 Valid 领先 0.037、DIRECT 在 Test 领先 0.016，但 25% 两边都接近训练集规模，绝对值已不可用于比较）。所以这个反转是划分的性质，不是样本量的性质。
 ## 9. 案例（每条由显式数值规则选出，非手工挑选）
-
-**composed** — both single molecules predicted well (top 40%), pair delta badly (top 10%), held-out only
-
-| cell | mol a (OGB id) | mol b | Δy/σ | Δf(C) | Δf(∅) | merge | err a | err b | pair err | repeats | label spread |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| cross | 3095 | 1729 | -1.907 | -0.203 | -0.760 | 0.556 | 2.036 | 0.361 | 2.063 |  | – |
-| cross | 1 | 1729 | 0.693 | 2.454 | 0.171 | 2.284 | 1.231 | 0.361 | 2.134 |  | – |
-| cross | 3679 | 1729 | 0.437 | 2.365 | 0.207 | 2.158 | 1.519 | 0.361 | 2.335 |  | – |
 
 **merge** — largest |delta_full - delta_isolated| on held-out pairs
 
@@ -266,20 +289,31 @@ ogbg-mollipo 小样本（嵌套 sha256 子集：25% ⊂ 50% ⊂ 100%，各臂共
 | cross | 1 | 807 | 3.302 | 3.355 | 0.892 | 2.463 | – | – | – |  | – |
 | cross | 1332 | 3107 | -1.626 | -2.439 | -0.036 | 2.402 | – | – | – |  | – |
 
-**pathological** — transform repeated >=3 times inside one cell with the largest label spread
-
-| cell | mol a (OGB id) | mol b | Δy/σ | Δf(C) | Δf(∅) | merge | err a | err b | pair err | repeats | label spread |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| train | 2549 | 3921 | -0.867 | -0.767 | 0.299 | 1.066 | – | – | – | 3 | 1.728 |
-| train | 761 | 15 | -0.371 | -0.452 | -0.074 | 0.379 | – | – | – | 10 | 1.383 |
-
 **redirect** — context flips the sign of the word's action
 
+| mol a | mol b | flip side | f(Sa|C) | f(Sa|∅) | f(Sb|C) | f(Sb|∅) | Δy/σ | merge | shift a | shift b |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1637 | 369 | a | 1.887 | -0.369 | -0.283 | -0.795 | -1.824 | 1.744 | 2.256 | 0.512 |
+| 169 | 3217 | a | 0.826 | -1.175 | 0.824 | -0.630 | 0.165 | 0.547 | 2.001 | 1.454 |
+| 969 | 3408 | a | 1.127 | -0.858 | 0.910 | -1.028 | -0.330 | 0.047 | 1.985 | 1.939 |
+
+**composed** — both single molecules predicted well (top 40%), pair delta badly (top 10%), held-out only（“预测得好”指 cross 单元内误差最小的 40%，该单元本身最难，所以绝对误差仍有 1–2 kcal/mol）
+
 | cell | mol a (OGB id) | mol b | Δy/σ | Δf(C) | Δf(∅) | merge | err a | err b | pair err | repeats | label spread |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| cross | 1637 | 369 | -1.824 | -2.170 | -0.426 | 1.744 | – | – | – |  | – |
-| cross | 1637 | 369 | -1.824 | -2.061 | -0.778 | 1.283 | – | – | – |  | – |
-| cross | 169 | 3217 | 0.165 | -0.002 | 0.545 | 0.547 | – | – | – |  | – |
+| cross | 3095 | 1729 | -1.907 | -0.203 | -0.760 | 0.556 | 2.036 | 0.361 | 2.063 |  | – |
+| cross | 1 | 1729 | 0.693 | 2.454 | 0.171 | 2.284 | 1.231 | 0.361 | 2.134 |  | – |
+| cross | 3679 | 1729 | 0.437 | 2.365 | 0.207 | 2.158 | 1.519 | 0.361 | 2.335 |  | – |
+
+**pathological** — transform repeated >=3 times inside one cell with the largest label spread
+
+| cell | repeats in cell | label spread σ | Δy/σ of every repeat | molecule pairs (OGB id) |
+|---|---|---|---|---|
+| train | 3 | 1.728 | [-0.8666656411653841, -1.40317304591952, 2.5009495116096923] | [[2549, 3921], [2384, 2945], [2583, 2548]] |
+| train | 10 | 1.383 | [-0.37142818815365447, 2.311108442037596, -0.6025390126784426, -0.016507901981076697, 2.6577747280222064, -0.45396789484875233, -0.28063453046801823, 2.022219960579039, 2.674282679200712, -0.49523753910722973] | [[761, 15], [53, 2023], [468, 154], [1680, 679], [2311, 690], [761, 3259], [1109, 2465], [1121, 2105], [1367, 2717], [2351, 2152]] |
+
+* 同 transform 的两个词：`[51*][1004*][5*]([3001*])[1002*][7*]1[1010*][10*][1010*][10*][1010*][10*][1010*][10*][1010*][10*][1010*]1` / `[18*][1001*][5*]([3001*])[1004*][51*]`
+* 同 transform 的两个词：`[57*][3001*]` / `[42*][3001*]`
 
 ## 10. 对三个问题的直接回答
 

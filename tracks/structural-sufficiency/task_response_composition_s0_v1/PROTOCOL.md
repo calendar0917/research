@@ -153,3 +153,17 @@ produces finite main/aux losses and real gradients on phi/E/q/r/heads.
    `predictions_final.npz` and `manifest.json`. All artefacts are complete and
    were used; the run is not repeated and its non-zero exit code is kept in the
    record.
+8. **2026-11-22T01:58 GPU check skips `renumber`.** The `renumber` sub-check
+   rebuilds a permutation of a real sub-pack, and the exact colour keys require
+   `rdkit`, which the compute venv does not have (deviation 1). It is therefore
+   run on CPU/FP64 only. The GPU/FP32 pass covers inputs, context identity,
+   port input, batching and one real training batch
+   (`analysis/checks.json` → `cuda`, `all_ok = true`). The shared-context feature
+   comparison uses `allclose(1e-5)` instead of bitwise equality on GPU, because
+   the two endpoints' context rows are summed in a different FP32 order;
+   the measured difference is 2.9e-06.
+9. **2026-11-22T02:05 no extra diagnostic unit was spent.** The frozen resource
+   stop did not trigger (the best FACTOR is 0.7096 < 0.76 and beats the matched
+   DIRECT by 0.038 on Valid), so queue B was not needed; the budget was used on
+   the ESOL quadrant and the 50%/25% small-sample units instead, which answer the
+   third question directly.
