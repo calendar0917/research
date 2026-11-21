@@ -15,6 +15,11 @@ import numpy as np
 import swf_common as C
 
 
+def _args_dict(args) -> dict:
+    """Arguments without the bound subcommand handler (not JSON serialisable)."""
+    return {k: v for k, v in vars(args).items() if k != "func"}
+
+
 def _ledger(name: str) -> C.Ledger:
     return C.Ledger(C.analysis_dir() / "resource_ledger.jsonl")
 
@@ -176,7 +181,7 @@ def cmd_train_prefix(args) -> int:
         "device": device,
         "environment": C.environment_snapshot(),
         "config": cfg,
-        "args": vars(args),
+        "args": _args_dict(args),
         "commit": C.git_commit(),
         "cache_stats": cache.sample_sizes(),
         "tf32": torch_info,
@@ -249,7 +254,7 @@ def cmd_train_branch(args) -> int:
         "device": device,
         "environment": C.environment_snapshot(),
         "config": cfg,
-        "args": vars(args),
+        "args": _args_dict(args),
         "commit": C.git_commit(),
         "cache_stats": cache.sample_sizes(),
         "branch_init": {k: init_info.get(k) for k in ("sha256", "state_hash", "prefix_ckpt", "prefix_sha256")},
@@ -292,7 +297,7 @@ def cmd_train_ref(args) -> int:
         "kind": "train",
         "device": device,
         "environment": C.environment_snapshot(),
-        "args": vars(args),
+        "args": _args_dict(args),
         "commit": C.git_commit(),
         "wall_seconds_total": wall,
         "gpu_hours": wall / 3600.0 if device.startswith("cuda") else 0.0,
