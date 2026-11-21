@@ -128,3 +128,28 @@ produces finite main/aux losses and real gradients on phi/E/q/r/heads.
 4. **2026-11-22T00:05 `res` GPU0 is shared** with an unrelated process already
    resident (22 GB, foreign PID). It is not touched; the second core unit runs
    concurrently on GPU0 as instructed and is correspondingly slower.
+5. **2026-11-22T00:57 common horizon raised to a conservative E=160.** The first
+   pair relaunch wrote `analysis/timing.json` automatically; the FACTOR unit
+   recorded `240` from its own 4.2 s/epoch and the DIRECT unit recorded `240`
+   from a transient epoch-3..5 median of 9.88 s. The settled epoch time of the
+   DIRECT unit is 14.9 s, i.e. `240 x 1.25 x 14.9 s = 74.5 min > 50 min`, so the
+   frozen rule gives `E=160`. The horizon was set to 160 for **every** unit
+   before any label of any relaunched unit was read; the settled measurement and
+   the override are recorded in `analysis/timing.json`. The DIRECT cost was later
+   diagnosed as its own parse-level evaluation (33438 parses x 3 splits), not
+   card contention: the GINE reference ran on the same contended card at
+   1.6 s/epoch.
+6. **2026-11-22T01:11 queue execution.** Units after the core pair are executed as
+   two **sequential chains** (`code/trc_chain.sh`), one per physical card, each
+   started by a single `rr run` (`trc-chain-gpu1`, `trc-chain-gpu0`). Every unit
+   still gets its own `results/<run_id>/` directory, its own manifest, its own
+   identical recipe and the same frozen commit; the one-process-per-card rule and
+   the GPU-hour accounting (wall time x 1 card) are unchanged. The chains exist
+   because the agent cannot poll a scheduler faster than units finish, and
+   idle cards were the largest scheduling loss in the first hour.
+7. **2026-11-22T00:18 GINE reference log-line bug.** `trc_reference.py` crashed
+   in its final log statement (`KeyError: test_rmse`) *after* writing
+   `curves.csv`, `state_best.pt`, `predictions_best.npz`,
+   `predictions_final.npz` and `manifest.json`. All artefacts are complete and
+   were used; the run is not repeated and its non-zero exit code is kept in the
+   record.

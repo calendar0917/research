@@ -167,8 +167,15 @@ def structure_freeze(pack, cfg) -> dict[str, Any]:
         }
     counts = np.asarray(pack["frag_counts"])
     out["distance_bucket_totals"] = counts.sum(0).tolist()
-    out["fragment_atoms_hist"] = np.bincount(np.asarray(pack["frag_natoms"]), minlength=12)[:12].tolist()
-    out["fragment_components_hist"] = np.bincount(np.asarray(pack["frag_ncomp"]), minlength=4)[:4].tolist()
+    natoms = np.asarray(pack["frag_natoms"])
+    out["fragment_atoms_hist"] = np.bincount(natoms, minlength=60)[:60].tolist()
+    out["fragment_atoms_hist_words"] = np.bincount(natoms[natoms <= 8],
+                                                   minlength=9)[:9].tolist()
+    out["fragment_atoms_quantiles"] = {
+        "p50": float(np.percentile(natoms, 50)), "p90": float(np.percentile(natoms, 90)),
+        "max": int(natoms.max()), "mean": float(natoms.mean())}
+    out["fragment_components_hist"] = np.bincount(
+        np.asarray(pack["frag_ncomp"]), minlength=8)[:8].tolist()
     return out
 
 
@@ -209,6 +216,20 @@ def support_report(pack, cfg, labels) -> dict[str, Any]:
         out["max_pairs_per_cell_transform"] = int(max((len(v) for v in dup.values()), default=0))
         out["repeat_unit_label_delta_abs_mean"] = float(np.mean(
             [np.mean([abs(dy[i]) for i in v]) for v in multi])) if multi else 0.0
+        out["label_delta_abs_mean_all_units"] = float(np.mean(np.abs(dy)))
+        held = cell != 0
+        supported = np.asarray([t in train_t for t in transform.tolist()])
+        out["support"] = {
+            "n_supported": int(supported.sum()),
+            "n_held_out_supported": int((supported & held).sum()),
+            "coverage_total": float(supported.mean()),
+            "coverage_held_out": float(supported[held].mean()) if held.any() else 0.0,
+        }
+        repeat_t = {int(t) for t, g in store.transform_groups.items() if len(g) >= 2}
+        out["repeat_subset"] = {
+            "n_pairs": int(np.isin(transform, list(repeat_t)).sum()) if repeat_t else 0,
+            "n_repeat_transforms": len(repeat_t),
+        }
     return out
 
 
@@ -670,10 +691,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     labels = np.asarray(pack["labels"], float)
     C.write_json(out_dir / "structure_freeze.json", structure_freeze(pack, cfg))
     C.write_json(out_dir / "support.json", support_report(pack, cfg, labels))
+    pack_esol = P.load_pack(cfg, "esol")
+    labels_esol = np.asarray(pack_esol["labels"], float)
+    C.write_json(out_dir / "structure_freeze_esol.json", structure_freeze(pack_esol, cfg))
+    C.write_json(out_dir / "support_esol.json",
+                 support_report(pack_esol, cfg, labels_esol))
 
     # bootstrap comparisons against the paired controls
     cmp_out: dict[str, Any] = {}
-    preds = {rid: predictions(rid, "best") for rid in lipo_runs}
+    preds = {rid: predictions(rid, "best") for rid in runs}
     pairs_to_compare = [
         ("LIPO_DIRECT_NONE_R0", "LIPO_FACTOR_NONE_R0"),
         ("LIPO_DIRECT_CUTRESP_R0", "LIPO_FACTOR_CUTRESP_R0"),
@@ -682,6 +708,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         ("LIPO_FACTOR_MOLPAIR_R0", "LIPO_FACTOR_CUTRESP_R0"),
         ("LIPO_ADD_CUTRESP_R0", "LIPO_FACTOR_CUTRESP_R0"),
         ("LIPO_GLOBAL_NONE_R0", "LIPO_FACTOR_NONE_R0"),
+        ("GINE_RAW_LIPO_R0", "LIPO_FACTOR_CUTRESP_R0"),
+        ("GINE_RAW_LIPO_R0", "LIPO_DIRECT_CUTRESP_R0"),
+        ("GINE_RAW_LIPO_R0", "LIPO_FACTOR_NONE_R0"),
+        ("GINE_RAW_LIPO_R0", "LIPO_GLOBAL_NONE_R0"),
+        ("GINE_RAW_ESOL_R0", "ESOL_FACTOR_CUTRESP_R0"),
+        ("GINE_RAW_ESOL_R0", "ESOL_DIRECT_CUTRESP_R0"),
+        ("GINE_RAW_ESOL_R0", "ESOL_GLOBAL_NONE_R0"),
+        ("GINE_RAW_ESOL_R0", "ESOL_FACTOR_NONE_R0"),
     ]
     for control, cand in pairs_to_compare:
         if control in preds and cand in preds and preds[control] is not None and preds[cand] is not None:
