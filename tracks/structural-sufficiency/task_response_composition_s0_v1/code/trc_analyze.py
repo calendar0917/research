@@ -332,6 +332,7 @@ def response_metrics(pack, cfg, labels, models: Mapping[str, Any]):
 
     masks = {
         "all": np.ones(cell.size, bool),
+        "unsupported": ~supported,
         "train_supported": supported,
         "train_supported_strict": strict_supported,
         "repeat_transform": repeat,
@@ -391,7 +392,11 @@ def response_metrics(pack, cfg, labels, models: Mapping[str, Any]):
                 "n_groups": len(gkeys), "mae": float(np.mean(vals)),
                 "lo": float(np.percentile(vals, 2.5)), "hi": float(np.percentile(vals, 97.5)),
             }
-    deltas = out.pop("models")
+    deltas = {}
+    for rid, entry in out["models"].items():
+        deltas[rid] = {"arm": entry["arm"], "delta_mol": entry.pop("delta_mol")}
+        if "delta_cut" in entry:
+            deltas[rid]["delta_cut"] = entry.pop("delta_cut")
     return out, deltas
 
 
@@ -548,6 +553,33 @@ def consistency(runs: Mapping[str, dict]) -> dict[str, Any]:
     return out
 
 
+def split_gap(runs: Mapping[str, dict]) -> dict[str, Any]:
+    """Diagnostic only: how much the reported best-Valid checkpoint costs on Test.
+
+    Reported for every run so a Valid/Test reversal can be read directly; the
+    protocol checkpoint stays the best-Valid one.
+    """
+    out: dict[str, Any] = {}
+    for run_id, run in runs.items():
+        rows = run["curves"]
+        bv = min(rows, key=lambda r: r["valid_rmse"])
+        bt = min(rows, key=lambda r: r["test_rmse"])
+        stab = [r for r in reversed(rows) if r["epoch"] >= 0.75 * rows[-1]["epoch"]]
+        out[run_id] = {
+            "best_valid": {"epoch": int(bv["epoch"]), "valid": bv["valid_rmse"],
+                           "test": bv["test_rmse"]},
+            "best_test": {"epoch": int(bt["epoch"]), "valid": bt["valid_rmse"],
+                          "test": bt["test_rmse"]},
+            "valid_test_gap_at_best_valid": bv["test_rmse"] - bv["valid_rmse"],
+            "cost_of_valid_selection": bt["test_rmse"] - bv["test_rmse"],
+            "tail_median": {
+                "valid": float(np.median([r["valid_rmse"] for r in stab])) if stab else None,
+                "test": float(np.median([r["test_rmse"] for r in stab])) if stab else None,
+            },
+        }
+    return out
+
+
 def judgement(table: Mapping[str, Any], fact: Mapping[str, Any],
               resp: Mapping[str, Any], cross: Mapping[str, Any],
               esol: Mapping[str, Any]) -> dict[str, Any]:
@@ -665,6 +697,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     C.write_json(out_dir / "factorial.json", fact)
     cons = consistency(lipo_runs)
     C.write_json(out_dir / "consistency.json", cons)
+    C.write_json(out_dir / "split_gap.json", split_gap(runs))
 
     resp: dict[str, Any] = {}
     cross: dict[str, Any] = {}
