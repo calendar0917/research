@@ -332,6 +332,63 @@ def intervention(*, device: str = "cpu") -> dict[str, Any]:
     return out
 
 
+def composition_scale(*, device: str = "cpu") -> dict[str, Any]:
+    """How much of the prediction actually comes from the composition branch?
+
+    Descriptive only: it reads the trained FULL weights and decomposes the
+    prediction into ``y_bag`` and the residual ``delta`` produced by the
+    sentence/relation path.  A ~zero ``delta`` means the composition branch is
+    dormant at this pilot, whatever the architecture claims.
+    """
+    import torch
+
+    import swf_cache as K
+    import swf_model as M
+    import swf_train as T
+
+    cfg = C.load_config()
+    run_dir = C.results_root() / "lipo_FULL_s0"
+    state = run_dir / "state_best.pt"
+    if not state.is_file():
+        return {"available": False, "reason": "FULL state_best.pt missing"}
+    cache = K.Cache(need_sentences=True)
+    model = M.build_model(cfg)
+    M.apply_train_support(model, cache.stats)
+    M.bind_constants(model, cache.stats)
+    model.load_state_dict(torch.load(state, map_location="cpu"))
+    model = model.to(device).eval()
+    out: dict[str, Any] = {"available": True, "state_sha256": C.sha256_file(state), "splits": {}}
+    with torch.no_grad():
+        for split in C.SPLITS:
+            rows = cache.split_rows[split]
+            parts_g: list[np.ndarray] = []
+            parts_d: list[np.ndarray] = []
+            for start in range(0, rows.size, int(cfg["recipe"]["eval_batch"])):
+                chunk = rows[start:start + int(cfg["recipe"]["eval_batch"])]
+                b = T.to_tensors(cache.pack(chunk, sentences=True), device, torch.float32)
+                _, parts = model(b, "full", return_parts=True)
+                parts_g.append(parts["y_bag"].detach().cpu().numpy())
+                parts_d.append(parts["delta"].detach().cpu().numpy())
+            y_bag = np.concatenate(parts_g).astype(np.float64)
+            delta = np.concatenate(parts_d).astype(np.float64)
+            std = float(cache.scaler["std"])
+            truth = cache.labels[rows].astype(np.float64)
+            y_bag_raw = y_bag * std + float(cache.scaler["mean"])
+            delta_raw = delta * std
+            out["splits"][split] = {
+                "rms_delta_raw": float(np.sqrt(np.mean(delta_raw ** 2))),
+                "rms_y_bag_raw": float(np.sqrt(np.mean(y_bag_raw ** 2))),
+                "max_abs_delta_raw": float(np.abs(delta_raw).max()),
+                "n": int(rows.size),
+                "ratio_delta_over_bag": float(
+                    np.sqrt(np.mean(delta_raw ** 2)) / max(1e-12, np.sqrt(np.mean(y_bag_raw ** 2)))
+                ),
+                "rmse_full": C.rmse(y_bag_raw + delta_raw, truth),
+                "rmse_bag_only": C.rmse(y_bag_raw, truth),
+            }
+    return out
+
+
 # ---------------------------------------------------------------------------
 # structural cases (section 12.4)
 # ---------------------------------------------------------------------------
@@ -453,10 +510,13 @@ def summarize(*, write: bool = True) -> dict[str, Any]:
             stats = {"available": False, "error": repr(exc)}
         C.write_json(C.analysis_dir() / "structure_stats.json", stats)
         out["structure_stats"] = {"available": isinstance(stats, dict) and "n_covers" in stats}
-        if status.get("status") in ("RUN_EARLY_POOL_AND_FLAT_CONTEXT", "RUN_FLAT_CONTEXT_ONLY") or _has_conditionals():
+        # Fixed-weight / uncertainty analyses are descriptive and are required by
+        # the protocol whatever the verdict; only *training* new arms is gated.
+        if True:
             conditional: dict[str, Any] = {}
             for name, fn in (("paired_bootstrap", paired_bootstrap),
                              ("intervention", intervention),
+                             ("composition_scale", composition_scale),
                              ("structure_cases", structure_cases)):
                 try:
                     conditional[name] = fn()
