@@ -1,0 +1,88 @@
+{
+  "protocol_id": "word-response-operator-s0-v1",
+  "version": "2026-11-21/s0",
+  "dataset": "ogbg-mollipo",
+  "reference_commit": "09455737",
+  "old_round": "tracks/structural-sufficiency/word_sentence_port_route_v1",
+  "split": {
+    "hash_tag": "word-op-s0|",
+    "hash_modulus": 5,
+    "hash_remainder": 0,
+    "h_min_molecules": 50,
+    "h_max_molecules": 840,
+    "min_evaluable_pairs": 40,
+    "min_h_components": 10,
+    "min_transforms": 8,
+    "min_fit_transform_components": 2
+  },
+  "operator": {
+    "channels": 4,
+    "atom_embed_dim": 4,
+    "bond_embed_dim": 4,
+    "hidden": 32,
+    "df_smoothing": 20.0,
+    "pair_bias_init": -3.0,
+    "theta_psi_init_std": 0.02,
+    "alpha_init": [0.1, -0.1, 0.1, -0.1],
+    "jitter": 1e-06
+  },
+  "recipe": {
+    "seed": 0,
+    "batch": 64,
+    "peak_lr": 0.002,
+    "weight_decay": 0.0001,
+    "warmup_epochs": 5,
+    "min_lr": 2e-05,
+    "clip": 5.0,
+    "epochs_default": 160,
+    "epochs_short": 80,
+    "batch_order_seed": 20261121,
+    "eval_batch": 256,
+    "loss_beta": 1.0,
+    "loss_word": 0.001,
+    "loss_alpha": 0.0001,
+    "timing_warm_epochs": 2,
+    "timing_epochs": 3,
+    "timing_safety": 1.25,
+    "epoch_budget_minutes": 18.0
+  },
+  "decisions": {
+    "delta_std_factor": 0.015,
+    "band_std_factor": 0.05
+  },
+  "add_word": {
+    "ridge_lambda": 1.0
+  },
+  "fp_krr": {
+    "radius": 2,
+    "n_bits": 2048,
+    "use_chirality": true,
+    "alpha": 0.01
+  },
+  "gine_raw": {
+    "hidden": 128,
+    "layers": 5,
+    "batch": 128,
+    "peak_lr": 0.001,
+    "weight_decay": 1e-05,
+    "warmup_epochs": 5,
+    "min_lr": 2e-05,
+    "epochs": 240,
+    "clip": 5.0
+  },
+  "budget": {
+    "t0_local": "2026-11-21T13:14:52+08:00",
+    "hard_wall_hours": 4.0,
+    "gpu_hours_cap": 4.0,
+    "stop_launching_after_hours": 3.0,
+    "stop_training_after_hours": 3.3333,
+    "max_formal_units": 7,
+    "gpu_pools": ["res-gpu0", "res-gpu1"]
+  },
+  "allowlist": {
+    "seeds": [0],
+    "arms": ["FULL_WORD_OP", "LOCAL_WORD_OP", "ATOMIC_OP_CAP", "GINE_RAW_REF",
+             "PORT_DIAG_WORD_OP"],
+    "datasets": ["ogbg-mollipo"]
+  }
+}
