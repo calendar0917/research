@@ -1,0 +1,15 @@
+{
+  "horizon_epochs": 160,
+  "rule": "slower of the first pair: 240 x 1.25 x 14.9s = 74.5 min > 50 min, 160 x 1.25 x 14.9s = 49.7 min <= 50 min -> E=160",
+  "safety_factor": 1.25,
+  "threshold_minutes": 50.0,
+  "basis": "epoch 3-5 steady-state epoch time including the three-split evaluation, measured 2026-11-22 00:06-00:08 on res",
+  "observed_epoch_seconds": {
+    "LIPO_FACTOR_CUTRESP_R0": {"median": 4.2, "gpu": "res-gpu1"},
+    "LIPO_DIRECT_CUTRESP_R0": {"median": 14.9, "gpu": "res-gpu0 (shared with a foreign 22GB process)"}
+  },
+  "estimate_240_minutes": 74.5,
+  "estimate_160_minutes": 49.7,
+  "note": "epochs 1-5 are horizon independent (linear warmup), so the runs were relaunched at the common E=160 without discarding any warmup recipe; labels were not used to choose the horizon",
+  "decided_at": "2026-11-22T00:57:00+08:00"
+}

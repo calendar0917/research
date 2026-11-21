@@ -81,7 +81,7 @@ def load_raw_cache(cfg: Mapping[str, Any], dataset: str) -> dict[str, Any]:
     expected = str(cfg["raw_cache_sha256"] if dataset == "lipo" else cfg["raw_cache_esol_sha256"])
     if digest != expected:
         raise ValueError(f"raw cache sha256 mismatch: {digest} != {expected}")
-    prefix = "" if dataset == "lipo" else "esol_"
+    prefix = ""
     with np.load(path, allow_pickle=False) as handle:
         payload = {key2: handle[key2] for key2 in handle.files}
     out: dict[str, Any] = {}
