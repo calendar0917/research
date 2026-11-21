@@ -100,3 +100,31 @@ produces finite main/aux losses and real gradients on phi/E/q/r/heads.
 ## Deviations log
 
 (appended during execution; each entry needs a reason)
+
+## Deviations log (appended during execution)
+
+1. **2026-11-21T23:50 environment.** `rdkit` is not present in the `res`
+   virtualenv (`uv sync --frozen` installs default groups only; rdkit lives in
+   the optional `lipo` group). Preparation is CPU data work, so the prepared
+   caches are built **locally** (where rdkit exists) and transferred with
+   `rsync` to the compute checkout. All experiment execution still goes through
+   `rr`. `analysis/timing.json` records the remote epochs; `data/` is
+   gitignored on both sides.
+2. **2026-11-21T23:56 engineering rerun #1 (invalid runs discarded).** The
+   first `LIPO_FACTOR_CUTRESP_R0` / `LIPO_DIRECT_CUTRESP_R0` launches were
+   cancelled at epochs 78 / 24: `C` was being set to the *other side of the cut*
+   instead of `V(G) \ S`, which silently dropped other connected components of
+   multi-component molecules (one molecule). Fixed in `trc_data.cut_parses`;
+   cache rebuilt; both units restarted from the common initial state. The
+   invalid runs are kept in `results/LIPO_*_R0_invalid_2026-11-21/` and are not
+   reported as results.
+3. **2026-11-22T00:20 engineering rerun #2 (same restarts).** Phase-2 CSR
+   assembly indexed `obj_frame_id` by object index instead of by
+   `obj_frame_offset`, which lost the multiplicity of multi-frame rooted
+   objects and attached wrong frames to a minority of fragments (76/29283).
+   Fixed; cache rebuilt (`sha256 c53fee5d...`). Because (2) and (3) are both
+   correctness defects found before any reported result, they are treated as a
+   single repair cycle of the two affected units.
+4. **2026-11-22T00:05 `res` GPU0 is shared** with an unrelated process already
+   resident (22 GB, foreign PID). It is not touched; the second core unit runs
+   concurrently on GPU0 as instructed and is correspondingly slower.

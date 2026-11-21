@@ -280,10 +280,11 @@ class ResponseModel(nn.Module):
                             device=phi.device, dtype=phi.dtype)
         sum_d.index_add_(0, slot, phi[frame] * weight[:, None])
         sum_d = sum_d.view(n, C.N_BUCKETS, -1)
-        natoms = self.frag_natoms[ids].float()
-        nbonds = self.frag_nbonds[ids].float()
-        ncomp = self.frag_ncomp[ids].float()
-        counts = self.frag_counts[ids].float()
+        dt = phi.dtype
+        natoms = self.frag_natoms[ids].to(dt)
+        nbonds = self.frag_nbonds[ids].to(dt)
+        ncomp = self.frag_ncomp[ids].to(dt)
+        counts = self.frag_counts[ids].to(dt)
         if erase_distance:
             total = sum_d.sum(dim=1, keepdim=True)
             n_total = counts.sum(dim=1, keepdim=True)
@@ -357,13 +358,15 @@ class ResponseModel(nn.Module):
         n_parse = int(frag_s.numel())
         h_s = h[inv[:n_parse]]
         h_c = (self.h_empty[None, :].repeat(n_parse, 1) if self.arm in ("FACTOR", "DIRECT")
-               else torch.zeros(n_parse, self.hidden, device=rows.device))
+               else torch.zeros(n_parse, self.hidden, device=rows.device,
+                                dtype=h_s.dtype))
         if bool(has_c.any()):
             h_c = h_c.index_copy(0, torch.nonzero(has_c).squeeze(-1), h[inv[n_parse:]])
         e = self._cut_embedding(self.parse_cut_bond_row[pidx])
         f = self.cut_scores(h_c, h_s, e, has_c)
         owner = torch.repeat_interleave(torch.arange(rows.numel(), device=rows.device), counts)
-        f_bar = torch.zeros(rows.numel(), device=rows.device).index_add_(0, owner, f)
+        f_bar = torch.zeros(rows.numel(), device=rows.device, dtype=f.dtype).index_add_(
+            0, owner, f)
         f_bar = f_bar / counts.float().clamp(min=1.0)
         return {"f_cut": f, "f_bar": f_bar, "owner": owner, "counts": counts}
 
@@ -379,13 +382,14 @@ class ResponseModel(nn.Module):
         sum_d = torch.zeros((n * nb, phi.shape[1]), device=phi.device, dtype=phi.dtype)
         sum_d.index_add_(0, slot, phi[frame] * weight[:, None])
         sum_d = sum_d.view(n, nb, -1)
-        cnt = self.mol_counts[rows].float()[:, :, None]
-        natoms = self.mol_meta[rows][:, 0].float().view(-1, 1, 1)
+        dt = phi.dtype
+        cnt = self.mol_counts[rows].to(dt)[:, :, None]
+        natoms = self.mol_meta[rows][:, 0].to(dt).view(-1, 1, 1)
         mean = sum_d / cnt.clamp(min=1.0)
         share = sum_d / natoms.clamp(min=1.0)
         logc = torch.log1p(cnt.squeeze(-1))
         feat = torch.cat([mean, share, logc[:, :, None]], dim=-1).reshape(n, -1)
-        meta = self.mol_meta[rows].float()
+        meta = self.mol_meta[rows].to(dt)
         tail = torch.stack([torch.log1p(meta[:, 0]), torch.log1p(meta[:, 1]),
                             torch.log1p(meta[:, 2])], dim=-1)
         return self.global_head(torch.cat([feat, tail], dim=-1)).squeeze(-1)

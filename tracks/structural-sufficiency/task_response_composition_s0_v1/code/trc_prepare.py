@@ -180,14 +180,18 @@ def _component_count(n_atoms: int, local_bonds: Sequence[tuple[int, int, Any]]) 
 # ---------------------------------------------------------------------------
 
 
-def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print) -> dict[str, Any]:
+def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print,
+                  rows: Sequence[int] | None = None,
+                  perms: Mapping[int, Sequence[int]] | None = None) -> dict[str, Any]:
     t_start = time.perf_counter()
     raw = D.load_raw_cache(cfg, dataset)
-    n_mol = int(raw["row_ids"].size)
+    all_rows = ([int(r) for r in rows] if rows is not None
+                else list(range(int(raw["row_ids"].size))))
+    n_mol = len(all_rows)
     max_side = int(cfg["cuts"]["max_side_atoms"])
     max_k = int(cfg["cuts"]["max_object_atoms"])
 
-    colors = D.ColorSpace()
+    colors = D.ColorSpace.from_raw(raw)
     atoms_table = _AttrTable(C.ATOM_COLUMNS)
     bonds_table = _AttrTable(C.BOND_COLUMNS)
     luts = D.build_luts(max_k)
@@ -212,7 +216,9 @@ def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print) -> dict[str, 
 
     t0 = time.perf_counter()
     for row in range(n_mol):
-        mol = D.raw_molecule(raw, row)
+        mol = D.raw_molecule(raw, all_rows[row])
+        if perms is not None:
+            mol = mol.permute(perms[all_rows[row]])
         adj = mol.adjacency_lists()
         bindex = mol.bond_index()
         atom_row = np.asarray([atoms_table.index_of(x) for x in mol.atom_feat], np.int32)
@@ -294,7 +300,8 @@ def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print) -> dict[str, 
         b_exp = np.repeat(sizes - 1, obj_counts)
         starts = np.cumsum(obj_counts) - obj_counts
         local = np.arange(total, dtype=np.int64) - np.repeat(starts, obj_counts)
-        fids = uni.obj_frame_id[np.repeat(np.arange(uni.obj_atoms.shape[0]), obj_counts) + local]
+        base = np.repeat(fptr[:-1], obj_counts)
+        fids = uni.obj_frame_id[base + local]
         w = 1.0 / np.repeat(obj_counts, obj_counts).astype(np.float64)
         if total:
             code = b_exp.astype(np.int64) * (len(frames.k) + 1) + fids
@@ -310,7 +317,7 @@ def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print) -> dict[str, 
         mol_ptr[row + 1] = b_out.size
         mol_meta[row, 0] = uni.n_atoms
         mol_meta[row, 1] = int((uni.bond_row >= 0).sum() // 2)
-        mol_meta[row, 2] = int(np.asarray(raw["graph_n_components"])[row])
+        mol_meta[row, 2] = int(np.asarray(raw["graph_n_components"])[all_rows[row]])
     mol_ptr = np.concatenate([[0], np.cumsum(mol_ptr[1:])]).astype(np.int64)
     log(f"  molecule csr {time.perf_counter() - t0:.1f}s nnz={mol_ptr[-1]}")
 
@@ -360,7 +367,8 @@ def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print) -> dict[str, 
             b_exp = np.repeat(buckets, counts) if total else np.zeros(0, np.uint8)
             starts = np.cumsum(counts) - counts
             local = np.arange(total, dtype=np.int64) - np.repeat(starts, counts) if total else np.zeros(0, np.int64)
-            fids = uni.obj_frame_id[np.repeat(obj_keep, counts) + local] if total else np.zeros(0, np.int32)
+            fids = (uni.obj_frame_id[np.repeat(fptr[obj_keep], counts) + local]
+                    if total else np.zeros(0, np.int32))
             nfr = uni.obj_n_frames[obj_keep]
             w = 1.0 / np.repeat(nfr, counts).astype(np.float64) if total else np.zeros(0)
             if total:
@@ -440,12 +448,15 @@ def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print) -> dict[str, 
         "frag_port": frag_port,
         "atom_table": atoms_table.matrix(),
         "bond_table": bonds_table.matrix(),
-        "row_ids": np.asarray(raw["row_ids"], np.int64),
-        "labels": np.asarray(raw["labels"], np.float64),
-        "train_idx": np.asarray(raw["train_idx"], np.int64),
-        "valid_idx": np.asarray(raw["valid_idx"], np.int64),
-        "test_idx": np.asarray(raw["test_idx"], np.int64),
-        "graph_n_components": np.asarray(raw["graph_n_components"], np.int32),
+        "row_ids": np.asarray(raw["row_ids"], np.int64)[np.asarray(all_rows, np.int64)],
+        "labels": np.asarray(raw["labels"], np.float64)[np.asarray(all_rows, np.int64)],
+        "train_idx": (np.arange(n_mol, dtype=np.int64) if rows is not None
+                      else np.asarray(raw["train_idx"], np.int64)),
+        "valid_idx": (np.zeros(0, np.int64) if rows is not None
+                      else np.asarray(raw["valid_idx"], np.int64)),
+        "test_idx": (np.zeros(0, np.int64) if rows is not None
+                     else np.asarray(raw["test_idx"], np.int64)),
+        "graph_n_components": np.asarray(raw["graph_n_components"], np.int32)[np.asarray(all_rows, np.int64)],
         "mol_ptr": mol_ptr.astype(np.int64),
         "mol_bucket": np.concatenate(mol_bucket_parts) if mol_bucket_parts else np.zeros(0, np.uint8),
         "mol_frame": np.concatenate(mol_frame_parts) if mol_frame_parts else np.zeros(0, np.int32),
@@ -457,7 +468,10 @@ def build_dataset(cfg: Mapping[str, Any], dataset: str, log=print) -> dict[str, 
 
     # ---- replacement directory ------------------------------------------
     t0 = time.perf_counter()
-    pairs, pair_stats = build_pairs(cfg, out)
+    if rows is None:
+        pairs, pair_stats = build_pairs(cfg, out)
+    else:
+        pairs, pair_stats = _empty_pairs(n_mol), {"n_pairs": 0, "n_transforms": 0}
     out.update(pairs)
     t_pairs = time.perf_counter() - t0
     log(f"  pairs {t_pairs:.1f}s: {pair_stats['n_pairs']} pairs, "
@@ -629,6 +643,19 @@ def build_pairs(cfg: Mapping[str, Any], pack: Mapping[str, Any]) -> tuple[dict[s
         "n_molecules_in_train_pairs": int(len(train_mols)),
     }
     return pack_out, stats
+
+
+def _empty_pairs(n_mol: int) -> dict[str, np.ndarray]:
+    z32 = np.zeros(0, np.int32)
+    return {
+        "pair_mol_a": z32, "pair_mol_b": z32, "pair_C": z32, "pair_Sa": z32,
+        "pair_Sb": z32, "pair_cut_bond_row": z32, "pair_transform": z32,
+        "pair_cell": np.zeros(0, np.uint8),
+        "transform_word_a": z32, "transform_word_b": z32, "transform_bond_row": z32,
+        "molecule_split": np.full(n_mol, CELL_CROSS, np.uint8),
+        "molecule_component": np.arange(n_mol, dtype=np.int32),
+        "pair_component": z32,
+    }
 
 
 def hash_transform(wa: int, wb: int, bond: int) -> int:

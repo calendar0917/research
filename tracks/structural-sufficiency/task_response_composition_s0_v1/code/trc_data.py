@@ -197,9 +197,13 @@ def cut_parses(mol: Molecule, adj: Sequence[Sequence[int]], max_side: int = 8) -
         comp = connected_components(adj, mol.n_atoms, banned=(u, v))
         side_u = tuple(i for i in range(mol.n_atoms) if comp[i] == comp[u])
         side_v = tuple(i for i in range(mol.n_atoms) if comp[i] == comp[v])
+        # C is *all* of V(G) minus S: other salt components stay in the
+        # environment (they are unreachable from the port, never dropped).
+        rest_u = tuple(i for i in range(mol.n_atoms) if comp[i] != comp[u])
+        rest_v = tuple(i for i in range(mol.n_atoms) if comp[i] != comp[v])
         for atoms_s, port_s, atoms_c, port_c in (
-            (side_u, u, side_v, v),
-            (side_v, v, side_u, u),
+            (side_u, u, rest_u, v),
+            (side_v, v, rest_v, u),
         ):
             if not (1 <= len(atoms_s) <= max_side):
                 continue
@@ -409,6 +413,20 @@ class ColorSpace:
                 raise ValueError("bond colour range exhausted")
             self.bond_color[key] = got
         return got
+
+    @classmethod
+    def from_raw(cls, raw: Mapping[str, Any]) -> "ColorSpace":
+        """Colours assigned in sorted order of the raw attribute tuples.
+
+        The numbering then depends only on the input fields, so a key is a
+        stable, build-order independent identifier for the whole dataset.
+        """
+        space = cls()
+        for row in np.unique(np.asarray(raw["atom_feat"]), axis=0):
+            space.atom(row)
+        for row in np.unique(np.asarray(raw["bond_feat"]), axis=0):
+            space.bond(row)
+        return space
 
     def atom_table(self) -> np.ndarray:
         return (np.frombuffer(b"".join(self.atom_color), np.uint8)
