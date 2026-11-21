@@ -187,6 +187,12 @@ def cmd_train(args) -> None:
         raise SystemExit(f"epochs {epochs} is not one of the frozen horizons")
     data = T.load_all()
     hidden = int(args.hidden or cfg["operator"]["hidden"])
+    if arm == "ATOMIC_OP_CAP":
+        frozen_width = C.read_json(C.analysis_dir() / "width_selection.json")["selected_width"]
+        if args.hidden is None:
+            hidden = int(frozen_width)
+        elif int(args.hidden) != int(frozen_width):
+            raise SystemExit(f"ATOMIC width is frozen at {frozen_width}")
     deadline = _deadline() if args.respect_deadline else None
     t0 = time.perf_counter()
     result = T.train_arm(data, arm, epochs, args.device, hidden=hidden, deadline=deadline)
@@ -283,12 +289,17 @@ def _deadline() -> float | None:
 # ---------------------------------------------------------------------------
 
 
+def _run_path(arm: str) -> Path:
+    for name in (f"lipo_{arm}_s0", f"lipo_{arm}"):
+        path = C.results_root() / name
+        if path.is_dir():
+            return path
+    return C.results_root() / f"lipo_{arm}"
+
+
 def _load_run(arm: str) -> dict[str, Any] | None:
-    for suffix in ("",):
-        path = C.results_root() / f"lipo_{arm}{suffix}" / "run.json"
-        if path.is_file():
-            return C.read_json(path)
-    return None
+    path = _run_path(arm) / "run.json"
+    return C.read_json(path) if path.is_file() else None
 
 
 def main_table() -> dict[str, Any]:
@@ -380,8 +391,8 @@ def cmd_candidates(args) -> None:
     rows = []
     for arm in ("FULL_WORD_OP", "LOCAL_WORD_OP", "ATOMIC_OP_CAP", "GINE_RAW_REF",
                 "ADD_WORD", "FP_KRR"):
-        path = C.results_root() / f"lipo_{arm}" / "best.pt"
-        preds = C.results_root() / f"lipo_{arm}" / "predictions_best.npz"
+        path = _run_path(arm) / "best.pt"
+        preds = _run_path(arm) / "predictions_best.npz"
         rows.append({"arm": arm,
                      "weight": str(path.relative_to(C.ROUND_DIR)) if path.is_file() else None,
                      "weight_sha256": C.sha256_file(path) if path.is_file() else None,
@@ -400,7 +411,7 @@ def _predict(arm: str, split_name: str, data) -> tuple[np.ndarray, str]:
 
     import wo_train as T
 
-    path = C.results_root() / f"lipo_{arm}" / "best.pt"
+    path = _run_path(arm) / "best.pt"
     if not path.is_file():
         raise SystemExit(f"missing checkpoint {path}")
     payload = torch.load(path, map_location="cpu", weights_only=False)
@@ -436,8 +447,8 @@ def cmd_holdout(args) -> None:
                      "rmse": C.rmse(pred, h.labels), "mae": C.mae(pred, h.labels),
                      "n": int(len(pred))}
     for arm in ("ADD_WORD", "FP_KRR"):
-        p = C.results_root() / f"lipo_{arm}" / "predictions_best.npz"
-        state = C.results_root() / f"lipo_{arm}" / "run.json"
+        p = _run_path(arm) / "predictions_best.npz"
+        state = _run_path(arm) / "run.json"
         if not p.is_file():
             rows[arm] = {"available": False}
             continue
