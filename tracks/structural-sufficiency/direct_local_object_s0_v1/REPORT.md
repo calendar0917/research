@@ -4,7 +4,7 @@ Protocol: `PROTOCOL.md`（训练前冻结），config `configs/dlo_s0.json`，
 protocol id `direct_local_object_s0_v1`。
 **Decision: `DIRECT_LOCAL_PREDICTION_PROMISING_SCOPE_UNRESOLVED`**。
 实际执行：两个 arm 均完成共同 240 epoch，单 seed，官方 3360/420/420；
-无 OOM；总 GPU 时间约 0.67 GPU·h。
+无 OOM；总 GPU 时间约 0.68 GPU·h。
 
 T0 = `2026-11-21T21:23:58+08:00`。最终训练于 22:19:57 结束，早于 T0+105 min
 （23:08:58）。全部训练在 `res`（a100-2）执行：`DIRECT_S56` 使用
@@ -181,8 +181,8 @@ S56 的 Train RMSE 明显更低（0.2487 vs W34 的 0.4043），但 Valid/Test �
 
 * 成本估计：S56 epoch 3–5 中位 4.81 s → 240 epoch 估计 24.0 min；W34 4.64 s →
 23.2 min；均 ≤45 min，所以 **240 epoch 分支被采用，未切 160**。
-* 预算：总 GPU 时间约 **0.67 GPU·h**（含 stage A 重跑；上限 2 GPU·h）；
-  总墙钟约 66 min（上限 120 min）；无 OOM。远端主机 503 GB RAM；缓存构建
+* 预算：总 GPU 时间约 **0.68 GPU·h**（含 stage A 重跑；上限 2 GPU·h）；
+  总墙钟约 68 min（上限 120 min）；无 OOM。远端主机 503 GB RAM；缓存构建
   峰值本地约 1.5 GB，GPU 峰值显存 939 MB（S56）/239 MB（W34）。
 * 偏差 1（唯一工程重跑）：`run_dir` 最初把 repo-relative `--out` 当作
   `results/` 的子目录，stage A 写到了嵌套路径；修复为绝对/仓库相对/
