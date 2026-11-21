@@ -101,9 +101,47 @@ sum/mean 池化的属性编码器 `WGINE`（0.768）更差。
 **判定：`未执行`。** 段层（`PARA_REL`/`PARA_CAP`，D2）按预注册规则**只在 P 分支之后**执行；
 本轮 B 阶段直接落到 N（见 §5），故未执行，无数字可报。
 
-### Q6 复用（ESOL D1）是否成立？
+### Q6 哪些事实能支撑“模型使用了结构词”，哪些仍不能支撑“化学贡献规律”？
 
-**判定：`未执行`。** 同上（P 分支前置条件未满足）。
+这一问必须分两层回答：**计算上确实用了词**（可实现、可干预、可复原）与
+**用词方式对应化学贡献规律**（本轮不支持）。
+
+#### (a) 能支撑“模型使用了结构词”的事实
+
+| # | 事实 | 数字 / 出处 |
+|---|---|---|
+| 1 | partition 冻结、每个原子恰好属于一个词；词+实例+端口可还原全部原始 9/3 列 | Stage-A `fidelity.ok=true`；`structure_freeze_mollipo.json` |
+| 2 | 计算式真的按词求和：`F = b + Σ_i mass_i(u_i+v_i+w_i+r_i)`，可从中间项加回 | `max abs(F_recon−F_model) = 3.15e-7`（§8，要求 ≤1e-5） |
+| 3 | 换掉“词”这个单元函数就变：原子级同一句公式的 `CHAR_FULL` 明显更差 | 0.8434 vs L 0.7680（差 0.075） |
+| 4 | 端口通道被真实读取（不是死参数）：`R` 与 pair head 都有梯度；冻结干预能移动预测 | `grad_R 最大绝对值 = 2.17e-3`；pair head 梯度非零；干预移动 0.0711（9% of RMSE）（§10） |
+| 5 | 词内容编码真的进入预测：同主体同参数、只换 `e_i` 就有系统差异 | `CODE` 0.835 / `ID` 0.857 / `WGINE` 0.768（§5） |
+| 6 | 模型不是在靠 UNK 混过去：Valid 只有 1/420 分子命中未见词型 | §11.1；`unknown_word_type.n_molecules=0` on Test（§9） |
+| 7 | 结构身份是精确的，不是哈希近似：三棱柱与 K3,3 得到**不同**的 template id 与不同 code tensor | `exact_identity_distinct=true`、`code_tensors_identical=false`（`probes_mollipo.json`） |
+
+结论：**“这条计算路径确实以结构词为单位、且读到了词内容与端口布局”是可以被证成的工程/表示事实。**
+
+#### (b) 不能支撑“化学贡献规律”的事实
+
+| # | 反证 | 数字 |
+|---|---|---|
+| 1 | 真实位点布局 `R` 的**重训**收益为 0（4 组 FULL/ERASED 配对） | −0.0018 / +0.0060（R0）、+0.0005 / −0.0020（R1）；CI 全跨 0（§10） |
+| 2 | 冻结干预“有效但无益”：读 `R` 确实改变预测，误差却几乎不动 | 预测移动 0.0711，RMSE 仅 −0.00105，203↑/212↓（§10） |
+| 3 | “真实连接 > 词袋”不可分辨 | L−BAG = +0.0271，scaffold bootstrap CI `[−0.0449,+0.0982]` 跨 0（§6） |
+| 4 | 更“懂结构”的编码器反而更差：精确 canonical 码在 Train 最好、Valid 最差之一 | CODE Train 0.437 / Valid 0.835；WGINE Train 0.490 / Valid 0.768（§11.4） |
+| 5 | 内容编码的表达边界被直接演示：sum/mean 池化对两个同度数 3-正则模板给出**逐位相同**的表示 | `wgine_sum_pool_max_abs_diff = 0.0`、`mean = 0.0`（`probes_mollipo.json`） |
+| 6 | `u/v/w` 的符号与量级一致**不是**化学定律：存在重参数化与归属约定（`mass_i` 权重、共享截距） | §8 明确声明；同组案例内 `u` 正负并存 |
+| 7 | 误差结构没有对上可解释单元：最大误差案例把 y=−0.04 读成 3.69 | §8 的 4 个 max_error 案例（绝对误差 2.27–3.73） |
+| 8 | 合成探针的成功不能外推：CODE 能分开三棱柱/K3,3，真实任务上却更差 | 探针真、任务负，两者都成立（§11 末条） |
+
+结论：本轮能说的是**“词与接口被用上了，但没有产生可分辨的化学/任务收益”**；
+不能说的是“结构词捕捉到了化学贡献规律”。要支撑后者，至少需要一种能把
+“读到了 `R`” 变成 “读对方向” 的证据——本轮三条证据线（重训 R0、重训 R1、
+冻结干预）都不支持，且方向互相独立。
+
+### Q6b 复用（ESOL D1）
+
+**判定：`未执行`。** 按预注册规则 D1 只在 P 分支成立后才启动；本轮阶段 B 落到 N，
+故未训练 ESOL（不设孤立 family）。见 §2 路线判定表“复用”行与 §13。
 
 ---
 
@@ -153,7 +191,7 @@ sum/mean 池化的属性编码器 `WGINE`（0.768）更差。
 | 内容探针（三棱柱 vs K3,3） | ID/CODE 均可拟合两标签；**WGINE sum/mean 表示完全相同**（`wgine_distinguishes=false`，记录为表达力事实） |
 | 接口探针（同 6 环 + 两个取代基，环内距离 1/2/3） | FULL train/dev RMSE 3.1e-4（取代基组合未在 Train 出现）；ERASED 等价输入组预测 spread **0.0**，ERASED dev RMSE 0.276 |
 | 训练健康性（32 真实分子，60 步） | loss 1.5518 → 0.0484，梯度全有限，`pair_R` 梯度非零（2.2e-3），pair head 梯度非零，无零梯度参数 |
-| FULL/ERASED 同 init（真实 Valid 64 分子，seed0） | `max_abs_pred_diff = 0.0`，`max|pred| = 0.079` |
+| FULL/ERASED 同 init（真实 Valid 64 分子，seed0） | `max_abs_pred_diff = 0.0`，`max abs(pred) = 0.079` |
 
 > 记录：该文件在 01:31 的巡检中发现缺失（早期产物被本地清理误删），于 01:33 用**同一冻结代码**
 > 重跑一次（`ws-probes-rerun-01`，commit `0339a5c`），数字与首轮一致；重跑属工程检查，不计正式单元。
@@ -292,8 +330,8 @@ CPU 准备（`analysis/structure_freeze_*.json` 的 `timing_seconds`）：Lipo *
 * **8 个固定案例**（规则：先按“词端口数最大”取 4 个结构支持案例，再按 row id 升序；
   然后取 4 个绝对误差最大的案例，不挑选好看的图）：
 
-| 规则 | row id | y | F | |err| | 原子 | 词数 |
-|---|---|---|---|---|---|---|---|
+| 规则 | row id | y | F | 绝对误差 | 原子 | 词数 |
+|---|---|---|---|---|---|---|
 | support | 1818 | 1.190 | 2.497 | 1.307 | 50 | 17 |
 | support | 1161 | 1.970 | 2.409 | 0.439 | 24 | 8 |
 | support | 1180 | 2.200 | 3.052 | 0.852 | 31 | 8 |
@@ -462,6 +500,22 @@ Test 与 Valid 的相对差距（22% vs 26%）一致，说明 Valid 上的结论
 * Checkpoint/预测：`results/<run_id>/{state_best.pt,curves.json,run.json,preds_*.npz}` 按仓库 gitignore
   不提交，但保留在结果存储（本地 `results/` + `res` 主机），并已 `rr pull` 回本地。本轮矩阵**没有**
   `state_final.pt`（见上条）；`state_final.pt` 的代码路径只对之后新启动的 run 生效。
+
+---
+
+### 14.1 任务书 §14 最低产物对照
+
+| 任务书要求 | 本轮产物 | 状态 |
+|---|---|---|
+| `PROTOCOL.md` + 唯一机器配置 | `PROTOCOL.md`、`configs/ws_v1.json`（含分支与时限） | ✅ |
+| 代码：准备/编码器/句模型/训练/分析入口，一条 CLI 定位各阶段 | `code/ws_words.py`（准备）、`ws_model.py`（编码器+句模型）、`ws_train.py`、`ws_analyze.py`、`ws_probes.py`；`ws_run.py` 提供 `prepare/timing/probe/train/terminal/summary/manifest/finalist/edits/measure/inspect` | ✅ |
+| `analysis/summary.json`、主表 CSV | `analysis/summary.json`、`analysis/main_table.csv`（12 行） | ✅ |
+| 词表与接口支持摘要 | `analysis/structure_freeze_*.json`、`summary.json` 的 `vocabulary_support`/`support_sets` | ✅ |
+| 关键案例 | `analysis/inspect_lipo_full_wgine_s0.json`（8 案例 + u/v/w 分解） | ✅ |
+| `run_manifest.json`：commit/数据与词表 hash/命令/环境/每 run 状态与资源 | `run_manifest.json`（35 个 job 记录，含 driver/CUDA/exit_code/GPU·h） | ✅ |
+| best/final checkpoint 与按 row id 预测 | `results/<run>/state_best.pt`、`preds_{best,final}_{train,valid}.npz`、`curves.json` | ⚠️ **`state_final.pt` 缺**（见 §14 缺口说明；final 的指标与预测已保存） |
+| `REPORT.md`：6 问 + 证据 + 局限 + 分支执行 + 资源与未完成项 + 路线判定表 | 本文件 §0–§15 | ✅ |
+| 终局 Test（一次性、selection 之后） | `analysis/terminal_test.json`（finalist + `GINE_REF` 各一次） | ✅ |
 
 ---
 
