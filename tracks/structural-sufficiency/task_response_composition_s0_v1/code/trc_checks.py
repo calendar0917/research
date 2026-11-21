@@ -7,7 +7,6 @@ results are frozen into ``analysis/checks.json``.
 from __future__ import annotations
 
 import argparse
-import itertools
 import math
 import time
 from typing import Any, Mapping, Sequence
@@ -67,7 +66,6 @@ def check_inputs(cfg, pack, raw) -> dict[str, Any]:
     scaler = C.target_scaler(np.asarray(pack["labels"], np.float64),
                              np.asarray(pack["train_idx"], np.int64))
     out["scaler"] = scaler
-    node_ptr = np.asarray(raw["node_ptr"], np.int64)
     bond_ptr = np.asarray(raw["bond_ptr"], np.int64)
     bad_local = 0
     bond_sum = 0
@@ -133,7 +131,6 @@ def check_inputs(cfg, pack, raw) -> dict[str, Any]:
     cv = np.asarray(pack["parse_cut_v"], np.int64)
     kind = np.asarray(pack["parse_kind"])
     parse_mol = np.asarray(pack["parse_mol"], np.int64)
-    bond_ptr_arr = np.asarray(raw["bond_ptr"], np.int64)
     bad_cover = 0
     bad_bond = 0
     bad_bridge = 0
@@ -155,7 +152,6 @@ def check_inputs(cfg, pack, raw) -> dict[str, Any]:
             e = int(np.asarray(pack["parse_bond_index"])[p])
             if not (int(mol.bond_u[e]) == cu[p] and int(mol.bond_v[e]) == cv[p]):
                 bad_bond += 1
-            n_bonds_total = mol.bond_u.size
             adj_full = mol.adjacency_lists()
             comp = D.connected_components(adj_full, mol.n_atoms,
                                           banned=(int(mol.bond_u[e]), int(mol.bond_v[e])))
@@ -287,7 +283,6 @@ def check_context_identity(cfg, pack, atom_dims, bond_dims, device: str) -> dict
         h_b = model.encode_fragments(torch.as_tensor(sb, device=device), phi)
         # features are built from content-deduped fragments, so both endpoints
         # necessarily share the same tensor; assert the ids resolve identically
-        same_ctx = bool(np.all(pc == pc))
         e = model._cut_embedding(torch.as_tensor(
             np.asarray(pack["pair_cut_bond_row"])[sel], device=device, dtype=torch.long))
         direct = model.cut_scores(h_c, h_b, e) - model.cut_scores(h_c, h_a, e)
@@ -375,10 +370,7 @@ def _csr_for_port(mol, atoms, port, atom_row, bond_row, luts, lookup):
 
 
 def _features_from_csr(model, phi, csr) -> "np.ndarray":
-    import torch
-
-    feat = model.fragment_features(torch.zeros(1, dtype=torch.long, device=phi.device), phi)
-    # rebuild through the reference formula directly
+    # rebuild the 394-dim feature through the reference formula directly
     phin = phi.double().cpu().numpy()
     acc = np.zeros((C.N_BUCKETS, 32))
     for b, f, w in zip(csr["bucket"].tolist(), csr["frame"].tolist(), csr["weight"].tolist()):
@@ -419,7 +411,6 @@ def check_port_input(cfg, pack, atom_dims, bond_dims, device: str) -> dict[str, 
                   if 3 <= int(pack["frag_natoms"][f]) <= 8][:40]
     out: dict[str, Any] = {"checked": 0, "reconstruction_max_abs": 0.0,
                            "port_change_diffs": [], "different_keys": 0}
-    colors = D.ColorSpace.from_raw(raw)
     atom_lookup, bond_lookup = _table_index(pack)
     with torch.no_grad():
         phi = model.frame_phi()
@@ -614,7 +605,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--dataset", default="lipo")
     ap.add_argument("--device", default="cpu")
     ap.add_argument("--only", default="")
+    ap.add_argument("--skip", default="",
+                    help="comma separated check names to skip (e.g. renumber when rdkit is absent)")
     args = ap.parse_args(argv)
+    skip = {x.strip() for x in args.skip.split(",") if x.strip()}
     cfg = dict(C.load_config())
     cfg["cache_stem"] = "trc_cache"
     pack = P.load_pack(cfg, args.dataset)
@@ -632,7 +626,7 @@ def main(argv: Sequence[str] | None = None) -> int:
              "port": lambda: check_port_input(cfg, pack, atom_dims, bond_dims, args.device),
              "batching": lambda: check_batching(cfg, pack, atom_dims, bond_dims, args.device),
              "batch": lambda: check_one_batch(cfg, pack, atom_dims, bond_dims, args.device)}
-    names = [args.only] if args.only else list(which)
+    names = [n for n in ([args.only] if args.only else list(which)) if n not in skip]
     all_ok = True
     for name in names:
         t = time.time()
