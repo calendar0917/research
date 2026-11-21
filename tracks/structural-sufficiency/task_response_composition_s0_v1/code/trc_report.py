@@ -383,10 +383,23 @@ def main() -> int:
             add("")
     small = [r for r in lipo if r.get("train_fraction")]
     if small:
-        add("ogbg-mollipo 小样本（嵌套 sha256 子集，同一 E=160）：")
+        add("ogbg-mollipo 小样本（嵌套 sha256 子集：25% ⊂ 50% ⊂ 100%，各臂共用同一子集，同一 E=160）：")
         add("")
         add(table(_main_rows(small), MAIN_HEADER))
         add("")
+        full = {(r["arm"], r["supervision"]): r for r in lipo if not r.get("train_fraction")}
+        rows = []
+        for r in sorted(small, key=lambda r: (r["arm"], -(r.get("train_fraction") or 0))):
+            base = full.get((r["arm"], r["supervision"]))
+            rows.append([f"{r['arm']}/{r['supervision']}", f(r.get("train_fraction"), 2),
+                         f(r["best_valid_rmse"]), f(r["best_test_rmse"]),
+                         f(r["best_valid_rmse"] - base["best_valid_rmse"]) if base else "–",
+                         f(r["best_test_rmse"] - base["best_test_rmse"]) if base else "–"])
+        add(table(rows, ["arm/aux", "train frac", "Valid", "Test", "ΔValid vs 100%",
+                         "ΔTest vs 100%"]))
+        add("")
+        add("读法：在相同训练分子数下比较不同臂，才是在问“哪一种接口表示更省样本”；"
+            "不同臂的 100%→50%→25% 退化斜率可以直接对比，因为子集是同一批分子。")
     add("## 9. 案例（每条由显式数值规则选出，非手工挑选）")
     add("")
     for key, block in cases.items():

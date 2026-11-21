@@ -21,7 +21,7 @@
 * 距离桶总量（d0..d3,d4+,unreachable）：[354531, 854837, 1295104, 1419061, 8416687, 69]。
 * 片段原子数：word 侧（≤8）直方 [0, 18, 24, 50, 111, 214, 332, 439, 626]；全体（含环境 C）分位数 {"max": 114, "mean": 25.01765529488099, "p50": 26.0, "p90": 35.0}；连通分量直方 [0, 29260, 0, 0, 23, 0, 0, 0]。
 * 无桥键分子（逐原子根回退）：8 个，OGB 行号 [721, 1452, 1897, 2568, 2751, 2969, 3204, 3753]。
-* cache `/home/calendar/code/research/tracks/structural-sufficiency/task_response_composition_s0_v1/data/trc_cache_lipo.npz` sha256 `c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3`，commit `a023cf9388e79a7d9744b3b31afd3a8b1a66f018`。
+* cache `/home/calendar/code/research/tracks/structural-sufficiency/task_response_composition_s0_v1/data/trc_cache_lipo.npz` sha256 `c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3`，commit `10c683cf37968d4e3632bfb8e16671a6fc02ac80`。
 
 替换目录（只在 Train 内部构建；Valid/Test 只作单元，不产生对）：
 
@@ -68,7 +68,9 @@ CPU/FP64 `all_ok = True`。
 | LIPO_FACTOR_NONE_R0 | FACTOR | NONE | 1.0 | 0.7427 | 0.7337 | 0.1693 | 129 | 154983 | 6.2 |
 | LIPO_DIRECT_CUTRESP_R0 | DIRECT | CUTRESP | 1.0 | 0.7474 | 0.6723 | 0.1833 | 135 | 155102 | 40.3 |
 | LIPO_GLOBAL_NONE_R0 | GLOBAL | NONE | 1.0 | 0.7555 | 0.7614 | 0.4723 | 92 | 124629 | 5.0 |
+| LIPO_FACTOR_CUTRESP_F50_R0 | FACTOR | CUTRESP | 0.5 | 0.8544 | 0.7854 | 0.2377 | 98 | 154983 | 5.9 |
 | LIPO_FACTOR_MOLPAIR_R0 | FACTOR | MOLPAIR | 1.0 | 0.8720 | 0.8523 | 0.5087 | 144 | 154983 | 6.4 |
+| LIPO_FACTOR_CUTRESP_F25_R0 | FACTOR | CUTRESP | 0.25 | 0.9571 | 0.9748 | 0.2354 | 97 | 154983 | 3.1 |
 
 外部 GINE 坐标（同划分、同目标缩放、同评估协议，raw 特征，5 层 128 维，sum+mean readout，387974 参数）：**Valid 0.6406 / Test 0.6582**（best epoch 128，wall 4.2 min）。
 
@@ -82,7 +84,7 @@ CPU/FP64 `all_ok = True`。
 | DIRECT_S56 | 0.7387 | 0.7753 |
 | GINE_RAW_REF | 0.6101 | 0.6722 |
 
-* 已用计算：7 个 lipo 单元 + 4 个 ESOL 单元 + 2 个 GINE 坐标，合计 **1.99 GPU·h**（16 GPU·h 预算内），队列上限 20 个正式单元未用满。
+* 已用计算：9 个 lipo 单元 + 4 个 ESOL 单元 + 2 个 GINE 坐标，合计 **2.14 GPU·h**（16 GPU·h 预算内），队列上限 20 个正式单元未用满。
 
 ## 5. 共享结构是否值钱：2×2 因子（配对 bootstrap，Test/Valid 各 1000 次重采样）
 
@@ -127,6 +129,10 @@ CPU/FP64 `all_ok = True`。
 | LIPO_DIRECT_CUTRESP_R0 · 整分子差 | 4856 | 0.1714 | 0.9582 | 0.8878 | 0.1790 | 0.9392 | 0.1686 |
 | LIPO_DIRECT_NONE_R0 · 切口函数差 | 4856 | 0.1800 | 0.9488 | 0.8756 | 0.1987 | 0.9152 | 0.1868 |
 | LIPO_DIRECT_NONE_R0 · 整分子差 | 4856 | 0.1803 | 0.9524 | 0.8834 | 0.1918 | 0.9285 | 0.1825 |
+| LIPO_FACTOR_CUTRESP_F25_R0 · 切口函数差 | 4856 | 0.5047 | 0.5348 | 0.6596 | 0.4362 | 0.5348 | 0.4342 |
+| LIPO_FACTOR_CUTRESP_F25_R0 · 整分子差 | 4856 | 0.4527 | 0.6028 | 0.6870 | 0.3989 | 0.5950 | 0.3963 |
+| LIPO_FACTOR_CUTRESP_F50_R0 · 切口函数差 | 4856 | 0.3426 | 0.7650 | 0.7881 | 0.2945 | 0.7681 | 0.2856 |
+| LIPO_FACTOR_CUTRESP_F50_R0 · 整分子差 | 4856 | 0.3437 | 0.7769 | 0.8019 | 0.3128 | 0.7671 | 0.3091 |
 | LIPO_FACTOR_CUTRESP_R0 · 切口函数差 | 4856 | 0.1284 | 0.9706 | 0.9117 | 0.1193 | 0.9589 | 0.1043 |
 | LIPO_FACTOR_CUTRESP_R0 · 整分子差 | 4856 | 0.1930 | 0.9505 | 0.8801 | 0.1958 | 0.9314 | 0.1867 |
 | LIPO_FACTOR_MOLPAIR_R0 · 切口函数差 | 4856 | 0.7677 | -0.3684 | 0.3801 | 0.7770 | -0.5985 | 0.7895 |
@@ -147,6 +153,10 @@ CPU/FP64 `all_ok = True`。
 | LIPO_DIRECT_CUTRESP_R0 | delta_mol | 914 | 0.3680 | 0.8151 | 0.7954 |
 | LIPO_DIRECT_NONE_R0 | delta_cut | 914 | 0.4304 | 0.7651 | 0.7724 |
 | LIPO_DIRECT_NONE_R0 | delta_mol | 914 | 0.3893 | 0.7960 | 0.7888 |
+| LIPO_FACTOR_CUTRESP_F25_R0 | delta_cut | 914 | 0.6855 | 0.3287 | 0.6149 |
+| LIPO_FACTOR_CUTRESP_F25_R0 | delta_mol | 914 | 0.5900 | 0.4423 | 0.6532 |
+| LIPO_FACTOR_CUTRESP_F50_R0 | delta_cut | 914 | 0.5376 | 0.5786 | 0.7090 |
+| LIPO_FACTOR_CUTRESP_F50_R0 | delta_mol | 914 | 0.4903 | 0.6394 | 0.7429 |
 | LIPO_FACTOR_CUTRESP_R0 | delta_cut | 914 | 0.4111 | 0.7629 | 0.7877 |
 | LIPO_FACTOR_CUTRESP_R0 | delta_mol | 914 | 0.3671 | 0.8269 | 0.8140 |
 | LIPO_FACTOR_MOLPAIR_R0 | delta_cut | 914 | 0.7294 | 0.0532 | 0.5284 |
@@ -174,6 +184,8 @@ CPU/FP64 `all_ok = True`。
 | LIPO_ADD_CUTRESP_R0 | 0.1061 | 0.0371 | 0.1584 | 0.3641 | 0.9245 | 0.7276 |
 | LIPO_DIRECT_CUTRESP_R0 | 0.0738 | 0.0161 | 0.1199 | 0.2571 | 0.8963 | 0.7474 |
 | LIPO_DIRECT_NONE_R0 | 0.0647 | 0.0123 | 0.1252 | 0.2326 | 0.8780 | 0.7345 |
+| LIPO_FACTOR_CUTRESP_F25_R0 | 0.1068 | 0.0331 | 0.2013 | 0.3422 | 1.1189 | 0.9571 |
+| LIPO_FACTOR_CUTRESP_F50_R0 | 0.0988 | 0.0284 | 0.1571 | 0.3365 | 1.0243 | 0.8544 |
 | LIPO_FACTOR_CUTRESP_R0 | 0.0836 | 0.0227 | 0.1127 | 0.3056 | 0.8501 | 0.7096 |
 | LIPO_FACTOR_MOLPAIR_R0 | 0.0748 | 0.0271 | 0.1477 | 0.5834 | 1.0136 | 0.8720 |
 | LIPO_FACTOR_NONE_R0 | 0.0642 | 0.0121 | 0.1283 | 0.2335 | 0.8936 | 0.7427 |
@@ -195,6 +207,10 @@ CPU/FP64 `all_ok = True`。
 | LIPO_DIRECT_CUTRESP_R0 | train_test_any_test | 2 | 0.3205 | – | 1.0000 | 0.5113 | 0.5000 |
 | LIPO_DIRECT_NONE_R0 | all_held_out | 1 | 0.4281 | – | 0.0000 | 0.3843 | 0.0000 |
 | LIPO_DIRECT_NONE_R0 | train_test_any_test | 2 | 0.4877 | – | 0.5000 | 0.4204 | 0.5000 |
+| LIPO_FACTOR_CUTRESP_F25_R0 | all_held_out | 1 | 0.2571 | – | 0.0000 | 0.2997 | 0.0000 |
+| LIPO_FACTOR_CUTRESP_F25_R0 | train_test_any_test | 2 | 0.5840 | – | 0.0000 | 0.4945 | 0.5000 |
+| LIPO_FACTOR_CUTRESP_F50_R0 | all_held_out | 1 | 0.3195 | – | 0.0000 | 0.5662 | 0.0000 |
+| LIPO_FACTOR_CUTRESP_F50_R0 | train_test_any_test | 2 | 0.4153 | – | 0.5000 | 0.2905 | 0.5000 |
 | LIPO_FACTOR_CUTRESP_R0 | all_held_out | 1 | 0.5164 | – | 0.0000 | 0.3024 | 1.0000 |
 | LIPO_FACTOR_CUTRESP_R0 | train_test_any_test | 2 | 0.5157 | – | 0.5000 | 0.2124 | 1.0000 |
 | LIPO_FACTOR_MOLPAIR_R0 | all_held_out | 1 | 0.5673 | – | 0.0000 | 1.6166 | 0.0000 |
@@ -219,6 +235,19 @@ ESOL（1128 分子，官方 902/112/114；原始单位，best-Valid）：
 
 ESOL 的 raw-GINE 坐标：Valid 0.8495 / Test 0.8351。
 
+ogbg-mollipo 小样本（嵌套 sha256 子集：25% ⊂ 50% ⊂ 100%，各臂共用同一子集，同一 E=160）：
+
+| run | arm | aux | train frac | Valid RMSE | Test RMSE | Train RMSE | best ep | params | wall min |
+|---|---|---|---|---|---|---|---|---|---|
+| LIPO_FACTOR_CUTRESP_F50_R0 | FACTOR | CUTRESP | 0.5 | 0.8544 | 0.7854 | 0.2377 | 98 | 154983 | 5.9 |
+| LIPO_FACTOR_CUTRESP_F25_R0 | FACTOR | CUTRESP | 0.25 | 0.9571 | 0.9748 | 0.2354 | 97 | 154983 | 3.1 |
+
+| arm/aux | train frac | Valid | Test | ΔValid vs 100% | ΔTest vs 100% |
+|---|---|---|---|---|---|
+| FACTOR/CUTRESP | 0.50 | 0.8544 | 0.7854 | 0.1448 | 0.0627 |
+| FACTOR/CUTRESP | 0.25 | 0.9571 | 0.9748 | 0.2476 | 0.2521 |
+
+读法：在相同训练分子数下比较不同臂，才是在问“哪一种接口表示更省样本”；不同臂的 100%→50%→25% 退化斜率可以直接对比，因为子集是同一批分子。
 ## 9. 案例（每条由显式数值规则选出，非手工挑选）
 
 **composed** — both single molecules predicted well (top 40%), pair delta badly (top 10%), held-out only
