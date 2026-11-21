@@ -4,10 +4,10 @@
     "contrasts": {
       "BIND_REL-BAG_CAP": {
         "ci95": [
-          -0.052268727860508964,
-          0.015134138121199112
+          -0.05451292290947736,
+          0.014195653064257139
         ],
-        "frac_positive": 0.136,
+        "frac_positive": 0.11975,
         "point": -0.019587493913881426,
         "seeds": [
           0,
@@ -16,10 +16,10 @@
       },
       "BIND_REL-GINE_RAW": {
         "ci95": [
-          0.05036115611804272,
-          0.1495496781553641
+          0.04982098715610869,
+          0.1484072611524196
         ],
-        "frac_positive": 1.0,
+        "frac_positive": 0.99975,
         "point": 0.09942746068682456,
         "seeds": [
           0,
@@ -28,10 +28,10 @@
       },
       "BIND_REL-GINE_REF": {
         "ci95": [
-          0.04421451689887645,
-          0.1390018896063118
+          0.04262945400098404,
+          0.13798758672806438
         ],
-        "frac_positive": 0.99975,
+        "frac_positive": 1.0,
         "point": 0.09110588742933967,
         "seeds": [
           0,
@@ -40,10 +40,10 @@
       },
       "BIND_REL-GLOBAL_CTX_BIND": {
         "ci95": [
-          -0.05026210690452449,
-          0.014263707611534648
+          -0.04898646773776951,
+          0.013604154266920451
         ],
-        "frac_positive": 0.139,
+        "frac_positive": 0.146,
         "point": -0.016954957158779926,
         "seeds": [
           0,
@@ -52,8 +52,8 @@
       },
       "BIND_REL-RANDOM_PART": {
         "ci95": [
-          -0.22280025874856374,
-          -0.13159160928531863
+          -0.22347704150681152,
+          -0.1289749162212376
         ],
         "frac_positive": 0.0,
         "point": -0.17680507451751848,
@@ -64,10 +64,10 @@
       },
       "BIND_SELF-BIND_REL": {
         "ci95": [
-          0.0028211074954097577,
-          0.06627700947530939
+          0.004588181094633702,
+          0.06625073111619614
         ],
-        "frac_positive": 0.9855,
+        "frac_positive": 0.98725,
         "point": 0.03474908981556413,
         "seeds": [
           0,
@@ -76,10 +76,10 @@
       },
       "BIND_SELF-BIND_SELF_SCALAR": {
         "ci95": [
-          -0.030185567523039213,
-          0.030299812967843086
+          -0.030889635823410318,
+          0.03045725681082785
         ],
-        "frac_positive": 0.47875,
+        "frac_positive": 0.4865,
         "point": -0.0007832066727463394,
         "seeds": [
           0,
@@ -88,10 +88,10 @@
       },
       "I_ctx_bind_minus_ctx_mean": {
         "ci95": [
-          -0.0008426211178026108,
-          0.09444008277534623
+          -0.0009574922342857568,
+          0.09295796590914054
         ],
-        "frac_positive": 0.972,
+        "frac_positive": 0.9725,
         "point": 0.04632158913959922,
         "seeds": [
           0,
@@ -100,10 +100,10 @@
       },
       "MEAN_REL-BIND_REL": {
         "ci95": [
-          -0.024241952914181113,
-          0.03933665110123102
+          -0.024192601476863015,
+          0.0388267185328836
         ],
-        "frac_positive": 0.68375,
+        "frac_positive": 0.67975,
         "point": 0.008015389420740537,
         "seeds": [
           0,
@@ -112,10 +112,10 @@
       },
       "MEAN_SELF-BIND_SELF": {
         "ci95": [
-          -0.07117572953311381,
-          -0.005630375932329957
+          -0.07144486702838669,
+          -0.006071320944469274
         ],
-        "frac_positive": 0.011,
+        "frac_positive": 0.0085,
         "point": -0.03830619971885868,
         "seeds": [
           0,
@@ -124,8 +124,8 @@
       },
       "MEAN_SELF-GINE_REF": {
         "ci95": [
-          0.04810589817401441,
-          0.12809948895664527
+          0.048643349845996706,
+          0.12831068546945656
         ],
         "frac_positive": 1.0,
         "point": 0.08754877752604512,
@@ -136,10 +136,10 @@
       },
       "MEAN_SELF-MEAN_REL": {
         "ci95": [
-          -0.04273903836283897,
-          0.01771523212362138
+          -0.04074831614720829,
+          0.01800891095598321
         ],
-        "frac_positive": 0.23025,
+        "frac_positive": 0.233,
         "point": -0.01157249932403509,
         "seeds": [
           0,
@@ -148,10 +148,10 @@
       },
       "MEAN_SELF-SET_MEAN_SELF": {
         "ci95": [
-          -0.05525594512110366,
-          0.01314529172697063
+          -0.05765626697747118,
+          0.012625469770280838
         ],
-        "frac_positive": 0.10375,
+        "frac_positive": 0.1035,
         "point": -0.021665358808232893,
         "seeds": [
           0,
@@ -159,14 +159,15 @@
         ]
       }
     },
-    "definition": "paired scaffold bootstrap; each replicate resamples scaffolds with replacement and recomputes every contrast on the same rows; the point estimate reproduces the reported best-Valid RMSE differences",
+    "definition": "paired bootstrap; each replicate resamples groups with replacement and recomputes every contrast on the same rows, so the point estimate reproduces the reported best-Valid RMSE differences",
+    "grouping": "molecule level (every Valid molecule has a distinct Murcko scaffold, so scaffold pairing degenerates to molecule pairing)",
     "n_boot": 4000,
     "n_rows": 420,
-    "n_scaffolds": 212,
+    "n_scaffolds": 420,
     "parse": {
       "level": "scaffold",
       "n_failed": 0,
-      "n_scaffolds": 212
+      "n_scaffolds": 420
     }
   },
   "candidates": {
@@ -239,7 +240,7 @@
     },
     "tie": 0.002423079680196794
   },
-  "commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+  "commit": "a0762544e0d00e1c770a04b16637181ec84dab17",
   "condition_differences": {
     "aggregate": {
       "I": {

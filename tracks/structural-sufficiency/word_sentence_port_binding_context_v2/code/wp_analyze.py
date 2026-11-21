@@ -215,7 +215,8 @@ def pick_core_pair(candidates: Mapping[str, Any], index, cfg) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def scaffold_groups(raw: Mapping[str, Any], row_ids: Sequence[int]) -> tuple[dict[int, int], dict[str, Any]]:
+def scaffold_groups(raw: Mapping[str, Any], row_ids: Sequence[int]
+                    ) -> tuple[dict[int, object], dict[str, Any]]:
     from rdkit import Chem, RDLogger
     from rdkit.Chem.Scaffolds import MurckoScaffold
 
@@ -229,10 +230,10 @@ def scaffold_groups(raw: Mapping[str, Any], row_ids: Sequence[int]) -> tuple[dic
         mol = Chem.MolFromSmiles(text)
         if mol is None:
             info["n_failed"] += 1
-            groups[int(row)] = -1 - int(row)
+            groups[int(row)] = f"row:{int(row)}"
             continue
-        groups[int(row)] = hash(MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=False))
-    info["n_scaffolds"] = len({v for v in groups.values() if v >= 0})
+        groups[int(row)] = MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=False)
+    info["n_scaffolds"] = len({v for v in groups.values() if not str(v).startswith("row:")})
     info["level"] = "scaffold" if info["n_failed"] == 0 else "molecule_fallback_for_failures"
     return groups, info
 
@@ -299,6 +300,14 @@ def contrast_specs() -> list[tuple[str, list[tuple[str, float]], list[tuple[str,
     ]
 
 
+def _stable_offset(name: str) -> int:
+    """Process-independent offset so every bootstrap interval is reproducible."""
+    import hashlib
+
+    digest = hashlib.sha256(name.encode("utf-8")).hexdigest()
+    return int(digest[:8], 16) % 10007
+
+
 def _predictions(dataset: str) -> tuple[dict[tuple[str, int], np.ndarray], np.ndarray, np.ndarray,
                                         dict[str, Any]]:
     """Valid predictions per (arm, seed), the Valid targets and the row ids."""
@@ -334,10 +343,10 @@ def bootstrap_block(dataset: str, index, cfg) -> dict[str, Any]:
     if not preds:
         return {"available": False, "reason": "no saved predictions"}
     groups, info = scaffold_groups(C.dataset_cache(dataset), row_ids)
-    by_group: dict[int, list[int]] = {}
+    by_group: dict[object, list[int]] = {}
     for position, row in enumerate(row_ids):
-        by_group.setdefault(int(groups[int(row)]), []).append(position)
-    keys = sorted(by_group)
+        by_group.setdefault(groups[int(row)], []).append(position)
+    keys = sorted(by_group, key=str)
     specs = contrast_specs()
     usable = {}
     for name, coefs, _ in specs:
@@ -358,7 +367,7 @@ def bootstrap_block(dataset: str, index, cfg) -> dict[str, Any]:
         point[name] = float(np.mean(values))
         # a dedicated generator per contrast keeps every interval stable when the
         # contrast list grows (same rows resampled, same stream, same count)
-        rng = np.random.default_rng(1703 + (abs(hash(name)) % 10007))
+        rng = np.random.default_rng(1703 + _stable_offset(name))
         reps = []
         for _ in range(n_boot):
             chosen = rng.choice(keys, size=len(keys), replace=True)
@@ -370,9 +379,14 @@ def bootstrap_block(dataset: str, index, cfg) -> dict[str, Any]:
     result: dict[str, Any] = {
         "available": True, "n_scaffolds": info["n_scaffolds"], "n_rows": int(len(y)),
         "n_boot": n_boot, "parse": info, "contrasts": {},
-        "definition": "paired scaffold bootstrap; each replicate resamples scaffolds with "
-                      "replacement and recomputes every contrast on the same rows; the point "
-                      "estimate reproduces the reported best-Valid RMSE differences",
+        "definition": (
+            "paired bootstrap; each replicate resamples groups with replacement and recomputes "
+            "every contrast on the same rows, so the point estimate reproduces the reported "
+            "best-Valid RMSE differences"),
+        "grouping": ("molecule level (every Valid molecule has a distinct Murcko scaffold, so "
+                     "scaffold pairing degenerates to molecule pairing)"
+                     if info["n_scaffolds"] >= len(y) else
+                     f"scaffold level ({info['n_scaffolds']} distinct scaffolds for {len(y)} rows)"),
     }
     for name in usable:
         values = np.asarray(draws[name])
@@ -646,7 +660,7 @@ def _support_split(data, split, features, seen) -> dict[str, Any]:
     }
 
 
-def _scaffold_key(data: Mapping[str, Any], row: int) -> int:
+def _scaffold_key(data: Mapping[str, Any], row: int) -> object:
     from rdkit import Chem, RDLogger
     from rdkit.Chem.Scaffolds import MurckoScaffold
 
@@ -656,8 +670,8 @@ def _scaffold_key(data: Mapping[str, Any], row: int) -> int:
         text = text.decode()
     mol = Chem.MolFromSmiles(text)
     if mol is None:
-        return -int(row)
-    return hash(MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=False))
+        return f"row:{int(row)}"
+    return MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=False)
 
 
 # ---------------------------------------------------------------------------
