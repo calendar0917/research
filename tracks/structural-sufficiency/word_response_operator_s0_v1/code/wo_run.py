@@ -457,7 +457,6 @@ def cmd_holdout(args) -> None:
 
 def _refs_holdout(args) -> None:
     """ADD_WORD / FP_KRR predictions on H, using the already-fit coefficients."""
-    import wo_baselines as B
     import wo_train as T
 
     data = T.load_all()
@@ -483,103 +482,85 @@ def _refs_holdout(args) -> None:
     print(json.dumps(out, indent=2))
 
 
-def _pair_eval(data, preds) -> dict[str, Any]:
-    """delta_pred = F(B)-F(A) on the frozen evaluable pairs (H labels only here)."""
+def _frozen_pairs(data):
+    """The frozen evaluable H pairs (Section 2.1), as row-index arrays."""
     import pandas as pd
 
-    split = data["split"]
-    rows = pd.read_csv(C.PAIRS_CSV)
-    h_ids = set(int(x) for x in split["h_row_ids"])
-    fit_ids = set(int(x) for x in split["fit_row_ids"])
+    pairs = data["split"]["evaluable_pairs"]
     h = data["h"]
     pos = {int(r): i for i, r in enumerate(h.row_ids.tolist())}
-    ev = rows[(rows.row_a.isin(h_ids)) & (rows.row_b.isin(h_ids))]
-    transform_fit = rows[(rows.row_a.isin(fit_ids)) | (rows.row_b.isin(fit_ids))]
-    fit_cores = set(transform_fit.core_id.astype(np.int64).tolist())
-    ev = ev[~ev.core_id.astype(np.int64).isin(fit_cores)]
-    keep = ev[(ev.row_a.astype(int).isin(pos)) & (ev.row_b.astype(int).isin(pos))]
-    a = keep.row_a.astype(int).to_numpy()
-    b = keep.row_b.astype(int).to_numpy()
-    y_a = h.labels[[pos[x] for x in a.tolist()]]
-    y_b = h.labels[[pos[x] for x in b.tolist()]]
+    a = np.asarray([int(p["row_a"]) for p in pairs], dtype=np.int64)
+    b = np.asarray([int(p["row_b"]) for p in pairs], dtype=np.int64)
+    keep = np.asarray([bool(int(x) in pos and int(y) in pos) for x, y in zip(a, b)])
+    a, b = a[keep], b[keep]
+    transform = np.asarray([str(p["transform_id"]) for p, k in zip(pairs, keep) if k])
+    core = np.asarray([str(p["core_id"]) for p, k in zip(pairs, keep) if k])
+    ia = np.asarray([pos[int(x)] for x in a.tolist()], dtype=np.int64)
+    ib = np.asarray([pos[int(x)] for x in b.tolist()], dtype=np.int64)
+    return {"a": ia, "b": ib, "transform": transform, "core": core,
+            "n_frozen": int(len(pairs))}
+
+
+def _pair_eval(data, preds) -> dict[str, Any]:
+    fp = _frozen_pairs(data)
+    h = data["h"]
+    y_a = h.labels[fp["a"]]
+    y_b = h.labels[fp["b"]]
     delta = y_b - y_a
-    out: dict[str, Any] = {"n_pairs": int(len(keep)), "rows": {}}
+    out: dict[str, Any] = {"n_pairs": int(len(fp["a"])), "n_transforms":
+                           int(len(set(fp["transform"].tolist()))), "rows": {}}
     for arm, pred in preds.items():
-        d = pred[[pos[x] for x in b.tolist()]] - pred[[pos[x] for x in a.tolist()]]
+        d = pred[fp["b"]] - pred[fp["a"]]
         out["rows"][arm] = {
             "mae": C.mae(d, delta), "rmse": C.rmse(d, delta),
             "direction_accuracy": float(np.mean(np.sign(d) == np.sign(delta))),
             "pearson": float(np.corrcoef(d, delta)[0, 1]) if len(d) > 2 else None,
+            "mean_pred_delta": float(np.mean(d)), "mean_true_delta": float(np.mean(delta)),
         }
     return out
 
 
 def _table_eval(data, preds) -> dict[str, Any]:
-    """Per-transform component-mean deltas, then mean over components."""
-    import pandas as pd
-
-    split = data["split"]
-    rows = pd.read_csv(C.PAIRS_CSV)
-    h_ids = set(int(x) for x in split["h_row_ids"])
-    fit_ids = set(int(x) for x in split["fit_row_ids"])
+    fp = _frozen_pairs(data)
     h = data["h"]
-    pos = {int(r): i for i, r in enumerate(h.row_ids.tolist())}
-    ev = rows[(rows.row_a.isin(h_ids)) & (rows.row_b.isin(h_ids))]
-    transform_fit = rows[(rows.row_a.isin(fit_ids)) | (rows.row_b.isin(fit_ids))]
-    ev = ev[~ev.core_id.astype(np.int64).isin(set(transform_fit.core_id.astype(np.int64)))]
-    ev = ev[(ev.row_a.astype(int).isin(pos)) & (ev.row_b.astype(int).isin(pos))]
-    if ev.empty:
-        return {"n_pairs": 0}
-    y = {(int(r)): float(h.labels[i]) for r, i in pos.items()}
-    ev = ev.copy()
-    ev["dy"] = [y[int(b)] - y[int(a)] for a, b in zip(ev.row_a, ev.row_b)]
-    out = {"n_pairs": int(len(ev)), "rows": {}}
-    comp = ev.groupby("transform_id").dy.agg(["mean", "count"])
-    out["n_transforms"] = int(len(comp))
+    dy = h.labels[fp["b"]] - h.labels[fp["a"]]
+    transforms = sorted(set(fp["transform"].tolist()))
+    rows = {}
     for arm, pred in preds.items():
-        p = {int(r): float(pred[i]) for r, i in pos.items()}
-        ev[f"d_{arm}"] = [p[int(b)] - p[int(a)] for a, b in zip(ev.row_a, ev.row_b)]
-        per = ev.groupby("transform_id")[f"d_{arm}"].mean()
-        out["rows"][arm] = {"table_mae": float(np.mean(np.abs(per - comp["mean"]))),
-                            "table_rmse": float(np.sqrt(np.mean((per - comp["mean"]) ** 2)))}
-    return out
+        dp = pred[fp["b"]] - pred[fp["a"]]
+        per_true, per_pred = [], []
+        for t in transforms:
+            sel = fp["transform"] == t
+            per_true.append(float(np.mean(dy[sel])))
+            per_pred.append(float(np.mean(dp[sel])))
+        per_true = np.asarray(per_true)
+        per_pred = np.asarray(per_pred)
+        rows[arm] = {"table_mae": float(np.mean(np.abs(per_pred - per_true))),
+                     "table_rmse": float(np.sqrt(np.mean((per_pred - per_true) ** 2))),
+                     "n_transforms": len(transforms)}
+    return {"n_pairs": int(len(dy)), "n_transforms": len(transforms), "rows": rows}
 
 
 def _bootstrap(data, preds, n_boot: int = 500) -> dict[str, Any]:
     rng = np.random.default_rng(20261121)
-    import pandas as pd
-
-    split = data["split"]
-    rows = pd.read_csv(C.PAIRS_CSV)
-    h_ids = set(int(x) for x in split["h_row_ids"])
-    fit_ids = set(int(x) for x in split["fit_row_ids"])
+    fp = _frozen_pairs(data)
     h = data["h"]
-    pos = {int(r): i for i, r in enumerate(h.row_ids.tolist())}
-    ev = rows[(rows.row_a.isin(h_ids)) & (rows.row_b.isin(h_ids))]
-    transform_fit = rows[(rows.row_a.isin(fit_ids)) | (rows.row_b.isin(fit_ids))]
-    ev = ev[~ev.core_id.astype(np.int64).isin(set(transform_fit.core_id.astype(np.int64)))]
-    ev = ev[(ev.row_a.astype(int).isin(pos)) & (ev.row_b.astype(int).isin(pos))]
-    if ev.empty:
-        return {"n_boot": 0}
-    comps = ev.core_id.astype(np.int64).to_numpy()
-    uniq = np.unique(comps)
-    y = {(int(r)): float(h.labels[i]) for r, i in pos.items()}
-    dy = np.array([y[int(b)] - y[int(a)] for a, b in zip(ev.row_a, ev.row_b)])
-    groups = {int(c): np.where(comps == c)[0] for c in uniq}
-    out: dict[str, Any] = {"n_boot": n_boot, "n_components": int(len(uniq)), "rows": {}}
+    dy = h.labels[fp["b"]] - h.labels[fp["a"]]
+    comps = fp["core"]
+    uniq = sorted(set(comps.tolist()))
+    groups = {c: np.where(comps == c)[0] for c in uniq}
+    out: dict[str, Any] = {"n_boot": n_boot, "n_components": len(uniq), "rows": {}}
     for arm, pred in preds.items():
-        p = {int(r): float(pred[i]) for r, i in pos.items()}
-        dp = np.array([p[int(b)] - p[int(a)] for a, b in zip(ev.row_a, ev.row_b)])
+        dp = pred[fp["b"]] - pred[fp["a"]]
         stats = []
         for _ in range(n_boot):
-            pick = rng.choice(uniq, size=len(uniq), replace=True)
-            idx = np.concatenate([groups[int(c)] for c in pick])
+            pick = rng.choice(len(uniq), size=len(uniq), replace=True)
+            idx = np.concatenate([groups[uniq[int(i)]] for i in pick])
             stats.append(np.mean(np.abs(dp[idx] - dy[idx])))
         stats = np.asarray(stats)
-        point = float(np.mean(np.abs(dp - dy)))
-        out["rows"][arm] = {"point_mae": point, "lo": float(np.quantile(stats, 0.025)),
-                            "hi": float(np.quantile(stats, 0.975)),
-                            "share_at_or_below_point": float(np.mean(stats <= point))}
+        out["rows"][arm] = {"point_mae": float(np.mean(np.abs(dp - dy))),
+                            "lo": float(np.quantile(stats, 0.025)),
+                            "hi": float(np.quantile(stats, 0.975))}
     return out
 
 
@@ -611,6 +592,28 @@ def cmd_cases(args) -> None:
     out = P.cases(data, n=4)
     C.write_json(C.analysis_dir() / "cases.json", C.jsonable(out))
     print(json.dumps({"n": len(out)}, indent=2))
+
+
+def cmd_unlock_h(args) -> None:
+    """One-shot H label unlock; refuses unless the candidate list is frozen."""
+    frozen = C.analysis_dir() / "candidates_frozen.json"
+    if not frozen.is_file():
+        raise SystemExit("candidates_frozen.json is missing: no H label access")
+    import wo_train as T
+
+    data = T.load_all()
+    if data["h"].labels.size:
+        raise SystemExit("H labels are already unlocked")
+    payload = C.dataset_cache("ogbg-mollipo")
+    rows = np.asarray(data["split"]["h_row_ids"], dtype=np.int64)
+    labels = np.asarray(payload["labels"], dtype=np.float32)[rows]
+    C.save_npz_atomic(C.data_dir() / "wo_h_labels.npz", {"labels": labels,
+                                                         "row_ids": rows})
+    C.write_json(C.analysis_dir() / "h_unlock.json",
+                 {"at_unix": time.time(), "commit": C.git_commit(),
+                  "n_rows": int(len(rows)), "candidates_frozen_sha256":
+                  C.sha256_file(frozen), "labels_sha256": C.sha256_bytes(labels.tobytes())})
+    print(json.dumps({"unlocked": int(len(rows))}, indent=2))
 
 
 def main(argv=None) -> None:
@@ -653,6 +656,9 @@ def main(argv=None) -> None:
 
     p = sub.add_parser("candidates")
     p.set_defaults(func=cmd_candidates)
+
+    p = sub.add_parser("unlock-h")
+    p.set_defaults(func=cmd_unlock_h)
 
     p = sub.add_parser("holdout")
     p.set_defaults(func=cmd_holdout)

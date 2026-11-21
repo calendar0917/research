@@ -732,3 +732,102 @@ def _assemble(mats, bonds, channel, merge=None):
             K[j, i] -= k
     sign, ld = np.linalg.slogdet(K) if len(slots) else (1, 0.0)
     return total_c + 0.5 * ld - 0.5 * float(h @ np.linalg.solve(K, h)) if len(slots) else total_c
+
+
+# ---------------------------------------------------------------------------
+# structural case reports (Section 10)
+# ---------------------------------------------------------------------------
+
+
+def _case_mol_ids(data, n_fixed: int = 2):
+    """Deterministic multi-port Valid molecules, fixed before labels are read."""
+    valid = data["valid"]
+    a = valid.arrays
+    cross = np.diff(a["graph_ptr_cross"])
+    n_words = np.diff(a["graph_ptr_word"])
+    score = [(int(min(cross[m], 4)), int(min(n_words[m], 8)), -int(m))
+             for m in range(valid.n_molecules) if cross[m] >= 2 and n_words[m] >= 3]
+    score.sort(reverse=True)
+    return [int(-x[2]) for x in score[:n_fixed]]
+
+
+def case_report(data, arm: str, mol_ids, channel: int = 0) -> list[dict]:
+    import torch
+
+    import wo_train as T
+
+    path = C.results_root() / f"lipo_{arm}" / "best.pt"
+    if not path.is_file():
+        return []
+    payload = torch.load(path, map_location="cpu", weights_only=False)
+    model = T.build_model(C.load_config(), data, arm)
+    model.load_state_dict(payload["state"])
+    model.eval()
+    out = []
+    for split_name in ("valid", "h"):
+        split = data[split_name]
+        if split.labels.size == 0:
+            continue
+        for mol in mol_ids:
+            if mol >= split.n_molecules:
+                continue
+            packed = split.pack([mol], device="cpu")
+            npk = to_numpy(packed)
+            npk["cross_bond_sel"] = npk["bond_cross"]
+            terms = model_terms(model, packed, torch.float32)
+            with torch.no_grad():
+                pred = float(model(packed)["yhat"].item())
+            words = _word_matrices(npk, terms, 0, channel)
+            word_rows = []
+            for word in words:
+                S, h, c = _reduce(word)
+                word_rows.append({
+                    "type": int(npk["word_tmpl"][word["w"]]),
+                    "n_atoms": int(word["n"]), "n_ports": len(word["boundary"]),
+                    "ports": [int(word["sites"][s]) for s in word["boundary"]],
+                    "c": float(c), "h": [float(x) for x in h],
+                    "S": [[float(x) for x in row] for row in S],
+                })
+            out.append({
+                "split": split_name, "molecule": int(mol),
+                "row_id": int(split.row_ids[mol]), "n_atoms": int(split.graph_n_atoms[mol]),
+                "n_words": int(len(words)), "channel": channel,
+                "pred_raw": pred, "label_raw": float(split.labels[mol]),
+                "n_crossing_bonds": int((npk["cross_mol"] == 0).sum()),
+                "words": word_rows,
+            })
+    return out
+
+
+def cases(data, n: int = 4) -> list[dict]:
+    fixed = _case_mol_ids(data, 2)
+    out = case_report(data, "FULL_WORD_OP", fixed)
+    # two more after the freeze: best / worst FULL-vs-LOCAL valid improvement
+    try:
+        import torch
+
+        import wo_train as T
+
+        valid = data["valid"]
+        preds = {}
+        for arm in ("FULL_WORD_OP", "LOCAL_WORD_OP"):
+            path = C.results_root() / f"lipo_{arm}" / "best.pt"
+            if not path.is_file():
+                continue
+            payload = torch.load(path, map_location="cpu", weights_only=False)
+            model = T.build_model(C.load_config(), data, arm)
+            model.load_state_dict(payload["state"])
+            model.eval()
+            ev = T.evaluate(model, data["valid"], "cpu")
+            preds[arm] = ev["pred_raw"]
+        if len(preds) == 2:
+            err = np.abs(preds["FULL_WORD_OP"] - valid.labels) - \
+                np.abs(preds["LOCAL_WORD_OP"] - valid.labels)
+            order = np.argsort(err)
+            picks = [int(order[0]), int(order[-1])]
+            out += case_report(data, "FULL_WORD_OP", picks)
+            out += [{"split": "valid", "molecule": picks[0], "role": "best_full_vs_local"}]
+            out += [{"split": "valid", "molecule": picks[1], "role": "worst_full_vs_local"}]
+    except Exception as exc:  # pragma: no cover
+        out.append({"error": str(exc)})
+    return out

@@ -32,6 +32,9 @@ def load_all() -> dict[str, Any]:
     fit = D.load_split("fit", data / "wo_struct_fit.npz")
     valid = D.load_split("valid", data / "wo_struct_valid.npz")
     h = D.load_split("h", data / "wo_struct_h.npz")
+    unlock = data / "wo_h_labels.npz"
+    if unlock.is_file():
+        h.labels = np.load(unlock)["labels"].astype(np.float32)
     # Fit-only standardisation of the count vector; zero-variance columns dropped.
     z = fit.z
     mean = z.mean(axis=0)
