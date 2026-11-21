@@ -1,13 +1,15 @@
 {
   "budget": {
-    "cpu_worker_hours": 3.084,
+    "cpu_worker_hours": 3.765,
     "gpu_hours_used": 0.0,
-    "units_complete": 20,
-    "units_launched": 20,
+    "units_complete": 32,
+    "units_esol": 10,
+    "units_launched": 32,
+    "units_lipo": 22,
     "units_partial": 0
   },
   "code_hashes": {
-    "wp_analyze.py": "0597b19a0032e9a1258da23dcad4c0331954addccc5e7c20532d19222eaed687",
+    "wp_analyze.py": "3c616279c4a47d2024544761dcb9bd516be755c067d6e44425f6c12b7fd01be2",
     "wp_common.py": "67ca3e79428416f0c65afe41bdccf88d744f862a77995b2d9fdffa4638f20ef2",
     "wp_data.py": "6ba38406fb9dcf7e9ad9bede9aca36dc0918416959361d3a1346ce055b255b18",
     "wp_launch.sh": "92bd3a7ebc4cf15cde5c6e660d216c356bc81b83e3e8b3be7f4ede43cf1d5b97",
@@ -15,20 +17,20 @@
     "wp_probes.py": "998ff05f641720d9296a5ab6e67f51d75b65340502af78a45e8a5d1e4c1f953a",
     "wp_queue.sh": "7bfd97ef8482a3021ddd4b7e6d8cdf90746ace4a6925c3ed560557c80e1608e5",
     "wp_random_part.py": "548ce647ef0f4a8ab4c9730c11e87d225e98d085360887e5986dd5d728fb6ce8",
-    "wp_report.py": "30bfe4c37dd1723bf6df1c41f1744c9fcc5a14a870f6ea36fe9cb3adc4506791",
+    "wp_report.py": "cde0fded25bb0d1b42b8248c24733e81b004d0dce23b33535f730a5bcbf9263a",
     "wp_run.py": "3ea9d2a64fa5ae87c3a0fd8fa05bc8d3af0747a7755f4c934ba961c44dd3e95a",
     "wp_train.py": "e21a2dca012e6571cdbf357bd0a69994c964aacd2d4a1618d24d7996c68f4bc1",
     "wp_v2.json": "7338bb3acc18accb3dd2a4a7828f9fc30593518660fe194a9a243d38b80eaf33"
   },
-  "commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+  "commit": "89be41d304c506c70cc604ac186c73253d2f5462",
   "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
   "execution_regime": "LOCAL_CPU",
   "failures": [],
-  "generated_utc": "2026-11-21T03:32:15Z",
+  "generated_utc": "2026-11-21T03:56:26Z",
   "hard_stop_utc": "2026-11-21T09:22:31Z",
   "host": {
     "cpu_count": 16,
-    "memory_mb": 39.01171875,
+    "memory_mb": 42.55859375,
     "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
     "processor": ""
   },
@@ -62,6 +64,7 @@
       }
     }
   },
+  "null_fields_note": "torch/max_rss_mb/cpu_seconds were added to the run payload at 02:51Z, after the 12 core units had launched, so they are null for those units; wall_seconds, epoch timing and artifact hashes are present for every unit.",
   "regime_deviation": {
     "evidence": [
       "rr doctor res -> 'Connection timed out during banner exchange' (proxied through pve-old.yulinsec.cn:22)",
@@ -74,6 +77,19 @@
       "All arms share the same regime, so cross-arm condition differences remain internally comparable; absolute numbers are not comparable to the round-1 GPU numbers."
     ],
     "reason": "SSH to the research host failed continuously from T0 with transport-level errors (see evidence); the rr CLI could not reach the box, so the frozen round was executed on the local host instead of the two remote GPUs."
+  },
+  "remote_attempts": {
+    "evidence": [
+      "rr doctor res -> Connection timed out during banner exchange",
+      "ssh probe every 45 s -> ssh: connect to host pve-old.yulinsec.cn port 22: Connection timed out"
+    ],
+    "host": "res",
+    "outcome": "unreachable from T0 to the end of Stage B; no remote job was ever created",
+    "pools": [
+      "res-gpu0",
+      "res-gpu1"
+    ],
+    "tool": "rr CLI (deploy/launch path)"
   },
   "remote_jobs": [],
   "round": "word_sentence_port_binding_context_v2",
@@ -233,6 +249,11 @@
           "path": "results/mollipo_BIND_REL_s0/preds_final.npz",
           "sha256": "058a9d73e37e4c547dc5c28b2677bb197a99bcbc12f1c6516ec78e8433472ba0"
         },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_BIND_REL_s0/preds_test.npz",
+          "sha256": "d701c04f8c9171ecd8da7b29d7d1c59c84d1afb4bd2471eebc4b6c0091d1a58a"
+        },
         "state_best.pt": {
           "bytes": 1374913,
           "path": "results/mollipo_BIND_REL_s0/state_best.pt",
@@ -296,6 +317,148 @@
       "artifacts": {
         "preds_best.npz": {
           "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s0_random/preds_best.npz",
+          "sha256": "69664345e786ca2e3ecd794e293782593a094c30a007bbfbfeb22d6681e3db7a"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s0_random/preds_final.npz",
+          "sha256": "65c823917c5554adcbc694c750842bff2a5f47cffe91bd5126a164f00af7d5fe"
+        },
+        "state_best.pt": {
+          "bytes": 5864961,
+          "path": "results/mollipo_BIND_REL_s0_random/state_best.pt",
+          "sha256": "cba852d4a6a2f4fe2100ae19627db67882f10689c4b65d79ffdb3cf52457e1db"
+        },
+        "state_final.pt": {
+          "bytes": 5865096,
+          "path": "results/mollipo_BIND_REL_s0_random/state_final.pt",
+          "sha256": "cb82cde7879d63ea61cce4368afb672d854568886f862c1e9b8f8bc27e29804f"
+        }
+      },
+      "best": {
+        "epoch": 44,
+        "train_mae_raw": 0.34676209489504495,
+        "train_rmse_raw": 0.4458450942838977,
+        "valid_mae_raw": 0.6829569507212866,
+        "valid_rmse_raw": 0.8912720540992428
+      },
+      "command": "bash code/wp_launch.sh BIND_REL 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 4921.049916,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.021901036940869832,
+        "train_rmse_raw": 0.028099037415390004,
+        "valid_mae_raw": 0.7154849350452424,
+        "valid_rmse_raw": 0.9257639563362764
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.024296719472677933,
+        "mean_last20_train_rmse_raw": 0.031096759458250866,
+        "mean_last20_valid_mae_raw": 0.7162011066362971,
+        "mean_last20_valid_rmse_raw": 0.9262485323202556
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 961.703125,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_REL_s0_random",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 773.1718829739839
+    },
+    {
+      "arm": "BIND_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_REL_s0/preds_best.npz",
+          "sha256": "04f63db3e4e518a10a0b7a489f82014c06d83ca42e5a1a49c3730e1a36c8a22a"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_REL_s0/preds_final.npz",
+          "sha256": "3bae1086b83052da56d88fddd3196d7b9ef32f9300a2ed2498af35a355b121d5"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_BIND_REL_s0/state_best.pt",
+          "sha256": "b0a9e23ce2eb4c6880fba2254309528029ffa4241cb69071237986a87c3eeedd"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_BIND_REL_s0/state_final.pt",
+          "sha256": "6a0f40d01ebfd30c2458ec5f385fb8b37094d5f8e08b7af621ddc2f97911308d"
+        }
+      },
+      "best": {
+        "epoch": 114,
+        "train_mae_raw": 0.2514888891359655,
+        "train_rmse_raw": 0.339021947200478,
+        "valid_mae_raw": 0.7036272456160689,
+        "valid_rmse_raw": 0.874253327699694
+      },
+      "command": "bash code/wp_launch.sh BIND_REL 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 559.2295799999999,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.17402001693349192,
+        "train_rmse_raw": 0.24072253545655264,
+        "valid_mae_raw": 0.7264953957194775,
+        "valid_rmse_raw": 0.9077428266129839
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.17540040499883852,
+        "mean_last20_train_rmse_raw": 0.2425538035842369,
+        "mean_last20_valid_mae_raw": 0.731342080050865,
+        "mean_last20_valid_rmse_raw": 0.9131315289555427
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 625.09765625,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_BIND_REL_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 85.27608686999884
+    },
+    {
+      "arm": "BIND_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
           "path": "results/mollipo_BIND_REL_s1/preds_best.npz",
           "sha256": "d05ec1f9307f27c5a8d29deaa404ec96c5f2a1166bac28ccc478e736929ed0d8"
         },
@@ -303,6 +466,11 @@
           "bytes": 46386,
           "path": "results/mollipo_BIND_REL_s1/preds_final.npz",
           "sha256": "1417fee82ac77b7d1fd4219db295767dff5da53dbb565f7868730ba6402a6c6b"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_BIND_REL_s1/preds_test.npz",
+          "sha256": "0d610af7ed9d20d5ff792ec0671596950626cbfa00d8459cabd175454d86df84"
         },
         "state_best.pt": {
           "bytes": 1374913,
@@ -363,6 +531,148 @@
       "wall_seconds": 492.44961577098
     },
     {
+      "arm": "BIND_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s1_random/preds_best.npz",
+          "sha256": "5b50d065304f720859c4c289554234923fe1d933f27fc5009a5ab7f9209ca1eb"
+        },
+        "preds_final.npz": {
+          "bytes": 46386,
+          "path": "results/mollipo_BIND_REL_s1_random/preds_final.npz",
+          "sha256": "a57219384b34a97282a127376d7c4c21395f35ac6099674d9fa3f2261fb4965c"
+        },
+        "state_best.pt": {
+          "bytes": 5864961,
+          "path": "results/mollipo_BIND_REL_s1_random/state_best.pt",
+          "sha256": "84edf26914b33572fc583a422c29d50485ab396156ba0ccd54c8d9314097a6d9"
+        },
+        "state_final.pt": {
+          "bytes": 5865096,
+          "path": "results/mollipo_BIND_REL_s1_random/state_final.pt",
+          "sha256": "b97ab8133b785bdc2d4df339caaf36cbd97d1ddc75b485f345788a773d44c231"
+        }
+      },
+      "best": {
+        "epoch": 41,
+        "train_mae_raw": 0.4059535719099499,
+        "train_rmse_raw": 0.5175281472520501,
+        "valid_mae_raw": 0.6793717804409208,
+        "valid_rmse_raw": 0.8883982088897898
+      },
+      "command": "bash code/wp_launch.sh BIND_REL 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 4909.366454,
+      "dataset": "ogbg-mollipo",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.027201397433167414,
+        "train_rmse_raw": 0.035028650560387016,
+        "valid_mae_raw": 0.6978016779536292,
+        "valid_rmse_raw": 0.9138018283969143
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.027400623240641186,
+        "mean_last20_train_rmse_raw": 0.03529756210983016,
+        "mean_last20_valid_mae_raw": 0.6974100531708627,
+        "mean_last20_valid_rmse_raw": 0.913566530306056
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 955.1328125,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "mollipo_BIND_REL_s1_random",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 771.6788446099963
+    },
+    {
+      "arm": "BIND_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_REL_s1/preds_best.npz",
+          "sha256": "3048f88fa6f4c90f5c46a911f17d64be9894ea33c1a2d740a53083ccf58b84e7"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_REL_s1/preds_final.npz",
+          "sha256": "9a2206418e898761d9ae67d1622365d4f952eeffe42c39c96ba6d7d13ceda9ec"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_BIND_REL_s1/state_best.pt",
+          "sha256": "a72b69e83c03896afc790d0df807e51e2ea92271b733d5edd95128253caa2926"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_BIND_REL_s1/state_final.pt",
+          "sha256": "eb3b67e60920e18ba122d65bbc1b2296fd5987bf766a70c36a2077014b02cca8"
+        }
+      },
+      "best": {
+        "epoch": 134,
+        "train_mae_raw": 0.23752923577429186,
+        "train_rmse_raw": 0.3202255204393923,
+        "valid_mae_raw": 0.7466886402231402,
+        "valid_rmse_raw": 0.9542327386979454
+      },
+      "command": "bash code/wp_launch.sh BIND_REL 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 547.464286,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.1720098122260523,
+        "train_rmse_raw": 0.2385855862248338,
+        "valid_mae_raw": 0.760907360937743,
+        "valid_rmse_raw": 0.9932150931023767
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.17376957843018212,
+        "mean_last20_train_rmse_raw": 0.2406479445850068,
+        "mean_last20_valid_mae_raw": 0.7610116769254734,
+        "mean_last20_valid_rmse_raw": 0.9954666811080504
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 623.5546875,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_BIND_REL_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 82.94016669498524
+    },
+    {
       "arm": "BIND_SELF",
       "artifacts": {
         "preds_best.npz": {
@@ -374,6 +684,11 @@
           "bytes": 46386,
           "path": "results/mollipo_BIND_SELF_s0/preds_final.npz",
           "sha256": "ac88c24ef5d1e4b76740910b50e75c03dd517948d5e22682d40286cfcdbc2d27"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_BIND_SELF_s0/preds_test.npz",
+          "sha256": "20352275c10f6e0a571a3a7f7bc153fdd6417025cb3723595e398e91d5271b3e"
         },
         "state_best.pt": {
           "bytes": 1374913,
@@ -437,6 +752,77 @@
       "arm": "BIND_SELF",
       "artifacts": {
         "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_SELF_s0/preds_best.npz",
+          "sha256": "108d89764a7d98553383f378f9cb6fc8a68dead6969c97321140652045e660cd"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_SELF_s0/preds_final.npz",
+          "sha256": "d411b80f2a49506bc92421eb33fd34af0ab21e3cf1075181e4c7b9a8691bc4b0"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_BIND_SELF_s0/state_best.pt",
+          "sha256": "e3191c78e53cd6b09202f346509c4418c78734ef0584959e98f1b6aedcad9c6b"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_BIND_SELF_s0/state_final.pt",
+          "sha256": "adb799a79de17236f64946dd735f5864ba30a5d5bb408819b4787d2e2a15c47e"
+        }
+      },
+      "best": {
+        "epoch": 217,
+        "train_mae_raw": 0.18069840640556523,
+        "train_rmse_raw": 0.24928458440143447,
+        "valid_mae_raw": 0.6848503889235775,
+        "valid_rmse_raw": 0.8568329711899799
+      },
+      "command": "bash code/wp_launch.sh BIND_SELF 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 573.5702140000001,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.18202571990484673,
+        "train_rmse_raw": 0.24847671616594963,
+        "valid_mae_raw": 0.6869148838836535,
+        "valid_rmse_raw": 0.8619565034504454
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.18274185453973166,
+        "mean_last20_train_rmse_raw": 0.2496143049807537,
+        "mean_last20_valid_mae_raw": 0.6935489696738995,
+        "mean_last20_valid_rmse_raw": 0.8704067700738343
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 622.51171875,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_BIND_SELF_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 90.02802087098826
+    },
+    {
+      "arm": "BIND_SELF",
+      "artifacts": {
+        "preds_best.npz": {
           "bytes": 46386,
           "path": "results/mollipo_BIND_SELF_s1/preds_best.npz",
           "sha256": "55b598350be8dbb8663b26a7c733e9d5e59eda79c9c1d1cb5308b0b6c48607d3"
@@ -445,6 +831,11 @@
           "bytes": 46386,
           "path": "results/mollipo_BIND_SELF_s1/preds_final.npz",
           "sha256": "378665db451590e89b9b8ee9ef5646528bdcc3a3db14f1215236e0c5b680d140"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_BIND_SELF_s1/preds_test.npz",
+          "sha256": "5fea4c47cbbbc278ee005ad157969d6f9ef00c4e52d7c5e19eac08f76f1af901"
         },
         "state_best.pt": {
           "bytes": 1374913,
@@ -503,6 +894,77 @@
       "status": "COMPLETE",
       "torch": null,
       "wall_seconds": 567.5641732399818
+    },
+    {
+      "arm": "BIND_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_SELF_s1/preds_best.npz",
+          "sha256": "0164cc406f797b302c0ed85a2abe7071cdd114481bc8846c2ceeabe54b4729c7"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_BIND_SELF_s1/preds_final.npz",
+          "sha256": "b44a962e3ef8e76026b0b25ec5534144059126ef95b25d9200aba5b43529191e"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_BIND_SELF_s1/state_best.pt",
+          "sha256": "65ec85324a4d57760f2d880e86f735a415bee4ed660cdb6011d14534edb6dce0"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_BIND_SELF_s1/state_final.pt",
+          "sha256": "71338c837cea7b3cdd0e461b9eb6c0cd4090fc7485f83c4b3121cd51bab57dd0"
+        }
+      },
+      "best": {
+        "epoch": 182,
+        "train_mae_raw": 0.21517931569177665,
+        "train_rmse_raw": 0.30070680822292883,
+        "valid_mae_raw": 0.7437162040609174,
+        "valid_rmse_raw": 0.9211254926484771
+      },
+      "command": "bash code/wp_launch.sh BIND_SELF 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 550.434941,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.1819402964046419,
+        "train_rmse_raw": 0.25647834847549367,
+        "valid_mae_raw": 0.7480283089443646,
+        "valid_rmse_raw": 0.9346662689832596
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.18313839844615917,
+        "mean_last20_train_rmse_raw": 0.25760970659302507,
+        "mean_last20_valid_mae_raw": 0.7494128807983567,
+        "mean_last20_valid_rmse_raw": 0.9347990214758852
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 625.2265625,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_BIND_SELF_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 83.42911171499873
     },
     {
       "arm": "BIND_SELF_SCALAR",
@@ -659,6 +1121,11 @@
           "path": "results/mollipo_GINE_RAW_s0/preds_final.npz",
           "sha256": "9b2c943035cfc96dff44fdbd6c8da714accc2340a73c913dcd65b2bfbec83d58"
         },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_GINE_RAW_s0/preds_test.npz",
+          "sha256": "f63a9dfbd40da4807b33c84cf07bf621cfa252791534f6cb0d03e03df74fc332"
+        },
         "state_best.pt": {
           "bytes": 1578722,
           "path": "results/mollipo_GINE_RAW_s0/state_best.pt",
@@ -729,6 +1196,11 @@
           "bytes": 46386,
           "path": "results/mollipo_GINE_RAW_s1/preds_final.npz",
           "sha256": "22a6f1c64123f7db884f85a9778fc40608251aa3ed2f79955902854468e15580"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_GINE_RAW_s1/preds_test.npz",
+          "sha256": "d3d8fe51973ac3119edc6d05b347c59dbfd8f72d468ff906dc40972bb9a6e570"
         },
         "state_best.pt": {
           "bytes": 1578722,
@@ -801,6 +1273,11 @@
           "path": "results/mollipo_GINE_REF_s0/preds_final.npz",
           "sha256": "baebcd485c9748a21f28190d5d2e587f9ec40a879e887cd6bffdfa12c246fdbf"
         },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_GINE_REF_s0/preds_test.npz",
+          "sha256": "d1c55840d147a87ef1d07bb8f579ba922b5740ddc0fb9f6fd2748d45fe96f579"
+        },
         "state_best.pt": {
           "bytes": 1595234,
           "path": "results/mollipo_GINE_REF_s0/state_best.pt",
@@ -863,6 +1340,77 @@
       "arm": "GINE_REF",
       "artifacts": {
         "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_GINE_REF_s0/preds_best.npz",
+          "sha256": "e4a4f3fd3fd70c785034d3b79c2ea3836e514d993bfe8b078b5c8bebbc7d2d09"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_GINE_REF_s0/preds_final.npz",
+          "sha256": "9ca71fdf390455989b89884dec17c968d06d2ec4b88e489197d2a7217abfe0b1"
+        },
+        "state_best.pt": {
+          "bytes": 1595234,
+          "path": "results/molesol_GINE_REF_s0/state_best.pt",
+          "sha256": "016cb3966adc9a8edd2cf15de93fe2b5763857d2f7666d6552204994f3183223"
+        },
+        "state_final.pt": {
+          "bytes": 1595306,
+          "path": "results/molesol_GINE_REF_s0/state_final.pt",
+          "sha256": "8bc0ab463142081dab74c797a736e718a32073bc489bc93cfe22b4db61089759"
+        }
+      },
+      "best": {
+        "epoch": 127,
+        "train_mae_raw": 0.2786661209394028,
+        "train_rmse_raw": 0.37270502780272374,
+        "valid_mae_raw": 0.7065597920291191,
+        "valid_rmse_raw": 0.9033251896908554
+      },
+      "command": "bash code/wp_launch.sh GINE_REF 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 624.06801,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.19475910734971716,
+        "train_rmse_raw": 0.28213386726222783,
+        "valid_mae_raw": 0.7289752527675798,
+        "valid_rmse_raw": 0.9785040523782889
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.19680162766027348,
+        "mean_last20_train_rmse_raw": 0.2843076718976042,
+        "mean_last20_valid_mae_raw": 0.7312077148298246,
+        "mean_last20_valid_rmse_raw": 0.9763282140716077
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 645.6953125,
+      "n_parameters": 391942,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_GINE_REF_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 96.61575518001337
+    },
+    {
+      "arm": "GINE_REF",
+      "artifacts": {
+        "preds_best.npz": {
           "bytes": 46386,
           "path": "results/mollipo_GINE_REF_s1/preds_best.npz",
           "sha256": "f0c6a91f380de8ca58e5f547edc887f985c72ddb9bff8eca943681304964d58b"
@@ -871,6 +1419,11 @@
           "bytes": 46386,
           "path": "results/mollipo_GINE_REF_s1/preds_final.npz",
           "sha256": "71c53c72beb17347ffa0906ec59b50b77185eedc4154461cad52a3e2f620b9b4"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_GINE_REF_s1/preds_test.npz",
+          "sha256": "cc713949318f2ca22cc5f6570d56a0e9afb226e595755e78bd3db1e547f81db1"
         },
         "state_best.pt": {
           "bytes": 1595234,
@@ -929,6 +1482,77 @@
       "status": "COMPLETE",
       "torch": null,
       "wall_seconds": 606.4189769189979
+    },
+    {
+      "arm": "GINE_REF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_GINE_REF_s1/preds_best.npz",
+          "sha256": "edf7ff449ed4718042e892a4aa8b67bd173b6737f8561729a7e5209e4716def2"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_GINE_REF_s1/preds_final.npz",
+          "sha256": "6c3b585a8993ad479303b9d8463637e69c70d28de04a682f87df584f47948fe9"
+        },
+        "state_best.pt": {
+          "bytes": 1595234,
+          "path": "results/molesol_GINE_REF_s1/state_best.pt",
+          "sha256": "fbeb3975c60d157c425584da3f6747f0b471251d3d5135d395485a74830814bd"
+        },
+        "state_final.pt": {
+          "bytes": 1595306,
+          "path": "results/molesol_GINE_REF_s1/state_final.pt",
+          "sha256": "6ab06ed5cf7e872732588b1d4c8eab75e637731b69940601c7bda4a3ac3d9713"
+        }
+      },
+      "best": {
+        "epoch": 93,
+        "train_mae_raw": 0.33192768607065576,
+        "train_rmse_raw": 0.4402535391108049,
+        "valid_mae_raw": 0.7114723129610044,
+        "valid_rmse_raw": 0.9020066265119026
+      },
+      "command": "bash code/wp_launch.sh GINE_REF 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 623.034397,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.21219885071735425,
+        "train_rmse_raw": 0.30520160115249056,
+        "valid_mae_raw": 0.7286593376007755,
+        "valid_rmse_raw": 0.9748016942244606
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.21684287405859873,
+        "mean_last20_train_rmse_raw": 0.3086874313117164,
+        "mean_last20_valid_mae_raw": 0.7265821506491804,
+        "mean_last20_valid_rmse_raw": 0.9770570000869883
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 649.26171875,
+      "n_parameters": 391942,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_GINE_REF_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "bind",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 96.5722773290181
     },
     {
       "arm": "GLOBAL_CTX_BIND",
@@ -1147,6 +1771,77 @@
       "arm": "MEAN_REL",
       "artifacts": {
         "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_REL_s0/preds_best.npz",
+          "sha256": "f586744eecb51115dca42d646f4b9b88e7edab5e5c9f85b9fdf8440f3c0c2ea8"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_REL_s0/preds_final.npz",
+          "sha256": "0d3c8e1407c82356a305ed29405edbc5bc12e1d1235b6078a85b992d5d5a40f0"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_MEAN_REL_s0/state_best.pt",
+          "sha256": "70e32493aa334c24008039cae4224088a0a182e0adf9d1c4699c985cc12be3a8"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_MEAN_REL_s0/state_final.pt",
+          "sha256": "3dcd6ab837765e8768f3186f50fb6b8e281de694c7d658220bd0cf2bb5641062"
+        }
+      },
+      "best": {
+        "epoch": 161,
+        "train_mae_raw": 0.19961258246999095,
+        "train_rmse_raw": 0.2698168925141897,
+        "valid_mae_raw": 0.7569412921382263,
+        "valid_rmse_raw": 0.9266140061305094
+      },
+      "command": "bash code/wp_launch.sh MEAN_REL 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 576.471554,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.16149349738647562,
+        "train_rmse_raw": 0.22487774156512919,
+        "valid_mae_raw": 0.7839135437940075,
+        "valid_rmse_raw": 0.9541837154672829
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.1630678722705122,
+        "mean_last20_train_rmse_raw": 0.22676665125888745,
+        "mean_last20_valid_mae_raw": 0.7902554203451208,
+        "mean_last20_valid_rmse_raw": 0.9589317815804531
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 625.01953125,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_MEAN_REL_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 90.13072327099508
+    },
+    {
+      "arm": "MEAN_REL",
+      "artifacts": {
+        "preds_best.npz": {
           "bytes": 46386,
           "path": "results/mollipo_MEAN_REL_s1/preds_best.npz",
           "sha256": "aea1df86a8f58e28bf8e2e5ef78a1b8c8c0f245b14004e876a37844068fbe021"
@@ -1215,6 +1910,77 @@
       "wall_seconds": 514.526785916998
     },
     {
+      "arm": "MEAN_REL",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_REL_s1/preds_best.npz",
+          "sha256": "33e5aef8e1e9ba02341af457262d13bb86d5e8ba91d15b5654979377ea956a71"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_REL_s1/preds_final.npz",
+          "sha256": "cf8fd98c0d6ad6d48548aed6f631b2a4bfea76c4e15fb90e6ed44c8e86d8c22e"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_MEAN_REL_s1/state_best.pt",
+          "sha256": "e8a719b0b64978ce82e481b1fde97479245866d833c612d15d2457474f78a545"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_MEAN_REL_s1/state_final.pt",
+          "sha256": "776721129aaa24c4fd3291b15b45f17971642e27d93b76e4f4d36671f46e1dc8"
+        }
+      },
+      "best": {
+        "epoch": 101,
+        "train_mae_raw": 0.28340266839892264,
+        "train_rmse_raw": 0.374597280863402,
+        "valid_mae_raw": 0.7714083732756893,
+        "valid_rmse_raw": 0.9145187657524755
+      },
+      "command": "bash code/wp_launch.sh MEAN_REL 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 637.0176859999999,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.16825179078362204,
+        "train_rmse_raw": 0.23545199535672953,
+        "valid_mae_raw": 0.7663677804237974,
+        "valid_rmse_raw": 0.9594718843710999
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.17090728185129272,
+        "mean_last20_train_rmse_raw": 0.23807166055554357,
+        "mean_last20_valid_mae_raw": 0.770003664862793,
+        "mean_last20_valid_rmse_raw": 0.9670753426595917
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 624.83203125,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_MEAN_REL_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "rel",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 96.8820625510125
+    },
+    {
       "arm": "MEAN_SELF",
       "artifacts": {
         "preds_best.npz": {
@@ -1226,6 +1992,11 @@
           "bytes": 46386,
           "path": "results/mollipo_MEAN_SELF_s0/preds_final.npz",
           "sha256": "613160fe38a43bc7c83f41bf70a22f3269cef54e43fca76b73cbdbf7457e5e3a"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_MEAN_SELF_s0/preds_test.npz",
+          "sha256": "e0c02f08677c1f07f010edd53dc46e3176389717fc10f2ff4b89774ed457b2be"
         },
         "state_best.pt": {
           "bytes": 1374913,
@@ -1289,6 +2060,77 @@
       "arm": "MEAN_SELF",
       "artifacts": {
         "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_SELF_s0/preds_best.npz",
+          "sha256": "a4ab8dfa94fff7a3454e4d24872dd4d26f5ce85b9b90a3d9924813be5fdcba2b"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_SELF_s0/preds_final.npz",
+          "sha256": "53750bf770e7b5e4fe4f2d7ee2af290de7987528314648a7396b2e499e7006f6"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_MEAN_SELF_s0/state_best.pt",
+          "sha256": "f7e4b5ac912c8e40afc2963c24561329358d4e420628bdccd8e8c07b48e023d3"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_MEAN_SELF_s0/state_final.pt",
+          "sha256": "f452091849781218215c6d7c9919ac6f6a7a1fb975c0b87b67bbcff1f88fb975"
+        }
+      },
+      "best": {
+        "epoch": 125,
+        "train_mae_raw": 0.2883514448702996,
+        "train_rmse_raw": 0.37840854490880266,
+        "valid_mae_raw": 0.7505406225677085,
+        "valid_rmse_raw": 0.9114763076634835
+      },
+      "command": "bash code/wp_launch.sh MEAN_SELF 0",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 569.230124,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.18257265318259433,
+        "train_rmse_raw": 0.24714995763026057,
+        "valid_mae_raw": 0.7538126612131575,
+        "valid_rmse_raw": 0.9443486063181047
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.18296573375518993,
+        "mean_last20_train_rmse_raw": 0.24862951338625075,
+        "mean_last20_valid_mae_raw": 0.7605279484153848,
+        "mean_last20_valid_rmse_raw": 0.951769296409403
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 622.125,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_MEAN_SELF_s0",
+      "seconds_per_epoch": null,
+      "seed": 0,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 86.64553484198404
+    },
+    {
+      "arm": "MEAN_SELF",
+      "artifacts": {
+        "preds_best.npz": {
           "bytes": 46386,
           "path": "results/mollipo_MEAN_SELF_s1/preds_best.npz",
           "sha256": "c4ae2db5598cbce2e742506af231f7cddb4a47237d87970ddbb76b9e0d087ead"
@@ -1297,6 +2139,11 @@
           "bytes": 46386,
           "path": "results/mollipo_MEAN_SELF_s1/preds_final.npz",
           "sha256": "7714010df45829a2385be89c6928458d8a36414ac778bb2333a8f069ad2fbc88"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_MEAN_SELF_s1/preds_test.npz",
+          "sha256": "a8b7af44ed5f0ee631c550b94ee3c3d9f08060496abd7b8a37442a05bfc73dd2"
         },
         "state_best.pt": {
           "bytes": 1374913,
@@ -1357,6 +2204,77 @@
       "wall_seconds": 522.3756274829793
     },
     {
+      "arm": "MEAN_SELF",
+      "artifacts": {
+        "preds_best.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_SELF_s1/preds_best.npz",
+          "sha256": "332ab64eae9cb142c6c26637aeedd7ab45e17828e210d2c85c553cac90037ae7"
+        },
+        "preds_final.npz": {
+          "bytes": 13206,
+          "path": "results/molesol_MEAN_SELF_s1/preds_final.npz",
+          "sha256": "8d5b1d4d529ab6aac9757902c8c1ef9be1f6570698d05cdf986ae15f313393f1"
+        },
+        "state_best.pt": {
+          "bytes": 1362113,
+          "path": "results/molesol_MEAN_SELF_s1/state_best.pt",
+          "sha256": "030b31c2e98b07cc109546078dbabf0afbbe4ab56091e62b10f8a79e57193857"
+        },
+        "state_final.pt": {
+          "bytes": 1362184,
+          "path": "results/molesol_MEAN_SELF_s1/state_final.pt",
+          "sha256": "251a16fe0edc2703863da5cd969ea1a2072a52123ca08bff7a4cedb9d73be5e7"
+        }
+      },
+      "best": {
+        "epoch": 181,
+        "train_mae_raw": 0.20677052038471874,
+        "train_rmse_raw": 0.2880539363255739,
+        "valid_mae_raw": 0.7645124766678937,
+        "valid_rmse_raw": 0.9495367539666665
+      },
+      "command": "bash code/wp_launch.sh MEAN_SELF 1",
+      "config_sha256": "b9d95dd0d2cb36e16fef5c4f49de6fbce88d0e9b034ee5c096c76a2f9cf505a8",
+      "cpu_seconds": 626.51631,
+      "dataset": "ogbg-molesol",
+      "device": "cpu",
+      "epochs": 240,
+      "final": {
+        "epoch": 240,
+        "train_mae_raw": 0.1839696201939805,
+        "train_rmse_raw": 0.2622003579717116,
+        "valid_mae_raw": 0.7737566644111565,
+        "valid_rmse_raw": 0.9665661015899857
+      },
+      "final_state_written": null,
+      "gpu_hours": null,
+      "gpu_model": null,
+      "last20": {
+        "mean_last20_train_mae_raw": 0.18558759690652665,
+        "mean_last20_train_rmse_raw": 0.2635187059187873,
+        "mean_last20_valid_mae_raw": 0.7733399756186832,
+        "mean_last20_valid_rmse_raw": 0.9657746179940851
+      },
+      "launch_commit": "85dcb3e057bc383515e238f11403bd911befed7a",
+      "max_rss_mb": 622.8984375,
+      "n_parameters": 284514,
+      "resumed_from_epoch": null,
+      "run_id": "molesol_MEAN_SELF_s1",
+      "seconds_per_epoch": null,
+      "seed": 1,
+      "spec": {
+        "bag": false,
+        "context": "self",
+        "instance": "graph",
+        "port": "mean",
+        "readout": "vector"
+      },
+      "status": "COMPLETE",
+      "torch": "2.5.1+cu124",
+      "wall_seconds": 95.28133760599303
+    },
+    {
       "arm": "SET_MEAN_SELF",
       "artifacts": {
         "preds_best.npz": {
@@ -1368,6 +2286,11 @@
           "bytes": 46386,
           "path": "results/mollipo_SET_MEAN_SELF_s0/preds_final.npz",
           "sha256": "86f5d7f434622745ad9ad5ede1b79bf4378ddc6a1d0586803c0b137340b739a6"
+        },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_SET_MEAN_SELF_s0/preds_test.npz",
+          "sha256": "603e3dacc2ce0a093cf644a86cef09c890d1b9679e49c6903d63ba805419bcb3"
         },
         "state_best.pt": {
           "bytes": 1374913,
@@ -1440,6 +2363,11 @@
           "path": "results/mollipo_SET_MEAN_SELF_s1/preds_final.npz",
           "sha256": "83293879fa3bc71db266e1450e226ada93c558a800874a37702dcd373ceded0f"
         },
+        "preds_test.npz": {
+          "bytes": 5540,
+          "path": "results/mollipo_SET_MEAN_SELF_s1/preds_test.npz",
+          "sha256": "e6b66beddeb1e3460b6877a36327b81bbb199d2a49d096d8dd090d54d3f4464e"
+        },
         "state_best.pt": {
           "bytes": 1374913,
           "path": "results/mollipo_SET_MEAN_SELF_s1/state_best.pt",
@@ -1501,5 +2429,218 @@
   ],
   "stop_launching_after_utc": "2026-11-21T07:52:31Z",
   "t0_monotonic": 1795224151,
-  "t0_utc": "2026-11-21T01:22:31Z"
+  "t0_utc": "2026-11-21T01:22:31Z",
+  "terminal_table": [
+    {
+      "arm": "BIND_REL",
+      "best_epoch": 69,
+      "best_valid_rmse": 0.7089139801739928,
+      "checkpoint_sha256": "df4552a7dbf1341a7bc2a8e4c7f5cf2b76c396a23b7b8afa62d1235a6dbb89a2",
+      "seed": 0,
+      "test_mae_raw": 0.593959864832106,
+      "test_rmse_raw": 0.7886249307713323
+    },
+    {
+      "arm": "BIND_REL",
+      "best_epoch": 53,
+      "best_valid_rmse": 0.717146130215152,
+      "checkpoint_sha256": "13973c652bdb28fc02924f6c3fefb9c32a155eade25991aea677f3d12bdabdc3",
+      "seed": 1,
+      "test_mae_raw": 0.5758434275786082,
+      "test_rmse_raw": 0.7647943921015334
+    },
+    {
+      "arm": "BIND_SELF",
+      "best_epoch": 57,
+      "best_valid_rmse": 0.7488057897401559,
+      "checkpoint_sha256": "5cbe5e26dbce9ab26070bf6f25ed2d8f00e8d5e0ce77113c92d72b6b219edd4e",
+      "seed": 0,
+      "test_mae_raw": 0.5880119809082576,
+      "test_rmse_raw": 0.7996525645958116
+    },
+    {
+      "arm": "BIND_SELF",
+      "best_epoch": 37,
+      "best_valid_rmse": 0.746752499485049,
+      "checkpoint_sha256": "c72abf0c1cf625ce8ffa44d2de8b703374f431fbf7dc7898f99519820e9afd44",
+      "seed": 1,
+      "test_mae_raw": 0.6147429548558735,
+      "test_rmse_raw": 0.7974466075003347
+    },
+    {
+      "arm": "GINE_RAW",
+      "best_epoch": 216,
+      "best_valid_rmse": 0.6181796725875821,
+      "checkpoint_sha256": "db799e2ef0b654026720e44893e3e296957fdfabe30c304e334114bb1442a258",
+      "seed": 0,
+      "test_mae_raw": 0.4676479399204254,
+      "test_rmse_raw": 0.6294152061639753
+    },
+    {
+      "arm": "GINE_RAW",
+      "best_epoch": 168,
+      "best_valid_rmse": 0.609025538415045,
+      "checkpoint_sha256": "84475b542fae7b6812f8bddb060299c34c35b6322a24a850e458a12c86c984c1",
+      "seed": 1,
+      "test_mae_raw": 0.4813251086643764,
+      "test_rmse_raw": 0.6517331642183747
+    },
+    {
+      "arm": "GINE_REF",
+      "best_epoch": 176,
+      "best_valid_rmse": 0.618124615886888,
+      "checkpoint_sha256": "af3b3227ea1d9649186f83b13b4d00b6c799c04837ae0ca85e1628cc56c2e350",
+      "seed": 0,
+      "test_mae_raw": 0.49017576433363413,
+      "test_rmse_raw": 0.6732425117375026
+    },
+    {
+      "arm": "GINE_REF",
+      "best_epoch": 111,
+      "best_valid_rmse": 0.625723743507331,
+      "checkpoint_sha256": "dca901ae746ea15285608420b565105b8c299c68aa77869d79a656a45082e89f",
+      "seed": 1,
+      "test_mae_raw": 0.5009203976108915,
+      "test_rmse_raw": 0.6649564921148053
+    },
+    {
+      "arm": "MEAN_SELF",
+      "best_epoch": 59,
+      "best_valid_rmse": 0.7199647129407775,
+      "checkpoint_sha256": "db728086a962f13b95b89d254c5b153dd7c7d4d8968f3cdde2fcda0be2ba091a",
+      "seed": 0,
+      "test_mae_raw": 0.6038891758237567,
+      "test_rmse_raw": 0.7971460583232357
+    },
+    {
+      "arm": "MEAN_SELF",
+      "best_epoch": 64,
+      "best_valid_rmse": 0.6989811783186147,
+      "checkpoint_sha256": "dade089818256b1729da5819c2d4668294061d8ebbd5aafa1c719202cc95ccf9",
+      "seed": 1,
+      "test_mae_raw": 0.5745399355888366,
+      "test_rmse_raw": 0.7539481902097369
+    },
+    {
+      "arm": "SET_MEAN_SELF",
+      "best_epoch": 53,
+      "best_valid_rmse": 0.7220478851400792,
+      "checkpoint_sha256": "c9742821fa2905a92fd75a67602f4485605559f42f421898bb68bd13ab717200",
+      "seed": 0,
+      "test_mae_raw": 0.5970055855455852,
+      "test_rmse_raw": 0.7821350483243551
+    },
+    {
+      "arm": "SET_MEAN_SELF",
+      "best_epoch": 48,
+      "best_valid_rmse": 0.7402287213726789,
+      "checkpoint_sha256": "55de5978327cd8b6f63ef404927d8507fb1648765a378078ed823e71410e57e6",
+      "seed": 1,
+      "test_mae_raw": 0.5862274133023762,
+      "test_rmse_raw": 0.7703116908288737
+    }
+  ],
+  "terminal_test": {
+    "commit": "89be41d304c506c70cc604ac186c73253d2f5462",
+    "dataset": "ogbg-mollipo",
+    "policy": "TERMINAL_DEVELOPMENT_TEST",
+    "scores": {
+      "BIND_REL_s0": {
+        "best_epoch": 69,
+        "best_valid_rmse": 0.7089139801739928,
+        "checkpoint_sha256": "df4552a7dbf1341a7bc2a8e4c7f5cf2b76c396a23b7b8afa62d1235a6dbb89a2",
+        "n_rows": 420,
+        "test_mae_raw": 0.593959864832106,
+        "test_rmse_raw": 0.7886249307713323
+      },
+      "BIND_REL_s1": {
+        "best_epoch": 53,
+        "best_valid_rmse": 0.717146130215152,
+        "checkpoint_sha256": "13973c652bdb28fc02924f6c3fefb9c32a155eade25991aea677f3d12bdabdc3",
+        "n_rows": 420,
+        "test_mae_raw": 0.5758434275786082,
+        "test_rmse_raw": 0.7647943921015334
+      },
+      "BIND_SELF_s0": {
+        "best_epoch": 57,
+        "best_valid_rmse": 0.7488057897401559,
+        "checkpoint_sha256": "5cbe5e26dbce9ab26070bf6f25ed2d8f00e8d5e0ce77113c92d72b6b219edd4e",
+        "n_rows": 420,
+        "test_mae_raw": 0.5880119809082576,
+        "test_rmse_raw": 0.7996525645958116
+      },
+      "BIND_SELF_s1": {
+        "best_epoch": 37,
+        "best_valid_rmse": 0.746752499485049,
+        "checkpoint_sha256": "c72abf0c1cf625ce8ffa44d2de8b703374f431fbf7dc7898f99519820e9afd44",
+        "n_rows": 420,
+        "test_mae_raw": 0.6147429548558735,
+        "test_rmse_raw": 0.7974466075003347
+      },
+      "GINE_RAW_s0": {
+        "best_epoch": 216,
+        "best_valid_rmse": 0.6181796725875821,
+        "checkpoint_sha256": "db799e2ef0b654026720e44893e3e296957fdfabe30c304e334114bb1442a258",
+        "n_rows": 420,
+        "test_mae_raw": 0.4676479399204254,
+        "test_rmse_raw": 0.6294152061639753
+      },
+      "GINE_RAW_s1": {
+        "best_epoch": 168,
+        "best_valid_rmse": 0.609025538415045,
+        "checkpoint_sha256": "84475b542fae7b6812f8bddb060299c34c35b6322a24a850e458a12c86c984c1",
+        "n_rows": 420,
+        "test_mae_raw": 0.4813251086643764,
+        "test_rmse_raw": 0.6517331642183747
+      },
+      "GINE_REF_s0": {
+        "best_epoch": 176,
+        "best_valid_rmse": 0.618124615886888,
+        "checkpoint_sha256": "af3b3227ea1d9649186f83b13b4d00b6c799c04837ae0ca85e1628cc56c2e350",
+        "n_rows": 420,
+        "test_mae_raw": 0.49017576433363413,
+        "test_rmse_raw": 0.6732425117375026
+      },
+      "GINE_REF_s1": {
+        "best_epoch": 111,
+        "best_valid_rmse": 0.625723743507331,
+        "checkpoint_sha256": "dca901ae746ea15285608420b565105b8c299c68aa77869d79a656a45082e89f",
+        "n_rows": 420,
+        "test_mae_raw": 0.5009203976108915,
+        "test_rmse_raw": 0.6649564921148053
+      },
+      "MEAN_SELF_s0": {
+        "best_epoch": 59,
+        "best_valid_rmse": 0.7199647129407775,
+        "checkpoint_sha256": "db728086a962f13b95b89d254c5b153dd7c7d4d8968f3cdde2fcda0be2ba091a",
+        "n_rows": 420,
+        "test_mae_raw": 0.6038891758237567,
+        "test_rmse_raw": 0.7971460583232357
+      },
+      "MEAN_SELF_s1": {
+        "best_epoch": 64,
+        "best_valid_rmse": 0.6989811783186147,
+        "checkpoint_sha256": "dade089818256b1729da5819c2d4668294061d8ebbd5aafa1c719202cc95ccf9",
+        "n_rows": 420,
+        "test_mae_raw": 0.5745399355888366,
+        "test_rmse_raw": 0.7539481902097369
+      },
+      "SET_MEAN_SELF_s0": {
+        "best_epoch": 53,
+        "best_valid_rmse": 0.7220478851400792,
+        "checkpoint_sha256": "c9742821fa2905a92fd75a67602f4485605559f42f421898bb68bd13ab717200",
+        "n_rows": 420,
+        "test_mae_raw": 0.5970055855455852,
+        "test_rmse_raw": 0.7821350483243551
+      },
+      "SET_MEAN_SELF_s1": {
+        "best_epoch": 48,
+        "best_valid_rmse": 0.7402287213726789,
+        "checkpoint_sha256": "55de5978327cd8b6f63ef404927d8507fb1648765a378078ed823e71410e57e6",
+        "n_rows": 420,
+        "test_mae_raw": 0.5862274133023762,
+        "test_rmse_raw": 0.7703116908288737
+      }
+    }
+  }
 }

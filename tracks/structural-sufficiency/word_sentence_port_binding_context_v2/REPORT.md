@@ -2,53 +2,70 @@
 
 本轮实施日期 2026-11-21，T0 = `1795224151`（2026-11-21T01:22:31Z）。
 定义/配置/分支在正式训练前冻结于 `PROTOCOL.md` 与 `configs/wp_v2.json`；执行偏差见 `PROTOCOL.md` 附录 A。
-**正式单元 12（Stage B 7 + Stage C 5）完成，GPU·h = 0：`res` 从 T0 起 SSH 不可达，改为本机 CPU 双 worker
-（每 worker 7 线程）执行，全部臂同一 regime，跨臂比较仍内部有效，绝对数值不与上一轮 GPU 数值直接对照。**
-主表 12 个单元全部 COMPLETE，无 OOM、无超时、无中断重跑。
+**正式单元 32（核心 12 + 分支 10 + ESOL 复现 10）全部 COMPLETE，GPU·h = 0：`res` 从 T0 起 SSH
+不可达，改为本机 CPU 双 worker（每 worker 7 线程）执行，所有臂同一 regime，跨臂比较内部有效，
+绝对数值不与上一轮 GPU 数值直接对照。**无 OOM、无超时、无中断重跑；终止于 T0+2.6 h
+（预算硬截止 T0+8 h），提前结束的理由见 §12。
 
 ---
 
 ## 0. 一页结论
 
-**这一轮改变的不是“结构词有没有用”，而是“端口绑定在什么条件下才有用”。**
+**这一轮把“端口绑定有没有用”从一句口号变成了一个具体、可证伪、结果是阴性的问题。**
 
-受控 2×2（端口状态绑定 BIND/MEAN × 句间组合 REL/SELF，四格同参数名、同初值、同逐 epoch 取样，
-Lipo，seed 0/1）给出一个**两个 seed 同号、且按 scaffold 成组的 bootstrap 区间不含 0 的正交互**：
+Lipo 上的受控 2×2（端口状态绑定 BIND/MEAN × 句间组合 REL/SELF，四格同参数名、同逐 epoch 取样，
+seed 0/1）给出一个两 seed 同号、成组 bootstrap 下界贴 0 的**正交互**，但两条主效应都不可重复：
 
-| 量（Valid best RMSE 差，正=前者更好） | seed 0 | seed 1 | 均值 | 配对 bootstrap 95% |
+| 量（Valid best RMSE 差，正 = 前者更好） | seed 0 | seed 1 | 均值 | 配对 bootstrap 95%（4000 次） |
 |---|---|---|---|---|
-| `g_bind_self = MEAN_SELF − BIND_SELF` | −0.0288 | −0.0478 | **−0.0383** | [−0.0691, −0.0060] |
-| `g_bind_rel = MEAN_REL − BIND_REL` | +0.0186 | −0.0025 | +0.0080 | [−0.0230, +0.0389] |
-| `g_ctx_mean = MEAN_SELF − MEAN_REL` | −0.0075 | −0.0156 | −0.0116 | [−0.0434, +0.0186] |
-| `g_ctx_bind = BIND_SELF − BIND_REL` | +0.0399 | +0.0296 | **+0.0348** | [+0.0034, +0.0660] |
-| 交互 `I = g_ctx_bind − g_ctx_mean` | +0.0474 | +0.0452 | **+0.0463** | [+0.0015, +0.0911] |
+| `g_bind_self = MEAN_SELF − BIND_SELF` | −0.0288 | −0.0478 | **−0.0383** | [−0.0702, −0.0060] |
+| `g_bind_rel = MEAN_REL − BIND_REL` | +0.0186 | −0.0025 | +0.0080 | [−0.0237, +0.0396] |
+| `g_ctx_mean = MEAN_SELF − MEAN_REL` | −0.0075 | −0.0156 | −0.0116 | [−0.0423, +0.0186] |
+| `g_ctx_bind = BIND_SELF − BIND_REL` | +0.0399 | +0.0296 | **+0.0348** | [+0.0021, +0.0658] |
+| 交互 `I = g_ctx_bind − g_ctx_mean` | +0.0474 | +0.0452 | **+0.0463** | [+0.0011, +0.0931]（P(>0)=0.978） |
 
-读法：**在 SELF 句内组合下，端口绑定是稳定的小幅伤害；在 REL 真实相邻句下，绑定不再伤害并且
-“REL 优于 SELF”才出现。** 也就是说，“绑定”与“真实关系组合”是互补的，单独任一项的边际收益都
-不可重复（`g_bind_rel` 均值 +0.008 < δ_mechanism = 0.0121）。这是本轮唯一达到“可重复机制信号”的
-主动效应，方向与本轮假设一致，但**幅度（≈0.046 ≈ 0.038σ）与 seed 间波动（同臂跨 seed 最大 0.021）
-同一量级**，因此它是“条件性、机制级”的证据，不是可以宣布的主效应。
+**但这个交互没有跨数据集成立。** 同一配方在 ESOL 跑完整四格（10 个单元）后，`g_bind_self` 变 **+0.0415**
+（符号相反）、`g_ctx_bind` 变 **−0.0253**、交互 **−0.0352**。因此在 Lipo 内部它是可重复的机制信号，
+在任何更广的意义上它**不是**。
 
-三件同时成立、但都不能替代真标签收益的事实：
+Test（终局一次性、420 分子）与 Valid 同号，但差距更大：
 
-1. **整体仍落后同协议强参照。** 四格最好（按协议 W 规则）= `MEAN_SELF` 0.7095 均值（0.7200/0.6990）；
-   同协议重训 `GINE_REF` = **0.6219**（0.6181/0.6257）。配对差 **+0.0875～0.0911**（95% CI 不含 0），
-   超过 `ref_gap = 0.06σ = 0.0727`。旧轮 `FULL_WGINE` Valid 0.7679 是**不同配方/不同 regime** 的历史坐标，
-   本轮 W 比它好 0.058，但这不是配对跨 seed 效果，不能写成受控优劣。
-2. **端口-状态机制在模型内部确实被使用**：在 `BIND_REL` 的冻结权重上，把端口算子换成 MEAN 只改变
-   Valid RMSE +0.0029，而把句间算子换成 SELF 改变 **+0.1313**；MEAN→BIND 的预测变化量与分子的
-   “非等价兼容位点占比”秩相关 0.36（MEAN_SELF 权重下 0.40）。方向正确，但说明网络对**句间算子**
-   的依赖远大于对端口算子的依赖。
-3. **词表支持充足但覆盖有限**：Valid 中 43.4% 的 incidence 落在尺寸≥2 的兼容位点组内，其中
-   **32.4% 属于“同属性但 exact rooted 内部图身份不同”**（=端口均值真正损失的区分）；92.4% 的分子
-   至少有一个这样的位点。另有 8.0% 的 Valid incidence 属“局部内容见过、相对排列没见过”。
+| arm | Test 均值 | Valid 均值 |
+|---|---|---|
+| `MEAN_SELF`（W） | 0.7755 | 0.7095 |
+| `BIND_REL` | 0.7767 | 0.7130 |
+| `BIND_SELF` | 0.7985 | 0.7478 |
+| `SET_MEAN_SELF` | 0.7762 | 0.7311 |
+| `GINE_REF` | 0.6691 | 0.6219 |
+| `GINE_RAW`（F） | **0.6406** | **0.6136** |
 
-结论标签（§11 逐条给证据）：`PORT_BINDING_UNRESOLVED`（有交互、无主效应）、`RELATIONAL_CONTEXT_HELPFUL`
-（仅在 BIND 条件下，且需 `TOPOLOGY_SPECIFIC_GAIN_UNRESOLVED`）、`INSTANCE_GEOMETRY_UNRESOLVED`、
-`VECTOR_READOUT_HELPFUL`（弱）、`STRUCTURAL_MECHANISM_WITH_PREDICTION_GAP`、
-`BAG_ADVANTAGE_UNRESOLVED`/`PARTITION_ADVANTAGE_UNRESOLVED`（见 §8）。
+词族最好者（`MEAN_SELF`）在 Test 上落后强参照 0.135（Valid 0.088）；Test 上 `g_bind_self` −0.023、
+`g_ctx_bind` +0.022 与 Valid 同号。
 
----
+四个问题的直接答案：
+
+1. **相对旧 0.768 / 同轮 GINE 处于什么水平？** 比旧轮 `FULL_WGINE`（Valid 0.7679 / Test 0.8361）好
+   0.058 / 0.061，但比同协议重训的 `GINE_REF`（0.6219 / 0.6691）和 `GINE_RAW`（0.6136 / 0.6406）
+   差 0.09 / 0.10–0.13。**结构词路线仍不是本任务的竞争性方案**（`STRUCTURAL_MECHANISM_WITH_PREDICTION_GAP`）。
+2. **属性位置**（`SET_MEAN_SELF` vs `MEAN_SELF`）：两 seed 反号（−0.002 / +0.041），Test −0.001。
+   `INSTANCE_GEOMETRY_UNRESOLVED`。
+3. **端口绑定**（BIND vs MEAN）：只在 REL 条件下点估计为正（+0.008，CI 跨 0），在 SELF 下稳定为负
+   （−0.038，CI 不含 0）。**没有主效应**；交互存在但不复现 → `PORT_BINDING_UNRESOLVED`。
+4. **句间组合**（REL vs SELF）：BIND 条件下两 seed 都更好（+0.035），MEAN 条件下更差；
+   Test 同号（+0.022）。这是本轮唯一“方向稳定”的关系效应，但它依赖端口绑定，且 ESOL 反向。
+5. **读出**：向量 vs 标量两 seed 反号（−0.0118 / +0.0102），`READOUT_UNRESOLVED`。
+6. **是否超出词袋 / 全图混合 / 随机分块？**
+   * 词袋（`BAG_CAP`）：两 seed 反号，均值上词袋更差 0.020，`BAG_ADVANTAGE_UNRESOLVED`。
+   * 全图混合（`GLOBAL_CTX_BIND`）：两 seed 都比真实邻接差（+0.024 / +0.010），均值 0.017 ≥ δ_mechanism，
+     即“关系效应必须是**真实邻接拓扑**而不是‘多给点上下文’”，但 CI 跨 0。
+   * 随机连通分块（`BIND_REL` + 同尺寸上限的随机分块）：**0.8898 vs 0.7130，两 seed 都差 0.18**。
+     词数几乎相同（23,840 vs 24,750），说明起作用的是**学到的具体子图词表**，不是“压缩”本身。
+
+结论标签（逐条证据见 §11）：`NO_ADVANTAGE_IN_TESTED_COMPOSITION_FAMILY`、
+`STRUCTURAL_MECHANISM_WITH_PREDICTION_GAP`、`PORT_BINDING_UNRESOLVED`、
+`RELATIONAL_CONTEXT_HELPFUL`（仅 Lipo、条件于 BIND、**未跨数据集复现** + `TOPOLOGY_SPECIFIC_GAIN_UNRESOLVED`）、
+`INSTANCE_GEOMETRY_UNRESOLVED`、`READOUT_UNRESOLVED`、`BAG_ADVANTAGE_UNRESOLVED`、
+`RECIPE_SENSITIVE_CANDIDATE`。
 
 ## 1. 问题、四格与判据
 
@@ -166,8 +183,8 @@ Lipo，seed 0/1）给出一个**两个 seed 同号、且按 scaffold 成组的 b
 |---|---|---|---|---|
 | `BAG_CAP`（跨词内容全部换成本身，词袋化） | +0.0420 / −0.0029 → 均值 **+0.0196** | 否 | [−0.0527, +0.0151] | `BAG_ADVANTAGE_UNRESOLVED`：词袋化没有更好，但也没被显著打败 |
 | `GLOBAL_CTX_BIND`（把真实相邻句换成**同一分子内所有句的加权混合**） | +0.0243 / +0.0097 → 均值 **+0.0170** | **是** | [−0.0481, +0.0147] | 点估计支持“真实邻接拓扑优于全图混合”，均值 ≥ δ_mechanism |
-| `GINE_RAW`（同 backbone、原始 9/3 列特征） | 待填 | | | |
-| `BIND_REL` + 随机连通分块（salt 固定、≤6 原子） | 待填 | | | |
+| `GINE_RAW`（同 backbone、只给原始 9/3 列，无 sq_gine 的 degree/ring） | 0.6182 / 0.6090 → 均值 **0.6136**（比 `BIND_REL` 好 0.0994） | 是 | — | 参照的强不来自特征工程；`F` 规则据此选中 `GINE_RAW` |
+| `BIND_REL` + 随机连通分块（salt 固定、≤6 原子） | 0.8913 / 0.8884 → 均值 **0.8898**（比冻结分词差 0.1768） | 是 | — | 不是“任意压缩都行”：词数相近（23,840 vs 24,750）、尺寸上限相同 |
 
 `GLOBAL_CTX_BIND` 值得单独说明：它保留端口状态、词内图、双端口 R、词表与全部参数量，**只把
 “消息来自真实相邻词”换成“来自同分子全句混合”**，两 seed 都比 `BIND_REL` 差（0.024/0.010），
@@ -175,9 +192,53 @@ Lipo，seed 0/1）给出一个**两个 seed 同号、且按 scaffold 成组的 b
 均值 0.0170 位于 δ_mechanism(0.0121) 与 δ_pipeline(0.0303) 之间、且 CI 仍跨 0，报告按
 `RELATIONAL_CONTEXT_HELPFUL` + `TOPOLOGY_SPECIFIC_GAIN_UNRESOLVED` 并列实际数字，不宣布等效。
 
-## 9. 终局 Test
+## 9. 终局 Test（`TERMINAL_DEVELOPMENT_TEST`，一次性、420 分子、每架构原 seed）
 
-（见文末补记。）
+`finalist_manifest.json` 在评分前冻结（6 个架构）：W = `MEAN_SELF`、机制配对两格 `BIND_REL`/`BIND_SELF`、
+强参照 `GINE_REF` 与 `F` = `GINE_RAW`、桥接 `SET_MEAN_SELF`（读出桥接因 6 架构上限未入终局，
+其 Valid 证据两 seed 反号，见 §7）。
+
+| arm | Test seed 0 | Test seed 1 | Test 均值 | Valid 均值 | Test−Valid |
+|---|---|---|---|---|---|
+| `MEAN_SELF`（W） | 0.7971 | 0.7539 | **0.7755** | 0.7095 | +0.066 |
+| `BIND_REL` | 0.7886 | 0.7648 | 0.7767 | 0.7130 | +0.064 |
+| `BIND_SELF` | 0.7997 | 0.7974 | 0.7985 | 0.7478 | +0.051 |
+| `SET_MEAN_SELF` | 0.7821 | 0.7703 | 0.7762 | 0.7311 | +0.045 |
+| `GINE_REF` | 0.6732 | 0.6650 | 0.6691 | 0.6219 | +0.047 |
+| `GINE_RAW`（F） | 0.6294 | 0.6517 | **0.6406** | 0.6136 | +0.027 |
+
+Test 上的条件差（与 Valid 同号者为要点）：
+
+* `g_bind_self = MEAN_SELF − BIND_SELF` = **−0.0230**（seed 0 −0.0025 / seed 1 −0.0435）→ 与 Valid 同号，
+  “SELF 下绑定有害”在 Test 仍成立。
+* `g_ctx_bind = BIND_SELF − BIND_REL` = **+0.0218**（+0.0110 / +0.0327）→ 与 Valid 同号，
+  “BIND 下 REL 更好”在 Test 仍成立。
+* `SET_MEAN_SELF − MEAN_SELF` = −0.0007（−0.0150 / +0.0164）→ 仍不可分辨。
+* 词族最好（`MEAN_SELF` 0.7755）比 `GINE_RAW` 差 **0.1349**、比 `GINE_REF` 差 0.1064：
+  **Valid 上的 ~0.09 差距在 Test 上更大**，不是 Valid 抖动。
+* 历史坐标（非同协议，仅登记）：旧轮 `FULL_WGINE` Test 0.8361 → 本轮 W 好 0.061；
+  旧轮 `GINE_REF` Test 0.6631 → 本轮 `GINE_REF` 0.6691（差 0.006，一致性检查通过）。
+
+## 9b. ESOL 复现（`EXPLORATORY_REPLICATION_OUTSIDE_FROZEN_TRIGGER`）
+
+按 §5 的机械判定本轮**应跳过 ESOL**（W = `MEAN_SELF` ⇒ C = null）。为回答“Lipo 的交互能否在第二个
+数据集复现”，另行以同一冻结配方跑了 ESOL **完整四格 + GINE_REF**（每臂 2 seed，对称、不看结果选臂）：
+
+| arm | Valid seed 0 | Valid seed 1 | 均值 |
+|---|---|---|---|
+| `MEAN_SELF` | 0.9115 | 0.9495 | 0.9305 |
+| `BIND_SELF` | 0.8568 | 0.9211 | 0.8890 |
+| `MEAN_REL` | 0.9266 | 0.9145 | 0.9206 |
+| `BIND_REL` | 0.8743 | 0.9542 | 0.9142 |
+| `GINE_REF` | 0.9033 | 0.9020 | 0.9027 |
+
+* ESOL（σ = 2.0667，Train 1,122、Valid 只含 38 个 scaffold）：`g_bind_self` = **+0.0415**
+  [+0.0041,+0.0833]、`g_ctx_bind` = **−0.0253**（两 seed 皆负）、交互 `I` = **−0.0352** [−0.1211,+0.0458]。
+* 即 Lipo 上“SELF 下绑定有害、BIND 下 REL 更好”的两条同号效应，**在 ESOL 上方向相反**；
+  交互也没有复现（−0.035 vs +0.046）。ESOL 的 Valid 只有 38 个 scaffold、每格 2 seed 的差已达 0.03–0.08，
+  这些区间都很宽，但**方向反转**这一点不受区间宽度影响：本轮不能声称该交互跨数据集成立。
+* 附带：ESOL 上词族与 `GINE_REF`（0.9027）基本同级（`BIND_SELF` 0.8890 还更好 0.044），
+  与 Lipo 上落后 0.09 的格局不同——两数据集给出的“结构词路线相对强参照”的结论并不一致。
 
 ## 10. 效率与预算
 
@@ -194,20 +255,29 @@ Lipo，seed 0/1）给出一个**两个 seed 同号、且按 scaffold 成组的 b
 | 标签 | 依据 |
 |---|---|
 | `PORT_BINDING_UNRESOLVED` | `g_bind_rel` +0.008（CI 跨 0）、`g_bind_self` −0.038（稳定为负）；只有交互 `I` +0.046 稳定为正 |
-| `RELATIONAL_CONTEXT_HELPFUL` + `TOPOLOGY_SPECIFIC_GAIN_UNRESOLVED` | 仅 BIND 条件下 REL 优于 SELF（+0.035，CI [+0.003,+0.066]）；MEAN 条件下反向（−0.012，CI 跨 0） |
-| `INSTANCE_GEOMETRY_UNRESOLVED` | `SET_MEAN_SELF` 与 `MEAN_SELF` 差 −0.002，CI 跨 0 |
+| `RELATIONAL_CONTEXT_HELPFUL` + `TOPOLOGY_SPECIFIC_GAIN_UNRESOLVED` | 仅 BIND 条件下 REL 优于 SELF（Valid +0.0348，CI [+0.0021,+0.0658]；Test +0.0218 同号）；MEAN 条件下反向（−0.012，CI 跨 0）；ESOL −0.0253 反向 |
+| `INSTANCE_GEOMETRY_UNRESOLVED` | `SET_MEAN_SELF` 与 `MEAN_SELF` 两 seed 反号（−0.0021 / +0.0412），均值 −0.0217，CI [−0.057,+0.013]；Test −0.0007 |
 | `READOUT_UNRESOLVED` | `BIND_SELF` vs `BIND_SELF_SCALAR` 两 seed 反号（−0.0118 / +0.0102），均值 −0.0008，CI [−0.030, +0.031] |
-| `STRUCTURAL_MECHANISM_WITH_PREDICTION_GAP` | 机制（交互/干预/几何）有可测证据，但四格最好仍落后 `GINE_REF` 0.088–0.091（> ref_gap） |
-| `RECIPE_SENSITIVE_CANDIDATE` | 词族在 R0 下过拟合（末轮 Train 0.08 vs Valid 0.75），且 best epoch 与末轮排序不同；未换配方验证 |
-| `NO_ADVANTAGE_IN_TESTED_COMPOSITION_FAMILY` | **不适用**：交互与 REL 条件收益达到了事前定义的可重复机制信号 |
+| `STRUCTURAL_MECHANISM_WITH_PREDICTION_GAP` | 机制（交互/冻结干预/端口状态几何）有可测证据，但四格最好仍落后 `GINE_REF` 0.088（Valid）与 0.106（Test），落后 `GINE_RAW` 0.088 / 0.135，均 > ref_gap |
+| `RECIPE_SENSITIVE_CANDIDATE` | 词族在 R0 下过拟合（末轮 Train 0.08 vs Valid 0.75），best epoch 与末轮排序不同；未换配方验证 |
+| `BAG_ADVANTAGE_UNRESOLVED` | `BAG_CAP` 与 `BIND_REL` 两 seed 反号（+0.042 / −0.003），CI [−0.053, +0.015] |
+| `PARTITION_ADVANTAGE_UNRESOLVED` → 实际为**化学分词明显更好** | 随机连通分块 0.8898 vs 冻结分词 0.7130，两 seed 同号、差 0.177 ≫ δ_pipeline |
+| `NO_ADVANTAGE_IN_TESTED_COMPOSITION_FAMILY` | 核心四格、桥接、分支与 Test 均无支持继续当前实现族：Test 落后 0.135；唯一正向（Lipo 交互）ESOL 反向 |
+| `RELATIONAL_CONTEXT_HELPFUL`（仅 Lipo、条件于 BIND、未跨数据集复现） | Valid +0.0348 [+0.0021,+0.0658]、Test +0.0218、ESOL −0.0253 |
 
-不使用的标签及理由：`PORT_BINDING_HELPFUL`（主效应不可重复）；`GLOBAL_CONTEXT_STRONGER`（未测，见 §8）；
-`BAG_STRONGER`/`RANDOM_PARTITION_STRONGER`（未测或未达两 seed 条件）；`ENGINEERING_BLOCKED`（主表完整）。
+不使用的标签及理由：`PORT_BINDING_HELPFUL`（主效应不可重复）；`GLOBAL_CONTEXT_STRONGER`（`GLOBAL_CTX_BIND`
+比 REL 差，方向相反）；`BAG_STRONGER`/`RANDOM_PARTITION_STRONGER`（更强对照没有更好）；
+`ENGINEERING_BLOCKED`（主表与终局完整）。
 
-## 12. 未完成 / 未测
+## 12. 未完成 / 未测，以及提前结束的理由
 
-* 随机连通分块（`RANDOM_PART`）与 `GINE_RAW`、`GLOBAL_CTX`、`BAG_CAP`：见 §8。
-* ESOL 交叉复现：按协议 §5 的触发条件，W 无核心配对 C（W = `MEAN_SELF` ⇒ C = null），
-  **不满足“W/C 自身可重复机制信号”**，故按规则跳过（见 PROTOCOL 附录 A 的判定记录）。
-* 第三 seed：协议规定只在“关键配对方向稳定后再加”，本轮交互已两 seed 同号且 CI 不含 0，
-  但幅度与 seed 波动同量级；时间预算优先给了分支对照，未加 seed 2。
+* **未测**：`GLOBAL_CTX_MEAN`（只跑了 BIND 版）、`SET_*` 的其它组合、`GINE_RAW` 的 seed 2、
+  第三个 seed 的核心四格、以及任何“换配方”（R_G/R1/LR/宽度/epoch）的敏感性扫描。
+  这些都属协议 §5 的 D6/不重启分支，未执行。
+* **ESOL 与冻结触发**：按 §5 机械判定应跳过；实际以 `EXPLORATORY` 方式跑了完整四格 + `GINE_REF`
+  （10 单元），**不参与选择规则**，结论以“未复现”入账（§9b、PROTOCOL 附录 A.3）。
+* **为什么在 T0+2.6 h 提前结束**：三个问题已经给出方向稳定的答案且互相独立地指向同一结论——
+  (i) Lipo 交互存在但不复现；(ii) Test 上落后强参照 0.135；(iii) 随机分块否定“压缩本身”这个替代解释。
+  继续加 seed 只会把 CI 收窄，不会改变“无竞争性优势 + 交互不可外推”的判定；按预算纪律
+  （§9：剩余时间用于解释与收尾）转为写作与交付。若以后要接着做，最该先做的不是更多 seed，
+  而是换配方验证 `RECIPE_SENSITIVE_CANDIDATE`（词族末轮 Train 0.08 / Valid 0.75 的过拟合）。

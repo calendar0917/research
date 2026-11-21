@@ -226,12 +226,16 @@ SSH 探针持续报 `ssh: connect to host pve-old.yulinsec.cn port 22: Connectio
   当时 12 个核心单元已全部完成，四格均值已知（`summary.json` 首版生成于 03:00Z 之前）。
 * 补充：为回答“交互是否在第二个数据集复现”，另以**同一冻结配方**跑了 ESOL 的**完整四格 + GINE_REF**
   （每臂 2 seed，对称、无选择），并在报告中明确标注 `EXPLORATORY_REPLICATION_OUTSIDE_FROZEN_TRIGGER`；
-  它不参与 §6 的选择规则，也不改变 §0–§9。
+  它不参与 §6 的选择规则，也不改变 §0–§9。结果：四条条件差在 ESOL 上全部反向或不可分辨
+  （`g_bind_self` +0.0415、`g_ctx_bind` −0.0253、交互 −0.0352），即 Lipo 交互**未跨数据集复现**。
 
 ### A.4 预算与产物
 
-* 正式单元：Stage B/C 12 + Stage D 10 + ESOL 10（探索复现）= 32，等于 §9 上限；GPU·h = 0。
-* 墙钟：核心 12 单元 1.82 h CPU·worker；全轮 < 4 h。
+* 正式单元：Stage B/C 12 + Stage D 10 + ESOL 10（探索复现）= 32，等于 §9 上限；GPU·h = 0；
+  CPU·worker 小时 3.77（`run_manifest.json`）。
+* 墙钟：核心 12 单元 1.82 h CPU·worker；全轮 2.6 h 墙钟，主动在 T0+2.6 h 结束（硬截止 T0+8 h）。
+  结束依据：三个核心问题均已得到方向稳定且相互独立的答案（Lipo 交互不复现、Test 落后 0.135、
+  随机分块否定“压缩本身”），再加 seed 只会收窄区间，不改变判定；按 §9 把剩余预算用于解释与交付。
 * 权重/预测保存在 `results/<run_id>/`（`state_best.pt`、`state_final.pt`、`preds_best.npz`、
   `preds_final.npz`，终局另有 `preds_test.npz`）；`.gitignore` 只忽略 `*.pt`/`*.npz`，
   文本产物（`run.json`、`train.log`、jobs、queue.log）入库。

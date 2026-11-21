@@ -134,7 +134,7 @@ def write_manifest(args) -> None:
 
     cfg = C.load_config()
     dataset = "ogbg-mollipo"
-    runs = A.collect_runs(dataset)
+    runs = A.collect_runs(dataset) + A.collect_runs("ogbg-molesol")
     provenance = C.read_json(C.ROUND_DIR / "analysis" / "execution_regime.json")
     entries = []
     total_seconds = 0.0
@@ -186,6 +186,8 @@ def write_manifest(args) -> None:
             "cpu_worker_hours": round(total_seconds / 3600.0, 3),
             "units_launched": len(entries),
             "units_complete": sum(1 for e in entries if e["status"] == "COMPLETE"),
+            "units_lipo": sum(1 for e in entries if e["dataset"] == "ogbg-mollipo"),
+            "units_esol": sum(1 for e in entries if e["dataset"] == "ogbg-molesol"),
             "units_partial": sum(1 for e in entries if e["status"] == "PARTIAL"),
         },
         "remote_jobs": [],
@@ -203,6 +205,9 @@ def write_manifest(args) -> None:
             "units had launched, so they are null for those units; wall_seconds, epoch timing and "
             "artifact hashes are present for every unit."),
         "failures": _failures(),
+        "terminal_test": (C.read_json(C.analysis_dir() / "terminal_test.json")
+                          if (C.analysis_dir() / "terminal_test.json").is_file() else None),
+        "terminal_table": _terminal_table(),
         "runs": entries,
     }
     try:
@@ -213,6 +218,27 @@ def write_manifest(args) -> None:
     C.write_json(C.ROUND_DIR / "run_manifest.json", C.jsonable(manifest))
     print(json.dumps({"runs": len(entries), "complete": manifest["budget"]["units_complete"],
                       "cpu_worker_hours": manifest["budget"]["cpu_worker_hours"]}, indent=2))
+
+
+def _terminal_table() -> list[dict[str, Any]]:
+    path = C.analysis_dir() / "terminal_test.json"
+    if not path.is_file():
+        return []
+    payload = C.read_json(path)
+    rows = []
+    for key, value in sorted(payload.get("scores", {}).items()):
+        arm, seed = key.rsplit("_s", 1)
+        rows.append({"arm": arm, "seed": int(seed),
+                     "test_rmse_raw": value.get("test_rmse_raw"),
+                     "test_mae_raw": value.get("test_mae_raw"),
+                     "best_epoch": value.get("best_epoch"),
+                     "best_valid_rmse": value.get("best_valid_rmse"),
+                     "checkpoint_sha256": value.get("checkpoint_sha256")})
+    if rows:
+        C.write_csv(C.analysis_dir() / "terminal_table.csv", rows,
+                    ["arm", "seed", "test_rmse_raw", "test_mae_raw", "best_epoch",
+                     "best_valid_rmse", "checkpoint_sha256"])
+    return rows
 
 
 def _failures() -> list[dict[str, Any]]:
