@@ -67,7 +67,14 @@ def results_root() -> Path:
 
 
 def run_dir(run_id: str) -> Path:
-    path = results_root() / run_id
+    """Resolve an output directory: absolute, repo-relative, or results/<name>."""
+    raw = Path(run_id)
+    if raw.is_absolute():
+        path = raw
+    elif len(raw.parts) > 1:
+        path = REPO_ROOT / raw
+    else:
+        path = results_root() / run_id
     path.mkdir(parents=True, exist_ok=True)
     return path
 
