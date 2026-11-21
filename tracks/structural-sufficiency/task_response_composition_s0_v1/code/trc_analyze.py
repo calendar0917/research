@@ -251,7 +251,8 @@ def _model_deltas(model, items: Mapping[str, np.ndarray], kind: str,
     return out
 
 
-def response_metrics(pack, cfg, labels, models: Mapping[str, Any]) -> dict[str, Any]:
+def response_metrics(pack, cfg, labels, models: Mapping[str, Any]):
+    """Returns (report, per-model delta arrays)."""
     cell = np.asarray(pack["pair_cell"])
     transform = np.asarray(pack["pair_transform"])
     comp = np.asarray(pack["pair_component"])
@@ -390,7 +391,8 @@ def response_metrics(pack, cfg, labels, models: Mapping[str, Any]) -> dict[str, 
                 "n_groups": len(gkeys), "mae": float(np.mean(vals)),
                 "lo": float(np.percentile(vals, 2.5)), "hi": float(np.percentile(vals, 97.5)),
             }
-    return out
+    deltas = out.pop("models")
+    return out, deltas
 
 
 # ---------------------------------------------------------------------------
@@ -556,13 +558,22 @@ def judgement(table: Mapping[str, Any], fact: Mapping[str, Any],
     if not lipo:
         out["status"] = "no lipo runs"
         return out
-    best_run = min(lipo.values(), key=lambda r: r["best_valid_rmse"])
+    best_run = min((r for r in lipo.values() if r.get("arm") in C.ARMS),
+                   key=lambda r: r["best_valid_rmse"])
     out["best_lipo"] = {"run_id": best_run["run_id"],
                         "valid": best_run["best_valid_rmse"],
                         "test": best_run["best_test_rmse"]}
     refv = C.load_config()["reference_values"]
-    out["gap_to_gine_valid"] = best_run["best_valid_rmse"] - refv["GINE_RAW_REF"]["valid_rmse"]
-    out["gap_to_gine_test"] = best_run["best_test_rmse"] - refv["GINE_RAW_REF"]["test_rmse"]
+    gine = [r for r in table.get("reference", []) if r.get("arm") == "GINE_RAW"]
+    if gine:
+        lowest = min(gine, key=lambda r: r["best_valid_rmse"])
+        out["gine_same_protocol"] = {"run_id": lowest["run_id"],
+                                     "valid": lowest["best_valid_rmse"],
+                                     "test": lowest["best_test_rmse"]}
+        out["gap_to_gine_valid"] = best_run["best_valid_rmse"] - lowest["best_valid_rmse"]
+        out["gap_to_gine_test"] = best_run["best_test_rmse"] - lowest["best_test_rmse"]
+    out["gap_to_historic_gine_valid"] = (best_run["best_valid_rmse"]
+                                         - refv["GINE_RAW_REF"]["valid_rmse"])
     out["gap_to_word_prefix_valid"] = best_run["best_valid_rmse"] - refv["WORD_PREFIX"]["valid_rmse"]
     out["gap_to_word_prefix_test"] = best_run["best_test_rmse"] - refv["WORD_PREFIX"]["test_rmse"]
     out["shared_value"] = {s: fact.get(s, {}).get("gain_share_none") for s in ("valid", "test")}
@@ -605,16 +616,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         runs.pop(rid, None)
     print(f"runs found: {sorted(runs)}")
 
-    table_rows = {"lipo": [], "esol": []}
+    lipo_runs = {rid: r for rid, r in runs.items() if r["manifest"].get("dataset") == "lipo"
+                 and r["manifest"].get("arm") in C.ARMS}
+    esol_runs = {rid: r for rid, r in runs.items() if r["manifest"].get("dataset") == "esol"
+                 and r["manifest"].get("arm") in C.ARMS}
+
+    table_rows: dict[str, list] = {"lipo": [], "esol": [], "reference": []}
     for rid, run in runs.items():
-        ds = run["manifest"].get("dataset", "lipo")
-        table_rows.setdefault(ds, []).extend(main_table({rid: run}))
-    all_rows = table_rows["lipo"] + table_rows["esol"]
+        if rid in lipo_runs:
+            key = "lipo"
+        elif rid in esol_runs:
+            key = "esol"
+        else:
+            key = "reference"
+        table_rows[key].extend(main_table({rid: run}))
+    all_rows = table_rows["lipo"] + table_rows["esol"] + table_rows["reference"]
     C.write_csv(out_dir / "main_table.csv", all_rows)
     C.write_json(out_dir / "main_table.json", table_rows)
-
-    lipo_runs = {rid: r for rid, r in runs.items() if r["manifest"].get("dataset") == "lipo"}
-    esol_runs = {rid: r for rid, r in runs.items() if r["manifest"].get("dataset") == "esol"}
 
     pack = P.load_pack(cfg, "lipo")
     labels = np.asarray(pack["labels"], float)
@@ -652,9 +670,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     cross: dict[str, Any] = {}
     if not args.skip_models:
         models = load_models(lipo_runs, cfg, pack, args.device)
-        resp = response_metrics(pack, cfg, labels, models)
+        resp, deltas = response_metrics(pack, cfg, labels, models)
         C.write_json(out_dir / "response_metrics.json", resp)
-        cross = cross_combinations(pack, cfg, labels, models)
+        cross = cross_combinations(pack, cfg, labels, deltas)
         C.write_json(out_dir / "cross_combinations.json", cross)
         del models
 

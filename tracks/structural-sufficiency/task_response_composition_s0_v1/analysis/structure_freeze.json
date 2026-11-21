@@ -1,0 +1,202 @@
+{
+  "cache_path": "/home/calendar/code/research/tracks/structural-sufficiency/task_response_composition_s0_v1/data/trc_cache_lipo.npz",
+  "cache_sha256": "c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3",
+  "commit": "a8a63a6e8a14b4639645e379db2b617853fa2c56",
+  "config": {
+    "cuts": {
+      "bucket_labels": [
+        "d0",
+        "d1",
+        "d2",
+        "d3",
+        "d4plus",
+        "unreachable"
+      ],
+      "distance_buckets": 6,
+      "max_object_atoms": 4,
+      "max_side_atoms": 8,
+      "null_cut_dim": 8
+    },
+    "dims": {
+      "atom_concat": 36,
+      "atom_fields": 9,
+      "atom_hidden": 32,
+      "atom_out": 16,
+      "bond_concat": 12,
+      "bond_fields": 3,
+      "bond_hidden": 16,
+      "bond_out": 8,
+      "cat_dim": 4,
+      "fragment_dropout": 0.1,
+      "fragment_hidden": 192,
+      "fragment_input": 394,
+      "fragment_out": 128,
+      "frame_adj": 6,
+      "frame_atom": 64,
+      "frame_bond": 48,
+      "frame_edge_mask": 6,
+      "frame_hidden": 128,
+      "frame_input": 132,
+      "frame_mask": 4,
+      "frame_out": 32,
+      "frame_size_onehot": 4,
+      "hidden": 128,
+      "pairs": 6,
+      "slots": 4,
+      "state_rank": 32
+    },
+    "heads": {
+      "ADD": {
+        "a_add": [
+          128,
+          128,
+          96,
+          1
+        ]
+      },
+      "DIRECT": {
+        "head": [
+          264,
+          96,
+          48,
+          1
+        ]
+      },
+      "FACTOR": {
+        "a": [
+          128,
+          64,
+          1
+        ],
+        "b": [
+          8,
+          1
+        ],
+        "q": [
+          136,
+          64,
+          32
+        ],
+        "r": [
+          136,
+          64,
+          32
+        ]
+      },
+      "GLOBAL": {
+        "buckets": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "global_head": [
+          263,
+          256,
+          128,
+          1
+        ]
+      }
+    },
+    "recipe": {
+      "aux_tau2_floor": 0.25,
+      "aux_weight": 0.25,
+      "batch_molecules": 64,
+      "batch_pairs": 16,
+      "clip_norm": 5.0,
+      "dropout_fragment": 0.1,
+      "dropout_global": 0.1,
+      "epochs_default": 240,
+      "epochs_fallback": 160,
+      "eval_batch": 64,
+      "min_lr": 1e-05,
+      "peak_lr": 0.001,
+      "seed": 0,
+      "warmup_epochs": 5,
+      "weight_decay": 0.0001
+    }
+  },
+  "distance_bucket_totals": [
+    354531,
+    854837,
+    1295104,
+    1419061,
+    8416687,
+    69
+  ],
+  "fallback_molecules": [
+    721,
+    1452,
+    1897,
+    2568,
+    2751,
+    2969,
+    3204,
+    3753
+  ],
+  "fragment_atoms_hist": [
+    0,
+    18,
+    24,
+    50,
+    111,
+    214,
+    332,
+    439,
+    626,
+    184,
+    264,
+    248
+  ],
+  "fragment_components_hist": [
+    0,
+    29260,
+    0,
+    0
+  ],
+  "n_atom_attribute_rows": 76,
+  "n_bond_attribute_rows": 10,
+  "n_fragments": 29283,
+  "n_frames": 71004,
+  "n_molecules": 4200,
+  "n_parses": 33438,
+  "splits": {
+    "test": {
+      "fallback_molecules": [],
+      "n_molecules": 420,
+      "n_parses": 3061,
+      "n_parses_at_fallback_molecules": 0,
+      "parses_per_molecule_mean": 7.288095238095238
+    },
+    "train": {
+      "fallback_molecules": [
+        721,
+        1897,
+        2568,
+        2751,
+        2969,
+        3204,
+        3753
+      ],
+      "n_molecules": 3360,
+      "n_parses": 27237,
+      "n_parses_at_fallback_molecules": 80,
+      "parses_per_molecule_mean": 8.10625
+    },
+    "valid": {
+      "fallback_molecules": [
+        1452
+      ],
+      "n_molecules": 420,
+      "n_parses": 3140,
+      "n_parses_at_fallback_molecules": 20,
+      "parses_per_molecule_mean": 7.476190476190476
+    }
+  },
+  "timing": {
+    "csr_seconds": 4.48807644698536,
+    "pairs_seconds": 0.05082370401942171,
+    "total_seconds": 39.93664352799533,
+    "walk_seconds": 34.65894339099759
+  }
+}
