@@ -15,7 +15,7 @@
 重训的强整图参照 `GINE_REF`（**0.629 / 0.663**）差 0.139 / 0.173（≈2.9 个 `band`）。
 真实端口布局 R 在**重训**（FULL vs ERASED 共 4 组配对：R0 的 CODE/WGINE 各 seed0，R1 的 WGINE seed0/1）
 与**冻结干预**（R→ERASED 均值）两条证据线上**都没有带来误差改善**；句模型相对同词表词袋（`BAG`，0.795）的点估计增益 +0.027 在按 scaffold
-分组的 bootstrap 下 **CI 跨 0**；而精确 canonical 内容编码（`CODE` 0.835 / `ID` 0.857）反而比只做
+成组的 bootstrap 下 **CI 跨 0**；而精确 canonical 内容编码（`CODE` 0.835 / `ID` 0.857）反而比只做
 sum/mean 池化的属性编码器 `WGINE`（0.768）更差。
 总体标签：**`NO_TASK_ADVANTAGE_IN_THIS_FAMILY`**（分层标签见 §2）。
 
@@ -233,7 +233,7 @@ CPU 准备（`analysis/structure_freeze_*.json` 的 `timing_seconds`）：Lipo *
 
 ---
 
-## 6. 主要差值的 scaffold bootstrap（1000 轮，seed 1703，420 个 scaffold 组）
+## 6. 主要差值的 scaffold bootstrap（1000 轮，seed 1703，420 个 Valid 分子；每个分子恰好是 1 个独立 Murcko scaffold）
 
 | 对照 | gain（正 = 前者的误差更低） | 95% CI | 判定 |
 |---|---|---|---|
@@ -244,6 +244,11 @@ CPU 准备（`analysis/structure_freeze_*.json` 的 `timing_seconds`）：Lipo *
 | CODE vs ERASED_CODE | −0.0018 | `[−0.0257, +0.0213]` | 跨 0 |
 | CODE vs GINE_REF | −0.2064 | `[−0.2675, −0.1411]` | 明确更差 |
 | ID vs GINE_REF | −0.2289 | `[−0.3001, −0.1585]` | 明确更差 |
+
+**分组事实（重要）**：Valid 的 420 个分子落在 **420 个不同的 Murcko scaffold** 上（`n_singleton_scaffolds=420`，
+`mean_group_size=1.0`；Test 的 420 个分子有 419 个 scaffold）。因此这里的“按 scaffold 成组”在 Valid 上
+等价于**按分子重采样**：它给出的是分子抽样波动，不是同 scaffold 组内相关或 scaffold 外推的不确定度，
+不能称为“偏保守的 scaffold CI”。分组数本身仍如实报告，但没有重复组可抵消共享偏移。
 
 每 seed 与 mean±sd：本轮只有 1 个 seed（P 未达，未进 Stage C），**seed 方差不可估**；
 唯一有多 seed 的族是 R1（FULL 0.78261/0.83050；ERASED 0.78312/0.82848），
@@ -411,8 +416,8 @@ Test 与 Valid 的相对差距（22% vs 26%）一致，说明 Valid 上的结论
 * **best-Valid 选择**本身在 420 个 Valid 分子上有 ±0.02 量级的抖动；`last20`/`final` 列已给出
   供读者判断（例如 `BAG` 的 final 0.827 比 best 0.795 差很多，说明其 best 有挑选成分）。
 * **Test 是长期暴露的开发 Test**，不是 fresh/blind confirmation；本轮只读一次且未用于选择。
-* **bootstrap 分组**用 Murcko scaffold（420 组，平均 2 分子/组），组内相关性低 → CI 偏窄；
-  这也让“CI 跨 0”的结论偏保守。
+* **bootstrap 分组**用 Murcko scaffold；Valid 恰好 420 个分子 / 420 个 scaffold（全部 singleton），
+  所以 CI 是分子级重采样，不能解释为 scaffold 外推不确定度，也没有组内相关可扣除。
 * **布局字母表饱和**（§7）：Valid 只有 6 个、Test 只有 2 个“新布局”pair，无法对该子集做统计声明。
 * **E = 160 的 horizon** 由计时冻结（360/240 都超 24 min），所有臂同等受限；不排除更长训练改变排序，
   但 N2 的 R1 结果与 best-epoch 位置都不支持“训练不足”解释。
@@ -454,8 +459,9 @@ Test 与 Valid 的相对差距（22% vs 26%）一致，说明 Valid 上的结论
   （`run.json` 的 `final`/`last20`、`curves.json`、`preds_final_*.npz`），因此 final/last-20 的数字
   可复核；但由于 `index_add_` 在 CUDA 上非确定性，重跑无法还原同一份 final 权重。
   所有报告数字与终局 Test 都只用 **best** checkpoint，故结论不受影响。
-* Checkpoint/预测：`results/<run_id>/{state_best.pt,state_final.pt,curves.json,run.json,preds_*.npz}`
-  按仓库 gitignore 不提交，但保留在结果存储（本地 `results/` + `res` 主机），并已 `rr pull` 回本地。
+* Checkpoint/预测：`results/<run_id>/{state_best.pt,curves.json,run.json,preds_*.npz}` 按仓库 gitignore
+  不提交，但保留在结果存储（本地 `results/` + `res` 主机），并已 `rr pull` 回本地。本轮矩阵**没有**
+  `state_final.pt`（见上条）；`state_final.pt` 的代码路径只对之后新启动的 run 生效。
 
 ---
 

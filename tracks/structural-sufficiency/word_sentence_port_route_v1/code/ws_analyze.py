@@ -34,7 +34,10 @@ def find_runs() -> dict[str, dict[str, Any]]:
         return out
     for path in sorted(root.glob("*/run.json")):
         record = C.read_json(path)
-        record.setdefault("run_dir", str(path.parent))
+        # ``run.json`` may carry the host path of the machine that trained it
+        # (e.g. /home/hxy/cy/research/...).  Analysis runs from a pulled copy,
+        # so always point at the directory this record was found in.
+        record["run_dir"] = str(path.parent)
         out[record["run_id"]] = record
     return out
 
@@ -65,7 +68,7 @@ def cmd_terminal(args) -> None:
     summary: dict[str, Any] = {"commit": C.git_commit(), "runs": {}}
     for run_id in args.runs:
         run = C.read_json(C.results_root() / run_id / "run.json")
-        run.setdefault("run_dir", str(C.results_root() / run_id))
+        run["run_dir"] = str(C.results_root() / run_id)
         if run.get("terminal_test_scored"):
             raise SystemExit(f"{run_id} was already scored once; refusing a second Test read")
         dataset = cfg["datasets"][run["dataset"]]
@@ -245,9 +248,12 @@ def paired_bootstrap(pred: np.ndarray, other: np.ndarray, target: np.ndarray,
         pick = rng.integers(0, n_groups, n_groups)
         idx = np.concatenate([members[g] for g in pick])
         samples[r] = np.sqrt(err_b[idx].mean()) - np.sqrt(err_a[idx].mean())
+    group_sizes = np.asarray([len(m) for m in members], dtype=np.int64)
     return {"gain": point, "ci_low": float(np.quantile(samples, 0.025)),
             "ci_high": float(np.quantile(samples, 0.975)),
             "n_scaffolds": int(n_groups), "n_molecules": int(len(err_a)),
+            "n_singleton_scaffolds": int((group_sizes == 1).sum()),
+            "mean_group_size": float(group_sizes.mean()),
             "rounds": int(rounds), "seed": int(seed)}
 
 
@@ -623,6 +629,26 @@ def classify_stage_b(runs: Mapping[str, Mapping[str, Any]], thr: Mapping[str, fl
     return out
 
 
+def vocabulary_support(dataset: str) -> dict[str, Any]:
+    """Compact Train-only vocabulary / interface support record."""
+    freeze = C.read_json(C.analysis_dir() /
+                         f"structure_freeze_{dataset.replace('ogbg-', '')}.json")
+    table = freeze["template_table"]
+    train = freeze["support"]["train"]
+    return {"dataset": dataset, "cache_content_sha256": freeze["cache_sha256"],
+            "labels_used_for_vocabulary": freeze.get("labels_used_for_vocabulary"),
+            "n_templates": table["n_templates"],
+            "n_multi_atom_words": table["n_multi_atom_words"],
+            "n_monatomic_base_types": table["n_monatomic_base_types"],
+            "n_merge_rounds": len(freeze["merge"]["history"]),
+            "support_flag": freeze["support"].get("flag"),
+            "expansion": freeze.get("expansion"),
+            "train": train,
+            "timing_seconds": freeze.get("timing_seconds"),
+            "split_sizes": freeze.get("split_sizes"),
+            "partition_check": freeze.get("partition_check")}
+
+
 def cmd_summary(args) -> None:
     cfg = C.load_config()
     runs = find_runs()
@@ -680,6 +706,8 @@ def cmd_summary(args) -> None:
             support[key]["train"] = support_sets(payload, "train")
         except Exception as exc:  # noqa: BLE001 - record, never hide
             support[key]["train_error"] = repr(exc)
+    out["vocabulary_support"] = {key: vocabulary_support(dataset)
+                                for key, dataset in cfg["datasets"].items()}
     out["support_sets"] = {k: {split: {kk: vv for kk, vv in val.items()
                                        if not isinstance(vv, list)}
                                for split, val in v.items()} for k, v in support.items()}
@@ -853,13 +881,40 @@ def cmd_manifest(args) -> None:
             "split_sizes": freeze.get("split_sizes"),
             "partition_check": freeze.get("partition_check")}
     runs = []
+    config_sha256 = C.sha256_file(root / "configs" / "ws_v1.json")
     for run_id, run in sorted(find_runs().items()):
-        runs.append({k: run.get(k) for k in ("run_id", "arm", "dataset", "partition", "seed",
-                                             "epochs", "n_curve_rows", "n_parameters", "seconds", "spec",
-                                             "recipe", "device", "status", "cache_content_sha256",
-                                             "config_sha256", "torch", "gpu", "init_state_hash",
-                                             "shared_body_hash")} |
-                    {"best": run.get("best"), "final": run.get("final"),
+        env = run.get("environment") or {}
+        versions = env.get("versions") or {}
+        torch_env = env.get("torch") or {}
+        env_devices = torch_env.get("devices") or []
+        cuda_visible = (env.get("env") or {}).get("CUDA_VISIBLE_DEVICES")
+        epoch_count = run.get("epochs") or (run.get("recipe") or {}).get("epochs")
+        runs.append({"run_id": run_id, "arm": run.get("arm"), "dataset": run.get("dataset"),
+                     "partition": run.get("partition"), "seed": run.get("seed"),
+                     "epochs": epoch_count, "n_curve_rows": run.get("n_curve_rows"),
+                     "n_parameters": run.get("n_parameters"), "seconds": run.get("seconds"),
+                     "spec": run.get("spec"), "recipe": run.get("recipe"),
+                     "status": run.get("status"),
+                     "device": run.get("device") or ("cuda:0" if cuda_visible is not None else None),
+                     "cuda_visible_devices": cuda_visible,
+                     "commit": run.get("commit"), "cache_sha256": run.get("cache_sha256"),
+                     "cache_content_sha256": run.get("cache_content_sha256") or run.get("cache_sha256"),
+                     "freeze_sha256": run.get("freeze_sha256"),
+                     "config_sha256": run.get("config_sha256") or config_sha256,
+                     "torch": run.get("torch") or versions.get("torch"),
+                     "gpu": run.get("gpu") or env_devices,
+                     "environment": {"hostname": env.get("hostname"),
+                                     "platform": env.get("platform"),
+                                     "python": env.get("python"),
+                                     "cpu_count": env.get("cpu_count"),
+                                     "torch": versions.get("torch"),
+                                     "torch_cuda": torch_env.get("cuda_version"),
+                                     "torch_devices": env_devices,
+                                     "cuda_visible_devices": cuda_visible,
+                                     "versions": versions},
+                     "init_state_hash": run.get("init_state_hash"),
+                     "shared_body_hash": run.get("shared_body_hash"),
+                     "best": run.get("best"), "final": run.get("final"),
                      "last20": run.get("last20"),
                      "terminal_test_scored": bool(run.get("terminal_test_scored"))})
     probes = C.analysis_dir() / "probes_mollipo.json"
@@ -1110,7 +1165,7 @@ def cmd_measure(args) -> None:
                            "runs": {}}
     for run_id in args.runs:
         run = C.read_json(C.results_root() / run_id / "run.json")
-        run.setdefault("run_dir", str(C.results_root() / run_id))
+        run["run_dir"] = str(C.results_root() / run_id)
         dataset = cfg["datasets"][run["dataset"]]
         payload, _ = T.load_prepared(dataset)
         scaler = C.target_scaler(C.dataset_cache(dataset))
