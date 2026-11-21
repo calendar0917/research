@@ -154,6 +154,13 @@ def add_word(data: Mapping[str, Any]) -> dict[str, Any]:
         },
         "seconds": 0.0,
     }
+    if data["h"].labels.size:
+        h = data["h"]
+        pred_h = (beta0 + h.z_std.astype(np.float64) @ beta) * h.target_std + h.target_mean
+        out["h_rmse_raw"] = C.rmse(pred_h, h.labels)
+        out["h_mae_raw"] = C.mae(pred_h, h.labels)
+        np.savez_compressed(C.run_dir("lipo", "ADD_WORD") / "predictions_h.npz",
+                            row_ids=h.row_ids, pred_raw=pred_h, target_raw=h.labels)
     path = C.run_dir("lipo", "ADD_WORD")
     path.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path / "predictions_best.npz", **{
@@ -265,6 +272,18 @@ def fp_krr(data: Mapping[str, Any]) -> dict[str, Any]:
         "seconds": time.perf_counter() - t0,
         "n_fit": int(fit.n_molecules),
     }
+    if data["h"].labels.size:
+        h = data["h"]
+        h_bits = bits[h.row_ids]
+        h_count = counts(h_bits)
+        inter_h = dots(h_bits, fit_bits)
+        union_h = h_count[:, None] + fit_count[None, :] - inter_h
+        k_h = inter_h / np.maximum(union_h, 1)
+        pred_h = (k_h @ coef) * fit.target_std + fit.target_mean
+        out["h_rmse_raw"] = C.rmse(pred_h, h.labels)
+        out["h_mae_raw"] = C.mae(pred_h, h.labels)
+        np.savez_compressed(C.run_dir("lipo", "FP_KRR") / "predictions_h.npz",
+                            row_ids=h.row_ids, pred_raw=pred_h, target_raw=h.labels)
     path = C.run_dir("lipo", "FP_KRR")
     path.mkdir(parents=True, exist_ok=True)
     np.savez_compressed(path / "predictions_best.npz",
@@ -319,3 +338,32 @@ def gine_raw(data: Mapping[str, Any], device: str, epochs: int = 240,
                       scaler=scaler, recipe=recipe, device=device, run_id="GINE_RAW_REF",
                       deadline=deadline)
     return result
+
+
+def gine_predict(split_data, device: str = "cpu") -> np.ndarray:
+    """Predictions from the frozen GINE_RAW_REF checkpoint on an arbitrary split."""
+    import sys as _sys
+
+    import torch
+
+    v2_code = C.REPO_ROOT / "tracks" / "structural-sufficiency" / "word_sentence_port_binding_context_v2" / "code"
+    if str(v2_code) not in _sys.path:
+        _sys.path.insert(0, str(v2_code))
+    import sq_data as SD
+    import wp_train as WT
+
+    raw = C.dataset_cache("ogbg-mollipo")
+    scaler = {"mean": float(split_data.target_mean), "std": float(split_data.target_std)}
+    model = WT.build_gine_model(raw, 0, device, raw_features=True)
+    state = torch.load(C.run_dir("lipo", "GINE_RAW_REF") / "state_best.pt",
+                       map_location="cpu", weights_only=False)
+    model.load_state_dict(state["model"])
+    model.eval()
+    packed = SD.packed_split(raw, "train")
+    counts = WT._gine_counts()
+    import sq_gine as SG
+    data_list = SG.build_data_list(packed, counts, scaler)
+    train_pos = {int(v): i for i, v in enumerate(SD.split_indices(raw, "train").tolist())}
+    rows = [data_list[train_pos[int(r)]] for r in split_data.row_ids.tolist()]
+    out = WT.evaluate_gine(model, rows, device)
+    return np.asarray(out["pred_std"], dtype=np.float64) * scaler["std"] + scaler["mean"]

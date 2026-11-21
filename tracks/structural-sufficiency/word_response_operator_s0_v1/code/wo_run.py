@@ -415,7 +415,8 @@ def _predict(arm: str, split_name: str, data) -> tuple[np.ndarray, str]:
     if not path.is_file():
         raise SystemExit(f"missing checkpoint {path}")
     payload = torch.load(path, map_location="cpu", weights_only=False)
-    model = T.build_model(C.load_config(), data, arm)
+    hidden = int(payload["state"]["node.0.weight"].shape[0])
+    model = T.build_model(C.load_config(), data, arm, hidden=hidden)
     model.load_state_dict(payload["state"])
     model.eval()
     ev = T.evaluate(model, data[split_name], "cpu")
@@ -446,6 +447,16 @@ def cmd_holdout(args) -> None:
         rows[arm] = {"available": True,
                      "rmse": C.rmse(pred, h.labels), "mae": C.mae(pred, h.labels),
                      "n": int(len(pred))}
+    try:
+        import wo_baselines as B
+        pred = B.gine_predict(h, "cpu")
+        preds["GINE_RAW_REF"] = pred
+        rows["GINE_RAW_REF"] = {"available": True, "rmse": C.rmse(pred, h.labels),
+                                "mae": C.mae(pred, h.labels), "n": int(len(pred))}
+        np.savez_compressed(_run_path("GINE_RAW_REF") / "predictions_h.npz",
+                            row_ids=h.row_ids, pred_raw=pred, target_raw=h.labels)
+    except Exception as exc:
+        rows["GINE_RAW_REF"] = {"available": False, "reason": str(exc)}
     for arm in ("ADD_WORD", "FP_KRR"):
         p = _run_path(arm) / "predictions_best.npz"
         state = _run_path(arm) / "run.json"
@@ -613,7 +624,7 @@ def cmd_unlock_h(args) -> None:
     import wo_train as T
 
     data = T.load_all()
-    if data["h"].labels.size:
+    if (C.data_dir() / "wo_h_labels.npz").is_file():
         raise SystemExit("H labels are already unlocked")
     payload = C.dataset_cache("ogbg-mollipo")
     rows = np.asarray(data["split"]["h_row_ids"], dtype=np.int64)

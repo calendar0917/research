@@ -33,8 +33,10 @@ def load_all() -> dict[str, Any]:
     valid = D.load_split("valid", data / "wo_struct_valid.npz")
     h = D.load_split("h", data / "wo_struct_h.npz")
     unlock = data / "wo_h_labels.npz"
-    if unlock.is_file():
-        h.labels = np.load(unlock)["labels"].astype(np.float32)
+    # the structure cache carries a zero placeholder: H labels only exist after
+    # the one-shot unlock file is written, so a missing file means "no labels".
+    h.labels = (np.load(unlock)["labels"].astype(np.float32) if unlock.is_file()
+                else np.zeros(0, dtype=np.float32))
     # Fit-only standardisation of the count vector; zero-variance columns dropped.
     z = fit.z
     mean = z.mean(axis=0)

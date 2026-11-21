@@ -455,7 +455,11 @@ def finite_difference(data: Mapping[str, Any], model, idx, device: str) -> dict[
     fit = data["fit"]
     target_all = (fit.labels - fit.target_mean) / fit.target_std
     packed = fit.pack(idx, device=device)
-    target = torch.as_tensor(target_all[idx], device=device)
+    # double precision: the float32 loss floor (~1e-7) swamps small gradients
+    packed = {k: (v.double() if torch.is_tensor(v) and v.dtype.is_floating_point else v)
+              for k, v in packed.items()}
+    target = torch.as_tensor(target_all[idx], device=device).double()
+    model = model.double()
     model.eval()
     checks = {}
 
@@ -477,7 +481,7 @@ def finite_difference(data: Mapping[str, Any], model, idx, device: str) -> dict[
         else:
             param = getattr(model, name)
             sel = index
-        eps = 1e-4
+        eps = 1e-5
         if sel is None:
             sel = (0,)
         flat = param.data.view(-1)
@@ -751,12 +755,15 @@ def _case_mol_ids(data, n_fixed: int = 2):
     return [int(-x[2]) for x in score[:n_fixed]]
 
 
-def case_report(data, arm: str, mol_ids, channel: int = 0) -> list[dict]:
+def case_report(data, arm: str, mol_ids, channel: int = 0,
+                splits=("valid", "h")) -> list[dict]:
     import torch
 
     import wo_train as T
 
-    path = C.results_root() / f"lipo_{arm}" / "best.pt"
+    path = C.results_root() / f"lipo_{arm}_s0" / "best.pt"
+    if not path.is_file():
+        path = C.results_root() / f"lipo_{arm}" / "best.pt"
     if not path.is_file():
         return []
     payload = torch.load(path, map_location="cpu", weights_only=False)
@@ -764,7 +771,7 @@ def case_report(data, arm: str, mol_ids, channel: int = 0) -> list[dict]:
     model.load_state_dict(payload["state"])
     model.eval()
     out = []
-    for split_name in ("valid", "h"):
+    for split_name in splits:
         split = data[split_name]
         if split.labels.size == 0:
             continue
@@ -782,7 +789,7 @@ def case_report(data, arm: str, mol_ids, channel: int = 0) -> list[dict]:
             for word in words:
                 S, h, c = _reduce(word)
                 word_rows.append({
-                    "type": int(npk["word_tmpl"][word["w"]]),
+                    "type": int(npk["word_m"][word["w"]]),
                     "n_atoms": int(word["n"]), "n_ports": len(word["boundary"]),
                     "ports": [int(word["sites"][s]) for s in word["boundary"]],
                     "c": float(c), "h": [float(x) for x in h],
@@ -801,7 +808,7 @@ def case_report(data, arm: str, mol_ids, channel: int = 0) -> list[dict]:
 
 def cases(data, n: int = 4) -> list[dict]:
     fixed = _case_mol_ids(data, 2)
-    out = case_report(data, "FULL_WORD_OP", fixed)
+    out = case_report(data, "FULL_WORD_OP", fixed, splits=("valid",))
     # two more after the freeze: best / worst FULL-vs-LOCAL valid improvement
     try:
         import torch
@@ -811,7 +818,9 @@ def cases(data, n: int = 4) -> list[dict]:
         valid = data["valid"]
         preds = {}
         for arm in ("FULL_WORD_OP", "LOCAL_WORD_OP"):
-            path = C.results_root() / f"lipo_{arm}" / "best.pt"
+            path = C.results_root() / f"lipo_{arm}_s0" / "best.pt"
+            if not path.is_file():
+                path = C.results_root() / f"lipo_{arm}" / "best.pt"
             if not path.is_file():
                 continue
             payload = torch.load(path, map_location="cpu", weights_only=False)
@@ -825,9 +834,10 @@ def cases(data, n: int = 4) -> list[dict]:
                 np.abs(preds["LOCAL_WORD_OP"] - valid.labels)
             order = np.argsort(err)
             picks = [int(order[0]), int(order[-1])]
-            out += case_report(data, "FULL_WORD_OP", picks)
-            out += [{"split": "valid", "molecule": picks[0], "role": "best_full_vs_local"}]
-            out += [{"split": "valid", "molecule": picks[1], "role": "worst_full_vs_local"}]
+            out += case_report(data, "FULL_WORD_OP", picks, splits=("valid",))
+            for rec in out[-2:]:
+                rec["role"] = ("best_full_vs_local" if rec["molecule"] == picks[0]
+                               else "worst_full_vs_local")
     except Exception as exc:  # pragma: no cover
         out.append({"error": str(exc)})
     return out
