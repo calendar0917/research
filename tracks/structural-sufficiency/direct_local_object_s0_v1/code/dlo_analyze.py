@@ -8,6 +8,7 @@ only to verify row identity and recompute the same RMSE.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 from pathlib import Path
 from typing import Any, Mapping
@@ -178,6 +179,20 @@ def main() -> None:
         run_dir = C.REPO_ROOT / "tracks" / "structural-sufficiency" / "structural_word_functions_s0_v1" / "results" / OLD_RUNS[name][0]
         old = C.read_json(run_dir / "run.json")
         best = old.get("best", {})
+        final: dict[str, Any] = {}
+        curve_path = run_dir / "curves.csv"
+        if curve_path.is_file():
+            with curve_path.open(encoding="utf-8") as handle:
+                last = list(csv.DictReader(handle))[-1]
+            final = {
+                "epoch": int(last.get("stage_epoch", last.get("epoch", 0))),
+                "train_rmse": float(last["train_rmse"]),
+                "valid_rmse": float(last["valid_rmse"]),
+                "test_rmse": float(last["test_rmse"]),
+                "train_mae": float(last["train_mae"]),
+                "valid_mae": float(last["valid_mae"]),
+                "test_mae": float(last["test_mae"]),
+            }
         table.append({
             "arm": name,
             "role": "read_only_reference",
@@ -193,9 +208,12 @@ def main() -> None:
             "train_mae_best_valid": best.get("train_mae"),
             "valid_mae_best_valid": best.get("valid_mae"),
             "test_mae_best_valid": best.get("test_mae"),
-            "train_rmse_final": None,
-            "valid_rmse_final": None,
-            "test_rmse_final": None,
+            "train_rmse_final": final.get("train_rmse"),
+            "valid_rmse_final": final.get("valid_rmse"),
+            "test_rmse_final": final.get("test_rmse"),
+            "train_mae_final": final.get("train_mae"),
+            "valid_mae_final": final.get("valid_mae"),
+            "test_mae_final": final.get("test_mae"),
             "wall_seconds": old.get("wall_seconds"),
             "gpu_hours": old.get("gpu_hours"),
             "max_vram_mb": old.get("max_vram_mb"),
@@ -276,6 +294,10 @@ def main() -> None:
     summary = {
         "protocol_id": cfg["protocol_id"],
         "decision": decision_payload,
+        "metrics": {
+            "e_L_valid": e_L, "e_S_valid": e_S, "e_P_valid": e_P, "e_G_valid": e_G,
+            "t_L_test": t_L, "t_S_test": t_S, "t_P_test": t_P, "t_G_test": t_G,
+        },
         "deltas": deltas,
         "bootstrap": {
             "valid": boot_valid,
@@ -364,7 +386,16 @@ def main() -> None:
         },
         "git_commit": C.git_commit(),
         "tf32": runs[C.ARM_S56].get("tf32"),
+        "init_parameter_hash_equal": bool(
+            runs[C.ARM_S56].get("init_parameter_hash") is not None
+            and runs[C.ARM_S56].get("init_parameter_hash") == runs[C.ARM_W34].get("init_parameter_hash")
+        ),
+        "init_parameter_hash": runs[C.ARM_S56].get("init_parameter_hash"),
+        "init_buffer_hash_note": "run.json init_state_hash also covers the arm-specific mu_bucket buffer; the trainable parameter hash is identical",
     }
+    provenance = out_dir / "rr_provenance.json"
+    if provenance.is_file():
+        manifest["rr_provenance"] = C.read_json(provenance)
     C.write_json(out_dir / "run_manifest.json", manifest)
 
     print(json.dumps({

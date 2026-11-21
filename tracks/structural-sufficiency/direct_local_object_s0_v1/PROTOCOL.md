@@ -147,6 +147,38 @@ comes with a >0.03 Test regression against the old word bag or the matched
 control. No new seeds, datasets, widths, objectives, ESOL runs or mechanism
 sweeps; this round closes after the result table.
 
+## Execution record (appended after the fact)
+
+* T0 `2026-11-21T21:23:58+08:00`; prepare/checks 21:48–21:49; stage A rerun
+  21:56–21:57; common 240-epoch stage B 22:00:04–22:19:57; final delivery before
+  22:35, inside the 120-minute wall.
+* Cost estimate after stage A: `DIRECT_S56` 24.0 min and `MATCHED_W34` 23.2 min
+  for 240 epochs (safety 1.25) — both below 45 min, so the **240-epoch** branch
+  was kept and both arms completed all 240 epochs.
+* Both arms used the same 240-epoch horizon, the same Train molecule order and
+  the same 5-epoch warmup. No per-arm early stopping.
+* All formal training ran on `res` (a100-2, driver 550.163.01): GPU1 for
+  `DIRECT_S56`, GPU0 for `MATCHED_W34`; one task process per GPU. No OOM.
+* Cache, checks, curves, predictions and `run.json` were pulled back; large cache,
+  weights and predictions are local and gitignored. Only code/config/protocol/
+  report, curves/run records and lightweight `analysis/` are committed.
+
 ## Deviations
 
-To be appended after execution. None are planned.
+1. **Output path bug (the single engineering rerun).** `C.run_dir` initially
+   appended a repo-relative `--out` path to `results/`, so the first stage-A
+   launch wrote to a nested path. `run_dir` now resolves absolute paths,
+   repo-relative paths, and bare run names separately. Stage A was rerun once for
+   both arms on the fixed code. The model, data, seed, recipe and order were
+   unchanged; the rerun reproduced the first stage-A metrics epoch by epoch.
+   This is the one allowed engineering rerun; the first nested-path artifacts
+   are not used.
+2. **Initial-state hash bookkeeping.** `run.json:init_state_hash` hashes the
+   whole `state_dict`, which includes the arm-specific constant `mu_bucket`
+   buffer, so the two arms' whole-state hashes differ. The trainable-parameter
+   hashes are identical and are recorded separately
+   (`init_parameter_hash = 3d8d8cb1064efc9ca7908a5e40c348ec2fae6a79ff260b0771580e8998a24a99`).
+   No training parameter differed at initialisation.
+3. No other deviations. No new seeds, datasets, widths, objectives or
+   mechanism arms were run. The stage-A path rerun is the only extra neural
+   launch beyond the two planned unit sets.
