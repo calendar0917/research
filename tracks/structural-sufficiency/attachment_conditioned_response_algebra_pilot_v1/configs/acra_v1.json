@@ -1,0 +1,94 @@
+{
+  "protocol_id": "attachment-conditioned-response-algebra-pilot-v1",
+  "version": "2026-11-23/v1",
+  "dataset": "ogbg-mollipo",
+  "raw_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+  "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "cache": {
+    "name": "acra_cache_lipo.npz",
+    "version": "acra-cache-v1"
+  },
+  "objects": {
+    "max_object_atoms": 4,
+    "s_radius": 1,
+    "c_radius": 2,
+    "distance_buckets": 4,
+    "bucket_labels": ["d1", "d2", "d3", "d4plus_or_unreachable"]
+  },
+  "dims": {
+    "atom_fields": 9,
+    "bond_fields": 3,
+    "frame_field_emb": 6,
+    "frame_atom_out": 16,
+    "frame_bond_out": 8,
+    "frame_input": 126,
+    "frame_hidden": 128,
+    "frame_out": 64,
+    "local_hidden": 128,
+    "local_out": 64,
+    "local_scalars": 8,
+    "local_input": 268,
+    "bond_emb": 32,
+    "bond_field_emb": 8,
+    "bond_flag_emb": 4,
+    "response_hidden": 64,
+    "response_dropout": 0.1,
+    "site_dim": 64,
+    "interaction_rank": 32,
+    "relation_rank": 32,
+    "relation_buckets": 4,
+    "relation_shared_ring": 2,
+    "atom_field_emb": 8,
+    "atom_hidden": 64
+  },
+  "composition": {
+    "site_loss_weight": 0.001,
+    "relation_loss_weight": 0.01,
+    "gate_init": 0.12,
+    "relation_normalizer": "n_undirected_bonds"
+  },
+  "arms": {
+    "ACRA_ADD": {"interaction": false, "relation": false},
+    "ACRA_COND": {"interaction": true, "relation": false},
+    "ACRA_REL": {"interaction": true, "relation": true}
+  },
+  "recipe": {
+    "seed": 0,
+    "peak_lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.0001,
+    "batch_molecules": 64,
+    "eval_batch": 128,
+    "clip_norm": 5.0,
+    "warmup_epochs": 5,
+    "epochs_max": 160,
+    "optimizer": "AdamW",
+    "scheduler": "warmup5+cosine_to_1e-5",
+    "selection": "best valid RMSE"
+  },
+  "reference": {
+    "morgan_radius": 2,
+    "morgan_bits": 2048,
+    "ridge_alpha": 10.0,
+    "external": {
+      "TRC_FACTOR_CUTRESP": {
+        "run_dir": "tracks/structural-sufficiency/task_response_composition_s0_v1/results/LIPO_FACTOR_CUTRESP_R0",
+        "note": "read-only prediction record of the parent round; not retrained, not a model component"
+      },
+      "GINE_RAW_REF": {
+        "run_dir": "tracks/structural-sufficiency/task_response_composition_s0_v1/results/GINE_RAW_LIPO_R0",
+        "note": "read-only external GNN reference prediction record"
+      }
+    }
+  },
+  "pairs": {
+    "source": "parent round train-only real replacement directory (pair_mol_a/pair_mol_b)",
+    "bootstrap_reps": 2000,
+    "seed": 0
+  },
+  "budget": {
+    "gpu_hours_max": 4,
+    "max_gpus": 2,
+    "seeds": [0]
+  }
+}
