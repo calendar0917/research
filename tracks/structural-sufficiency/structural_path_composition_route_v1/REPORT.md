@@ -1,6 +1,6 @@
 # Structural path composition route (PSC) — final report
 
-*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `97ee324b47c85381661a3257913461f6f9be6723` · *generated*: 2026-11-22T20:34:42Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
+*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `f39db7bd04a7fdc3332b83209c580e7d5e06c139` · *generated*: 2026-11-22T20:41:36Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
 
 Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers below are whole-molecule RMSE / MAE in **original label units** (the training target is the standardised label, all reported metrics are inverted back). Higher-is-better quantities are marked.
 
