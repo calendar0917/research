@@ -39,17 +39,28 @@ def build_cache(cfg: Mapping[str, Any], dataset: str = "lipo", log=print) -> dic
     return load_pack(cfg, dataset)
 
 
-def ensure_pack(cfg: Mapping[str, Any], dataset: str = "lipo", log=print) -> dict[str, Any]:
-    """Load the prepared cache, building it first if this checkout has none.
+def cache_candidates(cfg: Mapping[str, Any], dataset: str = "lipo") -> list[Path]:
+    """This round's cache first, then the parent's identical prepared cache.
 
-    Remote runs are self-contained: the build takes ~40 s and is verified by the
-    content digest, so a fresh remote build cannot silently differ from the
-    frozen structural record.
+    Both are produced by the same builder from the same raw cache, so the parent
+    file is a legitimate stand-in: the content digest (which excludes build
+    timings) is what identifies the structural record.  This is what makes remote
+    runs work on a checkout without rdkit.
     """
-    if not cache_path(cfg, dataset).is_file():
-        log(f"prepared cache missing, building it: {cache_path(cfg, dataset)}")
-        return build_cache(cfg, dataset, log=log)
-    return load_pack(cfg, dataset)
+    return [cache_path(cfg, dataset),
+            C.PARENT_ROUND / "data" / f"trc_cache_{dataset}.npz"]
+
+
+def ensure_pack(cfg: Mapping[str, Any], dataset: str = "lipo", log=print) -> dict[str, Any]:
+    """Load a prepared cache (own, else the parent's identical one), else build."""
+    for path in cache_candidates(cfg, dataset):
+        if path.is_file():
+            pack = load_pack(cfg, dataset, path=path)
+            if path != cache_path(cfg, dataset):
+                log(f"using the parent prepared cache at {path} (same content digest)")
+            return pack
+    log(f"prepared cache missing, building it: {cache_path(cfg, dataset)}")
+    return build_cache(cfg, dataset, log=log)
 
 
 def content_digest(path: Path | str, skip: Sequence[str] = ("timing_json",)) -> str:
@@ -74,8 +85,9 @@ def content_digest(path: Path | str, skip: Sequence[str] = ("timing_json",)) -> 
     return h.hexdigest()
 
 
-def load_pack(cfg: Mapping[str, Any], dataset: str = "lipo") -> dict[str, Any]:
-    path = cache_path(cfg, dataset)
+def load_pack(cfg: Mapping[str, Any], dataset: str = "lipo",
+              path: Path | str | None = None) -> dict[str, Any]:
+    path = Path(path) if path is not None else cache_path(cfg, dataset)
     if not path.is_file():
         raise FileNotFoundError(f"prepared cache missing: {path}")
     with np.load(path, allow_pickle=False) as handle:
