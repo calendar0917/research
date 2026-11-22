@@ -206,6 +206,49 @@ def pair_summary() -> dict[str, Any]:
     return out
 
 
+def _compact_support() -> dict[str, Any] | None:
+    path = C.analysis_dir() / "local_context_support.json"
+    if not path.is_file():
+        return None
+    data = C.read_json(path)
+    out: dict[str, Any] = {"identity": data.get("identity"), "by_radius": {}}
+    for group_key in ("results_primary_key_with_cut_bond", "results_structure_only_key_without_cut_bond"):
+        group = data.get(group_key, {})
+        label = "cut_bond_key" if "primary" in group_key else "structure_only_key"
+        out[label] = {}
+        for radius, rec in group.items():
+            tr, va = rec["train"], rec["valid"]
+            out[label][radius] = {
+                "train_distinct_contexts": tr["n_distinct_contexts"],
+                "train_contexts_in_ge2_molecules": tr["fraction_contexts_in_ge2_molecules"],
+                "train_max_molecules_per_context": tr["context_molecule_reuse"]["max"],
+                "valid_seen_parse_rate": va["seen_parse_rate"],
+                "valid_seen_unique_rate": va["seen_unique_context_rate"],
+                "valid_seen_molecule_any_rate": va["seen_molecule_any_context_rate"],
+                "valid_joint_context_S_seen_rate": va["joint_context_S_seen_parse_rate"],
+            }
+    out["crosscheck_complete_C_existing_rate"] = data.get("complete_C_support_crosscheck")
+    return out
+
+
+def _compact_mechanism() -> dict[str, Any] | None:
+    path = C.analysis_dir() / "mechanism_diagnostics.json"
+    if not path.is_file():
+        return None
+    data = C.read_json(path)
+    out: dict[str, Any] = {}
+    for name, rec in data.get("arms", {}).items():
+        out[name] = {
+            "best_epoch": rec["best_epoch"],
+            "interaction_contribution": rec["diagnostics"].get("interaction_contribution"),
+            "attention": rec.get("attention"),
+            "gradients_first_epoch": rec.get("gradients_first_epoch"),
+            "gradients_best_epoch": rec.get("gradients_best_epoch"),
+            "curve_best": rec.get("curve_best"),
+        }
+    return out
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="lipo")
@@ -323,6 +366,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         "cut_diagnostics": cut_var,
         "pair_delta_summary": pair_summary(),
         "gine_gap": gap,
+        "local_context_support": _compact_support(),
+        "mechanism_diagnostics": _compact_mechanism(),
+        "engineering_gate": (C.read_json(C.analysis_dir() / "checks.json")
+                             if (C.analysis_dir() / "checks.json").is_file() else None),
+        "deviations": [
+            "Post-run diagnostic bug: the in-run F_GRAPH interaction diagnostic failed because a zeroing shim assigned to model.q/model.r was not an nn.Module; training, loss and best-by-Valid selection were unaffected. Fixed in code/cpo_train.py and recomputed for all arms at the frozen best checkpoints in analysis/mechanism_diagnostics.json.",
+            "A 2-step remote smoke run (cpo-remote-smoke, 16 Train / 8 Valid molecules) preceded the formal runs; it is not an arm, is not in results, and its time is not charged to the 1.006 GPU-hour total.",
+            "No formal recipe deviation: all three arms used seed 0, 160 epochs, and the frozen parent/CSOI recipe values.",
+        ],
         "execution": {
             "runs": {
                 name: {

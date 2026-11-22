@@ -128,6 +128,8 @@ def total_grad_norm(model) -> float:
 
 
 class _ZeroOut:
+    """Callable zero map used only for a frozen-weight diagnostic."""
+
     def __init__(self, dim: int) -> None:
         self.dim = int(dim)
 
@@ -135,6 +137,16 @@ class _ZeroOut:
         import torch
 
         return torch.zeros((x.shape[0], self.dim), device=x.device, dtype=x.dtype)
+
+
+def _zero_module(dim: int):
+    import torch
+
+    class ZeroModule(torch.nn.Module):
+        def forward(self, x):
+            return torch.zeros((x.shape[0], int(dim)), device=x.device, dtype=x.dtype)
+
+    return ZeroModule()
 
 
 def interaction_diagnostics(model, family: str, pack: Mapping[str, Any],
@@ -189,8 +201,8 @@ def interaction_diagnostics(model, family: str, pack: Mapping[str, Any],
                 full = model.cut_scores(h_c, h_s, e, has_c)
                 q_orig, r_orig = model.q, model.r
                 try:
-                    model.q = _ZeroOut(model.rank)
-                    model.r = _ZeroOut(model.rank)
+                    model.q = _zero_module(model.rank)
+                    model.r = _zero_module(model.rank)
                     additive = model.cut_scores(h_c, h_s, e, has_c)
                 finally:
                     model.q, model.r = q_orig, r_orig

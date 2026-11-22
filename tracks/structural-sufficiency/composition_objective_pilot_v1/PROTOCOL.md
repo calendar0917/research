@@ -299,4 +299,18 @@ AdamW, peak LR `1e-3`, min LR `1e-5`, weight decay `1e-4`, clip `5.0`,
 
 ## 12. Deviations log (append only)
 
-(empty before formal training)
+- **2026-11-22 — post-run diagnostic fix (no training effect).** The in-run
+  `mechanism_diagnostics.json` for `F_GRAPH` failed because the frozen-weight
+  diagnostic assigned a plain callable zeroing shim to `model.q` / `model.r`;
+  PyTorch requires an `nn.Module` there. Training, the loss, checkpoint
+  selection, and all predictions were unaffected. The shim was made an
+  `nn.Module` in `code/cpo_train.py`, and the diagnostic was recomputed for all
+  six old/new arms at their frozen best checkpoints in
+  `analysis/mechanism_diagnostics.json`.
+- **2026-11-22 — remote smoke run.** A 2-step `cpo-remote-smoke` run (16 Train /
+  8 Valid molecules, `res-gpu0`) was executed to verify the remote environment
+  before the formal runs. It is not an arm, its outputs are not in `results/`,
+  and its time is not charged to the 1.006 A100 GPU-hour training total.
+- **2026-11-22 — no formal recipe deviations.** All three formal arms used seed
+  0, 160 epochs, the frozen parent/CSOI recipe values, and best-by-Valid
+  selection. Test labels and Test prediction arrays were never read.
