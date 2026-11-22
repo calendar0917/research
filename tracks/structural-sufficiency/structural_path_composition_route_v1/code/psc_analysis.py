@@ -365,93 +365,139 @@ def cmd_select(bundle: D.DataBundle) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
-def cmd_bootstrap(bundle: D.DataBundle) -> dict[str, Any]:
-    lock = C.read_json(ANALYSIS / "selection_lock.json")
-    models = [lock["champion"], lock["M_star"], lock["ACRA_B_star"], "GINE_REF",
-              "PATH_COUNT_KRR", "MORGAN_COUNT_KRR"]
-    models = [m for m in dict.fromkeys(models) if m]
-    rows = None
-    preds: dict[str, np.ndarray] = {}
-    per_seed: dict[str, list[np.ndarray]] = defaultdict(list)
+CONTRASTS = [
+    # (candidate, reference, question)
+    ("PSC_SUM_BAG", "PSC_SUM", "Q2 ORDER vs BAG (SUM, MOLECULE)"),
+    ("PSC_POOL_BAG", "PSC_POOL", "Q2 ORDER vs BAG (POOL, MOLECULE)"),
+    ("PSC_SUM_BAG_PAIR", "PSC_SUM_PAIR", "Q2 ORDER vs BAG (SUM, PAIR)"),
+    ("PSC_POOL_BAG_PAIR", "PSC_POOL_PAIR", "Q2 ORDER vs BAG (POOL, PAIR)"),
+    ("PSC_POOL", "PSC_SUM", "Q3 SUM vs POOL (ORDER, MOLECULE)"),
+    ("PSC_POOL_BAG", "PSC_SUM_BAG", "Q3 SUM vs POOL (BAG, MOLECULE)"),
+    ("PSC_POOL_PAIR", "PSC_SUM_PAIR", "Q3 SUM vs POOL (ORDER, PAIR)"),
+    ("PSC_POOL_BAG_PAIR", "PSC_SUM_BAG_PAIR", "Q3 SUM vs POOL (BAG, PAIR)"),
+    ("PSC_SUM_PAIR", "PSC_SUM", "Q4 PAIR coupling vs MOLECULE (SUM, ORDER)"),
+    ("PSC_POOL_PAIR", "PSC_POOL", "Q4 PAIR coupling vs MOLECULE (POOL, ORDER)"),
+    ("PSC_SUM_BAG_PAIR", "PSC_SUM_BAG", "Q4 PAIR coupling vs MOLECULE (SUM, BAG)"),
+    ("PSC_POOL_BAG_PAIR", "PSC_POOL_BAG", "Q4 PAIR coupling vs MOLECULE (POOL, BAG)"),
+    ("ACRA_PAIR", "ACRA_REF", "Q4 ACRA pair regulariser vs parent"),
+]
+
+
+def _sq_err_table(bundle: D.DataBundle, split: str, models: Sequence[str],
+                  rows: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray, list[str]]:
+    """(n_models, n_seeds_max, n_rows) squared errors + availability mask."""
+    sq, seeds_of, ok_models = [], [], []
+    ref_rows = rows
     for m in models:
+        seeds = []
         for seed in (0, 1, 2):
-            rid = run_id(m, "D0", seed) if m in ARM_SPEC else f"CPU_{m}_D0"
-            path = RESULTS / rid / "predictions_best_eval.npz"
-            if not path.is_file():
-                path = RESULTS / rid / "predictions_final_eval.npz"
-            if not path.is_file():
-                path = CPU_OUT / rid / "predictions.npz"
-            if not path.is_file():
+            if split == "D0":
+                n_seeds = 3
+            d = prediction_dict(m, split, seed)
+            if not d:
                 continue
-            with np.load(path, allow_pickle=False) as z:
-                rid_rows = np.asarray(z["row_id"])
-                pred = np.asarray(z["pred"], np.float64)
-            if rows is None:
-                rows = rid_rows
-            elif not np.array_equal(rows, rid_rows):
-                raise ValueError(f"row order differs for {rid}")
-            per_seed[m].append(pred)
+            r = np.asarray(sorted(d.keys())) if ref_rows is None else np.asarray(ref_rows)
+            if ref_rows is None:
+                ref_rows = r
+            if np.array_equal(np.asarray(sorted(d.keys())), np.asarray(ref_rows)) is False:
+                if not set(ref_rows.tolist()) <= set(d.keys()):
+                    continue
+            seeds.append(np.asarray([(d[int(x)] - bundle.labels[int(x)]) ** 2 for x in ref_rows]))
+        if seeds:
+            sq.append(np.stack(seeds))
+            seeds_of.append(m)
+    if not sq:
+        raise SystemExit(f"no predictions available for split {split}")
+    width = max(x.shape[0] for x in sq)
+    table = np.full((len(sq), width, ref_rows.size), np.nan)
+    for i, x in enumerate(sq):
+        table[i, :x.shape[0]] = x
+    return table, np.asarray(ref_rows, np.int64), seeds_of
+
+
+def cmd_bootstrap(bundle: D.DataBundle, split_name: str = "D0") -> dict[str, Any]:
+    lock = C.read_json(ANALYSIS / "selection_lock.json")
+    models = list(ARM_SPEC) + list(CPU_MODELS)
+    table, rows, used = _sq_err_table(bundle, split_name, models)
     y = bundle.labels[rows]
     cfg = C.load_config()
     reps, seed0 = int(cfg["bootstrap"]["reps"]), int(cfg["bootstrap"]["seed"])
-    rng = np.random.default_rng(seed0)
     n = rows.size
-    uniq = np.arange(n)
-    draws = {m: [] for m in per_seed}
-    for _ in range(reps):
+    n_models = table.shape[0]
+    rng = np.random.default_rng(seed0)
+    draw = np.empty((reps, n_models))
+    for r in range(reps):
         idx = rng.integers(0, n, size=n)
-        for m, predlist in per_seed.items():
-            rms = [float(np.sqrt(np.mean((p[idx] - y[idx]) ** 2))) for p in predlist]
-            draws[m].append(float(np.mean(rms)))
-    point = {}
-    for m, predlist in per_seed.items():
-        point[m] = {"n_seeds": len(predlist),
-                    "rmse_seed_mean": float(np.mean(
-                        [C.rmse(p, y) for p in predlist])),
-                    "per_seed": [C.rmse(p, y) for p in predlist]}
-    deltas = {}
-    ref = lock["ACRA_B_star"]
-    for m in per_seed:
-        if m == ref:
-            continue
-        d = np.asarray(draws[ref]) - np.asarray(draws[m])
-        deltas[f"{ref}_minus_{m}"] = {
-            "point": point[ref]["rmse_seed_mean"] - point[m]["rmse_seed_mean"],
-            "ci95": C.percentile_ci(d), "definition": "reference - candidate; >0 candidate better"}
-    # scaffold cluster bootstrap for the three headline comparisons
-    split = C.split_spec("D0", bundle.raw)
-    scaffold = split_rows_scaffold(bundle, split)
-    groups = defaultdict(list)
-    for i, s in enumerate(scaffold):
-        groups[s].append(i)
-    keys = list(groups)
-    cluster_draws = {m: [] for m in per_seed}
-    rng2 = np.random.default_rng(seed0 + 1)
-    for _ in range(reps):
-        picks = rng2.integers(0, len(keys), size=len(keys))
-        idx = np.concatenate([groups[keys[k]] for k in picks])
-        for m, predlist in per_seed.items():
-            rms = [float(np.sqrt(np.mean((p[idx] - y[idx]) ** 2))) for p in predlist]
-            cluster_draws[m].append(float(np.mean(rms)))
-    headline = ["GINE_REF", "PATH_COUNT_KRR", "MORGAN_COUNT_KRR"]
-    cluster = {}
-    for m in headline:
-        if m in per_seed:
-            d = np.asarray(cluster_draws[ref]) - np.asarray(cluster_draws[m])
-            cluster[f"{ref}_minus_{m}"] = {"point": point[ref]["rmse_seed_mean"]
-                                           - point[m]["rmse_seed_mean"],
-                                           "ci95": C.percentile_ci(d),
-                                           "n_clusters": len(keys)}
-    payload = {"generated_utc": C.now_utc(), "rows": int(n), "reps": reps,
-               "seed": seed0, "models": list(per_seed), "reference": ref,
-               "point": point, "molecule_bootstrap": deltas,
-               "scaffold_cluster_bootstrap": cluster,
-               "definition": "same resampling index for every model and seed; statistic is "
-                             "the mean over seeds of the resampled whole-molecule RMSE"}
-    C.write_json(ANALYSIS / "bootstrap.json", payload)
-    print(json.dumps({k: {"point": round(v["point"], 4), "ci": [round(x, 4) for x in v["ci95"]]}
-                      for k, v in deltas.items()}, indent=1))
-    return payload
+        draw[r] = np.nanmean(np.sqrt(np.nanmean(table[:, :, idx], axis=2)), axis=1)
+    point = np.nanmean(np.sqrt(np.nanmean(table, axis=2)), axis=1)
+    index = {m: i for i, m in enumerate(used)}
+    out: dict[str, Any] = {
+        "generated_utc": C.now_utc(), "split": split_name, "n_rows": int(n),
+        "reps": reps, "bootstrap_seed": seed0,
+        "models": used,
+        "point": {m: {"rmse_seed_mean": float(point[index[m]]),
+                      "per_seed": [float(np.sqrt(np.mean(table[index[m], s])))
+                                   for s in range(table.shape[1])
+                                   if np.isfinite(table[index[m], s]).any()]}
+                  for m in used},
+        "definition": ("per-molecule resampling with one shared index for every model "
+                       "and seed; statistic = mean over seeds of resampled RMSE"),
+    }
+    def add(a: str, b: str, label: str) -> dict[str, Any] | None:
+        if a not in index or b not in index:
+            return None
+        d = draw[:, index[b]] - draw[:, index[a]]
+        return {"candidate": a, "reference": b, "question": label,
+                "point": float(point[index[b]] - point[index[a]]),
+                "ci95": C.percentile_ci(d),
+                "p_two_sided": float(2 * min(np.mean(d <= 0), np.mean(d >= 0))),
+                "definition": "RMSE(reference) - RMSE(candidate); >0 candidate better"}
+    contrasts = {}
+    for a, b, label in CONTRASTS:
+        got = add(a, b, label)
+        if got:
+            contrasts[f"{a}_vs_{b}"] = got
+    champ = lock["champion"]
+    for ref in (lock["ACRA_B_star"], "ACRA_PAIR", "GINE_REF", "PATH_COUNT_KRR",
+                "MORGAN_COUNT_KRR", "COUNT_ONLY_RIDGE"):
+        got = add(champ, ref, f"Q1 champion vs {ref}")
+        if got:
+            contrasts[f"champion_vs_{ref}"] = got
+    out["contrasts"] = contrasts
+    # scaffold-cluster bootstrap (D0 and D1 both have a scaffold map)
+    try:
+        split = C.split_spec(split_name, bundle.raw,
+                             f1=(json.loads(C.SPLIT_F1.read_text(encoding="utf-8"))
+                                 if split_name == "D1" else None))
+        scaffold = split_rows_scaffold(bundle, split)
+        groups = defaultdict(list)
+        for i, sc in enumerate(scaffold):
+            groups[sc].append(i)
+        keys = list(groups)
+        rng2 = np.random.default_rng(seed0 + 1)
+        cdraw = np.empty((reps, n_models))
+        for r in range(reps):
+            picks = rng2.integers(0, len(keys), size=len(keys))
+            idx = np.concatenate([groups[keys[k]] for k in picks])
+            cdraw[r] = np.nanmean(np.sqrt(np.nanmean(table[:, :, idx], axis=2)), axis=1)
+        cluster = {}
+        for a, b, label in CONTRASTS + [(champ, lock["ACRA_B_star"], "Q1")]:
+            if a not in index or b not in index:
+                continue
+            d = cdraw[:, index[b]] - cdraw[:, index[a]]
+            cluster[f"{a}_vs_{b}"] = {"point": float(point[index[b]] - point[index[a]]),
+                                      "ci95": C.percentile_ci(d),
+                                      "n_clusters": len(keys)}
+        out["scaffold_cluster_bootstrap"] = cluster
+    except Exception as exc:  # pragma: no cover - scaffold map is optional
+        out["scaffold_cluster_bootstrap"] = {"error": repr(exc)}
+    path = ANALYSIS / ("bootstrap.json" if split_name == "D0" else f"bootstrap_{split_name}.json")
+    C.write_json(path, out)
+    print(json.dumps({k: {"d": round(v["point"], 4),
+                          "ci": [round(x, 4) for x in v["ci95"]],
+                          "p": round(v["p_two_sided"], 3)}
+                      for k, v in contrasts.items()}, indent=1))
+    return out
 
 
 def split_rows_scaffold(bundle: D.DataBundle, split: Mapping[str, Any]) -> list[str]:
@@ -468,6 +514,29 @@ def split_rows_scaffold(bundle: D.DataBundle, split: Mapping[str, Any]) -> list[
 # ---------------------------------------------------------------------------
 # pair-level data
 # ---------------------------------------------------------------------------
+
+
+def prediction_dict(model: str, split: str, seed: int) -> dict[int, float]:
+    """row_id -> prediction (original units) for every saved split of a run."""
+    if model in ARM_SPEC:
+        base = RESULTS / run_id(model, split, seed)
+        tags = ("best",) if split == "D0" else ("final",)
+    else:
+        base = CPU_OUT / f"CPU_{model}_{split}"
+        tags = ("",)
+    out: dict[int, float] = {}
+    for tag in tags:
+        for part in ("fit", "eval"):
+            name = f"predictions_{tag}_{part}.npz" if tag else "predictions.npz"
+            path = base / name
+            if not path.is_file():
+                continue
+            with np.load(path, allow_pickle=False) as z:
+                out.update(dict(zip(np.asarray(z["row_id"]).tolist(),
+                                    np.asarray(z["pred"], np.float64).tolist())))
+        if out:
+            break
+    return out
 
 
 class PairData:
@@ -534,6 +603,16 @@ def _components(n: int, a: np.ndarray, b: np.ndarray) -> np.ndarray:
     return np.asarray([find(i) for i in range(int(n))], np.int64)
 
 
+def delta_of(d: Mapping[int, float], pd: "PairData") -> tuple[np.ndarray, np.ndarray]:
+    """Predicted pair Δ for every unique pair; NaN + mask where unavailable."""
+    ok = np.asarray([int(a) in d and int(b) in d for a, b in
+                     zip(pd.pa.tolist(), pd.pb.tolist())], bool)
+    dp = np.full(pd.pa.size, np.nan)
+    idx = np.nonzero(ok)[0]
+    dp[idx] = np.asarray([d[int(pd.pb[i])] - d[int(pd.pa[i])] for i in idx.tolist()])
+    return dp, ok
+
+
 def pair_metrics(delta_true: np.ndarray, delta_pred: np.ndarray,
                  weights: np.ndarray | None = None) -> dict[str, Any]:
     y = np.asarray(delta_true, np.float64)
@@ -564,8 +643,20 @@ def pair_metrics(delta_true: np.ndarray, delta_pred: np.ndarray,
 # ---------------------------------------------------------------------------
 
 
-def fit_fragment_set(pair_dir: Any, fit_rows: Sequence[int]) -> set[int]:
-    trc = pair_dir.trc
+TRC_KEYS = ("parse_mol", "parse_kind", "parse_S", "parse_C", "parse_cut_bond_row",
+            "parse_S_atoms",
+            "parse_S_atoms_ptr", "parse_C_atoms", "parse_C_atoms_ptr", "pair_C")
+
+
+def load_trc() -> dict[str, np.ndarray]:
+    with np.load(C.TRC_CACHE, allow_pickle=False) as z:
+        return {k: np.asarray(z[k]) for k in TRC_KEYS}
+
+
+def fit_fragment_set(pair_dir: Any, fit_rows: Sequence[int],
+                     trc: Mapping[str, np.ndarray] | None = None) -> set[int]:
+    if trc is None:
+        trc = load_trc()
     parse_mol = np.asarray(trc["parse_mol"], np.int64)
     parse_kind = np.asarray(trc["parse_kind"], np.uint8)
     parse_S = np.asarray(trc["parse_S"], np.int64)
@@ -631,7 +722,8 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
                                          *D.category_support(
                                              bundle.raw, split["fit_rows"],
                                              *_dims()))
-        frag_seen = fit_fragment_set(pd.dir, split["fit_rows"])
+        trc = load_trc()
+        frag_seen = fit_fragment_set(pd.dir, split["fit_rows"], trc)
         fit_T = set(np.unique(pd.dir.T_id[pd.cut_scope == 0]).tolist())
         # support classes per cut row
         cut_class = np.full(pd.dir.mol_a.size, -1, np.int8)
@@ -665,24 +757,12 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
                 den_l = sum(abs(db.get(k, 0) - da.get(k, 0)) for k in keys
                             if int(cache.path_len[k]) == l)
                 eta_len[l][i] = num_l / den_l if den_l > 0 else np.nan
-        # molecule prediction lookups per model/seed (fit + eval rows)
-        # assemble molecule prediction lookup per model/seed
+        # molecule prediction lookups per model/seed (all rows available)
         data: dict[str, list[dict[int, float]]] = {}
         for m in models:
             lst = []
             for seed in (0, 1, 2):
-                rid = run_id(m, split_name, seed) if m in ARM_SPEC else f"CPU_{m}_{split_name}"
-                base = RESULTS / rid if m in ARM_SPEC else CPU_OUT / rid
-                fpath = base / ("predictions_best_fit.npz" if split_name == "D0"
-                                else "predictions_final_fit.npz")
-                epath = base / ("predictions_best_eval.npz" if split_name == "D0"
-                                else "predictions_final_eval.npz")
-                d: dict[int, float] = {}
-                for p in (fpath, epath):
-                    if p.is_file():
-                        with np.load(p, allow_pickle=False) as z:
-                            d.update(dict(zip(np.asarray(z["row_id"]).tolist(),
-                                              np.asarray(z["pred"], np.float64).tolist())))
+                d = prediction_dict(m, split_name, seed)
                 if d:
                     lst.append(d)
             if lst:
@@ -706,11 +786,16 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
                                      "n_components": int(np.unique(pd.component[mask]).size)}
             for m, seeds_pred in data.items():
                 per_seed = []
+                n_scored = None
                 for d in seeds_pred:
-                    dp = np.asarray([d[int(b)] - d[int(a)] for a, b in
-                                     zip(pd.pa.tolist(), pd.pb.tolist())])
-                    per_seed.append(pair_metrics(delta_true[mask], dp[mask]))
-                entry[m] = {"mean_over_seeds": {
+                    dp, ok = delta_of(d, pd)
+                    use = mask & ok
+                    n_scored = int(use.sum())
+                    per_seed.append(pair_metrics(delta_true[use], dp[use]))
+                if not per_seed[0]["n"]:
+                    entry[m] = {"n_scored": 0}
+                    continue
+                entry[m] = {"n_scored": n_scored, "mean_over_seeds": {
                     k: float(np.mean([ps[k] for ps in per_seed]))
                     for k in ("mae", "rmse", "bias", "direction_accuracy")
                     if per_seed[0].get(k) is not None},
@@ -728,16 +813,20 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
             for i, cuts in enumerate(cut_lists):
                 if cuts.size:
                     w[i] = float(np.sum(cut_class[cuts] == cls)) / float(cuts.size)
-            sel = w > 0
-            entry = {"n_pairs_any": int(sel.sum()), "weight_mass": float(w[sel].sum())
+            sel = (w > 0) & (pd.scope == 2)
+            entry = {"scope": "heldout_heldout", "n_pairs_any": int(sel.sum()),
+                     "weight_mass": float(w[sel].sum())
                      if sel.any() else 0.0,
                      "n_components": int(np.unique(pd.component[sel]).size) if sel.any() else 0}
             for m, seeds_pred in data.items():
                 per_seed = []
                 for d in seeds_pred:
-                    dp = np.asarray([d[int(b)] - d[int(a)] for a, b in
-                                     zip(pd.pa.tolist(), pd.pb.tolist())])
-                    per_seed.append(pair_metrics(delta_true[sel], dp[sel], w[sel]))
+                    dp, ok = delta_of(d, pd)
+                    use = sel & ok
+                    per_seed.append(pair_metrics(delta_true[use], dp[use], w[use]))
+                if not per_seed[0]["n"]:
+                    entry[m] = {"n_scored": 0}
+                    continue
                 entry[m] = {k: float(np.mean([ps[k] for ps in per_seed]))
                             for k in ("mae", "rmse", "direction_accuracy")
                             if per_seed[0].get(k) is not None}
@@ -762,10 +851,10 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
                     for m, seeds_pred in data.items():
                         per_seed = []
                         for d in seeds_pred:
-                            dp = np.asarray([d[int(b)] - d[int(a)] for a, b in
-                                             zip(pd.pa.tolist(), pd.pb.tolist())])
-                            per_seed.append(pair_metrics(delta_true[mask], dp[mask]))
-                        if per_seed:
+                            dp, ok = delta_of(d, pd)
+                            use = mask & ok
+                            per_seed.append(pair_metrics(delta_true[use], dp[use]))
+                        if per_seed and per_seed[0]["n"]:
                             sub[m] = {k: float(np.mean([ps[k] for ps in per_seed]))
                                       for k in ("mae", "rmse", "direction_accuracy")
                                       if per_seed[0].get(k) is not None}
@@ -778,10 +867,10 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
         for m, seeds_pred in data.items():
             per_seed = []
             for d in seeds_pred:
-                dp = np.asarray([d[int(b)] - d[int(a)] for a, b in
-                                 zip(pd.pa.tolist(), pd.pb.tolist())])
-                per_seed.append(pair_metrics(delta_true[big], dp[big]))
-            if per_seed:
+                dp, ok = delta_of(d, pd)
+                use = big & ok
+                per_seed.append(pair_metrics(delta_true[use], dp[use]))
+            if per_seed and per_seed[0]["n"]:
                 sens[m] = {"mae": float(np.mean([ps["mae"] for ps in per_seed])),
                            "rmse": float(np.mean([ps["rmse"] for ps in per_seed])),
                            "direction_accuracy": float(np.mean(
@@ -858,9 +947,9 @@ def cmd_decomp(bundle: D.DataBundle) -> dict[str, Any]:
                 "corr_endpoint_residuals": float(np.corrcoef(ea, eb)[0, 1])
                 if np.std(ea) > 0 and np.std(eb) > 0 else None,
             })
+        keys = [k for k in entries[0] if all(x[k] is not None for x in entries)]
         out["models"][m] = {
-            "mean": {k: float(np.mean([x[k] for x in entries]))
-                     for k in entries[0] if x is not None},
+            "mean": {k: float(np.mean([x[k] for x in entries])) for k in keys},
             "per_seed": entries,
         }
         for x in entries:
@@ -942,8 +1031,9 @@ def cmd_sizes(bundle: D.DataBundle) -> dict[str, Any]:
         union_entry["models"][m] = {"rmse": C.rmse(pred[keep], y[keep])}
     out["top5_union_removed"] = union_entry
     C.write_json(ANALYSIS / "size_strata.json", out)
-    print(json.dumps({m: {k: (round(v["overall_rmse"], 4) if isinstance(v, dict) else v)
-                          for k, v in out["models"][m].items() if k != "worst"}
+    print(json.dumps({m: {"rmse": round(out["models"][m]["overall_rmse"], 4),
+                          "quartiles": [round(out["models"][m][f"q{i}"]["rmse"], 4)
+                                        for i in range(1, 5)]}
                       for m in out["models"]}, indent=1))
     return out
 
@@ -1069,7 +1159,7 @@ def cmd_ledger(bundle: D.DataBundle) -> dict[str, Any]:
         s = score_paths(model, atoms, bonds, L, "cpu", spec["input"] == "BAG")
         plen = np.array([len(p) - 1 for p in paths])
         f_ledger = float(model.beta) + float(np.sum(c_l[plen] * s))
-        f_pred = _predict_one(model, cache, c_l, int(row), spec["input"] == "BAG", 0)
+        f_pred = _predict_one(model, cache, c_l, int(row), spec["input"] == "BAG")
         max_err = max(max_err, abs(f_ledger - f_pred))
     out["identity_max_abs_std"] = float(max_err)
     if max_err > 1e-3:
@@ -1086,12 +1176,16 @@ def cmd_ledger(bundle: D.DataBundle) -> dict[str, Any]:
                      "delta_true": float(delta_true[i]),
                      "delta_ref_pred": float(dp),
                      "abs_err_ref": float(abs(dp - delta_true[i]))})
+    cand = [c for c in cand if np.isfinite(c["abs_err_ref"])]
     out["pairs"] = len(cand)
+    if not cand:
+        raise SystemExit("ledger: no finite reference predictions (ACRA_B* missing)")
     # exact T support for the case rules
     import psc_train as TT
     dir_ = TT.ensure_pair_directory(bundle)
     fit_T = set(np.unique(dir_.T_id[pd.cut_scope == 0]).tolist())
-    frag_seen = fit_fragment_set(dir_, split["fit_rows"])
+    trc = load_trc()
+    frag_seen = fit_fragment_set(dir_, split["fit_rows"], trc)
     for entry in cand:
         cut_rows = pd.cut_rows_of_pair()[entry["pair"]]
         entry["T_seen"] = bool(np.any([int(dir_.T_id[c]) in fit_T for c in cut_rows.tolist()]))
@@ -1137,7 +1231,6 @@ def cmd_ledger(bundle: D.DataBundle) -> dict[str, Any]:
     take(lambda e: e["T_seen"] and e["delta_true"] < 0, lambda e: e["delta_true"],
          rules["seen_t_negative"], "seen T with negative true delta")
     # bridge decomposition for the picked pairs
-    trc = pd.dir.trc
     parse_mol = np.asarray(trc["parse_mol"], np.int64)
     parse_S = np.asarray(trc["parse_S"], np.int64)
     parse_C = np.asarray(trc["parse_C"], np.int64)
@@ -1209,8 +1302,10 @@ def cmd_ledger(bundle: D.DataBundle) -> dict[str, Any]:
     return out
 
 
-def _predict_one(model, cache, c_l, row, bag, **kw) -> float:
+def _predict_one(model, cache, c_l, row, bag) -> float:
+    """Standardised-space prediction of the SUM/Pool readout for one molecule."""
     import psc_train as T
+
     pred, _ = T.predict_psc(model, cache, c_l, [int(row)], "cpu", bag, 1)
     return float(pred[0])
 

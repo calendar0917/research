@@ -186,6 +186,10 @@ def select_config(rows: Sequence[Mapping[str, Any]], tolerance: float = 1e-8
 # ---------------------------------------------------------------------------
 
 
+def _maybe(fn, pred: np.ndarray, truth: np.ndarray):
+    return None if not np.isfinite(truth).all() else float(fn(pred, truth))
+
+
 def _save(name: str, payload: Mapping[str, Any], preds: Mapping[str, np.ndarray]) -> None:
     out = OUT / name
     out.mkdir(parents=True, exist_ok=True)
@@ -214,7 +218,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     fit_rows = np.asarray(split["fit_rows"], np.int64)
     eval_rows = np.asarray(split["eval_rows"], np.int64)
     y = np.asarray(bundle.labels[np.asarray(fit_rows)], np.float64)
-    truth = np.asarray(bundle.labels[eval_rows], np.float64)
+    # official Valid labels stay sealed: FULL runs only produce predictions and
+    # are scored exactly once by the frozen final evaluator.
+    has_truth = split["name"] in ("D0", "D1")
+    truth = (np.asarray(bundle.labels[eval_rows], np.float64) if has_truth
+             else np.full(eval_rows.size, np.nan))
     root = np.union1d(bundle.official_train, bundle.official_valid)
     meta = PP.ensure_cache(bundle.raw, root, L)
     cache = PP.PathCache(meta, device="cpu")
@@ -224,6 +232,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     fixed = {}
     if args.select_from:
         fixed = C.read_json(args.select_from)
+    if split["name"] == "FULL" and not fixed:
+        raise SystemExit("FULL runs require --select-from (hyper-parameters locked on D0)")
     rows_out: list[dict[str, Any]] = []
     t_all = time.time()
     for name in models:
@@ -293,8 +303,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             key = f.get("config_key")
             chosen = preds_by_cfg[key]
             sel = {"alpha": f["alpha"], "radius": f.get("radius", 0),
-                   "config_key": key, "rmse": C.rmse(chosen, truth),
-                   "mae": C.mae(chosen, truth)}
+                   "config_key": key,
+                   "rmse": _maybe(C.rmse, chosen, truth),
+                   "mae": _maybe(C.mae, chosen, truth)}
             locked = f
         else:
             sel = select_config(grid)
@@ -312,8 +323,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "split": {k: split[k] for k in ("name", "sha256", "role")},
             "n_fit": int(fit_rows.size), "n_eval": int(eval_rows.size),
             "grid": grid, "n_configs": len(grid), "selected": locked,
-            "eval_rmse": C.rmse(chosen, truth), "eval_mae": C.mae(chosen, truth),
+            "eval_rmse": _maybe(C.rmse, chosen, truth),
+            "eval_mae": _maybe(C.mae, chosen, truth),
             "eval_rmse_selected": sel["rmse"], "eval_mae_selected": sel["mae"],
+            "labels_available_locally": has_truth,
             "wall_seconds": float(wall), "cpu_threads": int(args.threads),
             "train_labels_sha256": bundle.hashes["train_labels"]["sha256"],
             "path_cache_sha256": meta["cache_sha256"],
@@ -323,14 +336,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             "extra": C.jsonable(extra),
             "finished_utc": C.now_utc(),
         }
-        _save(run_id, payload, {"row_id": bundle.row_id[eval_rows], "pred": chosen,
-                                "label": truth})
+        saved = {"row_id": bundle.row_id[eval_rows], "pred": chosen}
+        if has_truth:
+            saved["label"] = truth
+        _save(run_id, payload, saved)
         rows_out.append({"run_id": run_id, "model": name, "split": split["name"],
                          "seed": "", "rmse": payload["eval_rmse"],
                          "mae": payload["eval_mae"],
                          "rmse_selected": sel["rmse"], "n_configs": len(grid),
                          "wall_seconds": wall})
-        print(f"{run_id}: rmse={payload['eval_rmse']:.4f} mae={payload['eval_mae']:.4f} "
+        print(f"{run_id}: rmse={payload['eval_rmse']} mae={payload['eval_mae']} "
               f"selected={locked} configs={len(grid)} wall={wall:.1f}s")
     C.write_csv(OUT / f"cpu_{tag}.csv", rows_out)
     print(f"total cpu wall={time.time() - t_all:.1f}s")
