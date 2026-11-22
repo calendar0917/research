@@ -1,0 +1,96 @@
+{
+  "protocol_id": "structural-path-composition-route-v1",
+  "version": "2026-11-22/v1",
+  "dataset": "ogbg-mollipo",
+  "paths": {
+    "max_len": 5,
+    "fallback_max_len": 4,
+    "fallback_rule": "uniform L=4 if the L=5 queue is inapplicable before formal training"
+  },
+  "recipe": {
+    "epochs": 160,
+    "fallback_epochs": 120,
+    "batch_molecules": 64,
+    "aux_pairs": 32,
+    "lambda_aux": 0.25,
+    "peak_lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.0001,
+    "warmup_epochs": 5,
+    "clip_norm": 5.0,
+    "eval_batch": 256
+  },
+  "dims": {
+    "atom_field_emb": 32,
+    "bond_field_emb": 16,
+    "width": 256,
+    "mid": 128,
+    "out": 64,
+    "dropout": 0.1,
+    "head_last_std": 0.001
+  },
+  "seeds": [0, 1, 2],
+  "arms": {
+    "PSC_SUM": {"family": "PSC", "bag": false, "readout": "SUM", "target": "MOLECULE"},
+    "PSC_SUM_PAIR": {"family": "PSC", "bag": false, "readout": "SUM", "target": "PAIR"},
+    "PSC_SUM_BAG": {"family": "PSC", "bag": true, "readout": "SUM", "target": "MOLECULE"},
+    "PSC_SUM_BAG_PAIR": {"family": "PSC", "bag": true, "readout": "SUM", "target": "PAIR"},
+    "PSC_POOL": {"family": "PSC", "bag": false, "readout": "POOL", "target": "MOLECULE"},
+    "PSC_POOL_PAIR": {"family": "PSC", "bag": false, "readout": "POOL", "target": "PAIR"},
+    "PSC_POOL_BAG": {"family": "PSC", "bag": true, "readout": "POOL", "target": "MOLECULE"},
+    "PSC_POOL_BAG_PAIR": {"family": "PSC", "bag": true, "readout": "POOL", "target": "PAIR"},
+    "PSC_SUM_DIAG": {"family": "PSC", "bag": false, "readout": "SUM", "target": "DIAG"},
+    "PSC_SUM_BAG_DIAG": {"family": "PSC", "bag": true, "readout": "SUM", "target": "DIAG"},
+    "PSC_POOL_DIAG": {"family": "PSC", "bag": false, "readout": "POOL", "target": "DIAG"},
+    "PSC_POOL_BAG_DIAG": {"family": "PSC", "bag": true, "readout": "POOL", "target": "DIAG"},
+    "ACRA_REF": {"family": "ACRA", "readout": "ACRA", "target": "MOLECULE"},
+    "ACRA_PAIR": {"family": "ACRA", "readout": "ACRA", "target": "PAIR"},
+    "GINE_REF": {"family": "GINE", "readout": "GINE", "target": "MOLECULE"}
+  },
+  "stage1_arms": [
+    "PSC_SUM", "PSC_SUM_PAIR", "PSC_SUM_BAG", "PSC_SUM_BAG_PAIR",
+    "PSC_POOL", "PSC_POOL_PAIR", "PSC_POOL_BAG", "PSC_POOL_BAG_PAIR",
+    "ACRA_REF", "ACRA_PAIR", "GINE_REF"
+  ],
+  "psc_arms": [
+    "PSC_SUM", "PSC_SUM_PAIR", "PSC_SUM_BAG", "PSC_SUM_BAG_PAIR",
+    "PSC_POOL", "PSC_POOL_PAIR", "PSC_POOL_BAG", "PSC_POOL_BAG_PAIR"
+  ],
+  "selection": {
+    "tolerance_rmse": 0.005,
+    "priority_readout": ["SUM", "POOL"],
+    "priority_target": ["MOLECULE", "PAIR"],
+    "priority_input": ["ORDER", "BAG"],
+    "acra_priority": ["REF", "PAIR"],
+    "practical_gain_rmse": 0.02,
+    "practical_gain_seed_fraction": "2/3",
+    "mae_degradation_max": 0.01,
+    "direction_reversed_rmse": -0.02
+  },
+  "cpu": {
+    "ridge_alpha": [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0],
+    "krr_alpha": [0.001, 0.01, 0.1, 1.0, 10.0],
+    "morgan_bins": 4096,
+    "morgan_radius": [2, 3],
+    "morgan_chirality": true
+  },
+  "bootstrap": {"reps": 2000, "seed": 0},
+  "analysis": {
+    "novelty_buckets": [0.0, 0.25, 0.5, 1.0],
+    "delta_zero_tolerance": 1e-8,
+    "direction_sensitivity_delta": 0.25,
+    "min_effective_components": 10,
+    "case_rules": {
+      "t_unseen_frag_seen_improved": 2,
+      "t_unseen_frag_seen_degraded": 2,
+      "high_eta_improved": 1,
+      "high_eta_degraded": 1,
+      "seen_t_positive": 1,
+      "seen_t_negative": 1
+    }
+  },
+  "d1": {"seed": 20261122, "target_heldout": 504},
+  "split": {"f0": "F0 Train-sub 2856 / Dev 504 (scaffold disjoint, existing frozen split)",
+            "d1": "second scaffold split of official Train, seed 20261122, ~504 held out",
+            "full": "official Train 3360"}
+}
