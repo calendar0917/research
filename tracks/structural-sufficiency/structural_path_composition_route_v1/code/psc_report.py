@@ -876,7 +876,7 @@ def main() -> int:
     add("analysis/unique_pair_metrics.json, molecule_novelty.json, size_strata.json")
     add("analysis/pair_residual_decomposition.json, sum_edit_ledger.json")
     add("analysis/final_eval_lock.json, final_valid.json")
-    add("analysis/compute_budget.json, path_sparsity.json, tables.md, figures/")
+    add("analysis/compute_budget.json, path_sparsity.json, tables.md, README.md, figures/")
     add("results/main_table.csv, results/summary.json")
     add("```")
     add("")

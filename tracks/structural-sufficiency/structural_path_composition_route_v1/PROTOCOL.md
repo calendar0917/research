@@ -264,3 +264,40 @@ records; large caches are regenerable), `results/main_table.csv`,
 pair_residual_decomposition,sum_edit_ledger,selection_lock,final_eval_lock,
 checks,compute_budget}` and at most four core figures. Every planned arm —
 including failures, cancellations and budget skips — appears in the main table.
+---
+
+# Appendix A — execution timeline and deviations (appended after the run; nothing above changed)
+
+Times are local (+08:00). `T0 = 2026-11-22 23:56`.
+
+| when | what |
+|---|---|
+| 00:10 – 00:18 | three smoke jobs (one per family) on `res-gpu0/1`; prep, path cache and `psc_checks.py` all PASS |
+| 00:19 – 03:01 | D0 factorial: 15 arms × 3 seeds = 45 runs (33 GPU jobs for the 11 planned arms + 3 CPU baselines ×3 splits); no arm was dropped, no epoch shortened |
+| 03:08 – 03:37 | D1 replication, 5 arms × seeds {0,1} = 10 runs at the frozen `E_m`, final checkpoint |
+| 03:21 – 03:43 | required DIAG twin (`PSC_POOL_BAG_DIAG`) seeds 0/1/2 on D0 |
+| 03:56 – 04:18 | full-Train refits at `E_m`: C\*, ACRA_B\*, GINE, M\* × seeds {0,1,2} = 12 runs |
+| 04:25:15 | `analysis/final_eval_lock.json` written (16 READY, 0 skipped); no Valid label read |
+| 04:25:29 | single frozen Valid pass (`--score`), 420 rows, members `row_id`,`label` |
+| 04:29 | budget ledger, figures, tables, report |
+
+Deviations from the frozen plan, all recorded above and in `REPORT.md` §14:
+
+1. **No degradation step was used.** The full D0 matrix, the D1 replication and the
+   full-Train refits all completed; extensions (ESOL transfer, size curve, M\* beyond the
+   reference arms) were not started because the frozen extension gate (required queue
+   complete + 45 min wrap-up reserve) was never met with enough slack to finish them.
+2. **D1 seed 1 was kept** (10 runs instead of 5): the remaining time allowed it, which the
+   protocol permits (extensions are resource-triggered only). D1 seed 2 was not run.
+3. **Pre-flight launch rejections.** 44 `rr` launch attempts were refused by the
+   dirty-tree guard while analysis edits landed during a queue; all affected runs were
+   relaunched from the same clean commit. No job that started failed, and no run was
+   selected or excluded on the basis of its result.
+4. **Ordering of the analysis stages** was changed (tables → selection → bootstrap → pairs
+   → decomp → sizes → ledger → figures, then lock → Valid → report) for bookkeeping
+   reasons; the statistical definitions were fixed before D0 finished.
+5. **The ledger runs on the SUM twin** (`PSC_SUM_BAG_PAIR`) because the champion is a POOL
+   arm; this is stated in the report where the ledger is discussed.
+6. **The `E_m` rule** (median D0 best epoch) gives full-Train refits of 87 (ACRA), 127
+   (C\*), 132 (M\*) and 137 (GINE) epochs, each with its own cosine schedule; the shorter
+   ACRA schedule is a handicap on Valid and is noted there.

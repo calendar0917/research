@@ -1,6 +1,6 @@
 # Structural path composition route (PSC) — final report
 
-*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `38ab62664ca72e53a0e5069ec6a9eed0aefbad6c` · *generated*: 2026-11-22T20:32:25Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
+*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `01d05a411870946d116d5db6b1c80fb0f79a5519` · *generated*: 2026-11-22T20:33:27Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
 
 Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers below are whole-molecule RMSE / MAE in **original label units** (the training target is the standardised label, all reported metrics are inverted back). Higher-is-better quantities are marked.
 
@@ -184,6 +184,7 @@ For D0 held-out × held-out pairs with component weights, `E[(e_b−e_a)²] = E[
 | model | E[(e_b−e_a)²] | E[e_a²] | E[e_b²] | 2·cross | corr(e_a,e_b) |
 |---|---|---|---|---|---|
 | ACRA_REF | 0.268 | 0.375 | 0.272 | 0.379 | 0.440 |
+| GINE_REF | 0.283 | 0.362 | 0.222 | 0.301 | 0.495 |
 | PSC_POOL_BAG_DIAG | 0.400 | 0.583 | 0.456 | 0.639 | 0.589 |
 | PSC_POOL_BAG_PAIR | 0.328 | 0.580 | 0.432 | 0.684 | 0.467 |
 | PSC_SUM_BAG_PAIR | 0.308 | 0.622 | 0.504 | 0.819 | 0.553 |
@@ -286,7 +287,7 @@ analysis/bootstrap{,_D1}.json    paired molecule / scaffold-cluster bootstrap
 analysis/unique_pair_metrics.json, molecule_novelty.json, size_strata.json
 analysis/pair_residual_decomposition.json, sum_edit_ledger.json
 analysis/final_eval_lock.json, final_valid.json
-analysis/compute_budget.json, path_sparsity.json, tables.md, figures/
+analysis/compute_budget.json, path_sparsity.json, tables.md, README.md, figures/
 results/main_table.csv, results/summary.json
 ```
 

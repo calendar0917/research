@@ -977,7 +977,7 @@ def _dims() -> tuple[list[int], list[int]]:
 
 def cmd_decomp(bundle: D.DataBundle) -> dict[str, Any]:
     lock = C.read_json(ANALYSIS / "selection_lock.json")
-    models = [lock["champion"], lock["M_star"], lock["ACRA_B_star"]]
+    models = [lock["champion"], lock["M_star"], lock["ACRA_B_star"], "GINE_REF"]
     if lock.get("DIAG_twin"):
         models.append(lock["DIAG_twin"])
     models = [m for m in dict.fromkeys(models) if m]
