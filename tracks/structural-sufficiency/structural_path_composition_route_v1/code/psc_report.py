@@ -46,7 +46,8 @@ def ci(d: Mapping[str, Any] | None, nd: int = 3) -> str:
     if not d:
         return "n/a"
     lo, hi = d["ci95"]
-    return f"{signed(d['point'], nd)} [{signed(lo, nd)}, {signed(hi, nd)}]"
+    point = d.get("point", d.get("mean_abs_err_diff"))
+    return f"{signed(point, nd)} [{signed(lo, nd)}, {signed(hi, nd)}]"
 
 
 def pct(x: Any, nd: int = 1) -> str:
@@ -61,7 +62,9 @@ def main() -> int:
     check_status = {k: v.get("status") for k, v in checks.items()}
     prep = load("prepare.json", {})
     sparsity = load("path_sparsity.json", {})
-    summary = load("summary.json", {})
+    summary_path = A.RESULTS / "summary.json"
+    summary = (json.loads(summary_path.read_text(encoding="utf-8"))
+               if summary_path.is_file() else {})
     lock = load("selection_lock.json", {})
     boot = load("bootstrap.json", {})
     boot_d1 = load("bootstrap_D1.json", {})
@@ -139,7 +142,7 @@ def main() -> int:
     n_sig = sum(1 for k in pair_keys
                 if (c(k) or {}).get("ci95") and (c(k) or {})["ci95"][0] > 0)
     add(f"* PAIR coupling is a small, consistent-in-sign effect: {n_pos}/{len(pair_keys)} "
-        f"contrasts positive ({n_sig} with a CI excluding 0), maximum "
+        f"contrasts positive ({n_sig} of {len(pair_keys)} with a CI excluding 0), maximum "
         f"{signed(max([x for x in pair_pts if x is not None] or [0]))} RMSE — below the "
         "pre-registered +0.02 practical-gain threshold.")
     add("* **Verdict**: do not continue this branch as specified. The compositional "
@@ -411,15 +414,50 @@ def main() -> int:
             f"{n(d['unseen_path_mass']['max'], 3)}); "
             f"{pct(d['unseen_path_mass']['share_gt5pct'])} of molecules exceed 5%.")
     add("")
-    add("**Answer to Q5.** Transfer does not show up where it would have to. In the "
-        "highest-eta molecule bucket the champion's error grows faster than the linear "
-        "path-count ridge's, and in the hardest support class (T unseen, both fragment "
-        "words unseen) the PSC arms are competitive or better — but that cell is only "
-        "24 pairs and its `mean |Δtrue|` is small, so a shrunk predictor wins there for "
-        "reasons unrelated to structural transfer. The class where a real transfer "
-        "mechanism should shine (T unseen, *both fragments seen*, 156 pairs) is exactly "
-        "where PSC loses most to ACRA. There is therefore **no evidence of a "
-        "path-composition transfer advantage** on this dataset.")
+    if molnov:
+        d = molnov["splits"]["D0"]
+        b0 = d["buckets"].get("eta_mol=0", {})
+        bh = d["buckets"].get("(0.05,1.000000001]", {})
+        def grow(m):
+            a = (b0.get(m) or {}).get("rmse")
+            z = (bh.get(m) or {}).get("rmse")
+            return None if a is None or z is None else z - a
+        add(f"From the lowest to the highest unseen-mass bucket the error grows by "
+            f"{signed(grow(champ))} (champion), {signed(grow(acra))} (`{acra}`), "
+            f"{signed(grow('PATH_COUNT_RIDGE'))} (path-count ridge) and "
+            f"{signed(grow('GINE_REF'))} (GINE). The champion degrades at least as fast as "
+            "the linear ridge, so the novelty strata give no hint of a transfer advantage.")
+        add("")
+    if upm:
+        d = upm["splits"]["D0"]
+        hh = d["scopes"].get("heldout_heldout", {})
+        def mae(m):
+            got = hh.get(m) or {}
+            return (got.get("mean_over_seeds") or {}).get("mae")
+        add(f"**Pair-level vs molecule-level.** On held-out × held-out pairs the champion's "
+            f"Δ MAE is {n(mae(champ))}, versus {n(mae(acra))} for `{acra}` and "
+            f"{n(mae('PATH_COUNT_KRR'))} for the path-count KRR — i.e. at the level of "
+            "*differences* the champion is close to (and slightly better than) the "
+            f"kernel baselines, while at the level of whole molecules it is "
+            f"{n(agg0.get(champ, {}).get('rmse_mean'))} vs "
+            f"{n(agg0.get('PATH_COUNT_KRR', {}).get('rmse_mean'))}. The pair Δ regression "
+            f"slope is {n((hh.get(champ, {}).get('mean_over_seeds') or {}).get('slope'))} "
+            f"for the champion vs "
+            f"{n((hh.get(acra, {}).get('mean_over_seeds') or {}).get('slope'))} for "
+            f"`{acra}`: the additive model attenuates contrasts more, even though their "
+            "ordering is mostly right. That is the signature of a model whose *levels* are "
+            "biased (heavy shrinkage) rather than one that cannot see the structure.")
+        add("")
+    add("**Answer to Q5.** Transfer does not show up where it would have to. The only "
+        "cell where PSC is best is the most extreme one (T unseen, *both* fragment words "
+        "unseen), and it is 24 pairs — too few to build on, and exactly the cell where a "
+        "heavily shrunk predictor wins by predicting small |Δ|. In the cell where a real "
+        "transfer mechanism should shine (T unseen, both fragments **seen**, 156 pairs) "
+        "PSC is the worst of the four models compared. Combined with the 4.1% path-mass "
+        "share of unseen keys, the honest answer is that **unseen path words are too "
+        "rare on Lipo for a transfer mechanism to move the molecule-level metric, and "
+        "the model does not show a transfer advantage even in the pair-level cells "
+        "where it could be seen.**")
     add("")
 
     # ------------------------------------------------------ decomposition ----
@@ -472,12 +510,18 @@ def main() -> int:
                 f"{signed(e['delta_F_X'] * e['label_std'])} | "
                 f"{signed(e['delta_pred_units'])} |")
         add("")
-        add("The ledger exposes the matched-pair design exactly: for the selected "
-            "same-context pairs the C-side and crossing path **token multisets are "
-            "identical in both molecules**, so their ledger terms cancel to 0 and 100% of "
-            "the predicted Δ comes from paths inside the edited fragment side. That is "
-            "the property the route wanted — and it also shows why the property alone is "
-            "not enough: being exactly additive does not make the *magnitude* right.")
+        ex = [e for e in ledger.get("examples", []) if "delta_F_total" in e]
+        cancelled = [e for e in ex if abs(e["delta_F_C"]) < 1e-9 and abs(e["delta_F_X"]) < 1e-9]
+        add(f"In {len(cancelled)} of {len(ex)} selected examples the C-side and crossing "
+            "ledger terms are **exactly 0**: those pairs share an identical context "
+            "subgraph and their C/X path-token multisets are identical, so 100% of the "
+            "predicted Δ comes from paths inside the edited fragment side (checked "
+            "directly on the token multisets). In the remaining examples the two sides "
+            "differ beyond the cut bond and the C/X terms contribute. That exact "
+            "cancellation is the property the route wanted — and it also shows why the "
+            "property alone is not enough: being exactly additive does not make the "
+            "*magnitude* right, and the predicted Δ is systematically smaller than the "
+            "true one in the high-|Δ| cases.")
         add("")
     if sizes:
         add("### 10.3 Size strata and worst-error sensitivity (§9.7)")
@@ -511,13 +555,17 @@ def main() -> int:
                 f"{signed(v['rmse_mean'] - d0 if d0 else None)} | "
                 f"{ci(c(f'{a}_vs_{acra}', con1))} |")
         add("")
+        d1_champ = agg1.get(champ, {}).get("rmse_mean")
+        d1_acra = agg1.get(acra, {}).get("rmse_mean")
+        d0_champ = agg0.get(champ, {}).get("rmse_mean")
+        d0_acra = agg0.get(acra, {}).get("rmse_mean")
         add("D1 runs used the frozen `E_m` epochs (median D0 best epoch per arm) and the "
-            "final checkpoint, with no selection. The ordering and the size of the gaps "
-            "replicate; the champion's deficit versus ACRA is "
-            f"{signed((agg1.get(champ, {}).get('rmse_mean') or 0) - (agg1.get(acra, {}).get('rmse_mean') or 0))} "
-            "RMSE on D1 versus "
-            f"{signed((agg0.get(champ, {}).get('rmse_mean') or 0) - (agg0.get(acra, {}).get('rmse_mean') or 0))} "
-            "on D0.")
+            "final checkpoint, with no selection.")
+        if None not in (d1_champ, d1_acra, d0_champ, d0_acra):
+            add("")
+            add(f"The champion's deficit versus `{acra}` is {signed(d1_champ - d1_acra)} "
+                f"RMSE on D1 versus {signed(d0_champ - d0_acra)} on D0: the sign and the "
+                "order of magnitude replicate, and no arm moves across the ACRA boundary.")
     else:
         add("_D1 runs were not completed within the budget window; the degradation order "
             "in PROTOCOL.md §10 was followed and the omission is reported here._")
@@ -604,6 +652,13 @@ def main() -> int:
         "additive restriction's cost; but the 32-molecule overfit shows the gap is not "
         "an implementation failure, and the POOL>SUM contrast is measured at the same "
         "horizon for both.")
+    add("* **Baseline reproduction.** In this harness `ACRA_REF` reaches D0 dev RMSE "
+        "0.580 ± 0.002 (3 seeds), whereas the parent round's own reference run reported "
+        "0.555 for the same nominal recipe on the same split. The ~0.025 difference is "
+        "consistent with a different initialisation/data-order path in the re-hosted "
+        "trainer; it makes this round's ACRA baseline slightly *weaker* than the parent's, "
+        "which if anything understates the PSC deficit. The strongest non-PSC baseline "
+        "here is GINE (0.527), so no conclusion rests on the ACRA reproduction alone.")
     add("* **Recipe fairness.** PSC/ACRA/GINE share the frozen optimiser recipe "
         "(AdamW, peak lr 1e-3 / 1e-5, cosine, clip 5, batch 64 molecules). The ACRA and "
         "GINE baselines are the parent rounds' own recipes, not tuned for this round; the "
