@@ -84,7 +84,7 @@ positive = candidate better):
 | ADD vs TRC | −0.0605 [−0.135, +0.015] | −0.0390 |
 | REL vs TRC | −0.0070 [−0.126, +0.093] | **+0.0364** |
 | REL vs GINE | −0.0760 [−0.156, −0.006] | −0.0354 |
-| ADD vs Morgan-Ridge | +0.1272 [+0.055, +0.203] | +0.0886 |
+| ADD vs Morgan-Ridge | +0.1272 [+0.050, +0.208] | +0.0886 |
 
 Only one seed was trained.  These intervals quantify evaluation-molecule
 uncertainty, not training-seed uncertainty; a CI that includes zero is reported
@@ -102,8 +102,9 @@ CI [+0.050, +0.208]).  It is statistically indistinguishable from the parent
 round's per-cut response model TRC (0.7096; CI [−0.135, +0.015]), and
 significantly worse than the external GINE reference (0.6406; CI [−0.194,
 −0.063]).  So simple composition recovers most of the reference performance
-without any neural message passing; the remaining GNN gap is ≈0.08 RMSE and is
-concentrated in the large-molecule tail (Section 7).
+without any neural message passing; the remaining gap to GINE is ≈0.13 RMSE for
+the additive arm and ≈0.08 for REL, and within ACRA the largest errors are in
+the large-molecule stratum (Section 7).
 
 ### Q2. Does local context conditioning (the shared bilinear interaction) help?
 
@@ -144,8 +145,8 @@ information that is absent from the local terms.
 from a few large, flexible, multi-ring molecules.**  On Valid, 80.6 % of
 directed events have a seen combination, 19.4 % are unseen; 79/420 molecules
 have all events seen and none has zero seen events.  For `ACRA_REL`, mean |error|
-is 0.596 on the 35 molecules with >50 % unseen events vs 0.322 on low-novelty
-molecules (Pearson novelty–|error| 0.220; for `ACRA_ADD` 0.103).
+in std units is 0.596 on the 35 molecules with >50 % unseen events vs 0.322 on
+low-novelty molecules (Pearson novelty–|error| 0.220; for `ACRA_ADD` 0.103).
 
 The error decomposition by novelty bucket shows where the relation term does and
 does not transfer:
@@ -173,10 +174,10 @@ support difference).
 
 **Keep the additive/relational algebra and attack overfitting and novelty
 calibration, not expressiveness.**  The only resolved whole-molecule gain came
-from adding relations to the conditioned operator (Q3), and the relation ablation
-is the only ablation that improves a trained arm.  But the model already fits
-Train far better than Valid (gap 0.405 in the best arm; Train RMSE 0.311), and
-its errors concentrate exactly where local support is thin.  The three
+from adding relations to the conditioned operator (Q3), and it is the only
+addition that produces a resolved whole-molecule gain over the arm below it.
+But the model already fits Train far better than Valid (gap 0.405 in the best
+arm; Train RMSE 0.311), and its errors are larger where local support is thin.  The three
 highest-value next steps, in order:
 
 1. **Response shrinkage/calibration on unsupported local combinations** — make
@@ -248,7 +249,7 @@ on Lipophilicity: there is little "local ambiguity" to resolve.
 ### 5.2 Exhaustive small graphs
 
 All 992 connected graphs on 4–7 vertices (networkx atlas) with one common real
-atom/bond attribute row: **no two graphs share the local-multiset multiset**
+atom/bond attribute row: **no two graphs share a local-signature multiset**
 (the local radius-1/2 balls are already a strong invariant at this scale), so no
 relation-only witness exists there.  This is a negative result about the probe,
 not about the model.
@@ -315,9 +316,10 @@ pairs, then largest/median/smallest |Δy|; the same pair is shown for all arms):
 | COND | 1.119 | 0.489 | 0.630 | 0 |
 | REL | 1.251 | 0.503 | 0.601 | 0.147 |
 
-All arms under-predict the true +2.40, and the relation term closes ≈0.15 of the
-gap for this pair.  These are exact model-algebra decompositions, not chemical
-causal contributions.
+All arms under-predict the true +2.40.  For REL the relation term contributes
++0.147 label units (≈6 % of the true Δ), and REL's total predicted Δ is 0.356
+larger than ADD's for this pair.  These are exact model-algebra decompositions,
+not chemical causal contributions.
 
 ## 7. Failure cases and error structure
 
