@@ -282,3 +282,36 @@ and stop — no GNN replacement, no extra model.
 ## 14. Timing / deviations (appended after the runs)
 
 (to be filled with the actual horizon decision, GPU hours and any deviation)
+## 14. Timing / deviations (appended after the runs)
+
+* **Horizon.** One timing smoke on the real remote GPU (`ACRA_TIMING_SMOKE`,
+  commit `ec3acd83`, `ACRA_REL`, 3 epochs, full Train+Valid evaluation every
+  epoch) measured 2.5–3.0 s/epoch → 160 epochs for **all** arms, fixed in
+  `analysis/horizon.json` before the formal runs.  No per-arm horizon.
+* **Formal runs.** `ACRA_ADD_S0` on `res-gpu0` (started 15:47), `ACRA_COND_S0`
+  on `res-gpu1` (15:47), `ACRA_REL_S0` on `res-gpu0` after ADD finished (15:56).
+  All exited 0.  Wall times 385 / 392 / 404 s; best epochs 81 / 43 / 101;
+  GPU hours 0.1070 / 0.1089 / 0.1122; total **0.3281 GPU-hours** (8.2 % of the
+  4-hour budget, ≤2 GPUs in parallel).  Peak VRAM 704–735 MB per run.
+* **Provenance.** Runs used commit `c7118fb8f926`; code hashes, config sha256,
+  cache/raw sha256, environment (`a100-2`, A100-SXM4-40GB, driver 550.163.01,
+  torch 2.5.1+cu124, CUDA 12.4) and `rr` metadata are stored in each
+  `results/ACRA_*_S0/manifest.json` / `rr_meta.json`.
+* **Deviation 1.** The relational-capacity search covers all connected graphs
+  on **4–7** vertices (protocol §9.3 said 6–7) — a strict superset; still no
+  witness (992 graphs, zero local-multiset groups).
+* **Deviation 2.** Because the exhaustive search produced no witness, a
+  **constructed 18-vertex witness** was added (Pappus vs a deterministic
+  girth-preserving 2-switch).  Its conditions (identical local multiset,
+  different relation profile) are verified mechanically before the fitted
+  `ACRA_REL` checkpoint is run; ΔE_atom = ΔE_bond = 0 exactly.
+* **Deviation 3.** Extra label-free analysis `analysis/error_structure.json`
+  (novelty buckets, size quartiles, worst cases) was added to answer the
+  "biggest error class" question; no model or tuning change.
+* **Harness facts.** The structure cache (8.2 MB) is committed because the GPU
+  host has no RDKit.  The remote host had untracked parent-round result files;
+  these were moved to `.rr-untracked-backup-20261122/` (verified byte-identical
+  to the committed copies) before deploying.
+* **Test policy.** `test_labels_read: false` in every artifact; Test labels
+  were never read by preprocessing, training, selection, references or
+  analysis.  No Test metric is reported.

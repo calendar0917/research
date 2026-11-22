@@ -1,0 +1,233 @@
+{
+  "cache_sha256": "614b761af3d5cb120edbe530cdeb4981ba548681c6946102adc6777a74a5e555",
+  "definitions": {
+    "local_signature": "per-bond (S identity, C identity, cut-bond attributes), direction invariant",
+    "relation_profile": "counts of (bond separation bucket, common-cycle flag) over bond pairs"
+  },
+  "generated_utc": "2026-11-22T08:08:48Z",
+  "model": {
+    "arm": "ACRA_REL",
+    "best_epoch": 101,
+    "params": {
+      "atom_head": 6129,
+      "beta": 1,
+      "bond_emb": 104,
+      "flag_bridge": 8,
+      "flag_ring": 8,
+      "frame": 28490,
+      "gate_raw": 1,
+      "k": 2080,
+      "mlp_c": 10368,
+      "mlp_s": 10368,
+      "proj_c": 42816,
+      "proj_s": 42816,
+      "q": 2080,
+      "rel_bias": 8,
+      "rel_k": 2080,
+      "rel_q": 2080,
+      "scalar_c": 65,
+      "scalar_s": 65,
+      "site_head": 8256,
+      "total": 157823
+    },
+    "run_id": "ACRA_REL_S0"
+  },
+  "protocol_id": "attachment-conditioned-response-algebra-pilot-v1",
+  "real_molecules": {
+    "eta_squared_group_explains": {
+      "e_atom": null,
+      "e_bond": null,
+      "e_rel": null,
+      "yhat_std": null
+    },
+    "interpretation": "identical local multisets fix E_atom and E_bond exactly; any within-group variation of E_rel/yhat can only come from bond-pair relations. eta2 near 1 means the term is a function of the local multiset; eta2 below 1 means it varies across molecules with identical local inputs.",
+    "largest_group_size": 2,
+    "largest_groups": [
+      {
+        "members": [
+          {
+            "e_atom_std": 0.3817681074142456,
+            "e_bond_std": 0.6614026427268982,
+            "e_rel_std": -0.0635499656200409,
+            "row_id": 748,
+            "smiles": "COc1ccc(cc1)C(=O)C2CCN(CC2)C(=O)c3ccc(F)cc3",
+            "split": "train",
+            "yhat_std": 0.5515793561935425
+          },
+          {
+            "e_atom_std": 0.3817681074142456,
+            "e_bond_std": 0.6614028811454773,
+            "e_rel_std": -0.06354991346597672,
+            "row_id": 913,
+            "smiles": "COc1ccc(cc1)C(=O)N2CCC(CC2)C(=O)c3ccc(F)cc3",
+            "split": "train",
+            "yhat_std": 0.5515796542167664
+          }
+        ],
+        "n_atoms": 25,
+        "n_bonds": 27,
+        "n_members": 2,
+        "relation_profiles": [
+          {
+            "bucket_shared_counts": [
+              19,
+              18,
+              30,
+              18,
+              38,
+              9,
+              219,
+              0
+            ],
+            "n_bond_pairs": 351,
+            "shared_ring_fraction": 0.1282051282051282
+          },
+          {
+            "bucket_shared_counts": [
+              19,
+              18,
+              30,
+              18,
+              38,
+              9,
+              219,
+              0
+            ],
+            "n_bond_pairs": 351,
+            "shared_ring_fraction": 0.1282051282051282
+          }
+        ]
+      }
+    ],
+    "n_grouped_molecules": 2,
+    "n_groups_with_different_relation_profile": 0,
+    "n_groups_with_identical_local_multiset": 1,
+    "n_molecules_considered": 3780,
+    "within_group_term_range": {
+      "e_atom": {
+        "max_within_group_range": 0.0
+      },
+      "e_bond": {
+        "max_within_group_range": 2.384185791015625e-07
+      },
+      "e_rel": {
+        "max_within_group_range": 5.21540641784668e-08
+      },
+      "yhat_std": {
+        "max_within_group_range": 2.980232238769531e-07
+      }
+    }
+  },
+  "synthetic_graphs": {
+    "atlas": {
+      "attribute_assignment": {
+        "atoms": [
+          5,
+          0,
+          3,
+          5,
+          1,
+          0,
+          1,
+          1,
+          1
+        ],
+        "bonds": [
+          3,
+          0,
+          1
+        ],
+        "note": "all atoms and bonds share one real attribute row"
+      },
+      "largest_group_size": 0,
+      "n_graphs_enumerated": 992,
+      "n_groups_with_different_relation_profile": 0,
+      "n_groups_with_identical_local_multiset": 0,
+      "vocabulary": "all connected graphs on 4..7 vertices"
+    },
+    "constructed_witness": {
+      "construction": "cubic graphs of girth >= 6: after removing a cut bond every radius-1/2 ball is a tree of the same shape, so every edge has the same local signature.  Pappus and a deterministic 2-switch variant are non-isomorphic, same order, identical local multiset.",
+      "graphs": [
+        {
+          "distinct_signatures": 1,
+          "e_atom_std": 1.272819995880127,
+          "e_bond_std": 2.329808473587036,
+          "e_rel_std": -1.2144198417663574,
+          "girth": 6,
+          "graph6": "QhEGGD@?G__P?@G?_GGO@?CE?AG",
+          "n_atoms": 18,
+          "n_bonds": 27,
+          "name": "pappus",
+          "relation_profile": {
+            "bucket_shared_counts": [
+              0,
+              54,
+              0,
+              108,
+              0,
+              162,
+              0,
+              27
+            ],
+            "n_bond_pairs": 351,
+            "shared_ring_fraction": 1.0
+          },
+          "signature_histogram": [
+            27
+          ],
+          "signature_multiset_size": 27,
+          "yhat_std": 1.9601671695709229
+        },
+        {
+          "delta_vs_a": {
+            "delta_e_atom_std": 0.0,
+            "delta_e_bond_std": 0.0,
+            "delta_e_rel_std": 0.008081316947937012,
+            "delta_yhat_std": 0.008081316947937012
+          },
+          "distinct_signatures": 1,
+          "e_atom_std": 1.272819995880127,
+          "e_bond_std": 2.329808473587036,
+          "e_rel_std": -1.2063385248184204,
+          "girth": 6,
+          "graph6": "QLQGGD@?G__P?@G?_GGO@?CE?AG",
+          "n_atoms": 18,
+          "n_bonds": 27,
+          "name": "pappus_2switch",
+          "relation_profile": {
+            "bucket_shared_counts": [
+              0,
+              54,
+              0,
+              108,
+              0,
+              156,
+              0,
+              33
+            ],
+            "n_bond_pairs": 351,
+            "shared_ring_fraction": 1.0
+          },
+          "signature_histogram": [
+            27
+          ],
+          "signature_multiset_size": 27,
+          "yhat_std": 1.9682484865188599
+        }
+      ],
+      "local_multiset_equal": true,
+      "pair_decomposition": [
+        {
+          "a": 0,
+          "b": 1,
+          "delta_e_atom_std": 0.0,
+          "delta_e_bond_std": 0.0,
+          "delta_e_rel_std": 0.008081316947937012,
+          "delta_yhat_std": 0.008081316947937012
+        }
+      ],
+      "shared_ring_profiles_differ": true
+    }
+  },
+  "test_labels_read": false
+}
