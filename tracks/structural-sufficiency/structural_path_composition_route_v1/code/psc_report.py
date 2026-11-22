@@ -166,6 +166,109 @@ def main() -> int:
         f"{pct(sparsity.get('eval_mass_on_unseen_keys'))} of the held-out path mass.")
     add("")
 
+    # ------------------------------------------ route classification fields --
+    # ------------------------------------------ route classification fields --
+    add("## 0. Pre-registered route classification (§12 of the brief)")
+    add("")
+    add("Δ is always *candidate − reference* in RMSE/MAE, **positive = the candidate is "
+        "better**; the brief's directional labels use the same sign convention.")
+    add("")
+    add("| field | value |")
+    add("|---|---|")
+    if agg0.get(champ) and agg0.get(acra):
+        c0 = c("champion_vs_" + str(acra)) or {}
+        seeds_c = agg0[champ].get("rmse_seeds") or []
+        seeds_a = agg0[acra].get("rmse_seeds") or []
+        wins = sum(1 for x, y in zip(seeds_c, seeds_a) if x < y)
+        d_rmse = (agg0[acra]["rmse_mean"] - agg0[champ]["rmse_mean"])
+        d_mae = (agg0[acra].get("mae_mean") or float("nan")) - \
+            (agg0[champ].get("mae_mean") or float("nan"))
+        gain = bool(d_rmse >= 0.02 and wins >= 2 and d_mae >= -0.01)
+        add(f"| **D0_PRACTICAL_GAIN** | **{str(gain).lower()}** — ΔRMSE "
+            f"{signed(d_rmse)} ({wins}/{len(seeds_c)} seeds in C*'s favour), ΔMAE "
+            f"{signed(d_mae)} (rule: ≥ +0.02 RMSE, ≥2/3 seeds, MAE no more than 0.01 worse "
+            "than the reference) |")
+        d1c = (c("champion_vs_" + str(acra), con1) or {})
+        if d1c:
+            lo, hi = d1c["ci95"]
+            lab = "REVERSED" if (d1c["point"] <= -0.02 or hi < 0) else \
+                ("CONSISTENT" if d1c["point"] > 0 else "SMALL_OR_UNCERTAIN")
+            add(f"| **D1_DIRECTION** | **{lab}** — mean ΔRMSE {signed(d1c['point'])}, "
+                f"paired CI [{lo:+.3f}, {hi:+.3f}] (REVERSED = candidate significantly "
+                "worse; the D0 deficit replicates) |")
+        if valid:
+            vv = valid["models"]
+            b = (vv.get(champ, {}).get("bootstrap_vs_ACRA_B") or {})
+            lo, hi = (b.get("ci95") or [float("nan")] * 2)
+            lab = "REVERSED" if ((b.get("point") or 0) <= -0.02 or hi < 0) else \
+                ("CONSISTENT" if (b.get("point") or 0) > 0 else "SMALL_OR_UNCERTAIN")
+            add(f"| **VALID_DIRECTION** | **{lab}** (literal rule) — mean ΔRMSE "
+                f"{signed(b.get('point'))}, CI [{lo:+.3f}, {hi:+.3f}]. |Δ| < 0.02 and the "
+                "CI straddles 0, so this is a tie in substance: the D0/D1 deficit does "
+                "**not** replicate on Valid, and neither does it become a gain |")
+        add(f"| **COMPETITIVE_GAP** (D0) | vs `GINE_REF` {ci(c('champion_vs_GINE_REF'))}; "
+            f"vs `MORGAN_COUNT_KRR` {ci(c('champion_vs_MORGAN_COUNT_KRR'))}; vs "
+            f"`PATH_COUNT_KRR` {ci(c('champion_vs_PATH_COUNT_KRR'))} — behind all three in "
+            "point estimate; the two kernel intervals straddle 0 |")
+        if valid:
+            vv = valid["models"]
+            gm = (vv.get("GINE_REF") or {}).get("rmse_mean")
+            mm = (vv.get("MORGAN_COUNT_KRR") or {}).get("rmse_mean")
+            km = (vv.get("PATH_COUNT_KRR") or {}).get("rmse_mean")
+            cm = (vv.get(champ) or {}).get("rmse_mean")
+            rm = (vv.get("PATH_COUNT_RIDGE") or {}).get("rmse_mean")
+            if None not in (gm, mm, km, cm, rm):
+                add(f"| **COMPETITIVE_GAP** (Valid) | vs `GINE_REF` {signed(gm - cm)}; vs "
+                    f"`PATH_COUNT_RIDGE` {signed(rm - cm)}; vs `MORGAN_COUNT_KRR` "
+                    f"{signed(mm - cm)}; vs `PATH_COUNT_KRR` {signed(km - cm)} (point "
+                    "estimates only; the frozen scoring pass computed an interval for the "
+                    "ACRA contrast alone) |")
+        bp = [k for k in ("PSC_SUM_BAG_vs_PSC_SUM", "PSC_POOL_BAG_vs_PSC_POOL",
+                          "PSC_SUM_BAG_PAIR_vs_PSC_SUM_PAIR",
+                          "PSC_POOL_BAG_PAIR_vs_PSC_POOL_PAIR")]
+        pts = [(c(k) or {}).get("point") for k in bp]
+        sig = [k for k in bp if ((c(k) or {}).get("ci95") or [0, 0])[0] > 0]
+        add(f"| **M_order** | no gain: every BAG−ORDER contrast is ≥ 0 "
+            f"({', '.join(signed(x) for x in pts if x is not None)}), and "
+            f"{len(sig)}/4 CIs exclude 0 — connection order is not a source of benefit |")
+        rp = [k for k in ("PSC_POOL_vs_PSC_SUM", "PSC_POOL_BAG_vs_PSC_SUM_BAG",
+                          "PSC_POOL_PAIR_vs_PSC_SUM_PAIR",
+                          "PSC_POOL_BAG_PAIR_vs_PSC_SUM_BAG_PAIR")]
+        rpts = [(c(k) or {}).get("point") for k in rp]
+        rsig = [k for k in rp if ((c(k) or {}).get("ci95") or [0, 0])[0] > 0]
+        vv = (valid or {}).get("models", {})
+        pmv = None
+        if (vv.get(champ) or {}).get("rmse_mean") and                 (vv.get(lock.get("M_star") or "") or {}).get("rmse_mean"):
+            pmv = vv[lock["M_star"]]["rmse_mean"] - vv[champ]["rmse_mean"]
+        add(f"| **M_readout** | POOL−SUM = "
+            f"{', '.join(signed(x) for x in rpts if x is not None)} "
+            f"({len(rsig)}/4 CIs exclude 0), replicated on Valid ({signed(pmv)}): strict "
+            "additivity is the current limit |")
+        dv = c("champion_vs_DIAG") or {}
+        pm = c("PSC_POOL_BAG_PAIR_vs_PSC_POOL_BAG") or {}
+        add(f"| **M_pair** | PAIR−DIAG {ci(dv)} (the signed difference carries real "
+            f"signal); PAIR−MOLECULE {ci(pm)} (absolute-prediction gain below the +0.02 "
+            "threshold) — keep the mechanism claim small |")
+        sc = ((upm or {}).get("splits", {}).get("D0", {}).get("support_classes") or {})
+        cls = sc.get("T_unseen_frag_both_seen") or {}
+        cls1 = sc.get("T_unseen_one_frag_unseen") or {}
+        def v(cls_d, m):
+            return (cls_d.get(m) or {}).get("mae")
+        add(f"| **M_share** | in the T-unseen / fragments-seen cell (156 pairs) the shared "
+            f"model is {n(v(cls, champ))} vs {n(v(cls, 'PATH_COUNT_RIDGE'))} (path-count "
+            f"ridge), {n(v(cls, 'PATH_COUNT_KRR'))} (path-count KRR) and "
+            f"{n(v(cls, acra))} (ACRA) — no extrapolation advantage over exact-ID "
+            f"baselines; in the one-sided cell (100 pairs) it is {n(v(cls1, champ))} vs "
+            f"{n(v(cls1, 'PATH_COUNT_RIDGE'))}/{n(v(cls1, 'PATH_COUNT_KRR'))} (better) but "
+            f"{n(v(cls1, acra))} (ACRA, worse) |")
+    add("")
+    add("Classification summary: the route does not reach the pre-registered practical gain "
+        "on D0, is directionally reversed on the independent D1 split, and is a tie at "
+        "best on Valid; within the mechanism fields, only `M_readout` (POOL ≫ SUM) is a "
+        "clean, replicating effect. Per the brief's rules this is a **stop** for the strict "
+        "path-sum branch, not an invitation to re-tune it.")
+    add("")
+
     # ---------------------------------------------------------- the question --
     add("## 1. Question and pre-registered decision rule")
     add("")
@@ -437,8 +540,9 @@ def main() -> int:
         d = upm["splits"]["D0"]
         add("Matched-pair support classes (held-out pairs, cut-row weighted, pair Δ):")
         add("")
-        models = [m for m in (champ, acra, "PATH_COUNT_RIDGE", "MORGAN_COUNT_KRR")
-                  if m and m in next(iter(d["support_classes"].values()), {})]
+        present = next(iter(d["support_classes"].values()), {})
+        models = [m for m in (champ, acra, "PATH_COUNT_RIDGE", "PATH_COUNT_KRR",
+                              "MORGAN_COUNT_KRR") if m and m in present]
         add("| support class | pairs | weight | mean \\|Δtrue\\| | "
             + " | ".join(f"{m}" for m in models) + " |")
         add("|---|---|---|---|" + "---|" * len(models))
@@ -513,8 +617,9 @@ def main() -> int:
         "unseen), and it is 24 pairs — too few to build on, and exactly the cell where a "
         "heavily shrunk predictor wins by predicting small |Δ|. In the cell where a real "
         "transfer mechanism should shine (T unseen, both fragments **seen**, 156 pairs) "
-        "PSC trails `ACRA_REF` (0.468 vs 0.429 MAE) and is only marginally ahead of the raw "
-        "Morgan-count kernel (0.492); the same ordering holds in the scale-free *rel* "
+        "PSC trails `ACRA_REF` (0.468 vs 0.429 MAE), is level with the exact-ID path-count "
+        "KRR (0.467) and behind the path-count ridge (0.459), and is only marginally ahead "
+        "of the raw Morgan-count kernel (0.492); the same ordering holds in the scale-free *rel* "
         "column (0.56 vs 0.51 vs 0.59). In other words, the route shows no advantage in "
         "the cell where unseen *path words* meet seen *fragments* — the very transfer the "
         "design targets. Combined with the 4.1% path-mass "

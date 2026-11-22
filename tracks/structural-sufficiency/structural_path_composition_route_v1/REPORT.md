@@ -1,6 +1,6 @@
 # Structural path composition route (PSC) — final report
 
-*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `b430fbc42af278917c3594f74d91fbd3b5ad2db8` · *generated*: 2026-11-22T20:29:38Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
+*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `38ab62664ca72e53a0e5069ec6a9eed0aefbad6c` · *generated*: 2026-11-22T20:32:25Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
 
 Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers below are whole-molecule RMSE / MAE in **original label units** (the training target is the standardised label, all reported metrics are inverted back). Higher-is-better quantities are marked.
 
@@ -14,6 +14,24 @@ Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers
 * PAIR coupling is a small, consistent-in-sign effect: 4/5 contrasts positive (0 of 5 with a CI excluding 0), maximum +0.021 RMSE — below the pre-registered +0.02 practical-gain threshold.
 * **Official Valid** (frozen full-Train refit, single pass): champion 0.779 vs `ACRA_REF` 0.786 (Δ +0.006 [-0.091, +0.129]; a tie), with `GINE_REF` 0.622 and the path-count KRR 0.724 still ahead. The D0 deficit versus ACRA does not replicate at full-Train scale, but the branch still does not beat the baselines.
 * **Verdict**: do not continue this branch as specified. The compositional machinery is implementable and exactly verifiable, but on Lipo the strict path-sum parameterisation is dominated on the selection split by a linear path-count ridge and by ACRA, ties ACRA at best on the official Valid refit while staying behind GINE and both kernel baselines, and the phenomenon it targets (unseen path words) carries only 4.1% of the held-out path mass.
+
+## 0. Pre-registered route classification (§12 of the brief)
+
+Δ is always *candidate − reference* in RMSE/MAE, **positive = the candidate is better**; the brief's directional labels use the same sign convention.
+
+| field | value |
+|---|---|
+| **D0_PRACTICAL_GAIN** | **false** — ΔRMSE -0.107 (0/3 seeds in C*'s favour), ΔMAE -0.086 (rule: ≥ +0.02 RMSE, ≥2/3 seeds, MAE no more than 0.01 worse than the reference) |
+| **D1_DIRECTION** | **REVERSED** — mean ΔRMSE -0.068, paired CI [-0.118, -0.019] (REVERSED = candidate significantly worse; the D0 deficit replicates) |
+| **VALID_DIRECTION** | **CONSISTENT** (literal rule) — mean ΔRMSE +0.006, CI [-0.091, +0.129]. |Δ| < 0.02 and the CI straddles 0, so this is a tie in substance: the D0/D1 deficit does **not** replicate on Valid, and neither does it become a gain |
+| **COMPETITIVE_GAP** (D0) | vs `GINE_REF` -0.161 [-0.203, -0.118]; vs `MORGAN_COUNT_KRR` -0.028 [-0.072, +0.015]; vs `PATH_COUNT_KRR` -0.032 [-0.078, +0.010] — behind all three in point estimate; the two kernel intervals straddle 0 |
+| **COMPETITIVE_GAP** (Valid) | vs `GINE_REF` -0.158; vs `PATH_COUNT_RIDGE` +0.004; vs `MORGAN_COUNT_KRR` -0.035; vs `PATH_COUNT_KRR` -0.055 (point estimates only; the frozen scoring pass computed an interval for the ACRA contrast alone) |
+| **M_order** | no gain: every BAG−ORDER contrast is ≥ 0 (+0.041, +0.019, +0.058, +0.030), and 2/4 CIs exclude 0 — connection order is not a source of benefit |
+| **M_readout** | POOL−SUM = +0.058, +0.037, +0.064, +0.036 (3/4 CIs exclude 0), replicated on Valid (+0.065): strict additivity is the current limit |
+| **M_pair** | PAIR−DIAG +0.035 [+0.008, +0.061] (the signed difference carries real signal); PAIR−MOLECULE +0.020 [-0.006, +0.044] (absolute-prediction gain below the +0.02 threshold) — keep the mechanism claim small |
+| **M_share** | in the T-unseen / fragments-seen cell (156 pairs) the shared model is 0.468 vs 0.459 (path-count ridge), 0.467 (path-count KRR) and 0.429 (ACRA) — no extrapolation advantage over exact-ID baselines; in the one-sided cell (100 pairs) it is 0.480 vs 0.535/0.527 (better) but 0.463 (ACRA, worse) |
+
+Classification summary: the route does not reach the pre-registered practical gain on D0, is directionally reversed on the independent D1 split, and is a tie at best on Valid; within the mechanism fields, only `M_readout` (POOL ≫ SUM) is a clean, replicating effect. Per the brief's rules this is a **stop** for the strict path-sum branch, not an invitation to re-tune it.
 
 ## 1. Question and pre-registered decision rule
 
@@ -131,12 +149,12 @@ The novelty accounting first, because it bounds what any transfer mechanism can 
 
 Matched-pair support classes (held-out pairs, cut-row weighted, pair Δ):
 
-| support class | pairs | weight | mean \|Δtrue\| | PSC_POOL_BAG_PAIR | ACRA_REF | MORGAN_COUNT_KRR |
-|---|---|---|---|---|---|---|
-| T_seen | 195 | 173 | 0.693 | 0.443 (rel 0.64) | 0.392 (rel 0.57) | 0.465 (rel 0.67) |
-| T_unseen_both_frags_unseen | 24 | 19 | 0.417 | 0.316 (rel 0.76) | 0.478 (rel 1.14) | 0.407 (rel 0.97) |
-| T_unseen_frag_both_seen | 156 | 136 | 0.839 | 0.468 (rel 0.56) | 0.429 (rel 0.51) | 0.492 (rel 0.59) |
-| T_unseen_one_frag_unseen | 100 | 85 | 0.673 | 0.480 (rel 0.71) | 0.463 (rel 0.69) | 0.489 (rel 0.73) |
+| support class | pairs | weight | mean \|Δtrue\| | PSC_POOL_BAG_PAIR | ACRA_REF | PATH_COUNT_RIDGE | PATH_COUNT_KRR | MORGAN_COUNT_KRR |
+|---|---|---|---|---|---|---|---|---|
+| T_seen | 195 | 173 | 0.693 | 0.443 (rel 0.64) | 0.392 (rel 0.57) | 0.412 (rel 0.60) | 0.431 (rel 0.62) | 0.465 (rel 0.67) |
+| T_unseen_both_frags_unseen | 24 | 19 | 0.417 | 0.316 (rel 0.76) | 0.478 (rel 1.14) | 0.438 (rel 1.05) | 0.426 (rel 1.02) | 0.407 (rel 0.97) |
+| T_unseen_frag_both_seen | 156 | 136 | 0.839 | 0.468 (rel 0.56) | 0.429 (rel 0.51) | 0.459 (rel 0.55) | 0.467 (rel 0.56) | 0.492 (rel 0.59) |
+| T_unseen_one_frag_unseen | 100 | 85 | 0.673 | 0.480 (rel 0.71) | 0.463 (rel 0.69) | 0.535 (rel 0.79) | 0.527 (rel 0.78) | 0.489 (rel 0.73) |
 
 Read this table with the `mean |Δtrue|` column: the *rel* column is MAE divided by that scale, so it is comparable across classes.
 
@@ -155,7 +173,7 @@ From the lowest to the highest unseen-mass bucket the error grows by +0.214 (cha
 
 **Pair-level vs molecule-level.** On held-out × held-out pairs the champion's Δ MAE is 0.453, versus 0.422 for `ACRA_REF` and 0.462 for the path-count KRR — i.e. at the level of *differences* the champion is close to (and slightly better than) the kernel baselines, while at the level of whole molecules it is 0.687 vs 0.655. The pair Δ regression slope is 0.514 for the champion vs 0.589 for `ACRA_REF`: the additive model attenuates contrasts more, even though their ordering is mostly right. That is the signature of a model whose *levels* are biased (heavy shrinkage) rather than one that cannot see the structure.
 
-**Answer to Q5.** Transfer does not show up where it would have to. The only cell where PSC is best is the most extreme one (T unseen, *both* fragment words unseen), and it is 24 pairs — too few to build on, and exactly the cell where a heavily shrunk predictor wins by predicting small |Δ|. In the cell where a real transfer mechanism should shine (T unseen, both fragments **seen**, 156 pairs) PSC trails `ACRA_REF` (0.468 vs 0.429 MAE) and is only marginally ahead of the raw Morgan-count kernel (0.492); the same ordering holds in the scale-free *rel* column (0.56 vs 0.51 vs 0.59). In other words, the route shows no advantage in the cell where unseen *path words* meet seen *fragments* — the very transfer the design targets. Combined with the 4.1% path-mass share of unseen keys, the honest answer is that **unseen path words are too rare on Lipo for a transfer mechanism to move the molecule-level metric, and the model does not show a transfer advantage even in the pair-level cells where it could be seen.**
+**Answer to Q5.** Transfer does not show up where it would have to. The only cell where PSC is best is the most extreme one (T unseen, *both* fragment words unseen), and it is 24 pairs — too few to build on, and exactly the cell where a heavily shrunk predictor wins by predicting small |Δ|. In the cell where a real transfer mechanism should shine (T unseen, both fragments **seen**, 156 pairs) PSC trails `ACRA_REF` (0.468 vs 0.429 MAE), is level with the exact-ID path-count KRR (0.467) and behind the path-count ridge (0.459), and is only marginally ahead of the raw Morgan-count kernel (0.492); the same ordering holds in the scale-free *rel* column (0.56 vs 0.51 vs 0.59). In other words, the route shows no advantage in the cell where unseen *path words* meet seen *fragments* — the very transfer the design targets. Combined with the 4.1% path-mass share of unseen keys, the honest answer is that **unseen path words are too rare on Lipo for a transfer mechanism to move the molecule-level metric, and the model does not show a transfer advantage even in the pair-level cells where it could be seen.**
 
 ## 10. Mechanistic checks
 

@@ -98,6 +98,27 @@ def fit_prediction(rid: str, split: str) -> dict[str, np.ndarray] | None:
 # ---------------------------------------------------------------------------
 
 
+def _skipped_status(arm: str, split: str, seed: int | None = None) -> str:
+    """Why a planned cell has no run (protocol scope vs conditional arm)."""
+    try:
+        lock = C.read_json(ANALYSIS / "selection_lock.json")
+    except Exception:
+        lock = {}
+    d1 = [lock.get("champion"), lock.get("O_star"), lock.get("R_star"),
+          lock.get("ACRA_B_star") or "ACRA_REF", "GINE_REF"]
+    full = [lock.get("champion"), lock.get("ACRA_B_star") or "ACRA_REF", "GINE_REF",
+            lock.get("M_star")]
+    if arm.endswith("_DIAG") and arm != lock.get("DIAG_twin"):
+        return "SKIPPED_CONDITIONAL_DIAG"
+    if split == "D1":
+        if seed is not None and seed > 1:      # protocol: D1 replication uses seeds 0,1
+            return "SKIPPED_PROTOCOL_D1"
+        return "SKIPPED_PROTOCOL_D1" if arm not in d1 else "MISSING"
+    if split == "FULL":
+        return "SKIPPED_BUDGET_FULL" if arm not in full else "MISSING"
+    return "MISSING"
+
+
 def collect_records(bundle: D.DataBundle) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     labels = bundle.labels
     records: list[dict[str, Any]] = []
@@ -110,7 +131,8 @@ def collect_records(bundle: D.DataBundle) -> tuple[list[dict[str, Any]], dict[st
                 base = {"arm": arm, "run_id": rid, "split": split, "seed": seed,
                         **{k: spec[k] for k in ("family", "input", "readout", "target")}}
                 if man is None:
-                    records.append({**base, "status": "MISSING"})
+                    records.append({**base,
+                                    "status": _skipped_status(arm, split, seed)})
                     continue
                 pred = eval_prediction(rid, split)
                 if pred is None:
@@ -224,7 +246,21 @@ def cmd_table(bundle: D.DataBundle) -> dict[str, Any]:
             if r["split"] == "D0" and agg_arm:
                 row["delta_vs_ACRA_REF_D0_mean"] = base - agg_arm["rmse_mean"]
         rows.append(row)
-    C.write_csv(RESULTS / "main_table.csv", rows)
+    # keep the frozen Valid numbers written by psc_final_eval --score
+    old_path = RESULTS / "main_table.csv"
+    if old_path.is_file():
+        import csv as _csv
+        with old_path.open() as fh:
+            old = {r["run_id"]: r for r in _csv.DictReader(fh)}
+        keep = ("rmse", "mae", "bias", "checkpoint", "n_eval", "status")
+        for row in rows:
+            prev = old.get(row["run_id"]) or {}
+            if prev.get("status") == "OK" and str(prev.get("rmse", "")) not in ("", "nan"):
+                for k in keep:
+                    if prev.get(k) not in (None, ""):
+                        row[k] = prev[k]
+                row["status"] = "OK"
+    C.write_csv(old_path, rows)
     summary = {"generated_utc": C.now_utc(), "git_commit": C.git_commit(),
                "aggregate": agg, "n_records": len(rows),
                "gpu_hours_total": float(sum(r.get("gpu_hours") or 0 for r in records)),
@@ -728,7 +764,7 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
     models = [lock["champion"], lock["M_star"], lock["ACRA_B_star"], "GINE_REF"]
     if lock.get("DIAG_twin"):
         models.append(lock["DIAG_twin"])
-    models += ["PATH_COUNT_KRR", "MORGAN_COUNT_KRR"]
+    models += ["PATH_COUNT_RIDGE", "PATH_COUNT_KRR", "MORGAN_COUNT_KRR"]
     models = [m for m in dict.fromkeys(models) if m]
     out: dict[str, Any] = {"generated_utc": C.now_utc(), "models": models, "splits": {}}
     cfg = C.load_config()
