@@ -965,6 +965,96 @@ def cmd_decomp(bundle: D.DataBundle) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------------------
+# molecule-level novelty strata (§9.4 / Q5)
+# ---------------------------------------------------------------------------
+
+
+def cmd_molnov(bundle: D.DataBundle) -> dict[str, Any]:
+    lock = C.read_json(ANALYSIS / "selection_lock.json")
+    models = [lock["champion"], lock["M_star"], lock["ACRA_B_star"], "GINE_REF",
+              "PATH_COUNT_RIDGE", "MORGAN_COUNT_KRR", "COUNT_ONLY_RIDGE"]
+    models = [m for m in dict.fromkeys(models) if m]
+    cfg = C.load_config()
+    out: dict[str, Any] = {"generated_utc": C.now_utc(), "splits": {}}
+    buckets = [(0.0, 0.0), (0.0, 0.01), (0.01, 0.05), (0.05, 1.0 + 1e-9)]
+    for split_name in ("D0", "D1"):
+        f1 = None
+        if split_name == "D1":
+            f1 = json.loads(C.SPLIT_F1.read_text(encoding="utf-8"))
+            f1["file_sha256"] = C.sha256_file(C.SPLIT_F1)
+        split = C.split_spec(split_name, bundle.raw, f1=f1)
+        rows_eval = np.asarray(split["eval_rows"], np.int64)
+        cache_rows = np.union1d(bundle.official_train, bundle.official_valid)
+        meta = PP.ensure_cache(bundle.raw, cache_rows, int(cfg["paths"]["max_len"]))
+        cache = PP.PathCache(meta, device="cpu")
+        vocab = set(D.fit_path_vocab(cache, split["fit_rows"], cache.L).ids)
+        counts_eval = dict(zip(rows_eval.tolist(), path_count_dicts(cache, rows_eval)))
+        counts_fit = dict(zip(np.asarray(split["fit_rows"]).tolist(),
+                              path_count_dicts(cache, split["fit_rows"])))
+        bag_of = bag_keys(cache)
+        vocab_bag = {bag_of[p] for p in vocab}
+        eta = np.zeros(rows_eval.size)
+        eta_bag = np.zeros(rows_eval.size)
+        for i, r in enumerate(rows_eval.tolist()):
+            d = counts_eval[r]
+            tot = sum(d.values()) or 1
+            eta[i] = sum(m for k, m in d.items() if k not in vocab) / tot
+            agg: dict[bytes, int] = defaultdict(int)
+            for k, m in d.items():
+                agg[bag_of[k]] += m
+            eta_bag[i] = sum(m for k, m in agg.items() if k not in vocab_bag) / tot
+        payload = C.load_split_f0() if split_name == "D0" else f1
+        scaf_map = payload["scaffold_by_row"]
+        fit_scaf = {str(scaf_map[str(int(r))]) for r in np.asarray(split["fit_rows"]).tolist()}
+        scaf = np.asarray([str(scaf_map[str(int(r))]) for r in rows_eval.tolist()])
+        scaf_novel = np.asarray([x not in fit_scaf for x in scaf], bool)
+        y = bundle.labels[rows_eval]
+        entry: dict[str, Any] = {
+            "n_eval": int(rows_eval.size),
+            "n_scaffold_novel": int(scaf_novel.sum()),
+            "unseen_path_mass": {"mean": float(eta.mean()), "median": float(np.median(eta)),
+                                 "share_gt0": float(np.mean(eta > 0)),
+                                 "share_gt5pct": float(np.mean(eta > 0.05)),
+                                 "max": float(eta.max())},
+            "buckets": {}, "scaffold_cross": {},
+        }
+        for lo, hi in buckets:
+            if lo == 0.0 and hi == 0.0:
+                mask = eta <= 1e-12
+                name = "eta_mol=0"
+            else:
+                mask = (eta > lo) & (eta <= hi)
+                name = f"({lo},{hi}]"
+            sub = {"n": int(mask.sum()), "scaffold_novel": int((mask & scaf_novel).sum())}
+            for m in models:
+                d = prediction_dict(m, split_name, 0)
+                if not d:
+                    continue
+                pred = np.asarray([d[int(r)] for r in rows_eval.tolist()])
+                if mask.sum():
+                    sub[m] = {"rmse": C.rmse(pred[mask], y[mask]),
+                              "mae": C.mae(pred[mask], y[mask])}
+            entry["buckets"][name] = sub
+        for flag, name in ((False, "scaffold_seen"), (True, "scaffold_novel")):
+            mask = scaf_novel == flag
+            sub = {"n": int(mask.sum()), "mean_eta": float(eta[mask].mean()) if mask.any() else 0.0}
+            for m in models:
+                d = prediction_dict(m, split_name, 0)
+                if not d:
+                    continue
+                pred = np.asarray([d[int(r)] for r in rows_eval.tolist()])
+                if mask.sum():
+                    sub[m] = {"rmse": C.rmse(pred[mask], y[mask]),
+                              "mae": C.mae(pred[mask], y[mask])}
+            entry["scaffold_cross"][name] = sub
+        out["splits"][split_name] = entry
+        print(f"{split_name}: eta mean={eta.mean():.4f} share>0={np.mean(eta>0):.3f} "
+              f"scaffold_novel={int(scaf_novel.sum())}/{rows_eval.size}")
+    C.write_json(ANALYSIS / "molecule_novelty.json", out)
+    return out
+
+
+# ---------------------------------------------------------------------------
 # size strata and worst errors (§9.7)
 # ---------------------------------------------------------------------------
 
@@ -1446,14 +1536,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", required=True,
                     choices=("table", "select", "bootstrap", "pairs", "decomp",
-                             "sizes", "ledger", "figures", "all"))
+                             "sizes", "molnov", "ledger", "figures", "all"))
     args = ap.parse_args(argv)
     bundle = D.load_bundle()
-    stages = {"table": cmd_table, "select": cmd_select, "bootstrap": cmd_bootstrap,
+    stages = {"table": cmd_table, "select": cmd_select,
+              "bootstrap": lambda b: cmd_bootstrap(b, "D0"),
               "pairs": cmd_pairs, "decomp": cmd_decomp, "sizes": cmd_sizes,
-              "ledger": cmd_ledger, "figures": cmd_figures}
-    order = ["table", "select", "bootstrap", "pairs", "decomp", "sizes", "ledger",
-             "figures"] if args.stage == "all" else [args.stage]
+              "molnov": cmd_molnov, "ledger": cmd_ledger, "figures": cmd_figures}
+    order = ["table", "select", "bootstrap", "pairs", "decomp", "sizes", "molnov",
+             "ledger", "figures"] if args.stage == "all" else [args.stage]
     for name in order:
         print(f"== stage {name}")
         stages[name](bundle)
