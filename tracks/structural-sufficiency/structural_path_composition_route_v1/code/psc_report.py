@@ -443,7 +443,9 @@ def main() -> int:
                                                        "MORGAN_COUNT_KRR") if m) + " |")
         add("|---|---|" + "---|" * len([m for m in (champ, acra, "PATH_COUNT_RIDGE",
                                                    "MORGAN_COUNT_KRR") if m]))
+        label = {"(0.05,1.000000001]": ">0.05"}
         for name, v in d["buckets"].items():
+            name = label.get(name, name)
             add(f"| {name} | {v['n']} | " + " | ".join(
                 n((v.get(m) or {}).get("rmse")) for m in
                 (champ, acra, "PATH_COUNT_RIDGE", "MORGAN_COUNT_KRR") if m) + " |")
@@ -590,9 +592,16 @@ def main() -> int:
                 continue
             v = agg1[a]
             d0 = (agg0.get(a) or {}).get("rmse_mean")
+            got = c(f"champion_vs_{a}", con1) if a != acra else None
+            if a == acra:
+                delta = "—"
+            elif got:
+                delta = ci(got)
+            else:
+                delta = signed(v["rmse_mean"] - (agg1.get(acra, {}).get("rmse_mean")
+                                                 or float("nan")))
             add(f"| `{a}` | {n(v['rmse_mean'])} ± {n(v['rmse_sd'])} | {n(d0)} | "
-                f"{signed(v['rmse_mean'] - d0 if d0 else None)} | "
-                f"{ci(c(f'{a}_vs_{acra}', con1))} |")
+                f"{signed(v['rmse_mean'] - d0 if d0 else None)} | {delta} |")
         add("")
         d1_champ = agg1.get(champ, {}).get("rmse_mean")
         d1_acra = agg1.get(acra, {}).get("rmse_mean")
@@ -677,15 +686,18 @@ def main() -> int:
     # --------------------------------------------------------- deviations ---
     add("## 14. Deviations, incidents and honest limits")
     add("")
-    add("* **Ordering incident (no GPU waste beyond reruns).** The queue driver launches "
-        "through `rr`, which refuses to start a formal run from a dirty tracked tree. One "
-        "analysis edit left the tree dirty while the stage-2 queue was running, so a batch "
-        "of launch attempts was rejected (`LAUNCH_FAILED`) before the next commit. All "
-        "affected runs were relaunched from the same commit and the final matrix is "
-        "complete (see `analysis/compute_budget.json` for every attempt). No run was "
-        "selected or excluded on the basis of its result.")
-    add("* **Horizon.** 160 epochs is the frozen budget. The PSC arms' best epoch is "
-        f"late ({', '.join(str((agg0.get(a) or {}).get('best_epochs', ['n/a'])[0]) for a in A.PSC_ARMS if a in agg0)}), "
+    add("* **Dirty-tree launch failures (reruns only).** The queue driver launches through "
+        "`rr`, which refuses to start a formal run from a dirty tracked tree. Two analysis "
+        "edits landed while the D1 queue was running, so nine launch attempts were "
+        "rejected (`LAUNCH_FAILED`) before the next commit; every affected run was "
+        "relaunched from the same commit and the final matrix is complete (every attempt "
+        "is listed in `analysis/compute_budget.json`). No run was selected or excluded on "
+        "the basis of its result.")
+    def _med(a):
+        v = (agg0.get(a) or {}).get("best_epochs")
+        return int(__import__("numpy").median(v)) if v else "n/a"
+    add("* **Horizon.** 160 epochs is the frozen budget. The PSC arms' median best epoch is "
+        f"late ({', '.join(str(_med(a)) for a in A.PSC_ARMS if a in agg0)} of 160), "
         "i.e. they are still improving when the schedule ends. The comparison to a "
         "closed-form ridge on the same features is therefore a *lower bound* on the "
         "additive restriction's cost; but the 32-molecule overfit shows the gap is not "
@@ -710,10 +722,12 @@ def main() -> int:
         "parent cache's per-parse atom sets are stored in fragment-local numbering. The "
         "exact-cancellation result above holds under either convention for same-context "
         "pairs.")
-    add("* **DIAG twin** was not run (conditional on a PAIR champion), and the optional "
-        "extensions (ESOL transfer, size curve, M* full-train) were not started: the "
-        "required matrix plus D1 and the full-Train refits consumed the budget, and the "
-        "protocol's extension gate requires the required queue to be complete first.")
+    add("* **DIAG twin** was run because the champion carries the PAIR objective: three "
+        "D0 seeds at the same `E_m`, exact contrast in §8. The *optional* extensions (ESOL "
+        "transfer, size curve, M* full-train beyond the reference arms) were not started: "
+        "the required matrix, the D1 replication and the full-Train refits consumed the "
+        "budget, and the protocol's extension gate requires the required queue to be "
+        "complete first.")
     add("")
     add("## 15. What this means for the branch")
     add("")
