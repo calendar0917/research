@@ -251,16 +251,21 @@ def main() -> int:
         if a not in agg0:
             continue
         v = agg0[a]
-        key = f"champion_vs_{a}" if a != champ else f"{champ}_vs_{acra}"
+        key = f"champion_vs_{a}"
+        delta = ci(c(key))
+        if a == acra:
+            delta = "—"
         add(f"| `{a}` | {n(v['rmse_mean'])} ± {n(v['rmse_sd'])} | {n(v['mae_mean'])} | "
-            f"{ci(c(key))} |")
+            f"{delta} |")
     add("")
     add(f"Paired-molecule bootstrap ({boot.get('reps', 'n/a')} resamples, shared index across "
         "models and seeds): the champion is worse than every non-PSC reference with a CI "
         "that excludes 0. The per-molecule view agrees: "
         f"mean per-molecule |error| change vs `{acra}` is "
         f"{signed((boot.get('per_molecule') or {}).get('mean_abs_err_diff'))} "
-        f"[{ci(boot.get('per_molecule'))}], and the champion is closer to truth on "
+        f"[{(boot.get('per_molecule') or {}).get('ci95', [float('nan'), float('nan')])[0]:+.3f}, "
+        f"{(boot.get('per_molecule') or {}).get('ci95', [float('nan'), float('nan')])[1]:+.3f}], "
+        "and the champion is closer to truth on "
         f"{pct((boot.get('per_molecule') or {}).get('share_molecules_champion_better'), 1)} "
         "of molecules.")
     add("")
@@ -290,7 +295,10 @@ def main() -> int:
         "POOL family the two are indistinguishable (CIs straddle 0; scaffold-cluster "
         "bootstrap: "
         + ", ".join(f"`{k}` {ci(v)}" for k, v in scaf.items()
-                    if "BAG" in k and isinstance(v, dict)) + "). "
+                    if k in ("PSC_SUM_BAG_vs_PSC_SUM", "PSC_POOL_BAG_vs_PSC_POOL",
+                             "PSC_SUM_BAG_PAIR_vs_PSC_SUM_PAIR",
+                             "PSC_POOL_BAG_PAIR_vs_PSC_POOL_PAIR")
+                    and isinstance(v, dict)) + "). "
         "**Conclusion**: for Lipo, the *order* in which the atom/bond word is read along a "
         "path adds nothing — path identity beyond the multiset is not the useful signal, "
         "and the ORDER-specific machinery (sequence encoding, reversal averaging) is not "
@@ -345,16 +353,34 @@ def main() -> int:
         f"POOL {signed((c('PSC_POOL_PAIR_vs_PSC_POOL') or {}).get('point'))}, "
         f"SUM+BAG {signed((c('PSC_SUM_BAG_PAIR_vs_PSC_SUM_BAG') or {}).get('point'))}, "
         f"POOL+BAG {signed((c('PSC_POOL_BAG_PAIR_vs_PSC_POOL_BAG') or {}).get('point'))}), "
-        "but only two CIs exclude 0 and **none reaches the pre-registered +0.02 practical "
-        "gain threshold**. The ACRA regulariser is a wash "
+        f"but {sum(1 for k in pair_keys if ((c(k) or {}).get('ci95') or [0, 0])[0] > 0)} of "
+        f"{len(pair_keys)} CIs exclude 0 and **no contrast reaches the pre-registered +0.02 "
+        "practical gain threshold**. The ACRA regulariser is a wash "
         f"({signed((c('ACRA_PAIR_vs_ACRA_REF') or {}).get('point'))}). The dependence on "
         "readout is weak: the pair term gives roughly +0.01 to +0.02 in both families, "
         "consistent with a data-efficiency device rather than a substitute for capacity.")
     add("")
     add("The pair algebra is exact and verified: `PAIR = DIAG − 2·cross` "
         "(deviation < 1e-12), `Σ w_e = 1` per component, and the sampler matches the "
-        "component-weighted distribution. The DIAG twin, however, was **not run** because "
-        "the champion is not a PAIR arm (see the protocol's conditional rule).")
+        "component-weighted distribution.")
+    diag_key = "champion_vs_DIAG"
+    if c(diag_key):
+        dv = c(diag_key)
+        add("")
+        add(f"Because the champion carries the PAIR objective, the protocol required a "
+            f"**DIAG twin** (`{lock.get('DIAG_twin')}`, 3 seeds): same input/readout, same "
+            "pair sampling, but the pair target is a fixed zero vector, so it can only "
+            "anchor levels. The champion beats it by "
+            f"{ci(dv)} RMSE (positive = PAIR better), i.e. the *difference* signal — not "
+            "merely spending compute on pairs — is what the PAIR objective contributes.")
+        if dv["ci95"][0] > 0:
+            add("")
+            add("That contrast is the cleanest available test of the brief's "
+                "\"pair coupling vs pair weighting\" question: sharing weights across the "
+                "pair term alone does not help; supervising the signed difference does.")
+    else:
+        add("")
+        add("The DIAG twin was not run (conditional on a PAIR champion).")
     add("")
 
     # ------------------------------------------------------------ Q5 answer --
