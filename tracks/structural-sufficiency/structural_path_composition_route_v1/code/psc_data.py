@@ -57,7 +57,8 @@ class DataBundle:
 def load_bundle() -> DataBundle:
     raw = C.load_raw_structure()
     if not C.TRAIN_LABELS.is_file():
-        raise FileNotFoundError(f"train label file missing: {C.TRAIN_LABELS}")
+        # deterministic, label-safe extraction (two members of the frozen file)
+        C.build_train_labels(raw)
     train = C.load_train_labels()
     n_mol = int(np.asarray(raw["node_ptr"]).size - 1)
     labels = np.full(n_mol, np.nan, np.float64)
