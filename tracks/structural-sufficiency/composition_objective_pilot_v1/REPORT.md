@@ -126,25 +126,39 @@ most `2.3e-15`; see `analysis/checks.json` and
 
 Standardised units. `Var share = Var_cut / L_cut`.
 
-| arm | split | `L_cut` | `L_graph` | `Var_cut` | Var share | `Var_cut` std |
-|---|---|---:|---:|---:|---:|---:|
-| A parent FACTOR | Train | 0.0826 | 0.0493 | 0.0333 | **0.403** | 0.0227 |
-| A parent FACTOR | Valid | 0.6689 | 0.5035 | 0.1654 | **0.247** | 0.1127 |
-| B CSOI_ADD | Train | 0.4084 | 0.3287 | 0.0797 | **0.195** | 0.0543 |
-| B CSOI_ADD | Valid | 0.6005 | 0.5179 | 0.0826 | **0.138** | 0.0563 |
-| C CSOI_GLOBAL | Train | 0.1936 | 0.1347 | 0.0589 | **0.304** | 0.0401 |
-| C CSOI_GLOBAL | Valid | 0.6478 | 0.5397 | 0.1082 | **0.167** | 0.0737 |
+| arm | split | `L_cut` | `L_graph` | `Var_cut` | Var share |
+|---|---|---:|---:|---:|---:|
+| A parent FACTOR | Train | 0.0563 | 0.0336 | 0.0227 | **0.403** |
+| A parent FACTOR | Valid | 0.4557 | 0.3430 | 0.1127 | **0.247** |
+| B CSOI_ADD | Train | 0.2782 | 0.2239 | 0.0543 | **0.195** |
+| B CSOI_ADD | Valid | 0.4091 | 0.3528 | 0.0563 | **0.138** |
+| C CSOI_GLOBAL | Train | 0.1319 | 0.0918 | 0.0401 | **0.304** |
+| C CSOI_GLOBAL | Valid | 0.4414 | 0.3677 | 0.0737 | **0.167** |
+
+Per-molecule `Var_cut` quantiles (standardised):
+
+| arm | split | mean | p50 | p90 | p99 |
+|---|---|---:|---:|---:|---:|
+| A | Train | 0.0227 | 0.0169 | 0.0478 | 0.1038 |
+| A | Valid | 0.1127 | 0.0714 | 0.2539 | 0.5788 |
+| B | Train | 0.0543 | 0.0377 | 0.1161 | 0.2706 |
+| B | Valid | 0.0563 | 0.0402 | 0.1350 | 0.2670 |
+| C | Train | 0.0401 | 0.0277 | 0.0857 | 0.2031 |
+| C | Valid | 0.0737 | 0.0435 | 0.1721 | 0.4273 |
 
 `D_CSOI_REL_EXTRA` is similar (Var share 0.270 Train / 0.183 Valid). The
 variance term is therefore not negligible: on Train it is about one-fifth to
 two-fifths of the objective, and on Valid it is about one-seventh to one-quarter.
 The parent's Train fit is especially variance-heavy; on Valid the parent's graph
 error grows faster than its cut variance, so the relative variance share falls
-even though absolute `Var_cut` rises from 0.033 to 0.165.
+even though absolute `Var_cut` rises from 0.023 to 0.113.
 
 ### 2.3 Cut geometry, cancellation and association with error
 
-| arm | split | mean cut span | cancellation share | mixed-sign fraction | Pearson `Var` vs `|graph error|` |
+Span and variance values are standardised; cancellation and mixed-sign are
+fractions.
+
+| arm | split | mean cut span | cancellation share | mixed-sign fraction | Pearson `Var` vs abs graph error |
 |---|---|---:|---:|---:|---:|
 | A | Train | 0.517 | 0.568 | 0.161 | 0.319 |
 | A | Valid | 1.062 | 0.435 | 0.402 | 0.174 |
@@ -154,6 +168,9 @@ even though absolute `Var_cut` rises from 0.033 to 0.165.
 | C | Valid | 0.866 | 0.363 | 0.319 | 0.163 |
 
 - Span is the mean within-molecule `max_c f_c - min_c f_c`, standardised.
+- Global cut-response ranges (standardised) were A `[-1.87, 4.70]` Train /
+  `[-1.56, 4.48]` Valid; B `[-3.32, 5.38]` / `[-2.70, 5.22]`; C `[-2.10, 5.27]`
+  / `[-2.44, 5.66]`.
 - Cancellation share is the mean per-molecule `Var_cut / (L_graph + Var_cut)`.
 - Mixed-sign fraction is the fraction of molecules whose cuts contain both
   positive and negative responses.
@@ -209,7 +226,7 @@ as a direct `f(C,S_b)-f(C,S_a)` result.
 All values are original label units. `Δ` is `new − parent` (positive = worse);
 the CI is a paired bootstrap over the 420 Valid molecules.
 
-| arm | best epoch | Valid RMSE | Δ vs parent | 95% CI | Train RMSE | Valid MAE | Valid `Var_cut` std | Valid graph MSE std | Valid cancel |
+| arm | best epoch | Valid RMSE | Δ vs parent | 95% CI | Train RMSE | Valid MAE | Valid mean `Var_cut` (std. units) | Valid graph MSE (std. units) | Valid cancel |
 |---|---:|---:|---:|---|---:|---:|---:|---:|---:|
 | A parent | 100 | **0.7096** | — | — | 0.2220 | 0.5393 | 0.1127 | 0.3430 | 0.4350 |
 | `F_GRAPH` | 31 | **0.8097** | **+0.1001** | `[+0.0554, +0.1462]` | 0.4948 | 0.6332 | 1.3813 | 0.4467 | 0.7268 |
@@ -226,7 +243,7 @@ paired CI over 420 molecules does not resolve them; they are not evidence of
 improvement either.
 
 The graph loss did **not** improve graph-level prediction at the selected
-checkpoints:
+checkpoints (standardised units; lower is better):
 
 | arm | Train graph MSE (best) | Valid graph MSE (best) | Train `Var_cut` | Valid `Var_cut` |
 |---|---:|---:|---:|---:|
@@ -246,7 +263,7 @@ still worse than the parent on both Valid graph MSE and Valid RMSE.
 ### 3.2 Mechanism: cancellation, not branch death
 
 Removing the cut-wise term increases cut dispersion by an order of magnitude on
-Valid:
+Valid (all values in this paragraph are standardised):
 
 - `F_GRAPH`: `Var_cut` **0.1127 → 1.3813** (≈12.3×), cancellation
   0.435 → 0.727, mixed-sign 0.402 → 0.824, cut-MSE 0.456 → 1.828.
@@ -278,7 +295,11 @@ interaction branch is therefore not the missing ingredient in this pilot.
 The gradient snapshots tell the same story: `F_GRAPH` total gradient norm falls
 from 9.75 (first epoch) to 2.63 (best epoch 31), while `B_GRAPH` rises from 0.54
 to 9.17 and `C_GRAPH` from 1.04 to 1.84. The optimization is not failing to
-move; it is moving into cancelling cut configurations.
+move; it is moving into cancelling cut configurations. Best-checkpoint
+auxiliary pair loss was 0.224 for `F_GRAPH` vs 0.042 for A, 0.420 for `B_GRAPH`
+vs 0.415 for B, and 0.151 for `C_GRAPH` vs 0.087 for C, so the cut-response
+auxiliary did not compensate for the missing main-loss calibration in the
+parent/global arms.
 
 **The variance rise is not interpreted as improved representation.** It is the
 opposite: the graph-only objective removes the term that kept cut responses
