@@ -1,6 +1,6 @@
 # Structural path composition route (PSC) — final report
 
-*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `d1ae27654764cba98767e5e041b74e7acacc01c7` · *generated*: 2026-11-22T20:29:06Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
+*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `b430fbc42af278917c3594f74d91fbd3b5ad2db8` · *generated*: 2026-11-22T20:29:38Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
 
 Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers below are whole-molecule RMSE / MAE in **original label units** (the training target is the standardised label, all reported metrics are inverted back). Higher-is-better quantities are marked.
 
@@ -116,6 +116,8 @@ The pair algebra is exact and verified: `PAIR = DIAG − 2·cross` (deviation < 
 
 Because the champion carries the PAIR objective, the protocol required a **DIAG twin** (`PSC_POOL_BAG_DIAG`, 3 seeds): same input/readout, same pair sampling, but the pair target is a fixed zero vector, so it can only anchor levels. The champion beats it by +0.035 [+0.008, +0.061] RMSE (positive = PAIR better), i.e. the *difference* signal — not merely spending compute on pairs — is what the PAIR objective contributes.
 
+Note the two controls answer different questions. Against the molecule-only twin `PSC_POOL_BAG` the PAIR term buys little (+0.020 RMSE, ns); against the DIAG twin, which samples the same pairs but never sees the signed difference, it is clearly better. The DIAG twin is in turn +0.015 worse than the molecule-only twin, so pair *sampling* per se is a small cost — the benefit comes from supervising the difference.
+
 That contrast is the cleanest available test of the brief's "pair coupling vs pair weighting" question: sharing weights across the pair term alone does not help; supervising the signed difference does.
 
 ## 9. Q5 — where would unseen-substitution gains have to come from?
@@ -153,7 +155,7 @@ From the lowest to the highest unseen-mass bucket the error grows by +0.214 (cha
 
 **Pair-level vs molecule-level.** On held-out × held-out pairs the champion's Δ MAE is 0.453, versus 0.422 for `ACRA_REF` and 0.462 for the path-count KRR — i.e. at the level of *differences* the champion is close to (and slightly better than) the kernel baselines, while at the level of whole molecules it is 0.687 vs 0.655. The pair Δ regression slope is 0.514 for the champion vs 0.589 for `ACRA_REF`: the additive model attenuates contrasts more, even though their ordering is mostly right. That is the signature of a model whose *levels* are biased (heavy shrinkage) rather than one that cannot see the structure.
 
-**Answer to Q5.** Transfer does not show up where it would have to. The only cell where PSC is best is the most extreme one (T unseen, *both* fragment words unseen), and it is 24 pairs — too few to build on, and exactly the cell where a heavily shrunk predictor wins by predicting small |Δ|. In the cell where a real transfer mechanism should shine (T unseen, both fragments **seen**, 156 pairs) PSC is the worst of the four models compared. Combined with the 4.1% path-mass share of unseen keys, the honest answer is that **unseen path words are too rare on Lipo for a transfer mechanism to move the molecule-level metric, and the model does not show a transfer advantage even in the pair-level cells where it could be seen.**
+**Answer to Q5.** Transfer does not show up where it would have to. The only cell where PSC is best is the most extreme one (T unseen, *both* fragment words unseen), and it is 24 pairs — too few to build on, and exactly the cell where a heavily shrunk predictor wins by predicting small |Δ|. In the cell where a real transfer mechanism should shine (T unseen, both fragments **seen**, 156 pairs) PSC trails `ACRA_REF` (0.468 vs 0.429 MAE) and is only marginally ahead of the raw Morgan-count kernel (0.492); the same ordering holds in the scale-free *rel* column (0.56 vs 0.51 vs 0.59). In other words, the route shows no advantage in the cell where unseen *path words* meet seen *fragments* — the very transfer the design targets. Combined with the 4.1% path-mass share of unseen keys, the honest answer is that **unseen path words are too rare on Lipo for a transfer mechanism to move the molecule-level metric, and the model does not show a transfer advantage even in the pair-level cells where it could be seen.**
 
 ## 10. Mechanistic checks
 

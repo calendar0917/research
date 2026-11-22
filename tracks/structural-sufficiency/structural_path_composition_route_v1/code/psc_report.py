@@ -392,6 +392,19 @@ def main() -> int:
             "anchor levels. The champion beats it by "
             f"{ci(dv)} RMSE (positive = PAIR better), i.e. the *difference* signal — not "
             "merely spending compute on pairs — is what the PAIR objective contributes.")
+        twin = lock.get("DIAG_twin")
+        mol_twin = twin.replace("_DIAG", "") if twin else None
+        if mol_twin and (agg0.get(twin) or {}).get("rmse_mean") and \
+                (agg0.get(mol_twin) or {}).get("rmse_mean"):
+            add("")
+            add(f"Note the two controls answer different questions. Against the "
+                f"molecule-only twin `{mol_twin}` the PAIR term buys little "
+                f"({signed((agg0[mol_twin]['rmse_mean'] - agg0[champ]['rmse_mean']))} RMSE, "
+                "ns); against the DIAG twin, which samples the same pairs but never sees "
+                "the signed difference, it is clearly better. The DIAG twin is in turn "
+                f"{signed((agg0[twin]['rmse_mean'] - agg0[mol_twin]['rmse_mean']))} worse "
+                "than the molecule-only twin, so pair *sampling* per se is a small cost — "
+                "the benefit comes from supervising the difference.")
         if dv["ci95"][0] > 0:
             add("")
             add("That contrast is the cleanest available test of the brief's "
@@ -500,7 +513,11 @@ def main() -> int:
         "unseen), and it is 24 pairs — too few to build on, and exactly the cell where a "
         "heavily shrunk predictor wins by predicting small |Δ|. In the cell where a real "
         "transfer mechanism should shine (T unseen, both fragments **seen**, 156 pairs) "
-        "PSC is the worst of the four models compared. Combined with the 4.1% path-mass "
+        "PSC trails `ACRA_REF` (0.468 vs 0.429 MAE) and is only marginally ahead of the raw "
+        "Morgan-count kernel (0.492); the same ordering holds in the scale-free *rel* "
+        "column (0.56 vs 0.51 vs 0.59). In other words, the route shows no advantage in "
+        "the cell where unseen *path words* meet seen *fragments* — the very transfer the "
+        "design targets. Combined with the 4.1% path-mass "
         "share of unseen keys, the honest answer is that **unseen path words are too "
         "rare on Lipo for a transfer mechanism to move the molecule-level metric, and "
         "the model does not show a transfer advantage even in the pair-level cells "
