@@ -252,15 +252,28 @@ def main() -> int:
             continue
         v = agg0[a]
         key = f"champion_vs_{a}"
-        delta = ci(c(key))
         if a == acra:
             delta = "—"
+        elif c(key):
+            delta = ci(c(key))
+        else:
+            delta = signed(v["rmse_mean"] - (agg0.get(acra, {}).get("rmse_mean") or float("nan")))
         add(f"| `{a}` | {n(v['rmse_mean'])} ± {n(v['rmse_sd'])} | {n(v['mae_mean'])} | "
             f"{delta} |")
     add("")
+    refs = ["ACRA_REF", "ACRA_PAIR", "GINE_REF", "PATH_COUNT_RIDGE", "PATH_COUNT_KRR",
+            "MORGAN_COUNT_KRR", "COUNT_ONLY_RIDGE"]
+    worse = [r for r in refs
+             if ((c(f"champion_vs_{r}") or {}).get("ci95") or [0, 0])[1] < 0]
+    tie = [r for r in refs
+           if ((c(f"champion_vs_{r}") or {}).get("ci95") or [1, 1])[0] <= 0
+           <= ((c(f"champion_vs_{r}") or {}).get("ci95") or [1, 1])[1]]
     add(f"Paired-molecule bootstrap ({boot.get('reps', 'n/a')} resamples, shared index across "
-        "models and seeds): the champion is worse than every non-PSC reference with a CI "
-        "that excludes 0. The per-molecule view agrees: "
+        "models and seeds): the champion is significantly worse than "
+        + ", ".join(f"`{r}`" for r in worse)
+        + (" and statistically indistinguishable (CI straddles 0) from "
+           + ", ".join(f"`{r}`" for r in tie) if tie else "")
+        + ". The per-molecule view agrees: "
         f"mean per-molecule |error| change vs `{acra}` is "
         f"{signed((boot.get('per_molecule') or {}).get('mean_abs_err_diff'))} "
         f"[{(boot.get('per_molecule') or {}).get('ci95', [float('nan'), float('nan')])[0]:+.3f}, "
