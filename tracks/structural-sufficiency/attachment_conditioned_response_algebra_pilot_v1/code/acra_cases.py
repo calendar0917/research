@@ -152,6 +152,7 @@ def run(cfg: Mapping[str, Any], log=print) -> dict[str, Any]:
                                       "SE(COND) - SE(REL) > 0 means REL better"),
         "relation_degradation": block("ACRA_REL", "ACRA_COND",
                                       "SE(REL) - SE(COND) > 0 means REL worse"),
+        "test_labels_read": False,
     }
     C.write_json(C.analysis_dir() / "cases.json", out)
     for key in ("improvement_over_control", "degradation_vs_control",
