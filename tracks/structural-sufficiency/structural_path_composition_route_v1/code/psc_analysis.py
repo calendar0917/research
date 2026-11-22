@@ -336,6 +336,7 @@ def cmd_select(bundle: D.DataBundle) -> dict[str, Any]:
         "psc_selection": pick,
         "champion": champ, "champion_spec": ARM_SPEC[champ],
         "O_star": o_star, "R_star": r_star, "M_star": m_star,
+        "ACRA_B_star": acra_b,
         "ACRA_selection": {"means": acra_vals, "ACRA_B_star": acra_b,
                            "tie_priority": ["REF", "PAIR"]},
         "DIAG_twin": d_twin,
