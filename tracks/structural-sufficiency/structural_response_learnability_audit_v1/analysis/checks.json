@@ -1,0 +1,1178 @@
+{
+ "protocol_id": "structural-response-learnability-audit-v1",
+ "generated_utc": "2026-11-22T15:09:20Z",
+ "git_commit": "6f84002c0ac524d4c2199df1b166ba71a358fb09",
+ "elapsed_seconds": 79.06564927101135,
+ "peak_rss_mb": 649.14453125,
+ "settings": {
+  "bootstrap_reps": 2000,
+  "bootstrap_seed": 0,
+  "shrink_k": 1.0,
+  "ridge_lambda": 10.0,
+  "fingerprint_bits": 256,
+  "fingerprint_iters": 2
+ },
+ "inputs": {
+  "row_ids_equal": true,
+  "official_train_n": 3360,
+  "train_sub_n": 2856,
+  "dev_n": 504,
+  "train_sub_dev_overlap": 0,
+  "split_subset_of_official_train": true,
+  "labels_masked_outside_official_train": 840,
+  "labels_finite_on_official_train": true
+ },
+ "pair_table": {
+  "n_pairs_analyzed": 4646,
+  "n_pairs_source": 5770,
+  "n_pairs_excluded_non_train": 1124,
+  "scope_counts": {
+   "train_sub": 3561,
+   "cross": 474,
+   "dev_dev": 611
+  },
+  "transform_consistent": true,
+  "n_multi_parse_pairs": 46,
+  "max_parses_per_endpoint": 6,
+  "environment_key_mismatch": 0,
+  "n_word_keys": 1012,
+  "n_context_keys": 1244,
+  "n_duplicate_pair_keys": 0,
+  "n_components_train": 398,
+  "n_components_all": 458
+ },
+ "features": {
+  "n_pairs": 4646,
+  "compact_dim_per_ball": 61,
+  "fingerprint_dim_per_ball": 256,
+  "n_raw_features": 634,
+  "n_used_features": 583,
+  "n_zero_variance_columns": 51,
+  "context_feature_mismatch": 0,
+  "n_context_keys_compact": 568,
+  "n_context_keys_fingerprint": 568,
+  "atom_vocab_sizes": [
+   11,
+   3,
+   4,
+   3,
+   4,
+   1,
+   3,
+   2,
+   2
+  ],
+  "bond_vocab_sizes": [
+   4,
+   3,
+   2
+  ],
+  "features_finite": true
+ },
+ "label_guard": {
+  "official_train_n": 3360,
+  "n_finite_labels_outside_official_train": 0,
+  "test_labels_used": false,
+  "valid_labels_used": false,
+  "valid_used_for_model_selection": false,
+  "label_policy": "non-Train label entries masked to NaN immediately after loading; never used"
+ },
+ "support": {
+  "totals": {
+   "n_pairs_analyzed": 4646,
+   "n_pairs_train_sub": 3561,
+   "n_pairs_cross": 474,
+   "n_pairs_dev_dev": 611,
+   "n_molecules_in_pairs": 1865,
+   "n_molecules_train_sub_in_train_sub_pairs": 1541,
+   "n_molecules_dev": 504,
+   "n_exact_types_all": 3399,
+   "n_exact_types_with_train_support": 2651,
+   "n_exact_types_train_only_singletons": 2273,
+   "n_coarse_types_all": 1331,
+   "n_coarse_types_with_train_support": 1099,
+   "n_coarse_types_train_only_singletons": 651,
+   "n_full_contexts_train": 1050,
+   "n_r1_contexts_train": 157,
+   "n_r2_contexts_train": 373,
+   "n_scaffolds_train_sub": 1354,
+   "n_scaffolds_dev": 231,
+   "n_pair_components_train_graph": 398,
+   "n_pair_components_all_train_pairs": 458
+  },
+  "exact_ctx2": {
+   "n_types": 378,
+   "n_pairs_train": 1288,
+   "n_pairs_all": 1473,
+   "n_molecule_incidences": 2566,
+   "n_scaffold_incidences": 1285,
+   "n_component_incidences": 1209
+  },
+  "exact_ctx3": {
+   "n_types": 153,
+   "n_pairs_train": 838,
+   "n_pairs_all": 963,
+   "n_molecule_incidences": 1666,
+   "n_scaffold_incidences": 767,
+   "n_component_incidences": 771
+  },
+  "exact_ctx5": {
+   "n_types": 50,
+   "n_pairs_train": 505,
+   "n_pairs_all": 590,
+   "n_molecule_incidences": 1001,
+   "n_scaffold_incidences": 424,
+   "n_component_incidences": 458
+  },
+  "coarse_ctx2": {
+   "n_types": 351,
+   "n_pairs_train": 2664,
+   "n_pairs_all": 3281,
+   "n_molecule_incidences": 3867,
+   "n_scaffold_incidences": 2024,
+   "n_component_incidences": 1552
+  },
+  "unique_units": {
+   "exact": {
+    "2": {
+     "n_types": 378,
+     "n_pairs": 1288,
+     "n_type_context_cells": 1288,
+     "n_molecules": 999,
+     "n_scaffolds": 305,
+     "n_components": 275,
+     "pairs_per_type_context_cell": 1.0
+    },
+    "3": {
+     "n_types": 153,
+     "n_pairs": 838,
+     "n_type_context_cells": 838,
+     "n_molecules": 778,
+     "n_scaffolds": 230,
+     "n_components": 217,
+     "pairs_per_type_context_cell": 1.0
+    },
+    "5": {
+     "n_types": 50,
+     "n_pairs": 505,
+     "n_type_context_cells": 505,
+     "n_molecules": 583,
+     "n_scaffolds": 154,
+     "n_components": 174,
+     "pairs_per_type_context_cell": 1.0
+    }
+   },
+   "coarse": {
+    "2": {
+     "n_types": 351,
+     "n_pairs": 2664,
+     "n_type_context_cells": 1672,
+     "n_molecules": 1401,
+     "n_scaffolds": 493,
+     "n_components": 364,
+     "pairs_per_type_context_cell": 1.5933014354066986
+    },
+    "3": {
+     "n_types": 183,
+     "n_pairs": 2221,
+     "n_type_context_cells": 1336,
+     "n_molecules": 1255,
+     "n_scaffolds": 439,
+     "n_components": 327,
+     "pairs_per_type_context_cell": 1.6624251497005988
+    },
+    "5": {
+     "n_types": 82,
+     "n_pairs": 1764,
+     "n_type_context_cells": 1006,
+     "n_molecules": 1110,
+     "n_scaffolds": 392,
+     "n_components": 285,
+     "pairs_per_type_context_cell": 1.753479125248509
+    }
+   }
+  },
+  "strict_independence": {
+   "exact": {
+    "2": {
+     "n_types": 344,
+     "n_pairs_train": 1211
+    },
+    "3": {
+     "n_types": 147,
+     "n_pairs_train": 817
+    },
+    "5": {
+     "n_types": 49,
+     "n_pairs_train": 500
+    }
+   },
+   "coarse": {
+    "2": {
+     "n_types": 335,
+     "n_pairs_train": 2623
+    },
+    "3": {
+     "n_types": 181,
+     "n_pairs_train": 2214
+    },
+    "5": {
+     "n_types": 82,
+     "n_pairs_train": 1764
+    }
+   },
+   "definition": "contexts >= k, pair components >= 2, and scaffolds >= 2 within the type"
+  },
+  "duplicates": {
+   "n_pairs": 4646,
+   "n_unique_unordered_molecule_pairs": 3219,
+   "molecule_pair_multiplicity_histogram": {
+    "1": 2135,
+    "2": 806,
+    "3": 221,
+    "4": 49,
+    "5": 8
+   },
+   "n_molecule_pairs_with_both_molecule_id_orientations": 236,
+   "n_exact_reverse_pair_rows": 0,
+   "n_molecules_in_pairs": 1865,
+   "pairs_per_molecule_incidence": {
+    "mean": 4.98230563002681,
+    "median": 3.0,
+    "max": 31,
+    "histogram": {
+     "1": 437,
+     "2": 309,
+     "3": 210,
+     "4": 163,
+     "5": 128,
+     "6": 100,
+     "7": 104,
+     "8": 92,
+     "9": 59,
+     "10": 55,
+     "11": 45,
+     "12": 27,
+     "13": 23,
+     "14": 21,
+     "15": 16,
+     "16": 12,
+     "17": 8,
+     "18": 13,
+     "19": 13,
+     "20": 5,
+     "21": 4,
+     "22": 3,
+     "23": 3,
+     "24": 9,
+     "25": 1,
+     "29": 3,
+     "31": 2
+    }
+   },
+   "max_pairs_per_exact_type_full_context": 1,
+   "n_exact_type_full_context_cells": 4646,
+   "n_unique_full_pair_rows": 4646,
+   "n_repeated_full_pair_rows": 0,
+   "n_parallel_edges_same_molecule_pair": 1427,
+   "full_pair_multiplicity_histogram": {
+    "1": 4646
+   }
+  },
+  "cross_split": {
+   "n_components_train_edges": 398,
+   "n_train_sub_molecules_in_any_pair": 1567,
+   "n_train_sub_molecules_in_train_edges": 1541,
+   "n_train_sub_molecules_only_in_cross_edges": 26,
+   "n_components_all_graph_on_train_nodes": 415,
+   "n_components_all_train_pairs": 458,
+   "n_components_with_train_and_dev": 60,
+   "n_cross_pairs": 474,
+   "n_dev_dev_pairs": 611,
+   "n_dev_dev_pairs_in_cross_components": 326,
+   "n_train_pairs_in_cross_components": 874,
+   "frac_train_pairs_in_cross_components": 0.2454366750912665,
+   "n_dev_molecules": 504,
+   "n_dev_molecules_in_cross_components": 160,
+   "n_dev_molecules_in_dev_only_or_other": 344,
+   "n_cross_components": 60,
+   "top_cross_components": [
+    {
+     "component": 3984,
+     "n_cross_pairs": 50,
+     "n_dev_dev_pairs": 7,
+     "n_train_pairs": 107,
+     "n_dev_molecules": 9
+    },
+    {
+     "component": 2090,
+     "n_cross_pairs": 49,
+     "n_dev_dev_pairs": 54,
+     "n_train_pairs": 9,
+     "n_dev_molecules": 9
+    },
+    {
+     "component": 3505,
+     "n_cross_pairs": 32,
+     "n_dev_dev_pairs": 0,
+     "n_train_pairs": 163,
+     "n_dev_molecules": 2
+    },
+    {
+     "component": 3851,
+     "n_cross_pairs": 31,
+     "n_dev_dev_pairs": 1,
+     "n_train_pairs": 57,
+     "n_dev_molecules": 3
+    },
+    {
+     "component": 1937,
+     "n_cross_pairs": 19,
+     "n_dev_dev_pairs": 7,
+     "n_train_pairs": 100,
+     "n_dev_molecules": 6
+    },
+    {
+     "component": 3809,
+     "n_cross_pairs": 16,
+     "n_dev_dev_pairs": 43,
+     "n_train_pairs": 40,
+     "n_dev_molecules": 8
+    },
+    {
+     "component": 4125,
+     "n_cross_pairs": 16,
+     "n_dev_dev_pairs": 28,
+     "n_train_pairs": 1,
+     "n_dev_molecules": 8
+    },
+    {
+     "component": 3543,
+     "n_cross_pairs": 14,
+     "n_dev_dev_pairs": 45,
+     "n_train_pairs": 3,
+     "n_dev_molecules": 8
+    },
+    {
+     "component": 2452,
+     "n_cross_pairs": 14,
+     "n_dev_dev_pairs": 4,
+     "n_train_pairs": 3,
+     "n_dev_molecules": 2
+    },
+    {
+     "component": 3238,
+     "n_cross_pairs": 13,
+     "n_dev_dev_pairs": 19,
+     "n_train_pairs": 0,
+     "n_dev_molecules": 6
+    }
+   ]
+  },
+  "evaluation_coverage": {
+   "cross": {
+    "n_pairs": 474,
+    "n_clusters": 129,
+    "cluster_unit": "Dev molecule",
+    "type_seen": 69,
+    "type_seen_frac": 0.14556962025316456,
+    "type_seen_ctx2": 31,
+    "type_seen_ctx2_frac": 0.06540084388185655,
+    "ctx_full_seen": 378,
+    "ctx_full_seen_frac": 0.7974683544303798,
+    "ctx_r1_seen": 471,
+    "ctx_r1_seen_frac": 0.9936708860759493,
+    "ctx_r2_seen": 463,
+    "ctx_r2_seen_frac": 0.9767932489451476,
+    "type_and_ctx_full_seen": 36,
+    "type_seen_ctx_full_unseen": 33,
+    "type_unseen_ctx_full_seen": 342,
+    "both_unseen": 63
+   },
+   "dev_dev": {
+    "n_pairs": 611,
+    "n_clusters": 72,
+    "cluster_unit": "full Train pair component",
+    "type_seen": 243,
+    "type_seen_frac": 0.397708674304419,
+    "type_seen_ctx2": 154,
+    "type_seen_ctx2_frac": 0.2520458265139116,
+    "ctx_full_seen": 107,
+    "ctx_full_seen_frac": 0.1751227495908347,
+    "ctx_r1_seen": 592,
+    "ctx_r1_seen_frac": 0.9689034369885434,
+    "ctx_r2_seen": 500,
+    "ctx_r2_seen_frac": 0.8183306055646481,
+    "type_and_ctx_full_seen": 18,
+    "type_seen_ctx_full_unseen": 225,
+    "type_unseen_ctx_full_seen": 89,
+    "both_unseen": 279
+   }
+  }
+ },
+ "response": {
+  "n_exact_types": 378,
+  "n_coarse_types": 351,
+  "n_exact_pairs": 1288,
+  "n_coarse_pairs": 2664,
+  "variance_decomposition": {
+   "coarse_type": {
+    "r2": 0.5649656378272688,
+    "adj_r2": 0.48302010700248843,
+    "df": 204,
+    "n": 1288,
+    "delta_r2_over_exact_type": -0.2209478826695035,
+    "delta_adj_r2_over_exact_type": -0.21420044341437539
+   },
+   "exact_type": {
+    "r2": 0.7859135204967723,
+    "adj_r2": 0.6972205504168638,
+    "df": 377,
+    "n": 1288,
+    "delta_r2_over_exact_type": 0.0,
+    "delta_adj_r2_over_exact_type": 0.0
+   },
+   "r1_context": {
+    "r2": 0.13777355013504,
+    "adj_r2": 0.05558685874365654,
+    "df": 112,
+    "n": 1288,
+    "delta_r2_over_exact_type": -0.6481399703617323,
+    "delta_adj_r2_over_exact_type": -0.6416336916732073
+   },
+   "r2_context": {
+    "r2": 0.275165327489882,
+    "adj_r2": 0.09868384200915759,
+    "df": 252,
+    "n": 1288,
+    "delta_r2_over_exact_type": -0.5107481930068903,
+    "delta_adj_r2_over_exact_type": -0.5985367084077062
+   },
+   "exact_type+r1": {
+    "r2": 0.8297916353893594,
+    "adj_r2": 0.7265191445020045,
+    "df": 486,
+    "n": 1288,
+    "delta_r2_over_exact_type": 0.04387811489258708,
+    "delta_adj_r2_over_exact_type": 0.029298594085140683
+   },
+   "exact_type+r2": {
+    "r2": 0.8742789880393831,
+    "adj_r2": 0.7588629770591446,
+    "df": 616,
+    "n": 1288,
+    "delta_r2_over_exact_type": 0.08836546754261076,
+    "delta_adj_r2_over_exact_type": 0.06164242664228081
+   },
+   "exact_type+r1+r2": {
+    "r2": 0.8742789880393831,
+    "adj_r2": 0.7588629770591446,
+    "df": 616,
+    "n": 1288,
+    "delta_r2_over_exact_type": 0.08836546754261076,
+    "delta_adj_r2_over_exact_type": 0.06164242664228081
+   },
+   "exact_type+full_context": {
+    "r2": 0.937572866984614,
+    "adj_r2": 0.7697887673615993,
+    "df": 938,
+    "n": 1288,
+    "delta_r2_over_exact_type": 0.15165934648784163,
+    "delta_adj_r2_over_exact_type": 0.07256821694473548
+   }
+  },
+  "within_type_context_explanation": {
+   "exact": {
+    "n_pairs": 1288,
+    "n_types": 378,
+    "within_type_ss": 150.5667372934491,
+    "within_type_sd": 0.341905894590578,
+    "r1_within_type_explained_fraction": 0.7169396275646843,
+    "r1_within_type_residual_fraction": 0.2830603724353157,
+    "r1_n_groups": 878,
+    "r2_within_type_explained_fraction": 0.8646615991132425,
+    "r2_within_type_residual_fraction": 0.13533840088675753,
+    "r2_n_groups": 1038,
+    "note": "Pooled within-type ANOVA. The residual after r2 is not identified as measurement noise; it can contain higher-order context or type-by-context interaction."
+   },
+   "coarse": {
+    "n_pairs": 2664,
+    "n_types": 351,
+    "within_type_ss": 1154.1272365650625,
+    "within_type_sd": 0.6582028142271613,
+    "r1_within_type_explained_fraction": 0.3993538621861157,
+    "r1_within_type_residual_fraction": 0.6006461378138843,
+    "r1_n_groups": 1029,
+    "r2_within_type_explained_fraction": 0.5190819345186368,
+    "r2_within_type_residual_fraction": 0.4809180654813632,
+    "r2_n_groups": 1287,
+    "note": "Pooled within-type ANOVA. The residual after r2 is not identified as measurement noise; it can contain higher-order context or type-by-context interaction."
+   }
+  },
+  "noise_floor": {
+   "estimated": false,
+   "reason": "No replicate structures and no repeated (exact type, full context) cell; within-type across-context variation mixes effect modification and measurement noise.",
+   "n_duplicate_canonical_structures_train": 0,
+   "n_rows_in_duplicate_structures": 0,
+   "n_duplicate_groups_with_distinct_labels": 0,
+   "within_structure_sd": {
+    "n": 0,
+    "mean": null,
+    "median": null,
+    "max": null
+   },
+   "max_pairs_per_exact_type_full_context": 1,
+   "n_exact_type_full_context_cells": 4646
+  },
+  "naive_split_half_exact": {
+   "n_types": 74,
+   "observed_weighted_r": 0.8522401007690859,
+   "null_mean": 0.8887232572398633,
+   "null_sd": 0.02927354560275966,
+   "p_value_observed_ge_null": 0.8582834331337326,
+   "note": "This statistic is dominated by between-type differences; the permutation null keeps type means and destroys within-type context structure. It is reported only as a negative methodological check, not as evidence of stability."
+  }
+ },
+ "transfer": {
+  "scopes": {
+   "cross": {
+    "n_pairs": 474,
+    "n_clusters": 129,
+    "cluster_unit": "Dev molecule",
+    "mae": {
+     "zero": 0.7751687720245073,
+     "global": 0.7720071658854674,
+     "A_full": 0.7402291641955673,
+     "A_lomo": 0.7402291641955673,
+     "B": 0.8295917413201929
+    }
+   },
+   "dev_dev": {
+    "n_pairs": 611,
+    "n_clusters": 72,
+    "cluster_unit": "full Train pair component",
+    "mae": {
+     "zero": 0.7596726589173127,
+     "global": 0.762476598534751,
+     "A_full": 0.6801526764640544,
+     "A_lomo": 0.6801526764640544,
+     "B": 0.8609504052377112
+    }
+   },
+   "combined": {
+    "n_pairs": 1085,
+    "n_clusters": 103,
+    "cluster_unit": "full Train pair component",
+    "mae": {
+     "zero": 0.7664423894360318,
+     "global": 0.7666401827967229,
+     "A_full": 0.7063980729476831,
+     "A_lomo": 0.7063980729476831,
+     "B": 0.8472508598949429
+    }
+   }
+  },
+  "models": {
+   "A_transformation_only": {
+    "definition": "seen exact type: Train-sub empirical mean delta shrunk to the Train-sub global mean; unseen type: global mean",
+    "shrink_k": 1.0,
+    "global_mean": -0.03234765341474547,
+    "n_train_pairs": 3561,
+    "n_train_types": 2651,
+    "support_policy": "lomo: exclude Train-sub pairs sharing either molecule with the evaluation pair; full reported as a secondary anchor",
+    "n_lomo_excluded_cross": 0,
+    "n_lomo_excluded_dev_dev": 0,
+    "lomo_note": "Train-sub pairs contain only Train-sub molecules and Dev pairs contain at least one Dev molecule, so no Train-sub pair can share a molecule with an evaluation pair; A_lomo and A_full coincide on both eval scopes."
+   },
+   "B_context_conditioned_linear": {
+    "definition": "A + ridge context correction using fixed radius-1/radius-2 environment descriptors",
+    "lambda": 10.0,
+    "feature_blocks": "compact composition/scalars + rooted WL fingerprint (2 iterations, 256 bits per ball), radius-1 and radius-2",
+    "n_raw_features": 634,
+    "n_used_features": 583,
+    "n_train_pairs": 3561,
+    "n_components": 398,
+    "component_weight_range": [
+     0.05489101951475168,
+     8.947236180904524
+    ],
+    "correction_centered": true,
+    "in_sample": {
+     "A_full_self_included_mae": 0.32993737255972944,
+     "A_lomo_train_mae": 0.5918762689010443,
+     "B_train_mae": 0.5635474462441938,
+     "B_train_rmse": 0.8105625826329901,
+     "B_residual_weighted_r2": 0.3536887781338093,
+     "beta_norm": 1.3466384535992741
+    }
+   }
+  },
+  "evaluation_coverage": {
+   "n_dev_molecules": 504,
+   "n_dev_molecules_in_cross_pairs": 129,
+   "n_dev_molecules_in_dev_dev_pairs": 259,
+   "n_dev_molecules_in_any_eval_pair": 298,
+   "note": "transfer conclusions apply to the matched-pair evaluation subset, not all 504 Dev molecules"
+  },
+  "paired_B_minus_A": {
+   "cross": {
+    "overall": {
+     "n_pairs": 474,
+     "n_clusters": 129,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.08936257712462559,
+     "delta_mae_ci": [
+      0.04817390969774328,
+      0.13697714843442013
+     ],
+     "delta_rmse_point": 0.09818232813126704,
+     "delta_rmse_ci": [
+      0.04620083661530225,
+      0.1598379632560247
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type": {
+     "n_pairs": 69,
+     "n_clusters": 38,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.211100099116325,
+     "delta_mae_ci": [
+      0.11527418495962725,
+      0.3233457765079451
+     ],
+     "delta_rmse_point": 0.24655166218518998,
+     "delta_rmse_ci": [
+      0.14672887364780102,
+      0.36359850950304323
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "unseen_type": {
+     "n_pairs": 405,
+     "n_clusters": 117,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.0686221104149286,
+     "delta_mae_ci": [
+      0.025667700528769873,
+      0.1166336563199022
+     ],
+     "delta_rmse_point": 0.08244592035320086,
+     "delta_rmse_ci": [
+      0.02912125233037723,
+      0.14734774969544984
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type_ctx2": {
+     "n_pairs": 31,
+     "n_clusters": 21,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.15988207226083795,
+     "delta_mae_ci": [
+      -0.0047383528909092035,
+      0.3437142666908732
+     ],
+     "delta_rmse_point": 0.2540886742770767,
+     "delta_rmse_ci": [
+      0.07150369451505424,
+      0.47527916444836654
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_ctx_full": {
+     "n_pairs": 378,
+     "n_clusters": 81,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.044810302102404664,
+     "delta_mae_ci": [
+      0.0015927941843714628,
+      0.08959484224955575
+     ],
+     "delta_rmse_point": 0.05370185080777212,
+     "delta_rmse_ci": [
+      -0.0013851643403759632,
+      0.11633489695175489
+     ],
+     "definition": "B - A; negative means B is better"
+    }
+   },
+   "dev_dev": {
+    "overall": {
+     "n_pairs": 611,
+     "n_clusters": 72,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.18079772877365674,
+     "delta_mae_ci": [
+      0.11660637082307772,
+      0.26266167865900636
+     ],
+     "delta_rmse_point": 0.2026993408536264,
+     "delta_rmse_ci": [
+      0.11831247639807985,
+      0.3241742510081599
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type": {
+     "n_pairs": 243,
+     "n_clusters": 54,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.22562285307081442,
+     "delta_mae_ci": [
+      0.1330000147936199,
+      0.3395859411429857
+     ],
+     "delta_rmse_point": 0.23543764937528278,
+     "delta_rmse_ci": [
+      0.1217976144164676,
+      0.4135997222547645
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "unseen_type": {
+     "n_pairs": 368,
+     "n_clusters": 45,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.1511985298491747,
+     "delta_mae_ci": [
+      0.0873954817551043,
+      0.23675943119073728
+     ],
+     "delta_rmse_point": 0.18638860233703003,
+     "delta_rmse_ci": [
+      0.097914335532452,
+      0.3146736168191145
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type_ctx2": {
+     "n_pairs": 154,
+     "n_clusters": 48,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.2566398378665188,
+     "delta_mae_ci": [
+      0.14911959689496793,
+      0.38420976548820684
+     ],
+     "delta_rmse_point": 0.28821240786633995,
+     "delta_rmse_ci": [
+      0.15981278656455936,
+      0.4673585102542791
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_ctx_full": {
+     "n_pairs": 107,
+     "n_clusters": 17,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.11041182266855393,
+     "delta_mae_ci": [
+      0.039341775720608006,
+      0.30535062879979896
+     ],
+     "delta_rmse_point": 0.19881551696858857,
+     "delta_rmse_ci": [
+      0.06138283955164216,
+      0.46749473921246254
+     ],
+     "definition": "B - A; negative means B is better"
+    }
+   },
+   "combined": {
+    "overall": {
+     "n_pairs": 1085,
+     "n_clusters": 103,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.14085278694725978,
+     "delta_mae_ci": [
+      0.09483697454911533,
+      0.19298758956739845
+     ],
+     "delta_rmse_point": 0.15844701193065314,
+     "delta_rmse_ci": [
+      0.09763643326961698,
+      0.2287819594085885
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type": {
+     "n_pairs": 312,
+     "n_clusters": 68,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.2224110901770333,
+     "delta_mae_ci": [
+      0.14611640715275992,
+      0.32357258899359814
+     ],
+     "delta_rmse_point": 0.2357446405799627,
+     "delta_rmse_ci": [
+      0.14167965816142067,
+      0.38823328109721533
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "unseen_type": {
+     "n_pairs": 773,
+     "n_clusters": 76,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.10793404101234472,
+     "delta_mae_ci": [
+      0.06225588908346766,
+      0.15902027498695154
+     ],
+     "delta_rmse_point": 0.13400777591384228,
+     "delta_rmse_ci": [
+      0.07020832333929397,
+      0.2101221731204805
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type_ctx2": {
+     "n_pairs": 185,
+     "n_clusters": 58,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.24042637444070203,
+     "delta_mae_ci": [
+      0.14512809114985895,
+      0.3593599402325124
+     ],
+     "delta_rmse_point": 0.2826572937250694,
+     "delta_rmse_ci": [
+      0.17704600070619936,
+      0.4331125425487767
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_ctx_full": {
+     "n_pairs": 485,
+     "n_clusters": 40,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.059283214887101754,
+     "delta_mae_ci": [
+      0.01232694475327506,
+      0.11910164440081634
+     ],
+     "delta_rmse_point": 0.07779250620357248,
+     "delta_rmse_ci": [
+      0.004179832027669742,
+      0.17067360602596301
+     ],
+     "definition": "B - A; negative means B is better"
+    }
+   }
+  },
+  "paired_A_minus_global": {
+   "cross": {
+    "overall": {
+     "n_pairs": 474,
+     "n_clusters": 129,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.03177800168990008,
+     "delta_mae_ci": [
+      -0.048567623793761866,
+      -0.015726955063468145
+     ],
+     "delta_rmse_point": -0.029656791810143357,
+     "delta_rmse_ci": [
+      -0.04883018291168754,
+      -0.011564769661974207
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type": {
+     "n_pairs": 69,
+     "n_clusters": 38,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.21830105508713937,
+     "delta_mae_ci": [
+      -0.3230219503016008,
+      -0.12153038886511248
+     ],
+     "delta_rmse_point": -0.2798763938530773,
+     "delta_rmse_ci": [
+      -0.432813539983729,
+      -0.1178293261838531
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "unseen_type": {
+     "n_pairs": 405,
+     "n_clusters": 117,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.0,
+     "delta_mae_ci": [
+      0.0,
+      0.0
+     ],
+     "delta_rmse_point": 0.0,
+     "delta_rmse_ci": [
+      0.0,
+      0.0
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type_ctx2": {
+     "n_pairs": 31,
+     "n_clusters": 21,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.2124232436571316,
+     "delta_mae_ci": [
+      -0.3831309776876112,
+      -0.05122263161363627
+     ],
+     "delta_rmse_point": -0.24700603922559528,
+     "delta_rmse_ci": [
+      -0.5069986883906402,
+      0.021535148589330786
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_ctx_full": {
+     "n_pairs": 378,
+     "n_clusters": 81,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.019772820592696805,
+     "delta_mae_ci": [
+      -0.035352124804338636,
+      -0.004891429551613504
+     ],
+     "delta_rmse_point": -0.023962789052844546,
+     "delta_rmse_ci": [
+      -0.04162116569007322,
+      -0.008085604170805812
+     ],
+     "definition": "B - A; negative means B is better"
+    }
+   },
+   "dev_dev": {
+    "overall": {
+     "n_pairs": 611,
+     "n_clusters": 72,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.08232392207069661,
+     "delta_mae_ci": [
+      -0.1108952888991764,
+      -0.05461852164480956
+     ],
+     "delta_rmse_point": -0.07894389757702669,
+     "delta_rmse_ci": [
+      -0.106283680346091,
+      -0.04971367170164579
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type": {
+     "n_pairs": 243,
+     "n_clusters": 54,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.20699554067981718,
+     "delta_mae_ci": [
+      -0.26463678383456307,
+      -0.14748787653506296
+     ],
+     "delta_rmse_point": -0.2151553463746252,
+     "delta_rmse_ci": [
+      -0.2870468245798575,
+      -0.14296799570071123
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "unseen_type": {
+     "n_pairs": 368,
+     "n_clusters": 45,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.0,
+     "delta_mae_ci": [
+      0.0,
+      0.0
+     ],
+     "delta_rmse_point": 0.0,
+     "delta_rmse_ci": [
+      0.0,
+      0.0
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type_ctx2": {
+     "n_pairs": 154,
+     "n_clusters": 48,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.2144285994787447,
+     "delta_mae_ci": [
+      -0.2985750535009731,
+      -0.14197338917157337
+     ],
+     "delta_rmse_point": -0.20520739728863546,
+     "delta_rmse_ci": [
+      -0.2768417602636686,
+      -0.13013630207983748
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_ctx_full": {
+     "n_pairs": 107,
+     "n_clusters": 17,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.02418345560137447,
+     "delta_mae_ci": [
+      -0.058336054899843275,
+      0.013807649373559357
+     ],
+     "delta_rmse_point": -0.0254824706437502,
+     "delta_rmse_ci": [
+      -0.06152237622917622,
+      0.025732710175486964
+     ],
+     "definition": "B - A; negative means B is better"
+    }
+   },
+   "combined": {
+    "overall": {
+     "n_pairs": 1085,
+     "n_clusters": 103,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.06024210984903977,
+     "delta_mae_ci": [
+      -0.07979152031014351,
+      -0.04291107674422533
+     ],
+     "delta_rmse_point": -0.05782180857642971,
+     "delta_rmse_ci": [
+      -0.07971559722435113,
+      -0.036880916482236806
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type": {
+     "n_pairs": 312,
+     "n_clusters": 68,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.20949579867374424,
+     "delta_mae_ci": [
+      -0.26104912506195777,
+      -0.1632282118000998
+     ],
+     "delta_rmse_point": -0.2253579330140364,
+     "delta_rmse_ci": [
+      -0.2992839719014739,
+      -0.16147927291336522
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "unseen_type": {
+     "n_pairs": 773,
+     "n_clusters": 76,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": 0.0,
+     "delta_mae_ci": [
+      0.0,
+      0.0
+     ],
+     "delta_rmse_point": 0.0,
+     "delta_rmse_ci": [
+      0.0,
+      0.0
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_type_ctx2": {
+     "n_pairs": 185,
+     "n_clusters": 58,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.21409256688160938,
+     "delta_mae_ci": [
+      -0.2848855571257322,
+      -0.15023482119435005
+     ],
+     "delta_rmse_point": -0.2108528119047609,
+     "delta_rmse_ci": [
+      -0.28885068570443706,
+      -0.13733313090091925
+     ],
+     "definition": "B - A; negative means B is better"
+    },
+    "seen_ctx_full": {
+     "n_pairs": 485,
+     "n_clusters": 40,
+     "reps": 2000,
+     "seed": 0,
+     "delta_mae_point": -0.0207458885224463,
+     "delta_mae_ci": [
+      -0.037871344069178,
+      -0.005427500750745583
+     ],
+     "delta_rmse_point": -0.023903015951857842,
+     "delta_rmse_ci": [
+      -0.043602799334390006,
+      -0.005642909950524403
+     ],
+     "definition": "B - A; negative means B is better"
+    }
+   }
+  },
+  "bootstrap": {
+   "reps": 2000,
+   "seed": 0,
+   "ci": "percentile 95%",
+   "cross_cluster": "Dev molecule (129 clusters, 474 pairs)",
+   "dev_dev_cluster": "full Train pair component (72 clusters, 611 pairs)",
+   "combined_cluster": "full Train pair component"
+  }
+ },
+ "consistency": {
+  "exact_response_pairs": 1288,
+  "exact_ctx2_pairs": 1288,
+  "coarse_response_pairs": 2664,
+  "coarse_ctx2_pairs": 2664,
+  "cross_seen_ctx2_transfer": 31,
+  "dev_dev_seen_ctx2_transfer": 154,
+  "all_assertions_passed": true
+ },
+ "outputs": {
+  "support": {
+   "path": "tracks/structural-sufficiency/structural_response_learnability_audit_v1/analysis/support.json",
+   "sha256": "b154ac0ba392c47af08ed0d0456ce2bcc82cafa75c46e53e95665509d874dd6c",
+   "bytes": 2149724
+  },
+  "response": {
+   "path": "tracks/structural-sufficiency/structural_response_learnability_audit_v1/analysis/response_variation.json",
+   "sha256": "738e755799bf478be93186249b05cbdc1910f8c88f7f83408d37bb7bc6e295e8",
+   "bytes": 1178117
+  },
+  "transfer": {
+   "path": "tracks/structural-sufficiency/structural_response_learnability_audit_v1/analysis/transfer_check.json",
+   "sha256": "b31ee96792315862d3012b2571092cbe0c1eef262a4bfccb5d0052ec77a31cc0",
+   "bytes": 203928
+  }
+ }
+}
