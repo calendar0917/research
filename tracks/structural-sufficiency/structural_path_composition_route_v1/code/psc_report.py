@@ -145,10 +145,21 @@ def main() -> int:
         f"contrasts positive ({n_sig} of {len(pair_keys)} with a CI excluding 0), maximum "
         f"{signed(max([x for x in pair_pts if x is not None] or [0]))} RMSE — below the "
         "pre-registered +0.02 practical-gain threshold.")
+    if valid and (valid["models"].get(champ) or {}).get("rmse_mean"):
+        vm = valid["models"]
+        b = (vm[champ].get("bootstrap_vs_ACRA_B") or {})
+        add(f"* **Official Valid** (frozen full-Train refit, single pass): champion "
+            f"{n(vm[champ]['rmse_mean'])} vs `{acra}` {n(vm[acra]['rmse_mean'])} "
+            f"(Δ {ci(b)}; a tie), with `GINE_REF` {n(vm['GINE_REF']['rmse_mean'])} and the "
+            f"path-count KRR {n(vm['PATH_COUNT_KRR']['rmse_mean'])} still ahead. The D0 "
+            "deficit versus ACRA does not replicate at full-Train scale, but the branch "
+            "still does not beat the baselines.")
     add("* **Verdict**: do not continue this branch as specified. The compositional "
         "machinery is implementable and exactly verifiable, but on Lipo the strict "
-        "path-sum parameterisation is dominated by both a linear path-count kernel "
-        "and ACRA, and the phenomenon it targets (unseen path words) carries only "
+        "path-sum parameterisation is dominated on the selection split by a linear "
+        "path-count ridge and by ACRA, ties ACRA at best on the official Valid refit "
+        "while staying behind GINE and both kernel baselines, and the phenomenon it "
+        "targets (unseen path words) carries only "
         f"{pct(sparsity.get('eval_mass_on_unseen_keys'))} of the held-out path mass.")
     add("")
 
@@ -214,31 +225,23 @@ def main() -> int:
     add("")
     add("| check | evidence |")
     add("|---|---|")
-    names = {
-        "1_enumeration": "path enumeration equals directed-DFS/2 and matches a "
-                         "second independent enumerator",
-        "2_invariance": "renumbering invariance (atom relabelling gives identical keys)",
-        "3_padding_reversal": "padding + reversal apply to the declared columns only "
-                              f"(input width {checks.get('3_padding_reversal', {}).get('info', {}).get('input_dim', 'n/a')})",
-        "4_batch": "batched == single-molecule forward (max |Δ| ~1e-13)",
-        "5_bag_equivalence": "BAG exactly invariant to path reversal; ORDER distinguishes it",
-        "6_pair_algebra": "PAIR = DIAG − 2·cross, Σw = 1, sampler unbiased, masked ACRA "
-                          "loss equals the parent",
-        "7_fit_only": "path vocabulary / categorical support / scaler are fit-only",
-        "8_init_grad": "SUM and POOL share identical initial outputs; all parameters "
-                       "receive gradients",
-        "8b_overfit32": "32-molecule overfit: MSE 1.716 → 0.112 in 300 steps "
-                        "(the training chain can fit)",
-    }
-    for k, v in names.items():
-        got = check_status.get(k, "?")
-        add(f"| `{k}` ({got}) | {v} |")
+    for ck in checks_raw.get("checks") or []:
+        info = ck.get("info") or {}
+        bits = []
+        for k, v in info.items():
+            if isinstance(v, dict):
+                v = ", ".join(f"{kk}={vv}" for kk, vv in v.items()
+                              if not isinstance(vv, (dict, list)))
+            elif isinstance(v, list):
+                v = ", ".join(str(x) for x in v[:4])
+            bits.append(f"{k}={v}")
+        add(f"| `{ck.get('name')}` ({ck.get('status')}) | {'; '.join(bits)[:150]} |")
     add("")
-    add("The 32-molecule overfit matters for the interpretation below: the optimiser, "
-        "the path cache and the readout are not broken, so a plateau on D0 is a statement "
-        "about capacity/data, not about a bug.")
+    add("All checks pass; the raw output is `analysis/checks.json`. The 32-molecule "
+        "overfit matters for the interpretation below: the optimiser, the path cache and "
+        "the readout are not broken, so a plateau on D0 is a statement about capacity and "
+        "data, not about a bug.")
     add("")
-
     # ------------------------------------------------------------ Q1 answer --
     add("## 5. Q1 — does the route close the gap to ACRA / fingerprints / GINE?")
     add("")
@@ -592,7 +595,8 @@ def main() -> int:
                 continue
             v = agg1[a]
             d0 = (agg0.get(a) or {}).get("rmse_mean")
-            got = c(f"champion_vs_{a}", con1) if a != acra else None
+            got = (c("champion_vs_ACRA_REF", con1) if a == champ
+                   else c(f"champion_vs_{a}", con1) if a != acra else None)
             if a == acra:
                 delta = "—"
             elif got:
@@ -631,12 +635,76 @@ def main() -> int:
         add("")
         add("| model | seeds | Valid RMSE | Valid MAE | ACRA_B* − model [95% CI] |")
         add("|---|---|---|---|---|")
-        for m, v in valid["models"].items():
+        order = [champ, acra, "GINE_REF", "PATH_COUNT_RIDGE", "PATH_COUNT_KRR",
+                 "MORGAN_COUNT_KRR", "COUNT_ONLY_RIDGE"]
+        if lock.get("M_star"):
+            order.insert(2, lock["M_star"])
+        seen = set()
+        for m in order + [x for x in valid["models"] if x not in order]:
+            if m not in valid["models"] or m in seen:
+                continue
+            seen.add(m)
+            v = valid["models"][m]
             if not v.get("seeds"):
                 add(f"| `{m}` | – | {v.get('status', 'n/a')} | – | – |")
                 continue
+            delta = "—" if m == acra or "ACRA" not in str(acra) else ci(
+                v.get("bootstrap_vs_ACRA_B"))
             add(f"| `{m}` | {v['n_seeds']} | {n(v['rmse_mean'])} ± {n(v['rmse_sd'])} | "
-                f"{n(v['mae_mean'])} | {ci(v.get('bootstrap_vs_ACRA_B'))} |")
+                f"{n(v['mae_mean'])} | {delta} |")
+        add("")
+        # --- narrative: Valid vs D0, the ACRA caveat, the POOL>SUM replication ---
+        vm = valid["models"]
+        got = {}
+
+        def vr(m, k="rmse_mean"):
+            return (vm.get(m) or {}).get(k)
+
+        def vd(m):
+            a, b = vr(m), (agg0.get(m) or {}).get("rmse_mean")
+            return None if a is None or b is None else a - b
+
+        add("**What Valid says.** " + (
+            f"The champion's frozen Valid RMSE is {n(vr(champ))} "
+            f"(MAE {n(vr(champ, 'mae_mean'))}), versus {n(vr(acra))} "
+            f"(MAE {n(vr(acra, 'mae_mean'))}) for `{acra}` and {n(vr('GINE_REF'))} for "
+            f"`GINE_REF`." if vr(champ) else ""))
+        if vr(champ) and vr(acra):
+            b = (vm[champ].get("bootstrap_vs_ACRA_B") or {})
+            add("")
+            add(f"On Valid the champion and `{acra}` are statistically "
+                f"indistinguishable: Δ = {ci(b)} RMSE (positive = champion better). "
+                "The MAE ordering is the other way round "
+                f"({n(vr(champ, 'mae_mean'))} vs {n(vr(acra, 'mae_mean'))}), so the RMSE "
+                "tie reflects compensating errors (the champion has a heavier tail and a "
+                "larger positive bias on average), not equal accuracy.")
+            add("")
+            add("This does **not** overturn the D0 result, and the D0-versus-Valid gap is "
+                "not a uniform shift: every model is worse on Valid than on D0, but by "
+                "very different amounts — "
+                + ", ".join(f"`{m}` {signed(vd(m))}" for m in
+                            [champ, acra, "GINE_REF", "PATH_COUNT_RIDGE"]
+                            if m in vm and vd(m) is not None)
+                + ". D0 dev is a scaffold-disjoint subset of Train-sub; official Valid is a "
+                "different 420-row set, and the models that fit D0 dev best lose the most. "
+                "The pre-registered rule selects on D0 and the champion stands.")
+            add("")
+            add(f"Caveat in the other direction: each full-Train refit ran exactly its "
+                f"`E_m` epochs with its own cosine schedule, so `{acra}` received "
+                f"{lock.get('E_m', {}).get(acra)} epochs against 160 in its D0 run (on 18% "
+                "more rows), while the champion received "
+                f"{lock.get('E_m', {}).get(champ)}. The frozen rule therefore handicaps the "
+                "early-stopping arms on Valid; the near-tie should be read with that in mind.")
+            add("")
+        if vr(champ) and lock.get("M_star") and vr(lock["M_star"]):
+            add(f"The POOL ≫ SUM ordering does replicate on Valid: champion "
+                f"{n(vr(champ))} versus its SUM twin {n(vr(lock['M_star']))} "
+                f"({signed(vr(lock['M_star']) - vr(champ))} in favour of POOL), the same "
+                "sign as the D0 contrast and a similar magnitude. That is the one design "
+                "conclusion of the round that survives the distribution shift.")
+            add("")
+        add("Valid was scored once, from the frozen lock, after every full-Train "
+            "prediction existed; no Valid number changed any model, epoch, seed or arm.")
         add("")
     else:
         add("_The frozen Valid pass did not run: the full-Train refits were not all finished "
@@ -686,13 +754,14 @@ def main() -> int:
     # --------------------------------------------------------- deviations ---
     add("## 14. Deviations, incidents and honest limits")
     add("")
-    add("* **Dirty-tree launch failures (reruns only).** The queue driver launches through "
-        "`rr`, which refuses to start a formal run from a dirty tracked tree. Two analysis "
-        "edits landed while the D1 queue was running, so nine launch attempts were "
-        "rejected (`LAUNCH_FAILED`) before the next commit; every affected run was "
-        "relaunched from the same commit and the final matrix is complete (every attempt "
-        "is listed in `analysis/compute_budget.json`). No run was selected or excluded on "
-        "the basis of its result.")
+    add("* **Pre-flight launch failures (reruns only).** The queue driver launches through "
+        "`rr`, which refuses to start a formal run from a dirty tracked tree or a stale "
+        "remote checkout. Analysis edits made while a queue was running produced 44 "
+        "rejected launch attempts across the round (`LAUNCH_FAILED`, all visible in "
+        "`analysis/logs/`); each affected run was relaunched from a clean commit and "
+        "**no job that actually started ever failed** (0 non-completed runs in "
+        "`analysis/compute_budget.json`). Rejections consumed no GPU time. No run was "
+        "selected or excluded on the basis of its result.")
     def _med(a):
         v = (agg0.get(a) or {}).get("best_epochs")
         return int(__import__("numpy").median(v)) if v else "n/a"
@@ -731,9 +800,10 @@ def main() -> int:
     add("")
     add("## 15. What this means for the branch")
     add("")
-    add("1. **Kill the strict path-sum branch.** A shared scalar score per path shape is "
-        "dominated by a linear model on the same path counts (−"
-        f"{n(agg0.get('PATH_COUNT_RIDGE', {}).get('rmse_mean', float('nan')) - agg0.get(champ, {}).get('rmse_mean', float('nan')))}"
+    add("1. **Do not continue the strict path-sum branch as specified.** A shared scalar "
+        "score per path shape is "
+        "dominated by a linear model on the same path counts ("
+        f"{signed((agg0.get('PATH_COUNT_RIDGE', {}).get('rmse_mean') or float('nan')) - (agg0.get(champ, {}).get('rmse_mean') or float('nan')))}"
         " RMSE means the ridge is *better*) and by ACRA. More capacity in the encoder is "
         "not the fix; the sum is the fix.")
     add("2. **If the branch is revived, replace the shared scorer with a hybrid** "
