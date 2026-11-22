@@ -1,0 +1,21 @@
+{
+ "measured_on": "res (a100-2, A100-SXM4-40GB, torch 2.5.1+cu124), arm CSOI_REL (heaviest)",
+ "run_id": "csoi-timing-smoke2-20261122-105045-85743fb3",
+ "epoch_seconds": 20.6,
+ "epoch_seconds_breakdown": {
+  "train_151M_attention_entries_53_steps": 19.0,
+  "eval_train_plus_valid_3780_molecules": 1.6
+ },
+ "steps_per_epoch": 53,
+ "arms_to_train": 3,
+ "budget_gpu_hours_max": 5.0,
+ "projected_gpu_hours_at_160": 2.7466666666666666,
+ "projected_gpu_hours_with_safety": 3.433333333333333,
+ "horizon_rule": "horizon = min(epochs_cap, floor(budget * 3600 / (arms * epoch_seconds))); the safety factor is only used to check that the projection fits",
+ "horizon_epochs": 160,
+ "horizon_reduced": false,
+ "wall_clock_projection_minutes": {
+  "2_gpus_parallel": 109.86666666666666
+ },
+ "note": "uniform across the three trained arms; frozen before any formal run"
+}
