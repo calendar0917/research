@@ -30,13 +30,25 @@ while read -r run_id arm split seed epochs; do
     echo "[$(date +%H:%M:%S)] SKIP $run_id (local manifest present)" >> "$LOG"
     continue
   fi
+  pre=$(status_of "$run_id")
+  case "$pre" in
+    completed)
+      echo "[$(date +%H:%M:%S)] ADOPT $run_id state=completed (no relaunch)" >> "$LOG"
+      continue;;
+    running|queued|submitted|pending)
+      echo "[$(date +%H:%M:%S)] ADOPT $run_id state=$pre (waiting for it)" >> "$LOG"
+      ;;
+    *) pre="";;
+  esac
   args=(--run-id "$run_id" --arm "$arm" --seed "$seed" --split "$split" --device cuda)
   if [ -n "${epochs:-}" ] && [ "$epochs" != "-" ]; then args+=(--epochs "$epochs"); fi
+  if [ -z "$pre" ]; then
   echo "[$(date +%H:%M:%S)] LAUNCH $run_id arm=$arm split=$split seed=$seed epochs=${epochs:--} pool=$POOL" >> "$LOG"
   if ! rr run res "psc-$run_id" --pool "$POOL" --result "$ROUND/results/$run_id" --time 90m -- \
        python "$ROUND/code/psc_train.py" "${args[@]}" >> "$LOG" 2>&1; then
     echo "[$(date +%H:%M:%S)] DONE $run_id state=LAUNCH_FAILED" >> "$LOG"
     continue
+  fi
   fi
   st=""
   for _ in $(seq 1 1440); do
