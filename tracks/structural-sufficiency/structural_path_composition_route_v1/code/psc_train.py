@@ -190,12 +190,14 @@ def train_psc(args: argparse.Namespace, cfg: Mapping[str, Any], spec: Mapping[st
             if vals:
                 row[f"train_{key}"] = float(np.mean(vals))
         if eval_during_train:
-            pred, _ = predict_psc(model, cache, c_l, rows_of(split, "fit"), args.device,
-                                  bool(spec["bag"]), int(recipe["eval_batch"]))
+            p_std, _ = predict_psc(model, cache, c_l, fit_rows, args.device,
+                                   bool(spec["bag"]), int(recipe["eval_batch"]))
+            pred = to_raw(p_std, scaler)
             row["fit_rmse"] = C.rmse(pred, bundle.labels[fit_rows])
             row["fit_mae"] = C.mae(pred, bundle.labels[fit_rows])
-            pred, _ = predict_psc(model, cache, c_l, eval_rows, args.device,
-                                  bool(spec["bag"]), int(recipe["eval_batch"]))
+            p_std, _ = predict_psc(model, cache, c_l, eval_rows, args.device,
+                                   bool(spec["bag"]), int(recipe["eval_batch"]))
+            pred = to_raw(p_std, scaler)
             row["eval_rmse"] = C.rmse(pred, bundle.labels[eval_rows])
             row["eval_mae"] = C.mae(pred, bundle.labels[eval_rows])
             row["generalization_gap_rmse"] = row["eval_rmse"] - row["fit_rmse"]
@@ -224,21 +226,17 @@ def train_psc(args: argparse.Namespace, cfg: Mapping[str, Any], spec: Mapping[st
                 "zeroed": zeroed, "cache_sha256": cache_meta["cache_sha256"],
                 "split_sha256": split["sha256"]}, out / "state_final.pt")
     # predictions (no labels are read here; labels come from the frozen Train file)
-    preds: dict[str, Any] = {}
-    for name, rows in (("fit", fit_rows), ("eval", eval_rows)):
-        pred, extra = predict_psc(model, cache, c_l, rows, args.device, bool(spec["bag"]),
-                                  int(recipe["eval_batch"]))
-        preds[name] = {"row_id": bundle.row_id[rows], "pred": pred}
-        np.savez(out / f"predictions_final_{name}.npz", row_id=bundle.row_id[rows], pred=pred)
-    if split["name"] in ("D0", "D1") and (out / "state_best.pt").is_file():
-        state = torch.load(out / "state_best.pt", map_location=args.device, weights_only=False)
-        model.load_state_dict(state["state"])
+    for tag in (["best", "final"] if (split["name"] in ("D0", "D1")
+                                      and (out / "state_best.pt").is_file()) else ["final"]):
+        if tag == "best":
+            state = torch.load(out / "state_best.pt", map_location=args.device,
+                              weights_only=False)
+            model.load_state_dict(state["state"])
         for name, rows in (("fit", fit_rows), ("eval", eval_rows)):
-            pred, extra = predict_psc(model, cache, c_l, rows, args.device, bool(spec["bag"]),
+            pred_std, _ = predict_psc(model, cache, c_l, rows, args.device, bool(spec["bag"]),
                                       int(recipe["eval_batch"]))
-            np.savez(out / f"predictions_best_{name}.npz", row_id=bundle.row_id[rows],
-                     pred=pred)
-            preds["best_" + name] = {"row_id": bundle.row_id[rows], "pred": pred}
+            np.savez(out / f"predictions_{tag}_{name}.npz", row_id=bundle.row_id[rows],
+                     pred=to_raw(pred_std, scaler), pred_std=pred_std)
     wall = time.time() - t_start
     extra_manifest = {
         "target": target,
@@ -283,6 +281,10 @@ def zero_unseen(model: M.PSCModel, atom_ok: Sequence[np.ndarray], bond_ok: Seque
     zero(model.encoder.atom_emb, atom_ok, "atom")
     zero(model.encoder.bond_emb, bond_ok, "bond")
     return zeroed
+
+
+def to_raw(pred_std: np.ndarray, scaler: Mapping[str, float]) -> np.ndarray:
+    return np.asarray(pred_std, np.float64) * float(scaler["std"]) + float(scaler["mean"])
 
 
 def predict_psc(model: M.PSCModel, cache: PP.PathCache, c_l: np.ndarray,
@@ -844,7 +846,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     log(f"  split={split['name']} n_fit={len(split['fit_rows'])} "
         f"n_eval={len(split['eval_rows'])} sha={split['sha256']}")
     log(f"  train_labels sha={bundle.hashes['train_labels']['sha256']} "
-        f"n={bundle.hashes['train_labels']['n']}")
+        f"n={int(bundle.labels[np.isfinite(bundle.labels)].size)}")
     t0 = time.time()
     if spec["family"] == "PSC":
         manifest = train_psc(args, cfg, spec, bundle, split, log, out)
