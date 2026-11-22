@@ -218,8 +218,12 @@ def run(cfg: Mapping[str, Any], log=print) -> dict[str, Any]:
         if idx.size == 0:
             continue
         true_delta = labels[b[idx]] - labels[a[idx]]
-        clusters = (comp[idx] if scope == "train_sub_train_sub"
-                    else (a[idx] if split[a[idx]] == 1 else b[idx]))
+        if scope == "train_sub_train_sub":
+            clusters = comp[idx]
+        elif scope == "train_sub_dev":
+            clusters = np.where(split[a[idx]] == 1, a[idx], b[idx])
+        else:
+            clusters = np.arange(idx.size)
         rec_scope: dict[str, Any] = {"n": int(idx.size)}
         for arm in ARMS:
             pred_delta = pred_mol[arm][b[idx]] - pred_mol[arm][a[idx]]
@@ -314,10 +318,16 @@ def run(cfg: Mapping[str, Any], log=print) -> dict[str, Any]:
             "mean_n_bonds": float(np.mean(desc["n_bonds"][mask])),
             "mean_cycle_rank": float(np.mean(desc["cycle_rank"][mask])),
         }
-    # event-level interaction amplitude vs Train support
+    # event-level interaction amplitude vs Train support.  The support array is
+    # the structural Train-sub count for every Dev event, independent of whether
+    # an arm consumes it.
+    dev_support_parts = []
+    for start in range(0, dev.size, 128):
+        dev_support_parts.append(source.make(dev[start:start + 128])["ev_support"].numpy())
+    dev_event_support = np.concatenate(dev_support_parts).astype(np.int64)
     for arm in ("ACRA_REL_REF", "ACRA_SUPPORT_GATE"):
         ev = event_outputs(runs[arm]["model"], source, dev)
-        support = ev["support"].astype(np.int64)
+        support = dev_event_support
         scalar = ev["scalar_s"] + ev["scalar_c"]
         for lo, hi, label in SUPPORT_BINS:
             mask = (support >= lo) & (support <= hi)
@@ -393,6 +403,13 @@ def run(cfg: Mapping[str, Any], log=print) -> dict[str, Any]:
     C.write_json(C.analysis_dir() / "outlier_sensitivity.json", out)
 
     # ---- summary -----------------------------------------------------------
+    by_arm = {r["model"]: r for r in rows}
+    ref = by_arm[REF]
+    candidates = [a for a in ARMS if a != REF]
+    best_new = min(candidates, key=lambda a: by_arm[a]["dev_rmse"])
+    improv_rmse = float(ref["dev_rmse"] - by_arm[best_new]["dev_rmse"])
+    improv_mae = float(ref["dev_mae"] - by_arm[best_new]["dev_mae"])
+    qualifies = bool(improv_rmse >= 0.02 or improv_mae >= 0.02)
     summary = {
         "protocol_id": cfg["protocol_id"],
         "generated_utc": C.now_utc(),
@@ -416,11 +433,47 @@ def run(cfg: Mapping[str, Any], log=print) -> dict[str, Any]:
                 "ACRA_SUPPORT_GATE_vs_ACRA_REL_REF", {}),
         },
         "outlier_headline": out["ranking"],
+        "budget": {
+            "gpu_hours_used_formal_runs": float(sum(by_arm[a]["gpu_hours"] for a in ARMS)),
+            "gpu_hours_max": float(cfg["budget"]["gpu_hours_max"]),
+            "runs": len(ARMS),
+            "gpus_used_in_parallel": 2,
+        },
+        "full_train_revalidation_decision": {
+            "rule": "Dev RMSE improvement >= 0.02 OR Dev MAE improvement >= 0.02 "
+                    "versus ACRA_REL_REF, with no obvious matched-pair degradation",
+            "best_new_candidate": best_new,
+            "dev_rmse_improvement": improv_rmse,
+            "dev_mae_improvement": improv_mae,
+            "qualifies": qualifies,
+            "decision": ("run one full-Train revalidation" if qualifies
+                         else "do not run full-Train revalidation"),
+            "official_valid_read_for_new_models": False,
+        },
         "checks_all_passed": bool(C.read_json(C.analysis_dir() / "checks.json")["all_passed"]),
         "relation_factorization": C.read_json(C.analysis_dir() / "relation_factorization.json"),
         "relation_term_provenance": C.read_json(
             C.analysis_dir() / "relation_term_provenance.json"),
     }
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots(figsize=(7, 4))
+        for arm in ARMS:
+            curves = runs[arm]["curves"]
+            ax.plot([int(r["epoch"]) for r in curves], [float(r["dev_rmse"]) for r in curves],
+                    label=arm, linewidth=1.3)
+        ax.set_xlabel("epoch")
+        ax.set_ylabel("Dev RMSE (label units)")
+        ax.set_title("ACRA relation-generalization pilot: Dev whole-molecule RMSE")
+        ax.legend(fontsize=7)
+        ax.grid(alpha=0.25)
+        fig.tight_layout()
+        fig.savefig(C.analysis_dir() / "training_curves.png", dpi=160)
+        plt.close(fig)
+    except Exception as exc:  # noqa: BLE001
+        log(f"  plot skipped: {exc!r}")
     if (C.analysis_dir() / "structural_cases.json").is_file():
         summary["structural_cases"] = C.read_json(C.analysis_dir() / "structural_cases.json")
     if (C.analysis_dir() / "pair_delta.json").is_file():

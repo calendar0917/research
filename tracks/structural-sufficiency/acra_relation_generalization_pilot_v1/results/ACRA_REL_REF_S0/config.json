@@ -1,0 +1,126 @@
+{
+  "arms": {
+    "ACRA_HIST_ONLY": {
+      "interaction": true,
+      "relation": "histogram",
+      "support_gate": false
+    },
+    "ACRA_MOMENT_ONLY": {
+      "interaction": true,
+      "relation": "moment",
+      "support_gate": false
+    },
+    "ACRA_REL_REF": {
+      "interaction": true,
+      "relation": "full",
+      "support_gate": false
+    },
+    "ACRA_SUPPORT_GATE": {
+      "interaction": true,
+      "relation": "full",
+      "support_gate": true
+    },
+    "ACRA_TOPO_COUPLED": {
+      "interaction": true,
+      "relation": "topo",
+      "support_gate": false
+    }
+  },
+  "budget": {
+    "gpu_hours_max": 2,
+    "max_gpus": 2,
+    "seeds": [
+      0
+    ]
+  },
+  "cache": {
+    "name": "acra_cache_lipo_v2.npz",
+    "version": "acra-cache-v2"
+  },
+  "composition": {
+    "gamma_reg_weight": 0.001,
+    "gamma_scale": 0.5,
+    "gate_init": 0.12,
+    "relation_loss_weight": 0.01,
+    "relation_normalizer": "n_undirected_bonds",
+    "site_loss_weight": 0.001,
+    "support_gate": {
+      "rho_floor": 0.5,
+      "rho_span": 0.5,
+      "support_definition": "number of distinct Train-sub molecules containing the same (S identity, C identity, cut bond attributes); Train-sub uses leave-one-molecule-out, Dev uses the full Train-sub count",
+      "support_offset": 5.0
+    }
+  },
+  "dataset": "ogbg-mollipo",
+  "dims": {
+    "atom_field_emb": 8,
+    "atom_fields": 9,
+    "atom_hidden": 64,
+    "bond_emb": 32,
+    "bond_field_emb": 8,
+    "bond_fields": 3,
+    "bond_flag_emb": 4,
+    "frame_atom_out": 16,
+    "frame_bond_out": 8,
+    "frame_field_emb": 6,
+    "frame_hidden": 128,
+    "frame_input": 126,
+    "frame_out": 64,
+    "interaction_rank": 32,
+    "local_hidden": 128,
+    "local_input": 268,
+    "local_out": 64,
+    "local_scalars": 8,
+    "relation_buckets": 4,
+    "relation_categories": 8,
+    "relation_rank": 32,
+    "relation_shared_ring": 2,
+    "response_dropout": 0.1,
+    "response_hidden": 64,
+    "site_dim": 64
+  },
+  "objects": {
+    "bucket_labels": [
+      "d1",
+      "d2",
+      "d3",
+      "d4plus_or_unreachable"
+    ],
+    "c_radius": 2,
+    "distance_buckets": 4,
+    "max_object_atoms": 4,
+    "s_radius": 1
+  },
+  "pairs": {
+    "bootstrap_reps": 2000,
+    "seed": 0,
+    "source": "parent round train-only real replacement directory (pair_mol_a/pair_mol_b)"
+  },
+  "protocol_id": "acra-relation-generalization-pilot-v1",
+  "raw_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+  "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "recipe": {
+    "batch_molecules": 64,
+    "clip_norm": 5.0,
+    "epochs": 160,
+    "epochs_max": 160,
+    "eval_batch": 128,
+    "horizon_source": "analysis/horizon.json",
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.001,
+    "scheduler": "warmup5+cosine_to_1e-5",
+    "seed": 0,
+    "selection": "best Dev RMSE",
+    "warmup_epochs": 5,
+    "weight_decay": 0.0001
+  },
+  "split": {
+    "fraction_dev": 0.15,
+    "name": "train_sub_dev_scaffold_seed0",
+    "path": "data/split_train_sub_dev.json",
+    "scaffold": "rdkit Bemis-Murcko, acyclic molecules keyed by their own SMILES",
+    "seed": 0
+  },
+  "version": "2026-11-23/v1"
+}
