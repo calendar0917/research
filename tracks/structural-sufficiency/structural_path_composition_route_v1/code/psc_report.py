@@ -95,7 +95,9 @@ def main() -> int:
     add("")
     add(f"*Round*: `structural_path_composition_route_v1` · *protocol*: "
         f"`{C.load_config()['protocol_id']}` (frozen before formal training) · "
-        f"*commit*: `{C.git_commit()}` · *generated*: {C.now_utc()}")
+        f"*analysis-code commit*: `{C.git_commit()}` · *generated*: {C.now_utc()} · "
+        "*frozen artefacts*: `analysis/*.json`, `analysis/figures/`, "
+        "`analysis/tables.md`, `REPORT.md` in the same commit series")
     add("")
     add("Dataset: `ogbg-mollipo` (official split untouched; Test never read). "
         "All numbers below are whole-molecule RMSE / MAE in **original label units** "
@@ -114,18 +116,19 @@ def main() -> int:
         add(f"* It is **{n(gap)} RMSE worse than `{acra}`** "
             f"({n(agg0[acra]['rmse_mean'])}) and "
             f"{n(agg0[champ]['rmse_mean'] - agg0.get('GINE_REF', {}).get('rmse_mean', float('nan')))} "
-            "worse than the GINE reference; the paired bootstrap CI is "
-            f"{ci(c('champion_vs_' + str(acra)))} (positive = champion better).")
+            "worse than the GINE reference. Paired-molecule bootstrap "
+            f"(champion − reference, positive = champion better): "
+            f"{ci(c('champion_vs_' + str(acra)))} vs `{acra}`, "
+            f"{ci(c('champion_vs_GINE_REF'))} vs GINE.")
     if any(a in agg0 for a in A.CPU_MODELS):
         best_cpu = min((a for a in A.CPU_MODELS if a in agg0),
                        key=lambda a: agg0[a]["rmse_mean"])
-        add(f"* A closed-form **path-count ridge** (`{best_cpu}`, D0-selected α) reaches "
+        add(f"* A closed-form **{best_cpu.replace('_', ' ').lower()}** (`{best_cpu}`, D0-selected α) reaches "
             f"{n(agg0[best_cpu]['rmse_mean'])}, i.e. **better than every PSC arm** "
             f"({signed(agg0[best_cpu]['rmse_mean'] - agg0[champ]['rmse_mean'])} vs the champion).")
     add("* The additive `SUM` readout — the property the route was designed around — is "
         "consistently beaten by the non-additive `POOL` readout "
-        f"({signed((c('PSC_POOL_vs_PSC_SUM') or {}).get('point'))} RMSE, CI "
-        f"{ci(c('PSC_POOL_vs_PSC_SUM'))}).")
+        f"({ci(c('PSC_POOL_vs_PSC_SUM'))} RMSE, positive = POOL better).")
     bag_pts = [(c(k) or {}).get("point") for k in
                ("PSC_SUM_BAG_vs_PSC_SUM", "PSC_POOL_BAG_vs_PSC_POOL",
                 "PSC_SUM_BAG_PAIR_vs_PSC_SUM_PAIR", "PSC_POOL_BAG_PAIR_vs_PSC_POOL_PAIR")]
@@ -588,7 +591,7 @@ def main() -> int:
     add("")
     if agg1:
         add("| model | D1 RMSE (2 seeds) | D0 RMSE | Δ(D1−D0) | D1 Δ vs "
-            + str(acra) + " [95% CI] |")
+            + str(acra) + " (CI where bootstrapped) |")
         add("|---|---|---|---|---|")
         for a in dict.fromkeys([champ, o_star, r_star, acra, "GINE_REF"]):
             if not a or a not in agg1:
@@ -717,15 +720,20 @@ def main() -> int:
     add("")
     if budget:
         t = budget["totals"]
-        add(f"* GPU-hours consumed (all launched jobs, 1 GPU each): "
+        add(f"* GPU-hours consumed (every launched job, 1 GPU each, including smoke runs "
+            f"and cancelled duplicates): "
             f"**{n(t['gpu_hours_including_attempts'], 2)}** of the 16 h ceiling "
-            f"({'within' if t['within_budget'] else 'OVER'} budget).")
+            f"({'within' if t['within_budget'] else 'OVER'} budget, "
+            f"{pct(t['gpu_hours_including_attempts'] / t['budget_gpu_hours'])} of it).")
         add(f"* Train-loop hours: {n(t['train_loop_hours'], 2)} "
-            f"({pct(t['train_loop_fraction']) if t['train_loop_fraction'] else 'n/a'} of GPU wall).")
+            f"(of the {n(t['gpu_hours_including_attempts'], 2)} GPU-hours: "
+            f"{pct(t['train_loop_hours'] / t['gpu_hours_including_attempts'])} in the "
+            "training loop, the rest in evaluation/checkpoint I/O).")
         add(f"* Closed-form CPU hours: {n(t['cpu_hours_closed_form'], 2)}.")
-        add(f"* Completed GPU runs: {budget['counts']['gpu_runs_completed']}; launch "
-            f"attempts: {budget['counts']['launch_attempts']} "
-            f"(non-completed: {budget['counts']['noncompleted_attempts']}).")
+        add(f"* Completed GPU runs: {budget['counts']['gpu_runs_completed']}; jobs launched "
+            f"and recorded by the budget ledger: {budget['counts']['launch_attempts']}, of "
+            f"which {budget['counts']['noncompleted_attempts']} did not complete. The 44 "
+            "pre-flight rejections in §14 never started a job and are not in this ledger.")
         add("")
     add("Artefacts (all reproducible from the committed tree):")
     add("")

@@ -74,6 +74,7 @@ def cmd_budget() -> dict[str, Any]:
         if start and end:
             secs = (np.datetime64(end) - np.datetime64(start)) / np.timedelta64(1, "s")
         attempts.append({"pull_dir": d.name, "ident": data.get("ident"),
+                         "experiment": str(data.get("experiment", "")).replace("psc-", "", 1),
                          "state": data.get("state"), "pool": data.get("pool"),
                          "started_at": start, "completed_at": end,
                          "seconds": None if secs is None else float(secs),
@@ -86,10 +87,12 @@ def cmd_budget() -> dict[str, Any]:
     # include non-completed attempts (cancelled/failed smoke + duplicates) at
     # their measured wall time
     extra = defaultdict(float)
+    run_ids = {r["run_id"] for r in runs}
     for a in attempts:
-        if a["state"] in ("completed",) or a["seconds"] is None:
+        if a["seconds"] is None or a.get("experiment") in run_ids:
             continue
-        extra[a["state"]] += a["seconds"] / 3600.0
+        key = a["state"] if a["state"] != "completed" else "completed_no_result_dir"
+        extra[key] += a["seconds"] / 3600.0
     total_gpu_hours = gpu_hours + sum(extra.values())
     cpu_hours = sum(float(r["wall_seconds"] or 0) for r in runs if r["kind"] == "cpu") / 3600.0
     train_loop = sum(float(r["train_loop_seconds"] or 0) for r in runs

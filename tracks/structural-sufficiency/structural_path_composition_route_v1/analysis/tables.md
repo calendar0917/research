@@ -515,7 +515,7 @@ Ledger model: PSC_SUM_BAG_PAIR (champion PSC_POOL_BAG_PAIR); identity error 1.68
 
 | item | value |
 |---|---|
-| GPU-hours (all launched jobs) | 3.462 |
+| GPU-hours (all launched jobs) | 3.477 |
 | GPU-hours (completed runs) | 3.462 |
 | train-loop hours | 3.182 |
 | train-loop fraction of GPU wall | 0.919 |

@@ -1,15 +1,15 @@
 # Structural path composition route (PSC) — final report
 
-*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *commit*: `72eece8c3fc2d89e7e8a901b6f6934a7b19b7204` · *generated*: 2026-11-22T20:27:21Z
+*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `d1ae27654764cba98767e5e041b74e7acacc01c7` · *generated*: 2026-11-22T20:29:06Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
 
 Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers below are whole-molecule RMSE / MAE in **original label units** (the training target is the standardised label, all reported metrics are inverted back). Higher-is-better quantities are marked.
 
 ## TL;DR
 
 * The frozen champion of the eight PSC arms is **`PSC_POOL_BAG_PAIR`** (3-seed D0 RMSE 0.687 ± 0.014).
-* It is **0.107 RMSE worse than `ACRA_REF`** (0.580) and 0.161 worse than the GINE reference; the paired bootstrap CI is -0.107 [-0.151, -0.066] (positive = champion better).
-* A closed-form **path-count ridge** (`PATH_COUNT_RIDGE`, D0-selected α) reaches 0.617, i.e. **better than every PSC arm** (-0.070 vs the champion).
-* The additive `SUM` readout — the property the route was designed around — is consistently beaten by the non-additive `POOL` readout (+0.058 RMSE, CI +0.058 [+0.024, +0.093]).
+* It is **0.107 RMSE worse than `ACRA_REF`** (0.580) and 0.161 worse than the GINE reference. Paired-molecule bootstrap (champion − reference, positive = champion better): -0.107 [-0.151, -0.066] vs `ACRA_REF`, -0.161 [-0.203, -0.118] vs GINE.
+* A closed-form **path count ridge** (`PATH_COUNT_RIDGE`, D0-selected α) reaches 0.617, i.e. **better than every PSC arm** (-0.070 vs the champion).
+* The additive `SUM` readout — the property the route was designed around — is consistently beaten by the non-additive `POOL` readout (+0.058 [+0.024, +0.093] RMSE, positive = POOL better).
 * `ORDER` (path identity) vs `BAG` (atom/bond multiset) shows no consistent benefit for ORDER: the four matched contrasts are +0.041, +0.019, +0.058, +0.030 (BAG − ORDER, positive = BAG better).
 * PAIR coupling is a small, consistent-in-sign effect: 4/5 contrasts positive (0 of 5 with a CI excluding 0), maximum +0.021 RMSE — below the pre-registered +0.02 practical-gain threshold.
 * **Official Valid** (frozen full-Train refit, single pass): champion 0.779 vs `ACRA_REF` 0.786 (Δ +0.006 [-0.091, +0.129]; a tie), with `GINE_REF` 0.622 and the path-count KRR 0.724 still ahead. The D0 deficit versus ACRA does not replicate at full-Train scale, but the branch still does not beat the baselines.
@@ -200,7 +200,7 @@ Quartile edges on fit-set atom counts: [21.0, 27.0, 32.0]. Removing the union of
 
 ## 11. D1 replication (independent scaffold-disjoint split of the same Train rows)
 
-| model | D1 RMSE (2 seeds) | D0 RMSE | Δ(D1−D0) | D1 Δ vs ACRA_REF [95% CI] |
+| model | D1 RMSE (2 seeds) | D0 RMSE | Δ(D1−D0) | D1 Δ vs ACRA_REF (CI where bootstrapped) |
 |---|---|---|---|---|
 | `PSC_POOL_BAG_PAIR` | 0.706 ± 0.004 | 0.687 | +0.018 | -0.068 [-0.118, -0.019] |
 | `PSC_POOL_PAIR` | 0.755 ± 0.010 | 0.717 | +0.037 | +0.117 |
@@ -242,10 +242,10 @@ Valid was scored once, from the frozen lock, after every full-Train prediction e
 
 ## 13. Budget and artefacts
 
-* GPU-hours consumed (all launched jobs, 1 GPU each): **3.46** of the 16 h ceiling (within budget).
-* Train-loop hours: 3.18 (91.9% of GPU wall).
+* GPU-hours consumed (every launched job, 1 GPU each, including smoke runs and cancelled duplicates): **3.48** of the 16 h ceiling (within budget, 21.7% of it).
+* Train-loop hours: 3.18 (of the 3.48 GPU-hours: 91.5% in the training loop, the rest in evaluation/checkpoint I/O).
 * Closed-form CPU hours: 0.14.
-* Completed GPU runs: 58; launch attempts: 61 (non-completed: 0).
+* Completed GPU runs: 58; jobs launched and recorded by the budget ledger: 61, of which 0 did not complete. The 44 pre-flight rejections in §14 never started a job and are not in this ledger.
 
 Artefacts (all reproducible from the committed tree):
 
