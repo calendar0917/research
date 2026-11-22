@@ -463,6 +463,11 @@ def cmd_bootstrap(bundle: D.DataBundle, split_name: str = "D0") -> dict[str, Any
         if got:
             contrasts[f"{a}_vs_{b}"] = got
     champ = lock["champion"]
+    diag = lock.get("DIAG_twin")
+    if diag:
+        got = add(champ, diag, "Q4 PAIR vs DIAG twin (same input/readout, zero pair target)")
+        if got:
+            contrasts[f"champion_vs_DIAG"] = got
     for ref in (lock["ACRA_B_star"], "ACRA_PAIR", "GINE_REF", "PATH_COUNT_RIDGE",
                 "PATH_COUNT_KRR", "MORGAN_COUNT_KRR", "COUNT_ONLY_RIDGE"):
         got = add(champ, ref, f"Q1 champion vs {ref}")
