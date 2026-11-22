@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import os
 import sys
+import time
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -111,6 +112,31 @@ def run_dir(run_id: str) -> Path:
         path = results_root() / run_id
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def now_utc() -> str:
+    return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def read_csv(path: Path | str) -> list[dict[str, Any]]:
+    """Read a CSV written by ``write_csv`` into a list of dicts (floats where possible)."""
+    import csv
+
+    with Path(path).open(newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        rec: dict[str, Any] = {}
+        for key, value in row.items():
+            if value is None:
+                rec[key] = value
+                continue
+            try:
+                rec[key] = float(value)
+            except (TypeError, ValueError):
+                rec[key] = value
+        out.append(rec)
+    return out
 
 
 def parent_module_provenance() -> dict[str, str]:

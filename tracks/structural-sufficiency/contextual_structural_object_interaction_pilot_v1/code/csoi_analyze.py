@@ -133,54 +133,82 @@ def contrast(a: Mapping[str, Any], b: Mapping[str, Any], reps: int, seed: int) -
 # ---------------------------------------------------------------------------
 
 
+def _pred_by_mol(arm: Mapping[str, Any], pack: Mapping[str, Any]) -> np.ndarray:
+    rows = np.asarray(pack["row_ids"], np.int64)
+    idx_of_row = {int(r): i for i, r in enumerate(rows.tolist())}
+    pred = np.full(int(pack["n_molecules"]), np.nan)
+    for rid, val in zip(arm["valid_row_id"].tolist(), arm["valid_pred"].tolist()):
+        pred[idx_of_row[int(rid)]] = val
+    for rid, val in zip(arm["train_row_id"].tolist(), arm["train_pred"].tolist()):
+        pred[idx_of_row[int(rid)]] = val
+    return pred
+
+
+def pair_scopes(pack: Mapping[str, Any]) -> dict[str, np.ndarray]:
+    """Pair masks over the frozen train-only pair directory, by label availability.
+
+    The directory is train-only by protocol, so most pairs are in-sample for every
+    arm.  Only pairs whose molecules lie in {train, valid} are ever used: any pair
+    touching the official Test split is dropped, unread.
+    """
+    labels = np.asarray(pack["labels"], np.float64)
+    split = np.asarray(pack["molecule_split"], np.uint8)
+    a = np.asarray(pack["pair_mol_a"], np.int64)
+    b = np.asarray(pack["pair_mol_b"], np.int64)
+    sa, sb = split[a], split[b]
+    allowed = (sa != 2) & (sb != 2)
+    return {
+        "train_in_sample_pairs": allowed & (sa == 0) & (sb == 0),
+        "train_valid_cross_pairs": allowed & (((sa == 0) & (sb == 1))
+                                              | ((sa == 1) & (sb == 0))),
+        "valid_only_pairs": allowed & (sa == 1) & (sb == 1),
+        "_excluded_test_touching": ~allowed,
+    }
+
+
 def pair_metrics(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]]) -> dict[str, Any]:
     labels = np.asarray(pack["labels"], np.float64)
-    train = np.asarray(pack["train_idx"], np.int64)
-    valid = np.asarray(pack["valid_idx"], np.int64)
-    store = C.PPAIR.PairStore(C.load_config(), pack, labels, None, train,
-                              np.asarray(pack["row_ids"]), log=lambda *_a: None)
-    a = np.asarray(pack["pair_mol_a"], np.int64)[store.index]
-    b = np.asarray(pack["pair_mol_b"], np.int64)[store.index]
-    transform = store.transform
-    cell = np.asarray(pack["pair_cell"], np.uint8)[store.index]
-    rows = np.asarray(pack["row_ids"], np.int64)
+    a = np.asarray(pack["pair_mol_a"], np.int64)
+    b = np.asarray(pack["pair_mol_b"], np.int64)
+    transform = np.asarray(pack["pair_transform"], np.int64)
+    component = np.asarray(pack["pair_component"], np.int64)
+    scopes = pair_scopes(pack)
     out: dict[str, Any] = {
-        "n_train_pairs": int(store.npairs()),
-        "scope_note": ("pair directory is train-only; only pairs whose two molecules "
-                       "are both Valid are scored"),
+        "n_pairs_total": int(a.size),
+        "scopes": {k: int(v.sum()) for k, v in scopes.items()},
+        "scope_note": ("the frozen pair directory is train-only, so "
+                       "'train_in_sample_pairs' is optimistic for every arm; "
+                       "'valid_only_pairs' is fully out-of-sample but tiny (n=15); "
+                       "pairs touching Test are excluded and their labels unread"),
         "by_arm": {},
     }
-    valid_set = set(valid.tolist())
-    keep = np.asarray([int(x) in valid_set and int(y) in valid_set for x, y in zip(a, b)])
-    out["n_pairs_with_both_molecules_in_valid"] = int(keep.sum())
-    if not keep.any():
-        out["note"] = "no train pair has both molecules in Valid"
-        return out
-    a_k, b_k = a[keep], b[keep]
-    dl = labels[b_k] - labels[a_k]
-    tt = transform[keep]
-    comp = np.asarray(pack["pair_component"], np.int64)[store.index][keep]
     for name, arm in arms.items():
-        if arm.get("valid_pred") is None:
+        if arm.get("valid_pred") is None or arm.get("train_pred") is None:
             continue
-        # predictions are aligned with valid_row_id -> map row_id -> molecule index
-        idx_of_row = {int(r): i for i, r in enumerate(rows.tolist())}
-        pred = np.full(int(pack["n_molecules"]), np.nan)
-        for rid, val in zip(arm["valid_row_id"].tolist(), arm["valid_pred"].tolist()):
-            pred[idx_of_row[int(rid)]] = val
-        dp = pred[b_k] - pred[a_k]
-        diff_comp = np.asarray([len(set(comp[tt == t].tolist())) > 1 for t in tt])
-        rec = {"n_pairs_scored": int(keep.sum()), "all": _delta_stats(dl, dp),
-               "matched_transforms": {"n_pairs": int(diff_comp.sum()),
-                                      **_delta_stats(dl[diff_comp], dp[diff_comp])},
-               "same_component_pairs": {"n_pairs": int((~diff_comp).sum()),
-                                        **_delta_stats(dl[~diff_comp], dp[~diff_comp])},
-               "by_transform": {}}
-        for t in np.unique(tt).tolist():
-            m = tt == t
-            if m.sum() >= 5:
-                rec["by_transform"][f"transform_{int(t)}"] = {"n": int(m.sum()),
-                                                              **_delta_stats(dl[m], dp[m])}
+        pred = _pred_by_mol(arm, pack)
+        rec: dict[str, Any] = {}
+        for scope, mask in scopes.items():
+            if scope.startswith("_"):
+                continue
+            if not mask.any():
+                rec[scope] = {"n": 0}
+                continue
+            dl = labels[b[mask]] - labels[a[mask]]
+            dp = pred[b[mask]] - pred[a[mask]]
+            rec[scope] = _delta_stats(dl, dp)
+            tt = transform[mask]
+            comp = component[mask]
+            by_t: dict[str, Any] = {}
+            for t in np.unique(tt).tolist():
+                m = tt == t
+                if m.sum() >= 10:
+                    by_t[f"transform_{int(t)}"] = {"n": int(m.sum()),
+                                                   **_delta_stats(dl[m], dp[m])}
+            rec[scope]["by_transform"] = by_t
+            multi = np.asarray([len(set(comp[tt == t].tolist())) > 1 for t in tt])
+            if multi.any():
+                rec[scope]["matched_transforms_different_components"] = {
+                    "n": int(multi.sum()), **_delta_stats(dl[multi], dp[multi])}
         out["by_arm"][name] = rec
     return out
 
@@ -252,84 +280,88 @@ def support_report(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]
 
 def cases(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]],
           limit: int = 20) -> dict[str, Any]:
+    """Auto-selected matched pairs: Valid-only first, then Valid x Train crossings."""
     labels = np.asarray(pack["labels"], np.float64)
     rows = np.asarray(pack["row_ids"], np.int64)
-    idx_of_row = {int(r): i for i, r in enumerate(rows.tolist())}
+    split = np.asarray(pack["molecule_split"], np.uint8)
     a = np.asarray(pack["pair_mol_a"], np.int64)
     b = np.asarray(pack["pair_mol_b"], np.int64)
-    cell = np.asarray(pack["pair_cell"], np.uint8)
     transform = np.asarray(pack["pair_transform"], np.int64)
-    comp = np.asarray(pack["pair_component"], np.int64)
-    valid = np.asarray(pack["valid_idx"], np.int64)
-    train = np.asarray(pack["train_idx"], np.int64)
-    store = C.PPAIR.PairStore(C.load_config(), pack, labels, None, train,
-                              rows, log=lambda *_a: None)
-    keep = np.isin(store.index, np.nonzero(cell == 0)[0])
-    pairs = store.index[keep]
-    both_valid = np.asarray([int(a[p]) in set(valid.tolist()) and int(b[p]) in set(valid.tolist())
-                             for p in pairs.tolist()])
-    pairs = pairs[both_valid]
-    if pairs.size == 0:
-        return {"note": "no train pairs with both molecules in Valid", "cases": []}
-    preds = {}
-    for name in ("B_CSOI_ADD", "C_CSOI_GLOBAL", "D_CSOI_REL", "A_TRC_FACTOR_CUTRESP"):
-        arm = arms.get(name)
-        if arm is None or arm.get("valid_pred") is None:
-            continue
-        pred = np.full(int(rows.size), np.nan)
-        pos = np.asarray([idx_of_row[int(r)] for r in arm["valid_row_id"].tolist()])
-        pred[pos] = arm["valid_pred"]
-        preds[name] = pred
-    dl = labels[b[pairs]] - labels[a[pairs]]
-    table = []
-    for i, p in enumerate(pairs.tolist()):
-        rec = {"pair_index": int(p), "transform": int(transform[p]),
-               "component": int(comp[p]), "mol_a": int(a[p]), "mol_b": int(b[p]),
-               "row_id_a": int(rows[a[p]]), "row_id_b": int(rows[b[p]]),
-               "label_a": float(labels[a[p]]), "label_b": float(labels[b[p]]),
-               "delta_true": float(dl[i]),
-               "s_fragment_a": int(np.asarray(pack["pair_Sa"])[p]),
-               "s_fragment_b": int(np.asarray(pack["pair_Sb"])[p]),
-               "c_fragment": int(np.asarray(pack["pair_C"])[p]),
-               "cut_bond_row": int(np.asarray(pack["pair_cut_bond_row"])[p]),
-               "pred": {}}
-        for name, pred in preds.items():
-            rec["pred"][name] = {"a": float(pred[a[p]]), "b": float(pred[b[p]]),
-                                 "delta": float(pred[b[p]] - pred[a[p]]),
-                                 "abs_err": float(abs(pred[b[p]] - pred[a[p]] - dl[i]))}
-        table.append(rec)
-    # auto-selected rules: interaction (C or D) clearly better than additive (B)
-    def gain(rec, inter):
-        return rec["pred"]["B_CSOI_ADD"]["abs_err"] - rec["pred"][inter]["abs_err"]
+    component = np.asarray(pack["pair_component"], np.int64)
+    scopes = pair_scopes(pack)
+    preds = {name: _pred_by_mol(arm, pack) for name, arm in arms.items()
+             if arm.get("valid_pred") is not None and arm.get("train_pred") is not None}
+    need = ("B_CSOI_ADD", "C_CSOI_GLOBAL", "D_CSOI_REL")
+    if not all(k in preds for k in need):
+        return {"note": "trained CSOI arms are not available yet", "cases": {}}
 
-    selection = {}
+    def build(mask: np.ndarray, scope: str) -> list[dict[str, Any]]:
+        idx = np.nonzero(mask)[0]
+        recs = []
+        for i in idx.tolist():
+            dl = float(labels[b[i]] - labels[a[i]])
+            rec = {"scope": scope, "pair_index": int(i), "transform": int(transform[i]),
+                   "component": int(component[i]),
+                   "split_a": int(split[a[i]]), "split_b": int(split[b[i]]),
+                   "row_id_a": int(rows[a[i]]), "row_id_b": int(rows[b[i]]),
+                   "label_a": float(labels[a[i]]), "label_b": float(labels[b[i]]),
+                   "delta_true": dl,
+                   "S_a": int(np.asarray(pack["pair_Sa"])[i]),
+                   "S_b": int(np.asarray(pack["pair_Sb"])[i]),
+                   "C": int(np.asarray(pack["pair_C"])[i]),
+                   "cut_bond_row": int(np.asarray(pack["pair_cut_bond_row"])[i]),
+                   "delta_pred": {}, "abs_err": {}}
+            for name, pred in preds.items():
+                dp = float(pred[b[i]] - pred[a[i]])
+                rec["delta_pred"][name] = dp
+                rec["abs_err"][name] = abs(dp - dl)
+            recs.append(rec)
+        return recs
+
+    primary = build(scopes["valid_only_pairs"], "valid_only")
+    cross = build(scopes["train_valid_cross_pairs"], "train_valid_cross")
+    pool = primary + cross
+    out: dict[str, Any] = {
+        "n_valid_only_pairs": len(primary),
+        "n_train_valid_cross_pairs": len(cross),
+        "selection_rule": ("rank pairs by the absolute pair-delta error improvement of "
+                           "an interaction arm over CSOI_ADD; Valid-only pairs first, "
+                           "then Valid x Train crossings; deterministic top-k, no "
+                           "hand-picking"),
+        "requires_all_of": list(need),
+    }
     for inter in ("C_CSOI_GLOBAL", "D_CSOI_REL"):
-        if inter not in preds:
-            continue
-        ranked = sorted(table, key=lambda r: -gain(r, inter))
-        selection[f"interaction_wins_{inter}_over_B"] = [
-            {k: r[k] for k in ("pair_index", "row_id_a", "row_id_b", "delta_true",
-                               "transform", "component", "s_fragment_a", "s_fragment_b",
-                               "c_fragment", "cut_bond_row")}
-            | {"abs_err_B": r["pred"]["B_CSOI_ADD"]["abs_err"],
-               "abs_err_inter": r["pred"][inter]["abs_err"],
-               "gain": gain(r, inter),
-               "delta_pred_B": r["pred"]["B_CSOI_ADD"]["delta"],
-               "delta_pred_inter": r["pred"][inter]["delta"]}
-            for r in ranked[:limit] if gain(r, inter) > 0]
-        ranked_bad = sorted(table, key=lambda r: gain(r, inter))
-        selection[f"interaction_loses_{inter}_over_B"] = [
-            {k: r[k] for k in ("pair_index", "row_id_a", "row_id_b", "delta_true",
-                               "transform", "component")}
-            | {"gain": gain(r, inter),
-               "delta_pred_B": r["pred"]["B_CSOI_ADD"]["delta"],
-               "delta_pred_inter": r["pred"][inter]["delta"]}
-            for r in ranked_bad[:limit] if gain(r, inter) < 0]
-    return {"n_pairs_valid": int(pairs.size),
-            "selection_rule": ("rank pairs with both molecules in Valid by "
-                               "|pair-delta error| improvement of the interaction arm "
-                               "over the additive arm; deterministic top-k"),
-            "cases": selection}
+        wins = sorted(pool, key=lambda r: -(r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter]))
+        losses = sorted(pool, key=lambda r: (r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter]))
+        out[f"interaction_wins_{inter}_over_B"] = [
+            _case_row(r, inter, sign=1) for r in wins[:limit]
+            if r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter] > 0]
+        out[f"interaction_loses_{inter}_over_B"] = [
+            _case_row(r, inter, sign=-1) for r in losses[:limit]
+            if r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter] < 0]
+    out["relation_bias_wins_D_over_C"] = [
+        _case_row(r, "D_CSOI_REL", sign=1)
+        for r in sorted(pool, key=lambda r: -(r["abs_err"]["C_CSOI_GLOBAL"]
+                                              - r["abs_err"]["D_CSOI_REL"]))[:limit]
+        if r["abs_err"]["C_CSOI_GLOBAL"] - r["abs_err"]["D_CSOI_REL"] > 0]
+    return out
+
+
+def _case_row(r: Mapping[str, Any], inter: str, sign: int) -> dict[str, Any]:
+    base = "C_CSOI_GLOBAL" if inter == "D_CSOI_REL" else "B_CSOI_ADD"
+    return {"scope": r["scope"], "pair_index": r["pair_index"],
+            "split_a": r["split_a"], "split_b": r["split_b"],
+            "row_id_a": r["row_id_a"], "row_id_b": r["row_id_b"],
+            "transform": r["transform"], "component": r["component"],
+            "S_a": r["S_a"], "S_b": r["S_b"], "C": r["C"],
+            "cut_bond_row": r["cut_bond_row"],
+            "label_a": r["label_a"], "label_b": r["label_b"],
+            "delta_true": r["delta_true"],
+            f"delta_pred_{base}": r["delta_pred"][base],
+            f"delta_pred_{inter}": r["delta_pred"][inter],
+            f"abs_err_{base}": r["abs_err"][base],
+            f"abs_err_{inter}": r["abs_err"][inter],
+            "gain": r["abs_err"][base] - r["abs_err"][inter]}
 
 
 # ---------------------------------------------------------------------------

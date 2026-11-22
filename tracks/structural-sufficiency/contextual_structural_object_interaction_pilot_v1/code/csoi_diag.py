@@ -149,13 +149,16 @@ def _interaction_contribution(model, pack, rows: np.ndarray, device: str) -> dic
                            "corr_with_prediction": C.pearson(f, a),
                            "variance_reduction": float(1.0 - np.var(d) / max(1e-12, np.var(f)))}
     if model.interaction:
+        pidx, _counts = model._parse_index(torch.as_tensor(rows, device=device))
         inv = model.interaction_contribution(
-            torch.as_tensor(rows, device=device), frames)
+            model.parse_S[pidx], model.parse_C[pidx],
+            model.parse_cut_bond_row[pidx], frames)
         out["per_cut"] = {"mean_abs": float(inv.abs().mean()), "std": float(inv.std())}
     return out
 
 
-def _remove_bias(model, pack, cfg, device: str, rows: np.ndarray) -> dict:
+def _remove_bias(model, pack, cfg, device: str, rows: np.ndarray,
+                 scaler: Mapping[str, float]) -> dict:
     """Zero the relation branch output under frozen weights (no retraining)."""
     import torch
 
@@ -173,8 +176,10 @@ def _remove_bias(model, pack, cfg, device: str, rows: np.ndarray) -> dict:
             if n in saved:
                 p.copy_(saved[n])
     diff = after - before
-    return {"rmse_with_bias": C.rmse(before, np.asarray(pack["labels"])[rows]),
-            "rmse_without_bias": C.rmse(after, np.asarray(pack["labels"])[rows]),
+    scale, shift = float(scaler["std"]), float(scaler["mean"])
+    y = np.asarray(pack["labels"])[rows]
+    return {"rmse_with_bias": C.rmse(before * scale + shift, y),
+            "rmse_without_bias": C.rmse(after * scale + shift, y),
             "max_abs_change": float(np.max(np.abs(diff))),
             "mean_abs_change": float(np.mean(np.abs(diff))),
             "note": "same weights, relation-bias output zeroed: isolates the bias path"}
@@ -235,7 +240,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                     "max": float(max(float(r[c]) for r in curves))}
                 for c in grad_cols}
         if model.use_relation:
-            arm["bias_removal_frozen_weights"] = _remove_bias(model, pack, cfg, device, valid)
+            arm["bias_removal_frozen_weights"] = _remove_bias(model, pack, cfg, device,
+                                                             valid, scaler)
         # Valid interaction magnitude in target units
         f_std = _predict(model, pack, device, valid)
         arm["valid_pred_std_mean"] = float(np.mean(f_std))
