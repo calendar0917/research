@@ -4,6 +4,7 @@
 #   code/queue.sh <pool> <queue-file> <log-file>
 #
 # Queue lines:  <run_id> <arm> <split> <seed> [epochs|-]
+# Resumable: a run whose local results manifest already exists is skipped.
 # It launches one rr job at a time on the given pool, waits for a terminal
 # state, and records the outcome.  Safe to run two instances (one per GPU).
 set -u
@@ -25,17 +26,25 @@ print(d.get("state",""))
 while read -r run_id arm split seed epochs; do
   [ -z "${run_id:-}" ] && continue
   case "$run_id" in \#*) continue;; esac
+  if [ -f "$ROUND/results/$run_id/manifest.json" ]; then
+    echo "[$(date +%H:%M:%S)] SKIP $run_id (local manifest present)" >> "$LOG"
+    continue
+  fi
   args=(--run-id "$run_id" --arm "$arm" --seed "$seed" --split "$split" --device cuda)
   if [ -n "${epochs:-}" ] && [ "$epochs" != "-" ]; then args+=(--epochs "$epochs"); fi
   echo "[$(date +%H:%M:%S)] LAUNCH $run_id arm=$arm split=$split seed=$seed epochs=${epochs:--} pool=$POOL" >> "$LOG"
-  rr run res "psc-$run_id" --pool "$POOL" --result "$ROUND/results/$run_id" --time 90m -- \
-     python "$ROUND/code/psc_train.py" "${args[@]}" >> "$LOG" 2>&1
+  if ! rr run res "psc-$run_id" --pool "$POOL" --result "$ROUND/results/$run_id" --time 90m -- \
+       python "$ROUND/code/psc_train.py" "${args[@]}" >> "$LOG" 2>&1; then
+    echo "[$(date +%H:%M:%S)] DONE $run_id state=LAUNCH_FAILED" >> "$LOG"
+    continue
+  fi
   st=""
   for _ in $(seq 1 1440); do
     st=$(status_of "$run_id")
     case "$st" in completed|failed|cancelled) break;; esac
+    if [ -z "$st" ] && [ "$_" -gt 6 ]; then break; fi
     sleep 5
   done
-  echo "[$(date +%H:%M:%S)] DONE $run_id state=$st" >> "$LOG"
+  echo "[$(date +%H:%M:%S)] DONE $run_id state=${st:-UNKNOWN}" >> "$LOG"
 done < "$QUEUE"
 echo "[$(date +%H:%M:%S)] QUEUE COMPLETE $QUEUE" >> "$LOG"

@@ -1,0 +1,238 @@
+{
+ "arm": "PSC_SUM_PAIR",
+ "config": {
+  "analysis": {
+   "case_rules": {
+    "high_eta_degraded": 1,
+    "high_eta_improved": 1,
+    "seen_t_negative": 1,
+    "seen_t_positive": 1,
+    "t_unseen_frag_seen_degraded": 2,
+    "t_unseen_frag_seen_improved": 2
+   },
+   "delta_zero_tolerance": 1e-08,
+   "direction_sensitivity_delta": 0.25,
+   "min_effective_components": 10,
+   "novelty_buckets": [
+    0.0,
+    0.25,
+    0.5,
+    1.0
+   ]
+  },
+  "arms": {
+   "ACRA_PAIR": {
+    "family": "ACRA",
+    "readout": "ACRA",
+    "target": "PAIR"
+   },
+   "ACRA_REF": {
+    "family": "ACRA",
+    "readout": "ACRA",
+    "target": "MOLECULE"
+   },
+   "GINE_REF": {
+    "family": "GINE",
+    "readout": "GINE",
+    "target": "MOLECULE"
+   },
+   "PSC_POOL": {
+    "bag": false,
+    "family": "PSC",
+    "readout": "POOL",
+    "target": "MOLECULE"
+   },
+   "PSC_POOL_BAG": {
+    "bag": true,
+    "family": "PSC",
+    "readout": "POOL",
+    "target": "MOLECULE"
+   },
+   "PSC_POOL_BAG_DIAG": {
+    "bag": true,
+    "family": "PSC",
+    "readout": "POOL",
+    "target": "DIAG"
+   },
+   "PSC_POOL_BAG_PAIR": {
+    "bag": true,
+    "family": "PSC",
+    "readout": "POOL",
+    "target": "PAIR"
+   },
+   "PSC_POOL_DIAG": {
+    "bag": false,
+    "family": "PSC",
+    "readout": "POOL",
+    "target": "DIAG"
+   },
+   "PSC_POOL_PAIR": {
+    "bag": false,
+    "family": "PSC",
+    "readout": "POOL",
+    "target": "PAIR"
+   },
+   "PSC_SUM": {
+    "bag": false,
+    "family": "PSC",
+    "readout": "SUM",
+    "target": "MOLECULE"
+   },
+   "PSC_SUM_BAG": {
+    "bag": true,
+    "family": "PSC",
+    "readout": "SUM",
+    "target": "MOLECULE"
+   },
+   "PSC_SUM_BAG_DIAG": {
+    "bag": true,
+    "family": "PSC",
+    "readout": "SUM",
+    "target": "DIAG"
+   },
+   "PSC_SUM_BAG_PAIR": {
+    "bag": true,
+    "family": "PSC",
+    "readout": "SUM",
+    "target": "PAIR"
+   },
+   "PSC_SUM_DIAG": {
+    "bag": false,
+    "family": "PSC",
+    "readout": "SUM",
+    "target": "DIAG"
+   },
+   "PSC_SUM_PAIR": {
+    "bag": false,
+    "family": "PSC",
+    "readout": "SUM",
+    "target": "PAIR"
+   }
+  },
+  "bootstrap": {
+   "reps": 2000,
+   "seed": 0
+  },
+  "cpu": {
+   "krr_alpha": [
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    10.0
+   ],
+   "morgan_bins": 4096,
+   "morgan_chirality": true,
+   "morgan_radius": [
+    2,
+    3
+   ],
+   "ridge_alpha": [
+    0.0001,
+    0.001,
+    0.01,
+    0.1,
+    1.0,
+    10.0,
+    100.0
+   ]
+  },
+  "d1": {
+   "seed": 20261122,
+   "target_heldout": 504
+  },
+  "dataset": "ogbg-mollipo",
+  "dims": {
+   "atom_field_emb": 32,
+   "bond_field_emb": 16,
+   "dropout": 0.1,
+   "head_last_std": 0.001,
+   "mid": 128,
+   "out": 64,
+   "width": 256
+  },
+  "paths": {
+   "fallback_max_len": 4,
+   "fallback_rule": "uniform L=4 if the L=5 queue is inapplicable before formal training",
+   "max_len": 5
+  },
+  "protocol_id": "structural-path-composition-route-v1",
+  "psc_arms": [
+   "PSC_SUM",
+   "PSC_SUM_PAIR",
+   "PSC_SUM_BAG",
+   "PSC_SUM_BAG_PAIR",
+   "PSC_POOL",
+   "PSC_POOL_PAIR",
+   "PSC_POOL_BAG",
+   "PSC_POOL_BAG_PAIR"
+  ],
+  "recipe": {
+   "aux_pairs": 32,
+   "batch_molecules": 64,
+   "clip_norm": 5.0,
+   "epochs": 160,
+   "eval_batch": 256,
+   "fallback_epochs": 120,
+   "lambda_aux": 0.25,
+   "min_lr": 1e-05,
+   "peak_lr": 0.001,
+   "warmup_epochs": 5,
+   "weight_decay": 0.0001
+  },
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "selection": {
+   "acra_priority": [
+    "REF",
+    "PAIR"
+   ],
+   "direction_reversed_rmse": -0.02,
+   "mae_degradation_max": 0.01,
+   "practical_gain_rmse": 0.02,
+   "practical_gain_seed_fraction": "2/3",
+   "priority_input": [
+    "ORDER",
+    "BAG"
+   ],
+   "priority_readout": [
+    "SUM",
+    "POOL"
+   ],
+   "priority_target": [
+    "MOLECULE",
+    "PAIR"
+   ],
+   "tolerance_rmse": 0.005
+  },
+  "split": {
+   "d1": "second scaffold split of official Train, seed 20261122, ~504 held out",
+   "f0": "F0 Train-sub 2856 / Dev 504 (scaffold disjoint, existing frozen split)",
+   "full": "official Train 3360"
+  },
+  "stage1_arms": [
+   "PSC_SUM",
+   "PSC_SUM_PAIR",
+   "PSC_SUM_BAG",
+   "PSC_SUM_BAG_PAIR",
+   "PSC_POOL",
+   "PSC_POOL_PAIR",
+   "PSC_POOL_BAG",
+   "PSC_POOL_BAG_PAIR",
+   "ACRA_REF",
+   "ACRA_PAIR",
+   "GINE_REF"
+  ],
+  "version": "2026-11-22/v1"
+ },
+ "protocol_id": "structural-path-composition-route-v1",
+ "spec": {
+  "bag": false,
+  "family": "PSC",
+  "readout": "SUM",
+  "target": "PAIR"
+ }
+}

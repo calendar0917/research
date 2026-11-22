@@ -210,7 +210,7 @@ def check_batch_vs_single(dims) -> dict[str, Any]:
     cfg = C.load_config()
     bundle = D.load_bundle()
     split = C.split_spec("D0", bundle.raw)
-    L = 3
+    L = int(C.load_config()["paths"]["max_len"])  # keep the production cache
     rows = np.union1d(bundle.official_train, bundle.official_valid)
     meta = PP.ensure_cache(bundle.raw, rows, L)
     cache = PP.PathCache(meta, device="cpu")
@@ -469,6 +469,40 @@ def check_init_and_grad(dims) -> dict[str, Any]:
             "params": M.parameter_ledger(m)}
 
 
+def check_overfit(dims) -> dict[str, Any]:
+    """32-molecule overfit smoke: the training chain must be able to reduce error."""
+    import torch
+    import psc_train as T
+
+    L = int(C.load_config()["paths"]["max_len"])
+    cfg = C.load_config()
+    bundle = D.load_bundle()
+    split = C.split_spec("D0", bundle.raw)
+    rows = np.asarray(split["fit_rows"])[:32]
+    cache_rows = np.union1d(bundle.official_train, bundle.official_valid)
+    meta = PP.ensure_cache(bundle.raw, cache_rows, L)
+    cache = PP.PathCache(meta, device="cpu")
+    c_l = PP.c_l_from_cache(cache, split["fit_rows"])
+    y_std, scaler = D.labels_standardized(bundle, split["fit_rows"])
+    atom_dims, bond_dims = dims
+    model, _ = M.build_model(atom_dims, bond_dims, L, "SUM", 0, cfg)
+    opt = torch.optim.AdamW(model.parameters(), lr=3e-3, weight_decay=1e-4)
+    y = torch.as_tensor(y_std[rows], dtype=torch.float32)
+    batch = cache.gather(rows, c_l, bag=False)
+    start = float(torch.mean((model.forward_batch(batch)["yhat_std"] - y) ** 2))
+    for step in range(300):
+        model.train()
+        opt.zero_grad(set_to_none=True)
+        out = model.forward_batch(batch)
+        loss = torch.mean((out["yhat_std"] - y) ** 2)
+        loss.backward()
+        opt.step()
+    end = float(torch.mean((model.forward_batch(batch)["yhat_std"] - y) ** 2))
+    if not end < 0.25 * start:
+        raise AssertionError(f"32-molecule overfit failed: {start:.4f} -> {end:.4f}")
+    return {"mse_start": start, "mse_end": end, "steps": 300, "n_molecules": 32}
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip-heavy", action="store_true")
@@ -485,6 +519,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         check("6_pair_algebra", check_pair_algebra)
         check("7_fit_only", check_fit_only)
     check("8_init_grad", lambda: check_init_and_grad(dims))
+    if not args.skip_heavy:
+        check("8b_overfit32", lambda: check_overfit(dims))
     out = C.ROUND_DIR / "analysis" / "checks.json"
     C.write_json(out, {"generated_utc": C.now_utc(), "git_commit": C.git_commit(),
                        "environment": C.environment(), "checks": CHECKS})
