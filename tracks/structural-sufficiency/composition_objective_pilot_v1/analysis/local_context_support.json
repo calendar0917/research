@@ -1,0 +1,845 @@
+{
+  "cache_content_sha256": "46439b91dfd760255be4c53256f12687959d203b6740e55c0213d66476168825",
+  "cache_path_used": "/home/calendar/code/research/tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/data/csoi_cache_lipo.npz",
+  "cache_sha256": "d30e5b9516df5950f0a64c9d086216f1e29c69901c52140f0882383af101ef1c",
+  "complete_C_support_crosscheck": {
+    "existing_support_valid_C_seen_rate": 0.05764331210191083,
+    "note": "the existing rate includes any valid parse denominator; this analysis uses real bridge parses only",
+    "recomputed_complete_C_seen_parse_rate_real_parses_only": 0.058012820512820515
+  },
+  "generated_utc": "2026-11-22T05:10:36Z",
+  "identity": {
+    "complete_C_key_reconstruction_checks": 30251,
+    "complete_C_key_reconstruction_matches": 30251,
+    "encoding": "parent canonical_key: RDKit canonical SMILES over colour-encoded raw attributes, port marker at C-side endpoint",
+    "primary_key": "canonical structure + raw cut-bond 3-tuple (same semantics as the model's C key)",
+    "renumber_checks": 60,
+    "renumber_invariance_ok": true,
+    "renumber_ok": 60,
+    "structure_only": "canonical structure without the cut-bond suffix"
+  },
+  "n_real_parses": 30277,
+  "n_test_real_parses_not_analyzed": 0,
+  "n_train_real_parses": 27157,
+  "n_valid_real_parses": 3120,
+  "protocol": "composition-objective-pilot-v1",
+  "radius_definition": {
+    "1": "C atoms with graph distance <=1 from the C-side cut endpoint, induced subgraph",
+    "2": "C atoms with graph distance <=2 from the C-side cut endpoint, induced subgraph",
+    "3": "C atoms with graph distance <=3 from the C-side cut endpoint, induced subgraph",
+    "complete_C": "all atoms in C = V(G) \\ S, exactly the model's context object"
+  },
+  "results_primary_key_with_cut_bond": {
+    "complete_C": {
+      "complete_C": true,
+      "definition": "all C atoms",
+      "radius": "complete_C",
+      "structure_only": false,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 14.0,
+          "mean": 1.1017511276200584,
+          "n": 22614,
+          "p50": 1.0,
+          "p90": 1.0,
+          "p99": 4.0
+        },
+        "context_size_quantiles": {
+          "max": 114.0,
+          "mean": 25.73826269470118,
+          "n": 27157,
+          "p50": 26.0,
+          "p90": 34.0,
+          "p99": 43.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.0004422039444591846,
+        "fraction_contexts_in_ge2_molecules": 0.05673476607411338,
+        "fraction_contexts_in_ge5_molecules": 0.004952684177942868,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 22614,
+        "n_distinct_joint_context_S": 24917,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 99.0,
+          "mean": 27.57403846153846,
+          "n": 3120,
+          "p50": 26.0,
+          "p90": 37.0,
+          "p99": 97.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.0,
+        "joint_context_S_seen_parse_rate": 0.0,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 2847,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.005847953216374269,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.52046783625731,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.11695906432748537,
+          "n_seen_contexts": 171,
+          "n_unseen_contexts": 2676,
+          "train_S_types_per_seen_context": {
+            "max": 13.0,
+            "mean": 2.409356725146199,
+            "n": 171,
+            "p50": 2.0,
+            "p90": 5.0,
+            "p99": 8.300000000000011
+          },
+          "train_molecules_per_seen_context": {
+            "max": 13.0,
+            "mean": 2.409356725146199,
+            "n": 171,
+            "p50": 2.0,
+            "p90": 5.0,
+            "p99": 8.300000000000011
+          },
+          "train_parses_per_seen_context": {
+            "max": 14.0,
+            "mean": 2.415204678362573,
+            "n": 171,
+            "p50": 2.0,
+            "p90": 5.0,
+            "p99": 8.300000000000011
+          }
+        },
+        "seen_molecule_any_context_rate": 0.2553699284009546,
+        "seen_molecule_mean_parse_fraction": 0.0643974031802194,
+        "seen_parse_rate": 0.058012820512820515,
+        "seen_unique_context_rate": 0.06006322444678609,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.04262820512820513,
+            "n_parses": 133
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.015384615384615385,
+            "n_parses": 48
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.9141025641025641,
+            "n_parses": 2852
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.027884615384615386,
+            "n_parses": 87
+          }
+        }
+      }
+    },
+    "radius_1": {
+      "complete_C": false,
+      "definition": "C-side atoms within graph distance <= radius_1 from the C-side port",
+      "radius": "radius_1",
+      "structure_only": false,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 1154.0,
+          "mean": 20.30044052863436,
+          "n": 1135,
+          "p50": 2.0,
+          "p90": 39.0,
+          "p99": 306.0000000000041
+        },
+        "context_size_quantiles": {
+          "max": 4.0,
+          "mean": 2.8770114519276797,
+          "n": 27157,
+          "p50": 3.0,
+          "p90": 4.0,
+          "p99": 4.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.23876651982378855,
+        "fraction_contexts_in_ge2_molecules": 0.5876651982378854,
+        "fraction_contexts_in_ge5_molecules": 0.35594713656387666,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 1135,
+        "n_distinct_joint_context_S": 5287,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 4.0,
+          "mean": 2.8849358974358976,
+          "n": 3120,
+          "p50": 3.0,
+          "p90": 4.0,
+          "p99": 4.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.9928400954653938,
+        "joint_context_S_seen_parse_rate": 0.8041666666666667,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 530,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.5714285714285714,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.8904761904761904,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.7285714285714285,
+          "n_seen_contexts": 420,
+          "n_unseen_contexts": 110,
+          "train_S_types_per_seen_context": {
+            "max": 184.0,
+            "mean": 9.995238095238095,
+            "n": 420,
+            "p50": 2.0,
+            "p90": 25.0,
+            "p99": 105.24000000000001
+          },
+          "train_molecules_per_seen_context": {
+            "max": 1154.0,
+            "mean": 50.42857142857143,
+            "n": 420,
+            "p50": 14.0,
+            "p90": 122.0,
+            "p99": 737.3100000000004
+          },
+          "train_parses_per_seen_context": {
+            "max": 1338.0,
+            "mean": 59.31428571428572,
+            "n": 420,
+            "p50": 16.0,
+            "p90": 132.5000000000001,
+            "p99": 963.0000000000002
+          }
+        },
+        "seen_molecule_any_context_rate": 0.9976133651551312,
+        "seen_molecule_mean_parse_fraction": 0.9594906959112625,
+        "seen_parse_rate": 0.9573717948717949,
+        "seen_unique_context_rate": 0.7924528301886793,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.916025641025641,
+            "n_parses": 2858
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.041346153846153845,
+            "n_parses": 129
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.040705128205128206,
+            "n_parses": 127
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.0019230769230769232,
+            "n_parses": 6
+          }
+        }
+      }
+    },
+    "radius_2": {
+      "complete_C": false,
+      "definition": "C-side atoms within graph distance <= radius_2 from the C-side port",
+      "radius": "radius_2",
+      "structure_only": false,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 577.0,
+          "mean": 6.031296572280179,
+          "n": 4026,
+          "p50": 1.0,
+          "p90": 12.0,
+          "p99": 72.0
+        },
+        "context_size_quantiles": {
+          "max": 12.0,
+          "mean": 5.197665426961741,
+          "n": 27157,
+          "p50": 5.0,
+          "p90": 7.0,
+          "p99": 8.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.11798310978638847,
+        "fraction_contexts_in_ge2_molecules": 0.45156482861400893,
+        "fraction_contexts_in_ge5_molecules": 0.20491803278688525,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 4026,
+        "n_distinct_joint_context_S": 8656,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 10.0,
+          "mean": 5.283653846153846,
+          "n": 3120,
+          "p50": 5.0,
+          "p90": 7.0,
+          "p99": 8.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.9331742243436754,
+        "joint_context_S_seen_parse_rate": 0.6448717948717949,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 1313,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.4460260972716489,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.8446026097271648,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.6180308422301305,
+          "n_seen_contexts": 843,
+          "n_unseen_contexts": 470,
+          "train_S_types_per_seen_context": {
+            "max": 118.0,
+            "mean": 5.246737841043891,
+            "n": 843,
+            "p50": 2.0,
+            "p90": 11.800000000000068,
+            "p99": 51.58000000000004
+          },
+          "train_molecules_per_seen_context": {
+            "max": 577.0,
+            "mean": 20.49347568208778,
+            "n": 843,
+            "p50": 8.0,
+            "p90": 45.0,
+            "p99": 205.28000000000065
+          },
+          "train_parses_per_seen_context": {
+            "max": 602.0,
+            "mean": 22.768683274021353,
+            "n": 843,
+            "p50": 9.0,
+            "p90": 47.80000000000007,
+            "p99": 236.8000000000004
+          }
+        },
+        "seen_molecule_any_context_rate": 0.9713603818615751,
+        "seen_molecule_mean_parse_fraction": 0.8143942199753137,
+        "seen_parse_rate": 0.8227564102564102,
+        "seen_unique_context_rate": 0.642041127189642,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.7849358974358974,
+            "n_parses": 2449
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.03782051282051282,
+            "n_parses": 118
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.1717948717948718,
+            "n_parses": 536
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.0054487179487179484,
+            "n_parses": 17
+          }
+        }
+      }
+    },
+    "radius_3": {
+      "complete_C": false,
+      "definition": "C-side atoms within graph distance <= radius_3 from the C-side port",
+      "radius": "radius_3",
+      "structure_only": false,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 527.0,
+          "mean": 3.2527704485488127,
+          "n": 7580,
+          "p50": 1.0,
+          "p90": 6.0,
+          "p99": 36.0
+        },
+        "context_size_quantiles": {
+          "max": 17.0,
+          "mean": 7.7718083735316865,
+          "n": 27157,
+          "p50": 8.0,
+          "p90": 11.0,
+          "p99": 13.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.06596306068601583,
+        "fraction_contexts_in_ge2_molecules": 0.3448548812664908,
+        "fraction_contexts_in_ge5_molecules": 0.13139841688654352,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 7580,
+        "n_distinct_joint_context_S": 11797,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 17.0,
+          "mean": 7.977884615384616,
+          "n": 3120,
+          "p50": 8.0,
+          "p90": 11.0,
+          "p99": 13.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.8233890214797136,
+        "joint_context_S_seen_parse_rate": 0.5006410256410256,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 1896,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.3561786085150571,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.8006230529595015,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.5565939771547248,
+          "n_seen_contexts": 963,
+          "n_unseen_contexts": 933,
+          "train_S_types_per_seen_context": {
+            "max": 97.0,
+            "mean": 3.6396677050882658,
+            "n": 963,
+            "p50": 1.0,
+            "p90": 9.0,
+            "p99": 29.379999999999995
+          },
+          "train_molecules_per_seen_context": {
+            "max": 527.0,
+            "mean": 12.608515057113188,
+            "n": 963,
+            "p50": 6.0,
+            "p90": 30.800000000000068,
+            "p99": 92.65999999999997
+          },
+          "train_parses_per_seen_context": {
+            "max": 571.0,
+            "mean": 13.77466251298027,
+            "n": 963,
+            "p50": 6.0,
+            "p90": 32.0,
+            "p99": 130.38
+          }
+        },
+        "seen_molecule_any_context_rate": 0.9164677804295943,
+        "seen_molecule_mean_parse_fraction": 0.6346236404574062,
+        "seen_parse_rate": 0.6548076923076923,
+        "seen_unique_context_rate": 0.5079113924050633,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.6233974358974359,
+            "n_parses": 1945
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.03141025641025641,
+            "n_parses": 98
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.3333333333333333,
+            "n_parses": 1040
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.011858974358974358,
+            "n_parses": 37
+          }
+        }
+      }
+    }
+  },
+  "results_structure_only_key_without_cut_bond": {
+    "complete_C_structure_only": {
+      "complete_C": true,
+      "definition": "all C atoms",
+      "radius": "complete_C",
+      "structure_only": true,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 21.0,
+          "mean": 1.111681242191683,
+          "n": 22412,
+          "p50": 1.0,
+          "p90": 1.0,
+          "p99": 4.0
+        },
+        "context_size_quantiles": {
+          "max": 114.0,
+          "mean": 25.73826269470118,
+          "n": 27157,
+          "p50": 26.0,
+          "p90": 34.0,
+          "p99": 43.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.0006246653578440122,
+        "fraction_contexts_in_ge2_molecules": 0.05996787435302516,
+        "fraction_contexts_in_ge5_molecules": 0.006023558807781546,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 22412,
+        "n_distinct_joint_context_S": 24917,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 99.0,
+          "mean": 27.57403846153846,
+          "n": 3120,
+          "p50": 26.0,
+          "p90": 37.0,
+          "p99": 97.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.0,
+        "joint_context_S_seen_parse_rate": 0.0,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 2845,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.011235955056179775,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.5449438202247191,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.1348314606741573,
+          "n_seen_contexts": 178,
+          "n_unseen_contexts": 2667,
+          "train_S_types_per_seen_context": {
+            "max": 21.0,
+            "mean": 2.5898876404494384,
+            "n": 178,
+            "p50": 2.0,
+            "p90": 5.0,
+            "p99": 9.22999999999999
+          },
+          "train_molecules_per_seen_context": {
+            "max": 21.0,
+            "mean": 2.5898876404494384,
+            "n": 178,
+            "p50": 2.0,
+            "p90": 5.0,
+            "p99": 9.22999999999999
+          },
+          "train_parses_per_seen_context": {
+            "max": 22.0,
+            "mean": 2.595505617977528,
+            "n": 178,
+            "p50": 2.0,
+            "p90": 5.0,
+            "p99": 9.22999999999999
+          }
+        },
+        "seen_molecule_any_context_rate": 0.26968973747016706,
+        "seen_molecule_mean_parse_fraction": 0.06825967058663955,
+        "seen_parse_rate": 0.060897435897435896,
+        "seen_unique_context_rate": 0.06256590509666081,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.04487179487179487,
+            "n_parses": 140
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.016025641025641024,
+            "n_parses": 50
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.9118589743589743,
+            "n_parses": 2845
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.027243589743589744,
+            "n_parses": 85
+          }
+        }
+      }
+    },
+    "radius_1_structure_only": {
+      "complete_C": false,
+      "definition": "C-side atoms within graph distance <= radius_1 from the C-side port",
+      "radius": "radius_1",
+      "structure_only": true,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 1884.0,
+          "mean": 21.26692087702574,
+          "n": 1049,
+          "p50": 2.0,
+          "p90": 39.0,
+          "p99": 375.6799999999994
+        },
+        "context_size_quantiles": {
+          "max": 4.0,
+          "mean": 2.8770114519276797,
+          "n": 27157,
+          "p50": 3.0,
+          "p90": 4.0,
+          "p99": 4.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.22974261201143947,
+        "fraction_contexts_in_ge2_molecules": 0.5815061963775023,
+        "fraction_contexts_in_ge5_molecules": 0.34985700667302194,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 1049,
+        "n_distinct_joint_context_S": 5286,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 4.0,
+          "mean": 2.8849358974358976,
+          "n": 3120,
+          "p50": 3.0,
+          "p90": 4.0,
+          "p99": 4.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.9928400954653938,
+        "joint_context_S_seen_parse_rate": 0.8044871794871795,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 482,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.5631578947368421,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.8842105263157894,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.7236842105263158,
+          "n_seen_contexts": 380,
+          "n_unseen_contexts": 102,
+          "train_S_types_per_seen_context": {
+            "max": 292.0,
+            "mean": 11.255263157894737,
+            "n": 380,
+            "p50": 2.0,
+            "p90": 25.100000000000023,
+            "p99": 138.9899999999996
+          },
+          "train_molecules_per_seen_context": {
+            "max": 1884.0,
+            "mean": 54.20789473684211,
+            "n": 380,
+            "p50": 13.0,
+            "p90": 118.40000000000009,
+            "p99": 601.079999999999
+          },
+          "train_parses_per_seen_context": {
+            "max": 2511.0,
+            "mean": 65.9578947368421,
+            "n": 380,
+            "p50": 16.0,
+            "p90": 128.4000000000001,
+            "p99": 712.9399999999956
+          }
+        },
+        "seen_molecule_any_context_rate": 0.9976133651551312,
+        "seen_molecule_mean_parse_fraction": 0.9624285297560176,
+        "seen_parse_rate": 0.9602564102564103,
+        "seen_unique_context_rate": 0.7883817427385892,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.9189102564102564,
+            "n_parses": 2867
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.041346153846153845,
+            "n_parses": 129
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.03782051282051282,
+            "n_parses": 118
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.0019230769230769232,
+            "n_parses": 6
+          }
+        }
+      }
+    },
+    "radius_2_structure_only": {
+      "complete_C": false,
+      "definition": "C-side atoms within graph distance <= radius_2 from the C-side port",
+      "radius": "radius_2",
+      "structure_only": true,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 1014.0,
+          "mean": 6.426972281449894,
+          "n": 3752,
+          "p50": 1.0,
+          "p90": 12.0,
+          "p99": 76.97999999999956
+        },
+        "context_size_quantiles": {
+          "max": 12.0,
+          "mean": 5.197665426961741,
+          "n": 27157,
+          "p50": 5.0,
+          "p90": 7.0,
+          "p99": 8.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.12126865671641791,
+        "fraction_contexts_in_ge2_molecules": 0.45149253731343286,
+        "fraction_contexts_in_ge5_molecules": 0.20442430703624734,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 3752,
+        "n_distinct_joint_context_S": 8655,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 10.0,
+          "mean": 5.283653846153846,
+          "n": 3120,
+          "p50": 5.0,
+          "p90": 7.0,
+          "p99": 8.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.9331742243436754,
+        "joint_context_S_seen_parse_rate": 0.6451923076923077,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 1229,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.4440251572327044,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.8377358490566038,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.6125786163522012,
+          "n_seen_contexts": 795,
+          "n_unseen_contexts": 434,
+          "train_S_types_per_seen_context": {
+            "max": 178.0,
+            "mean": 5.876729559748427,
+            "n": 795,
+            "p50": 2.0,
+            "p90": 13.0,
+            "p99": 62.059999999999945
+          },
+          "train_molecules_per_seen_context": {
+            "max": 1014.0,
+            "mean": 22.080503144654088,
+            "n": 795,
+            "p50": 8.0,
+            "p90": 47.0,
+            "p99": 226.71999999999935
+          },
+          "train_parses_per_seen_context": {
+            "max": 1106.0,
+            "mean": 24.69937106918239,
+            "n": 795,
+            "p50": 8.0,
+            "p90": 50.0,
+            "p99": 242.17999999999984
+          }
+        },
+        "seen_molecule_any_context_rate": 0.9737470167064439,
+        "seen_molecule_mean_parse_fraction": 0.8323531890497751,
+        "seen_parse_rate": 0.8358974358974359,
+        "seen_unique_context_rate": 0.6468673718470301,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.7974358974358975,
+            "n_parses": 2488
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.038461538461538464,
+            "n_parses": 120
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.15929487179487178,
+            "n_parses": 497
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.004807692307692308,
+            "n_parses": 15
+          }
+        }
+      }
+    },
+    "radius_3_structure_only": {
+      "complete_C": false,
+      "definition": "C-side atoms within graph distance <= radius_3 from the C-side port",
+      "radius": "radius_3",
+      "structure_only": true,
+      "train": {
+        "context_molecule_reuse": {
+          "max": 874.0,
+          "mean": 3.3807755775577557,
+          "n": 7272,
+          "p50": 1.0,
+          "p90": 7.0,
+          "p99": 39.0
+        },
+        "context_size_quantiles": {
+          "max": 17.0,
+          "mean": 7.7718083735316865,
+          "n": 27157,
+          "p50": 8.0,
+          "p90": 11.0,
+          "p99": 13.0
+        },
+        "fraction_contexts_in_ge10_molecules": 0.06738173817381739,
+        "fraction_contexts_in_ge2_molecules": 0.34845984598459845,
+        "fraction_contexts_in_ge5_molecules": 0.13393839383938394,
+        "n_distinct_S_types": 1633,
+        "n_distinct_contexts": 7272,
+        "n_distinct_joint_context_S": 11797,
+        "n_molecules": 3353,
+        "n_parses": 27157
+      },
+      "valid": {
+        "context_size_quantiles": {
+          "max": 17.0,
+          "mean": 7.977884615384616,
+          "n": 3120,
+          "p50": 8.0,
+          "p90": 11.0,
+          "p99": 13.0
+        },
+        "joint_context_S_seen_molecule_any_rate": 0.8233890214797136,
+        "joint_context_S_seen_parse_rate": 0.5006410256410256,
+        "n_distinct_S_types": 503,
+        "n_distinct_contexts": 1845,
+        "n_molecules": 419,
+        "n_parses": 3120,
+        "seen_context_reuse_in_train": {
+          "fraction_seen_contexts_in_ge10_train_molecules": 0.3619957537154989,
+          "fraction_seen_contexts_in_ge2_train_molecules": 0.8152866242038217,
+          "fraction_seen_contexts_in_ge5_train_molecules": 0.5573248407643312,
+          "n_seen_contexts": 942,
+          "n_unseen_contexts": 903,
+          "train_S_types_per_seen_context": {
+            "max": 150.0,
+            "mean": 4.067940552016985,
+            "n": 942,
+            "p50": 1.0,
+            "p90": 10.0,
+            "p99": 34.59000000000003
+          },
+          "train_molecules_per_seen_context": {
+            "max": 874.0,
+            "mean": 13.376857749469215,
+            "n": 942,
+            "p50": 6.0,
+            "p90": 31.899999999999977,
+            "p99": 101.72000000000025
+          },
+          "train_parses_per_seen_context": {
+            "max": 999.0,
+            "mean": 14.642250530785562,
+            "n": 942,
+            "p50": 6.0,
+            "p90": 35.0,
+            "p99": 135.36000000000013
+          }
+        },
+        "seen_molecule_any_context_rate": 0.918854415274463,
+        "seen_molecule_mean_parse_fraction": 0.6467423822300858,
+        "seen_parse_rate": 0.6644230769230769,
+        "seen_unique_context_rate": 0.510569105691057,
+        "support_2x2": {
+          "seen_context_seen_S": {
+            "fraction_of_valid_parses": 0.6317307692307692,
+            "n_parses": 1971
+          },
+          "seen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.032692307692307694,
+            "n_parses": 102
+          },
+          "unseen_context_seen_S": {
+            "fraction_of_valid_parses": 0.325,
+            "n_parses": 1014
+          },
+          "unseen_context_unseen_S": {
+            "fraction_of_valid_parses": 0.010576923076923078,
+            "n_parses": 33
+          }
+        }
+      }
+    }
+  },
+  "test_policy": "no labels used; structure and split membership only"
+}

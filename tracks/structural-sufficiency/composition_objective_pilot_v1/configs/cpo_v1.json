@@ -1,0 +1,216 @@
+{
+  "protocol_id": "composition-objective-pilot-v1",
+  "version": "2026-11-22/v1",
+  "dataset": "ogbg-mollipo",
+  "parent_round": "tracks/structural-sufficiency/task_response_composition_s0_v1",
+  "raw_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+  "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "raw_cache_esol": "tracks/structural-query-learning/data/ogbg_molesol_sq-pilot-cache-v1.npz",
+  "raw_cache_esol_sha256": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+  "seed": 0,
+  "cuts": {
+    "max_object_atoms": 4,
+    "max_side_atoms": 8,
+    "distance_buckets": 6,
+    "bucket_labels": [
+      "d0",
+      "d1",
+      "d2",
+      "d3",
+      "d4plus",
+      "unreachable"
+    ],
+    "null_cut_dim": 8
+  },
+  "dims": {
+    "atom_fields": 9,
+    "bond_fields": 3,
+    "cat_dim": 4,
+    "atom_concat": 36,
+    "atom_hidden": 32,
+    "atom_out": 16,
+    "bond_concat": 12,
+    "bond_hidden": 16,
+    "bond_out": 8,
+    "slots": 4,
+    "pairs": 6,
+    "frame_atom": 64,
+    "frame_bond": 48,
+    "frame_mask": 4,
+    "frame_edge_mask": 6,
+    "frame_adj": 6,
+    "frame_size_onehot": 4,
+    "frame_input": 132,
+    "frame_hidden": 128,
+    "frame_out": 32,
+    "fragment_input": 394,
+    "fragment_hidden": 192,
+    "fragment_out": 128,
+    "fragment_dropout": 0.1,
+    "state_rank": 32,
+    "hidden": 128
+  },
+  "heads": {
+    "FACTOR": {
+      "a": [
+        128,
+        64,
+        1
+      ],
+      "q": [
+        136,
+        64,
+        32
+      ],
+      "r": [
+        136,
+        64,
+        32
+      ],
+      "b": [
+        8,
+        1
+      ]
+    },
+    "DIRECT": {
+      "head": [
+        264,
+        96,
+        48,
+        1
+      ]
+    },
+    "ADD": {
+      "a_add": [
+        128,
+        128,
+        96,
+        1
+      ]
+    },
+    "GLOBAL": {
+      "global_head": [
+        263,
+        256,
+        128,
+        1
+      ],
+      "buckets": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  },
+  "csoi": {
+    "frame_out": 64,
+    "hidden": 64,
+    "heads": 4,
+    "head_dim": 16,
+    "cross_layers": 1,
+    "dropout": 0.1,
+    "guard_token_samples": 128,
+    "attention_entry_chunk": 262144,
+    "cut_hidden": 32,
+    "add_hidden": 128,
+    "r_hidden": 128,
+    "rel_emb": 16,
+    "rel_hidden": 32
+  },
+  "recipe": {
+    "seed": 0,
+    "peak_lr": 0.001,
+    "min_lr": 1e-05,
+    "weight_decay": 0.0001,
+    "batch_molecules": 64,
+    "batch_pairs": 16,
+    "aux_weight": 0.25,
+    "clip_norm": 5.0,
+    "warmup_epochs": 5,
+    "epochs_frozen": 160,
+    "epochs_cap": 160,
+    "eval_batch_parent": 64,
+    "eval_batch_csoi": 32,
+    "dropout_fragment": 0.1,
+    "dropout_global": 0.1,
+    "aux_tau2_floor": 0.25
+  },
+  "pair_directory": {
+    "repeat_pool_weight": 0.8,
+    "all_pool_weight": 0.2,
+    "sampler_seed": 0
+  },
+  "arms": {
+    "F_GRAPH": {
+      "kind": "train",
+      "family": "parent",
+      "model_arm": "FACTOR",
+      "run_id": "F_GRAPH_LIPO_R0"
+    },
+    "B_GRAPH": {
+      "kind": "train",
+      "family": "csoi",
+      "model_arm": "CSOI_ADD",
+      "run_id": "B_GRAPH_LIPO_R0"
+    },
+    "C_GRAPH": {
+      "kind": "train",
+      "family": "csoi",
+      "model_arm": "CSOI_GLOBAL",
+      "run_id": "C_GRAPH_LIPO_R0"
+    }
+  },
+  "decision": {
+    "bootstrap_reps": 2000,
+    "bootstrap_seed": 0,
+    "exploratory_signal_rmse": 0.02,
+    "note": "single seed 0; CI covers Valid-molecule sampling only, not training-seed randomness"
+  },
+  "budget": {
+    "gpu_hours_max": 2.0,
+    "max_parallel_gpus": 2,
+    "wall_hours": 4.0,
+    "seeds": [
+      0
+    ]
+  },
+  "expected_content_sha256": {
+    "lipo": "46439b91dfd760255be4c53256f12687959d203b6740e55c0213d66476168825",
+    "esol": "e937998bb10a156c920f0adbf36ca7c932eb95203444a6a8ae21bcd20dd8b1eb"
+  },
+  "parent_file_sha256": {
+    "lipo": "c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3"
+  },
+  "identity_note": "np.savez stores zip timestamps, so the npz file hash is not reproducible; identity is checked with a content digest over every array except the timing string.",
+  "dataset_key": "lipo",
+  "dataset_key_note": "the parent load_raw_cache() selects the ESOL cache for any dataset string other than exactly \"lipo\"; the data key is therefore explicit",
+  "csoi_round": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1",
+  "reused": {
+    "A_TRC_FACTOR_CUTRESP": {
+      "family": "parent",
+      "model_arm": "FACTOR",
+      "run_dir": "tracks/structural-sufficiency/task_response_composition_s0_v1/results/LIPO_FACTOR_CUTRESP_R0"
+    },
+    "B_CSOI_ADD": {
+      "family": "csoi",
+      "model_arm": "CSOI_ADD",
+      "run_dir": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/results/CSOI_ADD_LIPO_R0"
+    },
+    "C_CSOI_GLOBAL": {
+      "family": "csoi",
+      "model_arm": "CSOI_GLOBAL",
+      "run_dir": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/results/CSOI_GLOBAL_LIPO_R0"
+    },
+    "D_CSOI_REL_EXTRA": {
+      "family": "csoi",
+      "model_arm": "CSOI_REL",
+      "run_dir": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/results/CSOI_REL_LIPO_R0"
+    },
+    "E_GINE_RAW_REF": {
+      "family": "gine",
+      "model_arm": "GINE_RAW",
+      "run_dir": "tracks/structural-sufficiency/task_response_composition_s0_v1/results/GINE_RAW_LIPO_R0"
+    }
+  }
+}
