@@ -1,6 +1,6 @@
 # Structural path composition route (PSC) — final report
 
-*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `03dd1b6ef57a7ea23395117595956bbe36917634` · *generated*: 2026-11-22T20:33:51Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
+*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `97ee324b47c85381661a3257913461f6f9be6723` · *generated*: 2026-11-22T20:34:42Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
 
 Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers below are whole-molecule RMSE / MAE in **original label units** (the training target is the standardised label, all reported metrics are inverted back). Higher-is-better quantities are marked.
 
@@ -73,18 +73,18 @@ All checks pass; the raw output is `analysis/checks.json`. The 32-molecule overf
 
 **No.** On D0 the ordering is stable and monotone (3 seeds, mean ± sd):
 
-| model | D0 RMSE | D0 MAE | Δ vs ACRA_REF [95% CI] |
+| model | D0 RMSE | D0 MAE | RMSE − RMSE(ACRA_REF) [95% CI] (positive = worse) |
 |---|---|---|---|
-| `PSC_POOL_BAG_PAIR` | 0.687 ± 0.014 | 0.530 | +0.107 |
+| `PSC_POOL_BAG_PAIR` | 0.687 ± 0.014 | 0.530 | +0.107 [+0.066, +0.151] |
 | `PSC_POOL_PAIR` | 0.717 ± 0.057 | 0.564 | +0.137 |
 | `PSC_SUM_BAG_PAIR` | 0.723 ± 0.027 | 0.556 | +0.143 |
 | `ACRA_REF` | 0.580 ± 0.002 | 0.445 | — |
-| `ACRA_PAIR` | 0.585 ± 0.022 | 0.450 | -0.102 [-0.141, -0.065] |
-| `GINE_REF` | 0.527 ± 0.006 | 0.398 | -0.161 [-0.203, -0.118] |
-| `PATH_COUNT_RIDGE` | 0.617 ± 0.000 | 0.465 | -0.070 [-0.115, -0.028] |
-| `PATH_COUNT_KRR` | 0.655 ± 0.000 | 0.495 | -0.032 [-0.078, +0.010] |
-| `MORGAN_COUNT_KRR` | 0.659 ± 0.000 | 0.520 | -0.028 [-0.072, +0.015] |
-| `COUNT_ONLY_RIDGE` | 1.161 ± 0.000 | 0.902 | +0.474 [+0.405, +0.544] |
+| `ACRA_PAIR` | 0.585 ± 0.022 | 0.450 | +0.004 [-0.016, +0.026] |
+| `GINE_REF` | 0.527 ± 0.006 | 0.398 | -0.054 |
+| `PATH_COUNT_RIDGE` | 0.617 ± 0.000 | 0.465 | +0.036 |
+| `PATH_COUNT_KRR` | 0.655 ± 0.000 | 0.495 | +0.075 |
+| `MORGAN_COUNT_KRR` | 0.659 ± 0.000 | 0.520 | +0.079 |
+| `COUNT_ONLY_RIDGE` | 1.161 ± 0.000 | 0.902 | +0.581 |
 
 Paired-molecule bootstrap (2000 resamples, shared index across models and seeds): the champion is significantly worse than `ACRA_REF`, `ACRA_PAIR`, `GINE_REF`, `PATH_COUNT_RIDGE` and statistically indistinguishable (CI straddles 0) from `PATH_COUNT_KRR`, `MORGAN_COUNT_KRR`. The per-molecule view agrees: mean per-molecule |error| change vs `ACRA_REF` is -0.085 [-0.114, -0.056], and the champion is closer to truth on 40.9% of molecules.
 
@@ -221,13 +221,13 @@ Quartile edges on fit-set atom counts: [21.0, 27.0, 32.0]. Removing the union of
 
 ## 11. D1 replication (independent scaffold-disjoint split of the same Train rows)
 
-| model | D1 RMSE (2 seeds) | D0 RMSE | Δ(D1−D0) | D1 Δ vs ACRA_REF (CI where bootstrapped) |
+| model | D1 RMSE (2 seeds) | D0 RMSE | Δ(D1−D0) | D1 Δ vs ACRA_REF [95% CI] (positive = worse) |
 |---|---|---|---|---|
-| `PSC_POOL_BAG_PAIR` | 0.706 ± 0.004 | 0.687 | +0.018 | -0.068 [-0.118, -0.019] |
+| `PSC_POOL_BAG_PAIR` | 0.706 ± 0.004 | 0.687 | +0.018 | +0.068 [+0.019, +0.118] |
 | `PSC_POOL_PAIR` | 0.755 ± 0.010 | 0.717 | +0.037 | +0.117 |
 | `PSC_SUM_BAG_PAIR` | 0.808 ± 0.052 | 0.723 | +0.085 | +0.171 |
 | `ACRA_REF` | 0.638 ± 0.008 | 0.580 | +0.057 | — |
-| `GINE_REF` | 0.553 ± 0.003 | 0.527 | +0.027 | -0.152 [-0.199, -0.104] |
+| `GINE_REF` | 0.553 ± 0.003 | 0.527 | +0.027 | -0.084 |
 
 D1 runs used the frozen `E_m` epochs (median D0 best epoch per arm) and the final checkpoint, with no selection.
 

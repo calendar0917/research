@@ -506,6 +506,7 @@ Counts: {"components_all": 458, "direction_items_removed": 5, "scope_counts": {"
 | model | E[(e_b−e_a)²] | E[e_a²] | E[e_b²] | E[e_a e_b] | corr(e_a,e_b) | identity err |
 |---|---|---|---|---|---|---|
 | ACRA_REF | 0.2679 | 0.3747 | 0.2718 | 0.1893 | 0.440 | 1.7e-16 |
+| GINE_REF | 0.2830 | 0.3623 | 0.2222 | 0.1507 | 0.495 | 1.1e-16 |
 | PSC_POOL_BAG_DIAG | 0.4001 | 0.5829 | 0.4565 | 0.3196 | 0.589 | 1.1e-16 |
 | PSC_POOL_BAG_PAIR | 0.3280 | 0.5800 | 0.4316 | 0.3418 | 0.467 | 0.0e+00 |
 | PSC_SUM_BAG_PAIR | 0.3077 | 0.6225 | 0.5041 | 0.4094 | 0.553 | 1.1e-16 |

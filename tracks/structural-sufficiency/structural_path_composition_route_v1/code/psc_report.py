@@ -50,6 +50,15 @@ def ci(d: Mapping[str, Any] | None, nd: int = 3) -> str:
     return f"{signed(point, nd)} [{signed(lo, nd)}, {signed(hi, nd)}]"
 
 
+def flip(d: Mapping[str, Any] | None, nd: int = 3) -> str:
+    """Contrast (positive = candidate better) -> model - reference (positive = worse)."""
+    if not d:
+        return "n/a"
+    lo, hi = d["ci95"]
+    point = d.get("point", d.get("mean_abs_err_diff"))
+    return f"{signed(-float(point), nd)} [{signed(-float(hi), nd)}, {signed(-float(lo), nd)}]"
+
+
 def pct(x: Any, nd: int = 1) -> str:
     if x is None:
         return "n/a"
@@ -353,20 +362,23 @@ def main() -> int:
     add("")
     add("**No.** On D0 the ordering is stable and monotone (3 seeds, mean ± sd):")
     add("")
-    add("| model | D0 RMSE | D0 MAE | Δ vs " + str(acra) + " [95% CI] |")
+    add("| model | D0 RMSE | D0 MAE | RMSE − RMSE(" + str(acra) + ") [95% CI] "
+        "(positive = worse) |")
     add("|---|---|---|---|")
     order = [champ, o_star, r_star, m_star, acra, "ACRA_PAIR", "GINE_REF"] + list(A.CPU_MODELS)
     for a in dict.fromkeys([x for x in order if x]):
         if a not in agg0:
             continue
         v = agg0[a]
-        key = f"champion_vs_{a}"
+        key = (f"champion_vs_{acra}" if a == champ else f"{a}_vs_{acra}")
+        acra_mean = agg0.get(acra, {}).get("rmse_mean")
+        point = (None if acra_mean is None else v["rmse_mean"] - acra_mean)
         if a == acra:
             delta = "—"
         elif c(key):
-            delta = ci(c(key))
+            delta = flip(c(key))
         else:
-            delta = signed(v["rmse_mean"] - (agg0.get(acra, {}).get("rmse_mean") or float("nan")))
+            delta = signed(point)
         add(f"| `{a}` | {n(v['rmse_mean'])} ± {n(v['rmse_sd'])} | {n(v['mae_mean'])} | "
             f"{delta} |")
     add("")
@@ -713,19 +725,18 @@ def main() -> int:
     add("")
     if agg1:
         add("| model | D1 RMSE (2 seeds) | D0 RMSE | Δ(D1−D0) | D1 Δ vs "
-            + str(acra) + " (CI where bootstrapped) |")
+            + str(acra) + " [95% CI] (positive = worse) |")
         add("|---|---|---|---|---|")
         for a in dict.fromkeys([champ, o_star, r_star, acra, "GINE_REF"]):
             if not a or a not in agg1:
                 continue
             v = agg1[a]
             d0 = (agg0.get(a) or {}).get("rmse_mean")
-            got = (c("champion_vs_ACRA_REF", con1) if a == champ
-                   else c(f"champion_vs_{a}", con1) if a != acra else None)
+            got = (c("champion_vs_ACRA_REF", con1) if a == champ else None)
             if a == acra:
                 delta = "—"
             elif got:
-                delta = ci(got)
+                delta = flip(got)
             else:
                 delta = signed(v["rmse_mean"] - (agg1.get(acra, {}).get("rmse_mean")
                                                  or float("nan")))
