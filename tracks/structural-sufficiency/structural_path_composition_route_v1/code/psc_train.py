@@ -454,8 +454,8 @@ def acra_masked_loss(model, out, batch, y_std, main_mask, aux=None, lam=0.25):
         0, owner[owner_main], site_sq[owner_main])
     n_sites = (batch["n_atoms_per_mol"] + 2 * batch["n_bonds"]).float()
     site = torch.mean((per_mol / n_sites.clamp(min=1.0))[main_mask])
-    ev_main = main_mask[batch["ev_mol"]]
-    rel = torch.mean(out["e_rel"][ev_main] ** 2)
+    # ``e_rel`` is already a per-molecule term in the parent model
+    rel = torch.mean(out["e_rel"][main_mask] ** 2)
     total = (task
              + float(model.cfg["composition"]["site_loss_weight"]) * site
              + float(model.cfg["composition"]["relation_loss_weight"]) * rel)

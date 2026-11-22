@@ -355,7 +355,35 @@ def check_pair_algebra() -> dict[str, Any]:
     fit[np.asarray(split["fit_rows"])] = True
     if not (fit[targets.a].all() and fit[targets.b].all()):
         raise AssertionError("pair targets contain non-fit endpoints")
-    return {"n_unique_pairs": int(targets.a.size), "n_components": int(targets.n_components),
+    import psc_train as T
+    import torch
+    import sys as _sys
+    from psc_train import _acra_modules, _feature_dims
+    _sys.path.insert(0, str(C.WORK_DIR if hasattr(C, "WORK_DIR") else C.CODE_DIR))
+    AC, AM, AD, AK = _acra_modules()
+    acc_cfg = json.loads((C.ACRA2_DIR / "configs" / "acra_v2.json").read_text())
+    acc_cfg["recipe"]["seed"] = 0
+    pack = T.ensure_acra_pack(acc_cfg, bundle)
+    source = AD.BatchSource(pack, torch.device("cpu"))
+    atom_dims, bond_dims = _feature_dims()
+    model = AM.ACRAModel(acc_cfg, atom_dims, bond_dims, "ACRA_REL_REF")
+    model.load_pack(pack)
+    model.eval()
+    rows = np.asarray(split["fit_rows"])[:16]
+    batch = source.make(rows)
+    y_std, _ = D.labels_standardized(bundle, split["fit_rows"])
+    y = torch.as_tensor(y_std[rows], dtype=torch.float32)
+    with torch.no_grad():
+        out_b = model.forward_batch(batch)
+        parent = model.loss(out_b, batch, y)
+        masked = T.acra_masked_loss(model, out_b, batch, y,
+                                    torch.ones(len(rows), dtype=torch.bool))
+    for key in ("task", "site", "rel", "loss"):
+        diff = abs(float(parent[key]) - float(masked[key]))
+        if diff > 1e-6:
+            raise AssertionError(f"masked ACRA {key} differs from parent: {diff}")
+    return {"masked_acra_equals_parent": True,
+            "n_unique_pairs": int(targets.a.size), "n_components": int(targets.n_components),
             "sampler_mean": float(np.mean(draws)), "exact_pair": pair,
             "sum_w": float(w.sum())}
 
