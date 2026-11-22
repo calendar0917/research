@@ -658,6 +658,10 @@ def pair_metrics(delta_true: np.ndarray, delta_pred: np.ndarray,
         out["rel_mae"] = out["mae"] / out["mean_abs_true"]
     if np.std(p) > 0 and np.std(y) > 0:
         out["corr"] = float(np.corrcoef(y, p)[0, 1])
+        out["sd_pred"] = float(np.std(p))
+        cov = float(np.sum(w * (p - np.sum(w * p)) * (y - np.sum(w * y))))
+        var = float(np.sum(w * (y - np.sum(w * y)) ** 2))
+        out["slope"] = cov / var if var > 0 else None
     return out
 
 
@@ -820,7 +824,8 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
                     continue
                 entry[m] = {"n_scored": n_scored, "mean_over_seeds": {
                     k: float(np.mean([ps[k] for ps in per_seed]))
-                    for k in ("mae", "rmse", "bias", "direction_accuracy")
+                    for k in ("mae", "rmse", "bias", "direction_accuracy", "slope",
+                              "corr", "sd_pred", "mean_abs_true")
                     if per_seed[0].get(k) is not None},
                     "per_seed_mae": [ps["mae"] for ps in per_seed],
                     "per_seed_rmse": [ps["rmse"] for ps in per_seed]}
