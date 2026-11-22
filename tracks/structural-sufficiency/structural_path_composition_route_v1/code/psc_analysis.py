@@ -464,6 +464,27 @@ def cmd_bootstrap(bundle: D.DataBundle, split_name: str = "D0") -> dict[str, Any
         if got:
             contrasts[f"champion_vs_{ref}"] = got
     out["contrasts"] = contrasts
+    # per-molecule error change of the champion against the reference
+    champ_i = index.get(lock["champion"])
+    ref_i = index.get(lock["ACRA_B_star"])
+    if champ_i is not None and ref_i is not None:
+        def per_mol(i: int) -> np.ndarray:
+            return np.sqrt(np.nanmean(table[i], axis=0))
+        diff = per_mol(ref_i) - per_mol(champ_i)  # >0 champion closer to truth
+        boot = np.empty(reps)
+        rng3 = np.random.default_rng(seed0 + 2)
+        for r in range(reps):
+            idx = rng3.integers(0, n, size=n)
+            boot[r] = float(np.mean(diff[idx]))
+        out["per_molecule"] = {
+            "definition": "mean over molecules of |err_ref| - |err_champion| "
+                          "(absolute error, positive = champion better)",
+            "mean_abs_err_diff": float(np.mean(diff)),
+            "median_abs_err_diff": float(np.median(diff)),
+            "ci95": C.percentile_ci(boot),
+            "share_molecules_champion_better": float(np.mean(diff > 0)),
+            "share_molecules_tie": float(np.mean(np.abs(diff) < 1e-9)),
+        }
     # scaffold-cluster bootstrap (D0 and D1 both have a scaffold map)
     try:
         split = C.split_spec(split_name, bundle.raw,
@@ -633,6 +654,8 @@ def pair_metrics(delta_true: np.ndarray, delta_pred: np.ndarray,
                                if nz.any() else None),
         "sd_true": float(np.std(y)), "mean_abs_true": float(np.mean(np.abs(y))),
     }
+    if out.get("mean_abs_true"):
+        out["rel_mae"] = out["mae"] / out["mean_abs_true"]
     if np.std(p) > 0 and np.std(y) > 0:
         out["corr"] = float(np.corrcoef(y, p)[0, 1])
     return out
@@ -828,7 +851,8 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
                     entry[m] = {"n_scored": 0}
                     continue
                 entry[m] = {k: float(np.mean([ps[k] for ps in per_seed]))
-                            for k in ("mae", "rmse", "direction_accuracy")
+                            for k in ("mae", "rmse", "direction_accuracy", "rel_mae",
+                                      "mean_abs_true")
                             if per_seed[0].get(k) is not None}
             result["support_classes"][name] = entry
         # novelty buckets on heldout x heldout (pair-level, unweighted)
@@ -856,7 +880,8 @@ def cmd_pairs(bundle: D.DataBundle) -> dict[str, Any]:
                             per_seed.append(pair_metrics(delta_true[use], dp[use]))
                         if per_seed and per_seed[0]["n"]:
                             sub[m] = {k: float(np.mean([ps[k] for ps in per_seed]))
-                                      for k in ("mae", "rmse", "direction_accuracy")
+                                      for k in ("mae", "rmse", "direction_accuracy", "rel_mae",
+                                                "mean_abs_true")
                                       if per_seed[0].get(k) is not None}
                     entry[name] = sub
                 result["novelty"].setdefault(scope_names[scope], {})[label] = entry
@@ -1212,183 +1237,17 @@ def load_psc_model(rid: str, bundle: D.DataBundle, cfg: Mapping[str, Any],
 
 
 def cmd_ledger(bundle: D.DataBundle) -> dict[str, Any]:
+    """Delegate to the v2 ledger (geometric S/C split, exact identity check)."""
+    import psc_ledger
+
     lock = C.read_json(ANALYSIS / "selection_lock.json")
     cfg = C.load_config()
-    champ = lock["champion"]
-    target = champ if ARM_SPEC[champ]["readout"] == "SUM" else lock["R_star"]
-    rid = run_id(target, "D0", 0)
-    model, cache, spec, state = load_psc_model(rid, bundle, cfg)
-    c_l = np.asarray(state["c_l"], np.float64)
-    scaler = state["scaler"]
-    L = cache.L
-    split = C.split_spec("D0", bundle.raw)
-    pd = PairData(bundle, split)
-    import psc_train as T
-    pred_eval = {}
-    for rid2 in [run_id(lock["ACRA_B_star"], "D0", s) for s in (0, 1, 2)]:
-        path = RESULTS / rid2 / "predictions_best_eval.npz"
-        if path.is_file():
-            with np.load(path, allow_pickle=False) as z:
-                pred_eval[rid2] = dict(zip(np.asarray(z["row_id"]).tolist(),
-                                           np.asarray(z["pred"], np.float64).tolist()))
-    # verify the ledger identity and build bridge decomposition for heldout pairs
-    held = np.asarray(split["eval_rows"], np.int64)
-    pairs_mask = pd.scope == 2
-    delta_true = bundle.labels[pd.pb] - bundle.labels[pd.pa]
-    out: dict[str, Any] = {"generated_utc": C.now_utc(), "ledger_model": target,
-                           "champion": champ,
-                           "note": ("SUM ledger of the champion" if target == champ else
-                                    "SUM ledger reported for the matched SUM twin of a POOL "
-                                    "champion; it does not explain the champion's predictions"),
-                           "identity_max_abs_std": None, "pairs": 0, "examples": []}
-    # identity check on 12 heldout molecules
-    check_rows = held[:12]
-    max_err = 0.0
-    for row in check_rows.tolist():
-        paths, atoms, bonds, keys = enumerate_row(cache, bundle.raw, row, L)
-        s = score_paths(model, atoms, bonds, L, "cpu", spec["input"] == "BAG")
-        plen = np.array([len(p) - 1 for p in paths])
-        f_ledger = float(model.beta) + float(np.sum(c_l[plen] * s))
-        f_pred = _predict_one(model, cache, c_l, int(row), spec["input"] == "BAG")
-        max_err = max(max_err, abs(f_ledger - f_pred))
-    out["identity_max_abs_std"] = float(max_err)
-    if max_err > 1e-3:
-        raise AssertionError(f"SUM ledger identity failed: {max_err}")
-    # candidates for the predefined case selection
-    cand = []
-    for i in np.nonzero(pairs_mask)[0]:
-        a, b = int(pd.pa[i]), int(pd.pb[i])
-        dp = np.mean([np.mean([
-            pred_eval[run_id(lock["ACRA_B_star"], "D0", s)][b]
-            - pred_eval[run_id(lock["ACRA_B_star"], "D0", s)][a]
-            for s in (0, 1, 2) if run_id(lock["ACRA_B_star"], "D0", s) in pred_eval])])
-        cand.append({"pair": i, "a": a, "b": b,
-                     "delta_true": float(delta_true[i]),
-                     "delta_ref_pred": float(dp),
-                     "abs_err_ref": float(abs(dp - delta_true[i]))})
-    cand = [c for c in cand if np.isfinite(c["abs_err_ref"])]
-    out["pairs"] = len(cand)
-    if not cand:
-        raise SystemExit("ledger: no finite reference predictions (ACRA_B* missing)")
-    # exact T support for the case rules
-    import psc_train as TT
-    dir_ = TT.ensure_pair_directory(bundle)
-    fit_T = set(np.unique(dir_.T_id[pd.cut_scope == 0]).tolist())
-    trc = load_trc()
-    frag_seen = fit_fragment_set(dir_, split["fit_rows"], trc)
-    for entry in cand:
-        cut_rows = pd.cut_rows_of_pair()[entry["pair"]]
-        entry["T_seen"] = bool(np.any([int(dir_.T_id[c]) in fit_T for c in cut_rows.tolist()]))
-        entry["frag_seen"] = bool(all(int(dir_.word_a[c]) in frag_seen
-                                      and int(dir_.word_b[c]) in frag_seen
-                                      for c in cut_rows.tolist()))
-    # eta
-    cache_rows = np.union1d(bundle.official_train, bundle.official_valid)
-    counts = dict(zip(cache_rows.tolist(), path_count_dicts(cache, cache_rows)))
-    vocab_fit = set(D.fit_path_vocab(cache, split["fit_rows"], L).ids)
-    for entry in cand:
-        da, db = counts[entry["a"]], counts[entry["b"]]
-        keys = set(da) | set(db)
-        num = sum(abs(db.get(k, 0) - da.get(k, 0)) for k in keys if k not in vocab_fit)
-        den = sum(abs(db.get(k, 0) - da.get(k, 0)) for k in keys)
-        entry["eta"] = num / den if den > 0 else None
-    high_eta = np.quantile([e["eta"] for e in cand if e["eta"] is not None], 0.75)
-    rules = cfg["analysis"]["case_rules"]
-    picked: list[dict[str, Any]] = []
-    seen_pairs: set[int] = set()
-
-    def take(filter_fn, key, n, why):
-        items = [e for e in cand if e["pair"] not in seen_pairs and filter_fn(e)]
-        items.sort(key=key)
-        for e in items[:n]:
-            seen_pairs.add(e["pair"])
-            picked.append({**e, "rule": why})
-
-    unseen_frag_seen = lambda e: (not e["T_seen"]) and e["frag_seen"]
-    take(unseen_frag_seen, lambda e: e["abs_err_ref"], rules["t_unseen_frag_seen_improved"],
-         "T unseen / fragments seen: largest ACRA_B* error (room to improve)")
-    take(lambda e: unseen_frag_seen(e) and e["abs_err_ref"] > 0, lambda e: -e["abs_err_ref"],
-         rules["t_unseen_frag_seen_degraded"],
-         "T unseen / fragments seen: smallest ACRA_B* error")
-    take(lambda e: e["eta"] is not None and e["eta"] >= high_eta,
-         lambda e: e["abs_err_ref"], rules["high_eta_improved"],
-         "high eta: largest ACRA_B* error")
-    take(lambda e: e["eta"] is not None and e["eta"] >= high_eta,
-         lambda e: -e["abs_err_ref"], rules["high_eta_degraded"],
-         "high eta: smallest ACRA_B* error")
-    take(lambda e: e["T_seen"] and e["delta_true"] > 0, lambda e: -e["delta_true"],
-         rules["seen_t_positive"], "seen T with positive true delta")
-    take(lambda e: e["T_seen"] and e["delta_true"] < 0, lambda e: e["delta_true"],
-         rules["seen_t_negative"], "seen T with negative true delta")
-    # bridge decomposition for the picked pairs
-    parse_mol = np.asarray(trc["parse_mol"], np.int64)
-    parse_S = np.asarray(trc["parse_S"], np.int64)
-    parse_C = np.asarray(trc["parse_C"], np.int64)
-    parse_bond = np.asarray(trc["parse_cut_bond_row"], np.int64)
-    parse_kind = np.asarray(trc["parse_kind"], np.uint8)
-    parse_S_atoms = np.asarray(trc["parse_S_atoms"], np.int64)
-    parse_S_ptr = np.asarray(trc["parse_S_atoms_ptr"], np.int64)
-    parse_C_atoms = np.asarray(trc["parse_C_atoms"], np.int64)
-    parse_C_ptr = np.asarray(trc["parse_C_atoms_ptr"], np.int64)
-
-    def parse_of(mol, word, ctx, bond):
-        m = (parse_mol == mol) & (parse_S == word) & (parse_C == ctx) \
-            & (parse_bond == bond) & (parse_kind == 0)
-        idx = np.nonzero(m)[0]
-        return int(idx[0]) if idx.size else None
-
-    for entry in picked:
-        results = {}
-        for side, row in (("a", entry["a"]), ("b", entry["b"])):
-            paths, atoms, bonds, keys = enumerate_row(cache, bundle.raw, row, L)
-            s = score_paths(model, atoms, bonds, L, "cpu", spec["input"] == "BAG")
-            plen = np.array([len(p) - 1 for p in paths])
-            results[side] = {"paths": paths, "scores": s, "plen": plen, "row": row}
-        # use the first cut row of the pair for the S/C atom sets
-        cut_rows = pd.cut_rows_of_pair()[entry["pair"]]
-        c0 = int(cut_rows[0])
-        ctx = int(trc["pair_C"][c0])
-        p_a = parse_of(entry["a"], int(pd.dir.word_a[c0]), ctx, int(pd.dir.bond_id[c0]))
-        p_b = parse_of(entry["b"], int(pd.dir.word_b[c0]), ctx, int(pd.dir.bond_id[c0]))
-        if p_a is None or p_b is None:
-            entry["decomposition"] = None
-            continue
-        S_a = set(parse_S_atoms[parse_S_ptr[p_a]:parse_S_ptr[p_a + 1]].tolist())
-        C_a = set(parse_C_atoms[parse_C_ptr[p_a]:parse_C_ptr[p_a + 1]].tolist())
-        S_b = set(parse_S_atoms[parse_S_ptr[p_b]:parse_S_ptr[p_b + 1]].tolist())
-        C_b = set(parse_C_atoms[parse_C_ptr[p_b]:parse_C_ptr[p_b + 1]].tolist())
-
-        def classed(side, S, C):
-            sums = {"S": 0.0, "C": 0.0, "X": 0.0}
-            for seq, sc, l in zip(results[side]["paths"], results[side]["scores"],
-                                  results[side]["plen"]):
-                vs = set(int(x) for x in seq)
-                w = c_l[l]
-                if vs <= S:
-                    sums["S"] += w * sc
-                elif vs <= C:
-                    sums["C"] += w * sc
-                else:
-                    sums["X"] += w * sc
-            return sums
-        sa = classed("a", S_a, C_a)
-        sb = classed("b", S_b, C_b)
-        entry["decomposition"] = {
-            "F_a": float(model.beta) + sa["S"] + sa["C"] + sa["X"],
-            "F_b": float(model.beta) + sb["S"] + sb["C"] + sb["X"],
-            "delta_F": (sb["S"] - sa["S"]) + (sb["C"] - sa["C"]) + (sb["X"] - sa["X"]),
-            "F0_S": {"a": sa["S"], "b": sb["S"]},
-            "F0_C": {"a": sa["C"], "b": sb["C"]},
-            "X": {"a": sa["X"], "b": sb["X"]},
-            "delta_F0_S": sb["S"] - sa["S"], "delta_F0_C": sb["C"] - sa["C"],
-            "delta_X": sb["X"] - sa["X"],
-            "delta_true": entry["delta_true"],
-            "delta_pred_scaled": (sb["S"] - sa["S"] + sb["C"] - sa["C"]
-                                  + sb["X"] - sa["X"]) * scaler["std"],
-        }
-        out["examples"].append(entry)
+    out = psc_ledger.build(bundle, lock, cfg)
     C.write_json(ANALYSIS / "sum_edit_ledger.json", out)
-    print(f"ledger: model={target} identity_err={max_err:.2e} examples={len(out['examples'])}")
+    print(f"ledger: model={out['ledger_model']} identity_err="
+          f"{out['identity_max_abs_std']:.2e} examples={len(out['examples'])} "
+          f"alignable={out['n_alignable']}/{out['n_candidates']} "
+          f"two-sided={out['n_two_sided']}")
     return out
 
 
@@ -1414,117 +1273,145 @@ def cmd_figures(bundle: D.DataBundle) -> dict[str, Any]:
     lock = C.read_json(ANALYSIS / "selection_lock.json")
     summary = json.loads((RESULTS / "summary.json").read_text(encoding="utf-8"))
     agg = summary["aggregate"]["D0"]
+    boot = C.read_json(ANALYSIS / "bootstrap.json")
     fig_dir = ANALYSIS / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
-    # 1. D0 performance across seeds
-    arms = [a for a in ("PSC_SUM", "PSC_SUM_PAIR", "PSC_SUM_BAG", "PSC_SUM_BAG_PAIR",
-                        "PSC_POOL", "PSC_POOL_PAIR", "PSC_POOL_BAG", "PSC_POOL_BAG_PAIR",
-                        "ACRA_REF", "ACRA_PAIR", "GINE_REF")
-            if a in agg]
-    cpu = {m: agg.get(m) for m in CPU_MODELS if m in agg}
-    fig, ax = plt.subplots(figsize=(9, 4.2))
-    xs = np.arange(len(arms))
-    means = [agg[a]["rmse_mean"] for a in arms]
-    sds = [agg[a]["rmse_sd"] for a in arms]
-    ax.bar(xs, means, yerr=sds, color="#4c72b0", alpha=0.85, capsize=3)
-    for a, x in zip(arms, xs):
-        ax.scatter([x] * len(agg[a]["rmse_seeds"]), agg[a]["rmse_seeds"], s=10, color="k")
-    for name, v in cpu.items():
-        ax.axhline(v["rmse_mean"], ls="--", lw=1, label=name)
-    for name, ls in (("ACRA_PAIR", ":"),):
+    made = []
+
+    # Fig 1: D0 whole-molecule accuracy by arm family (Q1)
+    groups = [
+        ("PSC SUM", ["PSC_SUM", "PSC_SUM_PAIR", "PSC_SUM_BAG", "PSC_SUM_BAG_PAIR"]),
+        ("PSC POOL", ["PSC_POOL", "PSC_POOL_PAIR", "PSC_POOL_BAG", "PSC_POOL_BAG_PAIR"]),
+        ("ACRA", ["ACRA_REF", "ACRA_PAIR"]),
+        ("GINE", ["GINE_REF"]),
+        ("CPU / fingerprint", ["PATH_COUNT_RIDGE", "PATH_COUNT_KRR", "MORGAN_COUNT_KRR",
+                                "COUNT_ONLY_RIDGE"]),
+    ]
+    fig, ax = plt.subplots(figsize=(9.5, 4.6))
+    xs, labels, colors = [], [], []
+    x = 0.0
+    ticks = []
+    palette = {"PSC SUM": "#4c72b0", "PSC POOL": "#55a868", "ACRA": "#c44e52",
+               "GINE": "#8172b2", "CPU / fingerprint": "#937860"}
+    for gname, arms in groups:
+        ticks.append((x - 0.5 + (len([a for a in arms if a in agg]) - 1) / 2, gname))
+        for arm in arms:
+            v = agg.get(arm)
+            if not v:
+                continue
+            ax.bar(x, v["rmse_mean"], yerr=v["rmse_sd"], width=0.8,
+                   color=palette[gname], alpha=0.9, capsize=2)
+            ax.scatter([x] * len(v["rmse_seeds"]), v["rmse_seeds"], s=9, color="k", zorder=3)
+            labels.append(arm.replace("PSC_", "").replace("_", "\n"))
+            xs.append(x)
+            x += 1.0
+        x += 0.6
+    for name, ls in ((lock["ACRA_B_star"], "--"), ("GINE_REF", ":")):
         if name in agg:
-            ax.axhline(agg[name]["rmse_mean"], ls=ls, lw=1, color="crimson",
-                       label="ACRA_B* baseline")
+            ax.axhline(agg[name]["rmse_mean"], ls=ls, lw=1, color="k", alpha=0.6)
     ax.set_xticks(xs)
-    ax.set_xticklabels([a.replace("PSC_", "") for a in arms], rotation=45, ha="right")
-    ax.set_ylabel("whole-molecule RMSE (official label units)")
-    ax.set_title("D0 (Train-sub 2856 / Dev 504): seed mean ± SD; dots are seeds")
-    ax.legend(fontsize=7)
+    ax.set_xticklabels(labels, rotation=90, fontsize=7)
+    for pos, name in ticks:
+        ax.text(pos, ax.get_ylim()[1] * 0.995, name, ha="center", va="bottom", fontsize=8)
+    ax.set_ylabel("whole-molecule RMSE (label units)")
+    ax.set_title("D0 (fit 2856 / held-out 504, scaffold-disjoint): 3-seed mean ± sd, dots = seeds")
     fig.tight_layout()
-    fig.savefig(fig_dir / "fig1_d0_performance.png", dpi=160)
+    fig.savefig(fig_dir / "fig1_d0_arms.png", dpi=170)
     plt.close(fig)
-    # 2. matched mechanism contrasts
-    pairs = [("PSC_SUM", "PSC_SUM_BAG"), ("PSC_POOL", "PSC_POOL_BAG"),
-             ("PSC_SUM", "PSC_POOL"), ("PSC_SUM_BAG", "PSC_POOL_BAG"),
-             ("PSC_SUM_PAIR", "PSC_SUM_BAG_PAIR"), ("PSC_POOL_PAIR", "PSC_POOL_BAG_PAIR"),
-             ("ACRA_REF", "ACRA_PAIR")]
-    if lock.get("DIAG_twin"):
-        pairs.append((lock["champion"], lock["DIAG_twin"]))
-    fig, ax = plt.subplots(figsize=(9, 4.2))
-    labels = []
-    for i, (a, b) in enumerate(pairs):
-        if a in agg and b in agg:
-            d = np.asarray(agg[b]["rmse_seeds"]) - np.asarray(agg[a]["rmse_seeds"])
-            ax.barh(i, d.mean(), xerr=d.std(ddof=1) if d.size > 1 else 0, color="#dd8452")
-            ax.scatter(d, [i] * d.size, color="k", s=10)
-            labels.append(f"{a.replace('PSC_','')} → {b.replace('PSC_','')}")
-    ax.set_yticks(range(len(labels)))
-    ax.set_yticklabels(labels, fontsize=7)
+    made.append("fig1_d0_arms.png")
+
+    # Fig 2: pre-specified contrasts with paired bootstrap CIs (Q2/Q3/Q4 + Q1)
+    con = boot["contrasts"]
+    keys = [k for k in con if "champion_vs" not in k]
+    champ_keys = [k for k in con if "champion_vs" in k]
+    fig, ax = plt.subplots(figsize=(9.5, 5.2))
+    order = keys + champ_keys
+    for row, k in enumerate(order):
+        v = con[k]
+        lo, hi = v["ci95"]
+        col = "#4c72b0" if "champion_vs" not in k else "#c44e52"
+        ax.plot([lo, hi], [row, row], color=col, lw=2)
+        ax.plot([v["point"]], [row], "o", color=col, ms=5)
     ax.axvline(0, color="k", lw=1)
-    ax.set_xlabel("Δ RMSE (target arm − reference arm); negative = target better")
-    ax.set_title("One-factor contrasts on D0, paired by seed")
+    ax.axvspan(-0.02, 0.02, color="grey", alpha=0.15)
+    ax.set_yticks(range(len(order)))
+    ax.set_yticklabels([con[k]["question"].split(" (")[0] + "\n" + con[k]["candidate"]
+                        .replace("PSC_", "") + " vs " + con[k]["reference"].replace("PSC_", "")
+                        for k in order], fontsize=6.5)
+    ax.invert_yaxis()
+    ax.set_xlabel("Δ RMSE = RMSE(reference) − RMSE(candidate), 95% paired-molecule bootstrap CI")
+    ax.set_title("One-factor contrasts on D0 (grey band: ±0.02 practical-gain threshold)")
     fig.tight_layout()
-    fig.savefig(fig_dir / "fig2_contrasts.png", dpi=160)
+    fig.savefig(fig_dir / "fig2_contrasts.png", dpi=170)
     plt.close(fig)
-    # 3. novelty / support strata
-    if (ANALYSIS / "unique_pair_metrics.json").is_file():
-        upm = json.loads((ANALYSIS / "unique_pair_metrics.json").read_text())
-        fig, axes = plt.subplots(1, 2, figsize=(11, 4))
-        for ax, key in zip(axes, ("support_classes", "novelty")):
-            d = upm["splits"]["D0"]
-            if key == "support_classes":
-                names = list(d["support_classes"])
-                vals = {}
-                for m in [lock["champion"], lock["ACRA_B_star"]]:
-                    vals[m] = [d["support_classes"][n].get(m, {}).get("mae") for n in names]
-                x = np.arange(len(names))
-                for j, m in enumerate(vals):
-                    ax.bar(x + 0.35 * j, vals[m], width=0.35, label=m)
-                ax.set_xticks(x)
-                ax.set_xticklabels(["T seen", "T unseen\nfrags seen", "1 frag unseen",
-                                    "2 frags unseen"], fontsize=7)
-                ax.set_ylabel("pair Δ MAE (cut-row weighted)")
-                ax.set_title("Support classes, D0 heldout pairs")
-                ax.legend(fontsize=7)
-            else:
-                names = list(d["novelty"]["heldout_heldout"]["order_full"])
-                x = np.arange(len(names))
-                for j, m in enumerate([lock["champion"], lock["ACRA_B_star"]]):
-                    vals = [d["novelty"]["heldout_heldout"]["order_full"][n].get(m, {})
-                            .get("mae") for n in names]
-                    ax.bar(x + 0.35 * j, vals, width=0.35, label=m)
-                ax.set_xticks(x)
-                ax.set_xticklabels(names, fontsize=7)
-                ax.set_ylabel("pair Δ MAE")
-                ax.set_title("ORDER path-word novelty, D0 heldout × heldout")
-                ax.legend(fontsize=7)
+    made.append("fig2_contrasts.png")
+
+    # Fig 3: where the errors live (Q5)
+    upm = (C.read_json(ANALYSIS / "unique_pair_metrics.json")
+           if (ANALYSIS / "unique_pair_metrics.json").is_file() else None)
+    molnov = (C.read_json(ANALYSIS / "molecule_novelty.json")
+              if (ANALYSIS / "molecule_novelty.json").is_file() else None)
+    if upm and molnov:
+        models = [lock["champion"], lock["ACRA_B_star"], "PATH_COUNT_RIDGE", "MORGAN_COUNT_KRR"]
+        models = [m for m in dict.fromkeys(models) if m]
+        fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.2))
+        ax = axes[0]
+        d = upm["splits"]["D0"]
+        names = list(d["support_classes"])
+        short = ["T seen", "T unseen\nfrags seen", "T unseen\n1 frag unseen",
+                 "T unseen\n2 frags unseen"]
+        width = 0.8 / max(1, len(models))
+        for j, m in enumerate(models):
+            vals = [d["support_classes"][n].get(m, {}).get("mae") for n in names]
+            ax.bar(np.arange(len(names)) + width * (j - (len(models) - 1) / 2), vals,
+                   width=width, label=m.replace("PSC_", ""))
+        ax.set_xticks(range(len(names)))
+        ax.set_xticklabels(short, fontsize=7)
+        ax.set_ylabel("pair Δ MAE (cut-row weighted)")
+        ax.set_title("Matched-pair error by support class (D0 held-out pairs)", fontsize=9)
+        ax.legend(fontsize=7)
+        ax = axes[1]
+        d = molnov["splits"]["D0"]
+        names = list(d["buckets"])
+        for j, m in enumerate(models):
+            vals = [d["buckets"][n].get(m, {}).get("rmse") for n in names]
+            ns = [d["buckets"][n]["n"] for n in names]
+            ax.plot(range(len(names)), vals, "o-", label=m.replace("PSC_", ""))
+        ax.set_xticks(range(len(names)))
+        ax.set_xticklabels([f"{n}\nn={d['buckets'][n]['n']}" for n in names], fontsize=6.5)
+        ax.set_ylabel("molecule RMSE")
+        ax.set_title("Molecule error vs unseen-path-mass fraction $\\eta_{mol}$ (D0)", fontsize=9)
+        ax.legend(fontsize=7)
         fig.tight_layout()
-        fig.savefig(fig_dir / "fig3_novelty_support.png", dpi=160)
+        fig.savefig(fig_dir / "fig3_where.png", dpi=170)
         plt.close(fig)
-    # 4. training curves of the champion family
-    fig, ax = plt.subplots(figsize=(7, 4))
-    for arm, color in ((lock["champion"], "#4c72b0"), (lock["ACRA_B_star"], "#c44e52"),
-                       ("GINE_REF", "#55a868")):
+        made.append("fig3_where.png")
+
+    # Fig 4: training curves + overfit sanity (capacity, not budget)
+    fig, ax = plt.subplots(figsize=(7.2, 4.2))
+    for arm, color, label in ((lock["champion"], "#55a868", None),
+                              (lock["R_star"], "#4c72b0", None),
+                              (lock["ACRA_B_star"], "#c44e52", None),
+                              ("GINE_REF", "#8172b2", None)):
         rid = run_id(arm, "D0", 0)
-        p = RESULTS / rid / "curves.csv"
-        if not p.is_file():
+        path = RESULTS / rid / "curves.csv"
+        if not path.is_file():
             continue
-        rows = C.read_csv(p) if hasattr(C, "read_csv") else None
-        if rows is None:
-            import csv
-            with p.open() as fh:
-                rows = list(csv.DictReader(fh))
-        epochs = [int(r["epoch"]) for r in rows if r.get("eval_rmse")]
-        rmse = [float(r["eval_rmse"]) for r in rows if r.get("eval_rmse")]
-        ax.plot(epochs, rmse, label=f"{arm} (D0 seed 0)", color=color)
+        import csv
+
+        with path.open() as fh:
+            rows = [r for r in csv.DictReader(fh) if r.get("eval_rmse")]
+        ax.plot([int(r["epoch"]) for r in rows], [float(r["eval_rmse"]) for r in rows],
+                label=arm, color=color, lw=1.4)
     ax.set_xlabel("epoch")
-    ax.set_ylabel("D0 dev RMSE")
-    ax.set_title("Training curves (dev RMSE per epoch)")
+    ax.set_ylabel("D0 held-out RMSE")
+    ax.set_title("Same 160-epoch recipe: PSC plateaus above ACRA/GINE", fontsize=9)
     ax.legend(fontsize=7)
     fig.tight_layout()
-    fig.savefig(fig_dir / "fig4_curves.png", dpi=160)
+    fig.savefig(fig_dir / "fig4_curves.png", dpi=170)
     plt.close(fig)
-    return {"figures": [str(p.name) for p in sorted(fig_dir.glob("*.png"))]}
+    made.append("fig4_curves.png")
+    return {"figures": made}
 
 
 # ---------------------------------------------------------------------------
