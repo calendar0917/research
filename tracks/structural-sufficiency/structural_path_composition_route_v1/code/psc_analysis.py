@@ -388,7 +388,9 @@ def _sq_err_table(bundle: D.DataBundle, split: str, models: Sequence[str],
                   rows: np.ndarray | None = None) -> tuple[np.ndarray, np.ndarray, list[str]]:
     """(n_models, n_seeds_max, n_rows) squared errors + availability mask."""
     sq, seeds_of, ok_models = [], [], []
-    ref_rows = rows
+    if rows is None:
+        raise ValueError("rows must be the evaluation rows")
+    ref_rows = np.asarray(rows, np.int64)
     for m in models:
         seeds = []
         for seed in (0, 1, 2):
@@ -397,12 +399,8 @@ def _sq_err_table(bundle: D.DataBundle, split: str, models: Sequence[str],
             d = prediction_dict(m, split, seed)
             if not d:
                 continue
-            r = np.asarray(sorted(d.keys())) if ref_rows is None else np.asarray(ref_rows)
-            if ref_rows is None:
-                ref_rows = r
-            if np.array_equal(np.asarray(sorted(d.keys())), np.asarray(ref_rows)) is False:
-                if not set(ref_rows.tolist()) <= set(d.keys()):
-                    continue
+            if not set(ref_rows.tolist()) <= set(d.keys()):
+                continue
             seeds.append(np.asarray([(d[int(x)] - bundle.labels[int(x)]) ** 2 for x in ref_rows]))
         if seeds:
             sq.append(np.stack(seeds))
@@ -419,7 +417,13 @@ def _sq_err_table(bundle: D.DataBundle, split: str, models: Sequence[str],
 def cmd_bootstrap(bundle: D.DataBundle, split_name: str = "D0") -> dict[str, Any]:
     lock = C.read_json(ANALYSIS / "selection_lock.json")
     models = list(ARM_SPEC) + list(CPU_MODELS)
-    table, rows, used = _sq_err_table(bundle, split_name, models)
+    f1 = None
+    if split_name == "D1":
+        f1 = json.loads(C.SPLIT_F1.read_text(encoding="utf-8"))
+        f1["file_sha256"] = C.sha256_file(C.SPLIT_F1)
+    eval_split = C.split_spec(split_name, bundle.raw, f1=f1)
+    table, rows, used = _sq_err_table(bundle, split_name, models,
+                                      rows=np.asarray(eval_split["eval_rows"], np.int64))
     y = bundle.labels[rows]
     cfg = C.load_config()
     reps, seed0 = int(cfg["bootstrap"]["reps"]), int(cfg["bootstrap"]["seed"])
@@ -459,8 +463,8 @@ def cmd_bootstrap(bundle: D.DataBundle, split_name: str = "D0") -> dict[str, Any
         if got:
             contrasts[f"{a}_vs_{b}"] = got
     champ = lock["champion"]
-    for ref in (lock["ACRA_B_star"], "ACRA_PAIR", "GINE_REF", "PATH_COUNT_KRR",
-                "MORGAN_COUNT_KRR", "COUNT_ONLY_RIDGE"):
+    for ref in (lock["ACRA_B_star"], "ACRA_PAIR", "GINE_REF", "PATH_COUNT_RIDGE",
+                "PATH_COUNT_KRR", "MORGAN_COUNT_KRR", "COUNT_ONLY_RIDGE"):
         got = add(champ, ref, f"Q1 champion vs {ref}")
         if got:
             contrasts[f"champion_vs_{ref}"] = got

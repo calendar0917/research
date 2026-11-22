@@ -123,18 +123,25 @@ def main() -> int:
         "consistently beaten by the non-additive `POOL` readout "
         f"({signed((c('PSC_POOL_vs_PSC_SUM') or {}).get('point'))} RMSE, CI "
         f"{ci(c('PSC_POOL_vs_PSC_SUM'))}).")
-    add("* `ORDER` (path identity) vs `BAG` (atom/bond multiset) is a wash: "
-        f"{signed((c('PSC_SUM_BAG_vs_PSC_SUM') or {}).get('point'))} "
-        f"[{ci(c('PSC_SUM_BAG_vs_PSC_SUM'))}] and "
-        f"{signed((c('PSC_SUM_BAG_PAIR_vs_PSC_SUM_PAIR') or {}).get('point'))} "
-        f"[{ci(c('PSC_SUM_BAG_PAIR_vs_PSC_SUM_PAIR'))}].")
-    add("* PAIR coupling helps the `SUM` family a little "
-        f"({signed((c('PSC_SUM_PAIR_vs_PSC_SUM') or {}).get('point'))}, CI "
-        f"{ci(c('PSC_SUM_PAIR_vs_PSC_SUM'))}) and the ACRA regulariser "
-        f"({signed((c('ACRA_PAIR_vs_ACRA_REF') or {}).get('point'))}, CI "
-        f"{ci(c('ACRA_PAIR_vs_ACRA_REF'))}), but not the POOL family "
-        f"({signed((c('PSC_POOL_PAIR_vs_PSC_POOL') or {}).get('point'))}, CI "
-        f"{ci(c('PSC_POOL_PAIR_vs_PSC_POOL'))}).")
+    bag_pts = [(c(k) or {}).get("point") for k in
+               ("PSC_SUM_BAG_vs_PSC_SUM", "PSC_POOL_BAG_vs_PSC_POOL",
+                "PSC_SUM_BAG_PAIR_vs_PSC_SUM_PAIR", "PSC_POOL_BAG_PAIR_vs_PSC_POOL_PAIR")]
+    bag_pts = [x for x in bag_pts if x is not None]
+    add(f"* `ORDER` (path identity) vs `BAG` (atom/bond multiset) shows no consistent "
+        f"benefit for ORDER: the four matched contrasts are "
+        + ", ".join(signed(x) for x in bag_pts) +
+        " (BAG − ORDER, positive = BAG better).")
+    pair_keys = ("PSC_SUM_PAIR_vs_PSC_SUM", "PSC_POOL_PAIR_vs_PSC_POOL",
+                 "PSC_SUM_BAG_PAIR_vs_PSC_SUM_BAG", "PSC_POOL_BAG_PAIR_vs_PSC_POOL_BAG",
+                 "ACRA_PAIR_vs_ACRA_REF")
+    pair_pts = [((c(k) or {}).get("point")) for k in pair_keys]
+    n_pos = sum(1 for x in pair_pts if x is not None and x > 0)
+    n_sig = sum(1 for k in pair_keys
+                if (c(k) or {}).get("ci95") and (c(k) or {})["ci95"][0] > 0)
+    add(f"* PAIR coupling is a small, consistent-in-sign effect: {n_pos}/{len(pair_keys)} "
+        f"contrasts positive ({n_sig} with a CI excluding 0), maximum "
+        f"{signed(max([x for x in pair_pts if x is not None] or [0]))} RMSE — below the "
+        "pre-registered +0.02 practical-gain threshold.")
     add("* **Verdict**: do not continue this branch as specified. The compositional "
         "machinery is implementable and exactly verifiable, but on Lipo the strict "
         "path-sum parameterisation is dominated by both a linear path-count kernel "
@@ -236,7 +243,7 @@ def main() -> int:
     add("")
     add("| model | D0 RMSE | D0 MAE | Δ vs " + str(acra) + " [95% CI] |")
     add("|---|---|---|---|")
-    order = [champ, o_star, r_star, m_star, acra, "GINE_REF"] + list(A.CPU_MODELS)
+    order = [champ, o_star, r_star, m_star, acra, "ACRA_PAIR", "GINE_REF"] + list(A.CPU_MODELS)
     for a in dict.fromkeys([x for x in order if x]):
         if a not in agg0:
             continue
@@ -273,15 +280,18 @@ def main() -> int:
         if v:
             add(f"| {v['candidate']} vs {v['reference']} | {ci(v)} | {v['p_two_sided']:.3f} |")
     add("")
-    add("The four contrasts do not agree on a sign and every CI straddles 0 "
-        "(scaffold-cluster bootstrap: "
+    add("The four contrasts are all ≥ 0 for BAG, i.e. **ORDER never wins**: in the SUM "
+        "family the orientation-invariant multiset is significantly better "
+        f"({signed((c('PSC_SUM_BAG_vs_PSC_SUM') or {}).get('point'))} and "
+        f"{signed((c('PSC_SUM_BAG_PAIR_vs_PSC_SUM_PAIR') or {}).get('point'))}), and in the "
+        "POOL family the two are indistinguishable (CIs straddle 0; scaffold-cluster "
+        "bootstrap: "
         + ", ".join(f"`{k}` {ci(v)}" for k, v in scaf.items()
                     if "BAG" in k and isinstance(v, dict)) + "). "
-        "**Conclusion**: for Lipo, preserving the *order* of the atom/bond word along a "
-        "path adds nothing measurable over its orientation-invariant multiset — the "
-        "information that matters is not the path's reading direction. This also means "
-        "the ORDER-specific part of the design (sequence encoding, reversal averaging) "
-        "is not earning its keep.")
+        "**Conclusion**: for Lipo, the *order* in which the atom/bond word is read along a "
+        "path adds nothing — path identity beyond the multiset is not the useful signal, "
+        "and the ORDER-specific machinery (sequence encoding, reversal averaging) is not "
+        "earning its keep.")
     add("")
 
     # ------------------------------------------------------------ Q3 answer --
@@ -327,15 +337,16 @@ def main() -> int:
         if v:
             add(f"| {v['candidate']} vs {v['reference']} | {ci(v)} | {v['p_two_sided']:.3f} |")
     add("")
-    add("The coupling is **not uniform**: PAIR helps SUM (+"
-        f"{signed((c('PSC_SUM_PAIR_vs_PSC_SUM') or {}).get('point'))}) and the ACRA "
-        "regulariser "
-        f"({signed((c('ACRA_PAIR_vs_ACRA_REF') or {}).get('point'))}), but not POOL. The "
-        "natural reading is that the pair term is a *data-efficiency* device: it injects "
-        "the same contrast into a model class that is too rigid to learn it from molecule "
-        "labels alone (SUM), and adds little once the readout can already represent "
-        "interactions (POOL). No PAIR contrast reaches the pre-registered +0.02 practical "
-        "gain threshold.")
+    add("The coupling is **real but small**: every PSC PAIR contrast is ≥ 0 "
+        f"(SUM {signed((c('PSC_SUM_PAIR_vs_PSC_SUM') or {}).get('point'))}, "
+        f"POOL {signed((c('PSC_POOL_PAIR_vs_PSC_POOL') or {}).get('point'))}, "
+        f"SUM+BAG {signed((c('PSC_SUM_BAG_PAIR_vs_PSC_SUM_BAG') or {}).get('point'))}, "
+        f"POOL+BAG {signed((c('PSC_POOL_BAG_PAIR_vs_PSC_POOL_BAG') or {}).get('point'))}), "
+        "but only two CIs exclude 0 and **none reaches the pre-registered +0.02 practical "
+        "gain threshold**. The ACRA regulariser is a wash "
+        f"({signed((c('ACRA_PAIR_vs_ACRA_REF') or {}).get('point'))}). The dependence on "
+        "readout is weak: the pair term gives roughly +0.01 to +0.02 in both families, "
+        "consistent with a data-efficiency device rather than a substitute for capacity.")
     add("")
     add("The pair algebra is exact and verified: `PAIR = DIAG − 2·cross` "
         "(deviation < 1e-12), `Σ w_e = 1` per component, and the sampler matches the "
