@@ -1,0 +1,74 @@
+{
+  "a_s_std": 1.0,
+  "cache_sha256": "d30e5b9516df5950f0a64c9d086216f1e29c69901c52140f0882383af101ef1c",
+  "flip_balance": {
+    "R_FLIP": 0.5078125,
+    "R_REL": 0.50390625
+  },
+  "n_examples": 512,
+  "note": "capability check on the real token machinery; NOT evidence about the Lipo dataset",
+  "rows": [
+    {
+      "arm": "CSOI_ADD",
+      "corr": 0.9958043935115821,
+      "normalized_rmse": 0.10083259778391605,
+      "rule": "R_ADD",
+      "seconds": 29.93055820465088,
+      "steps": 80,
+      "valid_rmse": 0.10139235052928175,
+      "valid_rmse_of_mean_predictor": 1.0055513073913382
+    },
+    {
+      "arm": "CSOI_REL",
+      "corr": 0.9955020777882884,
+      "normalized_rmse": 0.09938217812307018,
+      "rule": "R_ADD",
+      "seconds": 31.985234022140503,
+      "steps": 80,
+      "valid_rmse": 0.09993387914305207,
+      "valid_rmse_of_mean_predictor": 1.0055513073913382
+    },
+    {
+      "arm": "CSOI_ADD",
+      "corr": 0.11444228949664022,
+      "normalized_rmse": 1.002014681352906,
+      "rule": "R_FLIP",
+      "seconds": 31.060349941253662,
+      "steps": 80,
+      "valid_rmse": 1.0075643122310702,
+      "valid_rmse_of_mean_predictor": 1.0055384726206518
+    },
+    {
+      "arm": "CSOI_REL",
+      "corr": 0.7675911467646428,
+      "normalized_rmse": 0.6631164176433441,
+      "rule": "R_FLIP",
+      "seconds": 32.67864012718201,
+      "steps": 80,
+      "valid_rmse": 0.6667890697667664,
+      "valid_rmse_of_mean_predictor": 1.0055384726206518
+    }
+  ],
+  "rules": {
+    "R_ADD": "y = a(S) (context irrelevant)",
+    "R_FLIP": "y = a(S) * sign(g(C)) (same S, different C flips the sign)",
+    "R_REL": "y = a(S) * sign(bucket(S) - bucket(C)) (relation flips it)"
+  },
+  "seed": 0,
+  "steps": 80,
+  "task": "synthetic context-flip sanity task",
+  "verdict": {
+    "R_ADD": {
+      "additive_arm_fails": false,
+      "best_interaction_normalized_rmse": 0.09938217812307018,
+      "cs_add_normalized_rmse": 0.10083259778391605,
+      "interaction_arm_succeeds": true
+    },
+    "R_FLIP": {
+      "additive_arm_fails": true,
+      "best_interaction_normalized_rmse": 0.6631164176433441,
+      "cs_add_normalized_rmse": 1.002014681352906,
+      "interaction_arm_succeeds": false
+    }
+  }
+}
