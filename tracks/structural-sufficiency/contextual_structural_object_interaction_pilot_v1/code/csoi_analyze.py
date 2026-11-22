@@ -116,9 +116,9 @@ def contrast(a: Mapping[str, Any], b: Mapping[str, Any], reps: int, seed: int) -
     yb, pb = b["valid_label"], b["valid_pred"]
     if not np.allclose(a["valid_row_id"], b["valid_row_id"]):
         raise ValueError("valid row order mismatch")
-    ea = (pa - ya) ** 2
-    eb = (pb - yb) ** 2
-    res = C.paired_bootstrap(ea, eb, reps=reps, seed=seed)
+    res = C.paired_bootstrap(pa, pb, ya, n_boot=reps, seed=seed)
+    res["ci_low"] = res.pop("lo")
+    res["ci_high"] = res.pop("hi")
     res.update({
         "arm_a": a["run_id"], "arm_b": b["run_id"],
         "rmse_a": C.rmse(pa, ya), "rmse_b": C.rmse(pb, yb),
@@ -280,7 +280,13 @@ def support_report(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]
 
 def cases(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]],
           limit: int = 20) -> dict[str, Any]:
-    """Auto-selected matched pairs: Valid-only first, then Valid x Train crossings."""
+    """Matched-pair cases: every Valid-only pair, plus ranked Valid x Train crossings.
+
+    Ranking is on the pair-delta absolute error improvement of an interaction arm
+    over ``CSOI_ADD``; duplicates (the directory repeats some word rows) are
+    collapsed; the top-k and the bottom-k are both reported so the list cannot be
+    cherry-picked.
+    """
     labels = np.asarray(pack["labels"], np.float64)
     rows = np.asarray(pack["row_ids"], np.int64)
     split = np.asarray(pack["molecule_split"], np.uint8)
@@ -288,6 +294,10 @@ def cases(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]],
     b = np.asarray(pack["pair_mol_b"], np.int64)
     transform = np.asarray(pack["pair_transform"], np.int64)
     component = np.asarray(pack["pair_component"], np.int64)
+    pair_Sa = np.asarray(pack["pair_Sa"], np.int64)
+    pair_Sb = np.asarray(pack["pair_Sb"], np.int64)
+    pair_C = np.asarray(pack["pair_C"], np.int64)
+    pair_bond = np.asarray(pack["pair_cut_bond_row"], np.int64)
     scopes = pair_scopes(pack)
     preds = {name: _pred_by_mol(arm, pack) for name, arm in arms.items()
              if arm.get("valid_pred") is not None and arm.get("train_pred") is not None}
@@ -296,20 +306,21 @@ def cases(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]],
         return {"note": "trained CSOI arms are not available yet", "cases": {}}
 
     def build(mask: np.ndarray, scope: str) -> list[dict[str, Any]]:
-        idx = np.nonzero(mask)[0]
-        recs = []
-        for i in idx.tolist():
+        seen: set[tuple] = set()
+        recs: list[dict[str, Any]] = []
+        for i in np.nonzero(mask)[0].tolist():
+            key = (int(rows[a[i]]), int(rows[b[i]]), int(pair_C[i]), int(pair_bond[i]))
+            if key in seen:
+                continue
+            seen.add(key)
             dl = float(labels[b[i]] - labels[a[i]])
             rec = {"scope": scope, "pair_index": int(i), "transform": int(transform[i]),
                    "component": int(component[i]),
                    "split_a": int(split[a[i]]), "split_b": int(split[b[i]]),
                    "row_id_a": int(rows[a[i]]), "row_id_b": int(rows[b[i]]),
                    "label_a": float(labels[a[i]]), "label_b": float(labels[b[i]]),
-                   "delta_true": dl,
-                   "S_a": int(np.asarray(pack["pair_Sa"])[i]),
-                   "S_b": int(np.asarray(pack["pair_Sb"])[i]),
-                   "C": int(np.asarray(pack["pair_C"])[i]),
-                   "cut_bond_row": int(np.asarray(pack["pair_cut_bond_row"])[i]),
+                   "delta_true": dl, "S_a": int(pair_Sa[i]), "S_b": int(pair_Sb[i]),
+                   "C": int(pair_C[i]), "cut_bond_row": int(pair_bond[i]),
                    "delta_pred": {}, "abs_err": {}}
             for name, pred in preds.items():
                 dp = float(pred[b[i]] - pred[a[i]])
@@ -320,30 +331,41 @@ def cases(pack: Mapping[str, Any], arms: Mapping[str, Mapping[str, Any]],
 
     primary = build(scopes["valid_only_pairs"], "valid_only")
     cross = build(scopes["train_valid_cross_pairs"], "train_valid_cross")
-    pool = primary + cross
     out: dict[str, Any] = {
         "n_valid_only_pairs": len(primary),
         "n_train_valid_cross_pairs": len(cross),
-        "selection_rule": ("rank pairs by the absolute pair-delta error improvement of "
-                           "an interaction arm over CSOI_ADD; Valid-only pairs first, "
-                           "then Valid x Train crossings; deterministic top-k, no "
-                           "hand-picking"),
+        "n_pairs_excluded_test_touching": int(scopes["_excluded_test_touching"].sum()),
+        "selection_rule": ("Valid-only pairs are reported exhaustively; the crossing "
+                           "pairs are ranked by |pair-delta error| improvement of the "
+                           "interaction arm over CSOI_ADD, duplicates collapsed, both "
+                           "the best and the worst k reported (no hand-picking)"),
         "requires_all_of": list(need),
+        "valid_only_cases": [
+            {"scope": r["scope"], "pair_index": r["pair_index"],
+             "transform": r["transform"], "component": r["component"],
+             "row_id_a": r["row_id_a"], "row_id_b": r["row_id_b"],
+             "label_a": r["label_a"], "label_b": r["label_b"],
+             "delta_true": r["delta_true"],
+             "S_a": r["S_a"], "S_b": r["S_b"], "C": r["C"],
+             "cut_bond_row": r["cut_bond_row"],
+             "delta_pred": r["delta_pred"], "abs_err": r["abs_err"]}
+            for r in primary],
     }
     for inter in ("C_CSOI_GLOBAL", "D_CSOI_REL"):
-        wins = sorted(pool, key=lambda r: -(r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter]))
-        losses = sorted(pool, key=lambda r: (r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter]))
-        out[f"interaction_wins_{inter}_over_B"] = [
-            _case_row(r, inter, sign=1) for r in wins[:limit]
-            if r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter] > 0]
-        out[f"interaction_loses_{inter}_over_B"] = [
-            _case_row(r, inter, sign=-1) for r in losses[:limit]
-            if r["abs_err"]["B_CSOI_ADD"] - r["abs_err"][inter] < 0]
-    out["relation_bias_wins_D_over_C"] = [
-        _case_row(r, "D_CSOI_REL", sign=1)
-        for r in sorted(pool, key=lambda r: -(r["abs_err"]["C_CSOI_GLOBAL"]
-                                              - r["abs_err"]["D_CSOI_REL"]))[:limit]
-        if r["abs_err"]["C_CSOI_GLOBAL"] - r["abs_err"]["D_CSOI_REL"] > 0]
+        base = "B_CSOI_ADD"
+        gains = [(r["abs_err"][base] - r["abs_err"][inter], r) for r in cross]
+        wins = [g for g in gains if g[0] > 0]
+        losses = [g for g in gains if g[0] < 0]
+        wins.sort(key=lambda g: -g[0])
+        losses.sort(key=lambda g: g[0])
+        out[f"cross_pairs_interaction_wins_{inter}_over_B"] = [
+            _case_row(g[1], inter, 1) for g in wins[:limit]]
+        out[f"cross_pairs_interaction_loses_{inter}_over_B"] = [
+            _case_row(g[1], inter, -1) for g in losses[:limit]]
+    gains = [(r["abs_err"]["C_CSOI_GLOBAL"] - r["abs_err"]["D_CSOI_REL"], r) for r in cross]
+    out["cross_pairs_relation_bias_wins_D_over_C"] = [
+        _case_row(g[1], "D_CSOI_REL", 1) for g in
+        sorted([g for g in gains if g[0] > 0], key=lambda g: -g[0])[:limit]]
     return out
 
 

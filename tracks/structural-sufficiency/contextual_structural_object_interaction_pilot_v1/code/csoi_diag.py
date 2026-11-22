@@ -58,7 +58,7 @@ def _attention_stats(model, pack, rows: np.ndarray, device: str, max_mol: int = 
     finally:
         model._capture = None
     alpha = torch.cat(cap["alpha"], 0).double()          # [n_entries, heads]
-    qs = torch.cat(cap["qs"], 0)
+    qs = torch.cat([q + int(off) for q, off in zip(cap["qs"], cap["q0"])], 0)
     if alpha.numel() == 0:
         return {"note": "no attention entries captured"}
     # per query token (across its keys) and per head
@@ -68,10 +68,18 @@ def _attention_stats(model, pack, rows: np.ndarray, device: str, max_mol: int = 
     per_q.index_add_(0, qs, -(alpha.clamp_min(1e-12).log() * alpha))
     n_keys = torch.zeros(nq, dtype=alpha.dtype).index_add_(
         0, qs, torch.ones_like(qs, dtype=alpha.dtype))
-    ent_q = per_q / n_keys[:, None].clamp_min(1.0)
+    # per_q already sums the entropy contributions over the query's keys, so it
+    # *is* H(p) in nats per (query token, head); no further normalisation
+    ent_q = per_q
     eff = ent_q.exp()
+    amax = torch.zeros(nq, alpha.shape[1], dtype=alpha.dtype)
+    amax.index_reduce_(0, qs, alpha, "amax", include_self=False)
+    eff_mean = eff.mean(1)
     out = {
         "n_query_tokens": int(nq),
+        "alpha_max_per_query_head": C.quantiles(amax.reshape(-1).numpy()),
+        "frac_query_tokens_effectively_one_hot": float((eff_mean < 1.1).double().mean()),
+        "frac_query_tokens_effective_gt5": float((eff_mean > 5.0).double().mean()),
         "n_entries": int(alpha.shape[0]),
         "heads": int(alpha.shape[1]),
         "alpha_max": float(alpha.max()),

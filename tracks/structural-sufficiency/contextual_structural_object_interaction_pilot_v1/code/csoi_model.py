@@ -368,6 +368,9 @@ class CSOIModel(nn.Module):
                 self._capture.setdefault("alpha", []).append(alpha.detach())
                 self._capture.setdefault("keys", []).append(keys.detach())
                 self._capture.setdefault("qs", []).append(qs.detach())
+                # chunk-local query indices: record the offset so a caller can build
+                # global (per-call) query ids
+                self._capture.setdefault("q0", []).append(q0)
                 self._capture.setdefault("score", []).append(score.detach())
             out_parts.append(m)
         m_all = torch.cat(out_parts, dim=0)

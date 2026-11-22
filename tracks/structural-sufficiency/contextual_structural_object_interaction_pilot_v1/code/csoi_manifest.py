@@ -17,6 +17,7 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 import csoi_common as C
+import csoi_data as D
 
 ROUND = C.ROUND_DIR
 CODE = ROUND / "code"
@@ -38,10 +39,64 @@ def rr_meta(experiment: str) -> dict[str, Any] | None:
     if not hits:
         return None
     meta = C.read_json(hits[-1])
-    keep = ("experiment", "run_id", "host", "pool", "node", "gpu", "driver", "torch",
-            "commit", "branch", "state", "exit_code", "started", "completed", "command",
-            "backend")
-    return {k: meta.get(k) for k in keep if k in meta}
+    rt = meta.get("runtime") or {}
+    return {
+        "experiment": meta.get("experiment"), "run_id": meta.get("run_id"),
+        "host": meta.get("host"), "pool": meta.get("pool"),
+        "backend": meta.get("backend"), "node": rt.get("node"),
+        "gpu_names": (rt.get("gpus") or {}).get("names"),
+        "cuda_visible_devices": rt.get("cuda_visible_devices"),
+        "driver": rt.get("driver_version"), "torch": rt.get("torch_version"),
+        "torch_cuda": rt.get("torch_cuda"), "python": rt.get("python_version"),
+        "commit": meta.get("git_commit"), "branch": meta.get("git_branch"),
+        "dirty": meta.get("git_dirty"), "state": meta.get("state"),
+        "exit_code": rt.get("exit_code"), "started": rt.get("started_at"),
+        "completed": rt.get("completed_at"), "command": meta.get("command"),
+    }
+
+
+def _artifacts() -> dict[str, str]:
+    out = {}
+    for path in sorted(list(C.analysis_dir().glob("*.json")) + list(C.results_root().glob("*.json"))
+                       + list(C.results_root().glob("*.csv"))):
+        out[str(path.relative_to(ROUND))] = C.sha256_file(path)
+    return out
+
+
+def _synthetic_summary() -> dict[str, Any] | None:
+    path = C.analysis_dir() / "synthetic_flip.json"
+    if not path.is_file():
+        return None
+    d = C.read_json(path)
+    return {"path": "analysis/synthetic_flip.json", "verdict": d.get("verdict"),
+            "n_examples": d.get("n_examples"), "steps": d.get("steps"),
+            "device": d.get("device"),
+            "rows": [{k: r[k] for k in ("arm", "rule", "normalized_rmse", "corr")}
+                     for r in d.get("rows", [])]}
+
+
+def _compression_summary() -> dict[str, Any] | None:
+    path = C.results_root() / "compression_diagnostics.json"
+    if not path.is_file():
+        return None
+    d = C.read_json(path)
+    return {"path": "results/compression_diagnostics.json",
+            "n_pairs": d.get("n_pairs_scored"),
+            "designs": d.get("designs"),
+            "explained_variance_ratio_top8": d.get("explained_variance_ratio_top8")}
+
+
+def _structure_summary() -> dict[str, Any]:
+    d = C.read_json(C.analysis_dir() / "structure_stats.json")
+    tok = C.read_json(C.analysis_dir() / "token_stats.json")
+    return {"objects": d["objects"]["n_objects_by_size"],
+            "object_bucket_share": d["objects"]["object_distance_bucket_share"],
+            "fragment_tokens": d["fragments"]["fragment_tokens"],
+            "parses_per_molecule": d["molecules"]["parses_per_molecule"],
+            "attention_entries_total": d["molecules"]["attention_entries_total"],
+            "attention_entries_by_split": d["molecules"]["attention_entries_by_split"],
+            "token_guard": tok["guard"],
+            "files": ["analysis/structure_stats.json", "analysis/token_stats.json"]}
 
 
 def run_entry(run_id: str, arm_key: str) -> dict[str, Any]:
@@ -87,7 +142,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--dataset", default="lipo")
     args = ap.parse_args(argv)
     cfg = C.load_config()
-    pack = C.load_pack(cfg, cfg["dataset_key"])
+    pack = D.load_pack(cfg, cfg["dataset_key"])
     runs = [run_entry(rid, key) for key, rid in TRAINED.items()
             if (C.run_dir(rid) / "manifest.json").is_file()]
     reused = [reused_entry(p, k) for k, p in REUSED.items() if (p / "manifest.json").is_file()]
@@ -141,6 +196,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                                "statistics", "all analysis and diagnostics"],
             "no_manual_ssh": True, "launcher": "rr deploy + rr run",
         },
+        "analysis_artifacts": _artifacts(),
+        "synthetic_flip": _synthetic_summary(),
+        "compression_diagnostics": _compression_summary(),
+        "structure_record": _structure_summary(),
         "seed": int(cfg["recipe"]["seed"]),
         "seeds_planned": list(cfg["budget"]["seeds"]),
         "test_policy": "no official Test labels were read at any point in this round",

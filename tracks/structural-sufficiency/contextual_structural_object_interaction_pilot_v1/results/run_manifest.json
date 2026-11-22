@@ -1,0 +1,840 @@
+{
+  "analysis_artifacts": {
+    "analysis/checks.json": "4d6a649337edec74dfd07d5d3348f7dded68565bca5aee88501e6ef2206c0ea7",
+    "analysis/structure_stats.json": "be3b027d8469be883afe04100bed9f7bb92abfc7a0f35860fdd26fecc463fc6d",
+    "analysis/synthetic_flip.json": "0e345919255ebb3263b2491bfe722cbe0d1f76d54b87d37788bde0ae77c855a2",
+    "analysis/timing.json": "2027b122b20312dd9c4ca3f5f25a86b7c0bab9c77e405150de8dc85491eb2eab",
+    "analysis/token_stats.json": "689b8991ef6322cf3e82629e31eae379c2debe356bfbeabb44386bcc923552a1",
+    "results/cases.json": "6d75770edf3e6a5be6cbcd45a6b777a12e6216797afef5eaa8035168eb6dd92a",
+    "results/compression_diagnostics.json": "120234aef346b9f57bc1e693d6129763f1e4cf03f9e445c195e8c8faa9922087",
+    "results/interaction_diagnostics.json": "7223e2cae9f55cbbf709ec692eb91597900c04fa45cbd67381552c225cc92cdc",
+    "results/main_table.csv": "b14b484da8ae91716d2104a2a4789d5f62482c8bc6fbe0a932454a66634736eb",
+    "results/pair_metrics.json": "adfe6578e250333acc82b30b2772f12ef59e2ea5fb65157ed6fbf76c5c3a6b4a",
+    "results/run_manifest.json": "565e8164a998aac2e8a9e6a37b29ddc26d7370c43f6680d3c9ca49035d4ed7f5",
+    "results/summary.json": "653819b9729100a107e03ec27f426da9a4cd7e91d5a526cdb4ca6a41bda1f0f6",
+    "results/support.json": "f62b4ee665fa3e57b9d042dc3fd2d0e242a4c57f9b724f2b503f27a34fba5025"
+  },
+  "budget": {
+    "gpu_hours_max": 5.0,
+    "gpu_hours_used": 1.7079285759396023,
+    "gpu_hours_used_fraction": 0.34158571518792047,
+    "max_parallel_gpus": 2,
+    "wall_hours_limit": 6.0
+  },
+  "code_hashes": {
+    "csoi_analyze.py": "33fd5b9102ce6482e0e6eb087ac6242c179c6285ddcace1df9b806064036f069",
+    "csoi_checks.py": "bed96b93b6ec55e053a119896cf6659c374d02c9e78033e806d205eb2e3cf708",
+    "csoi_common.py": "ece2c715414a6892797c339658cb8009d3c5ddba2fc97a2cc47db40393bfcbb9",
+    "csoi_compress.py": "2ef5b6731ae934dd8eb698a0014780479deb7ce9b15d0422373afe7e8132a53f",
+    "csoi_data.py": "b6b5e6c5175134c5a5b4d725a7602ddae5e149388c0d2d7215a20de37b51dc24",
+    "csoi_diag.py": "4390b94f64c3be46079101bd1e7eab74853b6727ed672da5a3a550c4f5f947ea",
+    "csoi_manifest.py": "c408f586b3c110672eed0b5318299ad16b2a73a6dbd790a7995686519ea06abe",
+    "csoi_model.py": "3f7c6d56c9e72866519b70e719cf314f18bb232ac2154bf963ea04f00d591258",
+    "csoi_stats.py": "69d4d8a8a49f07c790bdfe3a21a24595420992354c76497a7228e1e3d9609d6a",
+    "csoi_synthetic.py": "93f46cd7b2529b60753fbc0ef96832a74dab10b23bfa0adeb33fe05b3fde73cc",
+    "csoi_train.py": "eaa450491ecff8ba2cd7cd55447a907f56bc4d4207944271ebbcb94004f6e1ea"
+  },
+  "commit": "d5c21a3898746db7666c99fbca28bdac1f6a1476",
+  "compression_diagnostics": {
+    "designs": {
+      "compressed_side_embeddings_only": {
+        "n_features": 256,
+        "oof_r2": 0.6593342127366917,
+        "oof_rmse": 0.45645413759410053
+      },
+      "cut_bond_only": {
+        "n_features": 6,
+        "oof_r2": -0.0014181239710349125,
+        "oof_rmse": 0.7826013842369846
+      },
+      "plus_mean_S_embedding": {
+        "n_features": 384,
+        "oof_r2": 0.654457225788798,
+        "oof_rmse": 0.45970983594610954
+      },
+      "plus_product_and_cut_bond": {
+        "n_features": 518,
+        "oof_r2": 0.6379970193009201,
+        "oof_rmse": 0.47053178015700986
+      },
+      "plus_product_basis": {
+        "n_features": 512,
+        "oof_r2": 0.6379048187714106,
+        "oof_rmse": 0.47059169750515994
+      }
+    },
+    "explained_variance_ratio_top8": [
+      0.09314499477113593,
+      0.046563912734815235,
+      0.0421990628631274,
+      0.03860985101940548,
+      0.03610422884607349,
+      0.030114888010985823,
+      0.029067965050629682,
+      0.028237316885105623
+    ],
+    "n_pairs": 4646,
+    "path": "results/compression_diagnostics.json"
+  },
+  "config_sha256": "bd4934159ed839f64271bd2c97aee6201adf661d3614e91240c45c001fc58b19",
+  "engineering_gate": {
+    "checks": {
+      "attention": true,
+      "batch": true,
+      "batching": true,
+      "boundary": true,
+      "branches": true,
+      "determinism": true,
+      "guard": true,
+      "init": true,
+      "inputs": true,
+      "loss": true,
+      "params": true,
+      "renumber": true,
+      "tokens": true
+    },
+    "ok": true,
+    "path": "analysis/checks.json"
+  },
+  "execution_regime": {
+    "launcher": "rr deploy + rr run",
+    "local_cpu_work": [
+      "cache build",
+      "13-gate check battery",
+      "corpus and token statistics",
+      "all analysis and diagnostics"
+    ],
+    "no_manual_ssh": true,
+    "trained_on": "res (a100-2, process backend, res-gpu0/res-gpu1)"
+  },
+  "generated_utc": "2026-11-22T04:18:09Z",
+  "horizon": {
+    "epoch_seconds_measured": 20.6,
+    "epochs": 160,
+    "reduced_from_cap": false,
+    "source": "analysis/timing.json (remote smoke on res)"
+  },
+  "inputs": {
+    "cache_content_sha256": "46439b91dfd760255be4c53256f12687959d203b6740e55c0213d66476168825",
+    "cache_file_sha256_this_checkout": "d30e5b9516df5950f0a64c9d086216f1e29c69901c52140f0882383af101ef1c",
+    "dataset": "ogbg-mollipo",
+    "dataset_key": "lipo",
+    "identity_note": "np.savez stores zip timestamps, so the npz file hash is not reproducible; identity is checked with a content digest over every array except the timing string.",
+    "n_fragments": 29283,
+    "n_molecules": 4200,
+    "n_parses": 33438,
+    "splits": {
+      "test_kept_unused": 420,
+      "train": 3360,
+      "valid": 420
+    },
+    "test_labels_read": false
+  },
+  "parent_modules": {
+    "trc_common.py": "b572faebca185d21ea680c817cd7e26230b9692fabfb1218a2d20b620e1ad0be",
+    "trc_data.py": "61752ee09e00b07fad90e490c8db3bb579930bb2eeebe8b97d86918ce998801a",
+    "trc_model.py": "90c61c49063f9f2bf5862e6e0f2355978b7f22fda85b0c09af0a8725a95715d7",
+    "trc_pairs.py": "6407b57dcd59e7395eaa7abd1fade478ee14e5b481eb2cd0b9ab53242ea652b4",
+    "trc_prepare.py": "edba7b50232182fe25422f94680801ca7eabe2e904fff626bc9ae08db46ef371",
+    "trc_train.py": "a9d6d45e614c6caab4fa9bc794751e04b06831a66d23d2ce8ea3a9c354580c30"
+  },
+  "parent_round": "tracks/structural-sufficiency/task_response_composition_s0_v1",
+  "protocol": "contextual-structural-object-interaction-pilot-v1",
+  "protocol_sha256": "82cb00cd8b2a45fd3d8be9568c33f7c01521f64f76d434ea618e712ae2823a83",
+  "reused_runs": [
+    {
+      "arm": "FACTOR",
+      "arm_key": "A_TRC_FACTOR_CUTRESP",
+      "best": {
+        "epoch": 100,
+        "valid": 0.7095734132533384
+      },
+      "commit": "7eb7dd102b062b0b80ddbfc7309a7713c017b78c",
+      "dir": "tracks/structural-sufficiency/task_response_composition_s0_v1/results/LIPO_FACTOR_CUTRESP_R0",
+      "environment": {
+        "cuda_available": true,
+        "gpu_count": 1,
+        "gpu_name": "NVIDIA A100-SXM4-40GB",
+        "hostname": "a100-2",
+        "numpy": "2.1.3",
+        "nvidia_smi": [
+          "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, 550.163.01",
+          "GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, 550.163.01"
+        ],
+        "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "final": {
+        "aux_loss": 0.0289424840659606,
+        "epoch": 160,
+        "epoch_seconds": 4.272421360015869,
+        "lr": 1.0000036195935664e-05,
+        "run_id": "LIPO_FACTOR_CUTRESP_R0",
+        "test_cut_disp": 0.40521005376651803,
+        "test_cut_n": 3061.0,
+        "test_cut_rmse": 0.8502215027645698,
+        "test_cut_rmse_std": 0.7017693307514491,
+        "test_cut_var_mean": 0.11186262965202332,
+        "test_mae": 0.5497399438721154,
+        "test_parses_mean": 7.288095238095238,
+        "test_rmse": 0.7145564508423615,
+        "train_cut_disp": 0.1487390342015976,
+        "train_cut_n": 27237.0,
+        "train_cut_rmse": 0.2484014157196058,
+        "train_cut_rmse_mol": 0.2484014157196058,
+        "train_cut_rmse_std": 0.20502950666437145,
+        "train_cut_var_mean": 0.015072125941514969,
+        "train_loss": 0.0541214164135591,
+        "train_mae": 0.12418621711741615,
+        "train_parses_mean": 8.10625,
+        "train_rmse": 0.17496251213399514,
+        "train_seconds": 4.140279531478882,
+        "valid_cut_disp": 0.4088484356508333,
+        "valid_cut_n": 3140.0,
+        "valid_cut_rmse": 0.8540237162600531,
+        "valid_cut_rmse_std": 0.7049076621291235,
+        "valid_cut_var_mean": 0.11388047784566879,
+        "valid_mae": 0.5377603258233532,
+        "valid_parses_mean": 7.476190476190476,
+        "valid_rmse": 0.7146899780108574
+      },
+      "gpu_hours": 0.19280069205496048,
+      "kind": "reuse",
+      "note": null,
+      "params": {
+        "a": 8321,
+        "b": 9,
+        "beta": 1,
+        "enc": 100800,
+        "h_empty": 128,
+        "null_cut": 8,
+        "phi": 24020,
+        "q": 10848,
+        "r": 10848,
+        "total": 154983,
+        "trainable": 154983
+      },
+      "recipe": null,
+      "run_id": "LIPO_FACTOR_CUTRESP_R0"
+    },
+    {
+      "arm": "GINE_RAW",
+      "arm_key": "E_GINE_RAW_REF",
+      "best": {
+        "epoch": 128,
+        "test": {
+          "mae": 0.4844451433225258,
+          "rmse": 0.6581582300587612
+        },
+        "train": {
+          "mae": 0.220061316000317,
+          "rmse": 0.294612516157568
+        },
+        "valid": {
+          "mae": 0.4674498417779572,
+          "rmse": 0.640602388791534
+        }
+      },
+      "commit": "7eb7dd102b062b0b80ddbfc7309a7713c017b78c",
+      "dir": "tracks/structural-sufficiency/task_response_composition_s0_v1/results/GINE_RAW_LIPO_R0",
+      "environment": {
+        "cuda_available": true,
+        "gpu_count": 1,
+        "gpu_name": "NVIDIA A100-SXM4-40GB",
+        "hostname": "a100-2",
+        "numpy": "2.1.3",
+        "nvidia_smi": [
+          "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, 550.163.01",
+          "GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, 550.163.01"
+        ],
+        "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "final": {
+        "epoch": 160,
+        "test_rmse": 0.6514544560675323,
+        "train_rmse": 0.2655080080712111,
+        "valid_rmse": 0.6450837811693396
+      },
+      "gpu_hours": 0.0699477962058154,
+      "kind": "reuse",
+      "note": "external prediction coordinate only: official categorical features, no ports, no cuts, no shared response state",
+      "params": {
+        "trainable": 387974
+      },
+      "recipe": {
+        "batch": 128,
+        "clip": 5.0,
+        "epochs": 160,
+        "eval_batch": 512,
+        "min_lr": 1e-05,
+        "peak_lr": 0.001,
+        "seed": 0,
+        "warmup_epochs": 5,
+        "weight_decay": 1e-05
+      },
+      "run_id": "GINE_RAW_LIPO_R0"
+    }
+  ],
+  "round": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1",
+  "runs": [
+    {
+      "arm": "CSOI_ADD",
+      "arm_key": "B_CSOI_ADD",
+      "aux_weight": 0.25,
+      "best": {
+        "epoch": 147,
+        "valid": 0.719637259044952
+      },
+      "cache_sha256": "c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3",
+      "commit": "679ad12ca4946da0ee3f93579761c178501cb85e",
+      "content_sha256": "46439b91dfd760255be4c53256f12687959d203b6740e55c0213d66476168825",
+      "dir": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/results/CSOI_ADD_LIPO_R0",
+      "environment": {
+        "cuda_available": true,
+        "gpu_count": 1,
+        "gpu_name": "NVIDIA A100-SXM4-40GB",
+        "hostname": "a100-2",
+        "numpy": "2.1.3",
+        "nvidia_smi": [
+          "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, 550.163.01",
+          "GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, 550.163.01"
+        ],
+        "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "epochs": 160,
+      "final": {
+        "aux_loss": 0.3891336709823249,
+        "epoch": 160,
+        "epoch_seconds": 5.492296457290649,
+        "grad_additive": 0.9320658195869777,
+        "grad_interaction": 0.0,
+        "grad_token_encoder": 3.6416395078021564,
+        "lr": 1.0000036195935664e-05,
+        "run_id": "CSOI_ADD_LIPO_R0",
+        "train_cut_n": 27237.0,
+        "train_cut_rmse": 0.6394106295718895,
+        "train_cut_rmse_std": 0.5277669032493053,
+        "train_cut_var_std": 0.054982103407382965,
+        "train_loss": 0.2784394770860672,
+        "train_mae": 0.43752628257583764,
+        "train_rmse": 0.5709940580663861,
+        "valid_cut_n": 3140.0,
+        "valid_cut_rmse": 0.803670351982118,
+        "valid_cut_rmse_std": 0.6633462023971467,
+        "valid_cut_var_std": 0.05687630549073219,
+        "valid_mae": 0.5626782433403634,
+        "valid_rmse": 0.7203756071501141
+      },
+      "gpu_hours": 0.23565638032224442,
+      "kind": "trained",
+      "max_steps": 0,
+      "max_vram_bytes": 1302403072,
+      "params": {
+        "add_c": 16641,
+        "add_s": 16641,
+        "beta": 1,
+        "bond_bias": 65,
+        "bucket_emb": 384,
+        "cut_proj": 2528,
+        "mult_proj": 192,
+        "null_ctx": 64,
+        "null_cut": 64,
+        "phi": 28212,
+        "token_ln": 128,
+        "token_proj": 4160,
+        "total": 69080,
+        "trainable": 69080
+      },
+      "rr": {
+        "backend": "process",
+        "branch": "main",
+        "command": "python tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/code/csoi_train.py --run-id CSOI_ADD_LIPO_R0 --arm CSOI_ADD --dataset lipo --epochs 0 --device cuda",
+        "commit": "679ad12ca4946da0ee3f93579761c178501cb85e",
+        "completed": "2026-11-22T11:12:00+08:00",
+        "cuda_visible_devices": "1",
+        "dirty": false,
+        "driver": "550.163.01",
+        "exit_code": 0,
+        "experiment": "CSOI_ADD_LIPO_R0",
+        "gpu_names": [
+          "NVIDIA A100-SXM4-40GB",
+          "NVIDIA A100-SXM4-40GB"
+        ],
+        "host": "res",
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "python": "3.12.14",
+        "run_id": "CSOI_ADD_LIPO_R0-20261122-105742-4b4318d8",
+        "started": "2026-11-22T10:57:45+08:00",
+        "state": "completed",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "run_id": "CSOI_ADD_LIPO_R0",
+      "scaler": {
+        "mean": 2.1621607144740187,
+        "n": 3360,
+        "std": 1.211539840098397
+      },
+      "seed": 0,
+      "supervision": "CUTRESP",
+      "test_policy": "no test labels read in this round",
+      "wall_seconds": 848.36296916008,
+      "zeroed_categories": {
+        "atom_field_0": 108,
+        "atom_field_1": 2,
+        "atom_field_2": 8,
+        "atom_field_3": 9,
+        "atom_field_4": 6,
+        "atom_field_5": 5,
+        "atom_field_6": 3,
+        "atom_field_7": 0,
+        "atom_field_8": 0,
+        "bond_field_0": 1,
+        "bond_field_1": 3,
+        "bond_field_2": 0
+      }
+    },
+    {
+      "arm": "CSOI_GLOBAL",
+      "arm_key": "C_CSOI_GLOBAL",
+      "aux_weight": 0.25,
+      "best": {
+        "epoch": 135,
+        "valid": 0.734621952161027
+      },
+      "cache_sha256": "c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3",
+      "commit": "d5c21a3898746db7666c99fbca28bdac1f6a1476",
+      "content_sha256": "46439b91dfd760255be4c53256f12687959d203b6740e55c0213d66476168825",
+      "dir": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/results/CSOI_GLOBAL_LIPO_R0",
+      "environment": {
+        "cuda_available": true,
+        "gpu_count": 1,
+        "gpu_name": "NVIDIA A100-SXM4-40GB",
+        "hostname": "a100-2",
+        "numpy": "2.1.3",
+        "nvidia_smi": [
+          "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, 550.163.01",
+          "GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, 550.163.01"
+        ],
+        "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "epochs": 160,
+      "final": {
+        "aux_loss": 0.08588639892778306,
+        "epoch": 160,
+        "epoch_seconds": 13.117430686950684,
+        "grad_additive": 0.2731784857240669,
+        "grad_interaction": 0.7328874133251999,
+        "grad_token_encoder": 1.3571537715109327,
+        "lr": 1.0000036195935664e-05,
+        "run_id": "CSOI_GLOBAL_LIPO_R0",
+        "train_cut_n": 27237.0,
+        "train_cut_rmse": 0.44529597637447366,
+        "train_cut_rmse_std": 0.36754546704655483,
+        "train_cut_var_std": 0.039452340453863144,
+        "train_loss": 0.14275760864311793,
+        "train_mae": 0.2717000020012623,
+        "train_rmse": 0.36078352686576237,
+        "valid_cut_n": 3140.0,
+        "valid_cut_rmse": 0.8361028235976498,
+        "valid_cut_rmse_std": 0.6901158310483165,
+        "valid_cut_var_std": 0.07444987446069717,
+        "valid_mae": 0.5704432104380468,
+        "valid_rmse": 0.7384556296815747
+      },
+      "gpu_hours": 0.5796061472098033,
+      "kind": "trained",
+      "max_steps": 0,
+      "max_vram_bytes": 9160040960,
+      "params": {
+        "add_c": 16641,
+        "add_s": 16641,
+        "beta": 1,
+        "bond_bias": 65,
+        "bucket_emb": 384,
+        "cut_proj": 2528,
+        "k_proj": 4160,
+        "mult_proj": 192,
+        "null_ctx": 64,
+        "null_cut": 64,
+        "out": 65,
+        "phi": 28212,
+        "q_proj": 4160,
+        "r_mlp": 49344,
+        "token_ln": 128,
+        "token_proj": 4160,
+        "total": 130969,
+        "trainable": 130969,
+        "v_proj": 4160
+      },
+      "rr": {
+        "backend": "process",
+        "branch": "main",
+        "command": "python tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/code/csoi_train.py --run-id CSOI_GLOBAL_LIPO_R0 --arm CSOI_GLOBAL --dataset lipo --epochs 0 --device cuda",
+        "commit": "679ad12ca4946da0ee3f93579761c178501cb85e",
+        "completed": "2026-11-22T11:32:49+08:00",
+        "cuda_visible_devices": "0",
+        "dirty": false,
+        "driver": "550.163.01",
+        "exit_code": 0,
+        "experiment": "CSOI_GLOBAL_LIPO_R0",
+        "gpu_names": [
+          "NVIDIA A100-SXM4-40GB",
+          "NVIDIA A100-SXM4-40GB"
+        ],
+        "host": "res",
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "python": "3.12.14",
+        "run_id": "CSOI_GLOBAL_LIPO_R0-20261122-105752-0734932f",
+        "started": "2026-11-22T10:57:55+08:00",
+        "state": "completed",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "run_id": "CSOI_GLOBAL_LIPO_R0",
+      "scaler": {
+        "mean": 2.1621607144740187,
+        "n": 3360,
+        "std": 1.211539840098397
+      },
+      "seed": 0,
+      "supervision": "CUTRESP",
+      "test_policy": "no test labels read in this round",
+      "wall_seconds": 2086.5821299552917,
+      "zeroed_categories": {
+        "atom_field_0": 108,
+        "atom_field_1": 2,
+        "atom_field_2": 8,
+        "atom_field_3": 9,
+        "atom_field_4": 6,
+        "atom_field_5": 5,
+        "atom_field_6": 3,
+        "atom_field_7": 0,
+        "atom_field_8": 0,
+        "bond_field_0": 1,
+        "bond_field_1": 3,
+        "bond_field_2": 0
+      }
+    },
+    {
+      "arm": "CSOI_REL",
+      "arm_key": "D_CSOI_REL",
+      "aux_weight": 0.25,
+      "best": {
+        "epoch": 113,
+        "valid": 0.7272085959879568
+      },
+      "cache_sha256": "c53fee5d16869b7b7ff721d404a84289d0a315d392440ebfb436cbd307e3abc3",
+      "commit": "d5c21a3898746db7666c99fbca28bdac1f6a1476",
+      "content_sha256": "46439b91dfd760255be4c53256f12687959d203b6740e55c0213d66476168825",
+      "dir": "tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/results/CSOI_REL_LIPO_R0",
+      "environment": {
+        "cuda_available": true,
+        "gpu_count": 1,
+        "gpu_name": "NVIDIA A100-SXM4-40GB",
+        "hostname": "a100-2",
+        "numpy": "2.1.3",
+        "nvidia_smi": [
+          "GPU-5b51f95e-48cd-f1bd-287e-8bcb14f1ca5f, 550.163.01",
+          "GPU-7c4f57e5-21e9-d1e6-c7c6-779b2624700d, 550.163.01"
+        ],
+        "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+        "python": "3.12.14",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "epochs": 160,
+      "final": {
+        "aux_loss": 0.08475998957764427,
+        "epoch": 160,
+        "epoch_seconds": 20.2182035446167,
+        "grad_additive": 0.23531346443546378,
+        "grad_interaction": 0.7709875740511662,
+        "grad_token_encoder": 1.6258269764390583,
+        "lr": 1.0000036195935664e-05,
+        "run_id": "CSOI_REL_LIPO_R0",
+        "train_cut_n": 27237.0,
+        "train_cut_rmse": 0.47959281085159533,
+        "train_cut_rmse_std": 0.3958539331340887,
+        "train_cut_var_std": 0.04277927801012993,
+        "train_loss": 0.16245973644391545,
+        "train_mae": 0.2997039837469578,
+        "train_rmse": 0.39313404734383994,
+        "valid_cut_n": 3140.0,
+        "valid_cut_rmse": 0.8424662957548404,
+        "valid_cut_rmse_std": 0.6953682147888908,
+        "valid_cut_var_std": 0.083363376557827,
+        "valid_mae": 0.5578009041185384,
+        "valid_rmse": 0.7290341271431008
+      },
+      "gpu_hours": 0.8926660484075546,
+      "kind": "trained",
+      "max_steps": 0,
+      "max_vram_bytes": 13348475392,
+      "params": {
+        "add_c": 16641,
+        "add_s": 16641,
+        "beta": 1,
+        "bond_bias": 65,
+        "bucket_emb": 384,
+        "cut_proj": 2528,
+        "k_proj": 4160,
+        "mult_proj": 192,
+        "null_ctx": 64,
+        "null_cut": 64,
+        "out": 65,
+        "phi": 28212,
+        "q_proj": 4160,
+        "r_mlp": 49344,
+        "rel_cut": 1040,
+        "rel_dc": 96,
+        "rel_ds": 96,
+        "rel_dt": 96,
+        "rel_mlp": 676,
+        "token_ln": 128,
+        "token_proj": 4160,
+        "total": 132973,
+        "trainable": 132973,
+        "v_proj": 4160
+      },
+      "rr": {
+        "backend": "process",
+        "branch": "main",
+        "command": "python tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/code/csoi_train.py --run-id CSOI_REL_LIPO_R0 --arm CSOI_REL --dataset lipo --epochs 0 --device cuda",
+        "commit": "d5c21a3898746db7666c99fbca28bdac1f6a1476",
+        "completed": "2026-11-22T12:08:07+08:00",
+        "cuda_visible_devices": "1",
+        "dirty": false,
+        "driver": "550.163.01",
+        "exit_code": 0,
+        "experiment": "CSOI_REL_LIPO_R0",
+        "gpu_names": [
+          "NVIDIA A100-SXM4-40GB",
+          "NVIDIA A100-SXM4-40GB"
+        ],
+        "host": "res",
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "python": "3.12.14",
+        "run_id": "CSOI_REL_LIPO_R0-20261122-111424-e0f793de",
+        "started": "2026-11-22T11:14:26+08:00",
+        "state": "completed",
+        "torch": "2.5.1+cu124",
+        "torch_cuda": "12.4"
+      },
+      "run_id": "CSOI_REL_LIPO_R0",
+      "scaler": {
+        "mean": 2.1621607144740187,
+        "n": 3360,
+        "std": 1.211539840098397
+      },
+      "seed": 0,
+      "supervision": "CUTRESP",
+      "test_policy": "no test labels read in this round",
+      "wall_seconds": 3213.5977742671967,
+      "zeroed_categories": {
+        "atom_field_0": 108,
+        "atom_field_1": 2,
+        "atom_field_2": 8,
+        "atom_field_3": 9,
+        "atom_field_4": 6,
+        "atom_field_5": 5,
+        "atom_field_6": 3,
+        "atom_field_7": 0,
+        "atom_field_8": 0,
+        "bond_field_0": 1,
+        "bond_field_1": 3,
+        "bond_field_2": 0
+      }
+    }
+  ],
+  "seed": 0,
+  "seeds_planned": [
+    0
+  ],
+  "smoke_runs": [
+    {
+      "backend": "process",
+      "branch": "main",
+      "command": "python tracks/structural-sufficiency/contextual_structural_object_interaction_pilot_v1/code/csoi_synthetic.py --dataset lipo --n 1536 --steps 400 --device cuda",
+      "commit": "bdadbf930fdfd536210d6ee10a19a6244fbd8b05",
+      "completed": "2026-11-22T10:53:54+08:00",
+      "cuda_visible_devices": "1",
+      "dirty": false,
+      "driver": "550.163.01",
+      "exit_code": 0,
+      "experiment": "csoi-synthetic-flip2",
+      "gpu_names": [
+        "NVIDIA A100-SXM4-40GB",
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "host": "res",
+      "node": "a100-2",
+      "pool": "res-gpu1",
+      "python": "3.12.14",
+      "run_id": "csoi-synthetic-flip2-20261122-105055-10640660",
+      "started": "2026-11-22T10:50:58+08:00",
+      "state": "completed",
+      "torch": "2.5.1+cu124",
+      "torch_cuda": "12.4"
+    }
+  ],
+  "structure_record": {
+    "attention_entries_by_split": {
+      "train": {
+        "attention_entries": 151125098.0,
+        "n_parses": 27237
+      },
+      "valid": {
+        "attention_entries": 19911880.0,
+        "n_parses": 3140
+      }
+    },
+    "attention_entries_total": 190414534.0,
+    "files": [
+      "analysis/structure_stats.json",
+      "analysis/token_stats.json"
+    ],
+    "fragment_tokens": {
+      "max": 1399.0,
+      "mean": 353.88430147184374,
+      "p50": 358.0,
+      "p90": 520.0,
+      "p95": 567.0,
+      "p99": 712.0
+    },
+    "object_bucket_share": [
+      0.034368,
+      0.085883,
+      0.124326,
+      0.133097,
+      0.622324,
+      2e-06
+    ],
+    "objects": {
+      "k=1": 76,
+      "k=2": 1113,
+      "k=3": 11545,
+      "k=4": 58060
+    },
+    "parses_per_molecule": {
+      "max": 55.0,
+      "mean": 7.961428571428572,
+      "p50": 8.0,
+      "p90": 13.0,
+      "p95": 14.0,
+      "p99": 18.0
+    },
+    "token_guard": {
+      "applied": true,
+      "cap": 128,
+      "fraction_below_095": 0.9113137315165796,
+      "fragments_below_095": 26686,
+      "note": "the guard is not used for training: the ragged attention path processes the full token set in entry chunks, so no structural object is dropped",
+      "retained_mass": {
+        "max": 1.0,
+        "mean": 0.6199628398729747,
+        "p50": 0.5813333330099317,
+        "p90": 0.9121145531058131,
+        "p95": 1.0,
+        "p99": 1.0
+      }
+    }
+  },
+  "synthetic_flip": {
+    "device": "cuda",
+    "n_examples": 1536,
+    "path": "analysis/synthetic_flip.json",
+    "rows": [
+      {
+        "arm": "CSOI_ADD",
+        "corr": 0.9999391249766918,
+        "normalized_rmse": 0.013084316743888791,
+        "rule": "R_ADD"
+      },
+      {
+        "arm": "CSOI_GLOBAL",
+        "corr": 0.9999471163836566,
+        "normalized_rmse": 0.010747293095136395,
+        "rule": "R_ADD"
+      },
+      {
+        "arm": "CSOI_REL",
+        "corr": 0.9999550030001795,
+        "normalized_rmse": 0.014123191833965378,
+        "rule": "R_ADD"
+      },
+      {
+        "arm": "CSOI_ADD",
+        "corr": 0.028124822648894373,
+        "normalized_rmse": 1.0046194043763716,
+        "rule": "R_FLIP"
+      },
+      {
+        "arm": "CSOI_GLOBAL",
+        "corr": 0.9838547987277007,
+        "normalized_rmse": 0.18025233558554746,
+        "rule": "R_FLIP"
+      },
+      {
+        "arm": "CSOI_REL",
+        "corr": 0.9512200011585509,
+        "normalized_rmse": 0.313342052651857,
+        "rule": "R_FLIP"
+      },
+      {
+        "arm": "CSOI_ADD",
+        "corr": 0.5345891811199666,
+        "normalized_rmse": 0.8491229215398644,
+        "rule": "R_REL"
+      },
+      {
+        "arm": "CSOI_GLOBAL",
+        "corr": 0.9604051555521799,
+        "normalized_rmse": 0.280234050279465,
+        "rule": "R_REL"
+      },
+      {
+        "arm": "CSOI_REL",
+        "corr": 0.9451926307069853,
+        "normalized_rmse": 0.32825711342632374,
+        "rule": "R_REL"
+      }
+    ],
+    "steps": 400,
+    "verdict": {
+      "R_ADD": {
+        "additive_arm_fails": false,
+        "best_interaction_normalized_rmse": 0.010747293095136395,
+        "cs_add_normalized_rmse": 0.013084316743888791,
+        "interaction_arm_succeeds": true
+      },
+      "R_FLIP": {
+        "additive_arm_fails": true,
+        "best_interaction_normalized_rmse": 0.18025233558554746,
+        "cs_add_normalized_rmse": 1.0046194043763716,
+        "interaction_arm_succeeds": true
+      },
+      "R_REL": {
+        "additive_arm_fails": true,
+        "best_interaction_normalized_rmse": 0.280234050279465,
+        "cs_add_normalized_rmse": 0.8491229215398644,
+        "interaction_arm_succeeds": true
+      }
+    }
+  },
+  "test_policy": "no official Test labels were read at any point in this round"
+}

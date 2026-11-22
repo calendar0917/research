@@ -1,6 +1,162 @@
 {
   "cache_sha256": "d30e5b9516df5950f0a64c9d086216f1e29c69901c52140f0882383af101ef1c",
   "checks": {
+    "attention": {
+      "chunk_size_invariance_max_abs": 0.0,
+      "entry_chunk": 262144,
+      "ok": true,
+      "vs_naive_reference_max_abs": 8.326672684688674e-17
+    },
+    "batch": {
+      "finite_loss": true,
+      "groups": {
+        "additive": {
+          "grad_norm": 3.1860888302748873,
+          "n_params": 21,
+          "params_with_nonzero_grad": 19
+        },
+        "interaction": {
+          "grad_norm": 2.247723265251739,
+          "n_params": 21,
+          "params_with_nonzero_grad": 21
+        },
+        "token_encoder": {
+          "grad_norm": 1.0643858045518242,
+          "n_params": 33,
+          "params_with_nonzero_grad": 33
+        }
+      },
+      "loss_aux": 0.7877549529075623,
+      "loss_main": 1.6684406995773315,
+      "ok": true,
+      "zeroed_categories": {
+        "atom_field_0": 108,
+        "atom_field_1": 2,
+        "atom_field_2": 8,
+        "atom_field_3": 9,
+        "atom_field_4": 6,
+        "atom_field_5": 5,
+        "atom_field_6": 3,
+        "atom_field_7": 0,
+        "atom_field_8": 0,
+        "bond_field_0": 1,
+        "bond_field_1": 3,
+        "bond_field_2": 0
+      }
+    },
+    "batching": {
+      "batch_vs_single_max_abs": 2.7755575615628914e-17,
+      "n_molecules": 12,
+      "ok": true,
+      "order_invariance_max_abs": 0.0
+    },
+    "boundary": {
+      "n_test_kept_unused": 420,
+      "n_train": 3360,
+      "n_train_pairs": 4646,
+      "n_valid": 420,
+      "ok": true,
+      "pair_sampler_train_only": true,
+      "pair_store_train_only": true,
+      "scaler": {
+        "mean": 2.1621607144740187,
+        "n": 3360,
+        "std": 1.211539840098397
+      },
+      "scaler_from_train_only": true,
+      "test_labels_read": false,
+      "trainer_data_view": [
+        "train",
+        "valid"
+      ]
+    },
+    "branches": {
+      "add_attention_parameters": [],
+      "add_double_difference_max_abs": 0.0,
+      "additive_only_identity_max_abs": 0.0,
+      "dtot_table_ok": true,
+      "global_double_difference_mean_abs": 0.014826880763423964,
+      "global_vs_rel_without_bias_max_abs": 0.0,
+      "note": "the four fragment ids are synthetic on purpose: the assertions are structural identities, they do not need real chemistry",
+      "ok": true,
+      "rel_double_difference_mean_abs": 0.012237982767870314,
+      "rel_with_bias_vs_without_max_abs": 0.007467073136153732
+    },
+    "determinism": {
+      "invariant_to_global_torch_rng": true,
+      "model_seed_changes_predictions": true,
+      "model_seed_delta_max_abs": 0.07074766406838187,
+      "ok": true,
+      "same_cfg_bitwise_identical": true
+    },
+    "guard": {
+      "cap": 128,
+      "cap_deterministic": true,
+      "fraction_below_0.95_mass": 0.9113137315165796,
+      "fragments_below_0.95_mass": 26686,
+      "guard_triggered": true,
+      "guard_would_be_inadequate": true,
+      "n_fragments_probed": 8,
+      "ok": true,
+      "resolution": "full token set + chunked ragged attention (no token dropped)",
+      "retained_mass": {
+        "max": 1.0,
+        "mean": 0.6199628398729747,
+        "p50": 0.5813333330099317,
+        "p90": 0.9121145531058131,
+        "p95": 1.0,
+        "p99": 1.0
+      },
+      "tokens_per_fragment": {
+        "max": 1399.0,
+        "mean": 353.88430147184374,
+        "p50": 358.0,
+        "p90": 520.0,
+        "p95": 567.0,
+        "p99": 712.0
+      },
+      "training_uses_full_token_set": true
+    },
+    "init": {
+      "attention_init_equal_between_global_and_rel": true,
+      "hashes": {
+        "CSOI_ADD": {
+          "add_c": "9bb309ae011a69829bbcba88d276e3ccec14c2b76f397877756144fb6c18ca48",
+          "add_s": "c493b8d20be4db699ec635266ba5617fbf1b69801693f07ee6d07d56dc08dced",
+          "bond_bias": "75c1c558a9068eb0ef3ba0d6c0f441a2354be4f8f38892fbf579b7ed20499986",
+          "bucket_emb": "1d09a00cd0ad060e2cc3e29a53ebc2205f25d915bf615d2fd775b359b4c66126",
+          "cut_proj": "0897641fd104ab085384d643f5b08974af35f3627ae79958471a3682eb36e9d6",
+          "mult_proj": "354a1b750214da56b025fa03b063978bf1b55d29727c9a187853c6f210c89ae6",
+          "phi": "71d621afdca3030248e55cd0acff60b6d4bba5566c27320a9dd13d8ea7ad6b56",
+          "token_ln": "23f9aeba0cd4600e6445f6d85cd8053e90df99a9c82f3ee673858a725b0603ff",
+          "token_proj": "d4399836a42483ede0260bf7c37750700fdf43f05912835f07efc549331039ec"
+        },
+        "CSOI_GLOBAL": {
+          "add_c": "9bb309ae011a69829bbcba88d276e3ccec14c2b76f397877756144fb6c18ca48",
+          "add_s": "c493b8d20be4db699ec635266ba5617fbf1b69801693f07ee6d07d56dc08dced",
+          "bond_bias": "75c1c558a9068eb0ef3ba0d6c0f441a2354be4f8f38892fbf579b7ed20499986",
+          "bucket_emb": "1d09a00cd0ad060e2cc3e29a53ebc2205f25d915bf615d2fd775b359b4c66126",
+          "cut_proj": "0897641fd104ab085384d643f5b08974af35f3627ae79958471a3682eb36e9d6",
+          "mult_proj": "354a1b750214da56b025fa03b063978bf1b55d29727c9a187853c6f210c89ae6",
+          "phi": "71d621afdca3030248e55cd0acff60b6d4bba5566c27320a9dd13d8ea7ad6b56",
+          "token_ln": "23f9aeba0cd4600e6445f6d85cd8053e90df99a9c82f3ee673858a725b0603ff",
+          "token_proj": "d4399836a42483ede0260bf7c37750700fdf43f05912835f07efc549331039ec"
+        },
+        "CSOI_REL": {
+          "add_c": "9bb309ae011a69829bbcba88d276e3ccec14c2b76f397877756144fb6c18ca48",
+          "add_s": "c493b8d20be4db699ec635266ba5617fbf1b69801693f07ee6d07d56dc08dced",
+          "bond_bias": "75c1c558a9068eb0ef3ba0d6c0f441a2354be4f8f38892fbf579b7ed20499986",
+          "bucket_emb": "1d09a00cd0ad060e2cc3e29a53ebc2205f25d915bf615d2fd775b359b4c66126",
+          "cut_proj": "0897641fd104ab085384d643f5b08974af35f3627ae79958471a3682eb36e9d6",
+          "mult_proj": "354a1b750214da56b025fa03b063978bf1b55d29727c9a187853c6f210c89ae6",
+          "phi": "71d621afdca3030248e55cd0acff60b6d4bba5566c27320a9dd13d8ea7ad6b56",
+          "token_ln": "23f9aeba0cd4600e6445f6d85cd8053e90df99a9c82f3ee673858a725b0603ff",
+          "token_proj": "d4399836a42483ede0260bf7c37750700fdf43f05912835f07efc549331039ec"
+        }
+      },
+      "ok": true,
+      "shared_module_hashes_equal": true
+    },
     "inputs": {
       "atom_attribute_rows_distinct": true,
       "bond_attribute_rows_distinct": true,
@@ -15,6 +171,56 @@
       "parse_count_mismatch_molecules": 0,
       "parse_cut_endpoint_bad": 0,
       "parse_recombination_bad": 0
+    },
+    "loss": {
+      "aux_weight": 0.25,
+      "cut_counts_match_parses": true,
+      "l_aux": 0.7879446868763711,
+      "l_main": 0.7920132295187724,
+      "loss_at_frozen_aux_weight": 0.9889994012378651,
+      "ok": true,
+      "pair_delta_matches_cut_scores_max_abs": 6.938893903907228e-18,
+      "per_molecule_mean_matches_direct_sum": 0.0,
+      "tau2": 0.5446173118936698,
+      "tau2_manual": 0.5446173118936698,
+      "tau2_matches_reweighted_sampler_formula": true
+    },
+    "params": {
+      "add_has_no_interaction_params": true,
+      "encoder_and_additive_equal_across_arms": true,
+      "groups": {
+        "CSOI_ADD": {
+          "additive": 36004,
+          "interaction": 0,
+          "token_encoder": 33076
+        },
+        "CSOI_GLOBAL": {
+          "additive": 36004,
+          "interaction": 61889,
+          "token_encoder": 33076
+        },
+        "CSOI_REL": {
+          "additive": 36004,
+          "interaction": 63893,
+          "token_encoder": 33076
+        }
+      },
+      "ok": true,
+      "rel_minus_global": 2004,
+      "relation_branch_params": 2004,
+      "shared_interaction_modules_equal_after_removing_relation_branch": true,
+      "total": {
+        "CSOI_ADD": 69080,
+        "CSOI_GLOBAL": 130969,
+        "CSOI_REL": 132973
+      }
+    },
+    "renumber": {
+      "device": "cpu",
+      "dtype": "float64",
+      "max_abs_diff": 1.1102230246251565e-16,
+      "n_molecules": 120,
+      "ok": true
     },
     "tokens": {
       "bucket_mass_equals_object_count_max_abs_diff": 9.5367431640625e-07,
@@ -50,7 +256,7 @@
   "content_sha256": "46439b91dfd760255be4c53256f12687959d203b6740e55c0213d66476168825",
   "ok": true,
   "signature": {
-    "commit": "0389c7934047f0dffe71e3a7ff656251a7c06ee2",
+    "commit": "d5c21a3898746db7666c99fbca28bdac1f6a1476",
     "config_sha256": "bd4934159ed839f64271bd2c97aee6201adf661d3614e91240c45c001fc58b19",
     "parent_modules": {
       "trc_common.py": "b572faebca185d21ea680c817cd7e26230b9692fabfb1218a2d20b620e1ad0be",
