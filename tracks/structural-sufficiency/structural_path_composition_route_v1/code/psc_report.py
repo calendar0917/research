@@ -934,17 +934,20 @@ def main() -> int:
         "score per path shape is "
         "dominated by a linear model on the same path counts ("
         f"{signed((agg0.get('PATH_COUNT_RIDGE', {}).get('rmse_mean') or float('nan')) - (agg0.get(champ, {}).get('rmse_mean') or float('nan')))}"
-        " RMSE means the ridge is *better*) and by ACRA. More capacity in the encoder is "
-        "not the fix; the sum is the fix.")
+        " RMSE means the ridge is *better*) and by ACRA on the D0 selection split; on the "
+        "official Valid refit it ties ACRA but stays behind GINE and the kernel baselines. "
+        "More capacity in the encoder is not the fix — the readout is the prime suspect.")
     add("2. **If the branch is revived, replace the shared scorer with a hybrid** "
         "`F = β + Σ_p [w_key(p) + h(E(p))]`, i.e. a free coefficient for keys with "
         "sufficient support and a shared, token-conditioned residual for the tail. That "
         "keeps a ledger (per-key plus per-shape terms) while removing the capacity "
         "cliff; the ridge/path-sum gap measures the headroom.")
     add("3. **Keep the pair algebra and the diagnostic harness.** The PAIR objective is "
-        "exactly verifiable, transfers to ACRA, and gives the only positive effect in the "
-        "matrix; the matched-pair ledger (exact C/X cancellation) is a reusable "
-        "instrument even if the model class changes.")
+        "exactly verifiable, gives a small positive effect in every PSC family and a clear "
+        "gain over its DIAG twin, while the ACRA variant is a wash "
+        f"({signed((c('ACRA_PAIR_vs_ACRA_REF') or {}).get('point'))}); the matched-pair "
+        "ledger (exact C/X cancellation) is a reusable instrument even if the model class "
+        "changes.")
     add("4. **Do not expect unseen-path-word transfer to move Lipo numbers.** It is 4.1% "
         "of held-out path mass. A route that targets it should be evaluated on a dataset "
         "or split where that slice is large, otherwise the metric cannot see it.")

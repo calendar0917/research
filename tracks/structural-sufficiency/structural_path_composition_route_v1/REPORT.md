@@ -1,6 +1,6 @@
 # Structural path composition route (PSC) — final report
 
-*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `01d05a411870946d116d5db6b1c80fb0f79a5519` · *generated*: 2026-11-22T20:33:27Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
+*Round*: `structural_path_composition_route_v1` · *protocol*: `structural-path-composition-route-v1` (frozen before formal training) · *analysis-code commit*: `03dd1b6ef57a7ea23395117595956bbe36917634` · *generated*: 2026-11-22T20:33:51Z · *frozen artefacts*: `analysis/*.json`, `analysis/figures/`, `analysis/tables.md`, `REPORT.md` in the same commit series
 
 Dataset: `ogbg-mollipo` (official split untouched; Test never read). All numbers below are whole-molecule RMSE / MAE in **original label units** (the training target is the standardised label, all reported metrics are inverted back). Higher-is-better quantities are marked.
 
@@ -303,9 +303,9 @@ results/main_table.csv, results/summary.json
 
 ## 15. What this means for the branch
 
-1. **Do not continue the strict path-sum branch as specified.** A shared scalar score per path shape is dominated by a linear model on the same path counts (-0.070 RMSE means the ridge is *better*) and by ACRA. More capacity in the encoder is not the fix; the sum is the fix.
+1. **Do not continue the strict path-sum branch as specified.** A shared scalar score per path shape is dominated by a linear model on the same path counts (-0.070 RMSE means the ridge is *better*) and by ACRA on the D0 selection split; on the official Valid refit it ties ACRA but stays behind GINE and the kernel baselines. More capacity in the encoder is not the fix — the readout is the prime suspect.
 2. **If the branch is revived, replace the shared scorer with a hybrid** `F = β + Σ_p [w_key(p) + h(E(p))]`, i.e. a free coefficient for keys with sufficient support and a shared, token-conditioned residual for the tail. That keeps a ledger (per-key plus per-shape terms) while removing the capacity cliff; the ridge/path-sum gap measures the headroom.
-3. **Keep the pair algebra and the diagnostic harness.** The PAIR objective is exactly verifiable, transfers to ACRA, and gives the only positive effect in the matrix; the matched-pair ledger (exact C/X cancellation) is a reusable instrument even if the model class changes.
+3. **Keep the pair algebra and the diagnostic harness.** The PAIR objective is exactly verifiable, gives a small positive effect in every PSC family and a clear gain over its DIAG twin, while the ACRA variant is a wash (-0.004); the matched-pair ledger (exact C/X cancellation) is a reusable instrument even if the model class changes.
 4. **Do not expect unseen-path-word transfer to move Lipo numbers.** It is 4.1% of held-out path mass. A route that targets it should be evaluated on a dataset or split where that slice is large, otherwise the metric cannot see it.
 
 ## 16. Non-claims
