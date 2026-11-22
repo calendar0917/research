@@ -85,13 +85,13 @@ def build_task(pack: dict, view: D.TokenView, n: int, seed: int = 0):
 
 
 def run_arm(cfg, pack, atom_dims, bond_dims, arm: str, task: dict, rule: str,
-            steps: int, seed: int, log=print) -> dict[str, Any]:
+            steps: int, seed: int, device: str = "cpu", log=print) -> dict[str, Any]:
     import torch
 
     C.set_deterministic(seed)
     model = M.CSOIModel(cfg, atom_dims, bond_dims, arm)
     model.load_pack(pack)
-    model = model.float()
+    model = model.float().to(device)
     n = task["s"].size
     n_valid = max(64, n // 8)
     tr = slice(0, n - n_valid)
@@ -99,7 +99,7 @@ def run_arm(cfg, pack, atom_dims, bond_dims, arm: str, task: dict, rule: str,
     y = task["y"][rule]
     y_tr = (y[tr] - y[tr].mean()) / max(1e-6, float(y[tr].std()))
     y_va_raw = y[va]
-    t = {k: torch.as_tensor(v) for k, v in task.items()
+    t = {k: torch.as_tensor(v, device=device) for k, v in task.items()
          if isinstance(v, np.ndarray)}
     opt = torch.optim.AdamW(model.parameters(), lr=3e-3, weight_decay=0.0)
     bs = 64
@@ -110,7 +110,7 @@ def run_arm(cfg, pack, atom_dims, bond_dims, arm: str, task: dict, rule: str,
     for step in range(steps):
         sel = rng.choice(idx_all, min(bs, idx_all.size), replace=False)
         f = model.cut_scores(t["s"][sel], t["c"][sel], t["bond"][sel])
-        target = torch.as_tensor(y_tr[sel], dtype=f.dtype)
+        target = torch.as_tensor(y_tr[sel], dtype=f.dtype, device=device)
         loss = torch.mean((f - target) ** 2)
         opt.zero_grad(set_to_none=True)
         loss.backward()
@@ -120,7 +120,8 @@ def run_arm(cfg, pack, atom_dims, bond_dims, arm: str, task: dict, rule: str,
             print(f"    {arm:11s} {rule:7s} step {step + 1:4d} loss {float(loss):.4f}")
     model.eval()
     with torch.no_grad():
-        f_va = model.cut_scores(t["s"][va], t["c"][va], t["bond"][va]).numpy()
+        f_va = model.cut_scores(t["s"][va], t["c"][va],
+                                t["bond"][va]).detach().cpu().numpy()
     pred = f_va * max(1e-6, float(y[tr].std())) + float(y[tr].mean())
     rmse = float(np.sqrt(np.mean((pred - y_va_raw) ** 2)))
     base = float(np.sqrt(np.mean((y_va_raw - y[tr].mean()) ** 2)))
@@ -139,9 +140,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--arms", nargs="*", default=list(M.CSOI_ARMS))
     ap.add_argument("--rules", nargs="*", default=["R_ADD", "R_FLIP", "R_REL"])
+    ap.add_argument("--device", default="cpu")
     args = ap.parse_args(argv)
     cfg = C.load_config()
-    pack = D.load_pack(cfg, args.dataset)
+    pack = D.ensure_pack(cfg, args.dataset)
     atom_dims, bond_dims = C.official_feature_dims()
     view = D.TokenView(pack)
     task = build_task(pack, view, args.n, seed=args.seed)
@@ -149,7 +151,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     for rule in args.rules:
         for arm in args.arms:
             rows.append(run_arm(cfg, pack, atom_dims, bond_dims, arm, task, rule,
-                                args.steps, args.seed))
+                                args.steps, args.seed, device=args.device))
     table = {(r["arm"], r["rule"]): r for r in rows}
     verdict = {}
     for rule in args.rules:
@@ -168,6 +170,7 @@ def main(argv: Sequence[str] | None = None) -> int:
            "note": ("capability check on the real token machinery; NOT evidence about "
                     "the Lipo dataset"),
            "n_examples": int(args.n), "steps": int(args.steps), "seed": int(args.seed),
+           "device": args.device,
            "flip_balance": task["flip_balance"], "a_s_std": task["a_s_std"],
            "cache_sha256": pack["cache_sha256"],
            "rules": {

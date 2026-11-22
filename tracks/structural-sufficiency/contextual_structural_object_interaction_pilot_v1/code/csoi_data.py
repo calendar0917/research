@@ -39,6 +39,19 @@ def build_cache(cfg: Mapping[str, Any], dataset: str = "lipo", log=print) -> dic
     return load_pack(cfg, dataset)
 
 
+def ensure_pack(cfg: Mapping[str, Any], dataset: str = "lipo", log=print) -> dict[str, Any]:
+    """Load the prepared cache, building it first if this checkout has none.
+
+    Remote runs are self-contained: the build takes ~40 s and is verified by the
+    content digest, so a fresh remote build cannot silently differ from the
+    frozen structural record.
+    """
+    if not cache_path(cfg, dataset).is_file():
+        log(f"prepared cache missing, building it: {cache_path(cfg, dataset)}")
+        return build_cache(cfg, dataset, log=log)
+    return load_pack(cfg, dataset)
+
+
 def content_digest(path: Path | str, skip: Sequence[str] = ("timing_json",)) -> str:
     """Order-independent content identity of a prepared pack.
 

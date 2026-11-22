@@ -36,7 +36,7 @@ class RunData:
     def __init__(self, cfg: Mapping[str, Any], dataset: str, log=print) -> None:
         self.cfg = dict(cfg)
         self.dataset = dataset
-        self.pack = D.load_pack(cfg, dataset)
+        self.pack = D.ensure_pack(cfg, dataset, log=log)
         self.labels = np.asarray(self.pack["labels"], np.float64)
         self.row_ids = np.asarray(self.pack["row_ids"], np.int64)
         self.splits = {
