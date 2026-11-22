@@ -378,6 +378,31 @@ ACRA_PACK = C.ROUND_DIR / "data" / "acra_pack_lipo_psc.npz"
 
 def ensure_acra_pack(cfg_acc: Mapping[str, Any], bundle: D.DataBundle,
                      log: Callable[[str], None] = print) -> dict[str, Any]:
+    """Load the frozen ACRA pack.
+
+    ``acra_relation_generalization_pilot_v1/data/acra_cache_lipo_v2.npz`` *is*
+    the parent round's label-free pack (its ``ensure_pack`` path is that file),
+    so it is loaded directly and only checked against the raw-cache sha.  No
+    rebuild is attempted on a GPU host: the parent builder imports RDKit for its
+    exact identity strings, and this round must not change the pack semantics.
+    """
+    AC, AM, AD, AK = _acra_modules()
+    source = C.ACRA_CACHE
+    with np.load(source, allow_pickle=False) as z:
+        meta = json.loads(str(z["meta_json"]))
+        pack = {k: np.asarray(z[k]) for k in z.files if k != "meta_json"}
+    if meta.get("raw_cache_sha256") not in (None, str(bundle.raw["cache_sha256"])):
+        raise ValueError("ACRA pack raw-cache sha differs from this round's structure cache")
+    pack["cache_sha256"] = C.sha256_file(source)
+    pack["cache_path"] = str(source)
+    pack["compat"] = "frozen parent pack (label free)"
+    log(f"  ACRA pack: {pack['ent_pat'].size} frame entries from {source.name}")
+    return pack
+
+
+def _ensure_acra_pack_build(cfg_acc: Mapping[str, Any], bundle: D.DataBundle,
+                            log: Callable[[str], None] = print) -> dict[str, Any]:
+    """Rebuild path (not used on GPU hosts; requires RDKit)."""
     AC, AM, AD, AK = _acra_modules()
     code_hash = C.code_sha([ACRA2_CODE / "acra_cache.py", ACRA2_CODE / "acra_data.py"])
     if ACRA_PACK.is_file():
@@ -603,7 +628,7 @@ def train_acra(args: argparse.Namespace, cfg: Mapping[str, Any], spec: Mapping[s
         "zeroed_categories": zeroed,
         "init_hash": hashes,
         "pair_targets": None if targets is None else targets.checks,
-        "acra_pack": {"path": str(ACRA_PACK.relative_to(C.REPO_ROOT)),
+        "acra_pack": {"path": str(Path(pack["cache_path"]).relative_to(C.REPO_ROOT)),
                       "sha256": pack["cache_sha256"], "compat": pack.get("compat")},
         "parent_recipe": {k: v for k, v in recipe.items()},
         "acra_cfg_sha256": C.sha256_file(C.ACRA2_DIR / "configs" / "acra_v2.json"),
