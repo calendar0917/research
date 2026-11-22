@@ -57,8 +57,8 @@
 8. **条件扩展没有触发。** Lipo 主对比不是 positive（既非 strong 也非 weak），
    按冻结规则 **不运行 ESOL**（`summary.json → decision.esol_extension_allowed = false`）。
 
-9. **预算与执行。** 3 个带 GPU 训练臂共 **1.708 A100 GPU·h**（上限 5），2 卡并行，
-   墙钟约 1.15 h（上限 6 h）。13 项工程门全部通过；horizon 由 remote timing smoke
+9. **预算与执行。** 3 个本轮训练的臂共 **1.708 A100 GPU·h**（B 0.236 + C 0.580 + D 0.893；
+   上限 5），2 卡并行，墙钟 **1.18 h**（10:57:42 → 12:08:07，上限 6 h）。13 项工程门全部通过；horizon 由 remote timing smoke
    （20.6 s/epoch）固定为 160 epoch，未缩减、未按臂调整。
 
 ---
@@ -226,8 +226,9 @@ A 0.220 / C 0.288 / D 0.310 / E 0.278 / B 0.360——顺序与整分子一致（
 
 ## 8. 父轮表示的压缩诊断（`results/compression_diagnostics.json`）
 
-用父轮 `FACTOR` 检查点取出全部 29283 个片段嵌入（128 维），对配对 δ 做**按 transform 分组的 5 折
-out-of-fold** 岭回归探针（5300+ 对，Test 相关配对全部排除）：
+用父轮 `FACTOR` 检查点取出全部 29283 个片段嵌入（128 维；前 8 个主成分只解释
+0.093/0.047/0.042/…/0.028 的方差，说明这 128 维确实被铺开使用），
+对配对 δ 做**按 transform 分组的 5 折 out-of-fold** 岭回归探针（4646 对，Test 相关配对全部排除）：
 
 | 特征块 | 维数 | OOF R² |
 |---|---|---|
@@ -257,7 +258,8 @@ out-of-fold** 岭回归探针（5300+ 对，Test 相关配对全部排除）：
 
 - 训练：`res`（a100-2，process backend，`res-gpu0` / `res-gpu1`，2 卡并行），
   驱动 550.163.01 / torch 2.5.1+cu124；全部经 `rr deploy` + `rr run`，无手工 SSH/sbatch/nohup。
-- GPU：**1.708 h**（A/B/C/D 的训练时长合计；上限 5 h）。墙钟 ~1.15 h（上限 6 h）。
+- GPU：**1.708 h**（本轮训练的 B/C/D 三臂合计；A、E 是父轮复用，其 0.193/0.070 h 不计入本轮预算；
+  上限 5 h）。墙钟 **1.18 h**（上限 6 h）。
   per-arm：B 14.1 min / C 34.8 min / D 53.6 min。
 - 本地 CPU：缓存构建、13 项门、结构/token 统计、配对与诊断分析、报告。
 - horizon：remote timing smoke 实测 20.6 s/epoch（最重的 `CSOI_REL`），按
