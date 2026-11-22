@@ -1377,7 +1377,7 @@ def cmd_figures(bundle: D.DataBundle) -> dict[str, Any]:
                  "T unseen\n2 frags unseen"]
         width = 0.8 / max(1, len(models))
         for j, m in enumerate(models):
-            vals = [d["support_classes"][n].get(m, {}).get("mae") for n in names]
+            vals = [d["support_classes"][n].get(m, {}).get("mae") or np.nan for n in names]
             ax.bar(np.arange(len(names)) + width * (j - (len(models) - 1) / 2), vals,
                    width=width, label=m.replace("PSC_", ""))
         ax.set_xticks(range(len(names)))
@@ -1389,8 +1389,7 @@ def cmd_figures(bundle: D.DataBundle) -> dict[str, Any]:
         d = molnov["splits"]["D0"]
         names = list(d["buckets"])
         for j, m in enumerate(models):
-            vals = [d["buckets"][n].get(m, {}).get("rmse") for n in names]
-            ns = [d["buckets"][n]["n"] for n in names]
+            vals = [d["buckets"][n].get(m, {}).get("rmse") or np.nan for n in names]
             ax.plot(range(len(names)), vals, "o-", label=m.replace("PSC_", ""))
         ax.set_xticks(range(len(names)))
         ax.set_xticklabels([f"{n}\nn={d['buckets'][n]['n']}" for n in names], fontsize=6.5)
