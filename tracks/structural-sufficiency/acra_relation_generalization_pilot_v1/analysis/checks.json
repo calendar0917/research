@@ -1,0 +1,430 @@
+{
+  "all_passed": true,
+  "cache_meta": {
+    "built_utc": "2026-11-22T10:47:57Z",
+    "cache_version": "acra-cache-v2",
+    "distinct_local_identities": 18232,
+    "label_free": true,
+    "n_bond_pairs": 1908180,
+    "n_bonds": 123899,
+    "n_combo_identities": 41248,
+    "n_events": 247798,
+    "n_frame_entries": 2586485,
+    "n_frame_patterns": 35942,
+    "n_frames_with_multiplicity": 2840452,
+    "n_local_blocks": 1982384,
+    "n_local_identities": 18232,
+    "n_molecules": 4200,
+    "protocol_id": "acra-relation-generalization-pilot-v1",
+    "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "row_range": [
+      0,
+      4199
+    ],
+    "timing_seconds": {
+      "frame_expansion": 6.127837657928467,
+      "identity": 16.538229942321777,
+      "total": 30.673141956329346
+    },
+    "unique_frame_compression": 0.9105892301647766
+  },
+  "cache_sha256": "1f6d7a3f870513a83b50f6aa6edbe0143f37c2a883308627f47145e2078fdc3b",
+  "checks": [
+    {
+      "detail": "pytest::test_relation_algebra_exact; analysis/relation_factorization.json: real max error 1.43e-06, synthetic max error 1.79e-07",
+      "name": "1_exact_relation_decomposition",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_relation_algebra_exact checks every batch molecule",
+      "name": "2_per_molecule_histogram_sum_equals_m_m_minus_1_over_2",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_relation_algebra_exact (bitwise equal) and pytest::test_moment_and_histogram_parts",
+      "name": "3_moment_plus_histogram_equals_original_e_rel",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_gamma_one_is_exactly_old_relation",
+      "name": "4_gamma_one_equals_old_relation",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_gamma_couples_categories_to_edge_pairs",
+      "name": "5_nonconstant_gamma_couples_categories_to_pairs",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_atom_renumbering_invariance; all five arms checked through the real cache",
+      "name": "6_atom_and_bond_renumbering_invariance",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_batch_equals_single",
+      "name": "7_batch_equals_single_graph",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_support_gate_loo; distinct molecules, repeated events inside one molecule subtract one only",
+      "name": "8_support_gate_train_leave_one_out",
+      "passed": true
+    },
+    {
+      "detail": {
+        "n_dev": 504,
+        "n_train_sub": 2856,
+        "overlap": 0,
+        "scaler_fit": "Train-sub only",
+        "shared_scaffolds": 0,
+        "split": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+      },
+      "name": "9_dev_and_train_sub_label_isolation",
+      "passed": true
+    },
+    {
+      "detail": {
+        "cache_label_free": true,
+        "test_labels_read": false,
+        "train_source_mentions_test_split": false
+      },
+      "name": "10_test_labels_and_predictions_never_accessed",
+      "passed": true
+    },
+    {
+      "detail": {
+        "arms": {
+          "ACRA_HIST_ONLY": {
+            "branches_without_gradient": [],
+            "finite_loss": true,
+            "loss_first": {
+              "gamma_reg": 0.0,
+              "loss": 0.5568928718566895,
+              "rel": 0.0,
+              "site": 0.00013957930787000805,
+              "task": 0.5568927526473999
+            },
+            "loss_last": {
+              "gamma_reg": 0.0,
+              "loss": 0.7387356758117676,
+              "rel": 4.431580691743875e-06,
+              "site": 9.55526702455245e-05,
+              "task": 0.7387354969978333
+            },
+            "params": {
+              "atom_head": 6129,
+              "beta": 1,
+              "bond_emb": 104,
+              "flag_bridge": 8,
+              "flag_ring": 8,
+              "frame": 28490,
+              "gate_raw": 1,
+              "k": 2080,
+              "mlp_c": 10368,
+              "mlp_s": 10368,
+              "proj_c": 42816,
+              "proj_s": 42816,
+              "q": 2080,
+              "rel_bias": 8,
+              "scalar_c": 65,
+              "scalar_s": 65,
+              "total": 145407
+            }
+          },
+          "ACRA_MOMENT_ONLY": {
+            "branches_without_gradient": [],
+            "finite_loss": true,
+            "loss_first": {
+              "gamma_reg": 0.0,
+              "loss": 0.5604431629180908,
+              "rel": 0.00010095228208228946,
+              "site": 0.0001350597885902971,
+              "task": 0.5604420304298401
+            },
+            "loss_last": {
+              "gamma_reg": 0.0,
+              "loss": 0.7415099143981934,
+              "rel": 0.0001706494513200596,
+              "site": 9.317702642874792e-05,
+              "task": 0.7415080666542053
+            },
+            "params": {
+              "atom_head": 6129,
+              "beta": 1,
+              "bond_emb": 104,
+              "flag_bridge": 8,
+              "flag_ring": 8,
+              "frame": 28490,
+              "gate_raw": 1,
+              "k": 2080,
+              "mlp_c": 10368,
+              "mlp_s": 10368,
+              "proj_c": 42816,
+              "proj_s": 42816,
+              "q": 2080,
+              "rel_k": 2080,
+              "rel_q": 2080,
+              "scalar_c": 65,
+              "scalar_s": 65,
+              "site_head": 8256,
+              "total": 157815
+            }
+          },
+          "ACRA_REL_REF": {
+            "branches_without_gradient": [],
+            "finite_loss": true,
+            "loss_first": {
+              "gamma_reg": 0.0,
+              "loss": 0.5626214742660522,
+              "rel": 0.00010114637552760541,
+              "site": 0.00013091429718770087,
+              "task": 0.5626203417778015
+            },
+            "loss_last": {
+              "gamma_reg": 0.0,
+              "loss": 0.8184352517127991,
+              "rel": 0.00023272988619282842,
+              "site": 0.00011125334276584908,
+              "task": 0.8184328079223633
+            },
+            "params": {
+              "atom_head": 6129,
+              "beta": 1,
+              "bond_emb": 104,
+              "flag_bridge": 8,
+              "flag_ring": 8,
+              "frame": 28490,
+              "gate_raw": 1,
+              "k": 2080,
+              "mlp_c": 10368,
+              "mlp_s": 10368,
+              "proj_c": 42816,
+              "proj_s": 42816,
+              "q": 2080,
+              "rel_bias": 8,
+              "rel_k": 2080,
+              "rel_q": 2080,
+              "scalar_c": 65,
+              "scalar_s": 65,
+              "site_head": 8256,
+              "total": 157823
+            }
+          },
+          "ACRA_SUPPORT_GATE": {
+            "branches_without_gradient": [],
+            "finite_loss": true,
+            "loss_first": {
+              "gamma_reg": 0.0,
+              "loss": 0.5007409453392029,
+              "rel": 0.00010040126653620973,
+              "site": 3.808088877121918e-05,
+              "task": 0.5007398724555969
+            },
+            "loss_last": {
+              "gamma_reg": 0.0,
+              "loss": 0.6380016803741455,
+              "rel": 0.00022780786093790084,
+              "site": 6.18914418737404e-05,
+              "task": 0.6379993557929993
+            },
+            "params": {
+              "atom_head": 6129,
+              "beta": 1,
+              "bond_emb": 104,
+              "flag_bridge": 8,
+              "flag_ring": 8,
+              "frame": 28490,
+              "gate_raw": 1,
+              "k": 2080,
+              "mlp_c": 10368,
+              "mlp_s": 10368,
+              "proj_c": 42816,
+              "proj_s": 42816,
+              "q": 2080,
+              "rel_bias": 8,
+              "rel_k": 2080,
+              "rel_q": 2080,
+              "scalar_c": 65,
+              "scalar_s": 65,
+              "site_head": 8256,
+              "total": 157823
+            }
+          },
+          "ACRA_TOPO_COUPLED": {
+            "branches_without_gradient": [],
+            "finite_loss": true,
+            "loss_first": {
+              "gamma_reg": 0.0,
+              "loss": 0.564185380935669,
+              "rel": 0.00010035653394879773,
+              "site": 0.00013647545711137354,
+              "task": 0.5641842484474182
+            },
+            "loss_last": {
+              "gamma_reg": 1.4560813497155323e-06,
+              "loss": 0.7653005719184875,
+              "rel": 0.00023565493756905198,
+              "site": 9.782952110981569e-05,
+              "task": 0.765298068523407
+            },
+            "params": {
+              "atom_head": 6129,
+              "beta": 1,
+              "bond_emb": 104,
+              "flag_bridge": 8,
+              "flag_ring": 8,
+              "frame": 28490,
+              "gamma_theta": 8,
+              "gate_raw": 1,
+              "k": 2080,
+              "mlp_c": 10368,
+              "mlp_s": 10368,
+              "proj_c": 42816,
+              "proj_s": 42816,
+              "q": 2080,
+              "rel_bias": 8,
+              "rel_k": 2080,
+              "rel_q": 2080,
+              "scalar_c": 65,
+              "scalar_s": 65,
+              "site_head": 8256,
+              "total": 157831
+            }
+          }
+        },
+        "init_hashes": {
+          "ACRA_HIST_ONLY": {
+            "atom_head": "1725aff1f903d677658d65247c8040860c0849ccfe3ead5122e031b20b570b12",
+            "beta": "87eec521f83f8f15142014d275a51ef9e8311b7b481954feab81a0d32d6098d4",
+            "bond_emb": "feff4d8c1a9e84064bc56b488c781731b4442ee3d79ad2484ab6eb16bf89999e",
+            "flag_bridge": "83a7b90d8f8f1424b7202ef1193acd1019b655287eab028e7d699b343606981d",
+            "flag_ring": "4b723a4d19a5d4933c8bee8e547ac912be2ed2f49034cd2eb5a166a27327f214",
+            "frame": "6376211352e94bcf2577dbd1e30765fc87cfadf867613d61bcff9b46f8244d66",
+            "k": "349859de2b288d2ee7c0d396c86c4a021cb8548d957f37cafc04afc1e1622b4c",
+            "mlp_c": "f4169fdf57cabadad1b67496713dac9a6e29a5880dd68978a0ac31b1e56efe12",
+            "mlp_s": "4183010c454892553c9a6d8b4bc292e53b2c885cc0d57b148104021176ed3d59",
+            "proj_c": "1ff8cec55808680f5ccc0530dc01a816d360188f5b4b44b789b163020062830f",
+            "proj_s": "0fb5690374e81ab77f9050f704b6ecbc7c0b8dc363b1ff382881a0e6197de28d",
+            "q": "ebd853f0c48d5599e0c65801e51f48d56b4e88acbd6a9ed014e9a6f52aace78b",
+            "scalar_c": "4ffc02df800ff0aa71a2d1c7c2fe89a9f2a5357918b32238ad72a8e957d0effe",
+            "scalar_s": "7ad8477e46137522a9d55dcefe24fad727f385f2b5147a8024d30198b70db8cf"
+          },
+          "ACRA_MOMENT_ONLY": {
+            "atom_head": "1725aff1f903d677658d65247c8040860c0849ccfe3ead5122e031b20b570b12",
+            "beta": "87eec521f83f8f15142014d275a51ef9e8311b7b481954feab81a0d32d6098d4",
+            "bond_emb": "feff4d8c1a9e84064bc56b488c781731b4442ee3d79ad2484ab6eb16bf89999e",
+            "flag_bridge": "83a7b90d8f8f1424b7202ef1193acd1019b655287eab028e7d699b343606981d",
+            "flag_ring": "4b723a4d19a5d4933c8bee8e547ac912be2ed2f49034cd2eb5a166a27327f214",
+            "frame": "6376211352e94bcf2577dbd1e30765fc87cfadf867613d61bcff9b46f8244d66",
+            "k": "349859de2b288d2ee7c0d396c86c4a021cb8548d957f37cafc04afc1e1622b4c",
+            "mlp_c": "f4169fdf57cabadad1b67496713dac9a6e29a5880dd68978a0ac31b1e56efe12",
+            "mlp_s": "4183010c454892553c9a6d8b4bc292e53b2c885cc0d57b148104021176ed3d59",
+            "proj_c": "1ff8cec55808680f5ccc0530dc01a816d360188f5b4b44b789b163020062830f",
+            "proj_s": "0fb5690374e81ab77f9050f704b6ecbc7c0b8dc363b1ff382881a0e6197de28d",
+            "q": "ebd853f0c48d5599e0c65801e51f48d56b4e88acbd6a9ed014e9a6f52aace78b",
+            "scalar_c": "4ffc02df800ff0aa71a2d1c7c2fe89a9f2a5357918b32238ad72a8e957d0effe",
+            "scalar_s": "7ad8477e46137522a9d55dcefe24fad727f385f2b5147a8024d30198b70db8cf"
+          },
+          "ACRA_REL_REF": {
+            "atom_head": "1725aff1f903d677658d65247c8040860c0849ccfe3ead5122e031b20b570b12",
+            "beta": "87eec521f83f8f15142014d275a51ef9e8311b7b481954feab81a0d32d6098d4",
+            "bond_emb": "feff4d8c1a9e84064bc56b488c781731b4442ee3d79ad2484ab6eb16bf89999e",
+            "flag_bridge": "83a7b90d8f8f1424b7202ef1193acd1019b655287eab028e7d699b343606981d",
+            "flag_ring": "4b723a4d19a5d4933c8bee8e547ac912be2ed2f49034cd2eb5a166a27327f214",
+            "frame": "6376211352e94bcf2577dbd1e30765fc87cfadf867613d61bcff9b46f8244d66",
+            "k": "349859de2b288d2ee7c0d396c86c4a021cb8548d957f37cafc04afc1e1622b4c",
+            "mlp_c": "f4169fdf57cabadad1b67496713dac9a6e29a5880dd68978a0ac31b1e56efe12",
+            "mlp_s": "4183010c454892553c9a6d8b4bc292e53b2c885cc0d57b148104021176ed3d59",
+            "proj_c": "1ff8cec55808680f5ccc0530dc01a816d360188f5b4b44b789b163020062830f",
+            "proj_s": "0fb5690374e81ab77f9050f704b6ecbc7c0b8dc363b1ff382881a0e6197de28d",
+            "q": "ebd853f0c48d5599e0c65801e51f48d56b4e88acbd6a9ed014e9a6f52aace78b",
+            "scalar_c": "4ffc02df800ff0aa71a2d1c7c2fe89a9f2a5357918b32238ad72a8e957d0effe",
+            "scalar_s": "7ad8477e46137522a9d55dcefe24fad727f385f2b5147a8024d30198b70db8cf"
+          },
+          "ACRA_SUPPORT_GATE": {
+            "atom_head": "1725aff1f903d677658d65247c8040860c0849ccfe3ead5122e031b20b570b12",
+            "beta": "87eec521f83f8f15142014d275a51ef9e8311b7b481954feab81a0d32d6098d4",
+            "bond_emb": "feff4d8c1a9e84064bc56b488c781731b4442ee3d79ad2484ab6eb16bf89999e",
+            "flag_bridge": "83a7b90d8f8f1424b7202ef1193acd1019b655287eab028e7d699b343606981d",
+            "flag_ring": "4b723a4d19a5d4933c8bee8e547ac912be2ed2f49034cd2eb5a166a27327f214",
+            "frame": "6376211352e94bcf2577dbd1e30765fc87cfadf867613d61bcff9b46f8244d66",
+            "k": "349859de2b288d2ee7c0d396c86c4a021cb8548d957f37cafc04afc1e1622b4c",
+            "mlp_c": "f4169fdf57cabadad1b67496713dac9a6e29a5880dd68978a0ac31b1e56efe12",
+            "mlp_s": "4183010c454892553c9a6d8b4bc292e53b2c885cc0d57b148104021176ed3d59",
+            "proj_c": "1ff8cec55808680f5ccc0530dc01a816d360188f5b4b44b789b163020062830f",
+            "proj_s": "0fb5690374e81ab77f9050f704b6ecbc7c0b8dc363b1ff382881a0e6197de28d",
+            "q": "ebd853f0c48d5599e0c65801e51f48d56b4e88acbd6a9ed014e9a6f52aace78b",
+            "scalar_c": "4ffc02df800ff0aa71a2d1c7c2fe89a9f2a5357918b32238ad72a8e957d0effe",
+            "scalar_s": "7ad8477e46137522a9d55dcefe24fad727f385f2b5147a8024d30198b70db8cf"
+          },
+          "ACRA_TOPO_COUPLED": {
+            "atom_head": "1725aff1f903d677658d65247c8040860c0849ccfe3ead5122e031b20b570b12",
+            "beta": "87eec521f83f8f15142014d275a51ef9e8311b7b481954feab81a0d32d6098d4",
+            "bond_emb": "feff4d8c1a9e84064bc56b488c781731b4442ee3d79ad2484ab6eb16bf89999e",
+            "flag_bridge": "83a7b90d8f8f1424b7202ef1193acd1019b655287eab028e7d699b343606981d",
+            "flag_ring": "4b723a4d19a5d4933c8bee8e547ac912be2ed2f49034cd2eb5a166a27327f214",
+            "frame": "6376211352e94bcf2577dbd1e30765fc87cfadf867613d61bcff9b46f8244d66",
+            "k": "349859de2b288d2ee7c0d396c86c4a021cb8548d957f37cafc04afc1e1622b4c",
+            "mlp_c": "f4169fdf57cabadad1b67496713dac9a6e29a5880dd68978a0ac31b1e56efe12",
+            "mlp_s": "4183010c454892553c9a6d8b4bc292e53b2c885cc0d57b148104021176ed3d59",
+            "proj_c": "1ff8cec55808680f5ccc0530dc01a816d360188f5b4b44b789b163020062830f",
+            "proj_s": "0fb5690374e81ab77f9050f704b6ecbc7c0b8dc363b1ff382881a0e6197de28d",
+            "q": "ebd853f0c48d5599e0c65801e51f48d56b4e88acbd6a9ed014e9a6f52aace78b",
+            "scalar_c": "4ffc02df800ff0aa71a2d1c7c2fe89a9f2a5357918b32238ad72a8e957d0effe",
+            "scalar_s": "7ad8477e46137522a9d55dcefe24fad727f385f2b5147a8024d30198b70db8cf"
+          }
+        },
+        "shared_init_hashes_equal": true
+      },
+      "name": "11_no_dead_trainable_branch",
+      "passed": true
+    },
+    {
+      "detail": {
+        "ACRA_HIST_ONLY": true,
+        "ACRA_MOMENT_ONLY": true,
+        "ACRA_REL_REF": true,
+        "ACRA_SUPPORT_GATE": true,
+        "ACRA_TOPO_COUPLED": true
+      },
+      "name": "12_no_nan_inf",
+      "passed": true
+    },
+    {
+      "detail": "pytest::test_fixed_seed_reproducibility and pytest::test_shared_initialisation_across_arms",
+      "name": "13_fixed_seed_reproducibility",
+      "passed": true
+    }
+  ],
+  "coverage": {
+    "atom_count_matches_raw": true,
+    "atom_table_equals_raw": true,
+    "bond_count_matches_raw": true,
+    "every_bond_has_two_events": true,
+    "max_frame_multiplicity": 12,
+    "n_bonds": 123899,
+    "n_bridge_events": 86808,
+    "n_events": 247798,
+    "n_frame_entries": 2586485,
+    "n_frame_patterns": 35942,
+    "n_molecules": 4200,
+    "n_no_bridge_molecules": 6,
+    "n_ring_events": 160990,
+    "pair_table_covers_all_unordered_pairs": true
+  },
+  "generated_utc": "2026-11-22T10:51:13Z",
+  "protocol_id": "acra-relation-generalization-pilot-v1",
+  "pytest": {
+    "command": "uv run pytest -q tracks/structural-sufficiency/acra_relation_generalization_pilot_v1/tests/test_acra.py",
+    "output_tail": [
+      ".............                                                            [100%]",
+      "13 passed in 4.23s"
+    ],
+    "passed": true,
+    "returncode": 0,
+    "seconds": 4.758125305175781
+  },
+  "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e",
+  "test_labels_read": false,
+  "wall_seconds": 8.717062711715698
+}

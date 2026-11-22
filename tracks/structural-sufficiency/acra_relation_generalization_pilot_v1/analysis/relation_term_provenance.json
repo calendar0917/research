@@ -1,0 +1,69 @@
+{
+  "best_epoch": 101,
+  "checkpoint": "tracks/structural-sufficiency/attachment_conditioned_response_algebra_pilot_v1/results/ACRA_REL_S0/state_best.pt",
+  "definitions": {
+    "frozen_ablation": "same checkpoint; one algebraic term set to zero at test time; not a retrained causal effect",
+    "histogram": "sum over the 8 (distance bucket, shared-ring) categories of count * bias",
+    "moment": "global low-rank second moment of the symmetric bond-pair kernel"
+  },
+  "gate_sigmoid": 0.2274099737405777,
+  "generated_utc": "2026-11-22T10:49:27Z",
+  "official_valid": {
+    "frozen_weight_variants": {
+      "base": {
+        "mae_label_units": 0.5028694122238864,
+        "mae_std": 0.4150663441517904,
+        "rmse_label_units": 0.7165791852844029,
+        "rmse_std": 0.5914615116793888
+      },
+      "without_both": {
+        "mae_label_units": 0.540656825500905,
+        "mae_std": 0.4462559196212605,
+        "prediction_change": {
+          "max_abs": 1.8615853786468506,
+          "mean_abs": 0.17904616256377526,
+          "pearson_with_base": -0.29141344219387333
+        },
+        "rmse_label_units": 0.7591505460980907,
+        "rmse_std": 0.626599737765483
+      },
+      "without_histogram": {
+        "mae_label_units": 0.5362353432407987,
+        "mae_std": 0.44260644635280644,
+        "prediction_change": {
+          "max_abs": 1.4752308130264282,
+          "mean_abs": 0.13572808878275933,
+          "pearson_with_base": -0.22332443607236271
+        },
+        "rmse_label_units": 0.7470397506826776,
+        "rmse_std": 0.6166035370508375
+      },
+      "without_moment": {
+        "mae_label_units": 0.509131224727192,
+        "mae_std": 0.420234818432254,
+        "prediction_change": {
+          "max_abs": 1.168613314628601,
+          "mean_abs": 0.09951063830785209,
+          "pearson_with_base": -0.2151610464945404
+        },
+        "rmse_label_units": 0.7219802361304472,
+        "rmse_std": 0.5959195168289394
+      }
+    },
+    "labels_used": "frozen-weight diagnostic only; parent-round label split",
+    "n": 420
+  },
+  "protocol_id": "acra-relation-generalization-pilot-v1",
+  "term_shares_on_train_plus_valid": {
+    "mean_abs_e_rel": 0.17396166245105046,
+    "mean_abs_histogram": 16.852863846494564,
+    "mean_abs_moment": 13.461226137511792,
+    "moment_fraction_of_abs_e_rel_components": 0.444058394779916
+  },
+  "test_labels_read": false,
+  "train_sub_dev": {
+    "n_dev": 504,
+    "n_train_sub": 2856,
+    "note": "the old full-Train checkpoint is not a Dev baseline; it has seen Dev labels"
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "protocol_id": "acra-relation-generalization-pilot-v1",
+  "version": "2026-11-23/v1",
+  "dataset": "ogbg-mollipo",
+  "raw_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+  "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "cache": {
+    "name": "acra_cache_lipo_v2.npz",
+    "version": "acra-cache-v2"
+  },
+  "split": {
+    "name": "train_sub_dev_scaffold_seed0",
+    "path": "data/split_train_sub_dev.json",
+    "fraction_dev": 0.15,
+    "seed": 0,
+    "scaffold": "rdkit Bemis-Murcko, acyclic molecules keyed by their own SMILES"
+  },
+  "objects": {
+    "max_object_atoms": 4,
+    "s_radius": 1,
+    "c_radius": 2,
+    "distance_buckets": 4,
+    "bucket_labels": ["d1", "d2", "d3", "d4plus_or_unreachable"]
+  },
+  "dims": {
+    "atom_fields": 9,
+    "bond_fields": 3,
+    "frame_field_emb": 6,
+    "frame_atom_out": 16,
+    "frame_bond_out": 8,
+    "frame_input": 126,
+    "frame_hidden": 128,
+    "frame_out": 64,
+    "local_hidden": 128,
+    "local_out": 64,
+    "local_scalars": 8,
+    "local_input": 268,
+    "bond_emb": 32,
+    "bond_field_emb": 8,
+    "bond_flag_emb": 4,
+    "response_hidden": 64,
+    "response_dropout": 0.1,
+    "site_dim": 64,
+    "interaction_rank": 32,
+    "relation_rank": 32,
+    "relation_buckets": 4,
+    "relation_shared_ring": 2,
+    "relation_categories": 8,
+    "atom_field_emb": 8,
+    "atom_hidden": 64
+  },
+  "composition": {
+    "site_loss_weight": 0.001,
+    "relation_loss_weight": 0.01,
+    "gamma_reg_weight": 0.001,
+    "gamma_scale": 0.5,
+    "gate_init": 0.12,
+    "relation_normalizer": "n_undirected_bonds",
+    "support_gate": {
+      "rho_floor": 0.5,
+      "rho_span": 0.5,
+      "support_offset": 5.0,
+      "support_definition": "number of distinct Train-sub molecules containing the same (S identity, C identity, cut bond attributes); Train-sub uses leave-one-molecule-out, Dev uses the full Train-sub count"
+    }
+  },
+  "arms": {
+    "ACRA_REL_REF": {"interaction": true, "relation": "full", "support_gate": false},
+    "ACRA_MOMENT_ONLY": {"interaction": true, "relation": "moment", "support_gate": false},
+    "ACRA_HIST_ONLY": {"interaction": true, "relation": "histogram", "support_gate": false},
+    "ACRA_TOPO_COUPLED": {"interaction": true, "relation": "topo", "support_gate": false},
+    "ACRA_SUPPORT_GATE": {"interaction": true, "relation": "full", "support_gate": true}
+  },
+  "recipe": {
+    "seed": 0,
+    "peak_lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.0001,
+    "batch_molecules": 64,
+    "eval_batch": 128,
+    "clip_norm": 5.0,
+    "warmup_epochs": 5,
+    "epochs_max": 160,
+    "optimizer": "AdamW",
+    "scheduler": "warmup5+cosine_to_1e-5",
+    "selection": "best Dev RMSE"
+  },
+  "pairs": {
+    "source": "parent round train-only real replacement directory (pair_mol_a/pair_mol_b)",
+    "bootstrap_reps": 2000,
+    "seed": 0
+  },
+  "budget": {
+    "gpu_hours_max": 2,
+    "max_gpus": 2,
+    "seeds": [0]
+  }
+}

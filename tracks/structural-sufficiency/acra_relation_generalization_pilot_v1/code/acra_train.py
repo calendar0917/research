@@ -1,0 +1,370 @@
+"""Seed-0 training on the frozen Train-sub / Dev scaffold split.
+
+Only whole-molecule labels supervise the composed prediction:
+``L = L_task + 0.001 * L_site + 0.01 * L_rel + 0.001 * mean((gamma-1)^2)``
+(the last term exists only for ``ACRA_TOPO_COUPLED``).  Model selection is
+**Dev** whole-molecule RMSE.  The official Valid and Test splits are never
+evaluated here; Test labels are never loaded.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import time
+from pathlib import Path
+from typing import Any, Mapping, Sequence
+
+import numpy as np
+
+import acra_common as C
+import acra_data as D
+import acra_cache as K
+import acra_model as M
+import acra_split as S
+import acra_support_gate as SG
+
+SHARED_MODULES = ("frame", "proj_s", "proj_c", "bond_emb", "flag_bridge", "flag_ring",
+                  "mlp_s", "mlp_c", "scalar_s", "scalar_c", "q", "k", "atom_head", "beta")
+RELATION_MODULES = ("site_head", "rel_q", "rel_k", "rel_bias", "gate_raw", "gamma_theta")
+
+
+def lr_at(step: int, warmup_steps: int, total_steps: int, peak: float, minimum: float) -> float:
+    if warmup_steps > 0 and step < warmup_steps:
+        return peak * (step + 1) / warmup_steps
+    progress = (step - warmup_steps) / max(1, total_steps - warmup_steps)
+    progress = min(1.0, max(0.0, progress))
+    return minimum + 0.5 * (peak - minimum) * (1.0 + math.cos(math.pi * progress))
+
+
+class RunData:
+    def __init__(self, cfg: Mapping[str, Any], log=print) -> None:
+        self.cfg = dict(cfg)
+        self.raw = D.load_raw(cfg)
+        self.pack = K.ensure_pack(cfg, log=log)
+        payload = S.load(cfg)
+        self.split_payload = payload
+        self.splits = {
+            "train_sub": np.asarray(payload["train_sub_rows"], np.int64),
+            "dev": np.asarray(payload["dev_rows"], np.int64),
+        }
+        official_train = np.asarray(D.official_splits(self.raw)["train"], np.int64)
+        if not np.array_equal(np.sort(np.concatenate(list(self.splits.values()))),
+                              np.sort(official_train)):
+            raise ValueError("frozen split does not cover the official Train rows")
+        self.labels = np.asarray(self.raw["labels"], np.float64)
+        self.row_ids = np.asarray(self.raw["row_ids"], np.int64)
+        self.scaler = C.target_scaler(self.labels, self.splits["train_sub"])
+        self.y_std = (self.labels - float(self.scaler["mean"])) / float(self.scaler["std"])
+        self.atom_dims, self.bond_dims = C.official_feature_dims()
+        sg = cfg["composition"]["support_gate"]
+        self.support = SG.build(self.pack, self.splits["train_sub"], self.splits["dev"],
+                                floor=float(sg["rho_floor"]), span=float(sg["rho_span"]),
+                                offset=float(sg["support_offset"]))
+
+    def raw_metrics(self, pred_std: np.ndarray, rows: np.ndarray) -> dict[str, float]:
+        pred = pred_std * float(self.scaler["std"]) + float(self.scaler["mean"])
+        truth = self.labels[rows]
+        return {"rmse": C.rmse(pred, truth), "mae": C.mae(pred, truth)}
+
+
+def build_model(cfg: Mapping[str, Any], data: RunData, arm: str):
+    model = M.ACRAModel(cfg, data.atom_dims, data.bond_dims, arm)
+    model.load_pack(data.pack)
+    atom_support, bond_support = M.category_support(
+        data.raw, data.splits["train_sub"], data.atom_dims, data.bond_dims)
+    zeroed = M.apply_support(model, atom_support, bond_support)
+    shared = C.module_hashes(model, list(SHARED_MODULES))
+    relation = C.module_hashes(model, list(RELATION_MODULES))
+    return model, zeroed, shared, relation
+
+
+def evaluate(model: M.ACRAModel, source: D.BatchSource, data: RunData,
+             split: str, batch_size: int = 128) -> tuple[dict[str, np.ndarray], dict[str, float]]:
+    rows = data.splits[split]
+    res = M.predict_rows(model, source, rows, model.device, batch_size)
+    metrics = data.raw_metrics(res["yhat_std"], rows)
+    metrics["term_abs_atom"] = float(np.mean(np.abs(res["e_atom"])))
+    metrics["term_abs_bond"] = float(np.mean(np.abs(res["e_bond"])))
+    metrics["term_abs_rel"] = float(np.mean(np.abs(res["e_rel"])))
+    metrics["term_abs_moment"] = float(np.mean(np.abs(res["moment"])))
+    metrics["term_abs_histogram"] = float(np.mean(np.abs(res["histogram"])))
+    metrics["yhat_std_mean"] = float(np.mean(res["yhat_std"]))
+    metrics["yhat_std_std"] = float(np.std(res["yhat_std"]))
+    return res, metrics
+
+
+def save_predictions(path: Path, data: RunData, rows: np.ndarray,
+                     res: Mapping[str, np.ndarray]) -> str:
+    payload: dict[str, np.ndarray] = {
+        "row_id": data.row_ids[rows],
+        "label": data.labels[rows],
+        "pred_std": np.asarray(res["yhat_std"], np.float64),
+        "pred": np.asarray(res["yhat_std"], np.float64) * float(data.scaler["std"])
+        + float(data.scaler["mean"]),
+        "e_atom_std": np.asarray(res["e_atom"], np.float64),
+        "e_bond_std": np.asarray(res["e_bond"], np.float64),
+        "e_rel_std": np.asarray(res["e_rel"], np.float64),
+        "e_rel_moment_std": np.asarray(res["e_rel_moment"], np.float64),
+        "e_rel_histogram_std": np.asarray(res["e_rel_histogram"], np.float64),
+        "moment_std": np.asarray(res["moment"], np.float64),
+        "histogram_std": np.asarray(res["histogram"], np.float64),
+        "beta_std": np.asarray(res["beta"], np.float64),
+    }
+    np.savez(path, **payload)
+    return C.sha256_file(path)
+
+
+def train(args: argparse.Namespace) -> int:
+    import torch
+
+    C.set_deterministic(int(args.seed))
+    cfg = dict(C.load_config())
+    horizon = C.analysis_dir() / "horizon.json"
+    if args.epochs is None and horizon.is_file():
+        cfg["recipe"]["epochs"] = int(C.read_json(horizon)["epochs"])
+        cfg["recipe"]["horizon_source"] = "analysis/horizon.json"
+    elif args.epochs is None:
+        cfg["recipe"]["epochs"] = int(cfg["recipe"]["epochs_max"])
+        cfg["recipe"]["horizon_source"] = "config epochs_max"
+    else:
+        cfg["recipe"]["epochs"] = int(args.epochs)
+        cfg["recipe"]["horizon_source"] = "cli --epochs"
+
+    run_id = args.run_id
+    rdir = C.run_dir(run_id)
+    log_path = rdir / "train.log"
+    log_handle = log_path.open("a", encoding="utf-8")
+
+    def log(msg: str) -> None:
+        line = f"[{time.strftime('%H:%M:%S')}] {msg}"
+        print(line, flush=True)
+        log_handle.write(line + "\n")
+        log_handle.flush()
+
+    log(f"run={run_id} arm={args.arm} device={args.device} seed={args.seed} "
+        f"epochs={cfg['recipe']['epochs']} ({cfg['recipe']['horizon_source']})")
+    data = RunData(cfg, log=log)
+    log(f"  scaler(Train-sub) mean={data.scaler['mean']:.6f} std={data.scaler['std']:.6f} "
+        f"n_train_sub={data.splits['train_sub'].size} n_dev={data.splits['dev'].size}")
+    log(f"  split sha256={data.split_payload['split_sha256']} "
+        f"scaffolds train_sub/dev={data.split_payload['n_scaffolds_train_sub']}/"
+        f"{data.split_payload['n_scaffolds_dev']}")
+    log(f"  support: {json.dumps(data.support['summary'], sort_keys=True)}")
+    log(f"  pack sha256={data.pack['cache_sha256']} entries={data.pack['ent_pat'].size} "
+        f"patterns={data.pack['pat_k'].size} events={data.pack['ev_key_s'].size}")
+    train_rows = data.splits["train_sub"]
+    if args.train_subset and int(args.train_subset) < train_rows.size:
+        train_rows = train_rows[:int(args.train_subset)]
+        log(f"  SMOKE train subset: {train_rows.size} molecules (not a formal run)")
+
+    model, zeroed, shared_hashes, relation_hashes = build_model(cfg, data, args.arm)
+    model = model.to(args.device)
+    source = D.BatchSource(data.pack, model.device,
+                           event_support=data.support["support_by_event"])
+    ledger = model.parameter_ledger()
+    log(f"  params={ledger}")
+    log(f"  shared_init_hashes={json.dumps(shared_hashes, sort_keys=True)}")
+    log(f"  relation_init_hashes={json.dumps(relation_hashes, sort_keys=True)}")
+    log(f"  zeroed_category_rows={zeroed}")
+    log(f"  interaction={model.use_interaction} relation={model.relation_mode} "
+        f"support_gate={model.use_support_gate}")
+
+    recipe = cfg["recipe"]
+    batch_molecules = int(recipe["batch_molecules"])
+    n_train = int(train_rows.size)
+    steps_per_epoch = int(math.ceil(n_train / batch_molecules))
+    total_steps = int(recipe["epochs"]) * steps_per_epoch
+    warmup_steps = int(recipe["warmup_epochs"]) * steps_per_epoch
+    opt = torch.optim.AdamW(model.parameters(), lr=float(recipe["peak_lr"]),
+                            weight_decay=float(recipe["weight_decay"]))
+    rng = np.random.default_rng(int(args.seed) + 101)
+    curves: list[dict[str, Any]] = []
+    best: dict[str, Any] = {"dev_rmse": float("inf"), "epoch": -1}
+    step = 0
+    t_start = time.time()
+    for epoch in range(1, int(recipe["epochs"]) + 1):
+        t_epoch = time.time()
+        model.train()
+        order = rng.permutation(n_train)
+        losses: list[dict[str, float]] = []
+        for start in range(0, n_train, batch_molecules):
+            take = order[start:start + batch_molecules]
+            rows = train_rows[take]
+            lr = lr_at(step, warmup_steps, total_steps, float(recipe["peak_lr"]),
+                       float(recipe["min_lr"]))
+            for group in opt.param_groups:
+                group["lr"] = lr
+            batch = source.make(rows)
+            y_std = torch.as_tensor(data.y_std[rows], device=model.device, dtype=torch.float32)
+            out = model.forward_batch(batch)
+            terms = model.loss(out, batch, y_std)
+            opt.zero_grad(set_to_none=True)
+            terms["loss"].backward()
+            grad_norm = torch.nn.utils.clip_grad_norm_(model.parameters(),
+                                                       float(recipe["clip_norm"]))
+            opt.step()
+            step += 1
+            losses.append({k: float(v.detach()) for k, v in terms.items()} | {
+                "grad_norm": float(grad_norm),
+                "n_events": float(batch["n_events"]),
+            })
+            if step == 1:
+                log(f"  step1 loss={losses[-1]['loss']:.4f} task={losses[-1]['task']:.4f} "
+                    f"site={losses[-1]['site']:.6f} rel={losses[-1]['rel']:.6f} "
+                    f"gamma_reg={losses[-1]['gamma_reg']:.6f} "
+                    f"grad={losses[-1]['grad_norm']:.3f} batch_atoms={batch['n_atoms']} "
+                    f"batch_events={batch['n_events']} batch_pairs={batch['n_pairs']} "
+                    f"batch_entries={batch['n_entries']}")
+
+        train_res, train_metrics = evaluate(model, source, data, "train_sub",
+                                            batch_size=int(recipe["eval_batch"]))
+        dev_res, dev_metrics = evaluate(model, source, data, "dev",
+                                        batch_size=int(recipe["eval_batch"]))
+        gate_value = float(torch.sigmoid(model.gate_raw).detach().cpu())
+        gamma_value = None
+        if model.relation_mode == "topo":
+            gamma_value = float(model.gamma().detach().mean().cpu())
+        row: dict[str, Any] = {
+            "run_id": run_id, "arm": args.arm, "epoch": epoch,
+            "step": step,
+            "lr": lr_at(step - 1, warmup_steps, total_steps, float(recipe["peak_lr"]),
+                        float(recipe["min_lr"])),
+            "epoch_seconds": time.time() - t_epoch,
+            "gate": gate_value,
+            "gamma_mean": gamma_value,
+        }
+        for key in ("loss", "task", "site", "rel", "gamma_reg", "grad_norm"):
+            row[f"train_{key}"] = float(np.mean([x[key] for x in losses]))
+        for split, metrics in (("train_sub", train_metrics), ("dev", dev_metrics)):
+            for key, value in metrics.items():
+                row[f"{split}_{key}"] = float(value)
+        row["generalization_gap_rmse"] = row["dev_rmse"] - row["train_sub_rmse"]
+        curves.append(row)
+        C.write_csv(rdir / "curves.csv", curves)
+
+        better = row["dev_rmse"] < float(best["dev_rmse"]) - 1e-12
+        if better:
+            best = {"dev_rmse": row["dev_rmse"], "dev_mae": row["dev_mae"],
+                    "train_sub_rmse": row["train_sub_rmse"], "epoch": epoch}
+            torch.save({
+                "state": model.state_dict(),
+                "epoch": epoch,
+                "row": row,
+                "scaler": data.scaler,
+                "ledger": ledger,
+                "shared_init_hashes": shared_hashes,
+                "relation_init_hashes": relation_hashes,
+                "arm": args.arm,
+                "relation_mode": model.relation_mode,
+                "config": cfg,
+                "pack_sha256": data.pack["cache_sha256"],
+                "split_sha256": data.split_payload["split_sha256"],
+            }, rdir / "state_best.pt")
+            save_predictions(rdir / "predictions_best_train_sub.npz", data, train_rows,
+                             train_res)
+            save_predictions(rdir / "predictions_best_dev.npz", data, data.splits["dev"],
+                             dev_res)
+        log(f"epoch {epoch:3d}/{recipe['epochs']} lr={row['lr']:.2e} "
+            f"train={row['train_sub_rmse']:.4f} dev={row['dev_rmse']:.4f} "
+            f"loss={row['train_loss']:.4f} site={row['train_site']:.5f} "
+            f"rel={row['train_rel']:.6f} gate={gate_value:.3f} "
+            f"gamma={'-' if gamma_value is None else f'{gamma_value:.4f}'} "
+            f"terms[atom={row['train_sub_term_abs_atom']:.3f},"
+            f"bond={row['train_sub_term_abs_bond']:.3f},"
+            f"rel={row['train_sub_term_abs_rel']:.4f}] {row['epoch_seconds']:.1f}s")
+
+    torch.save({
+        "state": model.state_dict(), "epoch": int(curves[-1]["epoch"]),
+        "row": curves[-1], "scaler": data.scaler, "ledger": ledger,
+        "shared_init_hashes": shared_hashes, "relation_init_hashes": relation_hashes,
+        "arm": args.arm, "relation_mode": model.relation_mode, "config": cfg,
+        "pack_sha256": data.pack["cache_sha256"],
+        "split_sha256": data.split_payload["split_sha256"],
+    }, rdir / "state_final.pt")
+    final_train = M.predict_rows(model, source, train_rows, model.device,
+                                 int(recipe["eval_batch"]))
+    save_predictions(rdir / "predictions_final_train_sub.npz", data, train_rows, final_train)
+    final_dev = M.predict_rows(model, source, data.splits["dev"], model.device,
+                               int(recipe["eval_batch"]))
+    save_predictions(rdir / "predictions_final_dev.npz", data, data.splits["dev"], final_dev)
+
+    wall = time.time() - t_start
+    manifest = {
+        "run_id": run_id,
+        "arm": args.arm,
+        "relation_mode": model.relation_mode,
+        "support_gate": model.use_support_gate,
+        "dataset": cfg["dataset"],
+        "protocol_id": cfg["protocol_id"],
+        "seed": int(args.seed),
+        "epochs": int(curves[-1]["epoch"]),
+        "epochs_planned": int(recipe["epochs"]),
+        "horizon_source": recipe["horizon_source"],
+        "steps_per_epoch": steps_per_epoch,
+        "batch_molecules": batch_molecules,
+        "train_subset": int(args.train_subset) if args.train_subset else None,
+        "n_train_sub": int(n_train),
+        "n_dev": int(data.splits["dev"].size),
+        "test_labels_read": False,
+        "selection": "best Dev whole-molecule RMSE",
+        "best": best,
+        "final": curves[-1],
+        "scaler": data.scaler,
+        "params": ledger,
+        "shared_init_hashes": shared_hashes,
+        "relation_init_hashes": relation_hashes,
+        "zeroed_categories": zeroed,
+        "split": {
+            "path": str(cfg["split"]["path"]),
+            "sha256": data.split_payload["split_sha256"],
+            "n_train_sub": data.split_payload["n_train_sub"],
+            "n_dev": data.split_payload["n_dev"],
+            "n_scaffolds_official_train": data.split_payload["n_scaffolds_official_train"],
+            "n_scaffolds_train_sub": data.split_payload["n_scaffolds_train_sub"],
+            "n_scaffolds_dev": data.split_payload["n_scaffolds_dev"],
+            "seed": data.split_payload["seed"],
+            "scaffold_definition": data.split_payload["scaffold_definition"],
+        },
+        "support": {
+            "summary": data.support["summary"],
+            "definition": data.support["definition"],
+        },
+        "cache_sha256": data.pack["cache_sha256"],
+        "cache_path": str(data.pack["cache_path"]),
+        "raw_cache_sha256": str(data.raw.get("cache_sha256", "")),
+        "cache_meta": json.loads(str(data.pack["meta_json"])),
+        "composition": cfg["composition"],
+        "recipe": {k: v for k, v in recipe.items() if k != "epochs"},
+        "wall_seconds": wall,
+        "gpu_hours": wall / 3600.0,
+        "max_vram_bytes": int(torch.cuda.max_memory_allocated()) if torch.cuda.is_available() else 0,
+        "environment": C.environment(),
+        "provenance": C.code_provenance(),
+        "parent_provenance": C.parent_provenance(),
+        "argv": list(getattr(args, "argv", [])),
+    }
+    C.write_json(rdir / "manifest.json", manifest)
+    C.write_json(rdir / "config.json", cfg)
+    log(f"done wall={wall / 60:.2f}min best_dev_rmse={best['dev_rmse']:.6f}@{best['epoch']} "
+        f"gpu_hours={manifest['gpu_hours']:.4f}")
+    log_handle.close()
+    return 0
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--run-id", required=True)
+    ap.add_argument("--arm", required=True, choices=list(M.ARMS))
+    ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--device", default="cpu")
+    ap.add_argument("--epochs", type=int, default=None)
+    ap.add_argument("--train-subset", type=int, default=0)
+    args = ap.parse_args(argv)
+    args.argv = list(argv) if argv is not None else []
+    return train(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

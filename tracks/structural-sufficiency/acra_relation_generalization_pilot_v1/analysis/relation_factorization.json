@@ -1,0 +1,120 @@
+{
+  "bond_count_quartiles": [
+    {
+      "mean_abs_e_rel": 0.22688308718895156,
+      "mean_abs_e_rel_per_bond": 0.013350062627351264,
+      "mean_abs_histogram": 16.325312224897758,
+      "mean_abs_histogram_per_bond": 0.9008025202078997,
+      "mean_abs_moment": 9.379379710551135,
+      "mean_abs_moment_per_bond": 0.5078899127371238,
+      "n": 945,
+      "n_bonds_range": [
+        7.0,
+        23.75
+      ],
+      "quartile": 1
+    },
+    {
+      "mean_abs_e_rel": 0.139978315475366,
+      "mean_abs_e_rel_per_bond": 0.005272834491171441,
+      "mean_abs_histogram": 9.10864490136232,
+      "mean_abs_histogram_per_bond": 0.3488413721795722,
+      "mean_abs_moment": 13.14423457987513,
+      "mean_abs_moment_per_bond": 0.4897528230191231,
+      "n": 876,
+      "n_bonds_range": [
+        23.75,
+        30.0
+      ],
+      "quartile": 2
+    },
+    {
+      "mean_abs_e_rel": 0.12411435342229586,
+      "mean_abs_e_rel_per_bond": 0.003879975803532766,
+      "mean_abs_histogram": 7.734097198184047,
+      "mean_abs_histogram_per_bond": 0.2390831476186516,
+      "mean_abs_moment": 14.022891066968441,
+      "mean_abs_moment_per_bond": 0.4390520202685836,
+      "n": 896,
+      "n_bonds_range": [
+        30.0,
+        35.0
+      ],
+      "quartile": 3
+    },
+    {
+      "mean_abs_e_rel": 0.19693612572776464,
+      "mean_abs_e_rel_per_bond": 0.004915117635917399,
+      "mean_abs_histogram": 31.389916523099508,
+      "mean_abs_histogram_per_bond": 0.7557242356614747,
+      "mean_abs_moment": 16.877762074646675,
+      "mean_abs_moment_per_bond": 0.41577420349551564,
+      "n": 1063,
+      "n_bonds_range": [
+        35.0,
+        118.0
+      ],
+      "quartile": 4
+    }
+  ],
+  "checkpoint": "tracks/structural-sufficiency/attachment_conditioned_response_algebra_pilot_v1/results/ACRA_REL_S0/state_best.pt",
+  "correlations": {
+    "abs_e_rel": {
+      "vs_cycle_rank": -0.06204021619177399,
+      "vs_n_atoms": 0.037619776609545706,
+      "vs_n_bonds": 0.02548718893563259,
+      "vs_unseen_combo_fraction": 0.07926218412975153
+    },
+    "abs_histogram": {
+      "vs_cycle_rank": 0.2280698472114374,
+      "vs_n_atoms": 0.4716559258611582,
+      "vs_n_bonds": 0.4569043152966592,
+      "vs_unseen_combo_fraction": 0.06991704937823752
+    },
+    "abs_moment": {
+      "vs_cycle_rank": 0.04868161149756968,
+      "vs_n_atoms": 0.2617039796316885,
+      "vs_n_bonds": 0.24324130797433777,
+      "vs_unseen_combo_fraction": 0.028111471340011362
+    },
+    "e_rel": {
+      "vs_cycle_rank": 0.4008811467207291,
+      "vs_n_atoms": 0.673224787897082,
+      "vs_n_bonds": 0.6626246893659775,
+      "vs_unseen_combo_fraction": -0.0649519406542216
+    }
+  },
+  "decomposition_means": {
+    "mean_abs_e_rel": 0.17396166245105046,
+    "mean_abs_histogram": 16.852863846494564,
+    "mean_abs_moment": 13.461226137511792,
+    "mean_e_rel": -0.011766720177247263,
+    "mean_histogram": 3.7328536634762135,
+    "mean_moment": 0.4621590373802329
+  },
+  "formula": {
+    "direct": "E_rel = gate * sum_{e<f} [0.5(q_e.k_f + q_f.k_e)/sqrt(rank) + bias[bucket(e,f)]] / max(1,m)",
+    "histogram": "sum_bucket count[bucket] * bias[bucket]",
+    "identity": "E_rel = gate * (moment + histogram) / max(1,m)",
+    "moment": "0.5 * (Q.K - sum_e q_e.k_e) / sqrt(rank), Q=sum_e q_e, K=sum_e k_e"
+  },
+  "generated_utc": "2026-11-22T10:49:27Z",
+  "parent_best_epoch": 101,
+  "per_molecule_identity_max_abs_error": 1.1920928955078125e-07,
+  "protocol_id": "acra-relation-generalization-pilot-v1",
+  "real_molecules": {
+    "max_abs_error_direct_minus_decomposition": 1.430511474609375e-06,
+    "max_abs_error_moment_plus_histogram_minus_e_rel": 0.0,
+    "max_abs_error_relation_count_sum": 0.0,
+    "n_bond_pairs": 1706206,
+    "n_molecules": 3780,
+    "rows_used": "official Train + Valid only (Test never touched)"
+  },
+  "synthetic_small_graphs": {
+    "generator": "networkx connected G(n,p=0.30), n in [6,10], real Train atom/bond attribute rows",
+    "max_abs_error_direct_minus_decomposition": 1.7881393432617188e-07,
+    "max_abs_error_moment_plus_histogram_minus_e_rel": 0.0,
+    "n_graphs": 12
+  },
+  "test_labels_read": false
+}
