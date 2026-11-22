@@ -355,11 +355,9 @@ def check_pair_algebra() -> dict[str, Any]:
     fit[np.asarray(split["fit_rows"])] = True
     if not (fit[targets.a].all() and fit[targets.b].all()):
         raise AssertionError("pair targets contain non-fit endpoints")
-    import psc_train as T
     import torch
-    import sys as _sys
-    from psc_train import _acra_modules, _feature_dims
-    _sys.path.insert(0, str(C.WORK_DIR if hasattr(C, "WORK_DIR") else C.CODE_DIR))
+    from psc_train import _acra_modules, _feature_dims, ensure_acra_pack as _ensure_pack
+    T = _ensure_pack.__module__ and __import__("psc_train")
     AC, AM, AD, AK = _acra_modules()
     acc_cfg = json.loads((C.ACRA2_DIR / "configs" / "acra_v2.json").read_text())
     acc_cfg["recipe"]["seed"] = 0
