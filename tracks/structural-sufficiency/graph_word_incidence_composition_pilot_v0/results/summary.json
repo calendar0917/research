@@ -1,0 +1,1507 @@
+{
+ "analysis_commit": "60d8dd6212fb7ef26aa08641a1a108b38b6fa924",
+ "arms": {
+  "SENTENCE_BASE": {
+   "arm": "SENTENCE_BASE",
+   "best_epoch": 81,
+   "dev_mae": 0.4275819111526722,
+   "dev_rmse": 0.5505589869874905,
+   "epochs_run": 126,
+   "gpu_hours": 0.10297499100367229,
+   "params": 416177,
+   "prep_seconds": 60.483558893203735,
+   "train_rmse_at_best": 0.2795061776187225,
+   "train_seconds": 370.7099676132202,
+   "training_commit": "a7155937bac08c7733f6a2c1d806a395558f57be",
+   "wall": 434.0181694030762
+  },
+  "WORD_GEOM_NULL": {
+   "arm": "WORD_GEOM_NULL",
+   "best_epoch": 96,
+   "dev_mae": 0.4198942088950721,
+   "dev_rmse": 0.5431939611473435,
+   "epochs_run": 141,
+   "gpu_hours": 0.2981225019693375,
+   "params": 619586,
+   "prep_seconds": 60.68281579017639,
+   "train_rmse_at_best": 0.17505697539136703,
+   "train_seconds": 1073.2410070896149,
+   "training_commit": "a7155937bac08c7733f6a2c1d806a395558f57be",
+   "wall": 1136.7718238830566
+  },
+  "WORD_REAL": {
+   "arm": "WORD_REAL",
+   "best_epoch": 109,
+   "dev_mae": 0.4180456645757196,
+   "dev_rmse": 0.5499787385400907,
+   "epochs_run": 154,
+   "gpu_hours": 0.3298181806008021,
+   "params": 619586,
+   "prep_seconds": 61.31767439842224,
+   "train_rmse_at_best": 0.17074113401595087,
+   "train_seconds": 1187.3454501628876,
+   "training_commit": "a7155937bac08c7733f6a2c1d806a395558f57be",
+   "wall": 1251.5428476333618
+  }
+ },
+ "checkpoint_geometry_switch": {
+  "WORD_GEOM_NULL": {
+   "fraction_changed_gt_1e_5": 0.9940476190476191,
+   "mae_geometry_real": 0.41992576529700604,
+   "mae_geometry_zero": 0.4198942088950721,
+   "max_abs_prediction_change": 0.008745074272155762,
+   "mean_abs_prediction_change": 0.0013177040077391126,
+   "rmse_geometry_real": 0.5431161134790817,
+   "rmse_geometry_zero": 0.5431939611473435
+  },
+  "WORD_REAL": {
+   "fraction_changed_gt_1e_5": 1.0,
+   "mae_geometry_real": 0.4180456645757196,
+   "mae_geometry_zero": 0.41760502316589865,
+   "max_abs_prediction_change": 0.03537106513977051,
+   "mean_abs_prediction_change": 0.013460527336786664,
+   "rmse_geometry_real": 0.5499787385400907,
+   "rmse_geometry_zero": 0.549613333679507
+  }
+ },
+ "contrasts": {
+  "bootstrap": {
+   "delta_binding": {
+    "bootstrap": {
+     "ci95": [
+      -0.027958506038622863,
+      0.015637156259502086
+     ],
+     "median": -0.006782826185208091,
+     "n_boot": 5000,
+     "point": -0.0067044690770513
+    },
+    "point": -0.006784777392747188
+   },
+   "delta_binding_mae": {
+    "bootstrap": {
+     "ci95": [
+      -0.016653981139986895,
+      0.0207162427553345
+     ],
+     "median": 0.001819208803926664,
+     "n_boot": 5000,
+     "point": 0.0019268871566339855
+    },
+    "point": 0.0018485443193524964
+   },
+   "delta_content": {
+    "bootstrap": {
+     "ci95": [
+      -0.027427683963036267,
+      0.0427019493112493
+     ],
+     "median": 0.006751968415251608,
+     "n_boot": 5000,
+     "point": 0.00723580607033824
+    },
+    "point": 0.007365025840146977
+   },
+   "delta_content_mae": {
+    "bootstrap": {
+     "ci95": [
+      -0.01882407051799374,
+      0.035325907646412295
+     ],
+     "median": 0.006961789514337263,
+     "n_boot": 5000,
+     "point": 0.007519695457038543
+    },
+    "point": 0.007687702257600071
+   },
+   "delta_word": {
+    "bootstrap": {
+     "ci95": [
+      -0.03497967745760738,
+      0.03786339569504202
+     ],
+     "median": 0.00017400261840472275,
+     "n_boot": 5000,
+     "point": 0.0005313369932869379
+    },
+    "point": 0.0005802484473997893
+   },
+   "delta_word_mae": {
+    "bootstrap": {
+     "ci95": [
+      -0.01831051690378302,
+      0.03872191875263868
+     ],
+     "median": 0.009418743729059181,
+     "n_boot": 5000,
+     "point": 0.00944658261367253
+    },
+    "point": 0.009536246576952567
+   },
+   "mae": {
+    "SENTENCE_BASE": 0.4275819111526722,
+    "WORD_GEOM_NULL": 0.4198942088950721,
+    "WORD_REAL": 0.4180456645757196
+   },
+   "n_molecules": 504,
+   "rmse": {
+    "SENTENCE_BASE": 0.5505589869874905,
+    "WORD_GEOM_NULL": 0.5431939611473435,
+    "WORD_REAL": 0.5499787385400907
+   },
+   "seed": 12345
+  },
+  "definition": "positive = WORD_REAL better",
+  "delta_binding": -0.006784777392747188,
+  "delta_word": 0.0005802484473997893
+ },
+ "data": {
+  "dataset": "ogbg-mollipo",
+  "n_dev": 504,
+  "n_fit": 2856,
+  "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "scaler": {
+   "mean": 2.185815826311436,
+   "n": 2856,
+   "std": 1.2139664740467941
+  },
+  "split": {
+   "eval": "dev_rows",
+   "fit": "train_sub_rows",
+   "n_eval": 504,
+   "n_fit": 2856,
+   "name": "D0",
+   "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+  },
+  "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+ },
+ "degenerate_word_real": false,
+ "diagnostics": {
+  "WORD_GEOM_NULL": {
+   "all_candidate_size_distribution": {
+    "2": 30046,
+    "3": 63426,
+    "4": 78528
+   },
+   "alpha_constant_fraction": 0.0,
+   "alpha_effective_candidates_mean": 11.820572886595127,
+   "alpha_effective_candidates_median": 9.998088385486763,
+   "alpha_entropy_mean": 2.314234225775969,
+   "alpha_entropy_median": 2.302393913269043,
+   "alpha_std_mean": 0.02298406292455084,
+   "alpha_top_mean": 0.15555315881478432,
+   "alpha_weighted_candidate_size_distribution": {
+    "2": 0.2165136171258536,
+    "3": 0.3908503649259262,
+    "4": 0.39263601794822023
+   },
+   "high_alpha_examples": [
+    {
+     "alpha_entropy": 0.15958809852600098,
+     "alpha_top": 0.9626009464263916,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 23,
+     "row_id": 3091,
+     "smiles": "CC(C)(CS(=O)(=O)N1CCN(CC1)c2ccc(F)cc2)N(O)C=O",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      22,
+      23
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.3328753411769867,
+     "alpha_top": 0.9333269596099854,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 5,
+     "root_atom_type": 5,
+     "root_local": 14,
+     "row_id": 1120,
+     "smiles": "CC(=O)Nc1ccc2c(c1)c(cn2CCO)c3cc(NC4CC4)n5ncc(C#N)c5n3",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      14,
+      15
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.3210684657096863,
+     "alpha_top": 0.9321846961975098,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 11,
+     "row_id": 456,
+     "smiles": "Cc1ncc(CO)c(CO)c1O",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      10,
+      11
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.3210684657096863,
+     "alpha_top": 0.9321846961975098,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 46,
+     "row_id": 2804,
+     "smiles": "CN(CCCc1ccccc1)S(=O)(=O)c2cc(C(=O)N3CCc4ccc(cc4C3)S(=O)(=O)NCCc5ccccc5)c(O)c(O)c2O",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      45,
+      46
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.32218268513679504,
+     "alpha_top": 0.9318878054618835,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 0,
+     "row_id": 2544,
+     "smiles": "Oc1c2C(=O)N(NC(=O)c2nc3cc(Cl)ccc13)C(C4CC4)c5ccccn5",
+     "support_atom_types": [
+      7,
+      5
+     ],
+     "support_local": [
+      0,
+      1
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.32218268513679504,
+     "alpha_top": 0.9318878054618835,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 0,
+     "row_id": 3754,
+     "smiles": "Oc1c(C#N)c(nc2ccncc12)c3ccc(cc3)c4ccccc4CN5CCOCC5",
+     "support_atom_types": [
+      7,
+      5
+     ],
+     "support_local": [
+      0,
+      1
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.32226964831352234,
+     "alpha_top": 0.9318487644195557,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 5,
+     "row_id": 2014,
+     "smiles": "CCCc1c(O)c(ccc1OCc2ccc(\\C=C\\c3nn[nH]n3)cc2)C(=O)C",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      4,
+      5
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.32226964831352234,
+     "alpha_top": 0.9318487644195557,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 42,
+     "row_id": 2804,
+     "smiles": "CN(CCCc1ccccc1)S(=O)(=O)c2cc(C(=O)N3CCc4ccc(cc4C3)S(=O)(=O)NCCc5ccccc5)c(O)c(O)c2O",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      41,
+      42
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.32226964831352234,
+     "alpha_top": 0.9318487644195557,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 44,
+     "row_id": 2804,
+     "smiles": "CN(CCCc1ccccc1)S(=O)(=O)c2cc(C(=O)N3CCc4ccc(cc4C3)S(=O)(=O)NCCc5ccccc5)c(O)c(O)c2O",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      43,
+      44
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.32837769389152527,
+     "alpha_top": 0.9113579392433167,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 6,
+     "root_local": 2,
+     "row_id": 2469,
+     "smiles": "NC(=N)c1cc2c(cccc2s1)c3ccccc3",
+     "support_atom_types": [
+      5,
+      6
+     ],
+     "support_local": [
+      1,
+      2
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.43733564019203186,
+     "alpha_top": 0.90716952085495,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 5,
+     "root_atom_type": 5,
+     "root_local": 31,
+     "row_id": 1605,
+     "smiles": "COc1cc(ccc1Nc2ncc(Cl)c(n2)c3cnc4ccccn34)N5CC6CN(CCO)CC(C5)O6",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      31,
+      32
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.5882707834243774,
+     "alpha_top": 0.8862459659576416,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 9,
+     "root_atom_type": 5,
+     "root_local": 11,
+     "row_id": 2823,
+     "smiles": "CCOC(=O)\\C=C\\[C@H](C[C@@H]1CCNC1=O)NC(=O)[C@H](CC#C)N2C=CC=C(NC(=O)c3cc(C)on3)C2=O",
+     "support_atom_types": [
+      5,
+      6
+     ],
+     "support_local": [
+      11,
+      12
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.48064836859703064,
+     "alpha_top": 0.873471200466156,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 6,
+     "root_local": 15,
+     "row_id": 2681,
+     "smiles": "CC(=O)Nc1nc(CCc2ccc(NC(=N)N)cc2)cs1",
+     "support_atom_types": [
+      5,
+      6
+     ],
+     "support_local": [
+      14,
+      15
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.4336228668689728,
+     "alpha_top": 0.8436171412467957,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 0,
+     "row_id": 349,
+     "smiles": "OCCCn1c(NC(=O)c2cccc(c2)[N+](=O)[O-])nc3ccccc13",
+     "support_atom_types": [
+      7,
+      5
+     ],
+     "support_local": [
+      0,
+      1
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.4336228668689728,
+     "alpha_top": 0.8436171412467957,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 0,
+     "row_id": 3008,
+     "smiles": "OCCNC(=O)COc1ccc(OCCNCC(O)COc2ccccc2)cc1",
+     "support_atom_types": [
+      7,
+      5
+     ],
+     "support_local": [
+      0,
+      1
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.4336228668689728,
+     "alpha_top": 0.8436171412467957,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 0,
+     "row_id": 4066,
+     "smiles": "OCCCNCCCOc1ccc(Cl)c(c1)C(=O)NCC23CC4CC(CC(C4)C2)C3",
+     "support_atom_types": [
+      7,
+      5
+     ],
+     "support_local": [
+      0,
+      1
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.4439733922481537,
+     "alpha_top": 0.8373895287513733,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 16,
+     "row_id": 78,
+     "smiles": "CC(=O)Nc1ccc2c(c1)c(cn2CCCO)c3cc(NC4CC4)n5ncc(C#N)c5n3",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      15,
+      16
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.4439733922481537,
+     "alpha_top": 0.8373895287513733,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 19,
+     "row_id": 588,
+     "smiles": "CC(=O)Nc1ccc2ccn(c3cc(NCCCCO)n4ncc(C#N)c4n3)c2c1",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      18,
+      19
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.4439733922481537,
+     "alpha_top": 0.8373895287513733,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 15,
+     "row_id": 1120,
+     "smiles": "CC(=O)Nc1ccc2c(c1)c(cn2CCO)c3cc(NC4CC4)n5ncc(C#N)c5n3",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      14,
+      15
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.4439733922481537,
+     "alpha_top": 0.8373895287513733,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       0
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 32,
+     "row_id": 1605,
+     "smiles": "COc1cc(ccc1Nc2ncc(Cl)c(n2)c3cnc4ccccn34)N5CC6CN(CCO)CC(C5)O6",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      31,
+      32
+     ],
+     "support_size": 2
+    }
+   ],
+   "n_roots_with_candidates": 13801,
+   "q_rank": {
+    "entropy_rank": 3.7260971918843273,
+    "mean_dim_std": 1.212100082175918,
+    "min_dim_std": 0.05900774290310045,
+    "near_constant_fraction": 0.0,
+    "participation_ratio": 2.589026749739615,
+    "top1_share": 0.5314880423499642
+   },
+   "q_rows": 15023,
+   "top_candidate_size_distribution": {
+    "2": 5798,
+    "3": 5196,
+    "4": 2807
+   },
+   "word_pairwise_cosine_mean_sampled": 0.4715195894241333,
+   "word_rank": {
+    "entropy_rank": 8.348787014816065,
+    "mean_dim_std": 0.6436043989617426,
+    "min_dim_std": 0.2362523227320317,
+    "near_constant_fraction": 0.0,
+    "participation_ratio": 5.040846245092347,
+    "top1_share": 0.3626822835476794
+   },
+   "word_rows": 172000,
+   "z_rank": {
+    "entropy_rank": 7.332921540923001,
+    "mean_dim_std": 0.5887306905261444,
+    "min_dim_std": 0.22080335058593353,
+    "near_constant_fraction": 0.0,
+    "participation_ratio": 4.465487029388656,
+    "top1_share": 0.4039335236847319
+   }
+  },
+  "WORD_REAL": {
+   "all_candidate_size_distribution": {
+    "2": 30046,
+    "3": 63426,
+    "4": 78528
+   },
+   "alpha_constant_fraction": 0.0,
+   "alpha_effective_candidates_mean": 10.548119050144292,
+   "alpha_effective_candidates_median": 9.985976843835696,
+   "alpha_entropy_mean": 2.174473244076289,
+   "alpha_entropy_median": 2.3011817932128906,
+   "alpha_std_mean": 0.04663376522512329,
+   "alpha_top_mean": 0.2125860662543379,
+   "alpha_weighted_candidate_size_distribution": {
+    "2": 0.24418437693173528,
+    "3": 0.39100158665684914,
+    "4": 0.3648140364114155
+   },
+   "high_alpha_examples": [
+    {
+     "alpha_entropy": 0.014379998669028282,
+     "alpha_top": 0.9982982277870178,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 11,
+     "row_id": 3264,
+     "smiles": "CC1=C(Oc2c(cccc2C1=O)C(=O)OCCN3CCCCC3)c4ccccc4",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      10,
+      11
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.014700442552566528,
+     "alpha_top": 0.9982542991638184,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 6,
+     "row_id": 2589,
+     "smiles": "Clc1ccc2C(=O)C3=C(Nc2c1)C(=O)NN(Cc4cc5ccccc5s4)C3=O",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      5,
+      6
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.014700442552566528,
+     "alpha_top": 0.9982542991638184,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 18,
+     "row_id": 3426,
+     "smiles": "COc1c(N2C[C@@H]3CCCN[C@@H]3C2)c(F)cc4C(=O)C(=CN(C5CC5)c14)C(=O)O",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      17,
+      18
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.014700442552566528,
+     "alpha_top": 0.9982542991638184,
+     "boundary_bond_count": 2,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 7,
+     "row_id": 3871,
+     "smiles": "Oc1cc(O)c2C(=O)C(=COc2c1)c3ccc4OCOc4c3",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      6,
+      7
+     ],
+     "support_size": 2
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 21,
+     "row_id": 53,
+     "smiles": "CCNC(=O)c1cc2c(c(cnc2[nH]1)c3cncc(c3)C(=O)O)n4ccc(n4)C(F)(F)F",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      20,
+      21,
+      22
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 18,
+     "row_id": 1367,
+     "smiles": "CC1=CN([C@H]2CCCN(C2)S(=O)(=O)c3ccc(C(=O)O)c(Oc4cccc(Cl)c4)c3)C(=O)NC1=O",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      17,
+      18,
+      19
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 23,
+     "row_id": 2198,
+     "smiles": "CC1=CN([C@H]2CCCN(C2)[C@H](CC3CCOCC3)c4ccc(C(=O)O)c(Oc5cccc(Cl)c5)c4)C(=O)NC1=O",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      22,
+      23,
+      24
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 21,
+     "row_id": 2201,
+     "smiles": "CCNC(=O)c1cc2c(c(cnc2[nH]1)c3cncc(c3)C(=O)O)n4nc(cc4C)C(F)(F)F",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      20,
+      21,
+      22
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 22,
+     "row_id": 2702,
+     "smiles": "CC(C)C(NC(=O)CN1C(=O)C(=CC=C1c2cccc(c2)C(=O)O)NC(=O)OCc3ccccc3)C(=O)C(F)(F)F",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      21,
+      22,
+      23
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 33,
+     "row_id": 2771,
+     "smiles": "CC(C)C(NC(=O)CN1C(=O)C(=CC=C1c2ccccc2)NC(=O)OCc3ccc(cc3)C(=O)O)C(=O)C(F)(F)F",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      32,
+      33,
+      34
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 27,
+     "row_id": 3426,
+     "smiles": "COc1c(N2C[C@@H]3CCCN[C@@H]3C2)c(F)cc4C(=O)C(=CN(C5CC5)c14)C(=O)O",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      26,
+      27,
+      28
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 18,
+     "row_id": 4010,
+     "smiles": "CC1=CN([C@H]2CCCN(C2)S(=O)(=O)c3ccc(C(=O)O)c(Oc4ccc(Cl)c(Cl)c4)c3)C(=O)NC1=O",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      17,
+      18,
+      19
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 22,
+     "row_id": 4016,
+     "smiles": "CC(C)NC(=O)c1cc2c(c(cnc2[nH]1)c3cncc(c3)C(=O)O)n4ccc(n4)C(F)(F)F",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      21,
+      22,
+      23
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.027594080194830894,
+     "alpha_top": 0.996221661567688,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ],
+      [
+       0,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 22,
+     "row_id": 4033,
+     "smiles": "CCCNC(=O)c1cc2c(c(cnc2[nH]1)c3cncc(c3)C(=O)O)n4ccc(n4)C(F)(F)F",
+     "support_atom_types": [
+      5,
+      7,
+      7
+     ],
+     "support_local": [
+      21,
+      22,
+      23
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.0306477602571249,
+     "alpha_top": 0.9957329034805298,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 2,
+     "row_id": 1878,
+     "smiles": "OC(=O)c1ccc(Nc2ncc(Br)c(Nc3ccccc3)n2)cc1",
+     "support_atom_types": [
+      7,
+      5,
+      7
+     ],
+     "support_local": [
+      0,
+      1,
+      2
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.0306477602571249,
+     "alpha_top": 0.9957329034805298,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 2,
+     "row_id": 2160,
+     "smiles": "OC(=O)c1ccc2c(c1)nc(Nc3cccc(c3)C#C)c4ncncc24",
+     "support_atom_types": [
+      7,
+      5,
+      7
+     ],
+     "support_local": [
+      0,
+      1,
+      2
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.0306477602571249,
+     "alpha_top": 0.9957329034805298,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 2,
+     "row_id": 3375,
+     "smiles": "OC(=O)c1ccc2[nH]c(nc2c1)C(F)(F)F",
+     "support_atom_types": [
+      7,
+      5,
+      7
+     ],
+     "support_local": [
+      0,
+      1,
+      2
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.0306477602571249,
+     "alpha_top": 0.9957329034805298,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 2,
+     "row_id": 3836,
+     "smiles": "OC(=O)c1ccccc1NC(=O)Nc2ccccc2",
+     "support_atom_types": [
+      7,
+      5,
+      7
+     ],
+     "support_local": [
+      0,
+      1,
+      2
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.0306477602571249,
+     "alpha_top": 0.9957329034805298,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       0,
+       0,
+       1
+      ],
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 4,
+     "root_atom_type": 7,
+     "root_local": 2,
+     "row_id": 3852,
+     "smiles": "OC(=O)c1cncc(c1)c2ccc(Cl)c(c2)C(=O)NCC34CC5CC(CC(C5)C3)C4",
+     "support_atom_types": [
+      7,
+      5,
+      7
+     ],
+     "support_local": [
+      0,
+      1,
+      2
+     ],
+     "support_size": 3
+    },
+    {
+     "alpha_entropy": 0.04516597092151642,
+     "alpha_top": 0.9922952055931091,
+     "boundary_bond_count": 1,
+     "internal_bond_types": [
+      [
+       1,
+       0,
+       1
+      ]
+     ],
+     "n_candidates_root": 2,
+     "root_atom_type": 7,
+     "root_local": 23,
+     "row_id": 1215,
+     "smiles": "CC(C)C(NC(=O)CN1C(=O)C(=CC=C1c2ccccc2)NC=O)C(=O)C(F)(F)F",
+     "support_atom_types": [
+      5,
+      7
+     ],
+     "support_local": [
+      22,
+      23
+     ],
+     "support_size": 2
+    }
+   ],
+   "n_roots_with_candidates": 13801,
+   "q_rank": {
+    "entropy_rank": 4.326015833356159,
+    "mean_dim_std": 1.2704564277415513,
+    "min_dim_std": 0.05509411413384935,
+    "near_constant_fraction": 0.0,
+    "participation_ratio": 2.9335959504178577,
+    "top1_share": 0.49203008235403656
+   },
+   "q_rows": 15023,
+   "top_candidate_size_distribution": {
+    "2": 4508,
+    "3": 5737,
+    "4": 3556
+   },
+   "word_pairwise_cosine_mean_sampled": 0.5004295706748962,
+   "word_rank": {
+    "entropy_rank": 8.407005555166684,
+    "mean_dim_std": 0.6257401824307403,
+    "min_dim_std": 0.24523097588824028,
+    "near_constant_fraction": 0.0,
+    "participation_ratio": 5.046048102306013,
+    "top1_share": 0.35499550595262835
+   },
+   "word_rows": 172000,
+   "z_rank": {
+    "entropy_rank": 7.29842739616207,
+    "mean_dim_std": 0.6036675133943747,
+    "min_dim_std": 0.22419975364189326,
+    "near_constant_fraction": 0.0,
+    "participation_ratio": 4.338918210042987,
+    "top1_share": 0.40833182930112616
+   }
+  }
+ },
+ "generated_utc": "2026-11-23T03:34:04Z",
+ "historical_d0_rmse": {
+  "ACRA_REF": 0.5802,
+  "GINE_REF": 0.5266,
+  "PATH_COUNT_RIDGE": 0.6167,
+  "PSC_POOL_BAG_PAIR": 0.6871,
+  "source": "tracks/structural-sufficiency/structural_path_composition_route_v1/REPORT.md"
+ },
+ "main_table": [
+  {
+   "arm": "SENTENCE_BASE",
+   "best_epoch": 81,
+   "dev_mae": 0.4275819111526722,
+   "dev_rmse": 0.5505589869874905,
+   "epochs_run": 126,
+   "gpu_hours": 0.10297499100367229,
+   "params": 416177,
+   "prep_seconds": 60.483558893203735,
+   "train_rmse_at_best": 0.2795061776187225,
+   "train_seconds": 370.7099676132202,
+   "training_commit": "a7155937bac08c7733f6a2c1d806a395558f57be",
+   "wall": 434.0181694030762
+  },
+  {
+   "arm": "WORD_GEOM_NULL",
+   "best_epoch": 96,
+   "dev_mae": 0.4198942088950721,
+   "dev_rmse": 0.5431939611473435,
+   "epochs_run": 141,
+   "gpu_hours": 0.2981225019693375,
+   "params": 619586,
+   "prep_seconds": 60.68281579017639,
+   "train_rmse_at_best": 0.17505697539136703,
+   "train_seconds": 1073.2410070896149,
+   "training_commit": "a7155937bac08c7733f6a2c1d806a395558f57be",
+   "wall": 1136.7718238830566
+  },
+  {
+   "arm": "WORD_REAL",
+   "best_epoch": 109,
+   "dev_mae": 0.4180456645757196,
+   "dev_rmse": 0.5499787385400907,
+   "epochs_run": 154,
+   "gpu_hours": 0.3298181806008021,
+   "params": 619586,
+   "prep_seconds": 61.31767439842224,
+   "train_rmse_at_best": 0.17074113401595087,
+   "train_seconds": 1187.3454501628876,
+   "training_commit": "a7155937bac08c7733f6a2c1d806a395558f57be",
+   "wall": 1251.5428476333618
+  }
+ ],
+ "protocol_id": "gwic-v0-graph-word-incidence-composition-pilot",
+ "route_rule": {
+  "clear_binding_min_gain": 0.015,
+  "precedence": [
+   "PROMISING_WORD_ROUTE",
+   "WORD_CONTENT_ONLY",
+   "NO_COMPETITIVE_WORD_SIGNAL",
+   "INCONCLUSIVE_SINGLE_SEED"
+  ],
+  "promising_max_word_dev_rmse": 0.62,
+  "promising_min_binding_gain_vs_null": 0.015,
+  "promising_min_word_gain_vs_base": 0.02,
+  "ridge_reference_rmse": 0.6167,
+  "sign_convention": "delta_word = RMSE(SENTENCE_BASE) - RMSE(WORD_REAL); delta_binding = RMSE(WORD_GEOM_NULL) - RMSE(WORD_REAL); positive = WORD_REAL better",
+  "word_content_min_gain_vs_base": 0.02
+ },
+ "seed": 0,
+ "training_commits": [
+  "a7155937bac08c7733f6a2c1d806a395558f57be"
+ ],
+ "verdict": "INCONCLUSIVE_SINGLE_SEED"
+}

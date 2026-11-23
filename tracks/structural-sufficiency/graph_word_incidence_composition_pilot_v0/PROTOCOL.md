@@ -38,7 +38,7 @@ incidence, rather than to a larger set of learnable statistics?**
 | Fit | D0 `train_sub_rows`: **2856** molecules |
 | Dev | D0 `dev_rows`: **504** molecules |
 | official Valid | structure not used for training; **labels never loaded** |
-| official Test | **never touched** |
+| official Test | **labels never loaded; Test rows never used in any tensor or metric** |
 
 The training object carries finite labels only on official Train rows. Fit and
 Dev are disjoint and cover exactly the 3360 official Train rows. Target
@@ -270,3 +270,10 @@ predictions, `results/summary.json`, and `REPORT.md`.
 
 None before formal training. Pre-training audit decision recorded in §4:
 support_max remains 4 because the full candidate count is 1,124,230 (<20M).
+
+**2026-11-23, post-training clarification (wording only, no scientific
+change).** The frozen raw cache is a 4200-row array file; GWIC reads only the
+label-free arrays and constructs molecule tensors only for the 3360 D0 rows
+(2856 fit + 504 Dev). The phrases "Test rows never used" / "never touched"
+mean no Test label and no Test row enters training, evaluation or any reported
+metric; they do not mean the underlying label-free cache file lacks Test rows.
