@@ -1,0 +1,118 @@
+{
+  "protocol_id": "fgcr-v0-full-graph-cavity-response-pilot",
+  "version": "2027-01-15/v1",
+  "dataset": "ogbg-mollipo",
+  "cache": {
+    "path": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+    "sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "sq_data_sha256": "89ad5436be3ddb8825fe877535e7fbb13679f4cb012a3a3073d63deaf9a83647",
+    "sq_common_sha256": "fe7333978fd748cf2a61fcdb4d3fa73bf855ebbdc6b05c439477b2c921b9d8cb"
+  },
+  "split": {
+    "train": 3360,
+    "valid": 420,
+    "test": 420,
+    "total": 4200,
+    "standardization": "Train labels only; mean and population std (ddof=0)"
+  },
+  "target": {
+    "name": "whole_molecule_lipophilicity",
+    "metric": "RMSE in original label units",
+    "secondary_metric": "MAE in original label units"
+  },
+  "inference": {
+    "algorithm": "exact junction-tree sum-product from min-fill elimination",
+    "vendored_source": "code/bamf_inference.py",
+    "vendored_sha256": "34024597b290451d931abe9d806d3497de1585722731bb09f21b1057ec39f2a7",
+    "original_source": "tracks/structural-sufficiency/zinc_bond_anchored_marginal_field_v1/code/bamf_inference.py",
+    "single_belief_pass": true,
+    "approximation": "none",
+    "smax": 4
+  },
+  "model": {
+    "channels": 16,
+    "states": 2,
+    "atom_fields": 9,
+    "bond_fields": 3,
+    "atom_emb": 16,
+    "bond_emb": 12,
+    "atom_potential_dims": [144, 64, 32],
+    "bond_potential_dims": [36, 64, 48],
+    "potential_bound": 2.0,
+    "pair_independent_values": ["00", "01/10", "11"],
+    "pair_symmetry": "J10 = J01 by construction",
+    "eta_norm_dim": 16,
+    "sentence_dims": [160, 128, 96],
+    "sentence_dropout": 0.1,
+    "sentence_final_activation": "SiLU",
+    "readout_dims": [322, 128, 64, 1],
+    "readout_dropout": 0.1,
+    "readout_bias": "independent scalar bias",
+    "init": "PyTorch default initialization under a local seed-0 RNG state",
+    "per_word_type_parameters": false
+  },
+  "pooling": {
+    "atom_h_stats": ["sum", "mean", "population_std"],
+    "graph_inputs": ["H", "H/(1+n_physical_bonds)", "log1p(n_atoms)", "log1p(n_physical_bonds)"],
+    "readout_input_dim": 322
+  },
+  "recipe": {
+    "seed": 0,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "min_lr": 0.00001,
+    "weight_decay": 0.0001,
+    "batch_molecules": 64,
+    "eval_batch_molecules": 256,
+    "warmup_epochs": 5,
+    "schedule": "cosine",
+    "max_epochs": 200,
+    "min_epochs": 80,
+    "patience": 40,
+    "gradient_clip": 5.0,
+    "loss": "MSE on standardized Train labels",
+    "precision": "float32",
+    "amp": false,
+    "checkpoint_selection": "minimum Valid RMSE; ties resolved to the earlier epoch",
+    "test_policy": "metrics logged every epoch; never used for gradients, standardization, selection or stopping"
+  },
+  "verification": {
+    "bruteforce_max_nodes": 7,
+    "bruteforce_dtype": "float64",
+    "bruteforce_abs_tolerance": 1e-8,
+    "zero_potential_tolerance": 1e-8,
+    "invariance_tolerance": 1e-7,
+    "real_train_batch_gradient_check": true
+  },
+  "preflight": {
+    "host": "res",
+    "pool": "res-gpu0",
+    "max_epochs": 2,
+    "seed": 0,
+    "budget_gpu_hours": 2.0,
+    "projection_epochs": 200,
+    "stop_if_projected_over_budget": true
+  },
+  "verdict": {
+    "predictive_candidate_max_valid_rmse": 0.65,
+    "weak_signal_max_valid_rmse": 0.70,
+    "labels": {
+      "predictive_candidate": "PREDICTIVE_CANDIDATE",
+      "weak_signal": "WEAK_PREDICTIVE_SIGNAL",
+      "no_signal": "NO_COMPETITIVE_SIGNAL",
+      "blocked": "BLOCKED"
+    },
+    "historical_reference": {
+      "note": "Descriptive only; different training recipe, not a matched control.",
+      "gine_valid_rmse_range": [0.61, 0.64],
+      "gine_test_rmse_range": [0.66, 0.67]
+    }
+  },
+  "resource_budget": {
+    "gpu_hours_total": 2.0,
+    "preflight_gpu_hours_recorded_separately": true,
+    "second_seed": false,
+    "architecture_search": false,
+    "hyperparameter_search": false
+  }
+}
