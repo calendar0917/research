@@ -1,0 +1,223 @@
+{
+ "all_pass": true,
+ "cache_facts": {
+  "all_word_sizes_one": true,
+  "all_words_are_atoms": true,
+  "n_bonds": 98561,
+  "n_crossing_bonds": 0,
+  "n_inter_word_bonds": 98561,
+  "n_words": 90514
+ },
+ "checks": [
+  {
+   "check": "A1_atom_coverage_and_singleton_partition",
+   "detail": {
+    "atoms": 90514,
+    "bonds": 98561,
+    "rows": 3360,
+    "violations": {
+     "applied_nonempty": 0,
+     "coverage": 0,
+     "history_not_atom": 0,
+     "intra_word_bond": 0,
+     "not_atom_rule": 0,
+     "not_singleton": 0,
+     "same_word_bond": 0,
+     "word_count": 0
+    },
+    "words": 90514
+   },
+   "ok": true
+  },
+  {
+   "check": "B1_bond_and_tensor_coverage",
+   "detail": {
+    "totals": {
+     "bonds": 98561,
+     "crossing_bonds": 0,
+     "inter_bonds": 98561,
+     "words": 90514
+    },
+    "violations": {
+     "b_core": 0,
+     "b_ptr": 0,
+     "b_stereo": 0,
+     "e_bond_sequence": 0,
+     "e_endpoints": 0,
+     "e_ptr": 0,
+     "w_atom_core": 0,
+     "w_atom_intr": 0,
+     "w_child": 0,
+     "w_final": 0,
+     "w_nports": 0,
+     "w_ptr": 0,
+     "w_rule": 0,
+     "w_size": 0,
+     "x_ptr": 0,
+     "x_words": 0
+    }
+   },
+   "ok": true
+  },
+  {
+   "check": "B2_no_crossing_bonds",
+   "detail": {
+    "x_bond": 0,
+    "x_word": 0
+   },
+   "ok": true
+  },
+  {
+   "check": "C1_width_and_init_identical_to_pred_grammar",
+   "detail": {
+    "init_hashes_equal": true,
+    "parameters_equal": true,
+    "total": 105025
+   },
+   "ok": true
+  },
+  {
+   "check": "C2_compose_is_instantiated",
+   "detail": {
+    "compose": 24240,
+    "compose_norm": 96
+   },
+   "ok": true
+  },
+  {
+   "check": "C3_compose_never_executed",
+   "detail": {
+    "calls": {
+     "compose": 0,
+     "compose_norm": 0
+    },
+    "loaded_trained_checkpoint": true
+   },
+   "ok": true
+  },
+  {
+   "check": "C4_word_state_is_atom_state",
+   "detail": {
+    "compose_dispersion": [],
+    "max_abs_z_diff": 0.0,
+    "words": 1720
+   },
+   "ok": true
+  },
+  {
+   "check": "C5_no_compose_gradient_path",
+   "detail": {
+    "compose_grads_all_none": true,
+    "compose_norm_grads_all_none": true
+   },
+   "ok": true
+  },
+  {
+   "check": "D1_renumbering_invariance",
+   "detail": {
+    "max_abs_prediction_diff": 5.960464477539062e-07,
+    "model_trained": true,
+    "n_molecules": 60,
+    "partition_backmap_ok": true
+   },
+   "ok": true
+  },
+  {
+   "check": "D2_bond_order_invariance",
+   "detail": {
+    "max_abs_prediction_diff": 4.76837158203125e-07,
+    "n_molecules": 60
+   },
+   "ok": true
+  },
+  {
+   "check": "D3_batch_composition_invariance",
+   "detail": {
+    "max_abs_prediction_diff": 1.1920928955078125e-07
+   },
+   "ok": true
+  },
+  {
+   "check": "D4_batch_order_invariance",
+   "detail": {
+    "max_abs_prediction_diff": 0.0
+   },
+   "ok": true
+  },
+  {
+   "check": "E1_finite_labels_only_on_official_train",
+   "detail": {
+    "finite": 3360,
+    "official_train": 3360
+   },
+   "ok": true
+  },
+  {
+   "check": "E2_no_official_valid_label",
+   "detail": {
+    "finite_valid": 0
+   },
+   "ok": true
+  },
+  {
+   "check": "E3_fit_dev_disjoint_and_cover_train",
+   "detail": {
+    "dev": 504,
+    "fit": 2856,
+    "official_train": 3360
+   },
+   "ok": true
+  },
+  {
+   "check": "E4_split_hash_is_frozen",
+   "detail": {
+    "sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+   },
+   "ok": true
+  },
+  {
+   "check": "E5_target_scaler_is_fit_only",
+   "detail": {
+    "mean": 2.185815826311436,
+    "n": 2856,
+    "std": 1.2139664740467941
+   },
+   "ok": true
+  },
+  {
+   "check": "E6_graph_scaler_is_fit_only",
+   "detail": {
+    "graph_mean": [
+     3.28953856563406,
+     3.369610530084288,
+     3.389705882352941,
+     1.0,
+     2.174165548898459,
+     3.304971988795518,
+     0.6805311204726754,
+     0.5399707837889887
+    ]
+   },
+   "ok": true
+  },
+  {
+   "check": "E7_grammar_is_label_free",
+   "detail": {
+    "construction": "empty Grammar()",
+    "n_rules": 0
+   },
+   "ok": true
+  }
+ ],
+ "generated_utc": "2026-11-23T07:27:10Z",
+ "git_commit": "0bb9a61252a9ba16320cf2e0af704245ff6dbbad",
+ "host": "main",
+ "n_checks": 19,
+ "n_passed": 19,
+ "part": "B_atom_only_checks",
+ "protocol_id": "prcg-atom-null-diagnostic-v0",
+ "python": "3.12.15",
+ "torch": "2.5.1+cu124",
+ "trained_checkpoint_loaded": true,
+ "wall_seconds": 9.707976579666138
+}
