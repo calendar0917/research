@@ -1,0 +1,88 @@
+{
+ "protocol_id": "bbpa-v0-bridge-block-port-algebra-pilot",
+ "version": "2026-11-23/v1",
+ "dataset": "ogbg-mollipo",
+ "split": {
+  "name": "D0",
+  "fit": "train_sub_rows",
+  "eval": "dev_rows",
+  "n_fit": 2856,
+  "n_eval": 504,
+  "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+ },
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "train-only z-score (D0 fit rows only)",
+  "metric": "RMSE in original label units"
+ },
+ "seeds": [0],
+ "arms": {
+  "BLOCK_BAG": {"mode": "BLOCK_BAG", "role": "structural-object baseline"},
+  "LOCAL_PORT": {"mode": "LOCAL_PORT", "role": "neighbour-local interface control"},
+  "TREE_PORT": {"mode": "TREE_PORT", "role": "recursive bidirectional tree composition"}
+ },
+ "decomposition": {
+  "bridge_definition": "Tarjan bridge on the raw undirected typed graph",
+  "block_definition": "connected component after deleting all bridge bonds",
+  "block_forest": "contract each block; bridge bonds are the forest edges",
+  "distance_buckets": [0, 1, 2, 3, 4, "5+"],
+  "n_distance_buckets": 6,
+  "internal_distances_only": true,
+  "port_atom_is_structural_not_learnable_id": true
+ },
+ "dims": {
+  "atom_state": 64,
+  "bond_state": 32,
+  "block_state": 96,
+  "subtree_state": 96,
+  "interface_state": 96,
+  "block_hidden": 128,
+  "port_hidden": 128,
+  "message_hidden": 96,
+  "update_hidden": 96,
+  "q_hidden": 96,
+  "readout_hidden": 128,
+  "readout_mid": 64,
+  "dropout": 0.1,
+  "last_layer_std": 0.001
+ },
+ "recipe": {
+  "optimizer": "AdamW",
+  "peak_lr": 0.001,
+  "min_lr": 0.00001,
+  "weight_decay": 0.0001,
+  "gradient_clip": 5.0,
+  "batch_molecules": 64,
+  "warmup_epochs": 5,
+  "schedule": "cosine",
+  "epochs": 180,
+  "eval_batch": 256,
+  "patience": 35,
+  "min_epochs": 80,
+  "objective": "whole-molecule standardized MSE only",
+  "auxiliary_targets": false,
+  "distillation": false,
+  "search": "none"
+ },
+ "route_classification": {
+  "promising_min_delta_comp": 0.025,
+  "promising_max_tree_rmse": 0.64,
+  "promising_max_mae_degradation_vs_local": 0.01,
+  "no_gain_max_delta_comp": 0.01,
+  "weak_tree_rmse_above": 0.64,
+  "sign_convention": "delta_comp = RMSE(LOCAL_PORT) - RMSE(TREE_PORT); positive = recursive composition better",
+  "precedence": ["PROMISING_PILOT", "NO_COMPOSITION_GAIN", "CAPACITY_WITHOUT_COMPETITIVENESS", "INCONCLUSIVE_SINGLE_SEED"]
+ },
+ "historical_d0_rmse": {
+  "GINE_REF": 0.5266,
+  "ACRA_REF": 0.5802,
+  "PATH_COUNT_RIDGE": 0.6167,
+  "PSC_POOL_BAG_PAIR": 0.6871,
+  "source": "tracks/structural-sufficiency/structural_path_composition_route_v1/REPORT.md"
+ },
+ "resource_budget": {
+  "wall_hours_target": 2.0,
+  "gpu_hours_target": 4.0,
+  "note": "target only; actual measured wall/gpu time is recorded in each manifest"
+ }
+}
