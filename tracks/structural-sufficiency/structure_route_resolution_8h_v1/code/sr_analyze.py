@@ -104,6 +104,8 @@ def whole_molecule(runs: list[dict[str, Any]], n_boot: int = N_BOOT,
         for run in items:
             pred = np.asarray([run["pred"][int(r)] for r in pts.tolist()])
             m = run["manifest"]
+            prov_path = run["dir"] / "rr_provenance.json"
+            prov = json.loads(prov_path.read_text(encoding="utf-8")) if prov_path.is_file() else {}
             meta_rmse = float(m["dev_rmse"])
             recomputed = C.rmse(pred, y)
             table.append({
@@ -122,7 +124,7 @@ def whole_molecule(runs: list[dict[str, Any]], n_boot: int = N_BOOT,
                 "params": int((m.get("params") or {}).get("total", 0)),
                 "pred_std": float(np.std(pred)),
                 "n_dev": int(pts.size),
-                "git_commit": m.get("git_commit"),
+                "git_commit": prov.get("commit") or m.get("git_commit"),
                 "checkpoint": m.get("checkpoint"),
             })
         seeds = sorted({int(r["manifest"]["seed"]) for r in items})
