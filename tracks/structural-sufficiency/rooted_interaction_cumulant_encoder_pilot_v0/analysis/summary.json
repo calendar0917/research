@@ -1,0 +1,158 @@
+{
+ "ablation_cross_check": {
+  "max_abs_diff": 4.76837158203125e-07,
+  "ok": true,
+  "removed_supports": 3528
+ },
+ "arms": [
+  {
+   "arm": "RICE_CUMULANT",
+   "best_epoch": 114,
+   "dev_mae": 0.46563518383246016,
+   "dev_rmse": 0.5993729555642237,
+   "epochs_run": 159,
+   "gpu_hours": 0.25831915570629965,
+   "params": 129198,
+   "prep_seconds": 14.519873142242432,
+   "train_rmse": 0.43136865314493866,
+   "train_seconds": 929.9489605426788,
+   "wall_seconds": 947.3684267997742,
+   "words_per_molecule_fit": 334.5922619047619
+  },
+  {
+   "arm": "RICE_RAW",
+   "best_epoch": 61,
+   "dev_mae": 0.5613540844771305,
+   "dev_rmse": 0.717408040308364,
+   "epochs_run": 106,
+   "gpu_hours": 0.15910145898660025,
+   "params": 129198,
+   "prep_seconds": 14.559484720230103,
+   "train_rmse": 0.5887223904462022,
+   "train_seconds": 572.7652523517609,
+   "wall_seconds": 590.167886018753,
+   "words_per_molecule_fit": 334.5922619047619
+  }
+ ],
+ "block_information": {
+  "fit_mean_block_replacement_on_dev": {
+   "ge2": {
+    "delta_rmse_vs_full": 0.9767975089327189,
+    "dev_rmse": 1.5761733001781992,
+    "note": "constant (Fit-mean) block, count channel untouched",
+    "sizes": [
+     2,
+     3,
+     4
+    ]
+   },
+   "ge3": {
+    "delta_rmse_vs_full": 0.779082913293535,
+    "dev_rmse": 1.3784587045390153,
+    "note": "constant (Fit-mean) block, count channel untouched",
+    "sizes": [
+     3,
+     4
+    ]
+   },
+   "order1": {
+    "delta_rmse_vs_full": 2.615867930344834,
+    "dev_rmse": 3.2152437215903142,
+    "note": "constant (Fit-mean) block, count channel untouched",
+    "sizes": [
+     1
+    ]
+   },
+   "order2": {
+    "delta_rmse_vs_full": 0.77723567870082,
+    "dev_rmse": 1.3766114699463003,
+    "note": "constant (Fit-mean) block, count channel untouched",
+    "sizes": [
+     2
+    ]
+   },
+   "order3": {
+    "delta_rmse_vs_full": 0.7164323469977633,
+    "dev_rmse": 1.3158081382432436,
+    "note": "constant (Fit-mean) block, count channel untouched",
+    "sizes": [
+     3
+    ]
+   },
+   "order4": {
+    "delta_rmse_vs_full": 0.27394723423580347,
+    "dev_rmse": 0.8733230254812838,
+    "note": "constant (Fit-mean) block, count channel untouched",
+    "sizes": [
+     4
+    ]
+   }
+  },
+  "fit_root_block_variation": {
+   "1": {
+    "components": 96,
+    "fraction_components_std_gt_10pct_of_scale": 0.6666666865348816,
+    "fraction_roots_with_zero_count": 0.0,
+    "mean_abs_component_mean": 0.03036412037909031,
+    "mean_component_std": 0.046811845153570175,
+    "relative_dispersion": 1.5416829586029053
+   },
+   "2": {
+    "components": 96,
+    "fraction_components_std_gt_10pct_of_scale": 0.96875,
+    "fraction_roots_with_zero_count": 0.0,
+    "mean_abs_component_mean": 0.07081058621406555,
+    "mean_component_std": 0.08973082154989243,
+    "relative_dispersion": 1.2671949863433838
+   },
+   "3": {
+    "components": 96,
+    "fraction_components_std_gt_10pct_of_scale": 0.8541666865348816,
+    "fraction_roots_with_zero_count": 0.0,
+    "mean_abs_component_mean": 0.009388107806444168,
+    "mean_component_std": 0.010886892676353455,
+    "relative_dispersion": 1.1596472263336182
+   },
+   "4": {
+    "components": 96,
+    "fraction_components_std_gt_10pct_of_scale": 0.8125,
+    "fraction_roots_with_zero_count": 0.02231694757938385,
+    "mean_abs_component_mean": 0.00020278357260394841,
+    "mean_component_std": 0.0007555661723017693,
+    "relative_dispersion": 3.72597336769104
+   }
+  },
+  "full_dev_rmse": 0.5993757912454803,
+  "note": "a zero-out removes the block entirely; replacing it by the Fit mean keeps the offset and removes only the root-to-root variation, so it isolates carried information from a constant bias"
+ },
+ "delta_raw_minus_cumulant": {
+  "ci_high": 0.16540356034610282,
+  "ci_low": 0.07080777061401927,
+  "fraction_positive": 1.0,
+  "n_boot": 10000,
+  "point": 0.11803508474414037,
+  "seed": 20261124,
+  "sign": "RMSE(a) - RMSE(b); positive = b better"
+ },
+ "gpu_hours_both_arms": 0.4174206146928999,
+ "historical": {
+  "cumulant_minus_gine": 0.0727729555642237,
+  "cumulant_minus_r2_s0": 0.048772955564223675,
+  "cumulant_minus_r2_s1": 0.052972955564223656,
+  "gine": 0.5266,
+  "r2_sentence_s0": 0.5506,
+  "r2_sentence_s1": 0.5464
+ },
+ "prep_seconds_total": 29.079357862472534,
+ "replay": {
+  "dev_abs_diff": 2.8356812566965317e-06,
+  "dev_rmse": 0.5993757912454803,
+  "fit_abs_diff": 4.558774908125507e-07,
+  "fit_rmse": 0.43136819726744785,
+  "manifest_dev_rmse": 0.5993729555642237,
+  "manifest_fit_rmse": 0.43136865314493866,
+  "noop_intervention_max_abs_diff": 0.0,
+  "noop_ok": true,
+  "ok": true
+ }
+}

@@ -83,7 +83,8 @@ def evaluate_split(model: M.RiceModel, structs: Mapping[int, S.MoleculeStruct],
                    rows: Sequence[int], bundle: D.DataBundle, arm: str,
                    atom_dims: Sequence[int], bond_dims: Sequence[int],
                    map_types: Mapping[int, np.ndarray] | None = None,
-                   device: Any = "cpu", batch: int = 512) -> SplitEval:
+                   device: Any = "cpu", batch: int = 512,
+                   block_override: Mapping[int, torch.Tensor] | None = None) -> SplitEval:
     rows = np.asarray(rows, np.int64)
     model.eval()
     stats: dict[int, dict[str, list[torch.Tensor]]] = {
@@ -107,7 +108,7 @@ def evaluate_split(model: M.RiceModel, structs: Mapping[int, S.MoleculeStruct],
         sub = {int(r): structs[int(r)] for r in part}
         coll = T.collate(part.tolist(), sub, bundle.raw, device)
         with torch.no_grad():
-            out = model(coll, arm=arm, return_aux=True)
+            out = model(coll, arm=arm, return_aux=True, block_override=block_override)
         for size in SIZES:
             roots_g[size].append(coll[f"atoms_{size}"][:, 0].cpu().numpy() + n_roots_total)
             sigs[size].append(_signatures(structs, part, size, atom_dims, bond_dims))
@@ -263,6 +264,57 @@ def intervene(model: M.RiceModel, split: SplitEval, keep: Mapping[int, np.ndarra
         preds[affected] = (model.readout_mlp(readout_in).view(-1) + model.beta).numpy()
     return Intervention(predictions=preds, affected_molecules=affected,
                         removed_supports=removed)
+
+
+def pooled_blocks(split: SplitEval) -> dict[int, torch.Tensor]:
+    """Rebuild the pre-LayerNorm pooled [sum, mean, std] block of every root."""
+    out: dict[int, torch.Tensor] = {}
+    for order in (1, 2, 3, 4):
+        st = split.stats[order]
+        total, count, sq = st["sum"], st["count"], st["sumsq"]
+        denom = count.clamp(min=1.0)[:, None]
+        mean = total / denom
+        var = (sq / denom - mean * mean).clamp(min=0.0)
+        std = torch.where((count > 1)[:, None], torch.sqrt(var + 1e-12),
+                          torch.zeros_like(var))
+        out[order] = torch.cat([total, mean, std], dim=1)
+    return out
+
+
+def block_variation(fit_eval: SplitEval) -> dict[str, Any]:
+    """How much root-to-root variation each order block actually carries."""
+    pooled = pooled_blocks(fit_eval)
+    res: dict[str, Any] = {}
+    for order, block in pooled.items():
+        m = block.mean(0)
+        s = block.std(0)
+        scale = m.abs().mean().clamp(min=1e-12)
+        res[str(order)] = {
+            "components": int(block.shape[1]),
+            "mean_abs_component_mean": float(m.abs().mean()),
+            "mean_component_std": float(s.mean()),
+            "relative_dispersion": float(s.mean() / scale),
+            "fraction_components_std_gt_10pct_of_scale": float((s > 0.1 * scale).float().mean()),
+            "fraction_roots_with_zero_count": float((fit_eval.stats[order]["count"] == 0).float().mean()),
+        }
+    return res
+
+
+def block_mean_replacement(model: M.RiceModel, structs: Mapping[int, S.MoleculeStruct],
+                           dev_rows: Sequence[int], bundle: D.DataBundle,
+                           pooled_fit: Mapping[int, torch.Tensor], sizes: Sequence[int],
+                           atom_dims: Sequence[int], bond_dims: Sequence[int],
+                           full_rmse: float) -> dict[str, Any]:
+    """Replace an order block by its Fit mean: keeps the offset, drops the variation."""
+    override = {int(size): pooled_fit[int(size)].mean(0) for size in sizes}
+    ev = evaluate_split(model, structs, dev_rows, bundle, "RICE_CUMULANT", atom_dims,
+                        bond_dims, block_override=override)
+    labels = bundle.labels[np.asarray(dev_rows, np.int64)]
+    rmse = float(np.sqrt(np.mean((ev.yhat_std * bundle.scaler["std"] + bundle.scaler["mean"]
+                                  - labels) ** 2)))
+    return {"sizes": [int(x) for x in sizes], "dev_rmse": rmse,
+            "delta_rmse_vs_full": rmse - full_rmse,
+            "note": "constant (Fit-mean) block, count channel untouched"}
 
 
 def cross_check_intervention(model: M.RiceModel, structs: Mapping[int, S.MoleculeStruct],
@@ -575,6 +627,25 @@ def main() -> None:
             "paired_rmse_increase": paired,
         }
     C.write_json(C.ANALYSIS_DIR / "interventions.json", interventions)
+
+    # ---- 2b. is the size>=3 dependence information or just a constant offset?
+    pooled_fit = pooled_blocks(fit_eval)
+    variation = block_variation(fit_eval)
+    full_dev = float(_rmse(base_dev_raw, y_dev))
+    replacement = {}
+    for tag, sizes in (("order1", (1,)), ("order2", (2,)), ("order3", (3,)),
+                       ("order4", (4,)), ("ge3", (3, 4)), ("ge2", (2, 3, 4))):
+        replacement[tag] = block_mean_replacement(model, structs, bundle.eval_rows, bundle,
+                                                  pooled_fit, sizes, bundle.atom_dims,
+                                                  bundle.bond_dims, full_dev)
+    block_probe = {"fit_root_block_variation": variation,
+                   "fit_mean_block_replacement_on_dev": replacement,
+                   "full_dev_rmse": full_dev,
+                   "note": ("a zero-out removes the block entirely; replacing it by the Fit "
+                            "mean keeps the offset and removes only the root-to-root variation, "
+                            "so it isolates carried information from a constant bias")}
+    C.write_json(C.ANALYSIS_DIR / "block_information.json", block_probe)
+    summary["block_information"] = block_probe
 
     # ---- 3b. ablation cross-check against a direct masked forward ----------
     probe = np.asarray(bundle.fit_rows[:512], np.int64)

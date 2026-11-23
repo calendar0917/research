@@ -169,6 +169,7 @@ class RiceModel(nn.Module):
     def forward(self, batch: Mapping[str, torch.Tensor], *, arm: str,
                 size_off: Sequence[int] = (), size_off_counts: bool = False,
                 word_mask: Mapping[int, torch.Tensor] | None = None,
+                block_override: Mapping[int, torch.Tensor] | None = None,
                 return_aux: bool = False) -> dict[str, Any]:
         if arm not in ARMS:
             raise KeyError(f"unknown arm {arm!r}")
@@ -204,7 +205,12 @@ class RiceModel(nn.Module):
                 total = total * 0.0
                 mean = mean * 0.0
                 std = std * 0.0
-            normed = self.order_norm[order - 1](torch.cat([total, mean, std], dim=1))
+            pooled = torch.cat([total, mean, std], dim=1)
+            if block_override is not None and order in block_override:
+                # analysis-only path: substitute a fixed pooled block (e.g. the Fit
+                # mean) so a frozen checkpoint can be re-read without retraining
+                pooled = block_override[order].to(pooled.dtype).reshape(1, -1).expand_as(pooled)
+            normed = self.order_norm[order - 1](pooled)
             blocks.append(torch.cat([normed, torch.log1p(count).unsqueeze(1)], dim=1))
             if return_aux:
                 aux_words[order] = {"values": vals, "sum": total, "mean": mean,
