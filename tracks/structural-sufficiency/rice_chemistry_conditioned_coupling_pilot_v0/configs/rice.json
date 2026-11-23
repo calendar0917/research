@@ -1,0 +1,196 @@
+{
+ "protocol_id": "rice-cc-v0-chemistry-conditioned-coupling-pilot",
+ "version": "2026-11-25/v1",
+ "dataset": "ogbg-mollipo",
+ "split": {
+  "name": "D0",
+  "fit": "train_sub_rows",
+  "eval": "dev_rows",
+  "n_fit": 2856,
+  "n_eval": 504,
+  "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+ },
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "D0 Fit-only z-score",
+  "metric": "RMSE in original label units"
+ },
+ "seeds": [
+  0
+ ],
+ "arms": {
+  "CC_NULL": {
+   "sentence_input": "kappa",
+   "pair_potential": "J_base",
+   "role": "control: original RICE_CUMULANT bond-only pair potential"
+  },
+  "CC_REAL": {
+   "sentence_input": "kappa",
+   "pair_potential": "J_real",
+   "role": "chemistry-conditioned coupling: delta = k * h_i * h_j"
+  }
+ },
+ "word": {
+  "root": "every atom of the molecule",
+  "context": "induced subgraph on {t : dist(v,t) <= 2} with every real bond",
+  "support_size": [
+   1,
+   2,
+   3,
+   4
+  ],
+  "connected_induced_only": true,
+  "must_contain_root": true,
+  "internal_bonds": "every real bond with both endpoints inside S (triangle closure included)",
+  "coverage": "overlapping supports, no non-overlapping cover required",
+  "root_slot": 0,
+  "mobius_order": [
+   1,
+   2,
+   3,
+   4
+  ]
+ },
+ "energy": {
+  "channels": 16,
+  "states_per_channel": 2,
+  "unary_inputs": "all 9 OGB atom categorical fields",
+  "pair_inputs": "all 3 OGB bond categorical fields",
+  "pair_independent_values": [
+   "00",
+   "01/10",
+   "11"
+  ],
+  "pair_symmetry": "J[a,b] == J[b,a] by construction",
+  "base_potential_bound": 2.0,
+  "conditioned_potential_bound": 4.0,
+  "coupling": {
+   "h": "tanh((u[...,1] - u[...,0]) / 2)",
+   "k": "(J00 + J11 - 2 * J01) / 4",
+   "delta": "k * h[i] * h[j]",
+   "J_real": [
+    "J00 + delta",
+    "J01 - delta",
+    "J11 + delta"
+   ],
+   "detach": false,
+   "added_parameters": 0
+  },
+  "normalizer": "logsumexp over all internal state assignments (<= 16 states)",
+  "empty_set": "logZ(empty) = 0",
+  "sampling": "none",
+  "message_passing": "none",
+  "per_word_parameters": "none",
+  "share_across": [
+   "molecules",
+   "roots",
+   "word types"
+  ]
+ },
+ "sentence": {
+  "per_order": [
+   "sum",
+   "mean",
+   "std",
+   "log1p(count)"
+  ],
+  "per_order_layer_norm": "independent LayerNorm over the [sum, mean, std] block of each order",
+  "order_block_dim": 97,
+  "sentence_in_dim": 388,
+  "h_dim": 96,
+  "readout_inputs": [
+   "h_sum",
+   "h_mean",
+   "h_std",
+   "log1p(atom_count)",
+   "8 fit-standardised graph scalars"
+  ],
+  "forbidden_inputs": [
+   "R2 S1/S2 statistics",
+   "closure/path embeddings",
+   "parent hidden vectors",
+   "parent checkpoints",
+   "distillation",
+   "auxiliary reconstruction",
+   "GNN",
+   "message passing",
+   "teacher checkpoint"
+  ]
+ },
+ "dims": {
+  "channels": 16,
+  "states": 2,
+  "atom_emb": 16,
+  "bond_emb": 12,
+  "atom_hidden": 64,
+  "bond_hidden": 64,
+  "potential_bound": 2.0,
+  "h_dim": 96,
+  "sentence_hidden": 128,
+  "readout_hidden": 128,
+  "readout_mid": 64,
+  "dropout": 0.1,
+  "energy_chunk": 4096
+ },
+ "recipe": {
+  "optimizer": "AdamW",
+  "peak_lr": 0.0003,
+  "min_lr": 1e-05,
+  "weight_decay": 0.0001,
+  "gradient_clip": 5.0,
+  "batch_molecules": 64,
+  "warmup_epochs": 5,
+  "schedule": "cosine",
+  "epochs": 240,
+  "eval_batch": 256,
+  "patience": 45,
+  "min_epochs": 80,
+  "objective": "whole-molecule standardized MSE only",
+  "auxiliary_targets": false,
+  "distillation": false,
+  "search": "none",
+  "checkpoint_selection": "best Dev RMSE"
+ },
+ "analysis": {
+  "bootstrap_resamples": 5000,
+  "bootstrap_seed": 20261125,
+  "bootstrap_unit": "molecule (paired on the same 504 Dev rows)",
+  "delta_summary_groups": [
+   "bond_type",
+   "full_bond_categorical",
+   "endpoint_element_pair"
+  ],
+  "endpoint_type": "OGB atom field 0 (atomic number index)",
+  "endpoint_type_full": "all 9 OGB atom categorical fields (mixed radix)",
+  "frozen_intervention": "CC_REAL best checkpoint evaluated with the CC_NULL pair potential; off-manifold, not a retrained control"
+ },
+ "verdict": {
+  "label_promising": "CHEM_BINDING_PROMISING",
+  "promising_min_delta_raw_minus_chem": 0.025,
+  "promising_requires_ci_low_positive": true,
+  "promising_max_chem_dev_rmse": 0.575,
+  "promising_requires_nondegenerate_coupling": true,
+  "coupling_min_max_abs_delta": 0.001,
+  "coupling_min_std_delta": 0.0001,
+  "coupling_min_abs_delta_fraction": 0.01,
+  "label_weak": "WEAK_OR_INSUFFICIENT_SIGNAL",
+  "label_no_gain": "NO_GAIN",
+  "label_invalid": "INVALID_COMPARISON",
+  "sign_convention": "Delta = RMSE(CC_NULL) - RMSE(CC_REAL); positive = chemistry-conditioned better",
+  "ci_scope": "molecule-level sampling uncertainty only; no training-seed variance",
+  "null_reproduction_tolerance_rmse": 0.02,
+  "null_reproduction_reference": 0.5994
+ },
+ "historical_d0_rmse": {
+  "RICE_CUMULANT_S0": 0.5994,
+  "R2_SENTENCE_S0": 0.5506,
+  "R2_SENTENCE_S1": 0.5464,
+  "GINE_REF": 0.5266,
+  "source": "tracks/structural-sufficiency/rooted_interaction_cumulant_encoder_pilot_v0/REPORT.md and r2_sentence_replication_v1/REPORT.md"
+ },
+ "resource_budget": {
+  "formal_gpu_hours_both_arms": 1.2,
+  "total_gpu_hours_with_preflight": 1.5,
+  "note": "hard cap; preprocessing wall time reported separately"
+ }
+}
