@@ -1,0 +1,217 @@
+{
+ "all_pass": true,
+ "candidate_cap_triggered": false,
+ "checks": [
+  {
+   "details": [
+    {
+     "n_atoms": 24,
+     "n_bonds": 27,
+     "ok": true,
+     "row": 0
+    },
+    {
+     "n_atoms": 33,
+     "n_bonds": 35,
+     "ok": true,
+     "row": 1
+    },
+    {
+     "n_atoms": 21,
+     "n_bonds": 23,
+     "ok": true,
+     "row": 2
+    },
+    {
+     "n_atoms": 28,
+     "n_bonds": 31,
+     "ok": true,
+     "row": 3
+    },
+    {
+     "n_atoms": 28,
+     "n_bonds": 29,
+     "ok": true,
+     "row": 4
+    }
+   ],
+   "id": "1_atom_bond_attributes",
+   "name": "all atom and bond attributes read correctly",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "bad_boundary": 0,
+    "bad_connected": 0,
+    "max_support_size": 4,
+    "words_checked": 2783
+   },
+   "id": "2_candidate_connected_induced",
+   "name": "every candidate S is a real connected induced support",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "bad_boundary": 0,
+    "bad_connected": 0,
+    "max_support_size": 4,
+    "words_checked": 2783
+   },
+   "id": "3_boundary_bonds_exact",
+   "name": "candidate boundary bonds are exact induced bonds to R2\\S",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "row": 0,
+    "y": -0.039576634764671326,
+    "y_candidate_reordered": -0.039576638489961624,
+    "y_permuted": -0.03957606106996536
+   },
+   "id": "4_renumber_edge_candidate_invariance",
+   "name": "renumbering, edge reorder and candidate reorder do not change prediction",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "max_abs_q_diff": 1.7881393432617188e-07,
+    "n_bonds": 27
+   },
+   "id": "5_q_endpoint_swap",
+   "name": "swapping Q endpoints leaves q unchanged",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "max_abs_error": 1.7881393432617188e-07,
+    "roots_with_candidates": 24
+   },
+   "id": "6_alpha_normalised",
+   "name": "softmax alpha sums to 1 for every root with candidates",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "max_abs_error": 1.6763806343078613e-07,
+    "n_atoms": 24
+   },
+   "id": "7_coverage_reference",
+   "name": "c_(v,t) equals the explicit sum over candidate words containing t",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "max_abs_error": 2.473456117702e-07,
+    "n_bonds": 27
+   },
+   "id": "8_overlap_real_atoms",
+   "name": "o_uv sums over real shared atoms, not embedding cosine",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "path_supports": 6,
+    "path_words": 14,
+    "star_supports": 7,
+    "star_words": 19
+   },
+   "id": "9_synthetic_connection_distinction",
+   "name": "same atom/bond counts with different real connection give different candidates/coverage",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "parameters": 619586,
+    "same_init_hashes": true,
+    "same_parameter_ledger": true,
+    "same_state_dict": true
+   },
+   "id": "10_bc_same_init_params",
+   "name": "WORD_GEOM_NULL and WORD_REAL start from identical initialisation with identical parameters",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "real_override_max_abs": 0.0,
+    "real_vs_zero_max_abs": 8.009374141693115e-07,
+    "zero_override_max_abs": 0.0
+   },
+   "id": "11_geometry_zeroing",
+   "name": "zeroing the three geometry inputs at one checkpoint matches the real forward",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "atom_emb": 2.1316234777302157e-08,
+    "backbone_mlp": 4.6181406648804213e-07,
+    "bond_encoder": 5.783397701714099e-09,
+    "bond_raw_emb": 3.9909528725410107e-13,
+    "path_joint": 3.411439354069441e-11,
+    "q_mlp": 8.611544614065599e-11,
+    "readout_mlp": 0.00015576939177520954,
+    "score_mlp": 3.707456834637501e-15,
+    "word_joint": 1.3880163325267559e-11,
+    "word_mlp": 3.392997249048596e-09
+   },
+   "id": "12_finite_nonzero_gradients",
+   "name": "all key modules have finite non-zero gradients",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "max_abs_error": 1.4901161193847656e-08
+   },
+   "id": "13_single_vs_batch",
+   "name": "single-molecule and batched predictions agree",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "collate_has_label_key": false,
+    "raw_has_label_member": false,
+    "raw_has_test_idx": false,
+    "train_finite": true,
+    "valid_all_nan": true
+   },
+   "id": "14_label_isolation",
+   "name": "official Valid/Test labels never enter a data tensor; only official Train labels are finite",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "build_seconds": 33.9449405670166,
+    "candidate_cap": 20000000,
+    "cap_triggered": false,
+    "cpu_forward_seconds_8_molecules": 0.010192155838012695,
+    "n_atoms": 90514,
+    "n_boundary_bond_occurrences": 2882391,
+    "n_internal_bond_occurrences": 2565011,
+    "n_molecules": 3360,
+    "n_words": 1124230,
+    "peak_rss_bytes_after": 742023168,
+    "peak_rss_bytes_before": 479879168,
+    "roots_without_words": 0,
+    "structure_array_bytes": 251988832,
+    "total_check_seconds": 34.73146986961365,
+    "words_per_molecule_max": 1251,
+    "words_per_molecule_mean": 334.5922619047619,
+    "words_per_molecule_median": 342.0,
+    "words_per_root_max": 53,
+    "words_per_root_mean": 12.420509534436661,
+    "words_per_root_median": 10.0,
+    "words_per_root_p90": 22.0,
+    "words_per_root_p99": 29.0
+   },
+   "id": "15_candidate_scale_memory_speed",
+   "name": "candidate enumeration is complete, within the 20M cap, and bounded in memory/time",
+   "status": "PASS"
+  }
+ ],
+ "config_sha256": "bd8b15497ff30a35bd3c5c8ca76d94dc86b0bf2fba61b34dce336cc95093921f",
+ "full_candidate_count": 1124230,
+ "generated_utc": "2026-11-23T02:56:29Z",
+ "git_commit": "8615013cee570ca542b11c35eb7f6b44506430ae",
+ "n_pass": 15,
+ "n_total": 15,
+ "protocol_id": "gwic-v0-graph-word-incidence-composition-pilot"
+}
