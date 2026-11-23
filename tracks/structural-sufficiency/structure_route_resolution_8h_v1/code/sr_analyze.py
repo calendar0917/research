@@ -107,7 +107,9 @@ def whole_molecule(runs: list[dict[str, Any]], n_boot: int = N_BOOT,
                 "abs_diff_manifest": abs(recomputed - meta_rmse),
                 "fit_rmse_at_best": float(m.get("train_rmse_at_best", np.nan)),
                 "best_epoch": int(m.get("best_epoch", -1)),
-                "optimizer_steps": int(m.get("optimizer_steps", -1)),
+                "optimizer_steps": int(m.get("optimizer_steps")
+                                       or (m.get("steps_per_epoch", 0)
+                                           * m.get("epochs_run", 0))),
                 "wall_seconds": float(m.get("wall_seconds", np.nan)),
                 "gpu_hours": float(m.get("wall_seconds", 0.0)) / 3600.0,
                 "params": int((m.get("params") or {}).get("total", 0)),
