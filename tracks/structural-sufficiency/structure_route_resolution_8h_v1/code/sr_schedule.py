@@ -46,6 +46,13 @@ SPECS: dict[str, list[dict[str, Any]]] = {
         {"name": "E_MOB_BIG_D0_S0", "arm": "E_MOB_BIG", "split": "D0", "seed": 0},
         {"name": "F_MOB_BIG_D0_S0", "arm": "F_MOB_BIG", "split": "D0", "seed": 0},
     ],
+    "p_scope": [
+        {"name": "G_EGO2_5_D0_S1", "arm": "G_EGO2_5", "split": "D0", "seed": 1},
+        {"name": "G_FULL5_D0_S1", "arm": "G_FULL5", "split": "D0", "seed": 1},
+    ],
+    "p_basis": [
+        {"name": "F_RAW_D0_S1", "arm": "F_RAW", "split": "D0", "seed": 1},
+    ],
     "ego3": [
         {"name": "G_EGO3_5_D0_S0", "arm": "G_EGO3_5", "split": "D0", "seed": 0},
     ],
