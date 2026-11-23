@@ -35,7 +35,21 @@ def _parse(argv: Sequence[str] | None) -> argparse.Namespace:
     ap.add_argument("--epochs", type=int, default=None, help="override (smoke tests only)")
     ap.add_argument("--tag", default="", help="suffix for smoke outputs")
     ap.add_argument("--out", default=str(C.RESULTS_DIR))
+    ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--allow-nondeterministic", action="store_true",
+                    help="CPU index_add reductions are otherwise forced deterministic")
     return ap.parse_args(argv)
+
+
+def _make_deterministic(threads: int) -> bool:
+    import torch
+
+    if torch.cuda.is_available():
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+    torch.set_num_threads(int(threads))
+    torch.use_deterministic_algorithms(True)
+    return True
 
 
 def _lr_at(step: int, total: int, warmup: int, peak: float, floor: float) -> float:
@@ -81,7 +95,7 @@ def run_arm(arm: str, seed: int, init_seed: int, config: Mapping[str, Any], bund
             molecules: Mapping[int, G.Molecule], grammars: Mapping[str, G.Grammar],
             caches: Mapping[str, Mapping[str, np.ndarray]], index: Mapping[int, int],
             rows_fit: np.ndarray, rows_eval: np.ndarray, device: str, epochs_override,
-            out_dir: Path, tag: str) -> dict[str, Any]:
+            out_dir: Path, tag: str, deterministic: bool = True) -> dict[str, Any]:
     import torch
 
     spec = dict(config["arms"][arm])
@@ -204,7 +218,8 @@ def run_arm(arm: str, seed: int, init_seed: int, config: Mapping[str, Any], bund
     result = {
         "protocol_id": config["protocol_id"],
         "arm": arm, "grammar": grammar_name, "port": port_mode, "seed": int(seed),
-        "init_seed": int(init_seed), "device": device,
+        "init_seed": int(init_seed), "device": device, "deterministic": deterministic,
+        "torch_threads": int(torch.get_num_threads()),
         "split": {"fit": int(rows_fit.size), "eval": int(rows_eval.size),
                   "sha256": bundle.hashes["split"]["sha256"]},
         "hashes": bundle.hashes,
@@ -221,8 +236,8 @@ def run_arm(arm: str, seed: int, init_seed: int, config: Mapping[str, Any], bund
         "dev_mae": dev_mae,
         "fit_rmse": C.rmse(_to_label(pred_fit, bundle), y_fit),
         "fit_mae": C.mae(_to_label(pred_fit, bundle), y_fit),
-        "dev_pred": pred_eval.tolist(),
-        "fit_pred": pred_fit.tolist(),
+        "dev_pred": _to_label(pred_eval, bundle).tolist(),   # label units
+        "fit_pred": _to_label(pred_fit, bundle).tolist(),     # label units
         "dev_rows": rows_eval.tolist(),
         "fit_rows": rows_fit.tolist(),
         "dev_y": y_eval.tolist(),
@@ -260,13 +275,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 for name in ("predictive", "frequency")}
     caches = {name: T.featurize(molecules, all_rows.tolist(), grammar)
               for name, grammar in grammars.items()}
+    deterministic = False
+    if not args.allow_nondeterministic:
+        deterministic = _make_deterministic(int(args.threads))
     results = {}
     for arm in args.arms:
         if arm not in config["arms"]:
             raise SystemExit(f"unknown arm {arm}")
         results[arm] = run_arm(arm, int(args.seed), int(args.init_seed), config, bundle,
                               molecules, grammars, caches, index, rows_fit, rows_eval,
-                              args.device, args.epochs, out_dir, args.tag)
+                              args.device, args.epochs, out_dir, args.tag, deterministic)
     hashes = {arm: r["init_hashes"] for arm, r in results.items()}
     unique = {json.dumps(v, sort_keys=True) for v in hashes.values()}
     if len(unique) != 1:
