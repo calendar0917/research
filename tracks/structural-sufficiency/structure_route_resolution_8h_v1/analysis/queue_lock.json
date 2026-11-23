@@ -1,0 +1,216 @@
+{
+ "catalogue_freeze_sha256": "9e4acc532a90c623c50ac2cad4c4faa1f5ed9ccc67ccd123c179b57268cbd403",
+ "code_commit": "580ea42e",
+ "conditional_interpretations": {
+  "BASE": "D0/s0+s1 both place E_MOB and F_MOB worse than R2. If D1 reverses, report split interaction; no promotion or architecture change.",
+  "C": "D0 K_TC vs K_T CI includes zero and D1 is directionally opposite; D0 strict-new gain CI upper bound is 0.0092. Unless D1 reverses, the conditional-context claim remains unresolved; K_T vs exact lookup is the robust part.",
+  "P_BASIS": "D0 both seeds place F_RAW better than F_MOB. D1 tests whether Mobius hurts free response out of split.",
+  "P_HEAD": "F_BIG beats F_SMALL on D0 both seeds but remains worse than R2. D1 tests whether capacity closes the gap; no E_BIG s1 was run because P_HEAD selected F only.",
+  "P_SCOPE": "D0 both seeds place EGO2 and FULL better than R2. If D1 replicates, local radius-2 ego is sufficient; if FULL-EGO2 >= delta and FULL <= R2+epsilon, scope may matter, but EGO3 was skipped by the fixed D0/s0 rule and no new EGO3 is added."
+ },
+ "created_utc": "2026-11-23T18:15:27Z",
+ "d0_evidence": {
+  "E_MOB": {
+   "mean": 0.6068821729343679,
+   "s0": 0.5988359803517598,
+   "s1": 0.614928365516976
+  },
+  "E_MOB_BIG": {
+   "s0": 0.6269090265625042
+  },
+  "E_RAW": {
+   "s0": 0.7177018016984148
+  },
+  "F_MOB": {
+   "mean": 0.6099153344097509,
+   "s0": 0.6189330860381781,
+   "s1": 0.6008975827813237
+  },
+  "F_MOB_BIG": {
+   "mean": 0.5849585098273995,
+   "s0": 0.5755974392001896,
+   "s1": 0.5943195804546094
+  },
+  "F_RAW": {
+   "mean": 0.581483505812992,
+   "s0": 0.6074479184286018,
+   "s1": 0.5555190931973822
+  },
+  "G_EGO2_5": {
+   "mean": 0.5256945527743353,
+   "s0": 0.5161057455373045,
+   "s1": 0.535283360011366
+  },
+  "G_FULL5": {
+   "mean": 0.5132967028199982,
+   "s0": 0.5146899747872726,
+   "s1": 0.5119034308527237
+  },
+  "R2_REF": {
+   "mean": 0.554355351444564,
+   "s0": 0.5476792712507136,
+   "s1": 0.5610314316384146
+  }
+ },
+ "d0_gate_decisions": {
+  "BASE_E_MOB_vs_R2": {
+   "consistent": true,
+   "gain_s0": -0.051156709101046194,
+   "gain_s1": -0.053896933878561426,
+   "mean_gain": -0.05252682148980381,
+   "note": "E_MOB worse than R2 on both seeds"
+  },
+  "BASE_F_MOB_vs_R2": {
+   "consistent": true,
+   "gain_s0": -0.07125381478746451,
+   "gain_s1": -0.039866151142909034,
+   "mean_gain": -0.05555998296518677,
+   "note": "F_MOB worse than R2 on both seeds"
+  },
+  "C1_E_MOB_vs_E_RAW": {
+   "gain_s0": 0.11886582134665502,
+   "note": "single-seed anchor; no cross-seed claim",
+   "seeds": [
+    0
+   ]
+  },
+  "C2_F_RAW_vs_F_MOB": {
+   "consistent": true,
+   "gain_s0": 0.011485167609576297,
+   "gain_s1": 0.04537848958394142,
+   "mean_gain": 0.028431828596758857,
+   "note": "Mobius hurts free response on both seeds"
+  },
+  "C3_E_MOB_vs_F_MOB": {
+   "consistent": false,
+   "gain_s0": -0.0200971056864183,
+   "gain_s1": 0.0140307827356532,
+   "mean_gain": -0.0030331614753829617,
+   "note": "family ranking flips across seeds"
+  },
+  "EGO3": {
+   "reason": "s0 FULL-EGO2 gap 0.001416 < delta",
+   "trigger": false
+  },
+  "HEAD_selected_family": "F",
+  "P_BASIS_F_RAW_vs_F_MOB": {
+   "consistent": true,
+   "gain_s0": 0.011485167609576297,
+   "gain_s1": 0.04537848958394142,
+   "mean_gain": 0.028431828596758857
+  },
+  "P_HEAD_F_BIG_vs_F_MOB": {
+   "consistent": true,
+   "gain_s0": 0.04333564683798852,
+   "gain_s1": 0.0065780023267142385,
+   "mean_gain": 0.024956824582351378
+  },
+  "P_SCOPE_EGO2_vs_R2": {
+   "consistent": true,
+   "gain_s0": 0.0315735257134091,
+   "gain_s1": 0.02574807162704862,
+   "mean_gain": 0.02866079867022886
+  },
+  "P_SCOPE_FULL_vs_EGO2": {
+   "consistent": true,
+   "gain_s0": 0.0014157707500318528,
+   "gain_s1": 0.023379929158642287,
+   "mean_gain": 0.01239784995433707,
+   "note": "FULL never worse; s0 gap below delta"
+  },
+  "P_SCOPE_FULL_vs_R2": {
+   "consistent": true,
+   "gain_s0": 0.032989296463440954,
+   "gain_s1": 0.049128000785690906,
+   "mean_gain": 0.04105864862456593
+  }
+ },
+ "d1_data": {
+  "eval_rows_sha256": "342c1de0ece164e9acba17ba17a48151c90235242e77481e41a1a9820b0380a6",
+  "file_sha256": "bdcd3f5884c66015aa099bd9c32b45cd6717b0d08b35a6a6c7ef44635fe61fcc",
+  "fit_rows_sha256": "b9f74030ee0decc67005e10963e64d7da16fd70d9a6bf9790f4a1c4afcebebbc",
+  "identity_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e",
+  "note": "D1 Fit scaler and categorical support mask recomputed from D1 Fit only; not inherited from D0",
+  "scaler": {
+   "mean": 2.151278011472791,
+   "n": 2856,
+   "std": 1.2159778136886414
+  },
+  "split_file": "tracks/structural-sufficiency/structural_path_composition_route_v1/data/split_train_sub_dev_d1.json"
+ },
+ "d1_runs": [
+  {
+   "arm": "R2_REF",
+   "data": "D1",
+   "params": 416177,
+   "recipe": "pinned r2_train.py unchanged",
+   "role": "reference",
+   "run": "R2_REF_D1_S0",
+   "seed": 0
+  },
+  {
+   "arm": "E_MOB",
+   "params": 129198,
+   "role": "base E family",
+   "run": "E_MOB_D1_S0",
+   "seed": 0
+  },
+  {
+   "arm": "F_MOB",
+   "params": 129878,
+   "role": "base F family",
+   "run": "F_MOB_D1_S0",
+   "seed": 0
+  },
+  {
+   "arm": "F_RAW",
+   "params": 129878,
+   "role": "P_BASIS candidate",
+   "run": "F_RAW_D1_S0",
+   "seed": 0
+  },
+  {
+   "arm": "G_EGO2_5",
+   "params": 413575,
+   "role": "P_SCOPE local",
+   "run": "G_EGO2_5_D1_S0",
+   "seed": 0
+  },
+  {
+   "arm": "G_FULL5",
+   "params": 413575,
+   "role": "P_SCOPE full",
+   "run": "G_FULL5_D1_S0",
+   "seed": 0
+  },
+  {
+   "arm": "F_MOB_BIG",
+   "params": 396118,
+   "role": "P_HEAD selected F BIG",
+   "run": "F_MOB_BIG_D1_S0",
+   "seed": 0
+  }
+ ],
+ "main_comparisons": [
+  "BASE: E_MOB vs F_MOB vs R2_REF on D1/s0",
+  "P_SCOPE: G_FULL5 vs G_EGO2_5 vs R2_REF on D1/s0",
+  "P_BASIS: F_RAW vs F_MOB on D1/s0",
+  "P_HEAD: F_MOB_BIG vs F_MOB on D1/s0",
+  "C: frozen K_T/K_TC/K_ID/K_CONDITIONAL_FULL Fit-only CV/fit/eval on D1 (CPU, already executed; no new feature/lambda search)"
+ ],
+ "no_d1_model_changes": true,
+ "notes": [
+  "D1 labels and Dev values are used only for the pre-locked comparisons and checkpoint selection by Dev RMSE.",
+  "No hyperparameter, feature, kernel lambda, or architecture search was performed on D1.",
+  "R2_REF D1 uses the pinned parent recipe; all other arms use the same config hashes as D0."
+ ],
+ "protocol_sha256": "55b14eb9517094f81a95df72961208c6105f2d551cacc771b6a96cf68094580d",
+ "response_pairs_sha256": "9a75e1251b6c6ec7c2d7fce51f6df8eb29ab1d5c86e708417d78cde41856015c",
+ "schema": "structure_route_resolution_8h_v1.queue_lock.v1",
+ "t0_utc": "2026-11-23T15:23:01Z",
+ "thresholds": {
+  "delta": 0.01,
+  "delta_half": 0.005,
+  "epsilon": 0.015
+ }
+}
