@@ -280,7 +280,11 @@ Compliance notes:
 * the remote checkout reports `dirty=True` in the run metadata because it
   contains untracked recovery backups and the run's own untracked output files;
   the tracked source is the deployed commit `f36aa1fc`, and no tracked file was
-  modified on the remote.
+  modified on the remote;
+* to allow the incremental deploy, two untracked RICE result directories on the
+  remote were first verified byte-identical to their committed local versions
+  and moved to a recovery backup outside the checkout; no historical module,
+  checkpoint or report was edited.
 
 ---
 
