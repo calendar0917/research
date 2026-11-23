@@ -73,7 +73,8 @@ For the 32 **selected** rules:
 
 Across all original candidates the denominator ratio reaches 1.36 and the largest mean-gain
 change is 1.0e-3 (on a candidate that was not selected), but the ordering is essentially
-unchanged. The pre-registered 1e-6 numerical-difference flag fires in 28 rounds; that is a
+unchanged. At candidate level, 241 of 5318 fold-sign comparisons flip; these are mostly
+near-zero non-selected candidates and **none** is one of the 32 selected rules. The pre-registered 1e-6 numerical-difference flag fires in 28 rounds; that is a
 sensitivity flag, not a substantive change. Only round 3 exceeds 1e-4 (1.33e-4), and there
 the selected rule remains rank 1, top-1 is unchanged, top-5 overlap is 5/5, and Spearman is
 0.99968.
