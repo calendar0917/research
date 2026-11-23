@@ -128,7 +128,7 @@ held-out support is available.
 - Stage V selected **P_SCOPE** as the single conflict package (FULL−EGO2 changed from
   +0.0124 on D0 to −0.0239 on D1/s0); the D1/s1 pair gives FULL 0.55172 vs EGO2 0.55233,
   i.e. no meaningful scope difference. No second conflict package.
-- 25 formal GPU runs, **4.74 GPU-hours** (target ≤14, hard ≤16); wall-clock ~4.3 h at
+- 25 formal GPU runs, **4.74 GPU-hours** (target ≤14, hard ≤16); wall-clock ~4.2 h at
   report time (target 7.5 h, hard 8 h). No training was started after T0+6:30; no training
   was running at T0+7:15. `analysis/budget.json` is the ledger.
 
