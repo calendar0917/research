@@ -39,7 +39,7 @@ def _load_model(bundle: D.DataBundle, arm: str, device: Any = "cpu"):
     ckpt = torch.load(run / "state_best.pt", map_location=device, weights_only=False)
     atom_dims, bond_dims = D.atom_bond_dims()
     model, info = M.build_model(atom_dims, bond_dims, int(manifest["seed"]), _norm(bundle),
-                                use_words=bool(manifest["use_words"]),
+                                use_words=bool(arm != "SENTENCE_BASE"),
                                 config=manifest.get("config"))
     model.load_state_dict(ckpt["state"])
     model.to(device)
@@ -73,16 +73,18 @@ def _paired_bootstrap(y: np.ndarray, pred: Mapping[str, np.ndarray],
     # point estimates
     rmse = {a: float(np.sqrt(sq[a].mean())) for a in arms}
     mae = {a: float(ae[a].mean()) for a in arms}
-    stats = {"delta_word": [], "delta_binding": [], "delta_word_mae": [],
-             "delta_binding_mae": []}
+    stats = {"delta_word": [], "delta_binding": [], "delta_content": [],
+             "delta_word_mae": [], "delta_binding_mae": [], "delta_content_mae": []}
     for _ in range(n_boot):
         idx = rng.integers(0, n, n)
         r = {a: float(np.sqrt(sq[a][idx].mean())) for a in arms}
         m = {a: float(ae[a][idx].mean()) for a in arms}
         stats["delta_word"].append(r["SENTENCE_BASE"] - r["WORD_REAL"])
         stats["delta_binding"].append(r["WORD_GEOM_NULL"] - r["WORD_REAL"])
+        stats["delta_content"].append(r["SENTENCE_BASE"] - r["WORD_GEOM_NULL"])
         stats["delta_word_mae"].append(m["SENTENCE_BASE"] - m["WORD_REAL"])
         stats["delta_binding_mae"].append(m["WORD_GEOM_NULL"] - m["WORD_REAL"])
+        stats["delta_content_mae"].append(m["SENTENCE_BASE"] - m["WORD_GEOM_NULL"])
     def ci(vals):
         arr = np.asarray(vals, np.float64)
         return {"point": float(arr.mean()), "median": float(np.median(arr)),
@@ -95,10 +97,14 @@ def _paired_bootstrap(y: np.ndarray, pred: Mapping[str, np.ndarray],
                        "bootstrap": ci(stats["delta_word"])},
         "delta_binding": {"point": rmse["WORD_GEOM_NULL"] - rmse["WORD_REAL"],
                           "bootstrap": ci(stats["delta_binding"])},
+        "delta_content": {"point": rmse["SENTENCE_BASE"] - rmse["WORD_GEOM_NULL"],
+                          "bootstrap": ci(stats["delta_content"])},
         "delta_word_mae": {"point": mae["SENTENCE_BASE"] - mae["WORD_REAL"],
                            "bootstrap": ci(stats["delta_word_mae"])},
         "delta_binding_mae": {"point": mae["WORD_GEOM_NULL"] - mae["WORD_REAL"],
                               "bootstrap": ci(stats["delta_binding_mae"])},
+        "delta_content_mae": {"point": mae["SENTENCE_BASE"] - mae["WORD_GEOM_NULL"],
+                              "bootstrap": ci(stats["delta_content_mae"])},
         "seed": int(seed),
     }
 
@@ -130,7 +136,7 @@ def _diagnostics(bundle: D.DataBundle, structs, raw, arm: str, model: M.GwicMode
                  device: Any) -> dict[str, Any]:
     rows = np.asarray(bundle.eval_rows, np.int64)
     w_all, q_all, z_all = [], [], []
-    alpha_entropies, alpha_eff, alpha_const = [], [], []
+    alpha_entropies, alpha_eff, alpha_const, alpha_stds = [], [], [], []
     top_sizes, all_sizes, weighted_sizes = [], [], np.zeros(5, np.float64)
     top_rows: list[dict[str, Any]] = []
     max_alpha_by_root = []
@@ -157,6 +163,7 @@ def _diagnostics(bundle: D.DataBundle, structs, raw, arm: str, model: M.GwicMode
                 alpha_entropies.append(h)
                 alpha_eff.append(float(np.exp(h)))
                 alpha_const.append(bool(float(a.max() - a.min()) < 1e-6) and hi - lo > 1)
+                alpha_stds.append(float(a.std()))
                 max_alpha_by_root.append(float(a.max()))
                 k = int(np.argmax(a))
                 sup = [int(x) for x in support[lo + k].tolist() if x >= 0]
@@ -165,29 +172,49 @@ def _diagnostics(bundle: D.DataBundle, structs, raw, arm: str, model: M.GwicMode
                 for j in range(lo, hi):
                     sz = int((support[j] >= 0).sum())
                     weighted_sizes[sz] += float(a[j - lo])
-                if len(top_rows) < 40 and float(a[k]) > 0.25:
-                    mol = int(np.searchsorted(batch["mol_atom_ptr"].cpu().numpy(), batch["word_root"][lo + k].item(), side="right") - 1)
-                    mol_start = int(batch["mol_atom_ptr"][mol].item())
-                    root_local = int(batch["word_root"][lo + k].item()) - mol_start
-                    atom_feat = batch["atom_feat"].cpu().numpy()
-                    top_rows.append({
-                        "row_id": int(part[mol]),
-                        "smiles": str(np.asarray(raw["smiles"])[int(part[mol])]),
-                        "root_local": root_local,
-                        "root_atom_type": int(atom_feat[mol_start + root_local, 0]),
-                        "support_atom_types": [int(atom_feat[mol_start + x, 0]) for x in sup],
-                        "support_size": len(sup),
-                        "alpha_top": float(a[k]),
-                        "alpha_entropy": h,
-                        "n_candidates_root": hi - lo,
-                    })
+                mol_ptr = batch["mol_atom_ptr"].cpu().numpy()
+                mol = int(np.searchsorted(mol_ptr, int(batch["word_root"][lo + k]), side="right") - 1)
+                mol_start = int(mol_ptr[mol])
+                root_local = int(batch["word_root"][lo + k]) - mol_start
+                atom_feat = batch["atom_feat"].cpu().numpy()
+                bond_feat = batch["bond_feat"].cpu().numpy()
+                wcand = int(lo + k)
+                sup_global = [int(x) for x in support[wcand].tolist() if x >= 0]
+                ib = [int(x) for x in batch["word_internal"][wcand].tolist() if x >= 0]
+                top_rows.append({
+                    "row_id": int(part[mol]),
+                    "smiles": str(np.asarray(raw["smiles"])[int(part[mol])]),
+                    "root_local": root_local,
+                    "root_atom_type": int(atom_feat[mol_start + root_local, 0]),
+                    "support_local": [int(x) - mol_start for x in sup_global],
+                    "support_atom_types": [int(atom_feat[x, 0]) for x in sup_global],
+                    "internal_bond_types": [[int(v) for v in bond_feat[x].tolist()] for x in ib],
+                    "support_size": len(sup_global),
+                    "boundary_bond_count": int(round(float(np.expm1(float(batch["word_scalars"][wcand, 11].item()))))),
+                    "alpha_top": float(a[k]),
+                    "alpha_entropy": h,
+                    "n_candidates_root": hi - lo,
+                })
     w_cat = np.concatenate(w_all, axis=0) if w_all else np.zeros((0, 64))
     q_cat = np.concatenate(q_all, axis=0) if q_all else np.zeros((0, 64))
     z_cat = np.concatenate(z_all, axis=0) if z_all else np.zeros((0, 64))
     n_roots = int(len(alpha_entropies))
     all_sizes = np.asarray(all_sizes, np.float64)
     weighted_sizes = weighted_sizes / max(1e-12, weighted_sizes.sum())
+    top_rows = sorted(top_rows, key=lambda x: (-x["alpha_top"], x["row_id"], x["root_local"]))[:20]
+    # sampled pairwise cosine of word representations, descriptive only
+    cos_mean = 0.0
+    if w_cat.shape[0] >= 2:
+        rng = np.random.default_rng(17)
+        k = min(1000, w_cat.shape[0])
+        sample = w_cat[rng.choice(w_cat.shape[0], size=k, replace=False)]
+        sample = sample / np.maximum(1e-12, np.linalg.norm(sample, axis=1, keepdims=True))
+        cos = sample @ sample.T
+        off = cos[~np.eye(k, dtype=bool)]
+        cos_mean = float(off.mean()) if off.size else 0.0
     return {
+        "alpha_std_mean": float(np.mean(alpha_stds)) if n_roots else 0.0,
+        "word_pairwise_cosine_mean_sampled": cos_mean,
         "n_roots_with_candidates": n_roots,
         "alpha_entropy_mean": float(np.mean(alpha_entropies)) if n_roots else 0.0,
         "alpha_entropy_median": float(np.median(alpha_entropies)) if n_roots else 0.0,
@@ -206,7 +233,7 @@ def _diagnostics(bundle: D.DataBundle, structs, raw, arm: str, model: M.GwicMode
         "z_rank": _effective_rank(z_cat),
         "word_rows": int(w_cat.shape[0]),
         "q_rows": int(q_cat.shape[0]),
-        "high_alpha_examples": top_rows[:20],
+        "high_alpha_examples": top_rows,
     }
 
 
