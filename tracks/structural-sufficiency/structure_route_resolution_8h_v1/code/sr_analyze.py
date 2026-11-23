@@ -92,7 +92,8 @@ def whole_molecule(runs: list[dict[str, Any]], n_boot: int = N_BOOT,
     groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for run in runs:
         m = run["manifest"]
-        groups[(str(m["arm"]), run_split(m))].append(run)
+        arm = "R2_REF" if str(m["arm"]) == "SENTENCE_BASE" else str(m["arm"])
+        groups[(arm, run_split(m))].append(run)
     table = []
     boot = {}
     for (arm, split), items in sorted(groups.items()):
@@ -307,7 +308,8 @@ def route_c(runs: list[dict[str, Any]]) -> dict[str, Any]:
                 d = np.asarray([pred[int(b)] - pred[int(a)]
                                 for a, b in zip(row_a.tolist(), row_b.tolist())])
                 err = np.abs(d - delta)
-                name = f"{m['arm']}_S{m['seed']}"
+                arm_name = "R2_REF" if str(m["arm"]) == "SENTENCE_BASE" else str(m["arm"])
+                name = f"{arm_name}_S{m['seed']}"
                 errs[name] = err
                 out["deltas"].append({
                     "split": split, "arm": name, "seed": int(m["seed"]),
