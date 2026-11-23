@@ -110,6 +110,9 @@ def _seed_state(seed: int) -> dict[str, Any]:
 
 def train(args: argparse.Namespace) -> dict[str, Any]:
     t_process = time.time()
+    started_utc = C.now_utc()
+    commit_at_start = C.git_commit()
+    dirty_at_start = C.git_dirty()
     C.seed_everything(int(args.seed))
     C.assert_pins()
     cfg = C.load_config()
@@ -330,8 +333,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         "run_id": args.run_id, "arm": arm, "family": family,
         "split": args.split, "seed": int(args.seed),
         "smoke": bool(args.max_fit or args.max_eval),
-        "started_utc": C.now_utc(), "host": socket.gethostname(),
-        "git_commit": C.git_commit(), "git_dirty": C.git_dirty(),
+        "started_utc": started_utc, "host": socket.gethostname(),
+        "git_commit": commit_at_start, "git_dirty": dirty_at_start,
         "device": str(args.device), "gpu_name": _gpu_name(),
         "torch": torch.__version__, "cuda": torch.version.cuda,
         "python": platform.python_version(),
