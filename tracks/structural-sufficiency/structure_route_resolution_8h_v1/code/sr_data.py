@@ -8,6 +8,7 @@ new models need and never touches a Valid/Test label (they stay NaN).
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import numpy as np
@@ -117,3 +118,17 @@ def unseen(bundle: Any, rows: Sequence[int],
 
 def graph_scalars_all(bundle: Any) -> np.ndarray:
     return np.asarray(bundle.graph_scalars, np.float64)
+
+def scaffolds(split: str) -> dict[int, str]:
+    """Bemis-Murcko scaffold per official-Train row, from the frozen split file."""
+    spec = SPLIT_PINS[split]
+    import json
+
+    payload = json.loads(Path(spec["file"]).read_text(encoding="utf-8"))
+    raw = payload.get("scaffold_by_row")
+    if not isinstance(raw, dict) or len(raw) != 3360:
+        raise ValueError(f"{split}: scaffold_by_row missing or wrong size")
+    out = {int(k): str(v) for k, v in raw.items()}
+    if len(out) != 3360:
+        raise ValueError(f"{split}: scaffold_by_row does not cover 3360 rows")
+    return out

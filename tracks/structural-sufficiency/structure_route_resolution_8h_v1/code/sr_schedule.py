@@ -131,7 +131,7 @@ def refresh_active(state: dict[str, Any]) -> bool:
             except Exception:
                 row["wall_seconds"] = None
             if remote_state == "completed":
-                cp = rr("pull", name, "--light")
+                cp = rr("pull", name)
                 row["pull_ok"] = cp.returncode == 0
                 row["pulled_dir"] = _copy_pulled(info, name)
             changed = True
@@ -145,7 +145,7 @@ def _copy_pulled(info: dict[str, Any], name: str) -> str | None:
     run_id = str(info.get("run_id") or "")
     if not run_id:
         return None
-    src = REPO / ".rr" / "pulled" / run_id / result_path({"name": name})
+    src = REPO / ".rr" / "pulled" / run_id / "result" / result_path({"name": name})
     dst = RESULTS / name
     if not src.is_dir():
         return None

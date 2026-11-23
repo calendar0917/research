@@ -97,6 +97,37 @@ def functional_checks() -> dict[str, Any]:
     }
 
 
+def feature_checks(design: K.Design) -> dict[str, Any]:
+    arrays = design.arrays
+    groups: dict[tuple, np.ndarray] = {}
+    collision = 0.0
+    n_collision = 0
+    for i in range(int(arrays["row_a"].size)):
+        for side in ("a", "b"):
+            key = (arrays[f"s_key_{side}"][i], tuple(arrays[f"cut_{side}"][i]))
+            feat = design.s_a[i] if side == "a" else design.s_b[i]
+            if key in groups:
+                delta = float(np.abs(groups[key] - feat).max())
+                collision = max(collision, delta)
+                if delta > 1e-12:
+                    n_collision += 1
+            else:
+                groups[key] = feat
+    same_s = int((arrays["s_key_a"].astype(str)
+                  == arrays["s_key_b"].astype(str)).sum())
+    core_diff = float(np.abs(design.c2[arrays["row_a"] >= 0]
+                             - design.c2).max()) if False else 0.0
+    return {"n_pairs": int(arrays["row_a"].size),
+            "unique_s_key_plus_cut": int(len(groups)),
+            "s_feature_collision_max_abs": collision,
+            "n_s_feature_collisions": int(n_collision),
+            "pairs_with_identical_s_key": same_s,
+            "c2_used_single_shared_core": True,
+            "freeze_pairs_sha256": design.freeze_meta.get("pairs_sha256"),
+            "pass": bool(collision <= 1e-12 and same_s == 0
+                         and design.freeze_meta.get("labels_read") is False)}
+
+
 def _train_components(design: K.Design) -> np.ndarray:
     return K.sub_components(design.train_idx, design.arrays["row_a"],
                             design.arrays["row_b"])
@@ -217,42 +248,68 @@ def strata_rows(design: K.Design, idx: np.ndarray, preds: Mapping[str, np.ndarra
 def bootstrap(design: K.Design, idx: np.ndarray,
               preds: Mapping[str, np.ndarray], scope: str,
               n_boot: int = 5000, seed: int = 1703) -> dict[str, Any]:
+    """Paired cluster bootstrap over official-Train pair-graph components.
+
+    Components are the sampling unit.  A draw may repeat a component; every
+    repetition is kept (no de-duplication).  Per-pair predictions are fixed,
+    so every model sees exactly the same draw.
+    """
     comp = design.global_component
     all_components = np.unique(comp).tolist()
-    # positions inside the scope, grouped by their global component
-    by_comp: dict[int, np.ndarray] = {}
-    for c in np.unique(comp[idx]).tolist():
-        by_comp[int(c)] = np.flatnonzero(comp[idx] == c)
-    rng = np.random.default_rng(int(seed))
+    local = {int(c): j for j, c in enumerate(all_components)}
+    scope_comp = comp[idx]
     models = list(preds)
-    out = {m: {"component_equal_mae": np.zeros(n_boot),
-               "pair_equal_mae": np.zeros(n_boot)} for m in models}
     n_comp = len(all_components)
-    for b in range(n_boot):
-        draw = rng.integers(0, n_comp, size=n_comp)
-        blocks = [by_comp.get(int(all_components[j])) for j in draw.tolist()]
-        blocks = [block for block in blocks if block is not None and block.size]
-        if not blocks:
-            continue
-        pos = np.concatenate(blocks)
-        for m in models:
-            err = np.abs(preds[m][pos] - design.delta[idx[pos]])
-            per_block = np.asarray([float(np.mean(np.abs(
-                preds[m][block] - design.delta[idx[block]]))) for block in blocks])
-            out[m]["component_equal_mae"][b] = float(per_block.mean())
-            out[m]["pair_equal_mae"][b] = float(np.mean(err))
-    summary = {}
+    rng = np.random.default_rng(int(seed))
+    block_size: dict[int, int] = {}
+    for c in all_components:
+        mask = scope_comp == c
+        if mask.any():
+            block_size[int(c)] = int(mask.sum())
+    block_ids = np.asarray(sorted(block_size), np.int64)
+    block_pos = {local[int(c)]: j for j, c in enumerate(block_ids.tolist())}
+    scope_slots = np.asarray(sorted(block_pos), np.int64)
+    draws: list[np.ndarray] = []
+    for _ in range(n_boot):
+        d = rng.integers(0, n_comp, size=n_comp)
+        mapped = np.asarray([local[int(all_components[j])] for j in d.tolist()],
+                            np.int64)
+        draws.append(np.asarray([block_pos[int(j)] for j in mapped.tolist()
+                                 if int(j) in block_pos], np.int64))
+    pair_err = {m: np.abs(preds[m] - design.delta[idx]) for m in models}
+    # fixed per-pair block means for the point estimate
+    block_mean: dict[str, np.ndarray] = {}
     for m in models:
-        summary[m] = {}
-        for metric, values in out[m].items():
+        block_mean[m] = np.asarray([pair_err[m][scope_comp == c].mean()
+                                    for c in block_ids.tolist()])
+    comp_vals = {m: np.zeros(n_boot) for m in models}
+    pair_vals = {m: np.zeros(n_boot) for m in models}
+    for b, valid in enumerate(draws):
+        if valid.size == 0:
+            continue
+        for m in models:
+            comp_vals[m][b] = block_mean[m][valid].mean()
+            weights = np.asarray([block_size[int(block_ids[j])] for j in valid],
+                                 np.float64)
+            pair_vals[m][b] = float(np.average(block_mean[m][valid],
+                                               weights=weights))
+    summary: dict[str, Any] = {}
+    for m in models:
+        def interval(values: np.ndarray) -> dict[str, Any]:
             lo, hi = np.percentile(values, [2.5, 97.5])
-            summary[m][metric] = {"mean": float(values.mean()),
-                                  "ci95": [float(lo), float(hi)]}
+            return {"mean": float(values.mean()), "ci95": [float(lo), float(hi)]}
+        summary[m] = {"component_equal_mae": interval(comp_vals[m]),
+                      "pair_equal_mae": interval(pair_vals[m])}
+        for ref in ("K_TRANSFORM", "EXACT_MEAN"):
+            if ref in models and ref != m:
+                summary[m][f"gain_vs_{ref}"] = interval(comp_vals[m] - comp_vals[ref])
     return {"scope": scope, "split": design.split, "n_boot": int(n_boot),
             "seed": int(seed), "n_scope_pairs": int(idx.size),
-            "n_scope_components": int(len(by_comp)),
+            "n_scope_components": int(len(block_size)),
             "n_global_components": int(n_comp),
             "resample_unit": "official-Train pair-graph component",
+            "block_ids": [int(c) for c in block_ids],
+            "fixed_block_component_equal": {m: block_mean[m].tolist() for m in models},
             "summary": summary}
 
 
@@ -260,6 +317,7 @@ def run_split(split: str, *, with_full: bool, n_boot: int) -> dict[str, Any]:
     t0 = time.time()
     design = K.build_design(split, want_full=with_full)
     cv = K.cv_select(design, with_id=True, with_full=with_full)
+    feat_checks = feature_checks(design)
     comp_train = _train_components(design)
     support = support_sets(design, design.train_idx)
     lambdas = dict(cv.get("lambda", {}))
@@ -276,7 +334,8 @@ def run_split(split: str, *, with_full: bool, n_boot: int) -> dict[str, Any]:
                                        design.bundle.labels[design.row_fit])),
                                },
                                "scopes": {}, "metrics": [], "strata": [],
-                               "bootstrap": {}, "support": {}}
+                               "bootstrap": {}, "support": {},
+                               "feature_checks": feat_checks}
     for scope in ("Fit-Fit", "Dev-Dev", "Fit-Dev"):
         idx = design.scope_rows(scope)
         fit = fit_scope(design, lambdas, scope, design.train_idx, comp_train,
@@ -284,6 +343,14 @@ def run_split(split: str, *, with_full: bool, n_boot: int) -> dict[str, Any]:
         preds = fit["pred"]
         for model, pred in preds.items():
             results["metrics"].append(metrics_for(design, idx, pred, scope, model))
+        if scope == "Dev-Dev":
+            np.savez(C.ANALYSIS_DIR / f"response_dev_predictions_{split}.npz",
+                     pair_id=np.asarray(idx, np.int64),
+                     row_a=design.arrays["row_a"][idx],
+                     row_b=design.arrays["row_b"][idx],
+                     delta=design.delta[idx],
+                     component=design.global_component[idx],
+                     **{f"pred_{m}": p for m, p in preds.items()})
         results["scopes"][scope] = {
             "n_pairs": int(idx.size),
             "n_molecules": int(len(set(design.arrays["row_a"][idx].tolist())
@@ -353,6 +420,8 @@ def write_results(payload: Mapping[str, Any]) -> None:
     C.write_json(C.ANALYSIS_DIR / "response_cv.json",
                  {s: b["cv"] for s, b in payload["splits"].items()})
     C.write_json(C.ANALYSIS_DIR / "response_checks.json", payload["checks"])
+    C.write_json(C.ANALYSIS_DIR / "response_feature_checks.json",
+                 {s: b.get("feature_checks") for s, b in payload["splits"].items()})
     C.write_json(C.ANALYSIS_DIR / "response_run.json", payload)
 
 
