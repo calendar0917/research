@@ -154,9 +154,12 @@ Per bond type (OGB `bond_type` field; 0=single, 1=double, 2=triple,
 | 2 triple | 46 | 0.001069 | 0.000721 | 0.848 | 63.0 % |
 | 3 aromatic | 7,647 | **0.002024** | **0.001082** | 0.214 | 90.8 % |
 
-Aromatic bonds carry the largest coupling magnitude and are predominantly
-negative; single/double bonds are smaller and predominantly positive. This is a
-descriptive split of a learned latent correction, not a chemical causal claim.
+The corresponding variances of the per-bond signed delta are 1.57e-7 (single),
+3.76e-8 (double), 5.19e-7 (triple) and 1.17e-6 (aromatic); the overall
+all-entry delta variance is 2.49e-5. Aromatic bonds carry the largest coupling
+magnitude and are predominantly negative; single/double bonds are smaller and
+predominantly positive. This is a descriptive split of a learned latent
+correction, not a chemical causal claim.
 
 ### Endpoint-combination variation
 
