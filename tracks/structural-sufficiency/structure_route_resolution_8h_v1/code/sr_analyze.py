@@ -149,11 +149,14 @@ def whole_molecule(runs: list[dict[str, Any]], n_boot: int = N_BOOT,
 
 
 def contrast_values(runs: list[dict[str, Any]], split: str,
-                    draws: Sequence[np.ndarray]) -> dict[tuple[str, int], np.ndarray]:
+                    draws: Sequence[np.ndarray]
+                    ) -> tuple[dict[tuple[str, int], np.ndarray],
+                               dict[tuple[str, int], float]]:
     labels = D.load_bundle(split).labels
     rows = D.load_bundle(split).eval_rows
     y = labels[rows]
     values: dict[tuple[str, int], np.ndarray] = {}
+    points: dict[tuple[str, int], float] = {}
     for run in runs:
         m = run["manifest"]
         if run_split(m) != split:
@@ -161,15 +164,16 @@ def contrast_values(runs: list[dict[str, Any]], split: str,
         if not all(int(r) in run["pred"] for r in rows.tolist()):
             continue
         pred = np.asarray([run["pred"][int(r)] for r in rows.tolist()])
-        values[(str(m["arm"]), int(m["seed"]))] = np.asarray(
-            [C.rmse(pred[pos], y[pos]) for pos in draws])
-    return values
+        arm = "R2_REF" if str(m["arm"]) == "SENTENCE_BASE" else str(m["arm"])
+        key = (arm, int(m["seed"]))
+        values[key] = np.asarray([C.rmse(pred[pos], y[pos]) for pos in draws])
+        points[key] = C.rmse(pred, y)
+    return values, points
 
 
 def contrasts(runs: list[dict[str, Any]], split: str,
               draws: Sequence[np.ndarray]) -> list[dict[str, Any]]:
-    values = contrast_values(runs, split, draws)
-    point = {k: float(np.mean(v)) for k, v in values.items()}
+    values, points = contrast_values(runs, split, draws)
     defs = [
         ("C1", "E_RAW", "E_MOB"),
         ("C2", "F_RAW", "F_MOB"),
@@ -192,16 +196,18 @@ def contrasts(runs: list[dict[str, Any]], split: str,
             continue
         per_seed_gain = np.stack([values[(ref, s)] - values[(cand, s)]
                                   for s in seeds])
-        gain = per_seed_gain.mean(axis=0)
-        lo, hi = np.percentile(gain, [2.5, 97.5])
+        gain_boot = per_seed_gain.mean(axis=0)
+        gain = float(np.mean([points[(ref, s)] - points[(cand, s)]
+                              for s in seeds]))
+        lo, hi = np.percentile(gain_boot, [2.5, 97.5])
         out.append({
             "split": split, "contrast": name, "reference": ref,
             "candidate": cand, "metric": "RMSE",
-            "gain": float(gain.mean()), "ci95_low": float(lo),
+            "gain": gain, "ci95_low": float(lo),
             "ci95_high": float(hi), "n_seeds": len(seeds),
             "seeds": "|".join(str(s) for s in seeds),
-            "reference_error": float(np.mean([point[(ref, s)] for s in seeds])),
-            "candidate_error": float(np.mean([point[(cand, s)] for s in seeds])),
+            "reference_error": float(np.mean([points[(ref, s)] for s in seeds])),
+            "candidate_error": float(np.mean([points[(cand, s)] for s in seeds])),
             "status": "OK",
         })
     # interaction C2 - C1, only on the seeds shared by all four arms
@@ -209,14 +215,17 @@ def contrasts(runs: list[dict[str, Any]], split: str,
     seeds4 = sorted(set.intersection(*[{s for (a, s) in values if a == arm}
                                        for arm in arms4]))
     if seeds4:
-        gain = np.stack([(values[("F_RAW", s)] - values[("F_MOB", s)])
-                         - (values[("E_RAW", s)] - values[("E_MOB", s)])
-                         for s in seeds4]).mean(axis=0)
-        lo, hi = np.percentile(gain, [2.5, 97.5])
+        gain_boot = np.stack([(values[("F_RAW", s)] - values[("F_MOB", s)])
+                              - (values[("E_RAW", s)] - values[("E_MOB", s)])
+                              for s in seeds4]).mean(axis=0)
+        gain = float(np.mean([(points[("F_RAW", s)] - points[("F_MOB", s)])
+                              - (points[("E_RAW", s)] - points[("E_MOB", s)])
+                              for s in seeds4]))
+        lo, hi = np.percentile(gain_boot, [2.5, 97.5])
         out.append({"split": split, "contrast": "C2_minus_C1",
                     "reference": "E_RAW-E_MOB", "candidate": "F_RAW-F_MOB",
                     "metric": "RMSE interaction",
-                    "gain": float(gain.mean()), "ci95_low": float(lo),
+                    "gain": gain, "ci95_low": float(lo),
                     "ci95_high": float(hi), "n_seeds": len(seeds4),
                     "seeds": "|".join(str(s) for s in seeds4), "status": "OK"})
     return out

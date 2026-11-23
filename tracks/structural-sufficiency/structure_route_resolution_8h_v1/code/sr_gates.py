@@ -144,8 +144,12 @@ def main() -> int:
                 "pass": bool(consistent and abs(mean_gain) >= half)}
 
     pair_gates = {}
-    for name, arm, ref in (("P_BASIS_F_RAW", "F_RAW", "F_MOB"),
-                           ("P_SCOPE_EGO2", "G_EGO2_5", "G_FULL5"),
+    for name, arm, ref in (("BASE_E_MOB", "E_MOB", "R2_REF"),
+                           ("BASE_F_MOB", "F_MOB", "R2_REF"),
+                           ("P_BASIS_F_RAW", "F_RAW", "F_MOB"),
+                           ("P_SCOPE_FULL_EGO2", "G_FULL5", "G_EGO2_5"),
+                           ("P_SCOPE_EGO2_R2", "G_EGO2_5", "R2_REF"),
+                           ("P_SCOPE_FULL_R2", "G_FULL5", "R2_REF"),
                            ("P_HEAD_E_BIG", "E_MOB_BIG", "E_MOB"),
                            ("P_HEAD_F_BIG", "F_MOB_BIG", "F_MOB")):
         got = seed_pair(arm, ref)
