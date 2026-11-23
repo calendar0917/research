@@ -53,12 +53,15 @@ SPECS: dict[str, list[dict[str, Any]]] = {
     "p_basis": [
         {"name": "F_RAW_D0_S1", "arm": "F_RAW", "split": "D0", "seed": 1},
     ],
+    "p_head": [
+        {"name": "F_MOB_BIG_D0_S1", "arm": "F_MOB_BIG", "split": "D0", "seed": 1},
+    ],
     "ego3": [
         {"name": "G_EGO3_5_D0_S0", "arm": "G_EGO3_5", "split": "D0", "seed": 0},
     ],
 }
 
-ORDER = ["stage1", "baseline", "big", "p_scope", "p_basis", "ego3"]
+ORDER = ["stage1", "baseline", "big", "p_scope", "p_basis", "p_head", "ego3"]
 
 
 def now() -> datetime:
