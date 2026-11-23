@@ -26,6 +26,13 @@ N_BOOT = 5000
 SEED = 1703
 
 
+def run_split(manifest: Mapping[str, Any]) -> str:
+    value = manifest.get("split_name") or manifest.get("split")
+    if isinstance(value, Mapping):
+        value = value.get("name")
+    return str(value)
+
+
 def read_manifest(run_dir: Path) -> dict[str, Any] | None:
     path = run_dir / "manifest.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.is_file() else None
@@ -85,7 +92,7 @@ def whole_molecule(runs: list[dict[str, Any]], n_boot: int = N_BOOT,
     groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
     for run in runs:
         m = run["manifest"]
-        groups[(str(m["arm"]), str(m["split"]))].append(run)
+        groups[(str(m["arm"]), run_split(m))].append(run)
     table = []
     boot = {}
     for (arm, split), items in sorted(groups.items()):
@@ -146,7 +153,7 @@ def contrast_values(runs: list[dict[str, Any]], split: str,
     values: dict[tuple[str, int], np.ndarray] = {}
     for run in runs:
         m = run["manifest"]
-        if str(m["split"]) != split:
+        if run_split(m) != split:
             continue
         if not all(int(r) in run["pred"] for r in rows.tolist()):
             continue
@@ -289,7 +296,7 @@ def route_c(runs: list[dict[str, Any]]) -> dict[str, Any]:
         if split == "D0":
             for run in runs:
                 m = run["manifest"]
-                if str(m["split"]) != split:
+                if run_split(m) != split:
                     continue
                 pred = run["pred"]
                 if not all(int(r) in pred for r in row_a.tolist()) or \
