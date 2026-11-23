@@ -1,0 +1,81 @@
+{
+ "protocol_id": "r2-sentence-replication-v1",
+ "version": "2026-11-23/v1",
+ "dataset": "ogbg-mollipo",
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "fit-only z-score of the current run's Fit rows",
+  "metric": "RMSE in original label units"
+ },
+ "model": {
+  "round": "graph_word_incidence_composition_pilot_v0",
+  "arm": "SENTENCE_BASE",
+  "use_words": false,
+  "params_total_expected": 416177,
+  "gwic_code_sha256_expected": "a58f942ebf4050114987c58c2cfeaec75f2cf42c6fc945c21bb45030813294a1",
+  "gwic_config_sha256_expected": "9ed13ab795e7ae8c9e2c447d74a452fa9b6a8e0c3c6c6990b578e1f963a7e090",
+  "gwic_config_is_model_config": true,
+  "note": "dims, recipe and the SENTENCE_BASE spec are read from the frozen GWIC-v0 config after sha256 verification; nothing is retyped here"
+ },
+ "atom_scalar_normalization": {
+  "formal_mode": "fit",
+  "v0_mode_available_for_audit": "v0_fit_dev",
+  "deviation_from_v0_implementation": "v0 computed atom scalar mean/scale on fit union dev atoms (label-free); this round recomputes on the run's Fit rows only, following the v0 protocol text"
+ },
+ "splits": {
+  "D0": {
+   "file": "tracks/structural-sufficiency/acra_relation_generalization_pilot_v1/data/split_train_sub_dev.json",
+   "file_sha256": "675289f6f997008d44fdabb4ab65350459fe5bccc5e1e5703e31e31fd794e845",
+   "identity_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e",
+   "fit_rows_sha256": "7edd3c68d946e9f3f7c5613993530dd44c2371956ee031582e123ef79c8bc6c0",
+   "eval_rows_sha256": "eacce8acde66acb6f0045813f8d6103381012ebab8181b7d314a2b66aa387193",
+   "n_fit": 2856,
+   "n_eval": 504
+  },
+  "D1": {
+   "file": "tracks/structural-sufficiency/structural_path_composition_route_v1/data/split_train_sub_dev_d1.json",
+   "file_sha256": "bdcd3f5884c66015aa099bd9c32b45cd6717b0d08b35a6a6c7ef44635fe61fcc",
+   "identity_sha256": "c94e2d4bd92e51ab91119923d61e955f5a2f686fc1751883e858fce88dab6bee",
+   "fit_rows_sha256": "b9f74030ee0decc67005e10963e64d7da16fd70d9a6bf9790f4a1c4afcebebbc",
+   "eval_rows_sha256": "342c1de0ece164e9acba17ba17a48151c90235242e77481e41a1a9820b0380a6",
+   "n_fit": 2856,
+   "n_eval": 504,
+   "role": "reproducibility check on a second frozen scaffold split of official Train, not an independent blind test",
+   "scaffold_algorithm": "RDKit Bemis-Murcko includeChirality=False, acyclic keyed by own SMILES, sorted keys -> default_rng(20261122).permutation -> greedy whole-group until 504",
+   "n_scaffolds_fit": 1318,
+   "n_scaffolds_eval": 267,
+   "n_scaffolds_official_train": 1585
+  }
+ },
+ "runs": [
+  {"run_id": "D0_S1", "split": "D0", "seed": 1, "arm": "SENTENCE_BASE"},
+  {"run_id": "D1_S0", "split": "D1", "seed": 0, "arm": "SENTENCE_BASE"}
+ ],
+ "gwic_v0_reference": {
+  "manifest": "tracks/structural-sufficiency/graph_word_incidence_composition_pilot_v0/results/SENTENCE_BASE_S0/manifest.json",
+  "checkpoint": "tracks/structural-sufficiency/graph_word_incidence_composition_pilot_v0/results/SENTENCE_BASE_S0/state_best.pt",
+  "predictions_dev": "tracks/structural-sufficiency/graph_word_incidence_composition_pilot_v0/results/SENTENCE_BASE_S0/predictions_best_dev.npz",
+  "dev_rmse": 0.5505589717057867,
+  "dev_mae": 0.42758191774670373,
+  "best_epoch": 81,
+  "epochs_run": 126
+ },
+ "historical_coordinates": {
+  "SENTENCE_BASE_D0_s0": 0.5506,
+  "GINE_D0_seed_mean": 0.5266,
+  "GINE_D1_seed_mean": 0.5534,
+  "ACRA_D0": 0.5802,
+  "ACRA_D1": 0.6376,
+  "note": "different recipes and rounds; reference coordinates only, not a matched benchmark"
+ },
+ "verdict_rule": {
+  "replicated_if": {"D0_S1_dev_rmse_max": 0.59, "D1_S0_dev_rmse_max": 0.61},
+  "labels": ["R2_BASELINE_REPLICATED_PRELIMINARY", "R2_BASELINE_SENSITIVITY_UNRESOLVED"],
+  "no_repair": "a missed threshold must not be repaired by tuning, extra runs or architecture changes"
+ },
+ "resource_budget": {
+  "wall_hours_target": 1.0,
+  "gpu_hours_target": 2.0,
+  "note": "target only; measured wall/GPU time is recorded in each manifest"
+ }
+}
