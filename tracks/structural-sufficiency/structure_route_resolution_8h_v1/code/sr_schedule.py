@@ -56,12 +56,21 @@ SPECS: dict[str, list[dict[str, Any]]] = {
     "p_head": [
         {"name": "F_MOB_BIG_D0_S1", "arm": "F_MOB_BIG", "split": "D0", "seed": 1},
     ],
+    "d1": [
+        {"name": "R2_REF_D1_S0", "arm": "R2_REF", "split": "D1", "seed": 0},
+        {"name": "E_MOB_D1_S0", "arm": "E_MOB", "split": "D1", "seed": 0},
+        {"name": "F_MOB_D1_S0", "arm": "F_MOB", "split": "D1", "seed": 0},
+        {"name": "F_RAW_D1_S0", "arm": "F_RAW", "split": "D1", "seed": 0},
+        {"name": "G_EGO2_5_D1_S0", "arm": "G_EGO2_5", "split": "D1", "seed": 0},
+        {"name": "G_FULL5_D1_S0", "arm": "G_FULL5", "split": "D1", "seed": 0},
+        {"name": "F_MOB_BIG_D1_S0", "arm": "F_MOB_BIG", "split": "D1", "seed": 0},
+    ],
     "ego3": [
         {"name": "G_EGO3_5_D0_S0", "arm": "G_EGO3_5", "split": "D0", "seed": 0},
     ],
 }
 
-ORDER = ["stage1", "baseline", "big", "p_scope", "p_basis", "p_head", "ego3"]
+ORDER = ["stage1", "baseline", "big", "p_scope", "p_basis", "p_head", "ego3", "d1"]
 
 
 def now() -> datetime:
