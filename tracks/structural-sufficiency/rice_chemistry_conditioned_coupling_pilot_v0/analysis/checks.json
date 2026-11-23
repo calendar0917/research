@@ -1,0 +1,476 @@
+{
+ "all_pass": true,
+ "checks": [
+  {
+   "description": "Phi(S,v) == sum_{T subset S, v in T} kappa(T,v) on every graph with <= 4 atoms, independent float64 brute-force reference, for both the bond-only and the chemistry-conditioned pair potential",
+   "graphs": 75,
+   "group": "A",
+   "id": "A1",
+   "identities": 1868,
+   "max_error_base": 8.881784197001252e-16,
+   "max_error_conditioned": 8.881784197001252e-16,
+   "status": "PASS",
+   "supports": 1868,
+   "vectorised_max_error_base": 2.886579864025407e-15,
+   "vectorised_max_error_conditioned": 2.6645352591003757e-15
+  },
+  {
+   "description": "float32 production path stays within float32 noise of the float64 reference (reported, informational)",
+   "group": "A",
+   "id": "A2",
+   "max_error": 1.551812525257823e-06,
+   "status": "PASS"
+  },
+  {
+   "cases": 492,
+   "description": "kappa(S,v) == 0 for every disconnected root-anchored S with |S|>1, bond-only and chemistry-conditioned",
+   "group": "B",
+   "id": "B1",
+   "max_abs": 1.7763568394002505e-15,
+   "status": "PASS"
+  },
+  {
+   "description": "with every J_base = 0: delta = 0 and every |S|>=2 kappa is zero",
+   "group": "B",
+   "id": "B2",
+   "max_abs_delta": 0.0,
+   "max_abs_kappa": 1.5543122344752192e-15,
+   "status": "PASS",
+   "supports": 1868
+  },
+  {
+   "description": "3-cycle stores all three internal bonds (closing bond read) and its conditioned kappa differs from the open 3-chain",
+   "group": "C",
+   "id": "C1",
+   "internal_bonds": 3,
+   "kappa_gap": 0.09681256630627712,
+   "status": "PASS"
+  },
+  {
+   "description": "4-clique support uses all six internal bond slots and is finite",
+   "group": "C",
+   "id": "C2",
+   "internal_bonds": 6,
+   "status": "PASS"
+  },
+  {
+   "description": "conditioned order-4 kappa is non-zero on a real 4-cycle",
+   "group": "C",
+   "id": "C3",
+   "kappa4_max": 0.03406908105757786,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_NULL: same attribute multisets, 4-cycle vs triangle+tail, kappa separates the real connectivity",
+   "group": "C",
+   "id": "C4_CC_NULL",
+   "kappa_gap": 0.03755472407547472,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_REAL: same attribute multisets, 4-cycle vs triangle+tail, kappa separates the real connectivity",
+   "group": "C",
+   "id": "C4_CC_REAL",
+   "kappa_gap": 0.04004885120353752,
+   "status": "PASS"
+  },
+  {
+   "certificate_mismatches": 0,
+   "description": "CC_NULL: atom renumbering leaves prediction, canonical word certificates and per-certificate kappa unchanged",
+   "group": "D",
+   "id": "D1_CC_NULL",
+   "kappa_max_diff": 1.3322676295501878e-15,
+   "pred_max_diff": 7.450580596923828e-09,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_NULL: bond direction swap leaves prediction, pair potential and kappa unchanged",
+   "group": "D",
+   "id": "D2_CC_NULL",
+   "j_max_diff": 0.0,
+   "kappa_max_diff": 0.0,
+   "pred_max_diff": 0.0,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_NULL: bond storage order leaves prediction unchanged",
+   "group": "D",
+   "id": "D3_CC_NULL",
+   "pred_max_diff": 0.0,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_NULL: batch composition and molecule position leave the prediction unchanged",
+   "group": "D",
+   "id": "D4_CC_NULL",
+   "pred_max_diff": 1.1641532182693481e-10,
+   "status": "PASS"
+  },
+  {
+   "certificate_mismatches": 0,
+   "description": "CC_REAL: atom renumbering leaves prediction, canonical word certificates and per-certificate kappa unchanged",
+   "group": "D",
+   "id": "D1_CC_REAL",
+   "kappa_max_diff": 1.3322676295501878e-15,
+   "pred_max_diff": 7.2177499532699585e-09,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_REAL: bond direction swap leaves prediction, pair potential and kappa unchanged",
+   "group": "D",
+   "id": "D2_CC_REAL",
+   "j_max_diff": 7.450580596923828e-09,
+   "kappa_max_diff": 0.0,
+   "pred_max_diff": 1.862645149230957e-09,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_REAL: bond storage order leaves prediction unchanged",
+   "group": "D",
+   "id": "D3_CC_REAL",
+   "pred_max_diff": 0.0,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_REAL: batch composition and molecule position leave the prediction unchanged",
+   "group": "D",
+   "id": "D4_CC_REAL",
+   "pred_max_diff": 4.656612873077393e-10,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_NULL: first real batch gradients are finite and non-zero for unary, pairwise, embedding, sentence and readout modules",
+   "grad_norms": {
+    "atom_emb": 0.0003727713833689809,
+    "atom_mlp": 0.0026998280193507133,
+    "bond_emb": 0.00048047457952552554,
+    "bond_mlp": 0.003398513429235651,
+    "readout_mlp": 0.40073955286124374,
+    "sentence_mlp": 0.009974649251316935
+   },
+   "group": "E",
+   "id": "E1_CC_NULL",
+   "loss": 1.523836374282837,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_REAL: first real batch gradients are finite and non-zero for unary, pairwise, embedding, sentence and readout modules",
+   "grad_norms": {
+    "atom_emb": 0.0003575387808980437,
+    "atom_mlp": 0.0028971353955636646,
+    "bond_emb": 0.000527657530108253,
+    "bond_mlp": 0.003651655575898542,
+    "readout_mlp": 0.4175843541349111,
+    "sentence_mlp": 0.010624018420833502
+   },
+   "group": "E",
+   "id": "E1_CC_REAL",
+   "loss": 1.5238497257232666,
+   "status": "PASS"
+  },
+  {
+   "delta_abs_max": 0.0013227907475084066,
+   "delta_abs_mean": 0.00016177182260435075,
+   "delta_grad_norms": {
+    "j_base": 0.4700238108634949,
+    "u": 0.8565013408660889
+   },
+   "description": "the CC_REAL delta term is not detached: its gradient reaches both the unary potential and the bond potential",
+   "group": "E",
+   "id": "E2",
+   "status": "PASS"
+  },
+  {
+   "description": "field-derived conditioned potentials produce non-zero order-3 (3-cycle) and order-4 (4-cycle) kappa",
+   "group": "E",
+   "id": "E3",
+   "kappa3_max": 0.17756700175074025,
+   "kappa4_max": 0.03406908105757786,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_NULL: 20 optimiser steps on D0 Fit reduce the standardised MSE with no NaN/Inf",
+   "first_loss": 0.9926671385765076,
+   "group": "E",
+   "id": "E4_CC_NULL",
+   "last_loss": 0.9591231942176819,
+   "mean_first5": 1.0619964838027953,
+   "mean_last5": 0.9890883326530456,
+   "status": "PASS"
+  },
+  {
+   "description": "CC_REAL: 20 optimiser steps on D0 Fit reduce the standardised MSE with no NaN/Inf",
+   "first_loss": 0.9926341772079468,
+   "group": "E",
+   "id": "E4_CC_REAL",
+   "last_loss": 0.9602702260017395,
+   "mean_first5": 1.0619468569755555,
+   "mean_last5": 0.9899671673774719,
+   "status": "PASS"
+  },
+  {
+   "description": "D0 root-conditioned word census: sizes 2/3/4 exist and every root is covered",
+   "group": "F",
+   "id": "F1",
+   "internal_bonds_total": {
+    "2": 197122,
+    "3": 830487,
+    "4": 1537402
+   },
+   "max_words_per_molecule": 1251,
+   "mean_words_per_molecule": 334.5922619047619,
+   "molecules": 3360,
+   "prep_seconds": 8.249625444412231,
+   "root_count_histogram": {
+    "2": {
+     "1": 14619,
+     "2": 46517,
+     "3": 28043,
+     "4": 1335
+    },
+    "3": {
+     "1": 2011,
+     "10": 272,
+     "11": 99,
+     "12": 47,
+     "13": 15,
+     "14": 4,
+     "2": 10465,
+     "3": 13811,
+     "4": 25383,
+     "5": 12365,
+     "6": 8561,
+     "7": 9816,
+     "8": 6416,
+     "9": 1249
+    },
+    "4": {
+     "0": 2011,
+     "1": 10495,
+     "10": 6971,
+     "11": 1570,
+     "12": 1842,
+     "13": 3399,
+     "14": 975,
+     "15": 1965,
+     "16": 481,
+     "17": 247,
+     "18": 500,
+     "19": 69,
+     "2": 8665,
+     "20": 59,
+     "21": 27,
+     "22": 29,
+     "23": 33,
+     "24": 17,
+     "25": 7,
+     "26": 10,
+     "27": 6,
+     "28": 14,
+     "29": 3,
+     "3": 4985,
+     "30": 4,
+     "32": 2,
+     "33": 4,
+     "35": 3,
+     "4": 23173,
+     "5": 1878,
+     "6": 10626,
+     "7": 4650,
+     "8": 4859,
+     "9": 935
+    }
+   },
+   "root_fraction_with_size": {
+    "2": 1.0,
+    "3": 1.0,
+    "4": 0.9777824424950836
+   },
+   "roots": 90514,
+   "roots_with_size": {
+    "2": 90514,
+    "3": 90514,
+    "4": 88503
+   },
+   "status": "PASS",
+   "words_by_size": {
+    "2": 197122,
+    "3": 415002,
+    "4": 512106
+   },
+   "words_total": 1124230
+  },
+  {
+   "description": "module forward calls per 64-molecule batch do not scale with the word count: one atom MLP, one bond MLP, four order norms, one sentence MLP and one readout for the whole batch",
+   "fwd_bwd_seconds": 0.31099939346313477,
+   "group": "F",
+   "id": "F2",
+   "module_calls": {
+    "atom_mlp": 4,
+    "bond_mlp": 4,
+    "order_norm": 16,
+    "readout_mlp": 4,
+    "sentence_mlp": 4
+   },
+   "status": "PASS",
+   "words_in_batch": 20713
+  },
+  {
+   "cpu_epoch_seconds_estimate": 15.22336721420288,
+   "cpu_step_seconds": 0.3382970492045085,
+   "description": "measured single-process CPU cost of one CC_REAL fit step (informational; formal runs are GPU)",
+   "group": "F",
+   "id": "F3",
+   "parameters": 129198,
+   "prep_seconds": 8.249625444412231,
+   "readout_in_dim": 297,
+   "sentence_in_dim": 388,
+   "status": "PASS",
+   "steps_per_epoch": 45,
+   "timer_seconds": 1.0314888954162598
+  },
+  {
+   "description": "CC_NULL initial forward is bitwise-equivalent to the historical RICE-v0 source: identical init hashes, unary, pair, Phi, kappa and standardized prediction",
+   "group": "G",
+   "id": "G1",
+   "init_hashes_equal": true,
+   "max_diffs": {
+    "j": 0.0,
+    "kappa_2": 0.0,
+    "kappa_3": 0.0,
+    "kappa_4": 0.0,
+    "phi_2": 0.0,
+    "phi_3": 0.0,
+    "phi_4": 0.0,
+    "u": 0.0,
+    "yhat": 0.0
+   },
+   "old_commit": "78f56039d548b6d7f72246cb7e23efaad3a63ea6",
+   "rows": 16,
+   "status": "PASS"
+  },
+  {
+   "description": "historical RICE_CUMULANT best checkpoint replayed through the new CC_NULL path reproduces its Dev predictions and RMSE",
+   "dev_rmse_historical": 0.5993729555642237,
+   "dev_rmse_replayed": 0.5993757986193486,
+   "group": "G",
+   "historical_best_epoch": 114,
+   "historical_npz_tolerance": 0.001,
+   "id": "G2",
+   "note": "the historical .npz was produced on GPU float32; the old source replayed on CPU matches the new CC_NULL path exactly, so the small historical .npz difference is device arithmetic, not a code change",
+   "pred_std_max_diff_vs_historical": 0.0002776980400085449,
+   "pred_std_max_diff_vs_old_source": 0.0,
+   "rows": 504,
+   "status": "PASS"
+  },
+  {
+   "description": "the two arms have identical modules, parameter ledger and random initial state; the arm only selects the pair potential at forward time",
+   "group": "G",
+   "id": "G3",
+   "ledger": {
+    "atom_emb": 2784,
+    "atom_mlp": 11360,
+    "beta": 1,
+    "bond_emb": 156,
+    "bond_mlp": 5488,
+    "order_norm": 768,
+    "readout_mlp": 46465,
+    "sentence_mlp": 62176,
+    "total": 129198
+   },
+   "n_parameters": 129198,
+   "readout_in_dim": 297,
+   "same_init_hashes": true,
+   "same_parameters": true,
+   "same_state_keys": true,
+   "sentence_in_dim": 388,
+   "state_max_abs_diff": 0.0,
+   "status": "PASS"
+  },
+  {
+   "base_max_diff": 0.0,
+   "delta_gap": 0.011599927223329379,
+   "description": "two bonds with identical bond fields but different endpoint atom types share J_base but receive a different delta and J_real",
+   "group": "G",
+   "id": "G4",
+   "j_real_gap": 0.011599927223329393,
+   "status": "PASS"
+  },
+  {
+   "description": "swapping the two endpoints of any physical bond leaves J_real unchanged",
+   "group": "G",
+   "id": "G5",
+   "max_abs_diff": 1.3877787807814457e-17,
+   "status": "PASS"
+  },
+  {
+   "base_abs_max": 0.19390781223773956,
+   "delta_abs_max": 0.0013227907475084066,
+   "description": "J_base, delta and J_real are finite and respect the conservative bounds 2 / 2 / 4",
+   "group": "G",
+   "id": "G6",
+   "real_abs_max": 0.19407102465629578,
+   "status": "PASS"
+  },
+  {
+   "covariance_delta_max_diff": 0.0,
+   "covariance_max_diff": 0.0,
+   "delta_max_diff": 0.0,
+   "description": "simultaneous 0/1 latent-state swap per channel leaves delta invariant, and J_real transforms covariantly as R J_base R + delta * [[1,-1],[-1,1]] (factor algebra only; the downstream readout is not required to be invariant)",
+   "group": "G",
+   "id": "G7",
+   "status": "PASS"
+  },
+  {
+   "description": "the vectorised coupling formula matches an independent NumPy reference to float64 precision",
+   "formula_max_error": 0.0,
+   "group": "G",
+   "id": "G8",
+   "status": "PASS"
+  },
+  {
+   "description": "D0 Fit/Dev identity (2856/504, disjoint, exactly covering official Train), pinned row/split/data hashes, Fit-only z-score and NaN official-Valid labels",
+   "dev_rows_sha256": "eacce8acde66acb6f0045813f8d6103381012ebab8181b7d314a2b66aa387193",
+   "fit_rows_sha256": "7edd3c68d946e9f3f7c5613993530dd44c2371956ee031582e123ef79c8bc6c0",
+   "group": "H",
+   "historical_dev_rows_sha256": "eacce8acde66acb6f0045813f8d6103381012ebab8181b7d314a2b66aa387193",
+   "historical_fit_rows_sha256": "7edd3c68d946e9f3f7c5613993530dd44c2371956ee031582e123ef79c8bc6c0",
+   "historical_split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e",
+   "id": "H1",
+   "intersection": 0,
+   "n_dev": 504,
+   "n_fit": 2856,
+   "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+   "recomputed_fit_scaler": {
+    "mean": 2.185815826311436,
+    "std": 1.2139664740467941
+   },
+   "scaler": {
+    "mean": 2.185815826311436,
+    "n": 2856,
+    "std": 1.2139664740467941
+   },
+   "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e",
+   "status": "PASS",
+   "train_labels_sha256": "a44d29deba1fd36e885feee27e788d1fda0247c01f69565c2d30e9c7251114c2",
+   "union": 3360
+  },
+  {
+   "description": "target and graph-scalar normalisation use Fit rows only; changing Dev labels leaves both unchanged",
+   "group": "H",
+   "id": "H2",
+   "status": "PASS",
+   "target_mean": 2.185815826311436,
+   "target_std": 1.2139664740467941
+  }
+ ],
+ "code_sha256": "2686be326e666b7ba165d161c294777c7954fe6abb194bd08707cd85cc24ab2a",
+ "config_sha256": "56e65e56a24a22f2842eebfe5872a9d70a237f2f47bdd59f61bdcf15e9d7c348",
+ "generated_utc": "2026-11-23T13:54:37Z",
+ "git_commit": "78f56039d548b6d7f72246cb7e23efaad3a63ea6",
+ "git_dirty": false,
+ "n_checks": 36,
+ "n_fail": 0,
+ "n_pass": 36,
+ "round": "rice_chemistry_conditioned_coupling_pilot_v0"
+}

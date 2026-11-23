@@ -125,8 +125,12 @@ def collect_coupling(model: M.RiceModel, structs: Mapping[int, S.MoleculeStruct]
     """Collect delta and the bond / endpoint metadata on one split."""
     rows = np.asarray(rows, np.int64)
     delta_parts: list[np.ndarray] = []
+    k_parts: list[np.ndarray] = []
+    h_parts: list[np.ndarray] = []
     base_abs: list[np.ndarray] = []
     real_abs: list[np.ndarray] = []
+    base_mean_parts: list[np.ndarray] = []
+    real_mean_parts: list[np.ndarray] = []
     changed: list[np.ndarray] = []
     bond_type: list[np.ndarray] = []
     bond_full: list[np.ndarray] = []
@@ -147,9 +151,16 @@ def collect_coupling(model: M.RiceModel, structs: Mapping[int, S.MoleculeStruct]
             bf = coll["bond_feat"].cpu().numpy()
             af = coll["atom_feat"].cpu().numpy()
             bi = coll["bond_index"].cpu().numpy()
+            u = out["u"].detach().cpu().numpy()
+            h = np.tanh((u[..., 1] - u[..., 0]) / 2.0)
+            k = (jb[..., 0] + jb[..., 2] - 2.0 * jb[..., 1]) / 4.0
             delta_parts.append(d.astype(np.float64))
+            k_parts.append(k.astype(np.float64))
+            h_parts.append(h.astype(np.float64))
             base_abs.append(np.abs(jb).max(axis=-1).astype(np.float64))
             real_abs.append(np.abs(jr).max(axis=-1).astype(np.float64))
+            base_mean_parts.append(np.asarray([np.abs(jb).mean(), jb.size], np.float64))
+            real_mean_parts.append(np.asarray([np.abs(jr).mean(), jr.size], np.float64))
             changed.append((np.abs(jr - jb).max(axis=-1) > 1e-8).astype(np.int8))
             bond_type.append(bf[:, 0].astype(np.int64))
             bond_full.append(_mix(bf, bond_dims))
@@ -163,17 +174,29 @@ def collect_coupling(model: M.RiceModel, structs: Mapping[int, S.MoleculeStruct]
             a1 = ac[bi[:, 1]]
             atom_pair_full.append(np.stack([np.minimum(a0, a1), np.maximum(a0, a1)], axis=1))
     delta = np.concatenate(delta_parts, axis=0) if delta_parts else np.zeros((0, 16))
+    k = np.concatenate(k_parts, axis=0) if k_parts else np.zeros((0, 16))
+    h = np.concatenate(h_parts, axis=0) if h_parts else np.zeros((0, 16))
+    base_mean = np.asarray(base_mean_parts, np.float64)
+    real_mean = np.asarray(real_mean_parts, np.float64)
     signed = delta.mean(axis=1) if delta.size else np.zeros(0)
     absmean = np.abs(delta).mean(axis=1) if delta.size else np.zeros(0)
     norm = np.linalg.norm(delta, axis=1) if delta.size else np.zeros(0)
     return {
         "rows": rows,
         "delta": delta,
+        "k": k,
+        "h": h,
         "signed_mean": signed,
         "abs_mean": absmean,
         "norm": norm,
         "base_absmax": np.concatenate(base_abs) if base_abs else np.zeros(0),
         "real_absmax": np.concatenate(real_abs) if real_abs else np.zeros(0),
+        "base_absmean": float((base_mean[:, 0] * base_mean[:, 1]).sum()
+                              / max(1.0, base_mean[:, 1].sum()))
+        if base_mean.size else 0.0,
+        "real_absmean": float((real_mean[:, 0] * real_mean[:, 1]).sum()
+                              / max(1.0, real_mean[:, 1].sum()))
+        if real_mean.size else 0.0,
         "changed": np.concatenate(changed) if changed else np.zeros(0, np.int8),
         "bond_type": np.concatenate(bond_type) if bond_type else np.zeros(0, np.int64),
         "bond_full": np.concatenate(bond_full) if bond_full else np.zeros(0, np.int64),
@@ -289,8 +312,25 @@ def coupling_report(data: Mapping[str, Any], split_name: str) -> dict[str, Any]:
                 float(np.mean(absmean > 0.001)) if absmean.size else 0.0,
             "fraction_bonds_with_changed_J_real_vs_J_base":
                 float(np.mean(np.asarray(data["changed"]) > 0)) if signed.size else 0.0,
+            "j_base_abs_mean": float(data["base_absmean"]),
             "j_base_abs_max": float(np.max(data["base_absmax"])) if signed.size else 0.0,
+            "j_real_abs_mean": float(data["real_absmean"]),
             "j_real_abs_max": float(np.max(data["real_absmax"])) if signed.size else 0.0,
+        },
+        "mechanism_magnitude": {
+            "k_abs_mean": float(np.abs(data["k"]).mean()) if data["k"].size else 0.0,
+            "k_abs_max": float(np.abs(data["k"]).max()) if data["k"].size else 0.0,
+            "k_std": float(data["k"].std()) if data["k"].size else 0.0,
+            "h_abs_mean": float(np.abs(data["h"]).mean()) if data["h"].size else 0.0,
+            "h_abs_max": float(np.abs(data["h"]).max()) if data["h"].size else 0.0,
+            "h_std": float(data["h"].std()) if data["h"].size else 0.0,
+            "delta_abs_mean": float(np.abs(flat).mean()) if flat.size else 0.0,
+            "delta_abs_max": float(np.abs(flat).max()) if flat.size else 0.0,
+            "delta_to_j_base_abs_ratio": float(
+                (np.abs(flat).mean() / data["base_absmean"])
+                if flat.size and data["base_absmean"] > 0 else 0.0),
+            "note": ("J_base and k are per-channel pair-potential values; h is the "
+                     "per-atom, per-channel state-oriented unary contrast"),
         },
         "per_bond_type": _group_report(data, data["bond_type"], "bond_type"),
         "per_full_bond_category": _group_report(data, data["bond_full"],
