@@ -8,6 +8,7 @@ import numpy as np
 import torch
 
 import sr_common as C
+import sr_data as D
 import sr_gnn as G
 import sr_model as M
 import sr_tensor as T
@@ -46,7 +47,7 @@ def load_trained(run_dir: str, arm: str, bundle: Any, cfg: Mapping[str, Any],
     """
     blob = torch.load(C.ROUND_DIR / run_dir / "state_best.pt", map_location=device,
                       weights_only=False)
-    atom_dims, bond_dims = bundle.atom_dims, bundle.bond_dims
+    atom_dims, bond_dims = D.feature_dims()
     placeholder = {"graph_mean": np.zeros(8), "graph_scale": np.ones(8)}
     if arm in M.ARMS:
         model, _ = M.build_family_models(cfg, atom_dims, bond_dims, 0, placeholder, arm)

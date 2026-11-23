@@ -1,0 +1,103 @@
+{
+ "BASIS": {
+  "action": "include F_RAW/F_MOB D0/s1",
+  "formula": "|RMSE(F_RAW)-RMSE(F_MOB)| >= delta or min(F_RAW,F_MOB) <= R2+epsilon",
+  "gap": 0.011485167609576297,
+  "min_f": 0.6074479184286018,
+  "r2_plus_eps": 0.5626792712507136,
+  "trigger": true
+ },
+ "BIG": {
+  "action": "run E_MOB_BIG + F_MOB_BIG D0/s0",
+  "both_mob_dev_better": false,
+  "both_mob_fit_better": false,
+  "formula": "min(RMSE E_MOB,F_MOB,F_RAW) > R2+epsilon and not both MOB dev-better and not both MOB fit-better",
+  "gap": 0.051156709101046194,
+  "min_new": 0.5988359803517598,
+  "r2_plus_eps": 0.5626792712507136,
+  "trigger": true
+ },
+ "D0_seed_packages": {
+  "BASE_E_MOB": {
+   "consistent": true,
+   "gain_s0": -0.051156709101046194,
+   "gain_s1": -0.053896933878561426,
+   "mean_gain": -0.05252682148980381,
+   "pass": true
+  },
+  "BASE_F_MOB": {
+   "consistent": true,
+   "gain_s0": -0.07125381478746451,
+   "gain_s1": -0.039866151142909034,
+   "mean_gain": -0.05555998296518677,
+   "pass": true
+  },
+  "P_BASIS_F_RAW": {
+   "consistent": true,
+   "gain_s0": 0.011485167609576297,
+   "gain_s1": 0.04537848958394142,
+   "mean_gain": 0.028431828596758857,
+   "pass": true
+  },
+  "P_HEAD_F_BIG": {
+   "consistent": true,
+   "gain_s0": 0.04333564683798852,
+   "gain_s1": 0.0065780023267142385,
+   "mean_gain": 0.024956824582351378,
+   "pass": true
+  },
+  "P_SCOPE_EGO2_R2": {
+   "consistent": true,
+   "gain_s0": 0.0315735257134091,
+   "gain_s1": 0.02574807162704862,
+   "mean_gain": 0.02866079867022886,
+   "pass": true
+  },
+  "P_SCOPE_FULL_EGO2": {
+   "consistent": true,
+   "gain_s0": 0.0014157707500318528,
+   "gain_s1": 0.023379929158642287,
+   "mean_gain": 0.01239784995433707,
+   "pass": true
+  },
+  "P_SCOPE_FULL_R2": {
+   "consistent": true,
+   "gain_s0": 0.032989296463440954,
+   "gain_s1": 0.049128000785690906,
+   "mean_gain": 0.04105864862456593,
+   "pass": true
+  }
+ },
+ "EGO3": {
+  "action": "SKIP",
+  "formula": "RMSE(EGO2)-RMSE(FULL) >= delta and FULL <= R2+epsilon",
+  "full_minus_r2": -0.032989296463440954,
+  "gap_ego2_minus_full": 0.0014157707500318528,
+  "trigger": false
+ },
+ "HEAD": {
+  "action": "include F_MOB SMALL/BIG D0/s1",
+  "best_big": 0.5755974392001896,
+  "formula": "family gain SMALL-BIG >= delta or best BIG <= R2+epsilon; larger gain, tie F",
+  "gains": {
+   "E": -0.028073046210744468,
+   "F": 0.04333564683798852
+  },
+  "selected_family": "F",
+  "trigger": true
+ },
+ "observed": {
+  "E_MOB_D0_S0": 0.5988359803517598,
+  "E_RAW_D0_S0": 0.7177018016984148,
+  "F_MOB_D0_S0": 0.6189330860381781,
+  "F_RAW_D0_S0": 0.6074479184286018,
+  "G_EGO2_D0_S0": 0.5161057455373045,
+  "G_FULL5_D0_S0": 0.5146899747872726,
+  "R2_D0_S0": 0.5476792712507136
+ },
+ "thresholds": {
+  "delta": 0.01,
+  "delta_half": 0.005,
+  "epsilon": 0.015
+ }
+}

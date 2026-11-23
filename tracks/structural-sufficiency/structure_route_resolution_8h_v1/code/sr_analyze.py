@@ -305,7 +305,7 @@ def route_c(runs: list[dict[str, Any]]) -> dict[str, Any]:
                 "rmse": float(np.sqrt(np.mean((p - delta) ** 2))),
                 "n_pairs": int(idx.size), "status": "OK",
             })
-        if split == "D0":
+        if True:
             for run in runs:
                 m = run["manifest"]
                 if run_split(m) != split:
@@ -384,6 +384,9 @@ def main() -> int:
             for scope, values in scopes.items():
                 row = {"split": split, "scope": scope}
                 row.update(values)
+                counts = row.pop("transform_support_counts", {}) or {}
+                for key in ("unseen", "one_component", "two_plus_components"):
+                    row[f"transform_{key}"] = counts.get(key)
                 rows.append(row)
         C.write_csv(out / "response_support.csv", rows)
     rc = route_c(runs)

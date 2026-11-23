@@ -1,0 +1,174 @@
+{
+ "schema": "structure_route_resolution_8h_v1.decision.v1",
+ "created_utc": "2026-11-23T19:28:04Z",
+ "routes": {
+  "A": {
+   "question": "Is the RICE effect due to the finite-state energy constraint, the Mobius decomposition, or their combination?",
+   "status": "INTERNAL_GAIN_ONLY",
+   "promotion": "SCREEN_ONLY",
+   "answer": "No factor is a robust standalone explanation. Mobius strongly improves the energy response at D0/s0 (E_RAW-E_MOB +0.1189), but it hurts the free response on both seeds (F_RAW-F_MOB -0.0284; s0 -0.0115, s1 -0.0454). The E/F ranking flips across seeds (C3 -0.0030, CI includes 0). Every A arm is worse than R2 on the D0 two-seed mean (E_MOB -0.0525, F_MOB -0.0556, F_RAW -0.0271), and D1/s0 agrees for E_MOB/F_RAW; F_MOB is only +0.0037 better than R2 on D1/s0. Larger capacity helps F (+0.0433 s0, +0.0066 s1) but hurts E (-0.0281 s0), and F_BIG remains worse than R2. The large Mobius-vs-RAW contrast is single-seed (E_RAW only s0), so it is an internal, energy-specific signal, not a promoted effect.",
+   "key_numbers": {
+    "C1_E_RAW_minus_E_MOB_D0_s0": {
+     "gain": 0.11886582134665502,
+     "ci95": [
+      0.045445297717179096,
+      0.20212979394164504
+     ],
+     "n_seeds": 1
+    },
+    "C2_F_RAW_minus_F_MOB_D0_2seed": {
+     "gain": -0.028431828596758857,
+     "ci95": [
+      -0.06114820506815569,
+      0.0022519853287770847
+     ]
+    },
+    "C3_E_MOB_minus_F_MOB_D0_2seed": {
+     "gain": -0.0030331614753829617,
+     "ci95": [
+      -0.04280877339176616,
+      0.03795514156259325
+     ]
+    },
+    "E_MOB_minus_R2_D0_2seed": {
+     "gain": -0.05252682148980381,
+     "ci95": [
+      -0.10183589436617646,
+      -0.005938371587328263
+     ]
+    },
+    "F_MOB_minus_R2_D0_2seed": {
+     "gain": -0.05555998296518677,
+     "ci95": [
+      -0.09637804299781669,
+      -0.013791302537808183
+     ]
+    },
+    "F_RAW_minus_R2_D0_2seed": {
+     "gain": -0.027128154368427915,
+     "ci95": [
+      -0.07255523394035554,
+      0.016797126406345182
+     ]
+    },
+    "F_BIG_minus_F_MOB_D0_2seed": {
+     "gain": 0.024956824582351378
+    },
+    "E_BIG_minus_E_MOB_D0_s0": {
+     "gain": -0.028073046210744468
+    }
+   }
+  },
+  "B": {
+   "question": "With a fixed five-layer network/parameters/molecular readout, does message range beyond radius 2 improve task performance?",
+   "status": "SEED_OR_SPLIT_SENSITIVE",
+   "promotion": "SCREEN_ONLY",
+   "answer": "No reliable improvement. FULL vs EGO2 is 0.5147 vs 0.5161 at D0/s0 (gap 0.0014, far below delta=0.01), 0.5119 vs 0.5353 at D0/s1 (gap 0.0234), 0.5803 vs 0.5563 at D1/s0 (EGO2 better by 0.0239), and 0.5517 vs 0.5523 at the D1/s1 conflict pair (gap 0.0006). The sign is not stable. Both G arms are competitive with or better than R2 on the D0 two-seed mean (+0.0287 EGO2, +0.0411 FULL), but D1/s0 FULL is worse than R2 (-0.0165) while EGO2 is slightly better (+0.0075). The fixed EGO3 trigger (s0 gap >= delta) did not fire. Local radius-2 ego encoding is sufficient; deeper range is not supported.",
+   "key_numbers": {
+    "D0_s0_FULL": 0.5146899747872726,
+    "D0_s0_EGO2": 0.5161057455373045,
+    "D0_s1_FULL": 0.5119034308527237,
+    "D0_s1_EGO2": 0.535283360011366,
+    "D1_s0_FULL": 0.5802680721836688,
+    "D1_s0_EGO2": 0.556328373514288,
+    "D1_s1_FULL": 0.5517155791378984,
+    "D1_s1_EGO2": 0.552333202810399,
+    "D0_2seed_FULL_minus_R2": {
+     "gain": 0.04105864862456593,
+     "ci95": [
+      0.008896444423220455,
+      0.07299259411050697
+     ]
+    },
+    "D0_2seed_EGO2_minus_R2": {
+     "gain": 0.02866079867022886,
+     "ci95": [
+      -0.005965897030858601,
+      0.062038854950179106
+     ]
+    }
+   }
+  },
+  "C": {
+   "question": "Can the antisymmetric transform-by-context response model predict held-out real-molecular differences and beat lookup or whole-molecule model differences?",
+   "status": "SCREEN_ONLY",
+   "promotion": "NOT_PROMOTED",
+   "answer": "The transform kernel beats lookup (K_TRANSFORM 0.5446 vs EXACT_MEAN 0.6858 on D0; 0.3604 vs 0.5063 on D1), but conditional context does not add robustly: C5 K_CONDITIONAL_R2 gain over K_TRANSFORM is +0.0531 on D0 (CI [-0.0070,+0.1180]) and -0.0161 on D1 (CI [-0.0781,+0.0465]); D0 strict-new cores gain +0.0491 (CI upper +0.0092). K_CONTEXT_ID beats K_CONDITIONAL_R2 on D1 (0.3601 vs 0.3769). The best neural whole-molecule difference is better than both kernels on both splits (D0 G_EGO2_S0 0.3480; D1 G_EGO2_S0 0.3441 vs K_CONDITIONAL_R2 0.4915/0.3769). Conditional response is an internal D0 gain only, not a competitive route.",
+   "key_numbers": {
+    "D0_C5_gain": 0.05313276580873214,
+    "D0_C5_ci": [
+     -0.00696268869993647,
+     0.11803111253445013
+    ],
+    "D1_C5_gain": -0.016112001372499317,
+    "D1_C5_ci": [
+     -0.07808697496906732,
+     0.04653386785879345
+    ],
+    "D0_strict_new_gain": 0.0491,
+    "D0_K_TRANSFORM": 0.5445579443052696,
+    "D1_K_TRANSFORM": 0.3604122073259338,
+    "D0_K_CONDITIONAL_R2": 0.4915417184276734,
+    "D1_K_CONDITIONAL_R2": 0.3769194120292539,
+    "D0_neural_best": {
+     "arm": "G_EGO2_5_S0",
+     "component_equal_mae": 0.3479765529489318
+    },
+    "D1_neural_best": {
+     "arm": "G_EGO2_5_S0",
+     "component_equal_mae": 0.34414538091693225
+    },
+    "D0_strict_new_ci": [
+     -0.0092,
+     0.1081
+    ]
+   }
+  }
+ },
+ "executed": {
+  "gpu_runs": 25,
+  "gpu_hours": 4.7425802493757665,
+  "d0_seed_pairs": [
+   "R2_REF",
+   "E_MOB",
+   "F_MOB",
+   "F_RAW",
+   "G_EGO2_5",
+   "G_FULL5",
+   "F_MOB_BIG"
+  ],
+  "d1_base": [
+   "R2_REF",
+   "E_MOB",
+   "F_MOB"
+  ],
+  "d1_packages": [
+   "P_SCOPE: G_EGO2_5,G_FULL5",
+   "P_BASIS: F_RAW",
+   "P_HEAD: F_MOB_BIG"
+  ],
+  "conflict_package": [
+   "G_EGO2_5_D1_S1",
+   "G_FULL5_D1_S1"
+  ],
+  "skipped": [
+   "EGO3 (s0 gap 0.0014 < delta)",
+   "P_HEAD E family (F had larger BIG gain)",
+   "F_RAW/E_RAW D1 (not in locked base/packages)",
+   "E_RAW s1 (C1 remains single-seed)"
+  ]
+ },
+ "artifacts": {
+  "queue_lock": "analysis/queue_lock.json",
+  "conflict_selection": "analysis/conflict_selection.json",
+  "gates": "analysis/gates.json",
+  "branch_log": "analysis/branch_log.jsonl",
+  "replay": "analysis/replay.json",
+  "checks": "analysis/checks.json",
+  "figures": [
+   "analysis/figures/route_a_rmse.png",
+   "analysis/figures/route_b_scope.png",
+   "analysis/figures/route_c_pairs.png"
+  ]
+ }
+}
