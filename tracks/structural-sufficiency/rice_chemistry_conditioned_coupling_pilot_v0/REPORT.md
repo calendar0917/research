@@ -23,7 +23,9 @@ fraction of resamples with Delta > 0: 0.2808
 ```
 
 `CC_REAL` is slightly better on Fit (0.430629 vs 0.431363) but slightly worse on
-Dev, so the change is not a held-out improvement. The coupling is not a no-op:
+Dev, so the change is not a held-out improvement. It also does not narrow the gap
+to R2-SENTENCE D0 s0 (0.5506): `CC_REAL` is 0.0488 behind, slightly farther than
+`CC_NULL` (0.0484 behind). The coupling is not a no-op:
 99.85 % of Dev bonds have `J_real != J_base`, the mean `|delta|` is 0.001251
 (0.83 % of the mean `|J_base|`), its maximum is 0.031851, and 68.7 % of the
 within-bond-type variance of `delta` is explained by different endpoint element
