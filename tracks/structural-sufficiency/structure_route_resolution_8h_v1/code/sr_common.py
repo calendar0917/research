@@ -265,8 +265,9 @@ def git_commit() -> str:
 
 def git_dirty() -> bool:
     try:
-        out = subprocess.check_output(["git", "status", "--porcelain"], cwd=REPO_ROOT,
-                                      text=True)
+        out = subprocess.check_output(
+            ["git", "status", "--porcelain", "--untracked-files=no"],
+            cwd=REPO_ROOT, text=True)
         return bool(out.strip())
     except Exception:
         return True
