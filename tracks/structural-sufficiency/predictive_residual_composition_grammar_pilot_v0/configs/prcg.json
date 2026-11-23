@@ -1,0 +1,94 @@
+{
+ "protocol_id": "prcg-v0-predictive-residual-composition-grammar-pilot",
+ "version": "2026-11-23/v1",
+ "dataset": "ogbg-mollipo",
+ "split": {
+  "name": "D0",
+  "fit": "train_sub_rows",
+  "eval": "dev_rows",
+  "n_fit": 2856,
+  "n_eval": 504,
+  "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+ },
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "fit-only z-score of the D0 Fit rows",
+  "metric": "RMSE in original label units"
+ },
+ "word": {
+  "max_atoms": 5,
+  "type_fields_atom": ["atomic number", "formal charge", "aromaticity"],
+  "type_fields_bond": ["bond type", "conjugation"],
+  "connected_induced_only": true,
+  "partition": "every atom covered exactly once; every real bond is internal or inter-word",
+  "matching": "greedy maximal matching of a rule's occurrences, ordered by exact canonical atom ranks"
+ },
+ "grammar": {
+  "learn_from": "D0 Fit rows and their labels only",
+  "ridge_lambda": 5.0,
+  "candidate_cap": 400,
+  "max_rules": 32,
+  "min_fold_molecules": 8,
+  "min_fold_scaffolds": 4,
+  "fold_seed": 20261201,
+  "min_frequency_molecules": 2,
+  "decision_improvement": 0.0,
+  "frequency_rule_count": "exactly the number of rules the predictive grammar accepted",
+  "one_rule_per_parent_type": true
+ },
+ "arms": {
+  "FREQ_GRAMMAR": {"grammar": "frequency", "port": "REAL"},
+  "PRED_GRAMMAR": {"grammar": "predictive", "port": "REAL"},
+  "PRED_PORT_MEAN": {"grammar": "predictive", "port": "MEAN"}
+ },
+ "dims": {
+  "z_dim": 48,
+  "atom_hidden": 48,
+  "compose_hidden": 96,
+  "q_dim": 32,
+  "q_hidden": 128,
+  "f_hidden": 32,
+  "readout_hidden": 128,
+  "readout_mid": 64,
+  "bond_dim": 10,
+  "stereo_dim": 4,
+  "dropout": 0.0
+ },
+ "recipe": {
+  "optimizer": "AdamW",
+  "peak_lr": 0.0003,
+  "min_lr": 0.00001,
+  "weight_decay": 0.0001,
+  "gradient_clip": 5.0,
+  "batch_molecules": 64,
+  "warmup_epochs": 5,
+  "schedule": "cosine",
+  "epochs": 240,
+  "eval_batch": 256,
+  "patience": 45,
+  "min_epochs": 80,
+  "objective": "whole-molecule standardized MSE only",
+  "auxiliary_targets": false,
+  "search": "none"
+ },
+ "route_classification": {
+  "promising_max_rmse": 0.56,
+  "promising_min_delta_discovery": 0.015,
+  "promising_min_delta_port": 0.01,
+  "sign_convention": "delta_discovery = RMSE(FREQ_GRAMMAR) - RMSE(PRED_GRAMMAR); delta_port = RMSE(PRED_PORT_MEAN) - RMSE(PRED_GRAMMAR); positive = PRED_GRAMMAR better",
+  "precedence": ["PROMISING_PREDICTIVE_GRAMMAR", "LEXICON_SIGNAL_WITHOUT_PORT_GAIN",
+                  "PORT_SIGNAL_WITHOUT_PREDICTIVE_LEXICON", "NO_TRANSFERABLE_PREDICTIVE_MERGE",
+                  "INCONCLUSIVE_SINGLE_SEED"]
+ },
+ "historical_d0_rmse": {
+  "R2_SENTENCE_BASE_S0": 0.5506,
+  "R2_SENTENCE_BASE_S1": 0.5464,
+  "GINE_REF": 0.5266,
+  "PSC_POOL_BAG_PAIR": 0.6871,
+  "PATH_COUNT_RIDGE": 0.6167
+ },
+ "resource_budget": {
+  "wall_hours_target": 2.0,
+  "gpu_hours_target": 4.0
+ }
+}

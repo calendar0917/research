@@ -1,0 +1,464 @@
+{
+ "all_pass": true,
+ "checks": [
+  {
+   "check": "A1_raw_cache_identity",
+   "detail": {
+    "members": 19,
+    "sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c"
+   },
+   "ok": true
+  },
+  {
+   "check": "A2_split_identity",
+   "detail": {
+    "dev_rows_sha256": "eacce8acde66acb6f0045813f8d6103381012ebab8181b7d314a2b66aa387193",
+    "fit_rows_sha256": "7edd3c68d946e9f3f7c5613993530dd44c2371956ee031582e123ef79c8bc6c0",
+    "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+   },
+   "ok": true
+  },
+  {
+   "check": "A3_frozen_grammar_shape",
+   "detail": {
+    "freq_sizes": [
+     2,
+     4,
+     2,
+     3,
+     2,
+     2,
+     3,
+     2,
+     3,
+     4,
+     5,
+     3,
+     3,
+     4,
+     5,
+     5,
+     2,
+     3,
+     3,
+     5,
+     3,
+     3,
+     5,
+     5,
+     3,
+     5,
+     4,
+     5,
+     5,
+     2,
+     4,
+     2
+    ],
+    "frequency_rules": 32,
+    "pred_sizes": [
+     2,
+     2,
+     2,
+     2,
+     3,
+     4,
+     2,
+     2,
+     4,
+     2,
+     4,
+     5,
+     3,
+     5,
+     2,
+     2,
+     2,
+     2,
+     3,
+     3,
+     2,
+     2,
+     5,
+     2,
+     4,
+     5,
+     5,
+     3,
+     5,
+     4,
+     3,
+     2
+    ],
+    "predictive_rules": 32,
+    "trace_rounds": 32
+   },
+   "ok": true
+  },
+  {
+   "check": "A4_one_rule_per_parent_type",
+   "detail": {
+    "freq_unique_parents": 32,
+    "pred_unique_parents": 32
+   },
+   "ok": true
+  },
+  {
+   "check": "B1_no_official_valid_label",
+   "detail": {
+    "finite_valid_labels": 0,
+    "label_rows": 3360
+   },
+   "ok": true
+  },
+  {
+   "check": "B2_no_label_outside_official_train",
+   "detail": {
+    "finite_labels_outside_train": 0,
+    "finite_train_labels": 3360
+   },
+   "ok": true
+  },
+  {
+   "check": "C1_words_are_real_connected_induced_supports",
+   "detail": {
+    "frequency": {
+     "bonds": 98561,
+     "molecules": 3360,
+     "n_words": 34513,
+     "violations": {
+      "child_type_mismatch": 0,
+      "duplicate_atom": 0,
+      "invented_bond": 0,
+      "missing_bond": 0,
+      "non_connected": 0,
+      "parent_type_mismatch": 0,
+      "parent_union_mismatch": 0,
+      "too_large": 0,
+      "uncovered_atom": 0
+     }
+    },
+    "predictive": {
+     "bonds": 98561,
+     "molecules": 3360,
+     "n_words": 68405,
+     "violations": {
+      "child_type_mismatch": 0,
+      "duplicate_atom": 0,
+      "invented_bond": 0,
+      "missing_bond": 0,
+      "non_connected": 0,
+      "parent_type_mismatch": 0,
+      "parent_union_mismatch": 0,
+      "too_large": 0,
+      "uncovered_atom": 0
+     }
+    }
+   },
+   "ok": true
+  },
+  {
+   "check": "C2_rule_replay_deterministic",
+   "detail": {
+    "frequency": 0,
+    "predictive": 0
+   },
+   "ok": true
+  },
+  {
+   "check": "C3_discovery_round_replay",
+   "detail": {
+    "replayed": [
+     "k1[5160][]@@k1[7208][]@@b0c0:L0R0:1x1",
+     "k1[5160][]@@k1[7208][]@@b0c1:L0R0:1x1",
+     "k1[5160][]@@k1[7208][]@@b1c1:L0R0:1x1"
+    ]
+   },
+   "ok": true
+  },
+  {
+   "check": "D1_same_type_same_internal_state",
+   "detail": {
+    "frequency": {
+     "max_within_type_z_dispersion": 1.0728836059570312e-06,
+     "n_types": 51,
+     "n_words": 146515
+    },
+    "predictive": {
+     "max_within_type_z_dispersion": 1.6689300537109375e-06,
+     "n_types": 51,
+     "n_words": 112623
+    }
+   },
+   "ok": true
+  },
+  {
+   "check": "E1_atom_renumbering_invariance",
+   "detail": {
+    "bond_order_prediction_max_abs_diff": 2.384185791015625e-07,
+    "n_molecules": 120,
+    "renumber_automorphism": 120,
+    "renumber_automorphism_violation": 0,
+    "renumber_partition_mismatch": 0,
+    "renumber_prediction_max_abs_diff": 4.76837158203125e-07,
+    "renumber_word_type_multiset_mismatch": 0
+   },
+   "ok": true
+  },
+  {
+   "check": "E2_bond_order_invariance",
+   "detail": {
+    "max_abs_diff": 2.384185791015625e-07
+   },
+   "ok": true
+  },
+  {
+   "check": "E3_batch_order_invariance",
+   "detail": {
+    "max_abs_diff": 1.7881393432617188e-07
+   },
+   "ok": true
+  },
+  {
+   "check": "F1_single_port_role_equals_mean",
+   "detail": {
+    "multi_port_words": 188,
+    "single_port_fraction": 0.8533541341653667,
+    "single_port_words": 1094
+   },
+   "ok": true
+  },
+  {
+   "check": "F2_real_vs_mean_only_role_fields",
+   "detail": {
+    "differing_role_fields": [
+     "e_i",
+     "e_j",
+     "x_l",
+     "x_r"
+    ],
+    "z_max_abs_diff": 0.19689103960990906
+   },
+   "ok": true
+  },
+  {
+   "check": "F3_checkpoint_switches_port_mode",
+   "detail": {
+    "max_abs_diff": 0.02281785011291504,
+    "mean_abs_diff": 0.006136175245046616
+   },
+   "ok": true
+  },
+  {
+   "check": "G1_compose_q_gradients_finite_nonzero",
+   "detail": {
+    "atom_mlp": {
+     "max_norm": 1.7145156860351562,
+     "min_norm": 0.2632090449333191,
+     "n": 4
+    },
+    "compose": {
+     "max_norm": 15.531423568725586,
+     "min_norm": 0.8061372637748718,
+     "n": 6
+    },
+    "emb": {
+     "max_norm": 0.5182005167007446,
+     "min_norm": 0.11072227358818054,
+     "n": 6
+    },
+    "f": {
+     "max_norm": 15.435568809509277,
+     "min_norm": 4.0952911376953125,
+     "n": 4
+    },
+    "q": {
+     "max_norm": 34.3046989440918,
+     "min_norm": 4.9114789962768555,
+     "n": 6
+    },
+    "readout": {
+     "max_norm": 2.4035329818725586,
+     "min_norm": 0.002303574699908495,
+     "n": 6
+    }
+   },
+   "ok": true
+  },
+  {
+   "check": "G2_thirty_steps_reduce_loss",
+   "detail": {
+    "first": 1.9286187887191772,
+    "last": 0.9925010204315186,
+    "ratio": 0.5146175212213153
+   },
+   "ok": true
+  },
+  {
+   "check": "H1_target_scaler_is_fit_only",
+   "detail": {
+    "fit_mean": 2.185815826311436,
+    "fit_std": 1.2139664740467941,
+    "scaler": {
+     "mean": 2.185815826311436,
+     "n": 2856,
+     "std": 1.2139664740467941
+    }
+   },
+   "ok": true
+  },
+  {
+   "check": "H2_graph_standardiser_is_fit_only",
+   "detail": {
+    "graph_mean": [
+     3.28953856563406,
+     3.369610530084288,
+     3.389705882352941,
+     1.0,
+     2.174165548898459,
+     3.304971988795518,
+     0.6805311204726754,
+     0.5399707837889887
+    ],
+    "graph_scale": [
+     0.2837356649768489,
+     0.2929200865362572,
+     1.1005564789481763,
+     1.0,
+     0.06306859976132033,
+     0.4603955634512915,
+     0.1356193789026798,
+     0.17283642464948307
+    ]
+   },
+   "ok": true
+  },
+  {
+   "check": "H3_dev_labels_not_used_and_folds_disjoint",
+   "detail": {
+    "fold_molecules": [
+     1428,
+     1428
+    ],
+    "fold_scaffolds": [
+     677,
+     677
+    ],
+    "rules_after_dev_label_shift_identical": true,
+    "shared_fold_scaffolds": 0
+   },
+   "ok": true
+  },
+  {
+   "check": "I1_word_states_not_constant_at_init",
+   "detail": {
+    "compose_dispersion": [
+     0.3351527154445648,
+     0.5336979627609253,
+     2.6358938217163086,
+     2.642273187637329
+    ],
+    "fraction_words_insensitive_to_port_mode": 0.9737344980239868,
+    "z_effective_rank": {
+     "participation_ratio": 1.722356208364624,
+     "top_singular_fraction": 0.7249126876199279
+    },
+    "z_variance_mean": 0.17058229446411133
+   },
+   "ok": true
+  }
+ ],
+ "generated_utc": "2026-11-23T05:38:26Z",
+ "git_commit": "5242324a45eaf3a2da3529219f98cc41397cd94c",
+ "grammar_stats_summary": {
+  "frequency": {
+   "dev": {
+    "mean_words_per_molecule": 10.511904761904763,
+    "multi_port_word_fraction": 0.6404303510758776,
+    "n_word_types": 45,
+    "size_histogram": {
+     "1": 1351,
+     "2": 1331,
+     "3": 1260,
+     "4": 772,
+     "5": 584
+    },
+    "type_cross_scaffold_reuse_fraction": 1.0
+   },
+   "fit": {
+    "mean_words_per_molecule": 10.229341736694678,
+    "multi_port_word_fraction": 0.6372411432483314,
+    "n_word_types": 51,
+    "size_histogram": {
+     "1": 7598,
+     "2": 7247,
+     "3": 6281,
+     "4": 4667,
+     "5": 3422
+    },
+    "type_cross_scaffold_reuse_fraction": 0.9607843137254902
+   }
+  },
+  "predictive": {
+   "dev": {
+    "mean_words_per_molecule": 20.569444444444443,
+    "multi_port_word_fraction": 0.1683225619754992,
+    "n_word_types": 44,
+    "size_histogram": {
+     "1": 7903,
+     "2": 1799,
+     "3": 465,
+     "4": 95,
+     "5": 105
+    },
+    "type_cross_scaffold_reuse_fraction": 1.0
+   },
+   "fit": {
+    "mean_words_per_molecule": 20.321428571428573,
+    "multi_port_word_fraction": 0.16030876322409457,
+    "n_word_types": 51,
+    "size_histogram": {
+     "1": 44937,
+     "2": 9357,
+     "3": 2552,
+     "4": 554,
+     "5": 638
+    },
+    "type_cross_scaffold_reuse_fraction": 0.9607843137254902
+   }
+  }
+ },
+ "host": "main",
+ "init_hashes": {
+  "atom_emb": "aa688d9b6676710b5a65f0e9b9f95e9aaf728cd07d5053b87da838090e6768bd",
+  "atom_mlp": "2e6e8684f5b33c692225942c2809d9f0432f4fa343d724d3001f1a291470fbea",
+  "bond_emb": "6ef5225a46eb7ff138889e104d8e76831cdf5e0a1a91839a6133168d430e80eb",
+  "compose": "8a39ee9d4364545c28654f07bf14aae17f033be99812573fec9f4dbc7b975b6e",
+  "compose_norm": "168e27dc5c1e49c95a7d31cb446becfd82af39dd1b4eb22d32d07e624a1035f1",
+  "f_mlp": "b0ae25ae4e4ce2e858487599b804181fa785afb04319488688ed299762f2e0a4",
+  "q_mlp": "ede481412186335f66d3284e75a22ed333cedb1ce6627c7e8068f2be5a5ec754",
+  "q_scalar": "714c21da85508c2630811a74444465eeacb32b0a0303d9dad6164b65adbb1558",
+  "readout": "df0c31070803ad99402c456e8a7d2ed044d11859797c39a6dbf36e318aa94196",
+  "stereo_emb": "6128858c945284d5eed9455ced840a8b748677bb43e69d0ed8b36629a128d815"
+ },
+ "molecule_build_seconds": 2.4032726287841797,
+ "n_checks": 22,
+ "n_passed": 22,
+ "params": {
+  "atom_emb": 1596,
+  "atom_mlp": 4128,
+  "bond_emb": 58,
+  "compose": 24240,
+  "compose_norm": 96,
+  "f_mlp": 1985,
+  "q_mlp": 32416,
+  "q_scalar": 33,
+  "readout": 40449,
+  "stereo_emb": 24,
+  "total": 105025
+ },
+ "protocol_id": "prcg-v0-predictive-residual-composition-grammar-pilot",
+ "python": "3.12.15",
+ "torch": "2.5.1+cu124",
+ "walls_seconds": 38.172523021698
+}
