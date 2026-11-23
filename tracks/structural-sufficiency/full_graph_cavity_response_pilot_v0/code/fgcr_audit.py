@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -179,12 +180,26 @@ def main() -> int:
     }
 
     status = "PASS" if all(bool(v.get("pass")) for v in checks.values()) else "FAIL"
+    out_rel = C.relative(Path(args.out))
+    git_status = subprocess.run(
+        ["git", "-C", str(C.REPO_ROOT), "status", "--porcelain"],
+        capture_output=True, text=True, check=True,
+    )
+    dirty_other = []
+    for line in git_status.stdout.splitlines():
+        if not line.strip():
+            continue
+        path = line[3:].strip()
+        if path == out_rel:
+            continue
+        dirty_other.append(line)
     payload = {
         "status": status,
         "checks": checks,
         "run": str(run_dir.relative_to(C.ROUND_DIR)),
         "commit": C.git_commit(),
-        "dirty": C.git_dirty(),
+        "dirty": bool(dirty_other),
+        "dirty_files_excluding_audit_output": dirty_other,
         "environment": C.environment_snapshot(),
     }
     C.write_json(args.out, payload)
