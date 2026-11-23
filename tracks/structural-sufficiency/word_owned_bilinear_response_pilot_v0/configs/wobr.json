@@ -1,0 +1,131 @@
+{
+ "protocol_id": "wobr-v0-word-owned-bilinear-response-pilot",
+ "version": "2026-11-25/v1",
+ "dataset": "ogbg-mollipo",
+ "split": {
+  "name": "official",
+  "train": "train_idx",
+  "valid": "valid_idx",
+  "test": "test_idx",
+  "n_train": 3360,
+  "n_valid": 420,
+  "n_test": 420,
+  "test_label": "DEVELOPMENT_TEST"
+ },
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "official Train only, mean and population std (ddof=0)",
+  "metric": "RMSE and MAE in original label units",
+  "fit_uses_valid_or_test": false
+ },
+ "seed": 0,
+ "sentence": {
+  "definition": "full radius-2 rooted ego graph with every real induced bond",
+  "all_atoms_as_roots": true,
+  "truncation": "none",
+  "trunk": "non-iterative LCRC-style S1 / typed S2 / complete R2 summaries",
+  "h_usage": "candidate score query only; never enters the final prediction directly"
+ },
+ "candidate_word": {
+  "support_min": 1,
+  "support_max": 4,
+  "singleton_required_per_root": true,
+  "connected_induced_only": true,
+  "must_contain_root": true,
+  "deduplicate_by_atom_support": true,
+  "hard_topk": false,
+  "sampling": false,
+  "atom_ids_learnable": false,
+  "boundary_definition": "real induced bonds from S to R2(v) \\ S",
+  "single_atom_internal_bonds": "empty",
+  "single_atom_scalars": "original gwic_structure._word_scalars with root degree 0"
+ },
+ "dims": {
+  "atom": 48,
+  "bond": 24,
+  "sentence": 96,
+  "word": 64,
+  "response": 16,
+  "path_rank": 24,
+  "path_end": 16,
+  "path_close": 8,
+  "nbr": 16,
+  "backbone_hidden": 192,
+  "word_hidden": 160,
+  "score_hidden": 96,
+  "interaction_hidden": 32,
+  "dropout": 0.1
+ },
+ "selection": {
+  "function": "sparsemax",
+  "temperature": 1.0,
+  "score": "ScoreMLP(concat(w_(v,S), h_v))",
+  "normalization_scope": "all candidates owned by the same root",
+  "padding_zero": true,
+  "exact_zeros_allowed": true
+ },
+ "prediction": {
+  "scale": "standardized Train label",
+  "formula": "beta + c_n*log1p(n_atoms) + c_m*log1p(n_physical_bonds) + sum_v dot(a,z_v) + sum_e dot(lambda_e,U(z_u)*U(z_v))/sqrt(16)",
+  "lambda": "tanh(BondInteraction(raw_bond_embedding))",
+  "bond_interaction": "24 -> 32 (SiLU) -> 16 (tanh)",
+  "U": "linear 64 -> 16 without bias",
+  "a": "learnable 64",
+  "extra_readout": false,
+  "h_direct_term": false,
+  "z_post_mix_norm": false
+ },
+ "initialization": {
+  "conventional_modules": "PyTorch default",
+  "sentence_path_gate": "ones (frozen GWIC sentence initialisation)",
+  "a": "normal(0, 0.02)",
+  "U": "Xavier uniform",
+  "bond_interaction_last": "weight normal(0, 0.02), bias 0",
+  "beta_c_n_c_m": 0.0,
+  "seed": 0,
+  "record_fingerprint": true
+ },
+ "recipe": {
+  "optimizer": "AdamW",
+  "peak_lr": 0.0003,
+  "min_lr": 0.00001,
+  "weight_decay": 0.0001,
+  "gradient_clip": 5.0,
+  "batch_molecules": 64,
+  "eval_batch": 256,
+  "warmup_epochs": 5,
+  "schedule": "cosine",
+  "epochs": 240,
+  "min_epochs": 80,
+  "patience": 45,
+  "objective": "whole-molecule standardized Train-label MSE only",
+  "amp": false,
+  "precision": "float32",
+  "auxiliary_loss": false,
+  "distillation": false,
+  "search": "none",
+  "checkpoint": "minimum official Valid RMSE",
+  "early_stopping": "epoch >= min_epochs and epoch - best_valid_epoch >= patience",
+  "evaluate_every_epoch": ["train", "valid", "test"]
+ },
+ "verdict": {
+  "predictive_candidate_max_valid_rmse": 0.65,
+  "weak_predictive_max_valid_rmse": 0.70,
+  "gine_reference_valid_range": [0.61, 0.64],
+  "gine_note": "historical recipe differs; descriptive only, not a matched control",
+  "word_evidence": "multi-atom alpha mass, non-zero contribution, cross-molecule support and sign distribution; no single top-word claim",
+  "word_evidence_rule": "if Valid RMSE > 0.70 -> STOP_THIS_IMPLEMENTATION; otherwise weak if Train multi-atom alpha mass < 0.10 or Train multi-atom absolute-contribution share < 0.10 -> PREDICTIVE_BUT_WORD_EVIDENCE_WEAK; otherwise CONTINUE_DISCUSSION",
+  "labels": {
+   "strong_prediction_weak_word_evidence": "PREDICTIVE_BUT_WORD_EVIDENCE_WEAK",
+   "no_competitive_prediction": "STOP_THIS_IMPLEMENTATION",
+   "both_good": "CONTINUE_DISCUSSION"
+  }
+ },
+ "word_reuse": {
+  "canonicalization": "exact root-fixed permutation enumeration over at most 3 non-root atoms; full 9 atom and 3 bond categorical fields",
+  "min_train_molecules": 20,
+  "min_train_scaffolds": 3,
+  "top_words": 20,
+  "ranking": "Train mean absolute contribution; no Valid/Test labels or effects"
+ }
+}
