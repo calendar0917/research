@@ -1,0 +1,125 @@
+{
+ "protocol_id": "gwic-v0-graph-word-incidence-composition-pilot",
+ "version": "2026-11-23/v1",
+ "dataset": "ogbg-mollipo",
+ "split": {
+  "name": "D0",
+  "fit": "train_sub_rows",
+  "eval": "dev_rows",
+  "n_fit": 2856,
+  "n_eval": 504,
+  "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+ },
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "train-only z-score (D0 fit rows only)",
+  "metric": "RMSE in original label units"
+ },
+ "seeds": [0],
+ "arms": {
+  "SENTENCE_BASE": {"use_words": false, "use_geometry": false, "role": "complete R2 sentence trunk"},
+  "WORD_GEOM_NULL": {"use_words": true, "use_geometry": false, "role": "word content without incidence geometry"},
+  "WORD_REAL": {"use_words": true, "use_geometry": true, "role": "word content with real incidence geometry"}
+ },
+ "sentence": {
+  "definition": "full radius-2 rooted ego graph with every real induced bond",
+  "all_atoms_as_roots": true,
+  "truncation": "none",
+  "distance_buckets": [0, 1, 2],
+  "s2_paths": "all rooted non-backtracking 2-paths v-w-u, u != v",
+  "trunk": "non-iterative LCRC-style S1/S2/R2 summaries, no message passing"
+ },
+ "candidate_word": {
+  "support_min": 2,
+  "support_max": 4,
+  "connected_induced_only": true,
+  "must_contain_root": true,
+  "deduplicate_by_atom_support": true,
+  "candidate_cap_global": 20000000,
+  "cap_fallback": "if the full D0 candidate count exceeds 20000000, change all arms to support_max=3 as one global configuration decision",
+  "hard_topk": false,
+  "atom_ids_learnable": false,
+  "boundary_definition": "real induced bonds from S to R2(v) \\ S"
+ },
+ "dims": {
+  "atom": 48,
+  "bond": 24,
+  "sentence": 96,
+  "word": 64,
+  "q": 64,
+  "path_rank": 24,
+  "path_end": 16,
+  "path_close": 8,
+  "nbr": 16,
+  "backbone_hidden": 192,
+  "word_hidden": 160,
+  "score_hidden": 96,
+  "q_hidden": 128,
+  "readout_hidden": 192,
+  "readout_mid": 96,
+  "dropout": 0.1
+ },
+ "word_encoder": {
+  "shared_mlp": true,
+  "inputs": [
+   "root atom representation",
+   "support atom sum/mean/std",
+   "internal bond sum/mean/std",
+   "per-internal-bond shared joint representation [a+b, |a-b|, a*b, bond attributes] aggregated by sum/mean",
+   "support size, internal bond count, cycle rank",
+   "root degree in word",
+   "induced internal distance distribution",
+   "boundary bond count and boundary categorical type fractions"
+  ],
+  "selection": "softmax over every candidate of the same root; no hard top-k"
+ },
+ "binding": {
+  "coverage": "c_(v,t) = sum_{S: t in S} alpha_(v,S)",
+  "overlap": "o_uv = sum_t c_(u,t) c_(v,t) over real atoms",
+  "directed": "r_uv = c_(u,v), r_vu = c_(v,u)",
+  "q_inputs": ["h_u+h_v", "|h_u-h_v|", "h_u*h_v", "z_u+z_v", "|z_u-z_v|", "z_u*z_v",
+               "bond_emb", "o_uv", "r_uv+r_vu", "|r_uv-r_vu|"],
+  "q_endpoint_swap_invariant": true,
+  "one_pass_only": true
+ },
+ "recipe": {
+  "optimizer": "AdamW",
+  "peak_lr": 0.0003,
+  "min_lr": 0.00001,
+  "weight_decay": 0.0001,
+  "gradient_clip": 5.0,
+  "batch_molecules": 64,
+  "warmup_epochs": 5,
+  "schedule": "cosine",
+  "epochs": 240,
+  "eval_batch": 256,
+  "patience": 45,
+  "min_epochs": 80,
+  "objective": "whole-molecule standardized MSE only",
+  "auxiliary_targets": false,
+  "distillation": false,
+  "search": "none"
+ },
+ "route_classification": {
+  "promising_min_word_gain_vs_base": 0.02,
+  "promising_min_binding_gain_vs_null": 0.015,
+  "promising_max_word_dev_rmse": 0.62,
+  "word_content_min_gain_vs_base": 0.02,
+  "clear_binding_min_gain": 0.015,
+  "ridge_reference_rmse": 0.6167,
+  "sign_convention": "delta_word = RMSE(SENTENCE_BASE) - RMSE(WORD_REAL); delta_binding = RMSE(WORD_GEOM_NULL) - RMSE(WORD_REAL); positive = WORD_REAL better",
+  "precedence": ["PROMISING_WORD_ROUTE", "WORD_CONTENT_ONLY", "NO_COMPETITIVE_WORD_SIGNAL", "INCONCLUSIVE_SINGLE_SEED"]
+ },
+ "historical_d0_rmse": {
+  "PSC_POOL_BAG_PAIR": 0.6871,
+  "PATH_COUNT_RIDGE": 0.6167,
+  "ACRA_REF": 0.5802,
+  "GINE_REF": 0.5266,
+  "source": "tracks/structural-sufficiency/structural_path_composition_route_v1/REPORT.md"
+ },
+ "resource_budget": {
+  "wall_hours_target": 2.0,
+  "gpu_hours_target": 4.0,
+  "note": "target only; actual measured wall/gpu time is recorded in each manifest"
+ }
+}
