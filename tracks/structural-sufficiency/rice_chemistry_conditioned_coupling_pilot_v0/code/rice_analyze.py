@@ -214,15 +214,16 @@ def _endpoint_variation(data: Mapping[str, Any], bond_type: np.ndarray,
         sel = np.nonzero(btype == bt)[0]
         if sel.size == 0:
             continue
+        x_sel = x[sel]
         pairs = ep[sel]
         unique_pairs, inverse = np.unique(pairs, axis=0, return_inverse=True)
-        groups = [sel[np.nonzero(inverse == g)[0]] for g in range(unique_pairs.shape[0])]
+        groups = [np.nonzero(inverse == g)[0] for g in range(unique_pairs.shape[0])]
         groups_stable = [g for g in groups if g.size >= int(min_pair_count)]
-        pair_means = [float(x[g].mean()) for g in groups]
-        dec_all = _weighted_between(groups, x[sel])
-        dec_stable = _weighted_between(groups_stable, x[sel]) if groups_stable else {
-            "total_variance": float(x[sel].var()), "between_variance": 0.0,
-            "within_variance": float(x[sel].var()), "between_fraction": 0.0}
+        pair_means = [float(x_sel[g].mean()) for g in groups]
+        dec_all = _weighted_between(groups, x_sel)
+        dec_stable = _weighted_between(groups_stable, x_sel) if groups_stable else {
+            "total_variance": float(x_sel.var()), "between_variance": 0.0,
+            "within_variance": float(x_sel.var()), "between_fraction": 0.0}
         coverage = (float(sum(g.size for g in groups_stable)) / sel.size
                     if groups_stable else 0.0)
         per_type[str(int(bt))] = {
@@ -242,10 +243,11 @@ def _endpoint_variation(data: Mapping[str, Any], bond_type: np.ndarray,
     within_bt_within = 0.0
     for bt, g in zip(sorted(np.unique(btype).tolist()), bt_groups):
         sel = g
+        x_sel = x[sel]
         pairs = ep[sel]
         unique_pairs, inverse = np.unique(pairs, axis=0, return_inverse=True)
-        groups = [sel[np.nonzero(inverse == k)[0]] for k in range(unique_pairs.shape[0])]
-        dec = _weighted_between(groups, x[sel])
+        groups = [np.nonzero(inverse == k)[0] for k in range(unique_pairs.shape[0])]
+        dec = _weighted_between(groups, x_sel)
         within_bt_between += dec["between_variance"] * sel.size
         within_bt_within += dec["within_variance"] * sel.size
     n = max(1, x.size)
