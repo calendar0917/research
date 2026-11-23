@@ -1,0 +1,121 @@
+{
+ "protocol_id": "rice-v0-rooted-interaction-cumulant-encoder-pilot",
+ "version": "2026-11-24/v1",
+ "dataset": "ogbg-mollipo",
+ "split": {
+  "name": "D0",
+  "fit": "train_sub_rows",
+  "eval": "dev_rows",
+  "n_fit": 2856,
+  "n_eval": 504,
+  "split_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e"
+ },
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "D0 Fit-only z-score",
+  "metric": "RMSE in original label units"
+ },
+ "seeds": [0],
+ "arms": {
+  "RICE_CUMULANT": {"sentence_input": "kappa", "role": "root-conditioned Mobius irreducible interactions"},
+  "RICE_RAW": {"sentence_input": "phi", "role": "control: same supports, same Phi, undecomposed"}
+ },
+ "word": {
+  "root": "every atom of the molecule",
+  "context": "induced subgraph on {t : dist(v,t) <= 2} with every real bond",
+  "support_size": [1, 2, 3, 4],
+  "connected_induced_only": true,
+  "must_contain_root": true,
+  "internal_bonds": "every real bond with both endpoints inside S (triangle closure included)",
+  "coverage": "overlapping supports, no non-overlapping cover required",
+  "root_slot": 0
+ },
+ "energy": {
+  "channels": 16,
+  "states_per_channel": 2,
+  "unary_inputs": "all 9 OGB atom categorical fields",
+  "pair_inputs": "all 3 OGB bond categorical fields",
+  "pair_independent_values": ["00", "01/10", "11"],
+  "pair_symmetry": "J[a,b] == J[b,a] by construction",
+  "potential_bound": 2.0,
+  "normalizer": "logsumexp over all internal state assignments (<= 16 states)",
+  "empty_set": "logZ(empty) = 0",
+  "sampling": "none",
+  "message_passing": "none",
+  "per_word_parameters": "none",
+  "share_across": ["molecules", "roots", "word types"]
+ },
+ "sentence": {
+  "per_order": ["sum", "mean", "std", "log1p(count)"],
+  "per_order_layer_norm": "independent LayerNorm over the [sum, mean, std] block of each order",
+  "order_block_dim": 97,
+  "sentence_in_dim": 388,
+  "h_dim": 96,
+  "readout_inputs": ["h_sum", "h_mean", "h_std", "log1p(atom_count)", "8 fit-standardised graph scalars"],
+  "forbidden_inputs": ["R2 S1/S2 statistics", "closure/path embeddings", "parent hidden vectors",
+                       "parent checkpoints", "distillation", "auxiliary reconstruction"]
+ },
+ "dims": {
+  "channels": 16,
+  "states": 2,
+  "atom_emb": 16,
+  "bond_emb": 12,
+  "atom_hidden": 64,
+  "bond_hidden": 64,
+  "potential_bound": 2.0,
+  "h_dim": 96,
+  "sentence_hidden": 128,
+  "readout_hidden": 128,
+  "readout_mid": 64,
+  "dropout": 0.1,
+  "energy_chunk": 4096
+ },
+ "recipe": {
+  "optimizer": "AdamW",
+  "peak_lr": 0.0003,
+  "min_lr": 0.00001,
+  "weight_decay": 0.0001,
+  "gradient_clip": 5.0,
+  "batch_molecules": 64,
+  "warmup_epochs": 5,
+  "schedule": "cosine",
+  "epochs": 240,
+  "eval_batch": 256,
+  "patience": 45,
+  "min_epochs": 80,
+  "objective": "whole-molecule standardized MSE only",
+  "auxiliary_targets": false,
+  "distillation": false,
+  "search": "none",
+  "checkpoint_selection": "best Dev RMSE"
+ },
+ "mechanism_analysis": {
+  "interventions": [
+   {"id": "zero_ge3", "sizes": [3, 4], "zero_counts": false},
+   {"id": "zero_ge4", "sizes": [4], "zero_counts": false},
+   {"id": "zero_ge2", "sizes": [2, 3, 4], "zero_counts": false},
+   {"id": "zero_block_ge3", "sizes": [3, 4], "zero_counts": true}
+  ],
+  "word_type_certificate": "root-marked attributed induced subgraph, lexicographically minimal relabelling of the non-root slots",
+  "word_type_min_fit_molecules": 10,
+  "word_type_min_fit_scaffolds": 5,
+  "word_type_ranking": "Fit prediction change when every kappa of the type is switched off (frozen checkpoint)"
+ },
+ "verdict": {
+  "promising_max_dev_rmse": 0.60,
+  "promising_min_delta_vs_raw": 0.015,
+  "promising_min_zero_ge3_degradation": 0.015,
+  "precedence": ["RICE_PROMISING", "RICE_MECHANISM_ONLY", "RICE_NO_SUPPORTED_GAIN"],
+  "sign_convention": "Delta = RMSE(RICE_RAW) - RMSE(RICE_CUMULANT); positive = CUMULANT better"
+ },
+ "historical_d0_rmse": {
+  "R2_SENTENCE_S0": 0.5506,
+  "R2_SENTENCE_S1": 0.5464,
+  "GINE_REF": 0.5266,
+  "source": "tracks/structural-sufficiency/r2_sentence_replication_v1/REPORT.md"
+ },
+ "resource_budget": {
+  "gpu_hours_both_arms": 2.0,
+  "note": "hard cap for the two formal arms; preprocessing wall time reported separately"
+ }
+}

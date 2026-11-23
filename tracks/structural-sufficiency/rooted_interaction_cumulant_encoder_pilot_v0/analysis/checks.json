@@ -1,0 +1,284 @@
+{
+ "all_pass": true,
+ "checks": [
+  {
+   "description": "Phi(S,v) == sum_{T subset S, v in T} kappa(T,v) on every graph with <= 4 atoms, independent brute-force subset sum",
+   "graphs": 75,
+   "group": "A",
+   "id": "A1",
+   "identities": 934,
+   "max_error": 8.881784197001252e-16,
+   "status": "PASS",
+   "supports": 934
+  },
+  {
+   "description": "vectorised Phi/kappa == brute-force Phi/kappa (float64)",
+   "group": "A",
+   "id": "A2",
+   "max_error": 3.552713678800501e-15,
+   "status": "PASS"
+  },
+  {
+   "description": "float32 production path stays within float32 noise of the float64 reference (reported, informational)",
+   "group": "A",
+   "id": "A3",
+   "max_error": 1.5729189741797711e-06,
+   "status": "PASS"
+  },
+  {
+   "cases": 246,
+   "description": "kappa(S,v) == 0 for every disconnected root-anchored S with |S|>1",
+   "group": "B",
+   "id": "B1",
+   "max_abs": 1.3322676295501878e-15,
+   "status": "PASS"
+  },
+  {
+   "description": "with every bond potential set to zero, every |S|>=2 kappa is zero",
+   "group": "B",
+   "id": "B2",
+   "max_abs": 1.5543122344752192e-15,
+   "status": "PASS",
+   "supports": 934
+  },
+  {
+   "description": "same {C,C,C,C} atom multiset and same {C-C single x 4} bond multiset, 4-cycle vs triangle+tail: Phi and kappa both separate",
+   "group": "C",
+   "id": "C1",
+   "kappa_gap": 0.032726021710343,
+   "phi_gap": 0.34304284615825686,
+   "status": "PASS"
+  },
+  {
+   "description": "same {C,O,O} atom multiset and same {C-O single x 2} bond multiset, attribute/topology binding swapped (root C in C-O-O with a chain tail vs O-C-O with two leaf O): Phi and kappa both separate",
+   "group": "C",
+   "id": "C2",
+   "kappa_gap": 0.0975789228309264,
+   "phi_gap": 0.42915899792016887,
+   "status": "PASS"
+  },
+  {
+   "description": "3-cycle stores all three internal bonds (closing bond read) and its kappa differs from the open 3-chain",
+   "group": "C",
+   "id": "C3",
+   "internal_bonds": 3,
+   "kappa_gap": 0.09449304367583967,
+   "status": "PASS"
+  },
+  {
+   "description": "4-clique support uses all six internal bond slots and is finite",
+   "finite": true,
+   "group": "C",
+   "id": "C4",
+   "internal_bonds": 6,
+   "status": "PASS"
+  },
+  {
+   "description": "same {C,C,C,C}+{C-C x 3} multiset, 4-path (middle root) vs 4-star: Phi separates them, and the order-4 kappa is identically zero in both (theory: conditional independence of the root branches)",
+   "group": "C",
+   "id": "C5",
+   "kappa_path": 3.3306690738754696e-16,
+   "kappa_star": 4.996003610813204e-16,
+   "phi_gap": 0.3466204188840283,
+   "status": "PASS"
+  },
+  {
+   "certificate_mismatches": 0,
+   "description": "atom renumbering: identical prediction, identical canonical word certificates and identical per-certificate kappa",
+   "group": "D",
+   "id": "D1",
+   "kappa_max_diff": 7.152557373046875e-07,
+   "pred_max_diff": 1.3271346688270569e-08,
+   "status": "PASS"
+  },
+  {
+   "description": "bond direction swap: identical prediction and kappa",
+   "group": "D",
+   "id": "D2",
+   "kappa_max_diff": 0.0,
+   "pred_max_diff": 0.0,
+   "status": "PASS"
+  },
+  {
+   "description": "bond storage order: identical prediction",
+   "group": "D",
+   "id": "D3",
+   "pred_max_diff": 0.0,
+   "status": "PASS"
+  },
+  {
+   "description": "batch composition and molecule position: identical prediction",
+   "group": "D",
+   "id": "D4",
+   "pred_max_diff": 1.979060471057892e-09,
+   "status": "PASS"
+  },
+  {
+   "description": "first real batch: unary and pairwise potential gradients are finite and non-zero, as are embedding/sentence/readout gradients",
+   "grad_norms": {
+    "atom_emb": 0.0003727714065462351,
+    "atom_mlp": 0.0026998280081897974,
+    "bond_emb": 0.0004804745549336076,
+    "bond_mlp": 0.0033985134214162827,
+    "readout_mlp": 0.4007395803928375,
+    "sentence_mlp": 0.009974649176001549
+   },
+   "group": "E",
+   "id": "E1",
+   "loss": 1.523836374282837,
+   "status": "PASS"
+  },
+  {
+   "chain4_root_atoms": [
+    1,
+    2
+   ],
+   "description": "field-derived potentials: order-3 (3-cycle) and order-4 (4-cycle) kappa are non-zero, and the radius-2 constraint excludes the endpoint-rooted 4-chain word",
+   "group": "E",
+   "id": "E2",
+   "kappa3_max": 0.16900657281511555,
+   "kappa4_max": 0.032726021710343084,
+   "status": "PASS"
+  },
+  {
+   "description": "30 optimiser steps on D0 Fit reduce the standardised MSE with no NaN/Inf",
+   "first_loss": 0.9926756024360657,
+   "group": "E",
+   "id": "E3",
+   "last_loss": 0.803431510925293,
+   "mean_first5": 1.062089216709137,
+   "mean_last5": 1.0194162487983705,
+   "status": "PASS"
+  },
+  {
+   "description": "D0 root-conditioned word census: sizes 2/3/4 exist, and every root is covered",
+   "group": "F",
+   "id": "F1",
+   "internal_bonds_total": {
+    "2": 197122,
+    "3": 830487,
+    "4": 1537402
+   },
+   "max_words_per_molecule": 1251,
+   "mean_words_per_molecule": 334.5922619047619,
+   "molecules": 3360,
+   "prep_seconds": 8.27164888381958,
+   "root_count_histogram": {
+    "2": {
+     "1": 14619,
+     "2": 46517,
+     "3": 28043,
+     "4": 1335
+    },
+    "3": {
+     "1": 2011,
+     "10": 272,
+     "11": 99,
+     "12": 47,
+     "13": 15,
+     "14": 4,
+     "2": 10465,
+     "3": 13811,
+     "4": 25383,
+     "5": 12365,
+     "6": 8561,
+     "7": 9816,
+     "8": 6416,
+     "9": 1249
+    },
+    "4": {
+     "0": 2011,
+     "1": 10495,
+     "10": 6971,
+     "11": 1570,
+     "12": 1842,
+     "13": 3399,
+     "14": 975,
+     "15": 1965,
+     "16": 481,
+     "17": 247,
+     "18": 500,
+     "19": 69,
+     "2": 8665,
+     "20": 59,
+     "21": 27,
+     "22": 29,
+     "23": 33,
+     "24": 17,
+     "25": 7,
+     "26": 10,
+     "27": 6,
+     "28": 14,
+     "29": 3,
+     "3": 4985,
+     "30": 4,
+     "32": 2,
+     "33": 4,
+     "35": 3,
+     "4": 23173,
+     "5": 1878,
+     "6": 10626,
+     "7": 4650,
+     "8": 4859,
+     "9": 935
+    }
+   },
+   "root_fraction_with_size": {
+    "2": 1.0,
+    "3": 1.0,
+    "4": 0.9777824424950836
+   },
+   "roots": 90514,
+   "roots_with_size": {
+    "2": 90514,
+    "3": 90514,
+    "4": 88503
+   },
+   "status": "PASS",
+   "words_by_size": {
+    "2": 197122,
+    "3": 415002,
+    "4": 512106
+   },
+   "words_total": 1124230
+  },
+  {
+   "description": "module forward calls per 64-molecule batch do not scale with the word count: one atom MLP, one bond MLP, four order norms, one sentence MLP and one readout for the whole batch",
+   "fwd_bwd_seconds": 0.3155555725097656,
+   "group": "F",
+   "id": "F2",
+   "module_calls": {
+    "atom_mlp": 4,
+    "bond_mlp": 4,
+    "order_norm": 16,
+    "readout_mlp": 4,
+    "sentence_mlp": 4
+   },
+   "status": "PASS",
+   "words_in_batch": 20713
+  },
+  {
+   "cpu_epoch_seconds_estimate": 15.034857988357544,
+   "cpu_step_seconds": 0.3341079552968343,
+   "description": "measured single-process CPU cost of one fit step (informational; the formal runs are GPU)",
+   "group": "F",
+   "id": "F3",
+   "parameters": 129198,
+   "prep_seconds": 8.27164888381958,
+   "readout_in_dim": 297,
+   "sentence_in_dim": 388,
+   "status": "PASS",
+   "steps_per_epoch": 45,
+   "timer_seconds": 1.0197300910949707
+  }
+ ],
+ "code_sha256": "30731601d59d9aeaed57920df36f310c9210d1d3da87f0503502a90c8189cd74",
+ "config_sha256": "72fd5a3de9a878a0a80af7356f51653fbc568f7684d643630a860245ddc7e33a",
+ "generated_utc": "2026-11-23T08:38:00Z",
+ "git_commit": "91804ab6882138e17de2a61e2c25e9065c5314e1",
+ "git_dirty": true,
+ "n_checks": 20,
+ "n_fail": 0,
+ "n_pass": 20,
+ "round": "rooted_interaction_cumulant_encoder_pilot_v0"
+}
