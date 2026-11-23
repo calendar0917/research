@@ -58,7 +58,7 @@ SPECS: dict[str, list[dict[str, Any]]] = {
     ],
 }
 
-ORDER = ["stage1", "baseline", "big", "ego3"]
+ORDER = ["stage1", "baseline", "big", "p_scope", "p_basis", "ego3"]
 
 
 def now() -> datetime:
