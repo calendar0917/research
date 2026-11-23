@@ -1,0 +1,181 @@
+{
+ "budget": {
+  "gpu_hours_sum_of_runs": 0.1954783519771364,
+  "gpu_hours_target": 2.0,
+  "wall_hours_target": 1.0,
+  "wall_seconds_sum_of_runs": 831.6303720474243,
+  "within_target": true
+ },
+ "comparisons": {
+  "D0_S1_minus_GINE_D0_mean": 0.01978995673411532,
+  "D0_S1_minus_GWIC_v0_s0": -0.004169014971671436,
+  "D1_S0_minus_ACRA_D0": -0.015833478432808468,
+  "D1_S0_minus_ACRA_D1": -0.07323347843280836,
+  "D1_S0_minus_D0_S1": 0.017976564833076303,
+  "D1_S0_minus_GINE_D1_mean": 0.010966521567191578,
+  "sign_convention": "positive = the R2 number is worse (higher RMSE)"
+ },
+ "engineering_checks": {
+  "n_checks": 24,
+  "n_pass": 24,
+  "path": "tracks/structural-sufficiency/r2_sentence_replication_v1/analysis/checks.json"
+ },
+ "gates": {
+  "D0_S1_dev_rmse": 0.5463899567341153,
+  "D0_S1_dev_rmse_max": 0.59,
+  "D0_S1_pass": true,
+  "D1_S0_dev_rmse": 0.5643665215671916,
+  "D1_S0_dev_rmse_max": 0.61,
+  "D1_S0_pass": true
+ },
+ "generated_utc": "2026-11-23T04:08:08Z",
+ "git_commit": "8bb7567645e37aa3062b851d15011ed39be966c5",
+ "historical_coordinates": {
+  "ACRA_D0": 0.5802,
+  "ACRA_D1": 0.6376,
+  "GINE_D0_seed_mean": 0.5266,
+  "GINE_D1_seed_mean": 0.5534,
+  "SENTENCE_BASE_D0_s0": 0.5506,
+  "note": "different recipes and rounds; reference coordinates only, not a matched benchmark"
+ },
+ "model": "SENTENCE_BASE",
+ "non_claims": [
+  "historical coordinates are different recipes, not a matched benchmark",
+  "the engineering threshold is not a statistical significance test",
+  "D1 is a reproducibility check on official Train rows, not a blind test",
+  "no official Valid/Test metric is reported"
+ ],
+ "params": 416177,
+ "protocol_id": "r2-sentence-replication-v1",
+ "runs": [
+  {
+   "atom_scalar_mode": "fit",
+   "best_epoch": 90,
+   "cuda": "12.4",
+   "dev_mae": 0.4204164792194336,
+   "dev_rmse": 0.5463899567341153,
+   "dev_rows_sha256": "eacce8acde66acb6f0045813f8d6103381012ebab8181b7d314a2b66aa387193",
+   "device": "cuda",
+   "driver": "550.163.01",
+   "early_stop": {
+    "min_epochs": 80,
+    "patience": 45
+   },
+   "epochs_max": 240,
+   "epochs_run": 135,
+   "fit_rows_sha256": "7edd3c68d946e9f3f7c5613993530dd44c2371956ee031582e123ef79c8bc6c0",
+   "frozen_gwic_code_sha256": "a58f942ebf4050114987c58c2cfeaec75f2cf42c6fc945c21bb45030813294a1",
+   "git_commit": "8bb7567645e37aa3062b851d15011ed39be966c5",
+   "gpu_hours": 0.10890184852812025,
+   "gpu_hours_total_process": 0.12675762163268195,
+   "gpu_name": "NVIDIA A100-SXM4-40GB",
+   "host": "a100-2",
+   "n_dev": 504,
+   "n_fit": 2856,
+   "normalization": {
+    "atom_scalars": "fit-only",
+    "category_support": "fit-only",
+    "graph_scalars": "fit-only",
+    "target": "fit-only"
+   },
+   "params": 416177,
+   "predictions_dev": "/home/calendar/code/research/tracks/structural-sufficiency/r2_sentence_replication_v1/results/D0_S1/predictions_best_dev.npz",
+   "recipe": {
+    "auxiliary_targets": false,
+    "batch_molecules": 64,
+    "distillation": false,
+    "epochs": 240,
+    "eval_batch": 256,
+    "gradient_clip": 5.0,
+    "min_epochs": 80,
+    "min_lr": 1e-05,
+    "objective": "whole-molecule standardized MSE only",
+    "optimizer": "AdamW",
+    "patience": 45,
+    "peak_lr": 0.0003,
+    "schedule": "cosine",
+    "search": "none",
+    "warmup_epochs": 5,
+    "weight_decay": 0.0001
+   },
+   "run_id": "D0_S1",
+   "scaler": {
+    "mean": 2.185815826311436,
+    "n": 2856,
+    "std": 1.2139664740467941
+   },
+   "seed": 1,
+   "split": "D0",
+   "split_file_sha256": "675289f6f997008d44fdabb4ab65350459fe5bccc5e1e5703e31e31fd794e845",
+   "split_identity_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e",
+   "torch": "2.5.1+cu124",
+   "train_rmse": 0.22673293270631634,
+   "wall_seconds": 456.32743787765503
+  },
+  {
+   "atom_scalar_mode": "fit",
+   "best_epoch": 64,
+   "cuda": "12.4",
+   "dev_mae": 0.42173492142319174,
+   "dev_rmse": 0.5643665215671916,
+   "dev_rows_sha256": "342c1de0ece164e9acba17ba17a48151c90235242e77481e41a1a9820b0380a6",
+   "device": "cuda",
+   "driver": "550.163.01",
+   "early_stop": {
+    "min_epochs": 80,
+    "patience": 45
+   },
+   "epochs_max": 240,
+   "epochs_run": 109,
+   "fit_rows_sha256": "b9f74030ee0decc67005e10963e64d7da16fd70d9a6bf9790f4a1c4afcebebbc",
+   "frozen_gwic_code_sha256": "a58f942ebf4050114987c58c2cfeaec75f2cf42c6fc945c21bb45030813294a1",
+   "git_commit": "8bb7567645e37aa3062b851d15011ed39be966c5",
+   "gpu_hours": 0.08657650344901614,
+   "gpu_hours_total_process": 0.10425081504715814,
+   "gpu_name": "NVIDIA A100-SXM4-40GB",
+   "host": "a100-2",
+   "n_dev": 504,
+   "n_fit": 2856,
+   "normalization": {
+    "atom_scalars": "fit-only",
+    "category_support": "fit-only",
+    "graph_scalars": "fit-only",
+    "target": "fit-only"
+   },
+   "params": 416177,
+   "predictions_dev": "/home/calendar/code/research/tracks/structural-sufficiency/r2_sentence_replication_v1/results/D1_S0/predictions_best_dev.npz",
+   "recipe": {
+    "auxiliary_targets": false,
+    "batch_molecules": 64,
+    "distillation": false,
+    "epochs": 240,
+    "eval_batch": 256,
+    "gradient_clip": 5.0,
+    "min_epochs": 80,
+    "min_lr": 1e-05,
+    "objective": "whole-molecule standardized MSE only",
+    "optimizer": "AdamW",
+    "patience": 45,
+    "peak_lr": 0.0003,
+    "schedule": "cosine",
+    "search": "none",
+    "warmup_epochs": 5,
+    "weight_decay": 0.0001
+   },
+   "run_id": "D1_S0",
+   "scaler": {
+    "mean": 2.151278011472791,
+    "n": 2856,
+    "std": 1.2159778136886414
+   },
+   "seed": 0,
+   "split": "D1",
+   "split_file_sha256": "bdcd3f5884c66015aa099bd9c32b45cd6717b0d08b35a6a6c7ef44635fe61fcc",
+   "split_identity_sha256": "c94e2d4bd92e51ab91119923d61e955f5a2f686fc1751883e858fce88dab6bee",
+   "torch": "2.5.1+cu124",
+   "train_rmse": 0.31569430372751806,
+   "wall_seconds": 375.3029341697693
+  }
+ ],
+ "verdict": "R2_BASELINE_REPLICATED_PRELIMINARY"
+}
