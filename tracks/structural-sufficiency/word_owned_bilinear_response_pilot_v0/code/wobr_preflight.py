@@ -41,8 +41,12 @@ def main() -> dict[str, Any]:
                                       + actual_preflight_total_hours)
     budget_ok = bool(projected_formal_gpu_hours <= MAX_FORMAL_GPU_HOURS
                      and projected_total_with_preflight <= MAX_TOTAL_GPU_HOURS)
+    try:
+        preflight_run = str((PREFLIGHT_DIR / "run.json").relative_to(C.REPO_ROOT))
+    except ValueError:
+        preflight_run = str(PREFLIGHT_DIR / "run.json")
     payload = {
-        "preflight_run": str(PREFLIGHT_DIR / "run.json"),
+        "preflight_run": preflight_run,
         "git_commit": run.get("git_commit"),
         "host": run.get("host"),
         "gpu_name": run.get("gpu_name"),

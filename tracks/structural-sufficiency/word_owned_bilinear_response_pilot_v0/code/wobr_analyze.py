@@ -28,6 +28,13 @@ RUN_DIR = C.RESULTS_DIR / "seed0"
 MAX_ATOMS_KEY = 128
 
 
+def _rel(path: Path) -> str:
+    try:
+        return str(Path(path).resolve().relative_to(C.REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
 def _norm(bundle: D.DataBundle) -> dict[str, np.ndarray]:
     return D.normalisers(bundle)
 
@@ -614,14 +621,14 @@ def main() -> dict[str, Any]:
     C.write_csv(C.ANALYSIS_DIR / "high_contribution_words.csv", high)
 
     C.write_json(C.ANALYSIS_DIR / "word_selection.json", {
-        "checkpoint": str(RUN_DIR / "best.pt"),
+        "checkpoint": _rel(RUN_DIR / "best.pt"),
         "best_epoch": int(run["best_epoch"]),
         "selection": selection,
         "identity": identity,
         "prediction_reload": pred_check,
     })
     C.write_json(C.ANALYSIS_DIR / "word_contributions.json", {
-        "checkpoint": str(RUN_DIR / "best.pt"),
+        "checkpoint": _rel(RUN_DIR / "best.pt"),
         "best_epoch": int(run["best_epoch"]),
         "stats": contributions,
         "contribution_units": {
@@ -635,7 +642,7 @@ def main() -> dict[str, Any]:
     })
     C.write_json(C.ANALYSIS_DIR / "verdict.json", verdict)
     C.write_json(C.ANALYSIS_DIR / "word_reuse.json", {
-        "checkpoint": str(RUN_DIR / "best.pt"),
+        "checkpoint": _rel(RUN_DIR / "best.pt"),
         "best_epoch": int(run["best_epoch"]),
         "summary": reuse["summary"],
         "top": reuse["top"],

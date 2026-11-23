@@ -1,0 +1,399 @@
+{
+ "all_pass": true,
+ "checks": [
+  {
+   "details": {
+    "attributes_match_raw": true,
+    "bad_boundary_count": 0,
+    "bad_boundary_types": 0,
+    "bad_connected": 0,
+    "bad_internal": 0,
+    "bad_root": 0,
+    "bad_scalars": 0,
+    "bad_singleton": 0,
+    "bad_size": 0,
+    "bad_unique": 0,
+    "max_support_size": 4,
+    "n_molecules": 4200,
+    "n_words_checked": 1530239
+   },
+   "id": "1_candidates_real_connected_singleton",
+   "name": "every candidate is a real connected induced support; every root has exactly one singleton",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "dtype": "float64",
+    "max_abs_error": 4.440892098500626e-16,
+    "row": 0,
+    "tolerance": 1e-08,
+    "y": 1.701753201259961,
+    "y_candidate_reordered": 1.7017532012599605,
+    "y_permuted": 1.7017532012599605
+   },
+   "id": "2_renumber_edge_candidate_invariance",
+   "name": "atom renumbering, edge reversal, bond order and candidate order do not change prediction",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "exact_zero_fraction_real_entries": 0.8091706001348618,
+    "max_alpha": 1.0000000000000002,
+    "max_candidates": 24,
+    "max_sum_error": 8.881784197001252e-16,
+    "min_alpha": 0.0,
+    "packed_reference_max_abs_error": 1.1102230246251565e-16,
+    "padding_max_abs": 0.0,
+    "reference_max_abs_error": 4.440892098500626e-16,
+    "rows": 128,
+    "score_gradient_finite_nonzero": true
+   },
+   "id": "3_sparsemax_normalised_padding_reference",
+   "name": "sparsemax is nonnegative, sums to 1 per root, can be exactly zero, and matches two independent references",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "max_abs_Q_diff": 0.008142525810791251,
+    "max_abs_prediction_diff": 0.020223753037436815,
+    "path_atoms": 4,
+    "path_bonds": 3,
+    "star_atoms": 4,
+    "star_bonds": 3
+   },
+   "id": "4_synthetic_same_counts_different_connection",
+   "name": "same atom/bond counts with different real connection produce different adjacent bilinear terms",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "real_batch_atoms": 863,
+    "real_batch_bonds": 943,
+    "real_batch_molecules": 32,
+    "real_expansion_max_abs_error": 6.798654794692993e-08,
+    "real_float32_max_abs_error": 2.86102294921875e-06,
+    "synthetic_atoms": 6,
+    "synthetic_bonds": 6,
+    "synthetic_expansion_max_abs_error": 1.3877787807814457e-16,
+    "synthetic_float64_max_abs_error": 1.1102230246251565e-16,
+    "tolerances": {
+     "float32": 0.0001,
+     "float64": 1e-10
+    }
+   },
+   "id": "5_exact_word_contribution_identity",
+   "name": "sum of word contributions equals prediction minus beta and count terms; word-pair bond expansion equals direct z_u,z_v bilinear term",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "max_abs_error": 7.152557373046875e-07,
+    "n_molecules": 8
+   },
+   "id": "6_batch_single_consistency",
+   "name": "batched and single-molecule inference agree",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "all_parameter_gradients_finite": true,
+    "gradient_squared_norms": {
+     "U": 33668.29296875,
+     "a": 6285979.0,
+     "atom_emb": 797.4009857177734,
+     "backbone_mlp": 585.8026503324509,
+     "beta": 153.74098205566406,
+     "bond_encoder": 4327.210263252258,
+     "bond_interaction": 2367148.5920410156,
+     "bond_raw_emb": 232.47451782226562,
+     "c_m": 1828.3143310546875,
+     "c_n": 1740.1937255859375,
+     "nbr_emb": 0.00944717787206173,
+     "path_emb": 0.008439218625426292,
+     "path_joint": 0.11503053456544876,
+     "score_mlp": 2052.9845837354674,
+     "word_joint": 5821.346214294434,
+     "word_mlp": 2546150.4340820312
+    }
+   },
+   "id": "7_finite_nonzero_gradients",
+   "name": "all key modules, including word encoder, score, a, U and bond interaction, have finite non-zero gradients",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "U_weight_absmax": 0.273771733045578,
+    "U_xavier_bound": 0.27386127875258304,
+    "a_mean": 0.0005553821683861315,
+    "a_std": 0.018935181200504303,
+    "before_support_fingerprint": "5b209b5ebf1bc6ba3b910096de78619c0f3498fbe16ddf80db081838a7e6a53f",
+    "beta_c_n_c_m": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "bond_interaction_last_weight_std": 0.02024051360785961,
+    "same_state_dict": true,
+    "second_fingerprint": "528e3d203ee9b3bb9d2f5173eb53475d82300b397f0f6f253b57ab6b49fdb5d3",
+    "state_fingerprint": "528e3d203ee9b3bb9d2f5173eb53475d82300b397f0f6f253b57ab6b49fdb5d3"
+   },
+   "id": "8_initialisation_reproducible",
+   "name": "the same seed reconstructs the same initial state and the frozen explicit initialisation values",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "all_rows_scaler": {
+     "mean": 2.186335714782278,
+     "std": 1.2028604904383229
+    },
+    "atom_dims": [
+     119,
+     5,
+     12,
+     12,
+     10,
+     6,
+     6,
+     2,
+     2
+    ],
+    "bond_dims": [
+     5,
+     6,
+     2
+    ],
+    "bundle_scaler": {
+     "mean": 2.1621607144740187,
+     "n": 3360,
+     "std": 1.211539840098397
+    },
+    "cover_0_4199": true,
+    "disjoint": true,
+    "embedding_tables_match_ogb": true,
+    "metric_restoration_ok": true,
+    "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "split_sizes": [
+     3360,
+     420,
+     420
+    ],
+    "test_metric_label": "DEVELOPMENT_TEST",
+    "train_scaler": {
+     "mean": 2.1621607144740187,
+     "std": 1.211539840098397
+    },
+    "train_standardised_mean": 1.1419436824715895e-16,
+    "train_standardised_std": 1.0,
+    "unseen_category_counts": {
+     "test": {
+      "atom_positions": 0,
+      "bond_positions": 0
+     },
+     "train_supported_atom_categories": [
+      11,
+      3,
+      4,
+      3,
+      4,
+      1,
+      3,
+      2,
+      2
+     ],
+     "train_supported_bond_categories": [
+      4,
+      3,
+      2
+     ],
+     "valid": {
+      "atom_positions": 1,
+      "bond_positions": 0
+     }
+    },
+    "unsupported_rows_are_zero": true
+   },
+   "id": "9_data_split_scaler_metrics_categories",
+   "name": "data SHA, official split, Train-only standardisation, raw-unit restoration and full OGB category dimensions are correct",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "batch_forward_finite": true,
+    "isolated_atoms": 3,
+    "isolated_singleton_boundary_zero": true,
+    "multi_component_molecules": 1,
+    "multi_component_r2_stays_in_component": true,
+    "rows_with_isolated_atoms": 1
+   },
+   "id": "10_isolated_atoms_components_preserved",
+   "name": "isolated atoms and disconnected components are retained, encoded with singletons and never cross-component",
+   "status": "PASS"
+  },
+  {
+   "details": {
+    "candidate_total": 1530239,
+    "peak_rss_after_build_bytes": 783331328,
+    "per_split": {
+     "test": {
+      "n_atoms": 11587,
+      "n_boundary_bond_occurrences": 410962,
+      "n_internal_bond_occurrences": 337827,
+      "n_molecules": 420,
+      "n_singleton_words": 11587,
+      "n_words": 159075,
+      "roots_without_words": 0,
+      "words_by_size": {
+       "1": 11587,
+       "2": 25506,
+       "3": 53982,
+       "4": 68000
+      },
+      "words_by_size_complete": {
+       "1": 11587,
+       "2": 25506,
+       "3": 53982,
+       "4": 68000
+      },
+      "words_per_molecule_max": 903,
+      "words_per_molecule_mean": 378.75,
+      "words_per_molecule_median": 386.5,
+      "words_per_root_max": 54,
+      "words_per_root_mean": 13.728747734530076,
+      "words_per_root_median": 11.0,
+      "words_per_root_p90": 23.0,
+      "words_per_root_p99": 31.0
+     },
+     "train": {
+      "n_atoms": 90514,
+      "n_boundary_bond_occurrences": 3079513,
+      "n_internal_bond_occurrences": 2565011,
+      "n_molecules": 3360,
+      "n_singleton_words": 90514,
+      "n_words": 1214744,
+      "roots_without_words": 0,
+      "words_by_size": {
+       "1": 90514,
+       "2": 197122,
+       "3": 415002,
+       "4": 512106
+      },
+      "words_by_size_complete": {
+       "1": 90514,
+       "2": 197122,
+       "3": 415002,
+       "4": 512106
+      },
+      "words_per_molecule_max": 1366,
+      "words_per_molecule_mean": 361.5309523809524,
+      "words_per_molecule_median": 371.0,
+      "words_per_root_max": 54,
+      "words_per_root_mean": 13.420509534436661,
+      "words_per_root_median": 11.0,
+      "words_per_root_p90": 23.0,
+      "words_per_root_p99": 30.0
+     },
+     "valid": {
+      "n_atoms": 11467,
+      "n_boundary_bond_occurrences": 401765,
+      "n_internal_bond_occurrences": 331624,
+      "n_molecules": 420,
+      "n_singleton_words": 11467,
+      "n_words": 156420,
+      "roots_without_words": 0,
+      "words_by_size": {
+       "1": 11467,
+       "2": 25170,
+       "3": 53187,
+       "4": 66596
+      },
+      "words_by_size_complete": {
+       "1": 11467,
+       "2": 25170,
+       "3": 53187,
+       "4": 66596
+      },
+      "words_per_molecule_max": 1209,
+      "words_per_molecule_mean": 372.42857142857144,
+      "words_per_molecule_median": 365.5,
+      "words_per_root_max": 48,
+      "words_per_root_mean": 13.64088253248452,
+      "words_per_root_median": 11.0,
+      "words_per_root_p90": 23.0,
+      "words_per_root_p99": 31.0
+     }
+    },
+    "resources": {
+     "backward_seconds": 0.24679827690124512,
+     "batch_atoms": 1713,
+     "batch_bonds": 1869,
+     "batch_molecules": 64,
+     "batch_words": 23080,
+     "collate_seconds": 0.016778945922851562,
+     "device": "cuda",
+     "forward_seconds": 0.3153696060180664,
+     "peak_rss_bytes": 1850015744,
+     "peak_vram_bytes": 290821632
+    },
+    "roots_without_words": 0,
+    "structure_array_bytes": 344875384,
+    "structure_build_seconds": 105.62234783172607,
+    "words_by_size": {
+     "1": 113568,
+     "2": 247798,
+     "3": 522171,
+     "4": 646702
+    },
+    "words_per_molecule_max": 1366,
+    "words_per_root_max": 54
+   },
+   "id": "11_candidate_scale_and_batch_resources",
+   "name": "complete candidate enumeration, singleton coverage and a measured real-batch resource footprint",
+   "status": "PASS"
+  }
+ ],
+ "code_sha256": "1f703912ac903faef36254d55a70e030d63b2e76d9d23f09318a5154d8498fc4",
+ "config_sha256": "62ac71c91b21a34254e5c89117559faa7fc07dfb6841f500cbfc6e1fd7493d81",
+ "elapsed_seconds": 131.95138001441956,
+ "full_candidate_count": 1530239,
+ "full_candidate_count_by_size": {
+  "1": 113568,
+  "2": 247798,
+  "3": 522171,
+  "4": 646702
+ },
+ "full_words_per_root_max": 54,
+ "generated_utc": "2026-11-23T12:51:29Z",
+ "git_commit": "6296d0a7cbbc59c906471095a9e10501eb07599e",
+ "gwic_sources": {
+  "gwic_common.py": "6d081769940ed00682c95c8a7c8be382f1592763db269c3067fc14bc3f1a97cb",
+  "gwic_data.py": "f02863be6e9f37a593e234c4cb7c5e1d9a760088be0c903aad36619a46aa0cef",
+  "gwic_model.py": "66926facafc97935905ba32ae4771f2a15585a34e0749f26cdb2fb8dff187e73",
+  "gwic_structure.py": "97e2e35b272e36043e03a476f58fb6a2edeb3beefc60b15e967c1096c65ecb56",
+  "gwic_tensor.py": "f969c1fd47255b3b4b897f540f501671def42ec45ec9515751ca7288204bedd0"
+ },
+ "n_pass": 11,
+ "n_total": 11,
+ "protocol_id": "wobr-v0-word-owned-bilinear-response-pilot",
+ "smoke_max_rows": null,
+ "zeroed_categories": {
+  "atom_field_0": 108,
+  "atom_field_1": 2,
+  "atom_field_2": 8,
+  "atom_field_3": 9,
+  "atom_field_4": 6,
+  "atom_field_5": 5,
+  "atom_field_6": 3,
+  "atom_field_7": 0,
+  "atom_field_8": 0,
+  "bond_field_0": 1,
+  "bond_field_1": 3,
+  "bond_field_2": 0,
+  "end_emb": 108,
+  "nbr_emb": 551,
+  "path_emb": 2799,
+  "path_gate": 2799,
+  "path_u": 2799,
+  "path_v": 108
+ }
+}
