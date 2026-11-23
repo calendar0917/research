@@ -306,3 +306,12 @@ The report distinguishes:
 * 2026-11-23: added an explicit root-choice rescheduling check (`6b`) after the
   decomposition tests, before formal training. It changes no model, data,
   recipe or decision rule.
+* 2026-11-23: post-run analysis code (`code/bbpa_analyze.py`) was added to
+  tabulate the frozen outputs, run the pre-registered paired bootstrap and
+  state diagnostics, and write `results/summary.json` / `analysis/tables.md`.
+  It changes no data, model, training recipe or route rule.
+* 2026-11-23: descriptive subgroup bootstrap contrasts (diameter / bridge-count
+  bins) were added after seeing the overall result, because the aggregate
+  contrast can hide a depth-dependent crossover. They are reported as
+  exploratory heterogeneity, are not used to change the pre-registered route
+  label, and carry no multiplicity correction.
