@@ -1,0 +1,48 @@
+{
+ "protocol_id": "prcg-atom-null-diagnostic-v0",
+ "version": "2026-11-23/v1",
+ "parent_round": "tracks/structural-sufficiency/predictive_residual_composition_grammar_pilot_v0",
+ "parent_protocol_id": "prcg-v0-predictive-residual-composition-grammar-pilot",
+ "parent_config": "tracks/structural-sufficiency/predictive_residual_composition_grammar_pilot_v0/configs/prcg.json",
+ "parent_config_sha256": "d4afc405ec3723c27ccae956b689352c06d9aa358278077775b25e3e873c88ce",
+ "inherits": ["dataset", "split", "target", "dims", "recipe", "historical_d0_rmse"],
+ "new_arm": {
+  "name": "ATOM_ONLY",
+  "grammar": "atom_only",
+  "port": "REAL",
+  "seed": 0,
+  "init_seed": 0,
+  "device": "cpu",
+  "threads": 4,
+  "description": "Empty merge grammar: every atom is a single-atom word; every real bond is an inter-word bond; Compose is instantiated but never executed."
+ },
+ "ridge_audit": {
+  "lambda": 5.0,
+  "candidate_penalty": 1.0,
+  "base_penalty": "intercept 0, all other base columns 1 (as in RoundScreener)",
+  "strict_definition": "direct solve of the augmented ridge normal equations [X, c] with the same lambda and a penalty of 1 on the candidate coefficient",
+  "candidate_scaling": "candidate count column is used raw, exactly as in PRCG-v0 discovery",
+  "material_difference": "selected-candidate absolute mean held-out gain difference > 1e-6, any fold sign change, or a different constraint-aware selection"
+ },
+ "decision_rule": {
+  "primary": "delta_merge = RMSE(ATOM_ONLY) - RMSE(PRED_GRAMMAR)",
+  "not_worse": "RMSE(ATOM_ONLY) <= RMSE(PRED_GRAMMAR)",
+  "clear_advantage": "delta_merge >= 0.01 and the paired-bootstrap 95% CI lower bound > 0",
+  "otherwise": "PRED is numerically better but not clearly separated; no evidence of a clear incremental merge value",
+  "stop_after_this_round": true,
+  "no_new_networks": ["PRCG-v1", "second seed", "D1", "Valid", "Test"]
+ },
+ "bootstrap": {
+  "replicates": 10000,
+  "seed": 20261202,
+  "n_dev": 504,
+  "scheme": "paired over Dev molecules, common resample indices for all four arms"
+ },
+ "checks": {
+  "atom_coverage": "every atom occurs in exactly one final word",
+  "bond_coverage": "every real bond is exactly one inter-word bond",
+  "renumbering": "prediction is invariant under atom renumbering / bond reordering",
+  "batch": "prediction is invariant under batch composition",
+  "label_isolation": "finite labels only on official Train; grammar is label-free; scalers are Fit-only"
+ }
+}
