@@ -1,0 +1,104 @@
+{
+  "protocol_id": "ses-v0-structural-evidence-selection-pilot",
+  "version": "2026-11-24/v1",
+  "dataset": "ogbg-mollipo",
+  "split": {
+    "name": "official",
+    "train": 3360,
+    "valid": 420,
+    "test": 420,
+    "checkpoint_selection": "Valid only",
+    "test_role": "DEVELOPMENT_TEST",
+    "normalizers_fit": "full official Train graphs (3360), shared by all arms"
+  },
+  "seed": 0,
+  "candidate": {
+    "node_fraction": 0.65,
+    "node_budget": "k = max(1, min(n-1, floor(0.65*n))); n=1 keeps the unique node",
+    "max_candidates": 4,
+    "generation": "BFS from every atom; first k popped atoms",
+    "bfs_tie_break": "pynauty canon_label of the coloured atom/bond incidence graph",
+    "deduplicate": "canonical atom-support",
+    "diversity": "first = BFS from canonical rank 0; then greedy max-min Jaccard distance, canonical tie-break",
+    "disconnected": "candidates stay inside one real connected component; below-k coverage is reported, the full graph is never substituted",
+    "features": "selected raw atom categorical columns, induced raw bond categorical columns, candidate-local S1/S2/R2 summaries, candidate-local degree/min_ring/in_cycle and candidate graph scalars",
+    "forbidden_inputs": [
+      "original atom id", "original graph node count", "original graph edge count",
+      "full-graph descriptors", "full-graph R2 hidden representation",
+      "selection score", "candidate index", "candidate count"
+    ]
+  },
+  "model": {
+    "source": "graph_word_incidence_composition_pilot_v0/code/gwic_model.py",
+    "arm": "SENTENCE_BASE",
+    "use_words": false,
+    "predictor_parameters": 416177,
+    "dims": {
+      "atom": 48,
+      "bond": 24,
+      "sentence": 96,
+      "word": 64,
+      "q": 64,
+      "path_rank": 24,
+      "path_end": 16,
+      "path_close": 8,
+      "nbr": 16,
+      "backbone_hidden": 192,
+      "word_hidden": 160,
+      "score_hidden": 96,
+      "q_hidden": 128,
+      "readout_hidden": 192,
+      "readout_mid": 96,
+      "dropout": 0.1
+    },
+    "selector": {
+      "input": "detached readout_in (post R2 pooling, pre readout) of each candidate",
+      "hidden": 64,
+      "activation": "SiLU",
+      "output": 1,
+      "softmax": "per original molecule over valid candidates",
+      "train_mixture": "p_train = 0.9*p + 0.1/m"
+    }
+  },
+  "arms": {
+    "DENSE": {"input": "complete original graph", "loss": "standardized label MSE"},
+    "RANDOM": {"input": "all valid candidates, independently encoded", "loss": "mean_j (y_j-y)^2, molecule-equal weight", "eval": "uniform single-candidate expectation + fixed label-blind index"},
+    "SELECT": {"input": "all valid candidates, independently encoded", "loss": "sum_j p_train_j (y_j-y)^2", "eval": "hard argmax candidate only"}
+  },
+  "recipe": {
+    "optimizer": "AdamW",
+    "peak_lr": 0.001,
+    "min_lr": 0.00001,
+    "weight_decay": 0.001,
+    "gradient_clip": 5.0,
+    "batch_molecules": 64,
+    "warmup_epochs": 5,
+    "schedule": "per-step cosine after linear warmup",
+    "dropout": 0.1,
+    "objective": "standardized label MSE only",
+    "eval_batch_molecules": 64,
+    "eval_every_epoch": ["train", "valid", "test"],
+    "checkpoint": "best Valid RMSE (ties keep the earlier epoch)"
+  },
+  "horizon": {
+    "target_epochs": 120,
+    "allowed": [120, 90, 60],
+    "target_wall_minutes": [8, 10],
+    "hard_wall_minutes": 15,
+    "gpu_budget_hours": 0.5,
+    "rule": "choose the largest allowed common horizon whose measured three-arm wall cost fits the target; never change it after seeing validation performance"
+  },
+  "evaluation": {
+    "bootstrap_replicates": 1000,
+    "bootstrap_unit": "molecule",
+    "bootstrap_seed": 0,
+    "dense": "full-graph prediction",
+    "random_expected": "sqrt(mean_m mean_j (y_mj-y_m)^2)",
+    "select": "argmax score candidate prediction only",
+    "oracle": "mean_m min_j (y_mj-y_m)^2, post-hoc diagnostic only"
+  },
+  "route_reference": {
+    "select_over_dense_gap": 0.03,
+    "note": "engineering reference only, not an equivalence test"
+  }
+}
