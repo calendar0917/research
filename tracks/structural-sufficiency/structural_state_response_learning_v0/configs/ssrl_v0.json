@@ -1,0 +1,159 @@
+{
+  "round": "structural-state-response-learning-v0",
+  "schema": "ssrl-v0",
+  "status": "frozen_before_formal_run",
+  "seed": 0,
+  "model_seed": 0,
+  "order_seed": 0,
+  "hash_salt": "ssrl-v0",
+  "checkpoint": {
+    "path": "tracks/structural-sufficiency/lcrc_pcqm4mv2_efficiency_width_v1/runs/PCQM_W3_1M/checkpoint_best_valid.pt",
+    "sha256": "f4175f141702b9cc10b23404c6689936fed0692aac32086489e0a4bf2492b5ac",
+    "epoch": 39,
+    "valid_mae_eV": 0.12780916721022834,
+    "parameters": 2038167,
+    "model": "LCRC-W3",
+    "scale": 3,
+    "identity": "the same checkpoint used by structural_state_action_v0",
+    "read_only": true
+  },
+  "data": {
+    "dataset": "pcqm4m-v2",
+    "train_plan": "original frozen 1M Train row plan (lcrc_pcqm4mv2_transfer_pilot_v1/cache/pcqm_subset_rows.npy)",
+    "train_cells": "tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m",
+    "valid_cells": "tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_valid",
+    "labels": "tracks/structural-sufficiency/structural_functional_equivalence_followup_v1/data/pcqm_labels.npy",
+    "label_normalisation": "tracks/structural-sufficiency/structural_state_response_learning_v0/configs/pcqm_label_norm.json",
+    "feature_normalisation": "tracks/structural-sufficiency/structural_state_response_learning_v0/configs/pcqm_feature_norm.json",
+    "feature_spec": "tracks/structural-sufficiency/structural_state_response_learning_v0/configs/pcqm_spec.json",
+    "official_valid_rows": 73545,
+    "test_labels": "never indexed; no Test row is in the 1M Train plan or any artefact of this round"
+  },
+  "train_plan": {
+    "max_rectangles": 8000,
+    "max_per_pair_type": 32,
+    "context_pool_per_pair_type": 32,
+    "min_rectangles": 2000,
+    "min_pair_types": 100,
+    "plain_multiplier": 4,
+    "canonical_pair": "A_rank < B_rank, pair_key = A_rank*64 + B_rank; bond_type is 1 for every cell used",
+    "rectangle": "same canonical replacement A->B in two distinct exact contexts C1<C2; all four cells are single-identity clean cells; the four molecules are pairwise distinct; no requirement on E_AB or delta_g",
+    "clean_cell": "cell has exactly one distinct molecule identity; molecule has no explicitly encoded stereo marker and no duplicate identity row; no directory reasm_stereo==0 marker",
+    "context_sampling": "per pair type, exact contexts are ordered by hash64('ctx', pair_key, C_id); the first min(n,32) contexts are used and all C(.,2) context pairs among them are candidates",
+    "rectangle_hash": "SplitMix64 finaliser over (pair_key, C1, C2), the same label-free hash as SSTA v0",
+    "selection": "for each pair type keep the first <=32 valid rectangles in fixed hash order; then visit pair types in hash64('pair', pair_key) order in rounds, taking the r-th candidate of every pair type; keep only molecule-disjoint rectangles and stop at 8000, never adding an overlapping rectangle to fill the cap; no label, prediction or error enters selection",
+    "plain": "4 x rectangle count molecules from the original 1M Train row plan, ranked by a fixed hash of the cache row; excludes every rectangle endpoint gid and endpoint molecule identity"
+  },
+  "batch": {
+    "rectangles_per_batch": 16,
+    "plain_per_batch": 64,
+    "graphs_per_batch": 128,
+    "endpoint_order": [
+      "C1+A",
+      "C1+B",
+      "C2+A",
+      "C2+B"
+    ],
+    "duplicate_endpoints": "if a batch contains duplicate rows, the unique rows are forwarded once and predictions are gathered back to the original graph order; loss weights are unchanged",
+    "batch_plan": "pre-computed per-epoch permutations of rectangles and plain molecules with numpy default_rng(0), one draw per epoch in the fixed order rectangle then plain; identical for all three arms"
+  },
+  "horizon_epochs": 5,
+  "horizon_rule": "5 epochs unless the measured preflight (one real epoch plus full official-Valid inference) projects the three-arm formal run above the 5-10 minute target; in that case the single frozen horizon becomes 3 epochs for all arms. Intermediate predictions never change the horizon.",
+  "optim": {
+    "optimizer": "AdamW",
+    "lr_start": 3e-05,
+    "lr_end": 1e-05,
+    "lr_schedule": "per-step linear decay from lr_start at step 0 to lr_end at the last step of the frozen horizon; no warmup, no search",
+    "weight_decay": 0.001,
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "dropout": 0.1,
+    "gradient_clip": 5.0,
+    "precision": "fp32",
+    "optimizer_state": "fresh AdamW state for every arm; this is not a seamless resume of the original W3 trajectory"
+  },
+  "loss": {
+    "units": "all losses are computed on the original W3 standardised label z = (gap_eV - mean_eV)/std_eV",
+    "endpoint_error": "e_i = pred_i - target_i in endpoint order [C1+A, C1+B, C2+A, C2+B]",
+    "ABS": "L = mean over all graphs of |e|",
+    "PAIR": "L_abs = mean over all graphs of |e|; L_pair = mean over rectangles of (|e2-e1| + |e4-e3|)/4; L = L_abs + L_pair",
+    "RECT": "L_abs = mean over all graphs of |e|; L_rect = mean over rectangles of |(e4-e3)-(e2-e1)|/4; L = L_abs + L_rect",
+    "coefficients": {
+      "abs": 1.0,
+      "pair": 1.0,
+      "rect": 1.0
+    },
+    "note": "PAIR and RECT use exactly the same rectangles, plain molecules, batch plan and initial parameters; only the auxiliary term differs"
+  },
+  "evaluation": {
+    "full_valid_mae": "official PCQM4Mv2Evaluator MAE on all 73,545 official Valid rows, plus an independent NumPy cross-check",
+    "train_subset_mae": "independent whole-graph MAE on the unique molecules of this round's Train subset; labelled as a continuation subset, never as the full 1M Train metric",
+    "replacement_delta": "frozen Structural Effect Diagnosis v0 / SFEC v1 Valid pair observations (n=36,952 evaluable), canonical A->B orientation",
+    "interaction_D": "frozen SSTA v0 rectangle directory (59,214 rectangles, 1,542 pair types) and its fixed-hash subsets",
+    "subsets": {
+      "all": "all matched observations / all frozen SSTA rectangles",
+      "unseen_exact_context": "replacement observations whose exact context hash64 is absent from the 1M Train prefix",
+      "both_contexts_unseen": "SSTA rectangles whose two exact contexts are both absent from the 1M Train prefix",
+      "molecule_disjoint": "the SSTA v0 molecule-disjoint rectangle subset (greedy, independently inside each pair type)",
+      "same_edit": "the frozen 946 same-edit rectangles (auxiliary mechanism evaluation)",
+      "strict": "the frozen 38 strict rectangles (descriptive only; below the SSTA support threshold)"
+    },
+    "metrics": [
+      "observation_equal_mae_eV",
+      "pair_type_macro_mae_eV",
+      "corr",
+      "slope",
+      "direction_accuracy",
+      "direction_n"
+    ],
+    "direction_threshold_eV": 0.1,
+    "bootstrap_reps": 1000,
+    "bootstrap_seed": 0,
+    "full_graph_unit": "molecule",
+    "interaction_unit": "pair type (observation-equal and molecule-disjoint reported as sensitivity)",
+    "checkpoint_selection": "best full official Valid MAE, including epoch 0; fixed-final-epoch results are reported separately"
+  },
+  "state": {
+    "checkpoints": [
+      "epoch_0",
+      "best_valid_RECT"
+    ],
+    "max_pairs": 128,
+    "pair_selection": "one real Valid replacement pair per pair type, pair types ordered by fixed hash, first <=128",
+    "shift": "one fixed per-head constant for every molecule of a checkpoint, calibrated on the fixed state-pair sample; the same shift is used across molecules",
+    "phi": "[1, f(h_v), h_v, h_v^2, exp(score_k-c_k), exp(score_k-c_k)*h_v for k=1..4]",
+    "mean_pooling_formula": "(delta_s - m_old*delta_n)/(n_old+delta_n)",
+    "attention_pooling_formula": "(delta_N - z*delta_Z)/(Z+delta_Z) for z=N/Z",
+    "prediction_decomposition": "delta_F = delta_sum_f + delta_rho + delta_attention, converted from z to eV by the frozen label standard deviation",
+    "examples": 3,
+    "example_rule": "2 real replacement pairs (smallest and largest absolute replacement error inside the fixed 128) and 1 fixed-hash strict same-edit rectangle; reported honestly as success/failure",
+    "no_interpreter": "no interpreter is trained and no explanation loss is added"
+  },
+  "budget": {
+    "cpu_preparation_target_seconds": 300,
+    "formal_wall_target_seconds": [
+      300,
+      600
+    ],
+    "formal_wall_hard_ceiling_seconds": 900,
+    "gpu_hours_hard_ceiling": 0.5,
+    "two_gpu_parallel": true,
+    "preflight_includes": [
+      "one real training epoch",
+      "full official Valid inference"
+    ]
+  },
+  "correctness_checks": [
+    "epoch 0 reproduces the historical W3 predictions and Valid MAE",
+    "three arms have bitwise identical initial parameters",
+    "three arms have identical training rows, occurrence counts and batch plan",
+    "rectangle orientation, endpoint labels and double-difference signs are correct",
+    "all training rows belong to the original 1M Train row plan",
+    "ABS / PAIR / RECT match a manual small-sample calculation",
+    "PAIR / RECT auxiliary gradients are finite and non-zero",
+    "no Test label is accessed"
+  ]
+}
