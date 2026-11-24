@@ -3,7 +3,8 @@
 **Round:** `r2_internal_binding_gap_audit_v0`
 **Status:** read-only diagnostic; no model, feature, loss, checkpoint, or training run was created
 **Base commit:** `189d5dd1e4e90bed5555cc4f23d57216a1e59dcc`
-**Analysis commit:** `PENDING`
+**Analysis commit:** `cab872cda2f586910dd59dc06c8305fe440fabd1`
+**Array commit:** `22fe13005b20833ebc3edb4300d39df6fc4a08bb`
 **Date:** 2026-11-24 UTC
 **Device:** local CPU only; no `rr` job; 0 GPU-h; 0 training runs
 
