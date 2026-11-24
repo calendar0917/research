@@ -5,7 +5,7 @@
 - 状态：**完成**。4 个正式训练单元、8 项 correctness/degeneracy checks、主表、bootstrap、机制分析均已完成；本轮到此为止，不扩展 seed / K / tau / SVD 维度 / 数据比例
 - 冻结协议：`PROTOCOL.md`，protocol id `css-v0-continuous-structural-sharing-pilot`
 - 执行：`res` / `a100-2`，2×A100-SXM4-40GB；torch 2.5.1+cu124，CUDA 12.4，driver 550.163.01
-- 代码 commit：实现 + checks `00ab1d35`；远端 prep + checks `2b8c5865`；horizon `05e4c0c8`；四个正式 run `7499c3c6`（run manifest 内记录同一 commit）
+- 代码 commit：实现 + checks `00ab1d35`；远端 prep + checks `2b8c5865`；horizon 与四个正式 run `05e4c0c8`；结果快照 `7499c3c6`（run manifest 记录训练 commit）
 
 ---
 
