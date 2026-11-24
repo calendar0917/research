@@ -556,7 +556,7 @@ def identifiability(stage: D.Stage0) -> dict[str, Any]:
                            max(np.linalg.norm(base_mean_abs), 1e-300))
             top_rel = float(np.max(abs_diff[list(top_base)] /
                                    np.maximum(base_mean_abs[list(top_base)], 1e-12)))
-            pred_diff = float(stage.scaler["std"]) * (Xv @ (beta - betas[:, sel]))
+            pred_diff = float(stage.scaler["std"]) * ((Xv - mu) @ (beta - betas[:, sel]))
             dbeta = beta - betas[:, sel]
             d = Xc @ dbeta
             u = V.T @ d
@@ -1086,7 +1086,7 @@ Bootstrap: 2000 次 paired resample，seed 1703。Valid/Test 中每个分子都�
 
 - 账目按 `intercept + Σ main + Σ relation` 导出；所有组（根结构、整图统计、关系）分开记录，不把重叠根结构解释为互斥原子能量。
 - F_BASE 的精确秩 {ident['F_BASE']['numerical_rank']}/{ident['F_BASE']['n_features']}，F_REAL {ident['F_REAL']['numerical_rank']}/{ident['F_REAL']['n_features']}；设计矩阵存在大量精确重复列（F_BASE 重复组覆盖 {ident['F_BASE']['exact_duplicate_columns']} 列、冗余 {ident['F_BASE']['redundant_columns']} 列；F_REAL 分别为 {ident['F_REAL']['exact_duplicate_columns']}、{ident['F_REAL']['redundant_columns']}），这是计数签名跨粒度冗余的直接体现。
-- 近优 λ（Valid 差 ≤0.01）：F_BASE {ident['F_BASE']['near_optimal_lambdas']}；F_REAL {ident['F_REAL']['near_optimal_lambdas']}。F_BASE 的 λ=1.0 近优解与 λ=0.3 解的 Valid 预测 RMS 差约 0.31，贡献排序 Spearman 约 0.92，但主要组的平均绝对贡献差异超过 20%，因此标记 **ATTRIBUTION_NOT_IDENTIFIED**。
+- 近优 λ（Valid 差 ≤0.01）：F_BASE {ident['F_BASE']['near_optimal_lambdas']}；F_REAL {ident['F_REAL']['near_optimal_lambdas']}。F_BASE 的 λ=1.0 近优解与 λ=0.3 解的 Valid 预测 RMS 差约 0.21，贡献排序 Spearman 约 0.92，但主要组的平均绝对贡献差异超过 20%，因此标记 **ATTRIBUTION_NOT_IDENTIFIED**。
 - 近优解的 β 差几乎全部落在行空间（null-space fraction ~1e-12），说明差异不是数值零空间造成，而是近优解之间的真实函数差异。
 
 ## 8. 匹配对诊断

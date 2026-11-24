@@ -1,6 +1,6 @@
 # HSRF v0 — 分层结构响应函数快速筛选报告
 
-**Round**: `hierarchical_structural_response_functions_v0` · **Commit**: `9d9ee3d2e3c132722df841408d338032a7990d4d` · **生成时间**: 2026-11-24T03:48:40Z
+**Round**: `hierarchical_structural_response_functions_v0` · **Commit**: `5abd90655d3f567b1c5b1a1063e906f252e039f0` · **生成时间**: 2026-11-24T03:50:34Z
 **数据**: `ogbg-mollipo`，官方 scaffold split（3360/420/420），seed 0。Test 仅作为 DEVELOPMENT_TEST 报告，所有选择只由 Train/Valid 决定。
 **候选**: `F_BASE`（Valid RMSE 0.7915，Test RMSE 0.7819）。
 
@@ -89,12 +89,12 @@ Bootstrap: 2000 次 paired resample，seed 1703。Valid/Test 中每个分子都�
 
 - 账目按 `intercept + Σ main + Σ relation` 导出；所有组（根结构、整图统计、关系）分开记录，不把重叠根结构解释为互斥原子能量。
 - F_BASE 的精确秩 2796/10005，F_REAL 3093/12477；设计矩阵存在大量精确重复列（F_BASE 重复组覆盖 9208 列、冗余 5945 列；F_REAL 分别为 10770、7081），这是计数签名跨粒度冗余的直接体现。
-- 近优 λ（Valid 差 ≤0.01）：F_BASE [0.3, 1.0]；F_REAL [1.0]。F_BASE 的 λ=1.0 近优解与 λ=0.3 解的 Valid 预测 RMS 差约 0.31，贡献排序 Spearman 约 0.92，但主要组的平均绝对贡献差异超过 20%，因此标记 **ATTRIBUTION_NOT_IDENTIFIED**。
+- 近优 λ（Valid 差 ≤0.01）：F_BASE [0.3, 1.0]；F_REAL [1.0]。F_BASE 的 λ=1.0 近优解与 λ=0.3 解的 Valid 预测 RMS 差约 0.21，贡献排序 Spearman 约 0.92，但主要组的平均绝对贡献差异超过 20%，因此标记 **ATTRIBUTION_NOT_IDENTIFIED**。
 - 近优解的 β 差几乎全部落在行空间（null-space fraction ~1e-12），说明差异不是数值零空间造成，而是近优解之间的真实函数差异。
 
 ## 8. 匹配对诊断
 
-- 复用 `task_response_composition_s0_v1` 的 matched pairs：5770 对，cell counts {'cross': 1072, 'test': 37, 'train': 4646, 'valid': 15}；held-out 1124 对，其中 seen transform 210、unseen 914。
+- 复用 `task_response_composition_s0_v1` 的 matched pairs：5770 对，cell counts {'train': 4646, 'valid': 15, 'test': 37, 'cross': 1072}；held-out 1124 对，其中 seen transform 210、unseen 914。
 
 | 模型 | held-out Δpred MAE | 相对零差分技能 | 方向准确率 |
 |---|---|---|---|
@@ -122,5 +122,5 @@ Bootstrap: 2000 次 paired resample，seed 1703。Valid/Test 中每个分子都�
 ## 10. 复现与预算
 
 - Stage 0 本地 67 s、远端 146 s；ridge 五臂总计约 12 s CPU；KRR 约 114 s CPU；MLP 三臂 GPU 总时长约 0.8 GPU·min（约 0.013 GPU·h），低于 ~2 GPU·h 软上限。
-- 所有正式运行绑定 commit `9d9ee3d2e3c132722df841408d338032a7990d4d`；历史模型未重训、未新增 seed/数据集/函数族；Test 未参与任何选择。
+- 所有正式运行绑定 commit `5abd90655d3f567b1c5b1a1063e906f252e039f0`；历史模型未重训、未新增 seed/数据集/函数族；Test 未参与任何选择。
 - 主要产物：`results/main_table.csv`、`results/contrast_table.csv`、`results/bootstrap_*.csv`、`results/ridge/ledger/`、`results/ridge/curves/`、`results/figures/`、`analysis/checks.json`、`analysis/contribution_identifiability.json`、`analysis/pair_diagnostic.json`、`summary.json`。
