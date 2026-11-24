@@ -1,0 +1,170 @@
+{
+ "protocol_id": "css-v0-continuous-structural-sharing-pilot",
+ "version": "2026-12-01/v1",
+ "dataset": "ogbg-mollipo",
+ "seed": 0,
+ "split": {
+  "name": "official",
+  "train": 3360,
+  "valid": 420,
+  "test": 420,
+  "fit_100": "all official Train rows",
+  "fit_50": "the 1680 official Train rows with the smallest sha256('css-v0-50pct/<row_id>')",
+  "fit_50_independent_of_labels": true,
+  "eval": "the same official Valid / Test rows for both training sizes",
+  "test_role": "DEVELOPMENT_TEST"
+ },
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "fit-only z-score, re-fit per training size",
+  "metric": "RMSE in original label units (whole graph)"
+ },
+ "descriptor": {
+  "root_object": "complete radius-2 induced ego graph R2(v) of a real root atom v",
+  "blocks": {
+   "ROOT": "one-hot of the root atom's 9 official OGB categorical fields",
+   "S1": "joint count of (neighbour atomic number, bond type) over real neighbours",
+   "S2": "joint count of (middle atomic number, first bond type, second bond type, end atomic number, closure) over real non-backtracking rooted 2-paths v-w-u, u != v",
+   "EGO_ATOM": "per root distance 0/1/2, category counts of each of the 9 official OGB atom fields",
+   "EGO_BOND": "per unordered endpoint-distance pair, category counts of each of the 3 official OGB bond fields over real induced R2 bonds"
+  },
+  "weighting": "per block: sqrt(count) then L2 normalisation; empty block stays zero; concat five blocks and divide by sqrt(5)",
+  "forbidden": [
+   "raw atom id",
+   "molecule id",
+   "whole-graph label",
+   "matching-molecule catalogue",
+   "task response",
+   "invented edges or paths",
+   "additional connected subgraph enumeration of size 3-6"
+  ]
+ },
+ "projection": {
+  "vocabulary": "per training size, built only from the corresponding Fit roots",
+  "svd": "TruncatedSVD(n_components=64, n_iter=5, random_state=0, randomized)",
+  "post": "L2 normalise every projected root descriptor (zero-safe)",
+  "dim_rule": "always 64; if fewer effective dimensions exist, zero-pad and report",
+  "dim_selection_by_performance": false
+ },
+ "references": {
+  "K": 64,
+  "selection": "fixed seed-0 k-means++ D^2 sampling over the Fit z_v; the selected point is always a real Fit root; no Lloyd update; no duplicate projected vector",
+  "temperature": "tau = max(1e-6, median_Fit(d_8th^2)), d_8th = eighth nearest reference",
+  "weights": "q_v = softmax(-||z_v - p_j||^2 / tau)",
+  "learned": false,
+  "precomputed": true,
+  "sparsification": "none (no top-k, no hard assignment, no sparsity penalty)"
+ },
+ "branch": {
+  "input_dim": 64,
+  "output_dim": 32,
+  "DIRECT": "t_v = z_v",
+  "SHARE": "t_v = q_v",
+  "normalisation": "(t - mean_Fit(t)) / max(global_RMS_Fit, 1e-6); global RMS over every centred Fit root and dimension",
+  "injection": "h_v = BackboneNorm(BackboneMLP(concat(x_v, Linear(64,32)(normalize(t_v)))))"
+ },
+ "model": {
+  "predictor": "frozen GwicModel(use_words=False) R2/SENTENCE_BASE trunk, 416177 parameters",
+  "shared_by_both_arms": true,
+  "arms": {
+   "DIRECT": "z_v branch",
+   "SHARE": "q_v branch"
+  }
+ },
+ "recipe": {
+  "optimizer": "AdamW",
+  "peak_lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 0.001,
+  "batch_molecules": 64,
+  "warmup_epochs": 5,
+  "schedule": "linear warmup then per-step cosine",
+  "dropout": 0.1,
+  "gradient_clip": 5.0,
+  "objective": "standardized label MSE only",
+  "eval_every_epoch": [
+   "train",
+   "valid",
+   "test"
+  ],
+  "eval_batch_molecules": 128,
+  "checkpoint": "best official Valid RMSE (ties keep the earlier epoch)",
+  "fit_only_statistics": [
+   "label scaler",
+   "R2 atom/graph normalisers",
+   "category support mask",
+   "descriptor vocabulary",
+   "SVD",
+   "reference points",
+   "tau",
+   "branch normalisation"
+  ],
+  "no_mid_training_changes": true
+ },
+ "horizon": {
+  "allowed": [
+   120,
+   90,
+   60
+  ],
+  "rule": "largest common horizon whose measured throughput, with a 25% timing margin, fits the 10-minute per-run target and the 0.5 GPU-hour total; never changed after seeing validation performance",
+  "hard_per_run_minutes": 15,
+  "cpu_prep_target_minutes": 3
+ },
+ "budget": {
+  "gpu_hours_total": 0.5,
+  "per_run_target_minutes": 10
+ },
+ "evaluation": {
+  "primary": "whole-graph RMSE in original label units",
+  "comparison": "gain = RMSE(DIRECT) - RMSE(SHARE); positive = SHARE better",
+  "bootstrap": 1000,
+  "bootstrap_seed": 0,
+  "bootstrap_unit": "molecule, paired",
+  "route_reference": {
+   "promising_gain": 0.02,
+   "labels": [
+    "PROMISING_FULL_DATA_GAIN",
+    "PROMISING_LOW_DATA_GAIN",
+    "NO_USEFUL_SHARING_GAIN",
+    "SPLIT_CONFLICT_OR_BUDGET_LIMITED"
+   ]
+  }
+ },
+ "not_in_scope": [
+  "structure replacement response",
+  "contribution decomposition",
+  "state algebra",
+  "discrete structure words",
+  "sparse evidence selection",
+  "message passing",
+  "transformer",
+  "teacher",
+  "distillation",
+  "pretraining",
+  "extra chemical labels",
+  "extra seeds",
+  "extra K",
+  "extra tau",
+  "extra SVD dims",
+  "other data fractions or datasets"
+ ],
+ "dims": {
+  "atom": 48,
+  "bond": 24,
+  "sentence": 96,
+  "word": 64,
+  "q": 64,
+  "path_rank": 24,
+  "path_end": 16,
+  "path_close": 8,
+  "nbr": 16,
+  "backbone_hidden": 192,
+  "word_hidden": 160,
+  "score_hidden": 96,
+  "q_hidden": 128,
+  "readout_hidden": 192,
+  "readout_mid": 96,
+  "dropout": 0.1
+ }
+}
