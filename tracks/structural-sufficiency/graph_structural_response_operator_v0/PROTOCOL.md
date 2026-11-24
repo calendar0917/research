@@ -48,4 +48,4 @@ python .../code/gsro_analyze.py
 
 `results/checks.json`、`results/pilot.json`、`results/curve_{full,local2}.csv`、
 `results/main_table.csv`、`results/predictions_{full,local2}.npz`、
-`results/{full,local2}_best.pt`、`results/explanation.json`、`results/REPORT.md`。
+`results/{full,local2}_best.pt`、`results/explanation.json`、实验根目录的 `REPORT.md`。
