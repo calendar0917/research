@@ -1,0 +1,53 @@
+{
+  "rule": {
+    "salt": "0|",
+    "hash": "sha256 hex first 16 chars mod 100",
+    "discovery": "< 80",
+    "evaluation": ">= 80",
+    "molecule_disjoint": "remove from discovery any molecule appearing in any evaluation context",
+    "primary_evaluation_selection": "hash-order greedy, molecule-disjoint, requiring primary S and k>=2",
+    "seed": 0,
+    "tau": 0.1
+  },
+  "datasets": {
+    "pcqm_train_1m": {
+      "n_c": 3166455,
+      "n_molecules": 987596,
+      "n_train_c": 3166455,
+      "n_discovery_c": 2531352,
+      "n_evaluation_c": 635103,
+      "n_evaluation_molecules": 572170,
+      "n_discovery_cells": 1568944,
+      "n_evaluation_cells": 966160,
+      "n_primary_evaluation_c": 417064,
+      "n_primary_evaluation_cells": 560734,
+      "selected_evaluation_c_count": 417064
+    },
+    "pcqm_train_100k": {
+      "n_c": 403413,
+      "n_molecules": 99849,
+      "n_train_c": 403413,
+      "n_discovery_c": 322231,
+      "n_evaluation_c": 81182,
+      "n_evaluation_molecules": 57961,
+      "n_discovery_cells": 155955,
+      "n_evaluation_cells": 96811,
+      "n_primary_evaluation_c": 53048,
+      "n_primary_evaluation_cells": 62008,
+      "selected_evaluation_c_count": 53048
+    },
+    "zinc": {
+      "n_c": 61796,
+      "n_molecules": 11994,
+      "n_train_c": 51574,
+      "n_discovery_c": 41191,
+      "n_evaluation_c": 10383,
+      "n_evaluation_molecules": 6601,
+      "n_discovery_cells": 15666,
+      "n_evaluation_cells": 11142,
+      "n_primary_evaluation_c": 6566,
+      "n_primary_evaluation_cells": 7048,
+      "selected_evaluation_c_count": 6566
+    }
+  }
+}

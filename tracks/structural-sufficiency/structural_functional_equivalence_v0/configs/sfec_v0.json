@@ -1,0 +1,69 @@
+{
+  "round": "structural_functional_equivalence_v0",
+  "datasets": {
+    "zinc": {
+      "source": "pyg_zinc_subset_true",
+      "root": "data/ZINC",
+      "splits": ["train", "valid", "test"],
+      "single_bond_code": 1,
+      "tau": 0.10,
+      "tau_sensitivity": [0.05, 0.20]
+    },
+    "pcqm": {
+      "source": "ogb_lsc_pcqm4m_v2",
+      "root": "data/ogb/pcqm4m-v2",
+      "train_cache": "tracks/structural-sufficiency/lcrc_pcqm4mv2_transfer_pilot_v1/cache/pcqm_train1m",
+      "valid_cache": "tracks/structural-sufficiency/lcrc_pcqm4mv2_transfer_pilot_v1/cache/pcqm_valid",
+      "prefix_steps": [100000, 1000000],
+      "tau": 0.10,
+      "tau_sensitivity": [0.05, 0.20]
+    }
+  },
+  "cuts": {
+    "max_small_side_atoms": 8,
+    "min_context_atoms": 6,
+    "min_context_to_small_ratio": 2.0
+  },
+  "vocabulary": {
+    "top_s_per_bond_type": 64
+  },
+  "context_split": {
+    "salt": 0,
+    "discovery_percent": 80,
+    "hash": "sha256_first16_hex_mod_100"
+  },
+  "support_gates": {
+    "p1_min_pairs": 10,
+    "p1_min_discovery_contexts": 10,
+    "p1_min_evaluation_contexts": 5,
+    "p1_min_evaluation_contexts_disjoint": 50,
+    "p1_min_evaluation_observations": 100,
+    "p2_min_masked_pairs": 10,
+    "p2_min_evaluation_contexts_per_pair": 5,
+    "p2_max_masked_pairs": 20
+  },
+  "estimators": {
+    "median": "numpy_median_over_discovery_contexts",
+    "shared_gauge": "sum_b_zero_per_component",
+    "local_lambda": 5.0,
+    "local_min_contexts_per_q": 10,
+    "local_coverage_min": 0.50,
+    "local_min_q_groups": 10,
+    "null_seed": 0
+  },
+  "statistics": {
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 0,
+    "max_context_pairs_for_D": 256
+  },
+  "judgement": {
+    "p2_min_relative_gain": 0.15,
+    "p3_min_relative_gain": 0.10
+  },
+  "resources": {
+    "local_workers": 8,
+    "max_workers": 24,
+    "rss_ceiling_gb": 64,
+    "blas_threads": 1
+  }
+}

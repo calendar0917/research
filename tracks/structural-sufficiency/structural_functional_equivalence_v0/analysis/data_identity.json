@@ -1,0 +1,322 @@
+{
+  "round": "sfec_v0",
+  "created_utc": "2026-11-24T05:52:43.940304+00:00",
+  "repo": "/home/calendar/code/research",
+  "git_commit": "d523e0919968b80172b682c796a3fe097bcfc09b",
+  "git_dirty": true,
+  "protocol": {
+    "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/PROTOCOL.md",
+    "bytes": 16299,
+    "sha256": "66c8f6ff54df16f9fc5cb1f437b5a5d9e9be12ab861256c27169557971278533"
+  },
+  "config": {
+    "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/configs/sfec_v0.json",
+    "bytes": 1880,
+    "sha256": "0ac737f87f8d8e447f61dda73abb4885f661d133664a6159699a72c1f454cd78"
+  },
+  "code_sha256": {
+    "sfec_aggregate.py": "0ab0a9a05d3b271eb121482e8a7fed5cd018743e944fd366aeebaaf6eb7a33df",
+    "sfec_build.py": "bc52e2d690e92e08ea11883365224b365840ebc558cbfed737c11fdf3fe09795",
+    "sfec_checks.py": "52e628b71d35137cd149bf541f0e77eecc37df81c8b89d8ae3c6fe388c4ee4ec",
+    "sfec_common.py": "257f57829d72fb98c95014891550dabd445a3150fa6b5768700f3b188d633d03",
+    "sfec_controls.py": "180e86ae4d1b8d454e02eee360dff1dd38fdcbf3cda2dac0039c9615e7d15a7c",
+    "sfec_data.py": "e2a2805fcb76e4883dd9fa93be1b20230a5a399527bf6effb70457a757c6d1d7",
+    "sfec_identity.py": "d411ac80051cab2f5530c697ab5d3af9815abec07fc11e21eb2de87c50377210",
+    "sfec_p1.py": "b7ccc43079708c7746bc9ec85978aa92c8859a541ef5586043cd4c98928f8336",
+    "sfec_p2.py": "97ea0952d5609a911f9d4798713c49d2f482ee8e32c463d26ba7f4fd67670966",
+    "sfec_p3.py": "9e2aa522bb43216eafa00d6e33f20e377956887de61010102fbba9291d177159",
+    "sfec_pcqm.py": "bb3b64bcb0fcbd392f8610dd7e69e6babb8c39afef7f81209104729adee5dcc3",
+    "sfec_summary.py": "bc7c0a94384a8982c2ae7b5f7c847148ad6f5eafeda2e5201094b5f836da0886",
+    "sfec_support.py": "9607d89689b990c86e1947510b5442de4cd210e452009cf0c4a4f235170f2a7e",
+    "sfec_valid.py": "6749a0c00966e3bea3d946431d07a463aa08381a187ad06dc05d965402008d17",
+    "sfec_zinc.py": "1e0fbb47c719287ce0d29130f60d1cab76f58a7b49821dccce1529a4063cc692"
+  },
+  "environment": {
+    "python": "3.12.15",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "numpy": "2.1.3",
+    "rdkit": "2026.09.1",
+    "torch": "2.5.1+cu124",
+    "pyg": "2.6.1",
+    "pynauty": "2.8.8.1"
+  },
+  "datasets": {
+    "zinc": {
+      "source": "/home/calendar/code/research/data/ZINC",
+      "official_subset": true,
+      "split_sizes": {
+        "train": 10000,
+        "valid": 1000,
+        "test": 1000
+      },
+      "labels": "logP_SA_cycle_normalized (raw y)",
+      "raw_files": {
+        "train.pickle": {
+          "path": "/home/calendar/code/research/data/ZINC/raw/train.pickle",
+          "bytes": 338943042,
+          "sha256": "9c76df5a1ab90aac200df22902893827168aeced3df87aab4b6bee100235d7f2"
+        },
+        "val.pickle": {
+          "path": "/home/calendar/code/research/data/ZINC/raw/val.pickle",
+          "bytes": 37634758,
+          "sha256": "4c6015ec483224c55593c862b0334ae4b64e14679eab041c0655c6a7b603e47a"
+        },
+        "test.pickle": {
+          "path": "/home/calendar/code/research/data/ZINC/raw/test.pickle",
+          "bytes": 7690132,
+          "sha256": "33c7d2bcf6332be422aaea4baaf056e36f2c80eb6f7d0f5d68a8264d1b94e65b"
+        },
+        "train.index": {
+          "path": "/home/calendar/code/research/data/ZINC/raw/train.index",
+          "bytes": 65110,
+          "sha256": "575d6acd72ac207a95947e2bdd16411ef6fc3faa88c2f55a2c496ea43022a6d8"
+        },
+        "val.index": {
+          "path": "/home/calendar/code/research/data/ZINC/raw/val.index",
+          "bytes": 5541,
+          "sha256": "fe48c38157f0d38e7fc441903a143392eda080511a79e8fb8f60f5c1b0a9c164"
+        },
+        "test.index": {
+          "path": "/home/calendar/code/research/data/ZINC/raw/test.index",
+          "bytes": 4782,
+          "sha256": "6aa50d98976044fb36089afef5b4c991b429ca1c8e009d33a0319e42a2d9b525"
+        }
+      },
+      "identity": "pynauty colored-incidence certificate of the rooted fragment; WL hashes never used as identity",
+      "known_limit": "5-6% of PCQM stereochemical reassemblies differ; graph reassembly is exact and reported separately"
+    },
+    "pcqm": {
+      "source": "/home/calendar/code/research/data/ogb/pcqm4m-v2",
+      "raw_files": {
+        "data.csv.gz": {
+          "path": "/home/calendar/code/research/data/ogb/pcqm4m-v2/raw/data.csv.gz",
+          "bytes": 54822297,
+          "sha256": "ab89a4707d5e37f19c3b5e69d1c5cbb7fc1a9665d38783c0c89df6675f34286b"
+        },
+        "split_dict.pt": {
+          "path": "/home/calendar/code/research/data/ogb/pcqm4m-v2/split_dict.pt",
+          "bytes": 33714863,
+          "sha256": "d913e5541af6a6279abfe23ecf0fdbe4bc86785e1d8fc24a8f3ef422a01d3722"
+        }
+      },
+      "official_split_counts": {
+        "train": 3378606,
+        "valid": 73545,
+        "test-dev": 147037,
+        "test-challenge": 147432
+      },
+      "rows_used": {
+        "train_prefix": 1000000,
+        "valid": 73545,
+        "test": 0
+      },
+      "labels": "homolumogap (eV, raw column; no normalization)",
+      "test_labels_read": false,
+      "cache": {
+        "train1m": {
+          "path": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_pcqm4mv2_transfer_pilot_v1/cache/pcqm_train1m",
+          "n_gids": 1000000,
+          "gids_unique": 1000000,
+          "gids_sha256": "a30bd9d9a38122661bf101009c27e32e1190bf9eca0b05257923027d0018d616",
+          "smiles_bytes": 30096540,
+          "smiles_lines": 1000000
+        },
+        "valid": {
+          "path": "/home/calendar/code/research/tracks/structural-sufficiency/lcrc_pcqm4mv2_transfer_pilot_v1/cache/pcqm_valid",
+          "n_gids": 73545,
+          "gids_unique": 73545,
+          "gids_sha256": "1ab39edeeb4121ebe3298971887c8905be1c585ad35528c1c145e744d319c8cb",
+          "smiles_bytes": 2238700,
+          "smiles_lines": 73545
+        }
+      },
+      "identity": "canonical isomeric fragment SMILES with explicit dummy atoms at original bond slots; WL hashes never used as identity",
+      "known_limit": "stereochemistry is not used in the graph-level identity; ~8.9% sampled stereo reassemblies differ"
+    }
+  },
+  "row_plan": {
+    "pcqm_train_prefix_order": "stable cache order; 100k -> 1M; no expansion based on labels",
+    "pcqm_train_rows": 1000000,
+    "pcqm_valid_rows": 73545,
+    "pcqm_test_rows": 0,
+    "zinc_rows": 12000
+  },
+  "artifacts": {
+    "cells_zinc.npz": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.npz",
+      "bytes": 1931040,
+      "sha256": "2dba34ff7d8bf88fb4002fe19dde8462d526086429133a743c141183f877f959"
+    },
+    "cells_zinc.C.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.C.parquet",
+      "bytes": 3153867,
+      "sha256": "fa425f59057f413e3cbb78625ec7b6416ca26d84a8afc16286ed1deab07c7b30"
+    },
+    "cells_zinc.S.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.S.parquet",
+      "bytes": 102791,
+      "sha256": "34e48d1ae3f00b5a68c730ea3151a793f330e3fe65f37a694a06e9a03b153969"
+    },
+    "cells_zinc.M.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.M.parquet",
+      "bytes": 517087,
+      "sha256": "4d608b9f62c79f8c72e0b22db6538444976b24c1f387bedfa4c6780046e4be62"
+    },
+    "cells_zinc.keys.json": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.keys.json",
+      "bytes": 3845,
+      "sha256": "a973c361275a82956abde6189456647fe8fb2c371402dd66ffefb6cbbdd1158a"
+    },
+    "cells_zinc.universe.npz": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.universe.npz",
+      "bytes": 1710844,
+      "sha256": "128bbf73a983596a5c7ed221aac1f3037292fa3807a867396d8dee54b2e7f593"
+    },
+    "cells_zinc.support.json": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.support.json",
+      "bytes": 69194,
+      "sha256": "aa27bd72c654f85ddd33d3076bc829f48ea63e1ef9ce9d92578b947ba80a2082"
+    },
+    "cells_zinc.rectangles.csv": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_zinc.rectangles.csv",
+      "bytes": 272,
+      "sha256": "074fd384efd8cd477b47fc434177aeb02fba285bda56f3608f84d1735f5f953e"
+    },
+    "cells_pcqm_train_1m.npz": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.npz",
+      "bytes": 139922610,
+      "sha256": "672fa6e9277b4066bb35817ed15442a0d78ef40707b3355b064848ab8827583f"
+    },
+    "cells_pcqm_train_1m.C.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.C.parquet",
+      "bytes": 72386546,
+      "sha256": "42a2b89bc3aa7bb388623519918d3d53290cdf7dba6b53b3932c66e0d3a5375d"
+    },
+    "cells_pcqm_train_1m.S.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.S.parquet",
+      "bytes": 69859,
+      "sha256": "6dae94e3a2727ee42c761fd3ce20509b41fc627eddf84577b3097a0d425d8410"
+    },
+    "cells_pcqm_train_1m.M.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.M.parquet",
+      "bytes": 19322121,
+      "sha256": "428b689feb2d27f1fc2938f7397df1b68e2e748a982f7e6bab31d2e4cc62d52b"
+    },
+    "cells_pcqm_train_1m.keys.json": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.keys.json",
+      "bytes": 5896355,
+      "sha256": "d9a5a77a5816bd10c7891b5911ef7427bf6addfa8c82755d831f483aab780a07"
+    },
+    "cells_pcqm_train_1m.universe.npz": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.universe.npz",
+      "bytes": 93138455,
+      "sha256": "45b8ea8447f5ffdf3ecd1fc7361862375408f9f05844ab8587737e7a006f6724"
+    },
+    "cells_pcqm_train_1m.support.json": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.support.json",
+      "bytes": 78827,
+      "sha256": "cb373ad442436035be3fed519204ae1a846aeec5598da6529447e6efc7b0e1c6"
+    },
+    "cells_pcqm_train_1m.rectangles.csv": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_1m.rectangles.csv",
+      "bytes": 332,
+      "sha256": "88fd72d9fc0de25f4073d9b6d1ca4255ab9de9fa7e1ca8902208c1cd144a2825"
+    },
+    "cells_pcqm_valid.npz": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_valid.npz",
+      "bytes": 9355620,
+      "sha256": "571a2e1c7a917c19e6b2ca0318a4c226f1636b7ab7cc4374540007596014b5e0"
+    },
+    "cells_pcqm_valid.C.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_valid.C.parquet",
+      "bytes": 5947497,
+      "sha256": "6d46323fed4c3235550126ece2552ed8a5214cf51c9983d4a249114fd8cea2d1"
+    },
+    "cells_pcqm_valid.S.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_valid.S.parquet",
+      "bytes": 32351,
+      "sha256": "3d7cbe9f33fda8eaf284fe76984f5732d22e8aec954a5b268435778862eb0b26"
+    },
+    "cells_pcqm_valid.M.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_valid.M.parquet",
+      "bytes": 1481768,
+      "sha256": "e44af3086266b5f7adad6bbbe70beb377b6ddd26be9f29848ca8b255dd2907b8"
+    },
+    "cells_pcqm_valid.keys.json": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_valid.keys.json",
+      "bytes": 966629,
+      "sha256": "4fb5234f28d2de9746eeb41b4166c2184f45523a8d602ad35cdce0652dab9abe"
+    },
+    "cells_pcqm_train_100k.npz": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.npz",
+      "bytes": 13980482,
+      "sha256": "c7bf87f0de1bc13ffae7d53d036d9e8a23c71cede26af856a17a91b7718c2fb5"
+    },
+    "cells_pcqm_train_100k.C.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.C.parquet",
+      "bytes": 9135029,
+      "sha256": "0b2a85c657e50e1d4641655ef2e1eea8822f61244b08afd9231ca53231442835"
+    },
+    "cells_pcqm_train_100k.S.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.S.parquet",
+      "bytes": 28561,
+      "sha256": "c91728aefc99657af664e9c10b8faebe3c0c11e25bea50586cb9027500861d91"
+    },
+    "cells_pcqm_train_100k.M.parquet": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.M.parquet",
+      "bytes": 2122796,
+      "sha256": "c41b87d151f5cbd09b54d9e276b3e88982bc9ded899f3284456816be937cc6a3"
+    },
+    "cells_pcqm_train_100k.keys.json": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.keys.json",
+      "bytes": 19309,
+      "sha256": "46451b1f03d84629d4736d11de6c59b19d4d622a5edc61725b232e2dcbd25b1e"
+    },
+    "cells_pcqm_train_100k.universe.npz": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.universe.npz",
+      "bytes": 11318275,
+      "sha256": "a9b1472ffa1a6b0ca67aee9e3b36a916fbd045800d4ff980b2435b7921248585"
+    },
+    "cells_pcqm_train_100k.support.json": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.support.json",
+      "bytes": 71089,
+      "sha256": "a3780db993085c32d26bf6ad8296930f4efe246e792d8d91775a145b6780c7f0"
+    },
+    "cells_pcqm_train_100k.rectangles.csv": {
+      "path": "/home/calendar/code/research/tracks/structural-sufficiency/structural_functional_equivalence_v0/data/cells_pcqm_train_100k.rectangles.csv",
+      "bytes": 308,
+      "sha256": "2a64a79e91a6bf38524041220f81322b6d836b5c805fc551a329279872e4d14c"
+    }
+  },
+  "counts": {
+    "zinc": {
+      "cells": 66494,
+      "C_keys": 61796,
+      "S_keys": 2576,
+      "molecules": 11994
+    },
+    "pcqm_train_1m": {
+      "cells": 4824824,
+      "C_keys": 3166455,
+      "S_keys": 6420,
+      "molecules": 987596
+    },
+    "pcqm_valid": {
+      "cells": 322514,
+      "C_keys": 237967,
+      "S_keys": 3027,
+      "molecules": 72181
+    }
+  },
+  "identity_methods": {
+    "zinc": "colored incidence certificate, root-marked (historical rd_fragment.py)",
+    "pcqm": "RDKit canonical isomeric SMILES of rooted fragments with explicit dummies",
+    "dedupe": "molecule key = whole-graph certificate/SMILES; duplicate rows keep labels but share one identity",
+    "context": "C_key = root-marked environment fragment; S_key = root-marked small fragment"
+  },
+  "notes": [
+    "PCQM only Train and Valid were parsed; Test labels were never read.",
+    "PCQM duplicate full graphs can carry different labels; all duplicate rows share one molecule identity for split independence.",
+    "ZINC official PyG subset; train/valid/test counts as stated."
+  ]
+}

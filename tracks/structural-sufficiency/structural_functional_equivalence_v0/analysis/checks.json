@@ -1,0 +1,136 @@
+{
+  "pcqm": {
+    "checks": {
+      "cut_invariants": {
+        "ok": true,
+        "n_cells": 4824824,
+        "nS_1_8": 4824824,
+        "nC_ge_6": 4824824,
+        "nC_ge_2nS": 4824824,
+        "nS_plus_nC_eq_n_atoms": 4824824,
+        "bond_type_unique": [
+          1
+        ]
+      },
+      "reassembly_sampled": {
+        "ok": true,
+        "n_checked": 57873,
+        "graph_bad": 0,
+        "stereo_bad": 5128,
+        "stereo_exact_rate": 0.9113921863390527,
+        "note": "graph-exact reconstruction checked on the fixed sample; stereo exactness reported separately"
+      },
+      "label_smiles_alignment": {
+        "ok": true,
+        "n_sampled": 1000,
+        "smiles_equal": 1000,
+        "labels_equal": 1000
+      },
+      "split_identity": {
+        "ok": true,
+        "train_rows_used": 1000000,
+        "unique": 1000000,
+        "all_in_official_train": true,
+        "all_labels_finite": true
+      },
+      "valid_invariants": {
+        "ok": true,
+        "n_cells": 322514,
+        "nS_plus_nC_eq_n_atoms": 322514
+      },
+      "duplicate_molecule_labels": {
+        "ok": true,
+        "n_duplicate_molecules": 10557,
+        "n_extra_rows": 11472,
+        "max_abs_label_difference_same_molecule": 4.941587525080001,
+        "note": "duplicate molecules are one identity in all independence/evaluation sets"
+      },
+      "context_split_disjointness": {
+        "ok": true,
+        "discovery_cells_with_evaluation_molecule": 0,
+        "max_primary_evaluation_contexts_per_molecule": 1
+      }
+    },
+    "all_ok": true
+  },
+  "zinc": {
+    "checks": {
+      "cut_invariants": {
+        "ok": true,
+        "n_cells": 66494,
+        "nS_plus_nC_eq_n_atoms": 66494,
+        "bond_type_counts": {
+          "1": 66494
+        }
+      },
+      "exact_reassembly": {
+        "ok": true,
+        "n_checked": 20000,
+        "n_bad": 0,
+        "note": "union certificate of the two rooted fragments plus the cut edge equals the whole-molecule certificate; capped at 20000 cuts"
+      }
+    },
+    "all_ok": true
+  },
+  "controls": {
+    "controls": [
+      {
+        "name": "A_additive",
+        "ok": true,
+        "max_b_difference_error": 3.0531133177191805e-15,
+        "max_rectangle_double_difference": 2.220446049250313e-16,
+        "grad_max_abs": 9.992007221626409e-16
+      },
+      {
+        "name": "B_crossed",
+        "ok": true,
+        "shared_sse": 0.22688452787673055,
+        "local_sse": 0.19882484165601438,
+        "relative_improvement": 0.12367386389591706
+      },
+      {
+        "name": "C_acyclic",
+        "ok": true,
+        "arbitrary_labels_fit_exactly": true,
+        "details": {
+          "labels_1": {
+            "fit_sse": 3.019858152799186e-31,
+            "b": [
+              -0.2749999999999996,
+              0.3249999999999997,
+              -0.5750000000000001,
+              0.5249999999999999
+            ],
+            "grad": 2.7755575615628914e-16
+          },
+          "labels_2": {
+            "fit_sse": 2.836509622093521e-30,
+            "b": [
+              1.6249999999999991,
+              -1.374999999999999,
+              0.024999999999999994,
+              -0.275
+            ],
+            "grad": 1.1102230246251565e-15
+          }
+        }
+      },
+      {
+        "name": "D_unobserved_replacement",
+        "ok": true,
+        "truth_delta": 0.30000000000000004,
+        "estimated_delta": 0.30000000000000043,
+        "error": 3.885780586188048e-16
+      },
+      {
+        "name": "E_unidentifiable",
+        "ok": true,
+        "component_A": 0,
+        "component_B": 1,
+        "note": "no shared b difference is used across components"
+      }
+    ],
+    "all_ok": true
+  },
+  "all_ok": true
+}
