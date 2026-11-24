@@ -369,6 +369,7 @@ def train(
     hard_seconds: float,
     test_labels: np.ndarray,
     gamma: float | None = None,
+    prior_gpu_seconds: float = 0.0,
 ) -> dict[str, Any]:
     t_start = time.perf_counter()
     started_utc = C.utcnow()
@@ -773,6 +774,15 @@ def train(
         and sorted(eval_completed) == expected_epochs
         and bool(final_checkpoint_sha)
     )
+    if not completed and resume is not None and int(start_epoch) > int(epochs):
+        # repair resume: the horizon was already finished in an earlier attempt
+        completed = (
+            epochs_run >= int(epochs)
+            and sorted(eval_completed) == list(range(1, int(epochs) + 1))
+            and final_path.is_file()
+        )
+        if completed and not final_checkpoint_sha:
+            final_checkpoint_sha = C.sha256_file(final_path)
     status = "COMPLETED" if completed else "INCOMPLETE"
     if completed:
         stop_reason = "COMPLETED"
@@ -885,7 +895,8 @@ def train(
         "grad_clip": clip,
         "grad_clip_events": int(clip_events_total),
         "gpu_seconds": total_seconds,
-        "gpu_hours": total_seconds / 3600.0,
+        "gpu_seconds_prior_attempts": float(prior_gpu_seconds),
+        "gpu_hours": (total_seconds + float(prior_gpu_seconds)) / 3600.0,
         "train_seconds": float(sum(float(r.get("epoch_train_seconds") or 0.0) for r in curve_rows)),
         "eval_seconds": float(sum(float(r.get("epoch_seconds") or 0.0) - float(r.get("epoch_train_seconds") or 0.0) for r in curve_rows)),
         "gpu_peak_allocated_bytes": int(gpu_peak_alloc),
@@ -928,6 +939,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--soft-seconds", type=float, required=True)
     parser.add_argument("--hard-seconds", type=float, required=True)
     parser.add_argument("--gamma", type=float, default=None)
+    parser.add_argument("--prior-gpu-seconds", type=float, default=0.0,
+                        help="GPU seconds already spent on this unit by an earlier attempt (ledger continuity)")
     args = parser.parse_args(argv)
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -953,6 +966,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             hard_seconds=float(args.hard_seconds),
             test_labels=np.asarray(test_info["labels"]),
             gamma=args.gamma,
+            prior_gpu_seconds=float(args.prior_gpu_seconds),
         )
         return 0 if run["status"] == "COMPLETED" else 3
     except Exception as exc:  # noqa: BLE001
