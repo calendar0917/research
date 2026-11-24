@@ -715,9 +715,76 @@ def decide(units: Mapping[str, Mapping[str, Any]], comparisons: Mapping[str, Any
     else:
         labels["Q5"] = "NOT_DETERMINED"
 
+    # ---- Q6: route recommendation.  Protocol §9: a route is only recommended when
+    # "real gain + repeatable across seeds + not a few low-support tasks + inside the
+    # declared information boundary + clear research value" all hold.
+    def hi(name: str, split: str) -> Any:
+        s = (comparisons.get(name) or {}).get("splits", {}).get(split) or {}
+        h = s.get("high_support") or {}
+        return h
+
+    def imp(name: str, split: str) -> Any:
+        s = (comparisons.get(name) or {}).get("splits", {}).get(split) or {}
+        return None if "n_improved" not in s else (s["n_improved"], s["n_degraded"])
+
+    q6 = {}
+    crit = {
+        "fixed_source_one_hop": {
+            "gain": [cmp("Q1b_Cstar_vs_W2_seed0", "valid"), cmp("Q1b_Cstar_vs_W2_seed1", "valid")],
+            "gain_vs_sibling": [cmp("Q2_fixed_source_one_hop_vs_self", "valid"),
+                                cmp("Q4b_Cstar_vs_Kstar_seed1", "valid")],
+            "repeatable": None,
+            "breadth": [hi("Q1b_Cstar_vs_W2_seed0", "valid"), hi("Q1b_Cstar_vs_W2_seed1", "valid")],
+            "improved": [imp("Q1b_Cstar_vs_W2_seed0", "valid"), imp("Q1b_Cstar_vs_W2_seed1", "valid")],
+            "information_boundary": "layer 2 reads h0 of real 1-hop neighbours; verified by A3 grad support",
+            "research_value": "states a concrete, non-iterative structural computation that matches DYNAMIC on Valid",
+        },
+        "real_two_hop": {
+            "gain": [cmp("Q3a_direct_two_hop_vs_fixed_one_hop", "valid")],
+            "repeatable": False,
+            "breadth": [hi("Q3a_direct_two_hop_vs_fixed_one_hop", "valid")],
+            "improved": [imp("Q3a_direct_two_hop_vs_fixed_one_hop", "valid")],
+            "information_boundary": "direct two-hop from h0 (verified)",
+            "research_value": "tested the 'recurrence is really two-hop branching' hypothesis",
+        },
+        "multiset_combination": {
+            "gain": [cmp("Q3b_multiset_combination_vs_fixed_one_hop", "valid")],
+            "repeatable": False,
+            "breadth": [hi("Q3b_multiset_combination_vs_fixed_one_hop", "valid")],
+            "improved": [imp("Q3b_multiset_combination_vs_fixed_one_hop", "valid")],
+            "information_boundary": "same multisets without correspondence (verified)",
+            "research_value": "diagnostic control only, never a candidate architecture",
+        },
+        "iterative": {
+            "gain": [cmp("Q5a_iterative_vs_fixed_one_hop", "valid")],
+            "gain_test": [cmp("Q5a_iterative_vs_fixed_one_hop", "test"),
+                          cmp("Q5c_Cstar_vs_DYNAMIC_seed1", "test")],
+            "repeatable": None,
+            "breadth": [hi("Q5a_iterative_vs_fixed_one_hop", "valid")],
+            "improved": [imp("Q5a_iterative_vs_fixed_one_hop", "valid")],
+            "information_boundary": "layer 2 reads h1[j]: a wider effective access range than any h0 arm",
+            "research_value": "capability boundary reference",
+        },
+    }
+    for key, entry in crit.items():
+        gains = [g for g in entry["gain"] if g is not None]
+        if entry["repeatable"] is None:
+            entry["repeatable"] = bool(len(gains) >= 2 and all(g > 0 for g in gains) and
+                                       all(g >= 0.005 for g in gains)) if len(gains) >= 2 else None
+        entry["verdict"] = _route_verdict(entry)
+        q6[key] = entry
+
+    modifiers: dict[str, list[str]] = {}
+    if c_d is not None and c_d_t is not None and c_d * c_d_t < 0 and abs(c_d_t) > 0.003:
+        modifiers["Q5"] = ["SPLIT_CONFLICT"]
+    if c_d is not None and c_d_t is not None:
+        modifiers.setdefault("Q5", []).append("VALID_TEST_DISAGREEMENT")
+
     return {
         "observations": obs,
         "labels": labels,
+        "modifiers": modifiers,
+        "q6_routes": q6,
         "thresholds": {
             "Q1_self_minus_w2_valid_min": 0.005,
             "Q4_real2_minus_bag2_valid_min": 0.0015,
@@ -726,6 +793,17 @@ def decide(units: Mapping[str, Mapping[str, Any]], comparisons: Mapping[str, Any
         "horizon": int(horizon),
         "note": "labels are route decisions on point estimates; the task bootstrap interval is not a significance test",
     }
+
+
+def _route_verdict(entry: Mapping[str, Any]) -> str:
+    gains = [g for g in (entry.get("gain") or []) if g is not None]
+    if not gains or max(gains) <= 0.0:
+        return "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+    if entry.get("repeatable") is False:
+        return "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+    if entry.get("repeatable") is None:
+        return "PROMISING_SINGLE_SEED_ONLY"
+    return "RECOMMEND_CONTINUE"
 
 
 def route_table() -> list[dict[str, Any]]:
@@ -891,47 +969,81 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     decision = decide(units, comparisons, horizon=horizon)
     table = route_table()
-    # fill the route table with the observed facts
+
     def d(name: str, split: str) -> float | None:
         s = (comparisons.get(name) or {}).get("splits", {}).get(split) or {}
         v = s.get("delta_macro_ap")
         return None if v is None else float(v)
 
+    q6 = decision["q6_routes"]
     table[0]["evidence_for"] = [
-        f"SELF - W2 Valid { _fmt(d('Q1_extra_pointwise_depth_vs_W2','valid')) } / Test { _fmt(d('Q1_extra_pointwise_depth_vs_W2','test')) }",
-        "SELF never reads another node's hidden state (A3 grad-support table)",
+        f"SELF − W2 Valid {_fmt(d('Q1_extra_pointwise_depth_vs_W2','valid'))}（seed0）/ "
+        f"{_fmt(d('Q4b_Cstar_vs_Kstar_seed1','valid'))} 为 C*−K* 而非 SELF−W2",
+        "A3 梯度支持表：SELF 第二阶段完全不读其他节点隐状态",
     ]
     table[0]["evidence_against"] = [
-        f"W2 absolute Valid {_fmt(units['W2']['best_valid_ap']) if units.get('W2') else 'n/a'}",
+        f"seed0 增益 {_fmt(d('Q1_extra_pointwise_depth_vs_W2','valid'))} 低于预注册 0.005 门槛",
+        "SELF 仍然对每条真实入边做条件化，不是纯点式深度",
     ]
-    table[0]["open"] = ["SELF still conditions on every incoming real bond, so this is not pure pointwise depth"]
+    table[0]["open"] = ["若需要更高点式容量，应作为容量对照单独预注册"]
+    table[0]["priority"] = f"{decision['labels']['Q1']} → SELF 单独不作为路线推荐"
+
     table[1]["evidence_for"] = [
-        f"FIXED1 - SELF Valid {_fmt(d('Q2_fixed_source_one_hop_vs_self','valid'))}",
-        f"DYNAMIC - FIXED1 Valid {_fmt(d('Q5a_iterative_vs_fixed_one_hop','valid'))}",
+        f"FIXED1 − SELF Valid {_fmt(d('Q2_fixed_source_one_hop_vs_self','valid'))}（seed0，CI 不含 0）",
+        f"C* − K* Valid {_fmt(d('Q4b_Cstar_vs_Kstar_seed1','valid'))} / Test "
+        f"{_fmt(d('Q4b_Cstar_vs_Kstar_seed1','test'))}（seed1 配对）",
+        f"C* − W2 Valid {_fmt(d('Q1b_Cstar_vs_W2_seed0','valid'))}（seed0） / "
+        f"{_fmt(d('Q1b_Cstar_vs_W2_seed1','valid'))}（seed1）",
+        f"与 DYNAMIC 的 Valid 差 {_fmt(-d('Q5a_iterative_vs_fixed_one_hop','valid') if d('Q5a_iterative_vs_fixed_one_hop','valid') is not None else None)}（seed0） / "
+        f"{_fmt(d('Q5c_Cstar_vs_DYNAMIC_seed1','valid'))}（seed1）",
     ]
-    table[1]["evidence_against"] = [f"FIXED1 - DYNAMIC Valid {_fmt(None if d('Q5a_iterative_vs_fixed_one_hop','valid') is None else -d('Q5a_iterative_vs_fixed_one_hop','valid'))}"]
-    table[1]["open"] = ["only one paired seed unless the seed-1 confirmation completed"]
-    table[2]["evidence_for"] = [f"REAL2 - FIXED1 Valid {_fmt(d('Q3a_direct_two_hop_vs_fixed_one_hop','valid'))}"]
-    table[2]["evidence_against"] = [f"REAL2 - BAG2 Valid {_fmt(d('Q4_real_branch_binding_vs_multiset','valid'))}"]
-    table[2]["open"] = ["an independent second seed is required before claiming the two-hop gain"]
-    table[3]["evidence_for"] = [f"BAG2 - FIXED1 Valid {_fmt(d('Q3b_multiset_combination_vs_fixed_one_hop','valid'))}"]
-    table[3]["evidence_against"] = [f"REAL2 - BAG2 Valid {_fmt(d('Q4_real_branch_binding_vs_multiset','valid'))}"]
-    table[3]["open"] = ["BAG2 is a diagnostic control, not a candidate architecture"]
+    table[1]["evidence_against"] = [
+        f"对 SELF 的 Test 优势只有 {_fmt(d('Q2_fixed_source_one_hop_vs_self','test'))}（seed0）",
+        f"C* − DYNAMIC Test 两 seed 符号相反：{_fmt(d('Q5c_Cstar_vs_DYNAMIC_seed0','test'))} / "
+        f"{_fmt(d('Q5c_Cstar_vs_DYNAMIC_seed1','test'))}",
+    ]
+    table[1]["open"] = ["FIXED1 只有 2 个 seed（0/1），尚无第三 seed"]
+    table[1]["priority"] = f"{decision['labels']['Q2']} → {q6['fixed_source_one_hop']['verdict']}"
+
+    table[2]["evidence_for"] = [
+        f"DYNAMIC − REAL2 Valid {_fmt(d('Q5b_iterative_vs_direct_two_hop','valid'))} / Test "
+        f"{_fmt(d('Q5b_iterative_vs_direct_two_hop','test'))}：两跳没有替代迭代",
+    ]
+    table[2]["evidence_against"] = [
+        f"REAL2 − FIXED1 Valid {_fmt(d('Q3a_direct_two_hop_vs_fixed_one_hop','valid'))}（CI 不含 0）",
+        f"REAL2 − BAG2 Valid {_fmt(d('Q4_real_branch_binding_vs_multiset','valid'))} / Test "
+        f"{_fmt(d('Q4_real_branch_binding_vs_multiset','test'))}",
+        "冻结替换：BAG2 权重 + REAL2 读出 +0.0002；REAL2 权重 + BAG2 读出 −0.0001",
+    ]
+    table[2]["open"] = ["REAL2 只有 1 个 seed；机制替换已显示对应关系不可识别，故未追加 seed"]
+    table[2]["priority"] = f"{decision['labels']['Q3']} → {q6['real_two_hop']['verdict']}"
+
+    table[3]["evidence_for"] = [
+        f"BAG2 绝对 Valid {_fmt(units['BAG2']['best_valid_ap']) if units.get('BAG2') else 'n/a'}，"
+        f"高于 REAL2、低于 FIXED1",
+        "BAG2 最佳 epoch 22（FIXED1/REAL2 为 25），Train AP 最低，表现为更强的正则化而非更强表达",
+    ]
+    table[3]["evidence_against"] = [
+        f"BAG2 − FIXED1 Valid {_fmt(d('Q3b_multiset_combination_vs_fixed_one_hop','valid'))}；Test 仅 "
+        f"{_fmt(d('Q3b_multiset_combination_vs_fixed_one_hop','test'))}（CI 含 0）",
+        "冻结替换：把 REAL2 读出换成 degree 归一化（mean）后 −0.0161，说明承重的是归一化而非配对",
+    ]
+    table[3]["open"] = ["BAG2 是诊断控制臂，不作为候选架构"]
+    table[3]["priority"] = f"{decision['labels']['Q3']} → {q6['multiset_combination']['verdict']}"
+
     table[4]["evidence_for"] = [
-        f"DYNAMIC - REAL2 Valid {_fmt(d('Q5b_iterative_vs_direct_two_hop','valid'))}",
-        f"DYNAMIC - FIXED1 Valid {_fmt(d('Q5a_iterative_vs_fixed_one_hop','valid'))}",
+        f"DYNAMIC − FIXED1 Test {_fmt(d('Q5a_iterative_vs_fixed_one_hop','test'))}（seed0）",
+        f"DYNAMIC − REAL2 Valid {_fmt(d('Q5b_iterative_vs_direct_two_hop','valid'))} / Test "
+        f"{_fmt(d('Q5b_iterative_vs_direct_two_hop','test'))}",
+        "A3：第二阶段读 h1[j]，有效访问范围严格大于任何 h0 臂",
     ]
-    table[4]["evidence_against"] = [f"DYNAMIC absolute Valid {_fmt(units['DYNAMIC']['best_valid_ap']) if units.get('DYNAMIC') else 'n/a'}",
-                                    "layer 2 reads h1[j] -> wider effective access range than REAL2"]
-    table[4]["open"] = ["the DYNAMIC advantage mixes iteration with a wider access range"]
-    for row in table:
-        row["priority"] = decision["labels"].get(
-            {"strict": "Q1", "fixed": "Q2", "real two": "Q3", "unbound": "Q3", "iterative": "Q5"}[
-                "strict" if row["route"].startswith("strict") else
-                "fixed" if row["route"].startswith("fixed") else
-                "real two" if row["route"].startswith("real") else
-                "unbound" if row["route"].startswith("unbound") else "iterative"
-            ], "n/a")
+    table[4]["evidence_against"] = [
+        f"与 FIXED1 的 Valid 差两 seed 均 ≈0：{_fmt(-d('Q5a_iterative_vs_fixed_one_hop','valid') if d('Q5a_iterative_vs_fixed_one_hop','valid') is not None else None)} / "
+        f"{_fmt(d('Q5c_Cstar_vs_DYNAMIC_seed1','valid'))}",
+        "Test 侧 DYNAMIC 优势在 seed1 反向（C* 领先 +0.0065）",
+    ]
+    table[4]["open"] = ["迭代优势与更宽访问范围不可分离（本轮无 h1 读取但非迭代的臂）"]
+    table[4]["priority"] = f"{decision['labels']['Q5']} → {q6['iterative']['verdict']}"
 
     payload = {
         "schema": C.SCHEMA_SUMMARY,
@@ -950,6 +1062,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             },
         },
         "decision": decision,
+        "q6_routes": decision["q6_routes"],
+        "modifiers": decision["modifiers"],
         "route_table": table,
         "fast_ap_vs_sklearn_max_abs_diff": ap_check,
         "units_present": [u["label"] for u in ordered],
