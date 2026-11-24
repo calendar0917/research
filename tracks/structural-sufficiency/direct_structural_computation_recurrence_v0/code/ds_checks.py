@@ -947,8 +947,9 @@ def degree_statistics(task: Any) -> dict[str, Any]:
             bonds = bi[b0:b1]
             deg = np.zeros(n_atoms, dtype=np.int64)
             if len(bonds):
-                np.add.at(deg, bonds[:, 0] - a0, 1)
-                np.add.at(deg, bonds[:, 1] - a0, 1)
+                # ``cache["bond_index"]`` stores molecule-local atom indices
+                np.add.at(deg, bonds[:, 0], 1)
+                np.add.at(deg, bonds[:, 1], 1)
             deg_sum += int(deg.sum())
             deg_sq_sum += int((deg.astype(np.int64) ** 2).sum())
             n_atoms_total += n_atoms

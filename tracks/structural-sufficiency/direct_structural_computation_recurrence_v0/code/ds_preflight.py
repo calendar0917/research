@@ -110,7 +110,7 @@ def time_checkpoint(model: torch.nn.Module, out_dir: Path) -> dict[str, Any]:
     path = out_dir / "_preflight_checkpoint.pt"
     t0 = time.perf_counter()
     payload = T.checkpoint_payload(
-        arm="PREFLIGHT", seed=0, horizon=0, epoch=0, global_step=0, model=model, optimizer=opt,
+        arm="REAL2", seed=0, horizon=0, epoch=0, global_step=0, model=model, optimizer=opt,
         rng_state=C.capture_rng_state(), plan={"global_plan_sha256": "preflight"}, model_audit={"parameters": {"total": 0}},
         valid_ap=None, kind="preflight",
     )
@@ -131,10 +131,12 @@ def project(
     steps_per_epoch: int,
     horizon: int,
 ) -> dict[str, Any]:
+    """Projection uses the *median* step time (an occasional stall is absorbed by
+    the 15% scheduling reserve) and the measured full-split evaluation cost."""
     out = {}
     for arm in arms:
         rec = per_arm[arm]
-        epoch_s = steps_per_epoch * rec["step_ms_mean"] / 1e3 + rec["eval_total_seconds"] + rec.get("checkpoint_seconds", 0.0)
+        epoch_s = steps_per_epoch * rec["step_ms_p50"] / 1e3 + rec["eval_total_seconds"] + rec.get("checkpoint_seconds", 0.0)
         out[arm] = {
             "epoch_seconds": float(epoch_s),
             "horizon_seconds": float(epoch_s * horizon),
@@ -283,6 +285,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             base = out["arms"][arm]
             per_arm[arm] = {
                 "step_ms_mean": base["step_ms_mean"],
+                "step_ms_p50": base["step_ms_p50"],
+                "step_ms_p90": base["step_ms_p90"],
                 "eval_total_seconds": eval_total.get(arm) if eval_total.get(arm) is not None else eval_fallback,
                 "checkpoint_seconds": ck["save_seconds"],
                 "measured_step": arm in out["arms"],
@@ -292,7 +296,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             # unmeasured arm: use the mean of the measured deep arms
             deep = [a for a in out["arms"] if a != "W2"]
             step_ms = float(np.mean([out["arms"][a]["step_ms_mean"] for a in deep])) if deep else 0.0
-            per_arm[arm] = {"step_ms_mean": step_ms, "eval_total_seconds": eval_fallback,
+            step_p50 = float(np.mean([out["arms"][a]["step_ms_p50"] for a in deep])) if deep else 0.0
+            per_arm[arm] = {"step_ms_mean": step_ms, "step_ms_p50": step_p50, "step_ms_p90": float(np.mean([out["arms"][a]["step_ms_p90"] for a in deep])) if deep else 0.0,
+                            "eval_total_seconds": eval_fallback,
                             "checkpoint_seconds": ck["save_seconds"], "measured_step": False, "measured_eval": False}
     out["per_arm_projection_inputs"] = per_arm
     out["projections"] = {
@@ -309,7 +315,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ):
             for h in C.HORIZONS:
                 epoch_seconds = {
-                    unit: per_arm["W2" if UNIT_COST[unit] == "W2" else UNIT_COST[unit]]["step_ms_mean"] * C.STEPS_PER_EPOCH / 1e3
+                    unit: per_arm[UNIT_COST[unit]]["step_ms_p50"] * C.STEPS_PER_EPOCH / 1e3
                     + per_arm[UNIT_COST[unit]]["eval_total_seconds"]
                     + per_arm[UNIT_COST[unit]]["checkpoint_seconds"]
                     for wave in waves for unit in wave
