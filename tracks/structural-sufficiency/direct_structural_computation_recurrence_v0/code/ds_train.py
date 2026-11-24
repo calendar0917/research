@@ -205,6 +205,13 @@ def _cell(value: Any) -> Any:
     return value
 
 
+def _read_csv(path: Path) -> list[dict[str, Any]]:
+    if not path.is_file():
+        return []
+    with open(path, newline="", encoding="utf-8") as fh:
+        return [dict(row) for row in csv.DictReader(fh)]
+
+
 def _write_csv(path: Path, fields: Sequence[str], rows: Sequence[Mapping[str, Any]]) -> str:
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", newline="", encoding="utf-8") as fh:
@@ -443,6 +450,39 @@ def train(
     last_checkpoint_sha = ""
     final_checkpoint_sha = ""
     eval_completed: list[int] = []
+    resume_repair: dict[str, Any] | None = None
+    if resume is not None:
+        # a resume must never erase an already written curve: re-adopt it and
+        # re-derive the frozen selection record (same rule: strict improvement, earlier epoch wins)
+        curve_rows = _read_csv(curve_path)
+        per_task_rows = _read_csv(per_task_path)
+        if curve_rows:
+            rows = [(int(r["epoch"]), float(r["valid_ap"])) for r in curve_rows if r.get("valid_ap")]
+            if rows:
+                best_epoch, best_valid_ap = max(rows, key=lambda item: (item[1], -item[0]))
+            eval_completed = [int(r["epoch"]) for r in curve_rows]
+            epochs_run = len(curve_rows)
+            recorded = resume.get("valid_ap")
+            if recorded is not None and best_epoch is not None and abs(float(recorded) - float(best_valid_ap)) > 1e-5:
+                raise RuntimeError(
+                    f"resume: curve best {best_valid_ap} disagrees with checkpoint best {recorded}"
+                )
+            prev = out_dir / "run.failed.json"
+            resume_repair = {
+                "resumed_from_epoch": int(resume["epoch"]),
+                "curve_rows_restored": len(curve_rows),
+                "best_from_curve": {"epoch": int(best_epoch), "valid_ap": float(best_valid_ap)},
+                "previous_status": None,
+                "previous_detail": None,
+            }
+            if prev.is_file():
+                old = C.read_json(prev)
+                resume_repair["previous_status"] = old.get("status")
+                resume_repair["previous_detail"] = old.get("detail")
+                resume_repair["previous_stop_reason"] = old.get("stop_reason")
+        usage_existing = C.read_json(usage_path) if usage_path.is_file() else None
+        if usage_existing and usage_existing.get("history"):
+            usage_history = list(usage_existing["history"])
     best_epoch_reports: dict[str, Any] = {}
     clip_events_total = 0
     epochs_run = int(start_epoch) - 1
@@ -766,7 +806,11 @@ def train(
             "test_role": C.TEST_ROLE,
         }
         C.write_json(out_dir / "best_checkpoint_eval.json", best_eval)
-        if abs(float(best_eval["valid"]["ap"]) - float(best_valid_ap)) > 1e-6:
+        # Re-scoring the same weights is reproducible to ~2e-6 on this GPU: the
+        # layer-2 scatter uses atomic adds (index_add_), whose summation order is not
+        # fixed.  The gate below is a corruption guard, not a bit-exactness claim.
+        best_eval["valid_ap_minus_recorded"] = float(best_eval["valid"]["ap"]) - float(best_valid_ap)
+        if abs(best_eval["valid_ap_minus_recorded"]) > 1e-5:
             raise RuntimeError(
                 f"best-checkpoint Valid AP {best_eval['valid']['ap']} != recorded {best_valid_ap}"
             )
@@ -859,6 +903,8 @@ def train(
         "rng_epoch_hashes": rng_epoch_hashes,
         "started_utc": started_utc,
         "finished_utc": C.utcnow(),
+        "resume_repair": resume_repair,
+        "epoch0_diagnostic_note": None if epoch0_report or resume is None else "epoch 0 ran in a previous attempt; see analysis/checks.json A2.4 and the run log",
         "test_role": C.TEST_ROLE,
         "test_used_for_selection": False,
         "test_scored_every_epoch": True,
