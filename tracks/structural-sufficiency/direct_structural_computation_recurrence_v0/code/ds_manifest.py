@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import shutil
 import json
 import os
 import subprocess
@@ -28,6 +29,13 @@ _configure_imports()
 import ds_common as C  # noqa: E402
 
 ARTIFACT_SUFFIXES = (".json", ".csv", ".npy", ".md", ".txt", ".log")
+#: small per-unit artefacts copied into ``results/`` (checkpoints and prediction
+#: matrices stay on the host; they are recorded by path + SHA256 only)
+STAGE_FILES = (
+    "run.json", "run.failed.json", "train_curve.csv", "per_task_ap.csv",
+    "best_checkpoint_eval.json", "best_epoch_reports.json", "structural_usage.json",
+    "training_order.json",
+)
 SKIP_DIRS = {"__pycache__", "_shared"}
 
 
@@ -102,6 +110,33 @@ def checkpoints(base: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def stage() -> list[str]:
+    """Copy the small per-unit artefacts into ``results/`` (no checkpoints, no logits)."""
+    copied: list[str] = []
+    for d in sorted(C.RUNS.glob("*_seed*")):
+        if not d.is_dir():
+            continue
+        out = C.RESULTS / "runs" / d.name
+        for name in STAGE_FILES:
+            src = d / name
+            if not src.is_file():
+                continue
+            out.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, out / name)
+            copied.append(str((out / name).relative_to(C.REPO)))
+    hist = C.RUNS / "HIST"
+    if hist.is_dir():
+        for d in sorted(hist.glob("*_seed*")):
+            out = C.RESULTS / "historical_reevaluation" / d.name
+            for name in ("best_checkpoint_eval.json",):
+                src = d / name
+                if src.is_file():
+                    out.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src, out / name)
+                    copied.append(str((out / name).relative_to(C.REPO)))
+    return copied
+
+
 def ledger(units: Sequence[tuple[str, str, int]]) -> list[dict[str, Any]]:
     rows = []
     for label, arm, seed in units:
@@ -143,6 +178,7 @@ def ledger(units: Sequence[tuple[str, str, int]]) -> list[dict[str, Any]]:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", default=str(C.RESULTS / "manifest.json"))
+    parser.add_argument("--stage", action="store_true", help="copy the small per-unit artefacts into results/")
     args = parser.parse_args(argv)
 
     units = [
@@ -156,6 +192,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ("DYNAMIC_seed1", "DYNAMIC", 1),
     ]
     units.extend([(f"{C.CANDIDATES[0]}_seed1", C.CANDIDATES[0], 1)])
+    staged = stage() if args.stage else []
     ledger_rows = ledger(units)
     gpu_hours = sum(float(r.get("gpu_hours") or 0.0) for r in ledger_rows if r.get("unit") != "CSTAR_seed1")
     new_units = [r for r in ledger_rows if r.get("status") not in (None, "missing")
@@ -204,6 +241,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "hard_cap": 16.0,
             "note": "historical W2/DYNAMIC seed-0 GPU hours are not spent by this round",
         },
+        "staged_files": staged,
         "test_role": C.TEST_ROLE,
         "notes": [
             "checkpoints stay on the host (4.5 MB each) and are listed with SHA256 only",
