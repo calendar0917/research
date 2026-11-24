@@ -1,0 +1,269 @@
+{
+  "schema": "ssta-v0",
+  "round": "structural-state-action-v0",
+  "status": "OK",
+  "data_identity": {
+    "valid_rows": 73545,
+    "observations": 36998,
+    "evaluable_observations": 36952,
+    "frozen_sfec_metric_max_abs_diff": 0.0,
+    "w3_valid_mae_eV_reproduced": 0.12780917351313392,
+    "w3_checkpoint_valid_mae_eV": 0.12780916721022834,
+    "checkpoint_epoch": 39,
+    "checkpoint_sha256": "f4175f141702b9cc10b23404c6689936fed0692aac32086489e0a4bf2492b5ac",
+    "model": "LCRC-W3",
+    "parameters": 2038167,
+    "widths": {
+      "atom_hidden": 384,
+      "atom_out": 288,
+      "bond_hidden": 480,
+      "bond_out": 288,
+      "stat_rank": 96,
+      "local_hidden": 576,
+      "width": 192,
+      "rho_hidden": 192,
+      "scorer_hidden": 96,
+      "pool_hidden": 264,
+      "n_heads": 4,
+      "n_out": 1
+    },
+    "test_labels_read": false,
+    "training_performed": false,
+    "weights_modified": false
+  },
+  "questions": {
+    "Q1_lcrc_predicts_double_difference": {
+      "observation_equal": {
+        "ZERO": {
+          "n": 59214,
+          "mae_eV": 0.48267888797614183,
+          "rmse_eV": 0.7057804910435075,
+          "corr": null,
+          "slope": 0.0,
+          "dir_acc": 0.0,
+          "dir_n": 45876
+        },
+        "PAIR_Q": {
+          "n": 59214,
+          "mae_eV": 0.46867934403834915,
+          "rmse_eV": 0.6884725068463399,
+          "corr": 0.22725734681540416,
+          "slope": 0.06452053462211797,
+          "dir_acc": 0.3649184758915337,
+          "dir_n": 45876
+        },
+        "LOCAL": {
+          "n": 59214,
+          "mae_eV": 0.44057703930472414,
+          "rmse_eV": 0.6376918427609821,
+          "corr": 0.4459989316809618,
+          "slope": 0.1438084904696781,
+          "dir_acc": 0.5356177522015869,
+          "dir_n": 45876
+        },
+        "LCRC": {
+          "n": 59214,
+          "mae_eV": 0.17982969164882645,
+          "rmse_eV": 0.2668012945047214,
+          "corr": 0.92609574804727,
+          "slope": 0.8794824867138071,
+          "dir_acc": 0.8920568488970267,
+          "dir_n": 45876
+        }
+      },
+      "pair_type_macro": {
+        "ZERO": {
+          "n_pairs": 1542,
+          "mae_eV": 0.5033204127931895,
+          "rmse_eV": 0.6243034298094184,
+          "dir_acc": 0.0,
+          "dir_n": 45876,
+          "ci_mae": [
+            0.48773808481681213,
+            0.5197469963675239
+          ]
+        },
+        "PAIR_Q": {
+          "n_pairs": 1542,
+          "mae_eV": 0.49140448026217204,
+          "rmse_eV": 0.609502560552528,
+          "dir_acc": 0.31023382932646715,
+          "dir_n": 45876,
+          "ci_mae": [
+            0.4751473919520182,
+            0.5081791534162808
+          ]
+        },
+        "LOCAL": {
+          "n_pairs": 1542,
+          "mae_eV": 0.4546813941677273,
+          "rmse_eV": 0.5628065633995285,
+          "dir_acc": 0.5446583597050302,
+          "dir_n": 45876,
+          "ci_mae": [
+            0.44063058702280494,
+            0.4691157839647738
+          ]
+        },
+        "LCRC": {
+          "n_pairs": 1542,
+          "mae_eV": 0.18030387266941622,
+          "rmse_eV": 0.23167527277140854,
+          "dir_acc": 0.8860127978757254,
+          "dir_n": 45876,
+          "ci_mae": [
+            0.1749030280809343,
+            0.185668881196018
+          ]
+        }
+      },
+      "contrasts": {
+        "LCRC_minus_ZERO": {
+          "point": -0.32301654012377323,
+          "ci": [
+            -0.3379910911054602,
+            -0.30664241686950316
+          ],
+          "n_pairs": 1542
+        },
+        "LCRC_minus_PAIR_Q": {
+          "point": -0.31110060759275593,
+          "ci": [
+            -0.32561793862484134,
+            -0.29549493399711546
+          ],
+          "n_pairs": 1542
+        },
+        "LCRC_minus_LOCAL": {
+          "point": -0.274377521498311,
+          "ci": [
+            -0.28780548103199965,
+            -0.26062000172933797
+          ],
+          "n_pairs": 1542
+        }
+      }
+    },
+    "Q2_equivalent_additive_state": {
+      "replay_passes": true,
+      "max_prediction_error_eV": 9.877752571441079e-07,
+      "reconstructed_terms": [
+        "pred_eV_vs_batch_forward",
+        "pred_eV_vs_frozen_full_valid_pass",
+        "logits_vs_batch_forward",
+        "sum_f_h",
+        "rho_output",
+        "attention_residual_output",
+        "mean_h",
+        "mean_h2",
+        "head_pooled_vector",
+        "log1p_n",
+        "node_count"
+      ],
+      "increment_replay_passes": true,
+      "increment_replay_max_error_eV": 6.947196418138901e-07
+    },
+    "Q3_same_record_same_increment": {
+      "same_record_passes": true,
+      "same_record_max_h_deviation": 1.1920928955078125e-06,
+      "renumbering_record_identical": true,
+      "renumbering_state_delta": 2.9802322387695312e-08,
+      "record_increment_pass_fraction": 1.0,
+      "record_increment_max_error": 7.45506294919096e-06
+    },
+    "Q4_same_increment_different_response": {
+      "rectangles_four_distinct_molecules": 29309,
+      "same_edit_rectangles": 946,
+      "same_edit_pair_types": 491,
+      "same_edit_LCRC_macro_mae_eV": 0.14309297638960353,
+      "same_edit_ZERO_macro_mae_eV": 0.30145789145620794,
+      "same_edit_PAIR_Q_macro_mae_eV": 0.3014504097108276,
+      "same_edit_LCRC_minus_ZERO": {
+        "point": -0.15836491506660438,
+        "ci": [
+          -0.1881778486613725,
+          -0.13034352393805917
+        ],
+        "n_pairs": 491
+      },
+      "same_edit_nonempty_LCRC_macro_mae_eV": 0.14309297638960353,
+      "same_edit_nonempty_ZERO_macro_mae_eV": 0.30145789145620794,
+      "same_edit_nonempty_n": 946,
+      "strict_rectangles": 38,
+      "strict_pair_types": 27,
+      "strict_LCRC_macro_mae_eV": 0.13425296443329027,
+      "strict_ZERO_macro_mae_eV": 0.21675883850476868,
+      "strict_insufficient_support": true,
+      "strict_decomposition": {
+        "n_rectangles": 38,
+        "max_deltaU_gap": 2.983344167262203e-06,
+        "delta_g_identical_fraction": 1.0,
+        "model_response_difference_abs_mean_eV": 0.1183606245006834,
+        "model_response_difference_abs_max_eV": 0.7636154864616564,
+        "n_with_model_response_difference_ge_0.01_eV": 31,
+        "statement": "dU and dg are identical across the two contexts, so the entire model double difference D_LCRC is produced by the nonlinear readout applied to two different initial states (U(A), g(A)); it is not an input-increment difference."
+      }
+    },
+    "Q5_support_coverage": {
+      "evaluable_observations": 36952,
+      "observed_pair_types": 1677,
+      "pair_types_with_2plus_contexts": 1542,
+      "possible_context_pairs": 2551216,
+      "selected_rectangles": 59214,
+      "selected_fraction_of_possible": 0.023210108434566105,
+      "molecule_disjoint_rectangles": 11930,
+      "molecule_disjoint_pair_types": 1542,
+      "state_sample_molecules": 11984,
+      "state_sample_rectangles": 29313,
+      "state_sample_pair_types": 1288,
+      "clean_rectangles_screened": 29313,
+      "rectangles_four_distinct_molecules": 29309,
+      "same_edit_rectangles": 946,
+      "same_edit_pair_types": 491,
+      "strict_same_dg_rectangles": 38,
+      "strict_same_dg_pair_types": 27
+    }
+  },
+  "resources": {
+    "total_seconds": 35.80430641100975,
+    "peak_rss_gb": 2.1501007080078125,
+    "cpu_only": true,
+    "target_seconds": 300,
+    "hard_ceiling_seconds": 600,
+    "w3_inference_seconds": 17.900319984997623,
+    "torch_threads": 8
+  },
+  "artifacts": {
+    "interaction_results": "tracks/structural-sufficiency/structural_state_action_v0/analysis/interaction_results.csv",
+    "state_replay": "tracks/structural-sufficiency/structural_state_action_v0/analysis/state_replay.json",
+    "action_support": "tracks/structural-sufficiency/structural_state_action_v0/analysis/action_support.json",
+    "summary": "tracks/structural-sufficiency/structural_state_action_v0/analysis/summary.json",
+    "report": "tracks/structural-sufficiency/structural_state_action_v0/REPORT.md"
+  },
+  "notes": {
+    "no_training": "no parameter was updated and no checkpoint was selected",
+    "no_new_labels": "no molecule label was generated or imputed",
+    "official_valid_only": "official Test labels were never indexed",
+    "rectangles_are_not_independent": "pair-type macro metrics with pair-type bootstrap intervals are the primary summary; rectangle counts are never used as sample sizes"
+  },
+  "log": [
+    "[    0.0s] load frozen W3 checkpoint + one Valid inference pass",
+    "[   18.9s] W3 Valid MAE 0.127809174 eV (checkpoint 0.127809167) in 17.9s; LCRC-W3 2038167 parameters, widths {'atom_hidden': 384, 'atom_out': 288, 'bond_hidden': 480, 'bond_out': 288, 'stat_rank': 96, 'local_hidden': 576, 'width': 192, 'rho_hidden': 192, 'scorer_hidden': 96, 'pool_hidden': 264, 'n_heads': 4, 'n_out': 1}",
+    "[   18.9s] reconstruct the frozen SFEC v1 Valid observations",
+    "[   22.5s] observations 36998 (evaluable 36952); frozen metric max abs diff 0; rss 1.86 GB",
+    "[   22.7s] rectangles 59214 over 1542 pair types (cap 64 per type; 2551216 possible)",
+    "[   22.7s] section 3: double differences",
+    "[   23.0s] section 3 done: all: LCRC 0.1798 / ZERO 0.4827, same_q: LCRC 0.1750 / ZERO 0.3958, different_q: LCRC 0.1811 / ZERO 0.5063, both_contexts_unseen_in_1m_prefix: LCRC 0.1747 / ZERO 0.3091, clean_cells: LCRC 0.1704 / ZERO 0.5017, molecule_disjoint: LCRC 0.1786 / ZERO 0.4704",
+    "[   23.0s] select the fixed-hash molecule sample (clean cells only)",
+    "[   23.1s] sample: 29313 rectangles, 11984 unique molecules, 1288 pair types, rounds 64",
+    "[   23.1s] computation audit: local called 1x, b_mean=False, local input 1265",
+    "[   23.1s] one frozen forward over the sample + exact root records",
+    "[   26.8s] states: 11984 molecules, 157240 atoms, record bytes mean 1352/max 3006, 3.6s, rss 1.86 GB",
+    "[   26.8s] attention shift c_k = [6.5353, 11.2321, 6.3425, 9.3617]",
+    "[   27.6s] states built: U shape (11984, 1158) (111.0 MB); rss 1.86 GB",
+    "[   27.6s] sections 4/5: state replay and record validation",
+    "[   33.0s]   replay max |pred err| 9.88e-07 eV (pass=True); pooled 3.6e-06; record dU pass 1.0000; increment replay 6.95e-07 eV",
+    "[   33.0s] section 6: identical-edit environments",
+    "[   35.8s]   same-edit 946 rectangles / 491 pair types; strict (same dg) 38 / 27; insufficient=True"
+  ]
+}
