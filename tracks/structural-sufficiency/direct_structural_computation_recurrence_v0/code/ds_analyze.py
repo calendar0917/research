@@ -138,15 +138,16 @@ def _num(v: Any) -> float | None:
     return out if math.isfinite(out) else None
 
 
-def load_unit(label: str, arm: str, seed: int) -> dict[str, Any] | None:
+def load_unit(label: str, arm: str, seed: int, horizon: int = 40) -> dict[str, Any] | None:
     """Load one unit: new round run, C*/K* alias, or a historical reference."""
     if arm in ("CSTAR", "KSTAR"):
         return None  # resolved by the caller
-    if label.startswith("HIST_"):
-        return load_historical(arm, seed)
     d = C.run_dir(arm, seed)
     rj = d / "run.json"
     if not rj.is_file():
+        # seed-0 references come from the historical rounds (read-only re-evaluation)
+        if seed == 0 and arm in C.HISTORICAL:
+            return load_historical(arm, seed, horizon=horizon)
         return None
     run = C.read_json(rj)
     if run.get("status") != "COMPLETED":
@@ -193,7 +194,7 @@ def _split_block(block: Mapping[str, Any] | None) -> dict[str, Any]:
     }
 
 
-def load_historical(arm: str, seed: int) -> dict[str, Any] | None:
+def load_historical(arm: str, seed: int, horizon: int = 40) -> dict[str, Any] | None:
     """Read-only reference: the historical checkpoint re-scored by this round's code."""
     base = C.RUNS / "HIST" / f"{arm}_seed{seed}"
     rj = base / "best_checkpoint_eval.json"
@@ -205,6 +206,9 @@ def load_historical(arm: str, seed: int) -> dict[str, Any] | None:
     ev = C.read_json(rj)
     curve_src = Path(hist["run_dir"]) / "train_curve.csv"
     curve = _curve(curve_src) if curve_src.is_file() else []
+    # the historical runs trained for 40 epochs; only the frozen H-epoch prefix is
+    # comparable, so every derived column (last-k mean, endpoint) uses that prefix
+    curve = curve[: int(horizon)]
     run_json = Path(hist["run_dir"]) / "run.json"
     run = C.read_json(run_json) if run_json.is_file() else {}
     unit = {
@@ -212,7 +216,8 @@ def load_historical(arm: str, seed: int) -> dict[str, Any] | None:
         "arm": arm,
         "seed": int(seed),
         "source": f"historical {hist['protocol']} (read-only checkpoint re-evaluation)",
-        "horizon": 40,
+        "horizon": int(horizon),
+        "trained_epochs": 40,
         "params": int(hist["parameters"]),
         "best_epoch": int(hist["best_epoch"]),
         "best_valid_ap": float(hist["best_valid_ap"]),
@@ -231,9 +236,12 @@ def load_historical(arm: str, seed: int) -> dict[str, Any] | None:
         else None,
         "historical": True,
     }
+    last = curve[-1] if curve else {}
     unit["endpoint"] = {
-        "epoch": 40,
-        "valid_ap": hist.get("valid_ap_at_40"),
+        "epoch": int(horizon),
+        "valid_ap": _num(last.get("valid_ap")),
+        "train_ap": None,
+        "test_ap": None,
     }
     unit["has_epoch_test"] = any(r.get("test_ap") is not None for r in curve)
     unit["has_epoch_train"] = any(r.get("train_ap") is not None for r in curve)
@@ -792,11 +800,11 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     units: dict[str, dict[str, Any]] = {}
     for arm in ("W2", "DYNAMIC", "SELF", "FIXED1", "REAL2", "BAG2"):
-        u = load_unit(arm, arm, 0)
+        u = load_unit(arm, arm, 0, horizon=horizon)
         if u is not None:
             units[arm] = u
     for arm in ("W2", "DYNAMIC"):
-        u = load_unit(f"HIST_{arm}", arm, 1)
+        u = load_unit(f"{arm}_seed1", arm, 1, horizon=horizon)
         if u is not None:
             units[f"{arm}_seed1"] = u
 
@@ -813,6 +821,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     units["CSTAR"] = dict(units[cstar]) if cstar else None
     kstar = C.CONTROL_OF.get(cstar) if cstar else None
     units["KSTAR"] = dict(units[kstar]) if kstar in units else None
+    for arm in (cstar, kstar):
+        if arm and arm not in (None, "W2", "DYNAMIC") and f"{arm}_seed1" not in units:
+            u = load_unit(f"{arm}_seed1", arm, 1, horizon=horizon)
+            if u is not None:
+                units[f"{arm}_seed1"] = u
     if cstar:
         for u in (units["CSTAR"],):
             u["label"] = f"C*={cstar}"
@@ -834,17 +847,26 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     rng = np.random.default_rng(20261125)
     comparisons: dict[str, Any] = {}
+    def resolve(arm: str, seed: int) -> dict[str, Any] | None:
+        if arm in ("CSTAR", "KSTAR"):
+            base = units.get(arm)
+            if base is None:
+                return None
+            if seed == 0:
+                return base
+            other = units.get(f"{base['arm']}_seed1")
+            if other is None:
+                return None
+            out = dict(other)
+            out["label"] = f"{arm}={base['arm']}_seed1"
+            return out
+        if seed == 0:
+            return units.get(arm)
+        return units.get(f"{arm}_seed1")
+
     for a, sa, b, sb, name in COMPARISONS + SEED1_COMPARISONS:
-        ua = units.get(a) if a not in ("CSTAR", "KSTAR") else units.get(a)
-        ub = units.get(b) if b not in ("CSTAR", "KSTAR") else units.get(b)
-        if a == "W2" and sa == 1:
-            ua = units.get("W2_seed1")
-        if b == "W2" and sb == 1:
-            ub = units.get("W2_seed1")
-        if a == "DYNAMIC" and sa == 1:
-            ua = units.get("DYNAMIC_seed1")
-        if b == "DYNAMIC" and sb == 1:
-            ub = units.get("DYNAMIC_seed1")
+        ua = resolve(a, sa)
+        ub = resolve(b, sb)
         if ua is None or ub is None:
             continue
         logits = None
