@@ -414,80 +414,41 @@ def check_invariance(spec: Any, norm: Mapping[str, Any], batch: Mapping[str, Any
     record("A2.5_renumber_direction_order_invariance", ok, detail)
 
 
-def check_batch_isolation(spec: Any, norm: Mapping[str, Any], batch: Mapping[str, Any], n_mol: int = 4) -> None:
-    detail: dict[str, Any] = {"n_molecules": int(n_mol), "arms": {}}
+def check_batch_isolation(spec: Any, norm: Mapping[str, Any], task: Any, rows: Sequence[int]) -> None:
+    """Batched vs per-molecule logits, plus cross-molecule information isolation."""
+    rows = [int(r) for r in rows]
+    detail: dict[str, Any] = {"n_molecules": len(rows), "arms": {}}
     ok = True
-    bond_batch = batch["bond_batch"]
-    atom_batch = batch["atom_batch"]
-    sub = _slice_molecules(batch, list(range(int(n_mol))))
-    for arm in C.DEEP_ARMS:
-        m, _ = M.build_ds_model(spec, norm, C.N_TASKS, arm=arm, seed=0, device="cpu")
-        M.randomize_new_modules(m, seed=4321)
+    whole_batch = C.PC.collate(task.cache, rows)
+    singles = [C.PC.collate(task.cache, [r]) for r in rows]
+    atom_batch = whole_batch["atom_batch"]
+    for arm in ("W2",) + C.DEEP_ARMS:
+        if arm == "W2":
+            m, _ = M.build_w2(spec, norm, C.N_TASKS, seed=0, device="cpu")
+        else:
+            m, _ = M.build_ds_model(spec, norm, C.N_TASKS, arm=arm, seed=0, device="cpu")
+            M.randomize_new_modules(m, seed=4321)
         m.eval()
-        mols = []
         with torch.inference_mode():
-            whole = m(sub).double()
-            for g in range(n_mol):
-                one = _slice_molecules(batch, [int(g)])
-                mols.append(m(one).double())
-        singles = torch.cat(mols, dim=0)
-        d = tol_rel(singles, whole, atol=1e-4, rtol=1e-4)
-        # cross-molecule isolation: modify molecule 1 only
-        pert = {k: (v.clone() if torch.is_tensor(v) else v) for k, v in sub.items()}
+            whole = m(whole_batch).double()
+            per_mol = torch.cat([m(b).double() for b in singles], dim=0)
+        d = tol_rel(per_mol, whole, atol=1e-4, rtol=1e-4)
+        pert = {k: (v.clone() if torch.is_tensor(v) else v) for k, v in whole_batch.items()}
         idx1 = atom_batch == 1
-        pert["atom_feat"] = pert["atom_feat"].clone()
         pert["atom_feat"][idx1] = pert["atom_feat"][idx1] + 0.5
+        pert["global"][1] = pert["global"][1] + 0.5
         with torch.inference_mode():
             after = m(pert).double()
-        iso = tol_rel(after[torch.tensor([0, 2, 3])], whole[torch.tensor([0, 2, 3])], atol=1e-6, rtol=1e-6)
-        detail["arms"][arm] = {"batch_vs_single": d, "cross_molecule_isolation": iso}
-        ok = ok and d["ok"] and iso["ok"]
+        others = torch.tensor([i for i in range(len(rows)) if i != 1])
+        iso = tol_rel(after[others], whole[others], atol=1e-6, rtol=1e-6)
+        changed = tol_rel(after[torch.tensor([1])], whole[torch.tensor([1])], atol=0.0, rtol=0.0)
+        detail["arms"][arm] = {
+            "batch_vs_single": d,
+            "cross_molecule_isolation": iso,
+            "perturbed_molecule_did_change": not changed["ok"],
+        }
+        ok = ok and d["ok"] and iso["ok"] and (not changed["ok"])
     record("A2.6_batch_vs_single_and_isolation", ok, detail)
-
-
-def _slice_molecules(batch: Mapping[str, Any], mol_ids: Sequence[int]) -> dict[str, Any]:
-    """Rebuild a batch dict restricted to ``mol_ids`` (whole molecules only)."""
-    mol_ids = list(mol_ids)
-    atom_batch = batch["atom_batch"]
-    bond_batch = batch["bond_batch"]
-    a_keep = torch.zeros_like(atom_batch, dtype=torch.bool)
-    for g in mol_ids:
-        a_keep |= atom_batch == int(g)
-    b_keep = torch.zeros_like(bond_batch, dtype=torch.bool)
-    for g in mol_ids:
-        b_keep |= bond_batch == int(g)
-    a_idx = torch.nonzero(a_keep, as_tuple=False).flatten()
-    remap = torch.full((int(atom_batch.numel()),), -1, dtype=torch.long)
-    remap[a_idx] = torch.arange(a_idx.numel(), dtype=torch.long)
-    gid = {int(g): i for i, g in enumerate(mol_ids)}
-    out: dict[str, Any] = {}
-    n_per_atom = int(atom_batch.numel())
-    for key, value in batch.items():
-        if torch.is_tensor(value) and value.dim() and value.shape[0] == n_per_atom:
-            out[key] = value[a_idx].clone()
-        elif torch.is_tensor(value) and value.dim() and value.shape[0] == int(bond_batch.numel()):
-            out[key] = value[b_keep].clone()
-        else:
-            out[key] = value.clone() if torch.is_tensor(value) else value
-    out["n_graphs"] = len(mol_ids)
-    out["atom_batch"] = torch.tensor([gid[int(g)] for g in atom_batch[a_idx].tolist()], dtype=torch.long)
-    out["bond_batch"] = torch.tensor([gid[int(g)] for g in bond_batch[b_keep].tolist()], dtype=torch.long)
-    if out["bond_index"].numel():
-        out["bond_index"] = remap[out["bond_index"]]
-    for key in ("nbr_atom", "path_atom", "path_end"):
-        if key in out and out[key].numel():
-            out[key] = remap[out[key]]
-    if "path_graph" in out and out["path_graph"].numel():
-        out["path_graph"] = torch.tensor([gid[int(g)] for g in batch["path_graph"].tolist()], dtype=torch.long)
-    if "atom_off" in out:
-        counts = torch.bincount(out["atom_batch"], minlength=len(mol_ids))
-        out["atom_off"] = torch.cat([torch.zeros(1, dtype=torch.long), torch.cumsum(counts, 0)[:-1]])
-    if "atom_counts" in out:
-        out["atom_counts"] = torch.bincount(out["atom_batch"], minlength=len(mol_ids))
-    if "bond_counts" in out:
-        out["bond_counts"] = torch.bincount(out["bond_batch"], minlength=len(mol_ids))
-    out["global"] = batch["global"][torch.tensor(mol_ids, dtype=torch.long)].clone()
-    return out
 
 
 def check_bond_occurrence(batch: Mapping[str, Any]) -> None:
@@ -940,7 +901,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         check_reference_formulas(spec, norm, C.PC.collate(task.cache, task.valid_rows[:4].tolist()), label="real_batch_4")
         check_reference_formulas(spec, norm, synthetic_star(spec), label="star")
         check_invariance(spec, norm, batch)
-        check_batch_isolation(spec, norm, C.PC.collate(task.cache, task.valid_rows[:4].tolist()))
+        check_batch_isolation(spec, norm, task, task.valid_rows[:4].tolist())
         check_gradients(spec, norm, batch, y)
         # real graph statistics (pair multiplicity at the real degree distribution)
         stats = degree_statistics(task)
