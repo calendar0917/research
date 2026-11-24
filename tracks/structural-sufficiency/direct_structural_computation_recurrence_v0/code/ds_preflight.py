@@ -150,18 +150,24 @@ def simulate(
     units: Sequence[Sequence[str]],
     *,
     available_seconds: float,
+    horizon: int,
     reserve_fraction: float = 0.15,
 ) -> dict[str, Any]:
-    """Wave simulation of the frozen unit list on two GPUs (greedy: first free GPU)."""
+    """Wave simulation of the frozen unit list on two GPUs (greedy: first free GPU).
+
+    A unit's wall time is ``horizon * epoch_seconds``; waves run side by side and a
+    GPU takes the next wave as soon as it is free.
+    """
     gpu_free = [0.0, 0.0]
     assignment = []
     for wave in units:
         gpu = int(np.argmin(gpu_free))
         start = gpu_free[gpu]
-        dur = max(epoch_seconds[a] for a in wave)
+        dur = max(epoch_seconds[a] for a in wave) * int(horizon)
         gpu_free[gpu] = start + dur
-        assignment.append({"gpu": gpu, "units": list(wave), "start_seconds": start,
-                           "duration_seconds": dur, "finish_seconds": gpu_free[gpu]})
+        assignment.append({"gpu": gpu, "units": list(wave), "start_seconds": float(start),
+                           "duration_seconds": float(dur), "finish_seconds": float(gpu_free[gpu]),
+                           "horizon": int(horizon)})
     makespan = max(gpu_free)
     return {
         "assignment": assignment,
@@ -207,8 +213,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--write-schedule", action="store_true")
     parser.add_argument("--arms", default="")
     parser.add_argument("--eval-arms", default="W2,BAG2")
+    parser.add_argument("--schedule-only", default="", help="recompute the schedule from an existing preflight JSON")
     args = parser.parse_args(argv)
     t0 = time.perf_counter()
+    if args.schedule_only:
+        src = C.read_json(Path(args.schedule_only))
+        out = {k: src[k] for k in ("schema", "round_id", "device", "gpu_name", "arms", "checkpoint",
+                                   "per_arm_projection_inputs", "projections", "seconds", "created_utc")}
+        _write_schedule(out, args)
+        C.write_json(Path(args.out), {**out, "schedule_recomputed_utc": C.utcnow()})
+        C.log(f"[preflight] schedule recomputed from {args.schedule_only}")
+        return 0
     device = torch.device(args.device)
     task = C.SD.load_task()
     test_info = C.load_test_labels(task, cache_dir=C.RUNS / "_shared")
@@ -306,6 +321,16 @@ def main(argv: Sequence[str] | None = None) -> int:
     }
 
     if args.write_schedule:
+        _write_schedule(out, args)
+    out["seconds"] = float(time.perf_counter() - t0)
+    C.write_json(Path(args.out), out)
+    C.log(f"[preflight] done in {out['seconds']:.1f}s -> {args.out}")
+    return 0
+
+
+def _write_schedule(out: dict[str, Any], args: Any) -> None:
+    per_arm = out["per_arm_projection_inputs"]
+    if True:
         available = float(args.remaining_seconds) - float(args.report_reserve_seconds)
         plans = {}
         for label, waves in (
@@ -320,7 +345,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     + per_arm[UNIT_COST[unit]]["checkpoint_seconds"]
                     for wave in waves for unit in wave
                 }
-                sim = simulate(epoch_seconds, waves, available_seconds=available)
+                sim = simulate(epoch_seconds, waves, available_seconds=available, horizon=h)
                 plans[f"{label}_H{h}"] = {**sim, "horizon": h, "label": label,
                                           "epoch_seconds": {k: float(v) for k, v in epoch_seconds.items()}}
         chosen = None
@@ -366,11 +391,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             },
         )
         out["schedule"] = {"chosen": chosen}
-
-    out["seconds"] = float(time.perf_counter() - t0)
-    C.write_json(Path(args.out), out)
-    C.log(f"[preflight] done in {out['seconds']:.1f}s -> {args.out}")
-    return 0
 
 
 if __name__ == "__main__":
