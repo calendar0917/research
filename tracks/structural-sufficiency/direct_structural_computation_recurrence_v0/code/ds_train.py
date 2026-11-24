@@ -482,6 +482,8 @@ def train(
                 resume_repair["previous_status"] = old.get("status")
                 resume_repair["previous_detail"] = old.get("detail")
                 resume_repair["previous_stop_reason"] = old.get("stop_reason")
+                resume_repair["first_started_utc"] = old.get("started_utc")
+                resume_repair["previous_finished_utc"] = old.get("finished_utc")
         usage_existing = C.read_json(usage_path) if usage_path.is_file() else None
         if usage_existing and usage_existing.get("history"):
             usage_history = list(usage_existing["history"])
@@ -914,7 +916,8 @@ def train(
         "rng_state_hashes_start": rng_start_hashes,
         "rng_state_hashes_end": rng_end_hashes,
         "rng_epoch_hashes": rng_epoch_hashes,
-        "started_utc": started_utc,
+        "started_utc": (resume_repair or {}).get("first_started_utc") or started_utc,
+        "this_attempt_started_utc": started_utc,
         "finished_utc": C.utcnow(),
         "resume_repair": resume_repair,
         "epoch0_diagnostic_note": None if epoch0_report or resume is None else "epoch 0 ran in a previous attempt; see analysis/checks.json A2.4 and the run log",

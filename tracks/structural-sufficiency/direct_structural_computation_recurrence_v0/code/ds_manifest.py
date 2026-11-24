@@ -166,6 +166,8 @@ def ledger(units: Sequence[tuple[str, str, int]]) -> list[dict[str, Any]]:
                 "wall_hours": round(float(run.get("wall_seconds") or 0.0) / 3600.0, 4),
                 "n_gpus": gpus,
                 "gpu_hours": round(hours, 4),
+                "prior_attempt_gpu_seconds": run.get("gpu_seconds_prior_attempts"),
+                "first_started_utc": (run.get("resume_repair") or {}).get("first_started_utc"),
                 "best_epoch": run.get("best_epoch"),
                 "best_valid_ap": run.get("best_valid_ap"),
                 "stopped_reason": run.get("stopped_reason"),
