@@ -299,8 +299,17 @@ def trace_molecules(
     return out
 
 
+def _smiles_path() -> Path:
+    try:
+        import lr_common as LC  # inherited: the frozen pcba_v1 cache location
+
+        return Path(LC.CACHE_PATH) / "smiles.jsonl"
+    except Exception:  # pragma: no cover - fallback keeps the trace optional
+        return C.SS / "lcrc_pcba_scale_pilot_v1/cache/pcba_v1/smiles.jsonl"
+
+
 def _smiles(gid: int) -> str | None:
-    path = C.PCBA_CACHE.parent / "smiles.jsonl"
+    path = _smiles_path()
     if not path.is_file():
         return None
     with open(path, encoding="utf-8") as fh:
