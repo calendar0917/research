@@ -81,7 +81,7 @@ def collect(base: Path) -> list[dict[str, Any]]:
     rows = []
     for p in walk(base):
         rel = p.relative_to(C.REPO)
-        if rel.parts[:2] == (C.RUNS.relative_to(C.REPO).parts[0], "runs"):
+        if C.RUNS in p.parents:
             continue  # host-only; summarised by staged_files and checkpoints
         rows.append(
             {
