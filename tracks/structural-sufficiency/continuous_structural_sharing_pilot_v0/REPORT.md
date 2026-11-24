@@ -141,9 +141,9 @@
 
 曲线读数：
 
-- 100%：SHARE 的 Test 从 epoch ≈50 起稳定低约 0.02，但 Valid 从 epoch ≈40 起稳定高约
-  0.02–0.04；best-Valid 选点没有改变这个冲突（同 epoch 82：D `0.6065/0.6670`，
-  S `0.6429/0.6400`）。
+- 100%：SHARE 的 Test 从 epoch ≈45–50 起多数 epoch 低约 0.02（仍有逐 epoch 波动），
+  但 Valid 从 epoch ≈40 起总体更高、epoch 50 之后稳定高约 0.03–0.04；best-Valid 选点
+  没有改变这个冲突（同 epoch 82：D `0.6065/0.6670`，S `0.6429/0.6400`）。
 - 50%：SHARE 只在早期（epoch 32 附近）拿到更好的 Valid；之后 Valid/Test 都变差。
   因此 `+0.005/+0.013` 更像是“early-stopping 时机”而不是稳定的低数据优势。
 - 所有 run 在 120 epoch 内都进入平台期（Fit 仍缓慢下降，Valid 已平坦或轻微上升），
