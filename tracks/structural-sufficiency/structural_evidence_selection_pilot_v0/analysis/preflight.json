@@ -1,0 +1,179 @@
+{
+  "cuda": "12.4",
+  "decision": {
+    "estimated_gpu_hours": 0.20537484169006348,
+    "estimated_seconds": {
+      "DENSE": 146.73942947387698,
+      "RANDOM": 289.84264755249023,
+      "SELECT": 302.7673530578613
+    },
+    "estimated_wall_seconds": 436.5820770263672,
+    "horizon": 60,
+    "within_gpu_budget": true,
+    "within_hard_wall": true,
+    "within_target_wall": true
+  },
+  "device": "cuda",
+  "feasible": true,
+  "gpu_budget_hours": 0.5,
+  "gpu_name": "NVIDIA A100-SXM4-40GB",
+  "hard_wall_seconds": 900.0,
+  "host": "a100-2",
+  "measurements": {
+    "DENSE": {
+      "arm": "DENSE",
+      "device": "cuda",
+      "estimated_epoch_seconds": 2.4456571578979496,
+      "estimates": {
+        "120": 293.47885894775396,
+        "60": 146.73942947387698,
+        "90": 220.10914421081546
+      },
+      "eval_metrics_smoke": {
+        "test": {
+          "mae": 0.9159115432413715,
+          "rmse": 1.107935894887206
+        },
+        "train": {
+          "mae": 0.9735039730523107,
+          "rmse": 1.2091211158895094
+        },
+        "valid": {
+          "mae": 0.9985861944234502,
+          "rmse": 1.2145821553667357
+        }
+      },
+      "init_state_sha256": "5ae62d089c4378e2b599aebcfd31e4073e76fb8716908ad786eef8cda0be76dd",
+      "losses": [
+        1.5818322896957397,
+        1.5825741291046143,
+        1.5839558839797974,
+        1.5876049995422363,
+        1.5860579013824463
+      ],
+      "measured_eval_seconds": 0.761883020401001,
+      "measured_train_step_seconds": 0.031769323348999026,
+      "predictor_parameters": 416177,
+      "selector_parameters": 0,
+      "steps_per_epoch": 53
+    },
+    "RANDOM": {
+      "arm": "RANDOM",
+      "device": "cuda",
+      "estimated_epoch_seconds": 4.830710792541504,
+      "estimates": {
+        "120": 579.6852951049805,
+        "60": 289.84264755249023,
+        "90": 434.7639713287354
+      },
+      "eval_metrics_smoke": {
+        "test": {
+          "mae": 0.9196094414571289,
+          "mae_expected": 0.9196094414571289,
+          "mae_fixed": 0.9194511545936662,
+          "mse_expected": 1.2353272422003638,
+          "rmse": 1.1114527620193149,
+          "rmse_expected": 1.1114527620193149,
+          "rmse_fixed": 1.1112767155287024
+        },
+        "train": {
+          "mae": 0.9757004366482671,
+          "mae_expected": 0.9757004366482671,
+          "mae_fixed": 0.9757443300187801,
+          "mse_expected": 1.4639792416084778,
+          "rmse": 1.209950098809235,
+          "rmse_expected": 1.209950098809235,
+          "rmse_fixed": 1.2099892112352253
+        },
+        "valid": {
+          "mae": 1.001453041253953,
+          "mae_expected": 1.001453041253953,
+          "mae_fixed": 1.0013882420008093,
+          "mse_expected": 1.4780263692015096,
+          "rmse": 1.2157410781912035,
+          "rmse_expected": 1.2157410781912035,
+          "rmse_fixed": 1.2157628249019694
+        }
+      },
+      "init_state_sha256": "5ae62d089c4378e2b599aebcfd31e4073e76fb8716908ad786eef8cda0be76dd",
+      "losses": [
+        1.5805388689041138,
+        1.5789189338684082,
+        1.5796995162963867,
+        1.5800634622573853,
+        1.5788075923919678
+      ],
+      "measured_eval_seconds": 1.9293644428253174,
+      "measured_train_step_seconds": 0.05474238395690918,
+      "predictor_parameters": 416177,
+      "selector_parameters": 0,
+      "steps_per_epoch": 53
+    },
+    "SELECT": {
+      "arm": "SELECT",
+      "device": "cuda",
+      "estimated_epoch_seconds": 5.0461225509643555,
+      "estimates": {
+        "120": 605.5347061157227,
+        "60": 302.7673530578613,
+        "90": 454.151029586792
+      },
+      "eval_metrics_smoke": {
+        "test": {
+          "mae": 0.9192468071769859,
+          "mae_expected": 0.9196094415587686,
+          "mae_fixed": 0.9194511549167191,
+          "mae_select": 0.9192468071769859,
+          "mse_expected": 1.2353272426717978,
+          "rmse": 1.1112147709429596,
+          "rmse_expected": 1.111452762231395,
+          "rmse_fixed": 1.1112767159402865,
+          "rmse_select": 1.1112147709429596
+        },
+        "train": {
+          "mae": 0.975437712642443,
+          "mae_expected": 0.9757004366488321,
+          "mae_fixed": 0.9757443300707893,
+          "mae_select": 0.975437712642443,
+          "mse_expected": 1.4639792416091513,
+          "rmse": 1.2098419353197605,
+          "rmse_expected": 1.2099500988095133,
+          "rmse_fixed": 1.2099892112423207,
+          "rmse_select": 1.2098419353197605
+        },
+        "valid": {
+          "mae": 1.001138782041041,
+          "mae_expected": 1.0014530412090659,
+          "mae_fixed": 1.0013882416441753,
+          "mae_select": 1.001138782041041,
+          "mse_expected": 1.4780263689686173,
+          "rmse": 1.2156007364391406,
+          "rmse_expected": 1.2157410780954212,
+          "rmse_fixed": 1.2157628246001717,
+          "rmse_select": 1.2156007364391406
+        }
+      },
+      "init_state_sha256": "5ae62d089c4378e2b599aebcfd31e4073e76fb8716908ad786eef8cda0be76dd",
+      "losses": [
+        1.5808918476104736,
+        1.579010248184204,
+        1.5796455144882202,
+        1.5787220001220703,
+        1.5795918703079224
+      ],
+      "measured_eval_seconds": 1.95499587059021,
+      "measured_train_step_seconds": 0.05832314491271973,
+      "predictor_parameters": 416177,
+      "selector_parameters": 28289,
+      "steps_per_epoch": 53
+    }
+  },
+  "note": "measurement models are discarded; formal runs are separate processes",
+  "preflight_seconds": 10.008227586746216,
+  "prepare_created_within_preflight": false,
+  "prepared_build_seconds": 25.172764539718628,
+  "prepared_path": "/home/hxy/cy/research/tracks/structural-sufficiency/structural_evidence_selection_pilot_v0/results/prepared/ses_prepared.pkl",
+  "stop_if_not_feasible": false,
+  "target_wall_seconds": 600.0,
+  "torch": "2.5.1+cu124"
+}
