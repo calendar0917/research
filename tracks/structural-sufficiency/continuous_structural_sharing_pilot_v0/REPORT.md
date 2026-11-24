@@ -5,7 +5,7 @@
 - 状态：**完成**。4 个正式训练单元、8 项 correctness/degeneracy checks、主表、bootstrap、机制分析均已完成；本轮到此为止，不扩展 seed / K / tau / SVD 维度 / 数据比例
 - 冻结协议：`PROTOCOL.md`，protocol id `css-v0-continuous-structural-sharing-pilot`
 - 执行：`res` / `a100-2`，2×A100-SXM4-40GB；torch 2.5.1+cu124，CUDA 12.4，driver 550.163.01
-- 代码 commit：实现 + checks `00ab1d35`；远端 prep + checks `2b8c5865`；horizon 与四个正式 run `05e4c0c8`；结果快照 `7499c3c6`（run manifest 记录训练 commit）
+- 代码 commit：实现 + checks `00ab1d35`；远端 prep + checks `2b8c5865`；horizon 与四个正式 run `05e4c0c8`；结果表快照 `7499c3c6`（run manifest 记录训练 commit）
 
 ---
 
@@ -144,7 +144,7 @@
 - 100%：SHARE 的 Test 从 epoch ≈45–50 起多数 epoch 低约 0.02（仍有逐 epoch 波动），
   但 Valid 从 epoch ≈40 起总体更高、epoch 50 之后稳定高约 0.03–0.04；best-Valid 选点
   没有改变这个冲突（同 epoch 82：D `0.6065/0.6670`，S `0.6429/0.6400`）。
-- 50%：SHARE 只在早期（epoch 32 附近）拿到更好的 Valid；之后 Valid/Test 都变差。
+- 50%：SHARE 只在早期（epoch 32 附近）拿到更好的 Valid；之后 Valid 总体变差，Test 从 epoch ≈60 起也变差。
   因此 `+0.005/+0.013` 更像是“early-stopping 时机”而不是稳定的低数据优势。
 - 所有 run 在 120 epoch 内都进入平台期（Fit 仍缓慢下降，Valid 已平坦或轻微上升），
   不是欠训练；120 是由吞吐规则选的，不构成 budget-limited。
@@ -245,7 +245,7 @@ SHARE（0.6335），与官方 Valid 的 +0.005 方向不一致，进一步说明
    held-out 随机半量上 SHARE 还更差；因此不能把 +0.005/+0.013 解读为稳定的低数据收益。
 
 **能与不能声称的。** 能声称：在这个冻结协议、这个 split、seed 0、这个 recipe 下，
-用真实参考结构的连续共享没有带来 ≥0.02 的 Valid 增益，100% 上还出现方向冲突；
+用真实参考结构的连续共享没有观察到 ≥0.02 的 Valid 增益，100% 上还出现方向冲突；
 机制没有塌缩，且可复现。不能声称：连续共享在别的 K/tau/维度/数据集上一定无效；
 也不能把 Test 的 +0.014 当作真实泛化收益（CI 跨 0、与 Valid 冲突、单 seed）。
 本轮没有做 structure-replacement 响应、贡献分解或 state algebra，故不解释“哪些原子/键导致预测”。
