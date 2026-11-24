@@ -590,6 +590,7 @@ def main() -> None:
     ap.add_argument("--ridge-dir", default=str(C.RESULTS_DIR / "ridge"))
     ap.add_argument("--out", default=str(C.ANALYSIS_DIR / "checks.json"))
     ap.add_argument("--skip-synthetic", action="store_true")
+    ap.add_argument("--skip-mlp-replay", action="store_true")
     args = ap.parse_args()
     cfg = C.load_config()
     C.assert_source_pins()
@@ -604,6 +605,8 @@ def main() -> None:
         checks += replay_checks(stage, Path(args.ridge_dir))
     if not args.skip_synthetic:
         checks += synthetic_checks(stage, cfg, Path(args.ridge_dir))
+    if not args.skip_mlp_replay:
+        checks += mlp_replay_checks(stage, C.RESULTS_DIR)
     passed = sum(1 for c in checks if c["pass"])
     payload_out = {
         "round": cfg["round_id"], "commit": C.git_commit(), "created_at": C.now_utc(),
@@ -615,6 +618,75 @@ def main() -> None:
     print(json.dumps({"n_checks": len(checks), "n_pass": passed,
                       "failures": [c["name"] for c in checks if not c["pass"]]},
                      indent=1))
+
+
+
+def mlp_replay_checks(stage: D.Stage0, results: Path) -> list[dict[str, Any]]:
+    import torch
+    from hrf_mlp import MLP, state_hash
+
+    out = []
+    manifests = {}
+    for arm in ("BASE", "NULL", "REAL"):
+        d = results / f"mlp_{arm}"
+        if not (d / "state_best.pt").is_file():
+            continue
+        man = json.load((d / "manifest.json").open())
+        manifests[arm] = man
+        design_name = {"BASE": "F_BASE", "NULL": "F_NULL", "REAL": "F_REAL"}[arm]
+        X = np.asarray(stage.design(design_name)["X"], np.float32)
+        model = MLP(X.shape[1], tuple(man["hidden"]), float(man["dropout"]))
+        ckpt = torch.load(d / "state_best.pt", map_location="cpu", weights_only=False)
+        model.load_state_dict(ckpt["state_dict"])
+        model.eval()
+        with torch.no_grad():
+            xt = torch.as_tensor(X, dtype=torch.float32)
+            full = model(xt).numpy().astype(np.float64)
+            chunks = []
+            for start in range(0, X.shape[0], 257):
+                chunks.append(model(xt[start:start + 257]).numpy().astype(np.float64))
+            chunked = np.concatenate(chunks)
+        z = np.load(d / "predictions_best_valid.npz", allow_pickle=False)
+        valid_rows = stage.rows["valid"]
+        saved = np.asarray(z["pred"], np.float64)
+        # model output is standardised; convert to raw for comparison
+        raw_full = float(stage.scaler["mean"]) + float(stage.scaler["std"]) * full
+        raw_chunked = float(stage.scaler["mean"]) + float(stage.scaler["std"]) * chunked
+        saved_aligned = _align_rows(z["row_id"], saved, valid_rows)
+        out.append(_result(
+            f"mlp_reload_single_vs_batch_{arm}",
+            float(np.abs(full - chunked).max()) < 1e-6 and
+            float(np.abs(raw_full[valid_rows] - saved_aligned).max()) < 1e-5 and
+            man["stage0_sha256"] == C.sha256_file(stage.path) and
+            man["config_sha256"] == C.sha256_file(C.CONFIG_PATH) and
+            int(man["n_features"]) == X.shape[1],
+            max_abs_single_vs_batch=float(np.abs(full - chunked).max()),
+            max_abs_saved_vs_replay=float(np.abs(raw_full[valid_rows] - saved_aligned).max()),
+            n_features=int(X.shape[1]),
+            stage0_hash_ok=bool(man["stage0_sha256"] == C.sha256_file(stage.path)),
+            config_hash_ok=bool(man["config_sha256"] == C.sha256_file(C.CONFIG_PATH)),
+        ))
+    if "REAL" in manifests and "NULL" in manifests:
+        mr, mn = manifests["REAL"], manifests["NULL"]
+        same = (mr["hidden"] == mn["hidden"] and mr["dropout"] == mn["dropout"] and
+                mr["seed"] == mn["seed"] and mr["n_features"] == mn["n_features"] and
+                mr["batch_order_first_epoch_sha256"] == mn["batch_order_first_epoch_sha256"] and
+                mr["init_sha256"] == mn["init_sha256"])
+        out.append(_result("mlp_real_null_matched_initialisation", same,
+                           n_features_real=mr["n_features"], n_features_null=mn["n_features"],
+                           init_sha256_real=mr["init_sha256"],
+                           init_sha256_null=mn["init_sha256"],
+                           batch_order_real=mr["batch_order_first_epoch_sha256"],
+                           batch_order_null=mn["batch_order_first_epoch_sha256"]))
+    return out
+
+
+def _align_rows(rid: np.ndarray, pred: np.ndarray, expected: np.ndarray) -> np.ndarray:
+    rid = np.asarray(rid, np.int64)
+    if np.array_equal(rid, expected):
+        return np.asarray(pred, np.float64)
+    pos = {int(r): i for i, r in enumerate(rid.tolist())}
+    return np.asarray(pred, np.float64)[[pos[int(r)] for r in expected.tolist()]]
 
 
 if __name__ == "__main__":

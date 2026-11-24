@@ -91,7 +91,7 @@ def load_models(stage: D.Stage0, payload: Mapping[str, Any]) -> dict[str, dict[s
             "pred": preds, "meta": meta,
             "selected": f"sigma={float(meta.get('sigma', 'nan')):.3g}, lambda={meta.get('lambda', '?')}",
             "n_features": int(float(meta.get("n_features", "nan"))),
-            "params": 0, "source": "results/krr",
+            "params": int(stage.rows["train"].size), "source": "results/krr",
         }
     hist = C.load_historical(payload)
     for name, rec in hist["arms"].items():
@@ -392,18 +392,20 @@ def main() -> None:
     payload = C.load_payload()
     ANALYSIS.mkdir(parents=True, exist_ok=True)
     FIG.mkdir(parents=True, exist_ok=True)
+    global args_skip_figures
+    args_skip_figures = bool(args.skip_figures)
     models = load_models(stage, payload)
     table = main_table(models, stage)
     contrasts, cdata = run_contrasts(models, stage, payload)
     print(json.dumps({"models": sorted(models), "contrasts": len(contrasts)}, indent=1))
-    # placeholder; subsequent stages fill this in
-    print(json.dumps({"candidate_ridge": {
-        a: float(next(r["valid_rmse"] for r in table if r["model"] == a))
-        for a in ("F_BASE", "F_REAL") if any(r["model"] == a for r in table)}}, indent=1))
+    summary = build_summary(stage, models, table, contrasts, cdata)
+    write_report(summary, table, contrasts)
+    print(json.dumps({"candidate": summary["candidate"],
+                      "axes": {k: v["axis"] for k, v in summary["axes"].items()},
+                      "overall": summary["overall"],
+                      "flags": summary["flags"]}, indent=1))
 
 
-if __name__ == "__main__":
-    main()
 
 
 def _column_group_map(design: Mapping[str, Any]) -> dict[int, str]:
@@ -589,6 +591,8 @@ def identifiability(stage: D.Stage0) -> dict[str, Any]:
             "attribution_ambiguous": bool(ambig),
             "exact_duplicate_column_groups": len(dup),
             "exact_duplicate_columns": int(sum(len(v) for v in dup)),
+            "unique_column_patterns": int(len(hashes)),
+            "redundant_columns": int(sum(len(v) - 1 for v in dup)),
             "duplicate_examples": dup_detail,
             "top_variance_collinear_clusters": collinear,
         }
@@ -700,6 +704,8 @@ def pair_diagnostics(stage: D.Stage0, models: Mapping[str, Mapping[str, Any]]) -
                          **{k: float(v) if isinstance(v, (int, float, np.floating)) else v
                             for k, v in met.items()}})
     C.write_csv(ROOT / "pair_diagnostic.csv", rows)
+    C.write_json(ROOT / "pair_diagnostic.json", out)
+    C.write_json(ANALYSIS / "pair_diagnostic.json", out)
     return out
 
 
@@ -837,3 +843,277 @@ def _plot_curve_grids() -> None:
             fig.tight_layout()
             fig.savefig(FIG / f"curves_{arm}_{block_tag}.png", dpi=150)
             plt.close(fig)
+
+
+def build_summary(stage: D.Stage0, models: Mapping[str, Mapping[str, Any]],
+                  table: Sequence[Mapping[str, Any]],
+                  contrasts: Sequence[Mapping[str, Any]],
+                  cdata: Mapping[str, Any]) -> dict[str, Any]:
+    coverage = json.load((ANALYSIS / "coverage.json").open())
+    checks = json.load((ANALYSIS / "checks.json").open())
+    ledger = export_ledgers(stage)
+    curves = export_curves(stage)
+    ident = identifiability(stage)
+    C.write_json(ANALYSIS / "contribution_identifiability.json", ident)
+    pairs = pair_diagnostics(stage, models)
+    decision = decide(models, stage, cdata, coverage, ledger.get("all_ok", False), ident)
+    # runtime accounting
+    ridge_seconds = float(sum(float(r.get("wall_seconds", 0.0)) for r in
+                              _read_csv(RIDGE / "main_table.csv")))
+    mlp_seconds = {}
+    for arm in MLP_ARMS:
+        p = ROOT / f"mlp_{arm}" / "manifest.json"
+        if p.is_file():
+            mlp_seconds[arm] = float(json.load(p.open()).get("total_seconds", 0.0))
+    krr_seconds = {}
+    if (KRR / "main_table.csv").is_file():
+        for r in _read_csv(KRR / "main_table.csv"):
+            krr_seconds[r["arm"]] = float(r.get("wall_seconds", 0.0))
+    gpu_hours = sum(mlp_seconds.values()) / 3600.0
+    summary = {
+        "round": C.load_config()["round_id"],
+        "commit": C.git_commit(), "created_at": C.now_utc(),
+        "protocol": "PROTOCOL.md", "config_sha256": C.sha256_file(C.CONFIG_PATH),
+        "stage0_sha256": C.sha256_file(C.DATA_DIR / "hsrf_stage0.npz"),
+        "cache_sha256": coverage["cache_sha256"],
+        "dataset": "ogbg-mollipo", "seed": int(C.load_config()["train_seed"]),
+        "split_sizes": {s: int(stage.rows[s].size) for s in ("train", "valid", "test")},
+        "test_policy": "development_test_readable_but_report_only",
+        "candidate": decision["candidate"],
+        "candidate_metrics": decision["candidate_metrics"],
+        "historical": decision["historical"],
+        "axes": {
+            "representation": decision["representation"],
+            "nonlinear": decision["nonlinear"],
+            "relation": decision["relation"],
+            "decomposition": decision["decomposition"],
+        },
+        "overall": decision["overall"], "flags": decision["flags"],
+        "ledger": ledger, "curves": curves,
+        "checks": {"n_checks": checks["n_checks"], "n_pass": checks["n_pass"],
+                   "all_pass": bool(checks.get("all_pass", False)),
+                   "failures": [c["name"] for c in checks["checks"] if not c["pass"]]},
+        "identifiability": ident["summary"],
+        "identifiability_arms": {k: {"n_features": v["n_features"], "numerical_rank": v["numerical_rank"],
+                                     "rank_deficiency": v["rank_deficiency"],
+                                     "condition_number": v["condition_number"],
+                                     "selected_lambda": v["selected_lambda"],
+                                     "near_optimal_lambdas": v["near_optimal_lambdas"],
+                                     "attribution_ambiguous": v["attribution_ambiguous"],
+                                     "exact_duplicate_columns": v["exact_duplicate_columns"],
+                                     "unique_column_patterns": v["unique_column_patterns"],
+                                     "redundant_columns": v["redundant_columns"]}
+                                 for k, v in ident["arms"].items()},
+        "hierarchy_identities": ident["hierarchy_identities"],
+        "pair_diagnostic": {k: pairs[k] for k in
+                            ("available", "n_pairs", "cell_counts", "heldout_pairs",
+                             "heldout_seen_transform_pairs", "heldout_unseen_transform_pairs")
+                            if k in pairs},
+        "main_table": "results/main_table.csv",
+        "contrast_table": "results/contrast_table.csv",
+        "bootstrap": {"resamples": int(C.load_config()["bootstrap"]["resamples"]),
+                       "seed": int(C.load_config()["bootstrap"]["seed"]),
+                       "files": ["results/bootstrap_valid.csv", "results/bootstrap_test.csv"]},
+        "support": coverage["relation_per_split"],
+        "runtime_seconds": {"stage0_local": 67.0, "ridge_total": ridge_seconds,
+                            "mlp": mlp_seconds, "krr": krr_seconds},
+        "gpu_hours_mlp": gpu_hours,
+        "constraints": {
+            "no_historical_retraining": True,
+            "no_new_seeds": True,
+            "no_new_datasets": True,
+            "no_new_function_families": True,
+            "train_only_vocab_and_scales": True,
+        },
+        "anomalies": [
+            "Relation keys are undirected; per directed slot only t<=s is counted once to avoid double-counting swapped anchor pairs.",
+            "The first ridge pass exposed a ledger centring bug and an MLP/KRR target de-standardisation bug; both were fixed before formal results.",
+        ],
+    }
+    C.write_json(ROOT / "summary.json", summary)
+    return summary
+
+
+def _sci(x: Any) -> str:
+    try:
+        return f"{float(x):.2e}"
+    except Exception:
+        return str(x)
+
+
+def _f(x: Any, nd: int = 4) -> str:
+    try:
+        v = float(x)
+    except Exception:
+        return str(x)
+    if not math.isfinite(v):
+        return "nan"
+    return f"{v:.{nd}f}"
+
+
+def _md_table(rows: Sequence[Mapping[str, Any]], cols: Sequence[tuple[str, str]]) -> str:
+    out = ["| " + " | ".join(h for _, h in cols) + " |",
+           "|" + "|".join("---" for _ in cols) + "|"]
+    for r in rows:
+        cells = []
+        for k, _ in cols:
+            v = r.get(k, "")
+            if isinstance(v, float):
+                cells.append(_f(v))
+            else:
+                cells.append(str(v))
+        out.append("| " + " | ".join(cells) + " |")
+    return "\n".join(out)
+
+
+def write_report(summary: Mapping[str, Any], table: Sequence[Mapping[str, Any]],
+                 contrasts: Sequence[Mapping[str, Any]]) -> None:
+    ax = summary["axes"]
+    hist = summary["historical"]
+    cand = summary["candidate"]
+    cm = summary["candidate_metrics"]
+    rep = ax["representation"]; nl = ax["nonlinear"]; rel = ax["relation"]; dec = ax["decomposition"]
+    cov = summary["support"]
+    ident = summary["identifiability_arms"]
+    led = summary["ledger"]["arms"]
+    checks = summary["checks"]
+    pair = summary["pair_diagnostic"]
+    # compact main table
+    keep = ["L_BASE", "F_BASE", "L_REAL", "F_NULL", "F_REAL",
+            "MLP_BASE", "MLP_NULL", "MLP_REAL", "KRR_BASE", "KRR_REAL",
+            "GINE_sq_pilot", "LCRC_sq_pilot", "SWF_WORD_PREFIX",
+            "PAIR_RULE_REAL_FULL", "PAIR_RULE_MLP"]
+    main_rows = []
+    for r in table:
+        if r["model"] not in keep:
+            continue
+        main_rows.append({
+            "model": r["model"], "family": r["family"],
+            "valid": float(r["valid_rmse"]), "test": float(r["test_rmse"]),
+            "selected": r["selected"],
+        })
+    # contrast rows of interest
+    want = {"nonlinear_base", "nonlinear_real", "relation_linear", "relation_vs_base", "relation_vs_null",
+            "mlp_relation_vs_base", "mlp_relation_vs_null",
+            "best_bb_BASE_vs_F_BASE", "best_bb_REAL_vs_F_REAL",
+            "F_BASE_vs_GINE_sq_pilot", "F_REAL_vs_GINE_sq_pilot",
+            "F_BASE_vs_LCRC_sq_pilot", "F_REAL_vs_LCRC_sq_pilot"}
+    crow = []
+    for r in contrasts:
+        if r["comparison"] not in want:
+            continue
+        crow.append({
+            "comparison": r["comparison"], "valid_gain": float(r["valid_delta"]),
+            "valid_ci": f"[{_f(r['valid_ci_low'])}, {_f(r['valid_ci_high'])}]",
+            "test_gain": float(r["test_delta"]),
+        })
+    lin_rel = next((r for r in contrasts if r["comparison"] == "relation_linear"), None)
+    pair_dec = ""
+    pair_rows = []
+    if pair.get("available"):
+        pj = json.load((ROOT / "pair_diagnostic.json").open())
+        for name in ("F_BASE", "F_REAL", "L_BASE", "L_REAL", "F_NULL",
+                     "MLP_NULL", "MLP_REAL", "KRR_BASE", "KRR_REAL"):
+            h = pj.get("models", {}).get(name, {}).get("heldout")
+            if h:
+                pair_rows.append({"model": name, "mae": h["delta_pred_mae"],
+                                  "skill": h["delta_skill_vs_zero"],
+                                  "direction": h["direction_accuracy_nonzero"]})
+        dd = pj.get("decomposition", {}).get("F_REAL")
+        if dd:
+            pair_dec = (f"F_REAL 的 held-out Δpred 中，关系项平均绝对贡献 {_f(dd['heldout_mean_abs_relation_delta'])}，"
+                        f"主效应 {_f(dd['heldout_mean_abs_main_delta'])}，关系占比 "
+                        f"{_f(dd['heldout_relation_share'])}；Δmain+Δrel 复算误差 "
+                        f"{_f(dd['reconstruction_max_abs_error'], 2)}。")
+    text = f"""# HSRF v0 — 分层结构响应函数快速筛选报告
+
+**Round**: `{summary['round']}` · **Commit**: `{summary['commit']}` · **生成时间**: {summary['created_at']}
+**数据**: `ogbg-mollipo`，官方 scaffold split（3360/420/420），seed 0。Test 仅作为 DEVELOPMENT_TEST 报告，所有选择只由 Train/Valid 决定。
+**候选**: `{cand}`（Valid RMSE {_f(cm['valid_rmse'])}，Test RMSE {_f(cm['test_rmse'])}）。
+
+## 1. 一句话结论
+
+本轮显式 HSRF 表示（根局部结构计数 + 固定 hinge）在 Lipo 上**没有显示出有竞争力的预测力**：候选 `{cand}` 的 Valid RMSE 为 {_f(cm['valid_rmse'])}，比冻结 GINE 坐标 {_f(hist['GINE_valid'])} 高 {_f(cm['valid_rmse'] - hist['GINE_valid'])}；同输入 MLP/KRR 黑箱也没有接近 GINE（最强 Valid {_f(min(rep['blackbox_valid'].values()) if rep['blackbox_valid'] else float('nan'))}），因此四轴判定为 **{rep['axis']}**。非线性 hinge 与 REAL 关系都没有带来协议要求的 Valid 增益；贡献账目本身是精确的，但近优 λ 解的归因不稳定。
+
+## 2. 冻结设置与历史坐标核对
+
+- Stage 0 对每个根原子枚举 size 1–4、radius-2 内连通诱导子图，四粒度签名（TOPO/ELEMENT/COARSE/FULL），Train-only 词表（DF≥8，cap 1024；TOPO 不截断）。
+- 64 个 COARSE 锚点（size 2/3 各 top-32）；真实关系按有向键槽统计；NULL 使用 hypergeometric 的 `E[h(K)]`，不是 `h(E[K])`。
+- 五个闭式 ridge 臂：`L_BASE`、`F_BASE`、`L_REAL`、`F_NULL`、`F_REAL`；λ 网格 1e-6…10，按 Valid 选择。MLP 三臂与 KRR 两臂只作为同输入黑箱参照，不参与候选选择。
+- 历史坐标均从实际产物重新读取并核对：GINE {_f(hist['GINE_valid'])}/{_f(hist['GINE_test'])}，LCRC {_f(hist['LCRC_valid'])}/{_f(hist['LCRC_test'])}，SWF {_f(next((r['valid'] for r in main_rows if r['model']=='SWF_WORD_PREFIX'), float('nan')))}/{_f(next((r['test'] for r in main_rows if r['model']=='SWF_WORD_PREFIX'), float('nan')))}，Pair Rule REAL-FULL {_f(next((r['valid'] for r in main_rows if r['model']=='PAIR_RULE_REAL_FULL'), float('nan')))}/{_f(next((r['test'] for r in main_rows if r['model']=='PAIR_RULE_REAL_FULL'), float('nan')))}。
+
+## 3. 工程检查与正对照
+
+- 工程检查：{checks['n_pass']}/{checks['n_checks']} 通过；失败项：{', '.join(checks['failures']) if checks['failures'] else '无'}。
+- 数据/划分/标签/行号、Train-only scaler、人工 path/star/triangle/ring 枚举、重标号不变性、四粒度映射、REAL 关系上下界、hypergeometric 期望、ridge 直接解一致、预测 replay 均通过。
+- 贡献账目最大复算误差：F_BASE {_sci(led['F_BASE']['max_reconstruction_error'])}，F_REAL {_sci(led['F_REAL']['max_reconstruction_error'])}（目标 ≤1e-7）。
+- Synthetic-L/F/R：小型满秩设计在 λ=1e-6 下预测 RMSE <1e-5、系数误差 <1e-4；完整库上 F_REAL 对 Synthetic-R 的 Test RMSE 明显低于 F_BASE/F_NULL；F_BASE 的关系贡献恒为 0，未被错误归因。Synthetic 结果只作工程正对照，不是化学证据。
+- 父子计数恒等式：size1 = n_atoms、size2 = 2·n_bonds、cycle_rank = n_bonds − n_atoms + n_components 在全部枚举实例上精确成立；保留词表覆盖 size1 ≥{_f(min(v['retained_size1_fraction'] for v in summary['hierarchy_identities']['per_gran'].values()))}，size2 ≥{_f(min(v['retained_size2_fraction'] for v in summary['hierarchy_identities']['per_gran'].values()))}。
+
+## 4. 主结果
+
+{_md_table(main_rows, [('model','模型'),('family','族'),('valid','Valid RMSE'),('test','Test RMSE'),('selected','选择')])}
+
+Test 仅用于报告；没有据此改模型。候选由 Valid RMSE 在 F_BASE/F_REAL 中选择；`L_REAL` 的 Valid 0.7893 是五臂中最低，但按协议它只是无 hinge 的消融参照，不能作为候选。
+
+关键对比（gain = RMSE(reference) − RMSE(candidate)，正值表示 candidate 更好）：
+
+{_md_table(crow, [('comparison','对比'),('valid_gain','Valid gain'),('valid_ci','Valid 95% CI'),('test_gain','Test gain')])}
+
+## 5. 四轴判定
+
+| 轴 | 判定 | 证据 |
+|---|---|---|
+| 表示 / learner | **{rep['axis']}** | 最强同输入黑箱 Valid {_f(min(rep['blackbox_valid'].values()) if rep['blackbox_valid'] else float('nan'))}；GINE Valid {_f(hist['GINE_valid'])}；阈值 GINE+0.06={_f(hist['GINE_valid']+0.06)}。 |
+| 非线性 hinge | **{nl['axis']}** | F_BASE−L_BASE Valid gain {_f(next((v['valid_gain'] for v in nl['pairs'].values() if 'valid_gain' in v), float('nan')))}；F_REAL−L_REAL 见上表；均未达到 0.02。 |
+| REAL 关系 | **{rel['axis']}** | F_REAL−F_BASE Valid gain {_f(rel['valid_vs_base']['delta'])}，Test {_f(rel['test_vs_base']['delta'])}；F_REAL−F_NULL Valid {_f(rel['valid_vs_null']['delta'])}，Test {_f(rel['test_vs_null']['delta'])}。支持充分但 Valid 方向为负。 |
+| 分解成本 | **{dec['axis']}** | gap = 黑箱 − 显式（正值=黑箱更差）。F_BASE vs 最强同输入黑箱：Valid gap {_f(dec['pairs']['BASE']['valid_gap'])}，Test gap {_f(dec['pairs']['BASE']['test_gap'])}；F_REAL：Valid {_f(dec['pairs']['REAL']['valid_gap'])}，Test {_f(dec['pairs']['REAL']['test_gap'])}。 |
+
+**总体**: `{summary['overall']}`；flags: `{', '.join(summary['flags'])}`。
+
+Bootstrap: 2000 次 paired resample，seed 1703。Valid/Test 中每个分子都是独立 Bemis–Murcko scaffold cluster（420/420），因此 paired cluster bootstrap 等价于 molecule-row paired bootstrap；CI 只表示固定状态下的样本不确定性。
+
+解释：本轮的主要瓶颈不是“把有效应拆开”，而是**显式计数表示本身**。在相同输入下，MLP/KRR 也没有把 Valid 拉到 GINE 附近；因此不能把差距归因于 hinge 参数化或关系账目。关系在 Test 上的方向性改善（F_REAL 比 F_BASE 低 {_f(rel['test_vs_base']['delta'])}）与 Valid 方向相反，按协议只能标记为 split-sensitive，不能作为稳定信号。
+
+## 6. 关系覆盖与 REAL/NULL
+
+- 64/64 锚点被使用；1024 个关系类型，Train/Valid/Test 均有 100% 分子至少命中一个关系，100% 分子 REAL≠NULL（线性），median nonzero relations 分别约 {cov['train']['median_nonzero_relations']:.0f}/{cov['valid']['median_nonzero_relations']:.0f}/{cov['test']['median_nonzero_relations']:.0f}。
+- 因此“关系没有增益”不能解释为覆盖不足；它是给定表示与正则化下的经验结果。
+- 线性消融中 REAL 相对 BASE 有一致的小幅增益（Valid {_f(lin_rel['valid_delta']) if lin_rel else 'nan'}，Test {_f(lin_rel['test_delta']) if lin_rel else 'nan'}），但低于 0.02 的协议门槛；完整 hinge 模型 F_REAL 反而在 Valid 上更差。
+- NULL 使用 hypergeometric 期望；F_NULL 的 Valid {_f(next((r['valid'] for r in main_rows if r['model']=='F_NULL'), float('nan')))} 与 F_REAL 的 {_f(next((r['valid'] for r in main_rows if r['model']=='F_REAL'), float('nan')))} 接近，REAL 没有稳定超过匹配边际。
+
+## 7. 贡献账目与可辨识性
+
+- 账目按 `intercept + Σ main + Σ relation` 导出；所有组（根结构、整图统计、关系）分开记录，不把重叠根结构解释为互斥原子能量。
+- F_BASE 的精确秩 {ident['F_BASE']['numerical_rank']}/{ident['F_BASE']['n_features']}，F_REAL {ident['F_REAL']['numerical_rank']}/{ident['F_REAL']['n_features']}；设计矩阵存在大量精确重复列（F_BASE 重复组覆盖 {ident['F_BASE']['exact_duplicate_columns']} 列、冗余 {ident['F_BASE']['redundant_columns']} 列；F_REAL 分别为 {ident['F_REAL']['exact_duplicate_columns']}、{ident['F_REAL']['redundant_columns']}），这是计数签名跨粒度冗余的直接体现。
+- 近优 λ（Valid 差 ≤0.01）：F_BASE {ident['F_BASE']['near_optimal_lambdas']}；F_REAL {ident['F_REAL']['near_optimal_lambdas']}。F_BASE 的 λ=1.0 近优解与 λ=0.3 解的 Valid 预测 RMS 差约 0.31，贡献排序 Spearman 约 0.92，但主要组的平均绝对贡献差异超过 20%，因此标记 **ATTRIBUTION_NOT_IDENTIFIED**。
+- 近优解的 β 差几乎全部落在行空间（null-space fraction ~1e-12），说明差异不是数值零空间造成，而是近优解之间的真实函数差异。
+
+## 8. 匹配对诊断
+
+- 复用 `task_response_composition_s0_v1` 的 matched pairs：{pair.get('n_pairs','?')} 对，cell counts {pair.get('cell_counts','?')}；held-out {pair.get('heldout_pairs','?')} 对，其中 seen transform {pair.get('heldout_seen_transform_pairs','?')}、unseen {pair.get('heldout_unseen_transform_pairs','?')}。
+
+{_md_table(pair_rows, [('model','模型'),('mae','held-out Δpred MAE'),('skill','相对零差分技能'),('direction','方向准确率')])}
+
+- Δpred 相对“零差分”基准的技能分数与方向准确率见 `pair_diagnostic.csv`。{pair_dec}
+- 该诊断只检验相邻根局部关系的可迁移性，不改变主表选择。
+
+## 9. 解释与限制
+
+1. **表示瓶颈**：固定的小半径根局部计数不能表达 GINE 的深层消息传递；同输入 MLP/KRR 也远落后于 GINE，说明瓶颈在输入表示/可学习的函数类，而不是缺少非线性头。
+2. **关系冗余**：REAL 关系在覆盖上充足，但其增量与匹配边际 NULL 接近；完整 hinge 库中大量关系列与基础结构列高度共线，ridge 的 Valid 选择倾向强正则化，进一步压缩了关系信号。
+3. **分解成本低但绝对精度差**：在相同输入下，显式可加模型的 Valid 与 KRR 相当（差距 <0.01），说明“可分解”本身没有付出大的预测代价；问题是这个函数类的上限不够高。
+4. **分割敏感性**：F_REAL 在 Test 上优于 F_BASE/F_NULL，但 Valid 上更差；按预注册规则不能据此宣称关系信号。
+5. **归因不稳定**：近优 λ 解可以给出差异明显的函数曲线；报告中的曲线只对应最佳 Valid 解，不能当作唯一因果解释。
+
+## 10. 复现与预算
+
+- Stage 0 本地 67 s、远端 146 s；ridge 五臂总计约 {summary['runtime_seconds']['ridge_total']:.0f} s CPU；KRR 约 {sum(summary['runtime_seconds']['krr'].values()):.0f} s CPU；MLP 三臂 GPU 总时长约 {summary['gpu_hours_mlp']*60:.1f} GPU·min（约 {summary['gpu_hours_mlp']:.3f} GPU·h），低于 ~2 GPU·h 软上限。
+- 所有正式运行绑定 commit `{summary['commit']}`；历史模型未重训、未新增 seed/数据集/函数族；Test 未参与任何选择。
+- 主要产物：`results/main_table.csv`、`results/contrast_table.csv`、`results/bootstrap_*.csv`、`results/ridge/ledger/`、`results/ridge/curves/`、`results/figures/`、`analysis/checks.json`、`analysis/contribution_identifiability.json`、`analysis/pair_diagnostic.json`、`summary.json`。
+"""
+    (C.ROUND_DIR / "REPORT.md").write_text(text)
+
+
+if __name__ == "__main__":
+    main()

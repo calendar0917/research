@@ -1,0 +1,191 @@
+{
+ "anomalies": [
+  "Relation keys are undirected; per directed slot only t<=s is counted once to avoid double-counting swapped anchor pairs.",
+  "The first ridge pass exposed a ledger centring bug and an MLP/KRR target de-standardisation bug; both were fixed before formal results."
+ ],
+ "artifacts": {
+  "checks": "analysis/checks.json",
+  "code": "code/",
+  "config": "configs/hsrf.json",
+  "contrast_table": "results/contrast_table.csv",
+  "coverage": "analysis/coverage.json",
+  "curves": "results/curves.csv, results/ridge/curves/, results/figures/",
+  "feature_catalog": "data/feature_catalog.json",
+  "identifiability": "analysis/contribution_identifiability.json",
+  "ledger": "results/ridge/ledger/",
+  "main_table": "results/main_table.csv",
+  "pair_diagnostic": "results/pair_diagnostic.json",
+  "predictions": "results/ridge/predictions/, results/mlp_*/predictions_best_*.npz, results/krr/predictions/",
+  "protocol": "PROTOCOL.md",
+  "report": "REPORT.md",
+  "ridge_path": "results/ridge/regularization_path.csv",
+  "summary": "results/summary.json",
+  "training_curves": "results/mlp_*/curves.csv"
+ },
+ "axes": {
+  "decomposition": "LOW_DECOMPOSITION_COST",
+  "nonlinear": "NO_MATERIAL_NONLINEAR_GAIN",
+  "relation": "NO_MATERIAL_RELATION_GAIN",
+  "representation": "REPRESENTATION_OR_LEARNER_LIMITED"
+ },
+ "checks": {
+  "all_pass": true,
+  "failures": [],
+  "n_checks": 36,
+  "n_pass": 36
+ },
+ "commands": {
+  "analysis_local": "OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 uv run python code/hrf_analysis.py",
+  "checks_local": "uv run python code/hrf_checks.py",
+  "krr_local": "OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 uv run python code/hrf_krr.py",
+  "mlp_base_remote": "rr run res hsrf-mlp-base-9d9 --pool res-gpu0 --result tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/results/mlp_BASE -- uv run python tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/code/hrf_mlp.py --arm BASE --out tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/results/mlp_BASE --device cuda",
+  "mlp_null_remote": "rr run res hsrf-mlp-null-9d9 --pool res-gpu1 --result tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/results/mlp_NULL -- uv run python tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/code/hrf_mlp.py --arm NULL --out tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/results/mlp_NULL --device cuda",
+  "mlp_real_remote": "rr run res hsrf-mlp-real-9d9 --pool res-gpu0 --result tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/results/mlp_REAL -- uv run python tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/code/hrf_mlp.py --arm REAL --out tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/results/mlp_REAL --device cuda",
+  "ridge_local": "OMP_NUM_THREADS=8 OPENBLAS_NUM_THREADS=8 uv run python code/hrf_ridge.py",
+  "stage0_local": "uv run python code/hrf_stage0.py",
+  "stage0_remote": "rr run res hsrf-stage0-9d9 --pool res-local --result tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/data -- uv run python tracks/structural-sufficiency/hierarchical_structural_response_functions_v0/code/hrf_stage0.py"
+ },
+ "commit": "9d9ee3d2e3c132722df841408d338032a7990d4d",
+ "config": {
+  "path": "configs/hsrf.json",
+  "sha256": "9050e2290549cfa7ff72ab7bca398f98762809aa37c38c1380bdf717a865c36c"
+ },
+ "constraints": {
+  "no_historical_retraining": true,
+  "no_new_datasets": true,
+  "no_new_function_families": true,
+  "no_new_seeds": true,
+  "train_only_vocab_and_scales": true
+ },
+ "created_at": "2026-11-24T03:44:58Z",
+ "data": {
+  "cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+  "dataset": "ogbg-mollipo",
+  "seed": 0,
+  "split_sizes": {
+   "test": 420,
+   "train": 3360,
+   "valid": 420
+  },
+  "stage0_sha256": "67708ad64d31da5093287fe9a43b90480e4b4f8e2e8e7f3761d5775fcc93f398",
+  "test_policy": "development_test_readable_but_report_only"
+ },
+ "flags": [
+  "NOT_PROMISING",
+  "ATTRIBUTION_NOT_IDENTIFIED",
+  "REPRESENTATION_OR_LEARNER_LIMITED",
+  "EXACT_LEDGER"
+ ],
+ "gpu_hours_mlp": 0.013317603005303278,
+ "identifiability_summary": {
+  "attribution_ambiguous": true,
+  "near_optimal_gap_threshold": 0.01,
+  "note": "Near-optimal means Valid RMSE within 0.01 of the selected solution; contribution ranks are mean |group contribution| on Valid."
+ },
+ "overall": "NOT_PROMISING",
+ "protocol": "PROTOCOL.md",
+ "remote_runs": {
+  "hsrf-mlp-base-9d9": {
+   "backend": "process",
+   "commit": "9d9ee3d2e3c1",
+   "completed_at": "2026-11-24T11:35:40+08:00",
+   "cuda_visible_devices": "0",
+   "dirty": false,
+   "driver_version": "550.163.01",
+   "exit_code": 0,
+   "gpu_count": 2,
+   "gpu_names": [
+    "NVIDIA A100-SXM4-40GB",
+    "NVIDIA A100-SXM4-40GB"
+   ],
+   "host": "res",
+   "node": "a100-2",
+   "pool": "res-gpu0",
+   "run_id": "hsrf-mlp-base-9d9-20261124-113508-469b3e69",
+   "started_at": "2026-11-24T11:35:10+08:00",
+   "state": "completed",
+   "torch_cuda": "12.4",
+   "torch_version": "2.5.1+cu124"
+  },
+  "hsrf-mlp-null-9d9": {
+   "backend": "process",
+   "commit": "9d9ee3d2e3c1",
+   "completed_at": "2026-11-24T11:34:18+08:00",
+   "cuda_visible_devices": "1",
+   "dirty": false,
+   "driver_version": "550.163.01",
+   "exit_code": 0,
+   "gpu_count": 2,
+   "gpu_names": [
+    "NVIDIA A100-SXM4-40GB",
+    "NVIDIA A100-SXM4-40GB"
+   ],
+   "host": "res",
+   "node": "a100-2",
+   "pool": "res-gpu1",
+   "run_id": "hsrf-mlp-null-9d9-20261124-113353-15cf8dfc",
+   "started_at": "2026-11-24T11:33:55+08:00",
+   "state": "completed",
+   "torch_cuda": "12.4",
+   "torch_version": "2.5.1+cu124"
+  },
+  "hsrf-mlp-real-9d9": {
+   "backend": "process",
+   "commit": "9d9ee3d2e3c1",
+   "completed_at": "2026-11-24T11:34:14+08:00",
+   "cuda_visible_devices": "0",
+   "dirty": false,
+   "driver_version": "550.163.01",
+   "exit_code": 0,
+   "gpu_count": 2,
+   "gpu_names": [
+    "NVIDIA A100-SXM4-40GB",
+    "NVIDIA A100-SXM4-40GB"
+   ],
+   "host": "res",
+   "node": "a100-2",
+   "pool": "res-gpu0",
+   "run_id": "hsrf-mlp-real-9d9-20261124-113345-6425547f",
+   "started_at": "2026-11-24T11:33:47+08:00",
+   "state": "completed",
+   "torch_cuda": "12.4",
+   "torch_version": "2.5.1+cu124"
+  },
+  "hsrf-stage0-9d9": {
+   "backend": "process",
+   "commit": "9d9ee3d2e3c1",
+   "completed_at": "2026-11-24T11:33:01+08:00",
+   "cuda_visible_devices": null,
+   "dirty": false,
+   "driver_version": "550.163.01",
+   "exit_code": 0,
+   "gpu_count": 2,
+   "gpu_names": [
+    "NVIDIA A100-SXM4-40GB",
+    "NVIDIA A100-SXM4-40GB"
+   ],
+   "host": "res",
+   "node": "a100-2",
+   "pool": "res-local",
+   "run_id": "hsrf-stage0-9d9-20261124-113033-980a9cf2",
+   "started_at": "2026-11-24T11:30:35+08:00",
+   "state": "completed",
+   "torch_cuda": "12.4",
+   "torch_version": "2.5.1+cu124"
+  }
+ },
+ "round": "hierarchical_structural_response_functions_v0",
+ "runtime_seconds": {
+  "krr": {
+   "BASE": 62.44811725616455,
+   "REAL": 51.160162925720215
+  },
+  "mlp": {
+   "BASE": 21.003416061401367,
+   "NULL": 10.590017318725586,
+   "REAL": 16.349937438964844
+  },
+  "ridge_total": 12.414960861206055,
+  "stage0_local": 67.0
+ }
+}

@@ -1,0 +1,364 @@
+{
+ "anomalies": [
+  "Relation keys are undirected; per directed slot only t<=s is counted once to avoid double-counting swapped anchor pairs.",
+  "The first ridge pass exposed a ledger centring bug and an MLP/KRR target de-standardisation bug; both were fixed before formal results."
+ ],
+ "axes": {
+  "decomposition": {
+   "axis": "LOW_DECOMPOSITION_COST",
+   "pairs": {
+    "BASE": {
+     "blackbox": "KRR_BASE",
+     "explicit": "F_BASE",
+     "test_gap": -0.043738887710817353,
+     "valid_ci_high": 0.04280787934551494,
+     "valid_ci_low": -0.0600301854505454,
+     "valid_gap": 0.008085569462476405
+    },
+    "REAL": {
+     "blackbox": "KRR_REAL",
+     "explicit": "F_REAL",
+     "test_gap": -0.037562364045288454,
+     "valid_ci_high": 0.03877743509337495,
+     "valid_ci_low": -0.037723151262952115,
+     "valid_gap": 0.0007822605584459907
+    }
+   }
+  },
+  "nonlinear": {
+   "axis": "NO_MATERIAL_NONLINEAR_GAIN",
+   "pairs": {
+    "base": {
+     "split_sensitive": false,
+     "test_gain": -0.001149126911488052,
+     "valid_ci_low": -0.036054070471880716,
+     "valid_gain": 0.002405480187817277
+    },
+    "real": {
+     "split_sensitive": false,
+     "test_gain": -0.006367852595082435,
+     "valid_ci_low": -0.04296253947230893,
+     "valid_gain": -0.010079486826280792
+    }
+   }
+  },
+  "relation": {
+   "axis": "NO_MATERIAL_RELATION_GAIN",
+   "relation_contribution_sd": 0.2748509578810853,
+   "support_ok": true,
+   "test_vs_base": {
+    "ci_high": 0.02703400281058956,
+    "ci_low": -0.017260092910068404,
+    "delta": 0.005545129755851419
+   },
+   "test_vs_null": {
+    "ci_high": 0.03813396051631877,
+    "ci_low": -0.010542414800733299,
+    "delta": 0.013673646354355862
+   },
+   "valid_vs_base": {
+    "ci_high": 0.013042506501229897,
+    "ci_low": -0.029603410263955663,
+    "delta": -0.00782378103165482
+   },
+   "valid_vs_null": {
+    "ci_high": 0.024334616434333312,
+    "ci_low": -0.04223293321443899,
+    "delta": -0.009603861596023
+   }
+  },
+  "representation": {
+   "axis": "REPRESENTATION_OR_LEARNER_LIMITED",
+   "blackbox": {
+    "BASE": "KRR_BASE",
+    "REAL": "KRR_REAL"
+   },
+   "blackbox_valid": {
+    "BASE": 0.7996349967133486,
+    "REAL": 0.800155468840973
+   }
+  }
+ },
+ "bootstrap": {
+  "files": [
+   "results/bootstrap_valid.csv",
+   "results/bootstrap_test.csv"
+  ],
+  "resamples": 2000,
+  "seed": 1703
+ },
+ "cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+ "candidate": "F_BASE",
+ "candidate_metrics": {
+  "test_mae": 0.5857673634713839,
+  "test_rmse": 0.781927668360357,
+  "train_mae": 0.3080270345298795,
+  "train_rmse": 0.4127676619748603,
+  "valid_mae": 0.6012094628501774,
+  "valid_rmse": 0.7915494272508722
+ },
+ "checks": {
+  "all_pass": true,
+  "failures": [],
+  "n_checks": 36,
+  "n_pass": 36
+ },
+ "commit": "9d9ee3d2e3c132722df841408d338032a7990d4d",
+ "config_sha256": "9050e2290549cfa7ff72ab7bca398f98762809aa37c38c1380bdf717a865c36c",
+ "constraints": {
+  "no_historical_retraining": true,
+  "no_new_datasets": true,
+  "no_new_function_families": true,
+  "no_new_seeds": true,
+  "train_only_vocab_and_scales": true
+ },
+ "contrast_table": "results/contrast_table.csv",
+ "created_at": "2026-11-24T03:48:40Z",
+ "curves": {
+  "arms": {
+   "F_BASE": {
+    "n_main_curves": 20,
+    "n_relation_curves": 0,
+    "selected_lambda": 0.3
+   },
+   "F_NULL": {
+    "n_main_curves": 20,
+    "n_relation_curves": 20,
+    "selected_lambda": 0.3
+   },
+   "F_REAL": {
+    "n_main_curves": 20,
+    "n_relation_curves": 20,
+    "selected_lambda": 1.0
+   },
+   "L_BASE": {
+    "n_main_curves": 20,
+    "n_relation_curves": 0,
+    "selected_lambda": 0.3
+   },
+   "L_REAL": {
+    "n_main_curves": 20,
+    "n_relation_curves": 20,
+    "selected_lambda": 0.3
+   }
+  }
+ },
+ "dataset": "ogbg-mollipo",
+ "flags": [
+  "NOT_PROMISING",
+  "ATTRIBUTION_NOT_IDENTIFIED",
+  "REPRESENTATION_OR_LEARNER_LIMITED",
+  "EXACT_LEDGER"
+ ],
+ "gpu_hours_mlp": 0.013317603005303278,
+ "hierarchy_identities": {
+  "all_pass": true,
+  "cycle_rank_max_abs_error": 0.0,
+  "identity_definition": "All enumerated instances from signatures.npz; retained-vocabulary coverage is reported separately.",
+  "n_atoms_col": 5150,
+  "n_bonds_col": 5151,
+  "per_gran": {
+   "COARSE": {
+    "n_size1_types": 17,
+    "n_size2_types": 77,
+    "retained_size1_fraction": 0.9997886728655959,
+    "retained_size2_fraction": 0.9993381706067038,
+    "size1_max_abs_error_vs_n_atoms": 0.0,
+    "size2_max_abs_error_vs_2n_bonds": 0.0
+   },
+   "ELEMENT": {
+    "n_size1_types": 7,
+    "n_size2_types": 46,
+    "retained_size1_fraction": 0.999841504649197,
+    "retained_size2_fraction": 0.9996125876722168,
+    "size1_max_abs_error_vs_n_atoms": 0.0,
+    "size2_max_abs_error_vs_2n_bonds": 0.0
+   },
+   "FULL": {
+    "n_size1_types": 62,
+    "n_size2_types": 503,
+    "retained_size1_fraction": 0.9996565934065934,
+    "retained_size2_fraction": 0.9906536775922323,
+    "size1_max_abs_error_vs_n_atoms": 0.0,
+    "size2_max_abs_error_vs_2n_bonds": 0.0
+   },
+   "TOPO": {
+    "n_size1_types": 7,
+    "n_size2_types": 1,
+    "retained_size1_fraction": 0.999841504649197,
+    "retained_size2_fraction": 1.0,
+    "size1_max_abs_error_vs_n_atoms": 0.0,
+    "size2_max_abs_error_vs_2n_bonds": 0.0
+   }
+  }
+ },
+ "historical": {
+  "GINE_test": 0.6456006570813893,
+  "GINE_valid": 0.6090630882456797,
+  "LCRC_test": 0.7138845277495122,
+  "LCRC_valid": 0.7051954064941586,
+  "source": {
+   "GINE_sq_pilot": "tracks/structural-query-learning/results/sq-pilot-small-v1/ogbg-mollipo/method_G_pred.npz",
+   "LCRC_sq_pilot": "tracks/structural-query-learning/results/sq-pilot-small-v1/ogbg-mollipo/method_L_pred.npz"
+  }
+ },
+ "identifiability": {
+  "attribution_ambiguous": true,
+  "near_optimal_gap_threshold": 0.01,
+  "note": "Near-optimal means Valid RMSE within 0.01 of the selected solution; contribution ranks are mean |group contribution| on Valid."
+ },
+ "identifiability_arms": {
+  "F_BASE": {
+   "attribution_ambiguous": true,
+   "condition_number": 459186.06469448,
+   "exact_duplicate_columns": 9208,
+   "n_features": 10005,
+   "near_optimal_lambdas": [
+    0.3,
+    1.0
+   ],
+   "numerical_rank": 2796,
+   "rank_deficiency": 7209,
+   "redundant_columns": 5945,
+   "selected_lambda": 0.3,
+   "unique_column_patterns": 4060
+  },
+  "F_REAL": {
+   "attribution_ambiguous": false,
+   "condition_number": 360591.72597208904,
+   "exact_duplicate_columns": 10770,
+   "n_features": 12477,
+   "near_optimal_lambdas": [
+    1.0
+   ],
+   "numerical_rank": 3093,
+   "rank_deficiency": 9384,
+   "redundant_columns": 7081,
+   "selected_lambda": 1.0,
+   "unique_column_patterns": 5396
+  }
+ },
+ "ledger": {
+  "all_ok": true,
+  "arms": {
+   "F_BASE": {
+    "intercept": 0.6516154559392486,
+    "ledger_ok": true,
+    "main_groups": 5273,
+    "max_reconstruction_error": 1.0658141036401503e-14,
+    "n_groups": 5273,
+    "n_molecules": 4200,
+    "relation_groups": 0
+   },
+   "F_NULL": {
+    "intercept": 0.7367513965527208,
+    "ledger_ok": true,
+    "main_groups": 5273,
+    "max_reconstruction_error": 1.4210854715202004e-14,
+    "n_groups": 6297,
+    "n_molecules": 4200,
+    "relation_groups": 1024
+   },
+   "F_REAL": {
+    "intercept": 0.8197235763888029,
+    "ledger_ok": true,
+    "main_groups": 5273,
+    "max_reconstruction_error": 1.7763568394002505e-14,
+    "n_groups": 6297,
+    "n_molecules": 4200,
+    "relation_groups": 1024
+   },
+   "L_BASE": {
+    "intercept": 0.902295340069889,
+    "ledger_ok": true,
+    "main_groups": 5273,
+    "max_reconstruction_error": 9.769962616701378e-15,
+    "n_groups": 5273,
+    "n_molecules": 4200,
+    "relation_groups": 0
+   },
+   "L_REAL": {
+    "intercept": 0.867856450709543,
+    "ledger_ok": true,
+    "main_groups": 5273,
+    "max_reconstruction_error": 8.881784197001252e-15,
+    "n_groups": 6297,
+    "n_molecules": 4200,
+    "relation_groups": 1024
+   }
+  }
+ },
+ "main_table": "results/main_table.csv",
+ "overall": "NOT_PROMISING",
+ "pair_diagnostic": {
+  "available": true,
+  "cell_counts": {
+   "cross": 1072,
+   "test": 37,
+   "train": 4646,
+   "valid": 15
+  },
+  "heldout_pairs": 1124,
+  "heldout_seen_transform_pairs": 210,
+  "heldout_unseen_transform_pairs": 914,
+  "n_pairs": 5770
+ },
+ "protocol": "PROTOCOL.md",
+ "round": "hierarchical_structural_response_functions_v0",
+ "runtime_seconds": {
+  "krr": {
+   "BASE": 62.44811725616455,
+   "REAL": 51.160162925720215
+  },
+  "mlp": {
+   "BASE": 21.003416061401367,
+   "NULL": 10.590017318725586,
+   "REAL": 16.349937438964844
+  },
+  "ridge_total": 12.414960861206055,
+  "stage0_local": 67.0
+ },
+ "seed": 0,
+ "split_sizes": {
+  "test": 420,
+  "train": 3360,
+  "valid": 420
+ },
+ "stage0_sha256": "67708ad64d31da5093287fe9a43b90480e4b4f8e2e8e7f3761d5775fcc93f398",
+ "support": {
+  "test": {
+   "fraction_real_ne_null_linear": 1.0,
+   "fraction_with_any_relation": 1.0,
+   "mean_nonzero_relations": 193.95,
+   "median_nonzero_relations": 194.5,
+   "molecules": 420,
+   "molecules_real_ne_null_linear": 420,
+   "molecules_with_any_relation": 420,
+   "relation_columns_nonzero": 1024,
+   "relation_count_total": 236070
+  },
+  "train": {
+   "fraction_real_ne_null_linear": 0.999702380952381,
+   "fraction_with_any_relation": 1.0,
+   "mean_nonzero_relations": 195.63690476190476,
+   "median_nonzero_relations": 195.0,
+   "molecules": 3360,
+   "molecules_real_ne_null_linear": 3359,
+   "molecules_with_any_relation": 3360,
+   "relation_columns_nonzero": 1024,
+   "relation_count_total": 1833196
+  },
+  "valid": {
+   "fraction_real_ne_null_linear": 1.0,
+   "fraction_with_any_relation": 1.0,
+   "mean_nonzero_relations": 197.5404761904762,
+   "median_nonzero_relations": 199.0,
+   "molecules": 420,
+   "molecules_real_ne_null_linear": 420,
+   "molecules_with_any_relation": 420,
+   "relation_columns_nonzero": 1024,
+   "relation_count_total": 237297
+  }
+ },
+ "test_policy": "development_test_readable_but_report_only"
+}
