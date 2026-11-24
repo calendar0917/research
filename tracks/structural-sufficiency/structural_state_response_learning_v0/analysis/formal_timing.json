@@ -1,0 +1,80 @@
+{
+  "schema": "ssrl-v0-formal-timing",
+  "created_utc": "2026-11-24T13:37:28Z",
+  "git_commit": "517b27d23568cbfce7fb1f23065cfc9f48402a78",
+  "git_dirty": false,
+  "mode": "formal",
+  "epochs": 5,
+  "steps_per_epoch": 500,
+  "wave1_wall_seconds": 234.01174354553223,
+  "total_wall_seconds": 486.40901231765747,
+  "gpu_hours_process_sum": 0.1850009474533403,
+  "arms": [
+    {
+      "arm": "ABS",
+      "gpu": 0,
+      "exit_code": 0,
+      "ok": true,
+      "wall_seconds": null,
+      "run_seconds": 224.18591743288562,
+      "gpu_hours_process": 0.06227386595357934,
+      "best_epoch": 0,
+      "best_valid_mae_eV": 0.12780916747209545,
+      "final_epoch": 5,
+      "final_valid_mae_eV": 0.1302730095211045,
+      "steps_per_epoch": 500,
+      "epochs": 5,
+      "log": "tracks/structural-sufficiency/structural_state_response_learning_v0/runs/PCQM_SSRL_ABS/train.log"
+    },
+    {
+      "arm": "PAIR",
+      "gpu": 1,
+      "exit_code": 0,
+      "ok": true,
+      "wall_seconds": null,
+      "run_seconds": 198.05890341708437,
+      "gpu_hours_process": 0.055016362060301215,
+      "best_epoch": 0,
+      "best_valid_mae_eV": 0.12780916800334102,
+      "final_epoch": 5,
+      "final_valid_mae_eV": 0.1300375946359665,
+      "steps_per_epoch": 500,
+      "epochs": 5,
+      "log": "tracks/structural-sufficiency/structural_state_response_learning_v0/runs/PCQM_SSRL_PAIR/train.log"
+    },
+    {
+      "arm": "RECT",
+      "gpu": 0,
+      "exit_code": 0,
+      "ok": true,
+      "wall_seconds": 252.39325046539307,
+      "run_seconds": 243.75858998205513,
+      "gpu_hours_process": 0.06771071943945976,
+      "best_epoch": 0,
+      "best_valid_mae_eV": 0.12780916818762547,
+      "final_epoch": 5,
+      "final_valid_mae_eV": 0.13061203125991008,
+      "steps_per_epoch": 500,
+      "epochs": 5,
+      "log": "tracks/structural-sufficiency/structural_state_response_learning_v0/runs/PCQM_SSRL_RECT/train.log"
+    }
+  ],
+  "within_hard_ceiling": true,
+  "within_wall_target": true,
+  "within_gpu_budget": true,
+  "all_arms_ok": true,
+  "budget": {
+    "cpu_preparation_target_seconds": 300,
+    "formal_wall_target_seconds": [
+      300,
+      600
+    ],
+    "formal_wall_hard_ceiling_seconds": 900,
+    "gpu_hours_hard_ceiling": 0.5,
+    "two_gpu_parallel": true,
+    "preflight_includes": [
+      "one real training epoch",
+      "full official Valid inference"
+    ]
+  }
+}
