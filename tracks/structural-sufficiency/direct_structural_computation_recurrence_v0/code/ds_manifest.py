@@ -93,6 +93,13 @@ def collect(base: Path) -> list[dict[str, Any]]:
     return rows
 
 
+def _dedupe(rows: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: dict[str, dict[str, Any]] = {}
+    for r in rows:
+        seen.setdefault(r["path"], r)
+    return [seen[k] for k in sorted(seen)]
+
+
 def checkpoints(base: Path) -> list[dict[str, Any]]:
     rows = []
     for root, dirs, files in os.walk(base):
@@ -249,7 +256,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             "pools": os.environ.get("PI_RR_POOL", ""),
         },
         "horizon": C.read_json(C.CONFIGS / "horizon.json") if (C.CONFIGS / "horizon.json").is_file() else None,
-        "artifacts": collect(C.ROUND) + collect(C.RESULTS),
+        "artifacts": _dedupe([a for a in collect(C.ROUND) + collect(C.RESULTS)
+                              if a["path"] != str(Path(args.out).relative_to(C.REPO))]),
         "checkpoints": checkpoints(C.RUNS),
         "historical_references": hist,
         "ledger": ledger_rows,

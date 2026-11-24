@@ -1,0 +1,447 @@
+{
+  "artifacts": {
+    "main_table": "/home/hxy/cy/research/tracks/structural-sufficiency/direct_structural_computation_recurrence_v0/analysis/main_table.csv",
+    "per_task_metrics": "/home/hxy/cy/research/tracks/structural-sufficiency/direct_structural_computation_recurrence_v0/analysis/per_task_metrics.csv"
+  },
+  "candidate_selection": {
+    "C*": "FIXED1",
+    "K*": "SELF",
+    "candidates": {
+      "BAG2": 0.27073606380030485,
+      "FIXED1": 0.27584552136653284,
+      "REAL2": 0.2691490333124464,
+      "SELF": 0.2693090880415918
+    },
+    "preference": [
+      "SELF",
+      "FIXED1",
+      "REAL2",
+      "BAG2"
+    ],
+    "selected_on": "full official Valid macro AP (Test never used)",
+    "selection_stability": {
+      "best_valid": {
+        "BAG2": 0.27073606380030485,
+        "FIXED1": 0.27584552136653284,
+        "REAL2": 0.2691490333124464,
+        "SELF": 0.2693090880415918
+      },
+      "last5_mean": {
+        "BAG2": 0.2691633904410133,
+        "FIXED1": 0.2733584884518717,
+        "REAL2": 0.26817454845946925,
+        "SELF": 0.2669742081372696
+      }
+    },
+    "tie_break_ap": 0.001
+  },
+  "created_utc": "2026-11-24T22:51:57Z",
+  "decision": {
+    "horizon": 25,
+    "labels": {
+      "Q1": "WEAK_OR_UNCONFIRMED_LOCAL_COMPUTATION_SIGNAL",
+      "Q2": "FIXED_SOURCE_COMPUTATION_SIGNAL",
+      "Q3": "NO_TWO_HOP_GAIN",
+      "Q4": "BINDING_NO_PREDICTIVE_VALUE",
+      "Q5": "COMPETITIVE_NONITERATIVE_COMPUTATION"
+    },
+    "modifiers": {
+      "Q5": [
+        "SPLIT_CONFLICT",
+        "VALID_TEST_DISAGREEMENT"
+      ]
+    },
+    "note": "labels are route decisions on point estimates; the task bootstrap interval is not a significance test",
+    "observations": {
+      "Q1": {
+        "SELF_minus_W2_seed1_test": 0.005933128889714023,
+        "SELF_minus_W2_seed1_valid": 0.01057297987268792,
+        "SELF_minus_W2_test": 0.0031027698310157124,
+        "SELF_minus_W2_valid": 0.004033138799717409,
+        "SELF_valid": 0.2693059943591427,
+        "W2_valid": 0.26527285555942526,
+        "rule": "both paired seeds must reach +0.005 Valid AP with Test in the same direction",
+        "seeds_paired": [
+          0,
+          1
+        ],
+        "threshold_valid": 0.005
+      },
+      "Q2": {
+        "FIXED1_minus_DYNAMIC_valid": 0.0007831566160605123,
+        "FIXED1_minus_SELF_test": 0.00028237052167511814,
+        "FIXED1_minus_SELF_valid": 0.006540984174703329,
+        "near_dynamic_band": [
+          -0.005,
+          -0.003
+        ]
+      },
+      "Q3": {
+        "BAG2_minus_FIXED1_test": 0.0013225374834531017,
+        "BAG2_minus_FIXED1_valid": -0.005109072927977966,
+        "REAL2_minus_FIXED1_test": -0.0015278736933018891,
+        "REAL2_minus_FIXED1_valid": -0.006698749340901458
+      },
+      "Q4": {
+        "REAL2_minus_BAG2_test": -0.0028504111767549906,
+        "REAL2_minus_BAG2_valid": -0.0015896764129234913,
+        "REAL2_vs_BAG2_valid_high_support_mean_delta": -0.001071613616918083
+      },
+      "Q5": {
+        "Cstar_minus_DYNAMIC_test": -0.005224247161610814,
+        "Cstar_minus_DYNAMIC_valid": 0.0007831566160605123,
+        "Cstar_minus_W2_valid": 0.010574122974420739,
+        "DYNAMIC_minus_Cstar_valid": -0.0007831566160605123
+      }
+    },
+    "q6_routes": {
+      "fixed_source_one_hop": {
+        "breadth": [
+          {
+            "mean_delta": 0.011913362517967202,
+            "min_positive": 20,
+            "n_degraded": 25,
+            "n_improved": 82,
+            "n_tasks": 107
+          },
+          {
+            "mean_delta": 0.011972425344136173,
+            "min_positive": 20,
+            "n_degraded": 35,
+            "n_improved": 72,
+            "n_tasks": 107
+          }
+        ],
+        "gain": [
+          0.010574122974420739,
+          0.016048834878458127
+        ],
+        "gain_vs_sibling": [
+          0.006540984174703329,
+          0.00547585500577021
+        ],
+        "improved": [
+          [
+            93,
+            34
+          ],
+          [
+            85,
+            42
+          ]
+        ],
+        "information_boundary": "layer 2 reads h0 of real 1-hop neighbours; verified by A3 grad support",
+        "repeatable": true,
+        "research_value": "states a concrete, non-iterative structural computation that matches DYNAMIC on Valid",
+        "verdict": "RECOMMEND_CONTINUE"
+      },
+      "iterative": {
+        "breadth": [
+          {
+            "mean_delta": -0.000655203061939387,
+            "min_positive": 20,
+            "n_degraded": 63,
+            "n_improved": 44,
+            "n_tasks": 107
+          }
+        ],
+        "gain": [
+          -0.0007831566160605123
+        ],
+        "gain_test": [
+          0.005224247161610814,
+          0.006498435409052943
+        ],
+        "improved": [
+          [
+            51,
+            76
+          ]
+        ],
+        "information_boundary": "layer 2 reads h1[j]: a wider effective access range than any h0 arm",
+        "repeatable": null,
+        "research_value": "capability boundary reference",
+        "verdict": "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+      },
+      "multiset_combination": {
+        "breadth": [
+          {
+            "mean_delta": -0.004063628830231326,
+            "min_positive": 20,
+            "n_degraded": 54,
+            "n_improved": 53,
+            "n_tasks": 107
+          }
+        ],
+        "gain": [
+          -0.005109072927977966
+        ],
+        "improved": [
+          [
+            61,
+            66
+          ]
+        ],
+        "information_boundary": "same multisets without correspondence (verified)",
+        "repeatable": false,
+        "research_value": "diagnostic control only, never a candidate architecture",
+        "verdict": "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+      },
+      "real_two_hop": {
+        "breadth": [
+          {
+            "mean_delta": -0.0051352424471494094,
+            "min_positive": 20,
+            "n_degraded": 65,
+            "n_improved": 42,
+            "n_tasks": 107
+          }
+        ],
+        "gain": [
+          -0.006698749340901458
+        ],
+        "improved": [
+          [
+            47,
+            80
+          ]
+        ],
+        "information_boundary": "direct two-hop from h0 (verified)",
+        "repeatable": false,
+        "research_value": "tested the 'recurrence is really two-hop branching' hypothesis",
+        "verdict": "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+      }
+    },
+    "thresholds": {
+      "Q1_self_minus_w2_valid_min": 0.005,
+      "Q4_real2_minus_bag2_valid_min": 0.0015,
+      "Q5_iterative_band": 0.005
+    }
+  },
+  "fast_ap_vs_sklearn_max_abs_diff": 1.1102230246251565e-16,
+  "horizon": 25,
+  "modifiers": {
+    "Q5": [
+      "SPLIT_CONFLICT",
+      "VALID_TEST_DISAGREEMENT"
+    ]
+  },
+  "q6_routes": {
+    "fixed_source_one_hop": {
+      "breadth": [
+        {
+          "mean_delta": 0.011913362517967202,
+          "min_positive": 20,
+          "n_degraded": 25,
+          "n_improved": 82,
+          "n_tasks": 107
+        },
+        {
+          "mean_delta": 0.011972425344136173,
+          "min_positive": 20,
+          "n_degraded": 35,
+          "n_improved": 72,
+          "n_tasks": 107
+        }
+      ],
+      "gain": [
+        0.010574122974420739,
+        0.016048834878458127
+      ],
+      "gain_vs_sibling": [
+        0.006540984174703329,
+        0.00547585500577021
+      ],
+      "improved": [
+        [
+          93,
+          34
+        ],
+        [
+          85,
+          42
+        ]
+      ],
+      "information_boundary": "layer 2 reads h0 of real 1-hop neighbours; verified by A3 grad support",
+      "repeatable": true,
+      "research_value": "states a concrete, non-iterative structural computation that matches DYNAMIC on Valid",
+      "verdict": "RECOMMEND_CONTINUE"
+    },
+    "iterative": {
+      "breadth": [
+        {
+          "mean_delta": -0.000655203061939387,
+          "min_positive": 20,
+          "n_degraded": 63,
+          "n_improved": 44,
+          "n_tasks": 107
+        }
+      ],
+      "gain": [
+        -0.0007831566160605123
+      ],
+      "gain_test": [
+        0.005224247161610814,
+        0.006498435409052943
+      ],
+      "improved": [
+        [
+          51,
+          76
+        ]
+      ],
+      "information_boundary": "layer 2 reads h1[j]: a wider effective access range than any h0 arm",
+      "repeatable": null,
+      "research_value": "capability boundary reference",
+      "verdict": "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+    },
+    "multiset_combination": {
+      "breadth": [
+        {
+          "mean_delta": -0.004063628830231326,
+          "min_positive": 20,
+          "n_degraded": 54,
+          "n_improved": 53,
+          "n_tasks": 107
+        }
+      ],
+      "gain": [
+        -0.005109072927977966
+      ],
+      "improved": [
+        [
+          61,
+          66
+        ]
+      ],
+      "information_boundary": "same multisets without correspondence (verified)",
+      "repeatable": false,
+      "research_value": "diagnostic control only, never a candidate architecture",
+      "verdict": "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+    },
+    "real_two_hop": {
+      "breadth": [
+        {
+          "mean_delta": -0.0051352424471494094,
+          "min_positive": 20,
+          "n_degraded": 65,
+          "n_improved": 42,
+          "n_tasks": 107
+        }
+      ],
+      "gain": [
+        -0.006698749340901458
+      ],
+      "improved": [
+        [
+          47,
+          80
+        ]
+      ],
+      "information_boundary": "direct two-hop from h0 (verified)",
+      "repeatable": false,
+      "research_value": "tested the 'recurrence is really two-hop branching' hypothesis",
+      "verdict": "NO_NEW_COMPETITIVE_DIRECT_MECHANISM"
+    }
+  },
+  "round_id": "direct-structural-computation-recurrence-v0",
+  "route_table": [
+    {
+      "evidence_against": [
+        "seed0 \u589e\u76ca 0.004033139 \u4f4e\u4e8e\u9884\u6ce8\u518c 0.005 \u95e8\u69db\uff08seed1 0.010572980 \u8fbe\u6807\uff0c\u4f46\u89c4\u5219\u8981\u6c42\u4e24\u4e2a seed \u540c\u65f6\u8fbe\u6807\uff09",
+        "SELF \u4ecd\u7136\u5bf9\u6bcf\u6761\u771f\u5b9e\u5165\u8fb9\u505a\u6761\u4ef6\u5316\uff0c\u4e0d\u662f\u7eaf\u70b9\u5f0f\u6df1\u5ea6"
+      ],
+      "evidence_for": [
+        "SELF \u2212 W2 Valid 0.004033139\uff08seed0\uff09/ 0.010572980\uff08seed1\uff09\uff1bTest 0.003102770 / 0.005933129",
+        "A3 \u68af\u5ea6\u652f\u6301\u8868\uff1aSELF \u7b2c\u4e8c\u9636\u6bb5\u5b8c\u5168\u4e0d\u8bfb\u5176\u4ed6\u8282\u70b9\u9690\u72b6\u6001"
+      ],
+      "open": [
+        "\u82e5\u9700\u8981\u66f4\u9ad8\u70b9\u5f0f\u5bb9\u91cf\uff0c\u5e94\u4f5c\u4e3a\u5bb9\u91cf\u5bf9\u7167\u5355\u72ec\u9884\u6ce8\u518c"
+      ],
+      "priority": "WEAK_OR_UNCONFIRMED_LOCAL_COMPUTATION_SIGNAL \u2192 SELF \u5355\u72ec\u4e0d\u4f5c\u4e3a\u8def\u7ebf\u63a8\u8350",
+      "role": "no cross-node hidden state is read at all",
+      "route": "strict direct local computation (W2 / SELF)"
+    },
+    {
+      "evidence_against": [
+        "\u5bf9 SELF \u7684 Test \u4f18\u52bf\u53ea\u6709 0.000282371\uff08seed0\uff09",
+        "C* \u2212 DYNAMIC Test \u4e24 seed \u7b26\u53f7\u76f8\u53cd\uff1a-0.005224247 / 0.006498435"
+      ],
+      "evidence_for": [
+        "FIXED1 \u2212 SELF Valid 0.006540984\uff08seed0\uff0cCI \u4e0d\u542b 0\uff09",
+        "C* \u2212 K* Valid 0.005475855 / Test 0.008092400\uff08seed1 \u914d\u5bf9\uff09",
+        "C* \u2212 W2 Valid 0.010574123\uff08seed0\uff09 / 0.016048835\uff08seed1\uff09",
+        "\u4e0e DYNAMIC \u7684 Valid \u5dee 0.000783157\uff08seed0\uff09 / 0.000126066\uff08seed1\uff09"
+      ],
+      "open": [
+        "FIXED1 \u53ea\u6709 2 \u4e2a seed\uff080/1\uff09\uff0c\u5c1a\u65e0\u7b2c\u4e09 seed"
+      ],
+      "priority": "FIXED_SOURCE_COMPUTATION_SIGNAL \u2192 RECOMMEND_CONTINUE",
+      "role": "reads h0 of the real 1-hop neighbours, never h1[j]",
+      "route": "fixed-source one-hop computation (FIXED1)"
+    },
+    {
+      "evidence_against": [
+        "REAL2 \u2212 FIXED1 Valid -0.006698749\uff08CI \u4e0d\u542b 0\uff09",
+        "REAL2 \u2212 BAG2 Valid -0.001589676 / Test -0.002850411",
+        "\u51bb\u7ed3\u66ff\u6362\uff1aBAG2 \u6743\u91cd + REAL2 \u8bfb\u51fa +0.0002\uff1bREAL2 \u6743\u91cd + BAG2 \u8bfb\u51fa \u22120.0001"
+      ],
+      "evidence_for": [
+        "DYNAMIC \u2212 REAL2 Valid 0.005915593 / Test 0.006752121\uff1a\u4e24\u8df3\u6ca1\u6709\u66ff\u4ee3\u8fed\u4ee3"
+      ],
+      "open": [
+        "REAL2 \u53ea\u6709 1 \u4e2a seed\uff1b\u673a\u5236\u66ff\u6362\u5df2\u663e\u793a\u5bf9\u5e94\u5173\u7cfb\u4e0d\u53ef\u8bc6\u522b\uff0c\u6545\u672a\u8ffd\u52a0 seed"
+      ],
+      "priority": "NO_TWO_HOP_GAIN \u2192 NO_NEW_COMPETITIVE_DIRECT_MECHANISM",
+      "role": "direct rooted two-hop branch computation from h0",
+      "route": "real two-hop structural combination (REAL2)"
+    },
+    {
+      "evidence_against": [
+        "BAG2 \u2212 FIXED1 Valid -0.005109073\uff1bTest \u4ec5 0.001322537\uff08CI \u542b 0\uff09",
+        "\u51bb\u7ed3\u66ff\u6362\uff1a\u628a REAL2 \u8bfb\u51fa\u6362\u6210 degree \u5f52\u4e00\u5316\uff08mean\uff09\u540e \u22120.0161\uff0c\u8bf4\u660e\u627f\u91cd\u7684\u662f\u5f52\u4e00\u5316\u800c\u975e\u914d\u5bf9"
+      ],
+      "evidence_for": [
+        "BAG2 \u7edd\u5bf9 Valid 0.270736064\uff0c\u9ad8\u4e8e REAL2\u3001\u4f4e\u4e8e FIXED1",
+        "BAG2 \u6700\u4f73 epoch 22\uff08FIXED1/REAL2 \u4e3a 25\uff09\uff0cTrain AP \u6700\u4f4e\uff0c\u8868\u73b0\u4e3a\u66f4\u5f3a\u7684\u6b63\u5219\u5316\u800c\u975e\u66f4\u5f3a\u8868\u8fbe"
+      ],
+      "open": [
+        "BAG2 \u662f\u8bca\u65ad\u63a7\u5236\u81c2\uff0c\u4e0d\u4f5c\u4e3a\u5019\u9009\u67b6\u6784"
+      ],
+      "priority": "NO_TWO_HOP_GAIN \u2192 NO_NEW_COMPETITIVE_DIRECT_MECHANISM",
+      "role": "same two multisets, correspondence removed",
+      "route": "unbound multiset combination (BAG2)"
+    },
+    {
+      "evidence_against": [
+        "\u4e0e FIXED1 \u7684 Valid \u5dee\u4e24 seed \u5747 \u22480\uff1a0.000783157 / 0.000126066",
+        "Test \u4fa7 DYNAMIC \u4f18\u52bf\u5728 seed1 \u53cd\u5411\uff08C* \u9886\u5148 +0.0065\uff09"
+      ],
+      "evidence_for": [
+        "DYNAMIC \u2212 FIXED1 Test 0.005224247\uff08seed0\uff09",
+        "DYNAMIC \u2212 REAL2 Valid 0.005915593 / Test 0.006752121",
+        "A3\uff1a\u7b2c\u4e8c\u9636\u6bb5\u8bfb h1[j]\uff0c\u6709\u6548\u8bbf\u95ee\u8303\u56f4\u4e25\u683c\u5927\u4e8e\u4efb\u4f55 h0 \u81c2"
+      ],
+      "open": [
+        "\u8fed\u4ee3\u4f18\u52bf\u4e0e\u66f4\u5bbd\u8bbf\u95ee\u8303\u56f4\u4e0d\u53ef\u5206\u79bb\uff08\u672c\u8f6e\u65e0 h1 \u8bfb\u53d6\u4f46\u975e\u8fed\u4ee3\u7684\u81c2\uff09"
+      ],
+      "priority": "COMPETITIVE_NONITERATIVE_COMPUTATION \u2192 NO_NEW_COMPETITIVE_DIRECT_MECHANISM",
+      "role": "layer 2 reads the updated neighbour state h1[j]",
+      "route": "iterative hidden-state update (DYNAMIC)"
+    }
+  ],
+  "schema": "dscr-summary-v1",
+  "test_role": "DEVELOPMENT_TEST / EXPOSED_TEST_ENGINEERING_COMPARISON_SET",
+  "units_present": [
+    "W2",
+    "SELF",
+    "FIXED1",
+    "REAL2",
+    "BAG2",
+    "DYNAMIC",
+    "W2_seed1",
+    "DYNAMIC_seed1",
+    "C*=FIXED1",
+    "K*=SELF"
+  ]
+}
