@@ -56,6 +56,8 @@ best 值在三臂重跑间有 ≤1.8e-9 eV 的 float32 差异（同一 checkpoin
 
 ## B. 实替换 delta
 
+best 层面：三臂 best epoch 均为 0，规定的五个对照（ABS−epoch0、PAIR−ABS、RECT−ABS、RECT−PAIR、RECT−epoch0）全部约为 0（<1e-6 eV），没有训练后的 best checkpoint 可比较。下面只报告固定终点。
+
 固定终点（epoch 5）在全部 36,952 个可评估替换观测、1,677 个 pair type 上：
 
 | 模型 | obs MAE (eV) | macro MAE (eV) | corr | slope | dir obs | dir macro |
@@ -85,6 +87,8 @@ best 值在三臂重跑间有 ≤1.8e-9 eV 的 float32 差异（同一 checkpoin
 未见 exact context 的 macro CI 分别跨 0；observation CI 为正。没有子集显示 RECT 优于 epoch 0 或 ABS。
 
 ## C. 环境交互 D
+
+best 层面同样没有训练后的 checkpoint：三臂 best epoch 均为 0，五个规定对照全部约为 0（<1e-6 eV）。下面只报告固定终点。
 
 固定终点在全部 59,214 个矩形、1,542 个 pair type 上（pair-type macro 为主指标）：
 
