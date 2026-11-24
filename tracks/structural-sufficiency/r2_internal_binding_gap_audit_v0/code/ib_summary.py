@@ -267,7 +267,7 @@ def main() -> None:
             "text": (
                 "No primary feature shows a positive, D0-consistent, adequately "
                 "supported, non-dominated structure contrast.  The only positive "
-                "D0-consistent contrast is reconvergence_2, but its high stratum "
+                "D0-consistent primary contrast is reconvergence_2, but its high stratum "
                 "contains 1 molecule on D0/s0, 1 on D0/s1 and 3 on D1/s0 (4 or 6 "
                 "non-zero Dev molecules in total), so it is unsupported and "
                 "dominated.  The only adequately supported D0-consistent contrast "
@@ -286,7 +286,7 @@ def main() -> None:
                 for cell in sensitivity["cells"]
             },
             "text": (
-                "The frozen EGO2 model is sensitive to d2-d2 edges: about 51-54% of "
+                "The frozen EGO2 model is sensitive to d2-d2 edges: 50.8-54.4% of "
                 "Dev molecules are covered, mean |Delta prediction| is 0.023-0.039, "
                 "and removing them worsens Dev RMSE by 0.0028-0.0070.  The d1-d1 "
                 "perturbation covers only 3.8-5.2% of molecules and is not "

@@ -365,7 +365,7 @@ uv run pytest -q tests
 
 `run_all.py` runs, in order: `ib_replay.py`, `ib_identity.py`, `ib_gap.py`,
 `ib_topology.py`, `ib_sensitivity.py`, `ib_summary.py`. The full pipeline took
-50.5 s wall on local CPU, used no GPU, and completed with `all_ok=true`
+51.8 s wall on local CPU, used no GPU, and completed with `all_ok=true`
 (`analysis/run_all.json`). Peak memory was bounded by processing one split at a
 time and batching EGO2 inference; the replay process peak RSS was ~0.51 GB.
 
@@ -373,7 +373,7 @@ time and batching EGO2 inference; the replay process peak RSS was ~0.51 GB.
 |---|---|
 | base commit | `189d5dd1e4e90bed5555cc4f23d57216a1e59dcc` |
 | protocol sha256 | `c36446a5397e703bee486bbe48c89f4c86158ee683a2fa5e4a81bb23cdfe561c` |
-| code sha256 (`ib_*.py` + `run_all.py`) | `a7b1a5ea5976adc5b4f8ddbcf351ed408ef2dc39775540917813e3531ff7c5b6` |
+| code sha256 (`ib_*.py` + `run_all.py`) | `913cb83ff200bd242c079023606e602ed700873e29da7a81e080fece311bf491` |
 | environment | Python 3.12.15, torch 2.5.1+cu124, CPU, 16 cores, no CUDA device |
 | training runs | 0 |
 | GPU-hours | 0 |
