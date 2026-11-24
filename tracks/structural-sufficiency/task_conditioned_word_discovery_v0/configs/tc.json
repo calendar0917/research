@@ -1,0 +1,164 @@
+{
+ "protocol_id": "task-conditioned-word-discovery-v0",
+ "version": "2026-11-24/v1",
+ "frozen_before_formal_gpu_runs": true,
+ "dataset": "ogbg-mollipo",
+ "target": {
+  "name": "whole_molecule_lipophilicity",
+  "normalization": "current split's Fit-only z-score",
+  "metric": "Dev RMSE in original label units at the best-Dev checkpoint"
+ },
+ "data": {
+  "official_train_rows": 3360,
+  "official_valid_labels": "never loaded; every Valid label stays NaN",
+  "official_test": "never touched",
+  "splits": {
+   "D0": {"identity_sha256": "60ac13c04fb0dab484fc8e7cc28f2a85450794ed3ebeeb0a87d1b41c3532559e",
+          "n_fit": 2856, "n_eval": 504},
+   "D1": {"identity_sha256": "c94e2d4bd92e51ab91119923d61e955f5a2f686fc1751883e858fce88dab6bee",
+          "n_fit": 2856, "n_eval": 504}
+  }
+ },
+ "candidate": {
+  "support": "every rooted connected induced subgraph of size 1..4 inside R2(root), root in slot 0, all real internal bonds",
+  "canonicalization": "rice_structure.canonical_signature exact root-marked attributed-graph certificate",
+  "word_sizes": [3, 4],
+  "low_order_sizes": [1, 2],
+  "granularities": {
+   "FULL": "9 OGB atom columns / 3 OGB bond columns",
+   "COARSE": "atomic_num, formal_charge, is_aromatic / bond_type"
+  },
+  "min_molecules": 20,
+  "min_scaffolds": 5,
+  "dedupe": "identical Fit root-level count columns; representative preference: smaller Fit document frequency, then COARSE, then canonical key ascending; all equivalent members recorded",
+  "vocabulary_sizes_are_only_3_and_4": true,
+  "note": "COARSE is an explicit attribute abstraction, not a claim of full chemical identity"
+ },
+ "x0": {
+  "features": ["size-1 FULL rooted type counts", "size-2 FULL rooted type counts",
+               "n_atoms", "n_bonds", "8 frozen graph scalars"],
+  "normalization": "Fit part of each inner fold only"
+ },
+ "folds": {
+  "n": 3,
+  "seed": 20261124,
+  "rule": "Bemis-Murcko scaffold groups; sorted scaffold keys -> default_rng(seed).permutation -> greedy whole-group assignment to the currently smallest fold (ties by fold index)",
+  "scaffold_disjoint": true
+ },
+ "selection": {
+  "ridge_alpha": 10.0,
+  "standardization": "training part mean/std; constant columns recorded, never filled arbitrarily",
+  "label_ridge": "y ~ X0",
+  "candidate_ridge": "multi-output X_words ~ X0",
+  "residuals": "inner held-out part only",
+  "correlation": "Pearson; undefined for zero residual variance",
+  "direction_consistency": "all three fold correlations strictly same sign",
+  "score": "min_j abs(corr_j(t))",
+  "order": "score descending, canonical key ascending",
+  "K": 128,
+  "min_K_for_neural": 32
+ },
+ "frequency_control": {
+  "sort": "Fit document frequency descending, canonical key ascending",
+  "buckets": 4,
+  "bucket_rule": "eligible candidates sorted by (df ascending, canonical key ascending) and split into four contiguous equal-count empirical quartile buckets",
+  "match": "exact joint distribution over (word size, granularity, df quartile bucket)",
+  "mutual_exclusion": "not enforced; actual intersection reported"
+ },
+ "ridge_arms": ["LOW_RIDGE", "ALL_RIDGE", "TASK_RIDGE", "FREQ_RIDGE"],
+ "positive_control": {
+  "planted_word_rule": "qualified size-3/4 candidate with strictly positive conditional residual variance in all three inner folds, maximising the minimum fold variance; chosen without reading real labels",
+  "label": "y_syn = Fit-standardised x_planted; same Fit scaler applied to Dev",
+  "same_selection_flow": true,
+  "must_enter_task_vocabulary": true,
+  "synthetic_labels_never_touch_real_lipo_training": true
+ },
+ "neural": {
+  "design": "shared non-iterative root-level readout, no GNN, no pretraining, no teacher, no distillation",
+  "dims": {
+   "atom": 48,
+   "bond": 24,
+   "pair_hidden": 128,
+   "pair_out": 64,
+   "word_hidden": 128,
+   "word_out": 64,
+   "sentence_input": 176,
+   "sentence_hidden": 192,
+   "sentence_out": 96,
+   "readout_input": 297,
+   "readout_hidden": 192,
+   "readout_mid": 96,
+   "dropout": 0.1
+  },
+  "root_input": "root atom embedding + sum over real first-order neighbours of a shared pair encoder([neighbour atom embedding, incident bond embedding])",
+  "word_input": "z_v[t] = log1p(c(v,t)) for the frozen selected vocabulary; BASE uses an all-zero z with the same shape",
+  "sentence_mlp": "concat(root 48, neighbour 64, word 64) = 176 -> 192 -> 96 (SiLU, dropout 0.1)",
+  "readout": "per-molecule sum/mean/std of the 96-d root representation + log1p(n_atoms) + Fit-standardised 8 graph scalars -> 297 -> 192 -> 96 -> 1",
+  "prohibitions": ["no full R2 trunk bypass", "no S2 branch", "no extra R2 statistics", "no GNN", "no neural path reading unselected word types"],
+  "recipe": {
+   "optimizer": "AdamW",
+   "peak_lr": 0.0003,
+   "min_lr": 0.00001,
+   "weight_decay": 0.0001,
+   "gradient_clip": 5.0,
+   "batch_molecules": 64,
+   "warmup_epochs": 5,
+   "schedule": "cosine",
+   "epochs": 240,
+   "eval_batch": 256,
+   "patience": 45,
+   "min_epochs": 80,
+   "objective": "whole-molecule standardized MSE only",
+   "checkpoint_selection": "best Dev RMSE, earliest epoch on ties",
+   "init": "deterministic per-seed uniform linear / normal(0,0.1) embeddings; final readout layer normal(0,1e-3)",
+   "search": "none"
+  },
+  "arms": {
+   "BASE": {"use_words": false, "z": "all zero, same shape"},
+   "D_TASK": {"use_words": true, "vocab": "D_TASK"},
+   "D_FREQ": {"use_words": true, "vocab": "D_FREQ"}
+  },
+  "identical_between_word_arms": ["parameter count", "initialisation", "batch order", "optimizer recipe"]
+ },
+ "run_matrix": {
+  "stage_1": [
+   {"run_id": "D0_S0_BASE", "split": "D0", "seed": 0, "arm": "BASE"},
+   {"run_id": "D0_S0_TASK", "split": "D0", "seed": 0, "arm": "D_TASK"},
+   {"run_id": "D0_S0_FREQ", "split": "D0", "seed": 0, "arm": "D_FREQ"}
+  ],
+  "stage_2_condition": "D_TASK beats D_FREQ by >= 0.015 RMSE on D0/s0, or D_TASK beats BASE by >= 0.03 and is within 0.025 of R2_REF D0/s0 0.547679",
+  "stage_2": [
+   {"run_id": "D0_S1_TASK", "split": "D0", "seed": 1, "arm": "D_TASK"},
+   {"run_id": "D0_S1_FREQ", "split": "D0", "seed": 1, "arm": "D_FREQ"}
+  ],
+  "stage_3_condition": "both D0 seeds show a positive TASK-vs-FREQ difference and their mean is >= 0.01 RMSE",
+  "stage_3": [
+   {"run_id": "D1_S0_BASE", "split": "D1", "seed": 0, "arm": "BASE"},
+   {"run_id": "D1_S0_TASK", "split": "D1", "seed": 0, "arm": "D_TASK"},
+   {"run_id": "D1_S0_FREQ", "split": "D1", "seed": 0, "arm": "D_FREQ"}
+  ],
+  "no_third_seed": true,
+  "no_search": ["K", "word size", "attribute granularity", "alpha", "MLP width", "scoring function"]
+ },
+ "references": {
+  "R2_REF_D0_S0": 0.547679,
+  "R2_REF_D1_S0": 0.563802,
+  "note": "descriptive performance coordinates only; no architecture attribution"
+ },
+ "evaluation": {
+  "bootstrap": {"draws": 5000, "seed": 1703, "unit": "Bemis-Murcko scaffold",
+                "comparison": "same-molecule paired D_TASK vs D_FREQ RMSE/MAE difference, 95% percentile interval"},
+  "vocabulary_compression": ["candidate types", "selected words", "root coverage", "molecule coverage", "effective words per root"],
+  "stability": ["D0/D1 selected-word intersection", "size/granularity distribution", "cross-scaffold support"],
+  "structure_content": "top 20 real words by frozen selection score with rooted graph serialization and actual molecular occurrences",
+  "information_repetition": ["selected-word vs low-order feature correlation", "equivalent columns", "highly correlated candidate pairs"]
+ },
+ "verdict_rule": {
+  "VOCABULARY_PROMISING": "task-vs-frequency gain direction-consistent on both D0 seeds and D1; D0 mean gain >= 0.01; both D0 and D1 task models within 0.025 RMSE of their R2_REF",
+  "DISCOVERY_ONLY": "task vocabulary better than frequency vocabulary but does not retain strong R2 performance",
+  "COMPRESSION_ONLY": "compact vocabulary close to R2 performance but task selection does not beat frequency selection",
+  "NO_SUPPORTED_DISCOVERY": "none of the above signals observed",
+  "INSUFFICIENT_OR_INVALID": "support insufficient, positive control failed, or implementation inconsistent"
+ },
+ "resource_budget": {"wall_hours": 2.0, "gpu_hours": 3.0, "host": "res", "parallel_gpus": 2}
+}
