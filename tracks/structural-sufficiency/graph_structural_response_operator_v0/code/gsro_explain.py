@@ -359,6 +359,7 @@ def run_explanation(config: dict[str, Any], checkpoint_path: Path) -> dict[str, 
             "note": "exact energy decomposition of the current computation; "
             "not a unique chemical attribution",
             "molecules": decomposition_rows,
+            "three_molecule_ledgers": ledgers,
         },
         "coupling_sensitivity": {
             "n_edges": int(len(sensitivity_rows)),
