@@ -143,7 +143,8 @@ def main_table(runs: dict[tuple[str, int], dict[str, Any]]) -> list[dict[str, An
                 "generalisation_gap_valid": check["valid"]["rmse"] - check["fit"]["rmse"],
                 "train_wall_seconds": float(payload["train_seconds"]),
                 "train_gpu_hours": float(payload.get("gpu_hours", 0.0)),
-                "peak_vram_mb": payload.get("peak_vram_mb"),
+                "peak_vram_mb": (round(payload["peak_vram_bytes"] / 1e6, 1)
+                                 if payload.get("peak_vram_bytes") else None),
             })
     return rows
 
