@@ -53,6 +53,7 @@ COMPARISONS = [
 ]
 SEED1_COMPARISONS = [
     ("CSTAR", 1, "W2", 1, "Q1b_Cstar_vs_W2_seed1"),
+    ("SELF", 1, "W2", 1, "Q1c_SELF_vs_W2_seed1"),
     ("CSTAR", 1, "DYNAMIC", 1, "Q5c_Cstar_vs_DYNAMIC_seed1"),
     ("CSTAR", 1, "KSTAR", 1, "Q4b_Cstar_vs_Kstar_seed1"),
     ("CSTAR", 0, "W2", 0, "Q1b_Cstar_vs_W2_seed0"),
@@ -630,17 +631,24 @@ def decide(units: Mapping[str, Mapping[str, Any]], comparisons: Mapping[str, Any
     # ---- Q1: SELF vs W2
     self_w2_v = cmp("Q1_extra_pointwise_depth_vs_W2", "valid")
     self_w2_t = cmp("Q1_extra_pointwise_depth_vs_W2", "test")
+    self_w2_v1 = cmp("Q1c_SELF_vs_W2_seed1", "valid")
+    self_w2_t1 = cmp("Q1c_SELF_vs_W2_seed1", "test")
     obs["Q1"] = {
         "SELF_minus_W2_valid": self_w2_v,
         "SELF_minus_W2_test": self_w2_t,
+        "SELF_minus_W2_seed1_valid": self_w2_v1,
+        "SELF_minus_W2_seed1_test": self_w2_t1,
         "SELF_valid": get("SELF", "valid"),
         "W2_valid": get("W2", "valid"),
-        "seeds_paired": ["0"],
+        "seeds_paired": [0, 1] if self_w2_v1 is not None else [0],
         "threshold_valid": 0.005,
+        "rule": "both paired seeds must reach +0.005 Valid AP with Test in the same direction",
     }
-    if self_w2_v is not None and self_w2_t is not None and self_w2_v >= 0.005 and self_w2_t > 0:
+    valids = [v for v in (self_w2_v, self_w2_v1) if v is not None]
+    tests = [t for t in (self_w2_t, self_w2_t1) if t is not None]
+    if len(valids) >= 2 and all(v >= 0.005 for v in valids) and all(t > 0 for t in tests):
         labels["Q1"] = "STRICT_LOCAL_COMPUTATION_SIGNAL"
-    elif self_w2_v is not None and self_w2_v > 0:
+    elif valids and all(v > 0 for v in valids):
         labels["Q1"] = "WEAK_OR_UNCONFIRMED_LOCAL_COMPUTATION_SIGNAL"
     else:
         labels["Q1"] = "NO_STRICT_LOCAL_COMPUTATION_SIGNAL"
@@ -978,11 +986,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     q6 = decision["q6_routes"]
     table[0]["evidence_for"] = [
         f"SELF − W2 Valid {_fmt(d('Q1_extra_pointwise_depth_vs_W2','valid'))}（seed0）/ "
-        f"{_fmt(d('Q4b_Cstar_vs_Kstar_seed1','valid'))} 为 C*−K* 而非 SELF−W2",
+        f"{_fmt(d('Q1c_SELF_vs_W2_seed1','valid'))}（seed1）；Test "
+        f"{_fmt(d('Q1_extra_pointwise_depth_vs_W2','test'))} / {_fmt(d('Q1c_SELF_vs_W2_seed1','test'))}",
         "A3 梯度支持表：SELF 第二阶段完全不读其他节点隐状态",
     ]
     table[0]["evidence_against"] = [
-        f"seed0 增益 {_fmt(d('Q1_extra_pointwise_depth_vs_W2','valid'))} 低于预注册 0.005 门槛",
+        f"seed0 增益 {_fmt(d('Q1_extra_pointwise_depth_vs_W2','valid'))} 低于预注册 0.005 门槛（seed1 "
+        f"{_fmt(d('Q1c_SELF_vs_W2_seed1','valid'))} 达标，但规则要求两个 seed 同时达标）",
         "SELF 仍然对每条真实入边做条件化，不是纯点式深度",
     ]
     table[0]["open"] = ["若需要更高点式容量，应作为容量对照单独预注册"]
