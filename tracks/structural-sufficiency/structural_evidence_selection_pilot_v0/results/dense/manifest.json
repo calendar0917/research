@@ -1,0 +1,313 @@
+{
+  "arm": "DENSE",
+  "best_epoch": 39,
+  "best_metrics": {
+    "test": {
+      "mae": 0.5124470294279898,
+      "rmse": 0.6814881914840909
+    },
+    "train": {
+      "mae": 0.18851582358481578,
+      "rmse": 0.24889009883991134
+    },
+    "valid": {
+      "mae": 0.4899147575204262,
+      "rmse": 0.6484780317372787
+    }
+  },
+  "best_score": 0.6484780317372787,
+  "code_sha256": "70b488e8d957a9af09a5696c7b30ffa91c3334069ab66668bc64c259743f979b",
+  "commit": "565ad1b93b627c55538ef7a4cc0c874c3f055435",
+  "config": {
+    "arms": {
+      "DENSE": {
+        "input": "complete original graph",
+        "loss": "standardized label MSE"
+      },
+      "RANDOM": {
+        "eval": "uniform single-candidate expectation + fixed label-blind index",
+        "input": "all valid candidates, independently encoded",
+        "loss": "mean_j (y_j-y)^2, molecule-equal weight"
+      },
+      "SELECT": {
+        "eval": "hard argmax candidate only",
+        "input": "all valid candidates, independently encoded",
+        "loss": "sum_j p_train_j (y_j-y)^2"
+      }
+    },
+    "candidate": {
+      "bfs_tie_break": "pynauty canon_label of the coloured atom/bond incidence graph",
+      "deduplicate": "canonical atom-support",
+      "disconnected": "candidates stay inside one real connected component; below-k coverage is reported, the full graph is never substituted",
+      "diversity": "first = BFS from canonical rank 0; then greedy max-min Jaccard distance, canonical tie-break",
+      "features": "selected raw atom categorical columns, induced raw bond categorical columns, candidate-local S1/S2/R2 summaries, candidate-local degree/min_ring/in_cycle and candidate graph scalars",
+      "forbidden_inputs": [
+        "original atom id",
+        "original graph node count",
+        "original graph edge count",
+        "full-graph descriptors",
+        "full-graph R2 hidden representation",
+        "selection score",
+        "candidate index",
+        "candidate count"
+      ],
+      "generation": "BFS from every atom; first k popped atoms",
+      "max_candidates": 4,
+      "node_budget": "k = max(1, min(n-1, floor(0.65*n))); n=1 keeps the unique node",
+      "node_fraction": 0.65
+    },
+    "dataset": "ogbg-mollipo",
+    "evaluation": {
+      "bootstrap_replicates": 1000,
+      "bootstrap_seed": 0,
+      "bootstrap_unit": "molecule",
+      "dense": "full-graph prediction",
+      "oracle": "mean_m min_j (y_mj-y_m)^2, post-hoc diagnostic only",
+      "random_expected": "sqrt(mean_m mean_j (y_mj-y_m)^2)",
+      "select": "argmax score candidate prediction only"
+    },
+    "horizon": {
+      "allowed": [
+        120,
+        90,
+        60
+      ],
+      "gpu_budget_hours": 0.5,
+      "hard_wall_minutes": 15,
+      "rule": "choose the largest allowed common horizon whose measured three-arm wall cost fits the target; never change it after seeing validation performance",
+      "target_epochs": 120,
+      "target_wall_minutes": [
+        8,
+        10
+      ]
+    },
+    "model": {
+      "arm": "SENTENCE_BASE",
+      "dims": {
+        "atom": 48,
+        "backbone_hidden": 192,
+        "bond": 24,
+        "dropout": 0.1,
+        "nbr": 16,
+        "path_close": 8,
+        "path_end": 16,
+        "path_rank": 24,
+        "q": 64,
+        "q_hidden": 128,
+        "readout_hidden": 192,
+        "readout_mid": 96,
+        "score_hidden": 96,
+        "sentence": 96,
+        "word": 64,
+        "word_hidden": 160
+      },
+      "predictor_parameters": 416177,
+      "selector": {
+        "activation": "SiLU",
+        "hidden": 64,
+        "input": "detached readout_in (post R2 pooling, pre readout) of each candidate",
+        "output": 1,
+        "softmax": "per original molecule over valid candidates",
+        "train_mixture": "p_train = 0.9*p + 0.1/m"
+      },
+      "source": "graph_word_incidence_composition_pilot_v0/code/gwic_model.py",
+      "use_words": false
+    },
+    "protocol_id": "ses-v0-structural-evidence-selection-pilot",
+    "recipe": {
+      "batch_molecules": 64,
+      "checkpoint": "best Valid RMSE (ties keep the earlier epoch)",
+      "dropout": 0.1,
+      "eval_batch_molecules": 64,
+      "eval_every_epoch": [
+        "train",
+        "valid",
+        "test"
+      ],
+      "gradient_clip": 5.0,
+      "min_lr": 1e-05,
+      "objective": "standardized label MSE only",
+      "optimizer": "AdamW",
+      "peak_lr": 0.001,
+      "schedule": "per-step cosine after linear warmup",
+      "warmup_epochs": 5,
+      "weight_decay": 0.001
+    },
+    "route_reference": {
+      "note": "engineering reference only, not an equivalence test",
+      "select_over_dense_gap": 0.03
+    },
+    "seed": 0,
+    "split": {
+      "checkpoint_selection": "Valid only",
+      "name": "official",
+      "normalizers_fit": "full official Train graphs (3360), shared by all arms",
+      "test": 420,
+      "test_role": "DEVELOPMENT_TEST",
+      "train": 3360,
+      "valid": 420
+    },
+    "version": "2026-11-24/v1"
+  },
+  "cuda": "12.4",
+  "curve_path": "/home/hxy/cy/research/tracks/structural-sufficiency/structural_evidence_selection_pilot_v0/results/dense/curve.csv",
+  "data_hashes": {
+    "atom_norm": "dc8c890dab199b0131d18a400f3176712d932fafcded3e557709180cb590f5bd",
+    "graph_norm": "193f8a2c489945e04b21cd3b818081ba3386427f252bedc2ad3f2171e1c5b92f",
+    "label_vault": {
+      "available": false,
+      "max_abs_diff": null,
+      "sha256": null
+    },
+    "labels": {
+      "test": "ac2495622e54cd9db8018e22449e3e79624d6b1ee7bab0233d412754b2b893a0",
+      "train": "8e4125f7d09e146cdcec59a23d0084dd8c28a4231e0c5517b8e7de72d51ed280",
+      "valid": "dae6a22f70a9e5331e4ef3f2b94a5975a8b7ea1d5929257ce369d2c1e99ac45b"
+    },
+    "official_rows": {
+      "test": "5c867ee677092158859d57c0d7e7d2f19951c4b7696fee5f0042c42365d700ec",
+      "train": "0d4a1b3dd6fea615888e2b95959b3b513122d11bb2990f319380220042fa00ad",
+      "valid": "6c45629d37eb246b4e0f90c54067710478c5d6de14d8b635f75551d6f9771dd2"
+    },
+    "raw_cache": {
+      "members": [
+        "dataset",
+        "cache_version",
+        "node_ptr",
+        "bond_ptr",
+        "atom_feat",
+        "bond_feat",
+        "bond_u",
+        "bond_v",
+        "degree",
+        "min_ring",
+        "in_cycle",
+        "labels",
+        "graph_n_components",
+        "graph_cycle_rank",
+        "graph_n_bonds",
+        "graph_n_atoms",
+        "smiles",
+        "row_ids",
+        "train_idx",
+        "valid_idx",
+        "test_idx"
+      ],
+      "path": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+      "sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c"
+    },
+    "split_identity": "71f1834015ca06645877727ed1830ab4438aa924a12a11f95836810a92c9e753"
+  },
+  "device": "cuda",
+  "epoch_seconds": [
+    2.9059319496154785,
+    2.5222902297973633,
+    2.4156503677368164,
+    2.405505895614624,
+    2.4107446670532227,
+    2.443230390548706,
+    2.4007420539855957,
+    2.433382511138916,
+    2.4202463626861572,
+    2.827195644378662,
+    2.892916202545166,
+    2.890991687774658,
+    2.8682148456573486,
+    2.8848397731781006,
+    2.8631110191345215,
+    2.8917014598846436,
+    2.899357318878174,
+    2.8809032440185547,
+    2.89343523979187,
+    2.89119291305542,
+    2.885129928588867,
+    2.89772629737854,
+    2.8809595108032227,
+    2.878180980682373,
+    2.914034366607666,
+    2.8745877742767334,
+    2.865067481994629,
+    2.8779094219207764,
+    2.873767375946045,
+    2.9028868675231934,
+    2.9214982986450195,
+    2.9008147716522217,
+    2.913827419281006,
+    2.945113182067871,
+    3.0113399028778076,
+    3.1395726203918457,
+    3.1247284412384033,
+    3.18131947517395,
+    3.2095494270324707,
+    3.108362913131714,
+    3.181051254272461,
+    3.229856014251709,
+    3.2163968086242676,
+    3.2190678119659424,
+    3.2538161277770996,
+    3.448009967803955,
+    3.9661834239959717,
+    3.172741413116455,
+    3.0871100425720215,
+    3.0723094940185547,
+    3.243267059326172,
+    3.4501326084136963,
+    3.620485782623291,
+    3.143134355545044,
+    2.9516851902008057,
+    3.0581462383270264,
+    3.7990665435791016,
+    3.9420595169067383,
+    3.0809502601623535,
+    3.1048619747161865
+  ],
+  "epochs": 60,
+  "gpu_hours_estimate": 0.051593484547403125,
+  "gpu_name": "NVIDIA A100-SXM4-40GB",
+  "host": "a100-2",
+  "init_hashes": {
+    "_model_state": "5ae62d089c4378e2b599aebcfd31e4073e76fb8716908ad786eef8cda0be76dd",
+    "atom_emb": "b6e1fe02c57388f1f0f4d4fd5c62bcde08b604a95cd5182927774bdaa3e08278",
+    "atom_norm": "168e27dc5c1e49c95a7d31cb446becfd82af39dd1b4eb22d32d07e624a1035f1",
+    "backbone_mlp": "363804fe099b886fcdc69cb849e13043f4f3cd2fdb6854964700ff5150db54f9",
+    "backbone_norm": "1738247344c5a33270dd99ca720f8e78c19e9bfe22ce2a5c55c051a6d0f8c7a7",
+    "beta": "937d4e76750fd0a92d67dd8360acae3ffefe2544adbc882a33bea2115a1fc423",
+    "bond_encoder": "529fe9c39a855468d0cafbe6d369b22c32a6808a134672f401e0fde516f67cc0",
+    "bond_raw_emb": "e80355adf5a597419000c7e14ad0cfb215d8d8d1d804a78989ed4d8177a41f84",
+    "close_emb": "847257e5358206a268d166940ca98eb23d64d3e1af16f1bd1a8bac8dae42990b",
+    "end_emb": "c7635cfb6d950f9946c2c9442be1440cff28544bffe44b8d9ccfa2d255953c39",
+    "nbr_emb": "5b3049367c5319693b4abef413a1511d3c0c1efc466b105a69d8cb1c8311905b",
+    "path_emb": "ec46a330fc58475c9015ec8199c6f681dc04bb697c5c3523c46ad17d1a85a116",
+    "path_gate": "ab718276857ce2c37db4e9b9d34122ee62872d506be1373fa8c00591fe37aaa9",
+    "path_joint": "dbe62a28b47c1270853472af067e5e0a1fc1965defb7ff2aa8075ae02a9535fe",
+    "path_u": "5a6b361fcef915a665f75c4a17de4e14f94340fc597d573e41104c609eb54c58",
+    "path_v": "ac8f07e253f6ccea9dc89272a5fbf4d087b84b30d17db6c483056a81ae6191b9",
+    "readout_mlp": "9487bd0fafd812095b5d0ecb4fc79d208e219531222de56f2621d9be6fe90ebe"
+  },
+  "max_steps_override": null,
+  "predictions_path": "/home/hxy/cy/research/tracks/structural-sufficiency/structural_evidence_selection_pilot_v0/results/dense/predictions.npz",
+  "predictor_parameters": 416177,
+  "prepared": {
+    "build_seconds": 25.172764539718628,
+    "n_candidates": 16775,
+    "path": "/home/hxy/cy/research/tracks/structural-sufficiency/structural_evidence_selection_pilot_v0/results/prepared/ses_prepared.pkl",
+    "raw_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "split_identity_sha256": "71f1834015ca06645877727ed1830ab4438aa924a12a11f95836810a92c9e753"
+  },
+  "python": "3.12.14",
+  "seed": 0,
+  "selector_parameters": 0,
+  "target_scaler": {
+    "mean": 2.1621607144740187,
+    "n": 3360,
+    "std": 1.211539840098397
+  },
+  "topology": {
+    "gwic.json": "9ed13ab795e7ae8c9e2c447d74a452fa9b6a8e0c3c6c6990b578e1f963a7e090",
+    "gwic_common.py": "6d081769940ed00682c95c8a7c8be382f1592763db269c3067fc14bc3f1a97cb",
+    "gwic_model.py": "66926facafc97935905ba32ae4771f2a15585a34e0749f26cdb2fb8dff187e73"
+  },
+  "torch": "2.5.1+cu124",
+  "train_seconds": 179.64033436775208,
+  "wall_seconds": 185.73654437065125
+}

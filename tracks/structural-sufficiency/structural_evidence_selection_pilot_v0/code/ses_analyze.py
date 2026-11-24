@@ -497,8 +497,43 @@ def main(prepared_path: str | None = None) -> dict[str, Any]:
     # ------------------------------------------------------------------
     # resource accounting
     # ------------------------------------------------------------------
+    runs_path = C.ANALYSIS_DIR / "runs.json"
+    runs = C.read_json(runs_path) if runs_path.is_file() else {}
+    actual = {}
+    if runs:
+        from datetime import datetime
+        parsed = {}
+        for name, rec in runs.items():
+            if rec.get("started_at") and rec.get("completed_at"):
+                parsed[name] = {
+                    "start": datetime.fromisoformat(rec["started_at"]),
+                    "end": datetime.fromisoformat(rec["completed_at"]),
+                }
+        formal_names = ["ses-v0-select", "ses-v0-random", "ses-v0-dense"]
+        if all(n in parsed for n in formal_names):
+            first = min(parsed[n]["start"] for n in formal_names)
+            last = max(parsed[n]["end"] for n in formal_names)
+            actual = {
+                "three_arm_wall_seconds": float((last - first).total_seconds()),
+                "three_arm_wall_minutes": float((last - first).total_seconds()) / 60.0,
+                "first_start": first.isoformat(),
+                "last_complete": last.isoformat(),
+                "dense_launch_delay_after_first_free_gpu_seconds": float(
+                    (parsed["ses-v0-dense"]["start"]
+                     - min(parsed["ses-v0-random"]["end"],
+                           parsed["ses-v0-select"]["end"])).total_seconds()),
+                "per_arm": {
+                    "SELECT": float((parsed["ses-v0-select"]["end"]
+                                     - parsed["ses-v0-select"]["start"]).total_seconds()),
+                    "RANDOM": float((parsed["ses-v0-random"]["end"]
+                                     - parsed["ses-v0-random"]["start"]).total_seconds()),
+                    "DENSE": float((parsed["ses-v0-dense"]["end"]
+                                    - parsed["ses-v0-dense"]["start"]).total_seconds()),
+                },
+            }
     resources = {
-        "prepared_build_seconds": float(prepared["stats"]["build_seconds"]),
+        "actual": actual,
+        "prepared_build_seconds": float(arms["SELECT"]["manifest"]["prepared"]["build_seconds"]),
         "preflight_seconds": float(preflight["preflight_seconds"]),
         "preflight_horizon": int(preflight["decision"]["horizon"]),
         "preflight_estimated_wall_seconds": float(
@@ -658,6 +693,7 @@ def main(prepared_path: str | None = None) -> dict[str, Any]:
         "resources": resources,
         "convergence": convergence,
         "route": route_detail,
+        "execution_regime": runs,
         "examples_path": str((C.ANALYSIS_DIR / "examples.json").relative_to(C.ROUND_DIR)),
         "test_role": "DEVELOPMENT_TEST",
         "notes": {
