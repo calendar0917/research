@@ -1,0 +1,73 @@
+{
+ "round_id": "hierarchical_structural_response_functions_v0",
+ "protocol_id": "hierarchical-structural-response-functions-v0",
+ "dataset": "ogbg-mollipo",
+ "train_seed": 0,
+ "test_policy": "development_test",
+ "splits": {"train": 3360, "valid": 420, "test": 420},
+ "cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+ "structure": {
+  "max_size": 4,
+  "radius": 2,
+  "sizes": [1, 2, 3, 4],
+  "granularities": ["TOPO", "ELEMENT", "COARSE", "FULL"],
+  "min_train_molecules": 8,
+  "vocab_cap": 1024,
+  "topo_uncapped": true
+ },
+ "relations": {
+  "anchor_gran": "COARSE",
+  "anchor_sizes": [2, 3],
+  "anchor_top_per_size": 32,
+  "min_train_molecules": 16,
+  "relation_cap": 1024,
+  "max_bond_types": 8
+ },
+ "basis": {
+  "knots": "1, round(median positive Train count), round(q90 positive Train count)",
+  "min_side_samples": 8,
+  "scale_floor": 0.1
+ },
+ "ridge": {
+  "lambdas": [1e-06, 1e-05, 0.0001, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0, 10.0],
+  "near_optimal_delta": 0.01
+ },
+ "mlp": {
+  "hidden": [128, 64],
+  "dropout": 0.1,
+  "batch_size": 128,
+  "epochs": 180,
+  "lr": 0.001,
+  "min_lr": 1e-05,
+  "weight_decay": 0.001,
+  "grad_clip": 5.0,
+  "seed": 0
+ },
+ "krr": {
+  "bandwidth_multipliers": [0.5, 1.0, 2.0],
+  "lambdas": [0.0001, 0.001, 0.01, 0.1, 1.0]
+ },
+ "bootstrap": {
+  "resamples": 2000,
+  "seed": 1703
+ },
+ "gates": {
+  "representation_gap_limit": 0.06,
+  "representation_competitive_delta": 0.03,
+  "nonlinear_valid_gain": 0.02,
+  "relation_valid_gain": 0.02,
+  "decomposition_gap_limit": 0.03,
+  "decomposition_cost_gap": 0.05,
+  "promising_gap_limit": 0.03,
+  "relation_min_molecule_fraction": 0.5,
+  "relation_min_real_null_fraction": 0.1,
+  "relation_min_median_nonzero": 1.0
+ },
+ "historical": {
+  "gine": {"valid": 0.6091, "test": 0.6456, "source": "sq-pilot-small-v1"},
+  "lcrc": {"valid": 0.7052, "test": 0.7139, "source": "sq-pilot-small-v1"},
+  "pair_rule_real_full": {"valid": 0.7952, "test": 0.8673, "source": "sq-lipo-pair-rule-v1"},
+  "pair_rule_mlp": {"valid": 0.7793, "test": 0.7740, "source": "sq-lipo-pair-rule-v1"},
+  "swf_word_prefix": {"valid": 0.6991, "test": 0.6891, "source": "structural-word-functions-s0-v1"}
+ }
+}
