@@ -1,0 +1,188 @@
+{
+ "bootstrap": {
+  "BASE_vs_D_FREQ": {
+   "a_better_fraction": 0.4365079365079365,
+   "arm_a": "D0_S0_BASE",
+   "arm_b": "D0_S0_FREQ",
+   "bootstrap_draws": 5000,
+   "gain_mae_a_minus_b": -0.06384391650319188,
+   "gain_mae_ci95": [
+    -0.12022093615603753,
+    -0.008420854034551442
+   ],
+   "gain_rmse_a_minus_b": -0.07393651801733425,
+   "gain_rmse_ci95": [
+    -0.13552828782817583,
+    -0.010755663709797953
+   ],
+   "mae_a": 0.6123647973825321,
+   "mae_b": 0.5485208808793403,
+   "n_molecules": 504,
+   "n_scaffolds": 231,
+   "rmse_a": 0.7774289615321809,
+   "rmse_b": 0.7034924435148466,
+   "seed": 1703
+  },
+  "D_TASK_vs_BASE": {
+   "a_better_fraction": 0.5317460317460317,
+   "arm_a": "D0_S0_TASK",
+   "arm_b": "D0_S0_BASE",
+   "bootstrap_draws": 5000,
+   "gain_mae_a_minus_b": 0.048780754007302196,
+   "gain_mae_ci95": [
+    -0.006802893887922782,
+    0.10308060653272673
+   ],
+   "gain_rmse_a_minus_b": 0.04333803391215041,
+   "gain_rmse_ci95": [
+    -0.020117845480563668,
+    0.10636666725366575
+   ],
+   "mae_a": 0.5635840433752299,
+   "mae_b": 0.6123647973825321,
+   "n_molecules": 504,
+   "n_scaffolds": 231,
+   "rmse_a": 0.7340909276200305,
+   "rmse_b": 0.7774289615321809,
+   "seed": 1703
+  },
+  "D_TASK_vs_D_FREQ": {
+   "a_better_fraction": 0.4861111111111111,
+   "arm_a": "D0_S0_TASK",
+   "arm_b": "D0_S0_FREQ",
+   "bootstrap_draws": 5000,
+   "gain_mae_a_minus_b": -0.015063162495889681,
+   "gain_mae_ci95": [
+    -0.07675443770977271,
+    0.04944175768681144
+   ],
+   "gain_rmse_a_minus_b": -0.030598484105183843,
+   "gain_rmse_ci95": [
+    -0.10016863858947822,
+    0.04557656055530547
+   ],
+   "mae_a": 0.5635840433752299,
+   "mae_b": 0.5485208808793403,
+   "n_molecules": 504,
+   "n_scaffolds": 231,
+   "rmse_a": 0.7340909276200305,
+   "rmse_b": 0.7034924435148466,
+   "seed": 1703
+  }
+ },
+ "frozen_utc": "2026-11-24T01:58:10Z",
+ "main_table": [
+  {
+   "K": 128,
+   "arm": "BASE",
+   "best_epoch": 187,
+   "commit": "ae32cc85b356ab0e298c53082a768d409f795037",
+   "dev_mae": 0.6123647973825321,
+   "dev_rmse": 0.7774289615321809,
+   "epochs_run": 232,
+   "fit_rmse": 0.5540068705852776,
+   "gap_to_ref": 0.22974996153218086,
+   "gpu_hours": 0.06212820251782735,
+   "params": 179385,
+   "run_id": "D0_S0_BASE",
+   "seed": 0,
+   "split": "D0",
+   "wall_seconds": 223.66152906417847
+  },
+  {
+   "K": 128,
+   "arm": "D_TASK",
+   "best_epoch": 207,
+   "commit": "ae32cc85b356ab0e298c53082a768d409f795037",
+   "dev_mae": 0.5635840433752299,
+   "dev_rmse": 0.7340909276200305,
+   "epochs_run": 240,
+   "fit_rmse": 0.4761961216203048,
+   "gap_to_ref": 0.18641192762003045,
+   "gpu_hours": 0.06988424943553077,
+   "params": 179385,
+   "run_id": "D0_S0_TASK",
+   "seed": 0,
+   "split": "D0",
+   "wall_seconds": 251.58329796791077
+  },
+  {
+   "K": 128,
+   "arm": "D_FREQ",
+   "best_epoch": 153,
+   "commit": "ae32cc85b356ab0e298c53082a768d409f795037",
+   "dev_mae": 0.5485208808793403,
+   "dev_rmse": 0.7034924435148466,
+   "epochs_run": 198,
+   "fit_rmse": 0.5135432929675491,
+   "gap_to_ref": 0.1558134435148466,
+   "gpu_hours": 0.05801050232516395,
+   "params": 179385,
+   "run_id": "D0_S0_FREQ",
+   "seed": 0,
+   "split": "D0",
+   "wall_seconds": 208.8378083705902
+  }
+ ],
+ "note": "round-resource judgment only; not a claim that all task-conditioned vocabularies are unlearnable",
+ "progression_gates": {
+  "condition_a_task_beats_freq_0.015": false,
+  "condition_b_base_0.03_and_ref_0.025": false,
+  "stage_2_executed": false,
+  "stage_2_triggered": false,
+  "stage_3_executed": false,
+  "stopped_by": "frozen progression rule after D0/s0",
+  "task_gain_vs_base": 0.04333803391215041,
+  "task_gain_vs_freq": -0.030598484105183843,
+  "task_within_0.025_of_ref": false
+ },
+ "protocol_id": "task-conditioned-word-discovery-v0",
+ "reference_r2_ref": 0.547679,
+ "split": "D0",
+ "stability": {
+  "D0_median_scaffold_df": 36.0,
+  "D0_min_scaffold_df": 10,
+  "D0_size_gran": {
+   "(3, 'COARSE')": 4,
+   "(3, 'FULL')": 42,
+   "(4, 'COARSE')": 18,
+   "(4, 'FULL')": 64
+  },
+  "D0_task_size": 128,
+  "D1_median_scaffold_df": 40.0,
+  "D1_min_scaffold_df": 7,
+  "D1_size_gran": {
+   "(3, 'COARSE')": 3,
+   "(3, 'FULL')": 41,
+   "(4, 'COARSE')": 22,
+   "(4, 'FULL')": 62
+  },
+  "D1_task_size": 128,
+  "intersection": 8,
+  "jaccard": 0.03225806451612903,
+  "note": "D0 and D1 Fit sets overlap; intersection is not independent replication",
+  "overlap_coefficient": 0.0625
+ },
+ "timing": {
+  "D0_S0_BASE": {
+   "gpu_hours": 0.06212820251782735,
+   "wall_seconds": 223.66152906417847
+  },
+  "D0_S0_FREQ": {
+   "gpu_hours": 0.05801050232516395,
+   "wall_seconds": 208.8378083705902
+  },
+  "D0_S0_TASK": {
+   "gpu_hours": 0.06988424943553077,
+   "wall_seconds": 251.58329796791077
+  }
+ },
+ "verdict": "NO_SUPPORTED_DISCOVERY",
+ "verdict_inputs": {
+  "base_dev_rmse": 0.7774289615321809,
+  "freq_dev_rmse": 0.7034924435148466,
+  "task_and_freq_close_to_ref_0.025": false,
+  "task_better_than_freq": false,
+  "task_dev_rmse": 0.7340909276200305
+ }
+}
