@@ -235,6 +235,8 @@ def freeze_manifest() -> dict[str, Any]:
     files = []
     for pattern in ("*.json", "*.csv", "*.npz"):
         for path in sorted(C.ANALYSIS_DIR.glob(pattern)):
+            if path.name == "frozen_manifest.json":
+                continue
             files.append({"path": str(path.relative_to(C.ROUND_DIR)),
                           "sha256": C.sha256_file(path),
                           "bytes": int(path.stat().st_size)})
