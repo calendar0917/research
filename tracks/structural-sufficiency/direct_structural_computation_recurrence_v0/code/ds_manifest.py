@@ -218,6 +218,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         seen.add((arm, seed))
         uniq.append((label, arm, seed))
     units = uniq
+    out_abs = Path(args.out) if Path(args.out).is_absolute() else (C.REPO / Path(args.out))
     staged = stage() if args.stage else []
     ledger_rows = ledger(units)
     gpu_hours = sum(float(r.get("gpu_hours") or 0.0) for r in ledger_rows if r.get("unit") != "CSTAR_seed1")
@@ -257,7 +258,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
         "horizon": C.read_json(C.CONFIGS / "horizon.json") if (C.CONFIGS / "horizon.json").is_file() else None,
         "artifacts": _dedupe([a for a in collect(C.ROUND) + collect(C.RESULTS)
-                              if a["path"] != str(Path(args.out).relative_to(C.REPO))]),
+                              if a["path"] != str(out_abs.relative_to(C.REPO))]),
         "checkpoints": checkpoints(C.RUNS),
         "historical_references": hist,
         "ledger": ledger_rows,
