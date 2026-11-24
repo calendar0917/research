@@ -506,7 +506,11 @@ def check_arms(plan, manifest) -> dict[str, Any]:
     same_rows = present and len({(runs[a]["rectangles"], runs[a]["plain_molecules"],
                                   runs[a]["epochs"], runs[a]["steps_per_epoch"],
                                   runs[a]["total_steps"]) for a in arms}) == 1
-    same_epoch0 = present and len({runs[a]["epoch0_valid_mae_eV"] for a in arms}) == 1
+    epoch0_values = [float(runs[a]["epoch0_valid_mae_eV"]) for a in arms] if present else []
+    epoch0_spread = (max(epoch0_values) - min(epoch0_values)) if epoch0_values else float("nan")
+    # Epoch 0 is the same checkpoint; re-running it on two GPUs changes only the
+    # last float32 bits, so require numerical (<=1e-6 eV), not byte, identity.
+    same_epoch0 = present and epoch0_spread <= 1e-6
     loss_names = present and {runs[a]["loss_name"] for a in arms} == set(arms)
     details = {
         "arms": runs,
@@ -516,6 +520,7 @@ def check_arms(plan, manifest) -> dict[str, Any]:
         "same_initial_state_sha256": bool(same_init),
         "same_rows_occurrences_batch_geometry": bool(same_rows),
         "same_epoch0_valid_mae": bool(same_epoch0),
+        "epoch0_valid_mae_spread_eV": float(epoch0_spread),
         "loss_names_match_arms": bool(loss_names),
         "manifest_batch_plan_sha256": manifest["batch_plan_sha256"],
     }

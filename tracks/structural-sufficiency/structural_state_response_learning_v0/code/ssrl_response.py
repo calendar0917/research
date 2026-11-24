@@ -150,11 +150,14 @@ def main(argv: list[str] | None = None) -> int:
         _align_valid(d, pred)
         runs[arm] = run
         preds[arm] = pred
-    # all three arms must share epoch 0
+    # all three arms share the original checkpoint at epoch 0.  Re-running the
+    # same weights on different GPUs changes the last few float32 bits, so the
+    # identity check is numerical (<=1e-5 eV), not byte equality.
     e0 = np.asarray(preds["ABS"]["valid_pred_eV"][0], np.float64)
     for arm in ARMS:
-        if not np.array_equal(np.asarray(preds[arm]["valid_pred_eV"][0], np.float64), e0):
-            raise RuntimeError(f"{arm} epoch-0 predictions differ from ABS")
+        d0 = np.abs(np.asarray(preds[arm]["valid_pred_eV"][0], np.float64) - e0)
+        if float(d0.max()) > 1e-5:
+            raise RuntimeError(f"{arm} epoch-0 predictions differ from ABS by {d0.max():.3e} eV")
 
     def epoch_pred(arm: str, epoch: int) -> np.ndarray:
         epochs = np.asarray(preds[arm]["epochs"], np.int64).tolist()
