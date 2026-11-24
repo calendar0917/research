@@ -498,8 +498,8 @@ def compare(a: Mapping[str, Any], b: Mapping[str, Any], *, rng: np.random.Genera
             "largest_positive": _top_tasks(common, d, 5, sign=1),
             "largest_negative": _top_tasks(common, d, 5, sign=-1),
         }
-        if mol_bootstrap and task is not None and logits is not None:
-            entry["molecule_bootstrap"] = _molecule_bootstrap(split, task, logits, common, n_mol, rng)
+        if mol_bootstrap and task is not None and logits is not None and split in logits:
+            entry["molecule_bootstrap"] = _molecule_bootstrap(split, task, logits[split], common, n_mol, rng)
         out["splits"][split] = entry
     return out
 
@@ -537,15 +537,15 @@ def _top_tasks(common: Sequence[int], d: np.ndarray, k: int, *, sign: int) -> li
 def _molecule_bootstrap(
     split: str,
     task: Any,
-    logits: Mapping[str, np.ndarray],
+    bundle: Mapping[str, np.ndarray],
     common: Sequence[int],
     n: int,
     rng: np.random.Generator,
 ) -> dict[str, Any]:
     rows = getattr(task, f"{split}_rows")
-    a = logits["a"]
-    b = logits["b"]
-    y = logits["y"]
+    a = bundle["a"]
+    b = bundle["b"]
+    y = bundle["y"]
     deltas = []
     scored = []
     n_mol = int(len(rows))
@@ -874,7 +874,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             la = load_logits_for(ua, task)
             lb = load_logits_for(ub, task)
             if la is not None and lb is not None:
-                logits = {"a": la["valid"], "b": lb["valid"], "y": np.asarray(task.labels[task.valid_rows])}
+                # paired molecule resampling is run on Valid only (the split that
+                # selected the checkpoints); Test is never resampled for a decision
+                logits = {"valid": {"a": la["valid"], "b": lb["valid"],
+                                    "y": np.asarray(task.labels[task.valid_rows])}}
         comparisons[name] = compare(
             ua, ub, rng=rng, mol_bootstrap=logits is not None, task=task, logits=logits
         )
