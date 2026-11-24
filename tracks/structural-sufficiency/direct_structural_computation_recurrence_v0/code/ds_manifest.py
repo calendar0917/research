@@ -193,7 +193,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         ("W2_seed1", "W2", 1),
         ("DYNAMIC_seed1", "DYNAMIC", 1),
     ]
-    units.extend([(f"{C.CANDIDATES[0]}_seed1", C.CANDIDATES[0], 1)])
+    # the seed-1 candidate/control arms are whatever the frozen selection chose
+    sel: dict[str, Any] = {}
+    if (C.ANALYSIS / "summary.json").is_file():
+        sel = C.read_json(C.ANALYSIS / "summary.json").get("candidate_selection") or {}
+    for role in ("C*", "K*"):
+        arm = sel.get(role)
+        if arm:
+            units.append((f"{role.replace('*', 'star')}={arm}_seed1", str(arm), 1))
+    seen: set[tuple[str, int]] = set()
+    uniq: list[tuple[str, str, int]] = []
+    for label, arm, seed in units:
+        if (arm, seed) in seen:
+            continue
+        seen.add((arm, seed))
+        uniq.append((label, arm, seed))
+    units = uniq
     staged = stage() if args.stage else []
     ledger_rows = ledger(units)
     gpu_hours = sum(float(r.get("gpu_hours") or 0.0) for r in ledger_rows if r.get("unit") != "CSTAR_seed1")
