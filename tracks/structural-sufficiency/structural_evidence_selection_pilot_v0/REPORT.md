@@ -84,7 +84,7 @@
 | 90 | 654.9 s（10.92 min） | 否 | 是 |
 | 60 | 436.6 s（7.28 min） | 是 | 是 |
 
-因此选择共同 **60 epochs**。该选择只依据吞吐/预算，未依据任何中间性能。实际正式训练每 epoch 比 preflight 慢约 20–27%（SELECT 6.23 s、RANDOM 5.70 s、DENSE 3.10 s），加上 DENSE 在首块 GPU 空闲后 119 s 才启动，最终三臂 wall 为 **660 s = 11.0 min**：略超 10 min 目标，但满足 15 min 硬上限。三臂 GPU·h 合计 **0.2504**，加 preflight/prepare 仍低于 0.5 GPU·h。
+因此选择共同 **60 epochs**。该选择只依据吞吐/预算，未依据任何中间性能。实际正式训练每 epoch 比 preflight 慢约 18–27%（SELECT 6.23 s、RANDOM 5.70 s、DENSE 3.10 s），加上 DENSE 在首块 GPU 空闲后 119 s 才启动，最终三臂 wall 为 **660 s = 11.0 min**：略超 10 min 目标，但满足 15 min 硬上限。三臂 GPU·h 合计 **0.2504**，加 preflight/prepare 仍低于 0.5 GPU·h。
 
 ### 1.4 Correctness checks
 
@@ -245,7 +245,7 @@ oracle 使用标签，在每个分子的候选预测中取误差最小者；它�
 | 硬上限 15 min | 满足 |
 | 目标 8–10 min | 略超（11.0 min） |
 
-目标略超的原因是可解释的工程因素：实际 epoch 时间比 preflight 高约 20–27%，且 DENSE 在首块 GPU 空闲后 119 s 才启动（agent 轮询延迟），不是模型规模或候选编码超预算。GPU·h 仍远低于 0.5 上限。
+目标略超的原因是可解释的工程因素：实际 epoch 时间比 preflight 高约 18–27%，且 DENSE 在首块 GPU 空闲后 119 s 才启动（agent 轮询延迟），不是模型规模或候选编码超预算。GPU·h 仍远低于 0.5 上限。
 
 执行 regime（`analysis/runs.json`）：
 
