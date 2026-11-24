@@ -380,6 +380,11 @@ time and batching EGO2 inference; the replay process peak RSS was ~0.51 GB.
 | checkpoint selection | pre-existing best-Dev checkpoints only |
 
 The complete output manifest is in `analysis/run.json` and `analysis/run_all.json`.
+`analysis/run.json` was written from the working tree used for the final run, just
+before the analysis commit; its `git_commit` field is therefore the preceding commit
+and `git_dirty_tracked` is `true`. The pinned code SHA
+`913cb83f…11bf491` is the code committed in `393f2b2e`, and the reproducible
+entry point is `code/run_all.py`.
 Key tables: `gap_metrics.csv`, `gap_per_molecule.csv`, `gap_tails.csv`,
 `gap_d0_seed_consistency.csv`, `topology_molecules_D0.csv`,
 `topology_molecules_D1.csv`, `strata_*.csv`, `strata_contrasts_*.csv`,
