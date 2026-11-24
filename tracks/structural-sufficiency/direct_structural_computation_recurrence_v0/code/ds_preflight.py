@@ -153,21 +153,22 @@ def simulate(
     horizon: int,
     reserve_fraction: float = 0.15,
 ) -> dict[str, Any]:
-    """Wave simulation of the frozen unit list on two GPUs (greedy: first free GPU).
+    """Schedule simulation of the frozen unit list on two GPUs.
 
-    A unit's wall time is ``horizon * epoch_seconds``; waves run side by side and a
-    GPU takes the next wave as soon as it is free.
+    One *unit* occupies one GPU for ``horizon * epoch_seconds``; the two units of a wave
+    start together, one per GPU, and a GPU takes the next wave as soon as it is free.
     """
     gpu_free = [0.0, 0.0]
     assignment = []
     for wave in units:
-        gpu = int(np.argmin(gpu_free))
-        start = gpu_free[gpu]
-        dur = max(epoch_seconds[a] for a in wave) * int(horizon)
-        gpu_free[gpu] = start + dur
-        assignment.append({"gpu": gpu, "units": list(wave), "start_seconds": float(start),
-                           "duration_seconds": float(dur), "finish_seconds": float(gpu_free[gpu]),
-                           "horizon": int(horizon)})
+        for k, unit in enumerate(wave):
+            gpu = k % len(gpu_free)
+            start = gpu_free[gpu]
+            dur = epoch_seconds[unit] * int(horizon)
+            gpu_free[gpu] = start + dur
+            assignment.append({"gpu": gpu, "units": [unit], "wave": list(wave),
+                               "start_seconds": float(start), "duration_seconds": float(dur),
+                               "finish_seconds": float(gpu_free[gpu]), "horizon": int(horizon)})
     makespan = max(gpu_free)
     return {
         "assignment": assignment,
