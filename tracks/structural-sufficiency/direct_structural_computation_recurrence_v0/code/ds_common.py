@@ -376,7 +376,7 @@ def load_test_labels(task: Any, *, cache_dir: Path | str | None = None) -> dict[
             raise RuntimeError("official Test labels are not binary 0/1")
         if cache_path is not None:
             cache_path.parent.mkdir(parents=True, exist_ok=True)
-            tmp = cache_path.with_suffix(".tmp.npy")
+            tmp = cache_path.with_name(cache_path.stem + f".{os.getpid()}.tmp.npy")
             np.save(tmp, y)
             os.replace(tmp, cache_path)
     finite = np.isfinite(y)
