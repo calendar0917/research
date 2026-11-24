@@ -1,0 +1,47 @@
+{
+  "round": "structural_functional_equivalence_followup_v1",
+  "parent_round": "structural_functional_equivalence_v0",
+  "datasets": {
+    "pcqm": {
+      "train_prefix": "../structural_functional_equivalence_v0/data/cells_pcqm_train_1m",
+      "valid_prefix": "../structural_functional_equivalence_v0/data/cells_pcqm_valid",
+      "tau": 0.1,
+      "tau_sensitivity": [
+        0.05,
+        0.2
+      ]
+    }
+  },
+  "support": {
+    "p1_min_discovery_contexts": 10,
+    "p1_min_evaluation_contexts": 5,
+    "p1_min_pairs": 10,
+    "strict_mask_max_pairs": 20,
+    "strict_mask_min_eval_contexts": 5,
+    "strict_mask_min_pairs": 10,
+    "conditional_min_discovery_contexts": 10,
+    "conditional_min_evaluation_contexts": 5
+  },
+  "estimators": {
+    "local_lambda": 5.0,
+    "local_min_contexts_per_q": 10,
+    "null_seed": 0
+  },
+  "statistics": {
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 0
+  },
+  "judgement": {
+    "strict_mask_practical_gain": 0.1,
+    "conditional_candidate_tau": 0.1,
+    "conditional_candidate_tau_sensitivity": [
+      0.05,
+      0.2
+    ]
+  },
+  "resources": {
+    "max_workers": 24,
+    "rss_ceiling_gb": 64,
+    "blas_threads": 1
+  }
+}

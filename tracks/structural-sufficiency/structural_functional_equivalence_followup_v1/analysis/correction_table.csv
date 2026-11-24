@@ -1,0 +1,28 @@
+subset,metric,v0,corrected,difference,note
+P1/supported,n_pairs,1602,1602,0,same unordered structural pairs; v0 stored orientation is mixed
+P1/supported,n_observation_rows,96991,96991,0,the evaluation observation set is unchanged
+P1/supported,pair_MAE_observation_equal,0.2621535875,0.2621535875,0,MAE is invariant when delta and prediction flip together
+P1/supported,pair_RMSE,0.4160078169,0.4160078169,0,
+P1/supported,pair_sign_accuracy,0.6471863966,0.6471863966,0,
+P1/supported,pair_type_equal_MAE_PAIR,,0.3191121937,,true macro over 1602 pair types; v0 did not report this weighting
+P1/supported,pair_type_equal_MAE_ZERO,,0.3643207035,,same 2x2 weighting for the no-prediction baseline
+P1/discovery,rectangle_count_sum_AB_k_AB(k_AB-1)/2,117860358,117860358,0,"2x2 rectangles are context-pairs sharing an A,B pair; this is not the 297996 pair-observation count"
+P1/discovery,fraction_reversed_pair_rows,0.4588685754,0,-0.4588685754,canonical A<B removes all reversed rows
+P1/evaluation,fraction_reversed_pair_rows,0.4425992558,0,-0.4425992558,
+P1/discovery,n_pairs_with_flipped_median_sign,846,0,-846,v0 pairs whose reported median had the opposite sign to the canonical delta
+P1/discovery,n_pairs_affected_by_direction,846,0,-846,pairs whose stored orientation was B->A
+P3/all,n_q_supported,114,114,0,"SHARED/LOCAL use stored A,B consistently; canonicalisation does not change them"
+P3/all,SHARED_MAE,0.2714537226,0.2714537226,0,
+P3/all,LOCAL_MAE,0.2488079733,0.2488079733,0,
+P3/all,LOCAL_NULL_MAE,0.2731903952,0.2731903952,0,
+P2/controlled_masking,n_applicable_pairs,16,20,4,canonical pair rows make direct discovery co-occurrence visible
+P2/controlled_masking,n_observations,18584,21970,3386,v0-style masking: only the direct B cell is deleted (not strict identity masking)
+P2/controlled_masking,ZERO_MAE,0.1708274351,0.1701286262,-0.000698808887,v0-style masking: only the direct B cell is deleted (not strict identity masking)
+P2/controlled_masking,SHARED_MAE,0.1692417578,0.1687006942,-0.0005410635931,v0-style masking: only the direct B cell is deleted (not strict identity masking)
+P2/controlled_masking,LOCAL_MAE,0.1542299796,0.1555103418,0.001280362224,v0-style masking: only the direct B cell is deleted (not strict identity masking)
+P2/controlled_masking,PAIR_FULL_MAE,0.1620903314,0.1626490253,0.0005586938185,v0-style masking: only the direct B cell is deleted (not strict identity masking)
+P2/controlled_masking,relative_gain_shared_vs_zero,0.009282333845,0.008393249393,-0.0008890844524,
+P2/controlled_masking,relative_gain_local_vs_shared,0.0887002029,0.07818789663,-0.01051230628,
+Valid/orientation,n_pair_observations_with_frozen_mu,36952,36952,0,parent lookup used the mixed stored orientation; canonical lookup recovers the rest
+Valid/orientation,n_pair_types_with_frozen_mu,1677,1677,0,
+Valid/orientation,PAIR_MAE_on_v0_visible_subset,0.2979455936,0.2979455936,0,same observation subset; no missing-mu rows are added
