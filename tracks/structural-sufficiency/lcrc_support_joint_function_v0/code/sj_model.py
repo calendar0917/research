@@ -216,7 +216,8 @@ def attach_support(model: nn.Module, support: S.Support, arm: str) -> nn.Module:
         raise TypeError("unexpected local encoder")
     if isinstance(local, SupportLocal):
         raise RuntimeError("support already attached")
-    new = SupportLocal(model.spec, model.variant, model.cfg, support, arm)
+    target = next(model.parameters()).device
+    new = SupportLocal(model.spec, model.variant, model.cfg, support, arm).to(target)
     src = {k: v for k, v in local.state_dict().items()}
     dst_keys = set(new.state_dict().keys())
     table_key = "J_table" if arm == C.ARM_B else "Theta"
@@ -227,6 +228,11 @@ def attach_support(model: nn.Module, support: S.Support, arm: str) -> nn.Module:
     with torch.no_grad():
         new.load_state_dict({**shared, table_key: new.state_dict()[table_key]}, strict=True)
     model.local = new
+    mismatched = sorted(
+        name for name, tensor in new.state_dict().items() if tensor.device != target
+    )
+    if mismatched:
+        raise RuntimeError(f"arm {arm}: support module tensors left on another device: {mismatched}")
     return model
 
 
