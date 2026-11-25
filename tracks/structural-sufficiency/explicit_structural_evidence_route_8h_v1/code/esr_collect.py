@@ -21,6 +21,9 @@ from typing import Any, Iterable, Mapping, Sequence
 import numpy as np
 
 import esr_common as C
+import esr_data as D
+
+D_ap_report = D.ap_report
 
 RNG_SEED = 20261125
 N_BOOT = 2000
@@ -422,15 +425,13 @@ def historical_check(view_dataset: str, preds: Mapping[str, Mapping[str, Any]], 
             out["artifacts"][name] = {"available": True, "note": "no matching predictions loaded"}
             continue
         y = sample["y"]
-        from pc_metrics import per_task_ap
-
-        rep = per_task_ap(y, 1.0 / (1.0 + np.exp(-logits.astype(np.float64))))
-        ap_task = np.asarray(rep["per_task"], dtype=np.float64)
+        # official OGB macro AP, exactly the evaluator used for every number here
+        official = float(D_ap_report(y, logits.astype(np.float64))["ap"])
         out["artifacts"][name] = {
             "available": True,
             "recorded_valid_ap": meta["recorded_valid_ap"],
-            "recomputed_macro_ap": float(np.nanmean(ap_task)),
-            "reproduced": bool(abs(float(np.nanmean(ap_task)) - float(meta["recorded_valid_ap"])) < 1e-9),
+            "recomputed_macro_ap": official,
+            "reproduced": bool(abs(official - float(meta["recorded_valid_ap"])) < 1e-9),
             "note": meta["note"],
         }
         pairs = {}
