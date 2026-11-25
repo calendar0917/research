@@ -373,9 +373,9 @@ def comparisons(
                         "arm_b": rb["arm"],
                         "primary_a": view_primary(dataset, ra["best_valid_metrics"]),
                         "primary_b": view_primary(dataset, rb["best_valid_metrics"]),
-                        "preferred": "a" if _prefers(dataset, result) else "b",
                     }
                 )
+                result["preferred"] = "a" if _prefers(dataset, result) else "b"
                 entries[f"{ra['arm']}__vs__{rb['arm']}"] = result
         out["datasets"][dataset] = entries
     return out

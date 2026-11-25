@@ -44,12 +44,9 @@ def _config_from_run(run: dict[str, Any]) -> dict[str, Any]:
 def evaluate_run(run_dir: Path, split: str, out_dir: Path, device: torch.device) -> dict[str, Any]:
     run = json.loads((run_dir / "run.json").read_text())
     cfg = _config_from_run(run)
-    view = D.load_view(
-        cfg["dataset"],
-        max_dist=cfg["max_dist"],
-        relation_mode=cfg["relation_mode"],
-        include_test=split == "test",
-        workers=4,
+    view = D.load_view(cfg["dataset"], max_dist=cfg["max_dist"], include_test=split == "test", workers=4)
+    view = D.view_with_pairs(
+        view, relation_mode=cfg["relation_mode"], max_dist=cfg["max_dist"], workers=4
     )
     if split == "test" and cfg["dataset"] == C.PCBA:
         raise RuntimeError("PCBA Test labels are unavailable; Test cannot be scored")

@@ -49,10 +49,11 @@ def _row_primary(view: D.View, metrics: Mapping[str, Any]) -> float:
 
 def _view_run(run_dir: Path) -> tuple[dict[str, Any], D.View, torch.nn.Module]:
     run = json.loads((run_dir / "run.json").read_text())
-    view = D.load_view(
-        run["dataset"],
-        max_dist=int(run.get("max_dist", 2)),
+    view = D.load_view(run["dataset"], max_dist=int(run.get("max_dist", 2)), workers=4)
+    view = D.view_with_pairs(
+        view,
         relation_mode=str(run.get("relation_mode", "real")),
+        max_dist=int(run.get("max_dist", 2)),
         workers=4,
     )
     model = M.build_model(
@@ -308,6 +309,11 @@ def analyse_run(run_dir: Path, device: torch.device, *, analysis: Path) -> dict[
         "valid_primary": primary,
         "cohort": {"n_molecules": int(positions.size), "limit": limit},
     }
+    if arm == C.BASE:
+        entry["accounting"] = {"skipped": "BASE has no explicit object set; accounting is undefined by construction"}
+        entry["accounting_exact"] = None
+        entry["interventions"] = {"skipped": "BASE is the reference; stream ablations are defined on the explicit arms"}
+        return entry
     # ---- exact accounting on a small cohort -----------------------------
     if dataset in (C.LIPO, C.ESOL):
         err = np.abs(logits.reshape(-1) * float(view.target_norm["scale"]) + float(view.target_norm["mean"]) - y.reshape(-1))
