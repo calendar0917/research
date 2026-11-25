@@ -1,0 +1,595 @@
+{
+  "created_utc": "2026-11-25T11:09:43Z",
+  "intervention": {
+    "hiv": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_support_joint_function_v0/runs/hiv_B_s0/checkpoint.pt",
+      "coverage_breakdown": {
+        "test": {
+          "0.5_to_0.9": {
+            "mean_output_change_add_only": 0.888007640838623,
+            "n_molecules": 2
+          },
+          "0.9_to_1.0": {
+            "mean_output_change_add_only": 1.14030781212975,
+            "n_molecules": 17,
+            "roc_auc_add_only": 0.25,
+            "roc_auc_original": 0.125
+          },
+          "below_0.5": {
+            "mean_output_change_add_only": 1.1168403625488281,
+            "n_molecules": 1
+          },
+          "full_1.0": {
+            "mean_output_change_add_only": 0.9163280817805891,
+            "n_molecules": 4093,
+            "roc_auc_add_only": 0.7614773269503047,
+            "roc_auc_original": 0.7857774231650749
+          }
+        },
+        "valid": {
+          "0.5_to_0.9": {
+            "mean_output_change_add_only": 3.2750978469848633,
+            "n_molecules": 3
+          },
+          "0.9_to_1.0": {
+            "mean_output_change_add_only": 1.2309542135758833,
+            "n_molecules": 11
+          },
+          "full_1.0": {
+            "mean_output_change_add_only": 0.8675480853438116,
+            "n_molecules": 4099,
+            "roc_auc_add_only": 0.8244811926577316,
+            "roc_auc_original": 0.8379760214835708
+          }
+        }
+      },
+      "interpretation_guard": "this intervention only asks whether the trained model uses the non-additive part of its own joint function; it is not a generalisation test and cannot attribute the trained B-vs-C difference to it",
+      "modes": {
+        "ADD_ONLY": "J_add = P J",
+        "HALF_INTERACTION": "J_add + 0.5 J_int",
+        "ORIGINAL": "J_add + J_int (the trained table itself)"
+      },
+      "results": {
+        "test": {
+          "ADD_ONLY": {
+            "delta_primary_vs_original": -0.02149520075706368,
+            "delta_secondary_vs_original": -0.07847529309930223,
+            "output_max_abs_change": 8.516705513000488,
+            "output_mean_abs_change": 0.9172888225573506,
+            "output_units": "logits",
+            "pr_auc": 0.19308819865485888,
+            "roc_auc": 0.7598930068174357
+          },
+          "HALF_INTERACTION": {
+            "delta_primary_vs_original": -0.0048282122095830715,
+            "delta_secondary_vs_original": -0.032643373727714864,
+            "output_max_abs_change": 5.011065483093262,
+            "output_mean_abs_change": 0.4709057269553155,
+            "output_units": "logits",
+            "pr_auc": 0.23892011802644625,
+            "roc_auc": 0.7765599953649163
+          },
+          "ORIGINAL": {
+            "delta_primary_vs_original": 0.0,
+            "delta_secondary_vs_original": 0.0,
+            "output_max_abs_change": 0.0,
+            "output_mean_abs_change": 0.0,
+            "output_units": "logits",
+            "pr_auc": 0.2715634917541611,
+            "roc_auc": 0.7813882075744993
+          }
+        },
+        "valid": {
+          "ADD_ONLY": {
+            "delta_primary_vs_original": -0.013429600235155714,
+            "delta_secondary_vs_original": -0.08572550093246772,
+            "output_max_abs_change": 8.073053359985352,
+            "output_mean_abs_change": 0.8702760495294366,
+            "output_units": "logits",
+            "pr_auc": 0.27179678873699825,
+            "roc_auc": 0.8246313443072703
+          },
+          "HALF_INTERACTION": {
+            "delta_primary_vs_original": -0.0027143959435625975,
+            "delta_secondary_vs_original": -0.020017484127985097,
+            "output_max_abs_change": 4.104427337646484,
+            "output_mean_abs_change": 0.4441437974423641,
+            "output_units": "logits",
+            "pr_auc": 0.3375048055414809,
+            "roc_auc": 0.8353465485988634
+          },
+          "ORIGINAL": {
+            "delta_primary_vs_original": 0.0,
+            "delta_secondary_vs_original": 0.0,
+            "output_max_abs_change": 0.0,
+            "output_mean_abs_change": 0.0,
+            "output_units": "logits",
+            "pr_auc": 0.357522289669466,
+            "roc_auc": 0.838060944542426
+          }
+        }
+      },
+      "task": "hiv",
+      "unseen_policy": "unseen codes keep the trained table's fixed fallback value in every mode"
+    },
+    "lipo": {
+      "checkpoint": "tracks/structural-sufficiency/lcrc_support_joint_function_v0/runs/lipo_B_s0/checkpoint.pt",
+      "coverage_breakdown": {
+        "test": {
+          "0.5_to_0.9": {
+            "mean_output_change_add_only": 0.41374761683028494,
+            "n_molecules": 1,
+            "rmse_add_only": 0.5291769152574801,
+            "rmse_original": 0.942924532087765
+          },
+          "0.9_to_1.0": {
+            "mean_output_change_add_only": 0.02444382442072013,
+            "n_molecules": 1,
+            "rmse_add_only": 0.4321115763995418,
+            "rmse_original": 0.40766775197882166
+          },
+          "full_1.0": {
+            "mean_output_change_add_only": 0.37006566675490205,
+            "n_molecules": 418,
+            "rmse_add_only": 0.7473934328228434,
+            "rmse_original": 0.5657257437484574
+          }
+        },
+        "valid": {
+          "full_1.0": {
+            "mean_output_change_add_only": 0.37958914174151687,
+            "n_molecules": 420,
+            "rmse_add_only": 0.8720443920005699,
+            "rmse_original": 0.7113930872415881
+          }
+        }
+      },
+      "interpretation_guard": "this intervention only asks whether the trained model uses the non-additive part of its own joint function; it is not a generalisation test and cannot attribute the trained B-vs-C difference to it",
+      "modes": {
+        "ADD_ONLY": "J_add = P J",
+        "HALF_INTERACTION": "J_add + 0.5 J_int",
+        "ORIGINAL": "J_add + J_int (the trained table itself)"
+      },
+      "results": {
+        "test": {
+          "ADD_ONLY": {
+            "delta_primary_vs_original": 0.17975785270788802,
+            "delta_secondary_vs_original": 0.1571981693151302,
+            "mae": 0.5841189193639594,
+            "output_max_abs_change": 1.4745481795744593,
+            "output_mean_abs_change": 0.36934676224952395,
+            "output_units": "raw target units",
+            "rmse": 0.7463566602000146
+          },
+          "HALF_INTERACTION": {
+            "delta_primary_vs_original": 0.04065966806654353,
+            "delta_secondary_vs_original": 0.03798939427865622,
+            "mae": 0.46491014432748545,
+            "output_max_abs_change": 0.6853653848007184,
+            "output_mean_abs_change": 0.15975082579467426,
+            "output_units": "raw target units",
+            "rmse": 0.6072584755586701
+          },
+          "ORIGINAL": {
+            "delta_primary_vs_original": 0.0,
+            "delta_secondary_vs_original": 0.0,
+            "mae": 0.42692075004882923,
+            "output_max_abs_change": 0.0,
+            "output_mean_abs_change": 0.0,
+            "output_units": "raw target units",
+            "rmse": 0.5665988074921265
+          }
+        },
+        "valid": {
+          "ADD_ONLY": {
+            "delta_primary_vs_original": 0.16065130475898182,
+            "delta_secondary_vs_original": 0.16856378212771128,
+            "mae": 0.5938768800102827,
+            "output_max_abs_change": 1.4745481795744593,
+            "output_mean_abs_change": 0.37958914174151687,
+            "output_units": "raw target units",
+            "rmse": 0.8720443920005699
+          },
+          "HALF_INTERACTION": {
+            "delta_primary_vs_original": 0.037075584160774167,
+            "delta_secondary_vs_original": 0.04547725549452586,
+            "mae": 0.4707903533770973,
+            "output_max_abs_change": 0.644975920266786,
+            "output_mean_abs_change": 0.16743679531892394,
+            "output_units": "raw target units",
+            "rmse": 0.7484686714023623
+          },
+          "ORIGINAL": {
+            "delta_primary_vs_original": 0.0,
+            "delta_secondary_vs_original": 0.0,
+            "mae": 0.42531309788257143,
+            "output_max_abs_change": 0.0,
+            "output_mean_abs_change": 0.0,
+            "output_units": "raw target units",
+            "rmse": 0.7113930872415881
+          }
+        }
+      },
+      "task": "lipo",
+      "unseen_policy": "unseen codes keep the trained table's fixed fallback value in every mode"
+    }
+  },
+  "post_training_identity_checks": {
+    "hiv": {
+      "gate10_trained_C": {
+        "float32_roundoff_scale": 1.1920928955078125e-07,
+        "max_abs_theta_projection_error_float64": 2.886579864025407e-15,
+        "nonadditive_rms_float32_model_path": 2.260043833885183e-08,
+        "passed": true,
+        "relative_nonadditive_residual_float32_model_path": 7.037745938733753e-08,
+        "relative_nonadditive_residual_float64_parameterisation": 1.6404895109063233e-15,
+        "table_rms": 0.32113177337740256,
+        "theta_shape": [
+          88,
+          32
+        ]
+      },
+      "gate11_trained_C": {
+        "max_abs_contrast_float32_model_path": 3.948807716369629e-07,
+        "max_abs_contrast_float64": 1.609823385706477e-15,
+        "n_rectangles": 4658,
+        "note": "D = J(p1,e1) + J(p2,e2) - J(p1,e2) - J(p2,e1) on quadruples that really exist in Omega",
+        "passed": true,
+        "rms_contrast_float32_model_path": 5.439215942704334e-08,
+        "table_rms": 0.32113177337740256
+      }
+    },
+    "lipo": {
+      "gate10_trained_C": {
+        "float32_roundoff_scale": 1.1920928955078125e-07,
+        "max_abs_theta_projection_error_float64": 2.3314683517128287e-15,
+        "nonadditive_rms_float32_model_path": 2.205914939061757e-08,
+        "passed": true,
+        "relative_nonadditive_residual_float32_model_path": 5.9367745784058755e-08,
+        "relative_nonadditive_residual_float64_parameterisation": 1.4287243477867512e-15,
+        "table_rms": 0.37156791283358487,
+        "theta_shape": [
+          50,
+          32
+        ]
+      },
+      "gate11_trained_C": {
+        "max_abs_contrast_float32_model_path": 3.725290298461914e-07,
+        "max_abs_contrast_float64": 1.4432899320127035e-15,
+        "n_rectangles": 488,
+        "note": "D = J(p1,e1) + J(p2,e2) - J(p1,e2) - J(p2,e1) on quadruples that really exist in Omega",
+        "passed": true,
+        "rms_contrast_float32_model_path": 6.016029542013218e-08,
+        "table_rms": 0.37156791283358487
+      }
+    }
+  },
+  "round_id": "lcrc-support-joint-function-v0",
+  "schema": "lcrc-support-joint-function-decomposition-v1",
+  "tasks": {
+    "hiv": {
+      "coverage_of_joint_computation": {
+        "test": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.004862630683199611,
+          "molecule_fraction_without_s2": 0.0,
+          "n_omega_rows_with_any_occurrence": 221,
+          "occurrence_coverage": 0.9997436144927186
+        },
+        "train": {
+          "molecule_fraction_with_any_seen_pair": 0.9999392115741162,
+          "molecule_fraction_with_any_unseen_pair": 0.0,
+          "molecule_fraction_without_s2": 6.078842588371174e-05,
+          "n_omega_rows_with_any_occurrence": 290,
+          "occurrence_coverage": 1.0
+        },
+        "valid": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.0034038414782397277,
+          "molecule_fraction_without_s2": 0.0,
+          "n_omega_rows_with_any_occurrence": 227,
+          "occurrence_coverage": 0.9996698156971255
+        }
+      },
+      "joint_subspace_dim": 202,
+      "note": "latent coordinates of different models are not aligned; magnitudes are compared within one model only. Under type-equal weights J_add and J_int are orthogonal by construction (P is an orthogonal projector); other weightings do not guarantee orthogonality.",
+      "omega": 290,
+      "per_arm": {
+        "A": {
+          "closure": {
+            "cosine_type_equal": 2.4694097164190057e-16,
+            "identity_sum_max_abs": 2.220446049250313e-16,
+            "inner_product_occurrence": -0.26889074499930254,
+            "inner_product_type_equal": 5.595524044110789e-13,
+            "projector_closure_max_abs": 4.218847493575595e-15,
+            "relative_inner_product_type_equal": 2.4694097164190057e-16
+          },
+          "relative_interaction_occurrence": 2.1897057847415766,
+          "relative_interaction_type_equal": 1.5889075473559975,
+          "rms_additive": {
+            "max_row_norm": 1.234230557414448,
+            "rms_occurrence": 0.28369634881503936,
+            "rms_type_equal": 0.3920130318786917
+          },
+          "rms_all": {
+            "max_row_norm": 1.527431818317196,
+            "rms_occurrence": 0.6705085527904293,
+            "rms_type_equal": 0.7359648937519314
+          },
+          "rms_interaction": {
+            "max_row_norm": 1.4858727326438783,
+            "rms_occurrence": 0.6212115361103558,
+            "rms_type_equal": 0.6228724650139604
+          },
+          "w_joint_relative_interaction_occurrence": 2.4087449452407776,
+          "w_joint_relative_interaction_type_equal": 1.647575127394904,
+          "w_joint_rms_additive": {
+            "max_row_norm": 0.49260854897020095,
+            "rms_occurrence": 0.10935637284548992,
+            "rms_type_equal": 0.1450759001671232
+          },
+          "w_joint_rms_interaction": {
+            "max_row_norm": 0.6603605011194209,
+            "rms_occurrence": 0.26341161032143967,
+            "rms_type_equal": 0.2390234446997784
+          },
+          "w_joint_shape": [
+            192,
+            32
+          ]
+        },
+        "B": {
+          "closure": {
+            "cosine_type_equal": 2.7927535395242903e-16,
+            "identity_sum_max_abs": 1.1102230246251565e-16,
+            "inner_product_occurrence": 0.11004267238544596,
+            "inner_product_type_equal": 4.085620730620576e-13,
+            "projector_closure_max_abs": 2.886579864025407e-15,
+            "relative_inner_product_type_equal": 2.7927535395242903e-16
+          },
+          "relative_interaction_occurrence": 1.8442353940815708,
+          "relative_interaction_type_equal": 1.4794313292035468,
+          "rms_additive": {
+            "max_row_norm": 0.9354776265118283,
+            "rms_occurrence": 0.26209848009965986,
+            "rms_type_equal": 0.3264309470619037
+          },
+          "rms_all": {
+            "max_row_norm": 0.9409757543549714,
+            "rms_occurrence": 0.5560765126324562,
+            "rms_type_equal": 0.5829070628572356
+          },
+          "rms_interaction": {
+            "max_row_norm": 0.8661743474039597,
+            "rms_occurrence": 0.48337129373477694,
+            "rms_type_equal": 0.4829321699049648
+          },
+          "w_joint_relative_interaction_occurrence": 2.0999890019340715,
+          "w_joint_relative_interaction_type_equal": 1.5479118750806118,
+          "w_joint_rms_additive": {
+            "max_row_norm": 0.3612979919619886,
+            "rms_occurrence": 0.09265408945604357,
+            "rms_type_equal": 0.11191686277683814
+          },
+          "w_joint_rms_interaction": {
+            "max_row_norm": 0.3339842988498978,
+            "rms_occurrence": 0.1945725688419071,
+            "rms_type_equal": 0.17323744091403506
+          },
+          "w_joint_shape": [
+            192,
+            32
+          ]
+        },
+        "C": {
+          "closure": {
+            "cosine_type_equal": 5.581510967543689e-09,
+            "identity_sum_max_abs": 0.0,
+            "inner_product_occurrence": 1.2390724172770556e-08,
+            "inner_product_type_equal": 3.759238663368693e-13,
+            "projector_closure_max_abs": 2.886579864025407e-15,
+            "relative_inner_product_type_equal": 5.581510967543689e-09
+          },
+          "relative_interaction_occurrence": 9.16399653508888e-08,
+          "relative_interaction_type_equal": 7.037745938733773e-08,
+          "rms_additive": {
+            "max_row_norm": 0.9418873196287494,
+            "rms_occurrence": 0.25974145645985686,
+            "rms_type_equal": 0.3211317733774017
+          },
+          "rms_all": {
+            "max_row_norm": 0.9418873196287495,
+            "rms_occurrence": 0.2597414579506101,
+            "rms_type_equal": 0.32113177337740256
+          },
+          "rms_interaction": {
+            "max_row_norm": 4.584735278422551e-08,
+            "rms_occurrence": 2.3802698070170672e-08,
+            "rms_type_equal": 2.260043833885183e-08
+          },
+          "w_joint_relative_interaction_occurrence": 7.28726001564873e-08,
+          "w_joint_relative_interaction_type_equal": 6.203440184059584e-08,
+          "w_joint_rms_additive": {
+            "max_row_norm": 0.1668608544710591,
+            "rms_occurrence": 0.05404594541842282,
+            "rms_type_equal": 0.060653694103356415
+          },
+          "w_joint_rms_interaction": {
+            "max_row_norm": 7.119306876446744e-09,
+            "rms_occurrence": 3.938468570556063e-09,
+            "rms_type_equal": 3.76261563312419e-09
+          },
+          "w_joint_shape": [
+            192,
+            32
+          ]
+        }
+      },
+      "rank_X": 88,
+      "task": "hiv",
+      "weights": "type-equal primary (every Omega element weight 1); occurrence weights reported separately"
+    },
+    "lipo": {
+      "coverage_of_joint_computation": {
+        "test": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.004761904761904762,
+          "molecule_fraction_without_s2": 0.0,
+          "n_omega_rows_with_any_occurrence": 89,
+          "occurrence_coverage": 0.9995379194824698
+        },
+        "train": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.0,
+          "molecule_fraction_without_s2": 0.0,
+          "n_omega_rows_with_any_occurrence": 114,
+          "occurrence_coverage": 1.0
+        },
+        "valid": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.0,
+          "molecule_fraction_without_s2": 0.0,
+          "n_omega_rows_with_any_occurrence": 85,
+          "occurrence_coverage": 1.0
+        }
+      },
+      "joint_subspace_dim": 64,
+      "note": "latent coordinates of different models are not aligned; magnitudes are compared within one model only. Under type-equal weights J_add and J_int are orthogonal by construction (P is an orthogonal projector); other weightings do not guarantee orthogonality.",
+      "omega": 114,
+      "per_arm": {
+        "A": {
+          "closure": {
+            "cosine_type_equal": -6.19297674037843e-17,
+            "identity_sum_max_abs": 2.220446049250313e-16,
+            "inner_product_occurrence": -0.23534785845197087,
+            "inner_product_type_equal": -4.263256414560601e-14,
+            "projector_closure_max_abs": 2.4424906541753444e-15,
+            "relative_inner_product_type_equal": -6.19297674037843e-17
+          },
+          "relative_interaction_occurrence": 1.5777070595155454,
+          "relative_interaction_type_equal": 1.184057957915138,
+          "rms_additive": {
+            "max_row_norm": 0.7851729082480432,
+            "rms_occurrence": 0.3340321762500837,
+            "rms_type_equal": 0.39921523562752187
+          },
+          "rms_all": {
+            "max_row_norm": 1.0605542030535382,
+            "rms_occurrence": 0.6120477448986344,
+            "rms_type_equal": 0.6187183526720405
+          },
+          "rms_interaction": {
+            "max_row_norm": 0.8257016390444274,
+            "rms_occurrence": 0.5270049225750979,
+            "rms_type_equal": 0.4726939766657342
+          },
+          "w_joint_relative_interaction_occurrence": 1.6671947591335892,
+          "w_joint_relative_interaction_type_equal": 1.2307487727088582,
+          "w_joint_rms_additive": {
+            "max_row_norm": 0.16136131747070528,
+            "rms_occurrence": 0.07350205117227175,
+            "rms_type_equal": 0.08442791434824119
+          },
+          "w_joint_rms_interaction": {
+            "max_row_norm": 0.182831999878431,
+            "rms_occurrence": 0.12254223449998035,
+            "rms_type_equal": 0.10390955196646644
+          },
+          "w_joint_shape": [
+            192,
+            32
+          ]
+        },
+        "B": {
+          "closure": {
+            "cosine_type_equal": 0.0,
+            "identity_sum_max_abs": 1.1102230246251565e-16,
+            "inner_product_occurrence": -0.060413072954438166,
+            "inner_product_type_equal": 0.0,
+            "projector_closure_max_abs": 2.4424906541753444e-15,
+            "relative_inner_product_type_equal": 0.0
+          },
+          "relative_interaction_occurrence": 1.4547831320733409,
+          "relative_interaction_type_equal": 1.1507416314456689,
+          "rms_additive": {
+            "max_row_norm": 0.7572926960142836,
+            "rms_occurrence": 0.32632431166589004,
+            "rms_type_equal": 0.3715382769380716
+          },
+          "rms_all": {
+            "max_row_norm": 0.8969890861476547,
+            "rms_occurrence": 0.5727838690262227,
+            "rms_type_equal": 0.5664230261356821
+          },
+          "rms_interaction": {
+            "max_row_norm": 0.747173217003433,
+            "rms_occurrence": 0.47473110419698056,
+            "rms_type_equal": 0.42754456294822923
+          },
+          "w_joint_relative_interaction_occurrence": 1.5544801833863044,
+          "w_joint_relative_interaction_type_equal": 1.2064229930911885,
+          "w_joint_rms_additive": {
+            "max_row_norm": 0.14440513525207066,
+            "rms_occurrence": 0.07450093470800108,
+            "rms_type_equal": 0.08048670515438593
+          },
+          "w_joint_rms_interaction": {
+            "max_row_norm": 0.18068401146015214,
+            "rms_occurrence": 0.11581022664734461,
+            "rms_type_equal": 0.09710101173640226
+          },
+          "w_joint_shape": [
+            192,
+            32
+          ]
+        },
+        "C": {
+          "closure": {
+            "cosine_type_equal": -2.2880402908123014e-10,
+            "identity_sum_max_abs": 0.0,
+            "inner_product_occurrence": 2.4725994246043527e-08,
+            "inner_product_type_equal": -6.841407545283861e-15,
+            "projector_closure_max_abs": 2.3869795029440866e-15,
+            "relative_inner_product_type_equal": -2.2880402908123014e-10
+          },
+          "relative_interaction_occurrence": 7.929861621648829e-08,
+          "relative_interaction_type_equal": 5.936774578405886e-08,
+          "rms_additive": {
+            "max_row_norm": 0.7349102385411618,
+            "rms_occurrence": 0.31904597574615035,
+            "rms_type_equal": 0.3715679128335842
+          },
+          "rms_all": {
+            "max_row_norm": 0.7349102385411618,
+            "rms_occurrence": 0.31904597816801966,
+            "rms_type_equal": 0.37156791283358487
+          },
+          "rms_interaction": {
+            "max_row_norm": 4.1638261635477375e-08,
+            "rms_occurrence": 2.5299904386109008e-08,
+            "rms_type_equal": 2.205914939061757e-08
+          },
+          "w_joint_relative_interaction_occurrence": 6.285678079941617e-08,
+          "w_joint_relative_interaction_type_equal": 4.996343487928851e-08,
+          "w_joint_rms_additive": {
+            "max_row_norm": 0.14427261885569959,
+            "rms_occurrence": 0.06776795252390733,
+            "rms_type_equal": 0.07519586595222633
+          },
+          "w_joint_rms_interaction": {
+            "max_row_norm": 8.041372380434858e-09,
+            "rms_occurrence": 4.2596753370204845e-09,
+            "rms_type_equal": 3.757043751695768e-09
+          },
+          "w_joint_shape": [
+            192,
+            32
+          ]
+        }
+      },
+      "rank_X": 50,
+      "task": "lipo",
+      "weights": "type-equal primary (every Omega element weight 1); occurrence weights reported separately"
+    }
+  }
+}

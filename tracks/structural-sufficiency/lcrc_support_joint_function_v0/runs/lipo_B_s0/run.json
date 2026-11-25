@@ -1,0 +1,247 @@
+{
+  "arm": "B",
+  "arm_label": "JOINT table over the Train-only Omega (support-indexed free matrix)",
+  "checkpoint": {
+    "best_epoch": 189,
+    "best_state_hash": "e7e23f8306be3fa529a4f82bb08c24ad4cdaec7d6d725e5839729e0e0463b73e",
+    "improvement_epochs": [
+      1,
+      2,
+      6,
+      8,
+      11,
+      14,
+      18,
+      20,
+      22,
+      28,
+      31,
+      39,
+      56,
+      63,
+      132,
+      135,
+      180,
+      184,
+      189
+    ],
+    "path": "tracks/structural-sufficiency/lcrc_support_joint_function_v0/runs/lipo_B_s0/checkpoint.pt",
+    "selection_uses_test": false,
+    "sha256": "1b5ca16020e0eee583f79799e42c6f45fb6123c025adb6542cb15c779ecdd32d",
+    "valid_recheck_abs_diff": 5.230839206227245e-09
+  },
+  "curve": {
+    "path": "tracks/structural-sufficiency/lcrc_support_joint_function_v0/runs/lipo_B_s0/curve.csv",
+    "sha256": "7e92c013a46c8544e022cf02c0468b17e832d733afea1ad167de5f23d6928aea"
+  },
+  "dataset": "Lipophilicity",
+  "env": {
+    "cuda_available": true,
+    "cuda_device_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "cuda_driver": null,
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "epochs_run": 360,
+  "feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+  "git_commit": "6352d528166e965729b3ae3301d72936016c7556",
+  "git_dirty_tracked": false,
+  "last20": {
+    "last20_epochs": [
+      341,
+      342,
+      343,
+      344,
+      345,
+      346,
+      347,
+      348,
+      349,
+      350,
+      351,
+      352,
+      353,
+      354,
+      355,
+      356,
+      357,
+      358,
+      359,
+      360
+    ],
+    "last20_mae": 0.423040912252302,
+    "last20_test_rmse": 0.5670393151320762,
+    "last20_train_rmse": 0.2632019482688299,
+    "last20_valid_rmse": 0.7277770046963081
+  },
+  "metrics": {
+    "best_checkpoint": {
+      "test": {
+        "bias": -0.022559027211786396,
+        "mae": 0.42692079135975125,
+        "n": 420,
+        "r2": 0.7763005160733961,
+        "rmse": 0.5665988201584085
+      },
+      "train": {
+        "bias": 0.007061691684444405,
+        "mae": 0.24984465534520175,
+        "n": 3360,
+        "r2": 0.9244891140930556,
+        "rmse": 0.33225579276159856
+      },
+      "valid": {
+        "bias": 0.01042266875945902,
+        "mae": 0.42531308391922246,
+        "n": 420,
+        "r2": 0.6207380792545365,
+        "rmse": 0.7113931077066544
+      }
+    },
+    "best_checkpoint_label": "best-Valid checkpoint, all three splits evaluated once after training"
+  },
+  "model": {
+    "arm": "B",
+    "family": "dissect",
+    "full_init_state_hash": "666b88d7d0a0f18b55235756ed34b8bfa38263c3bb166fc551db008e2fd36a4f",
+    "init_state_hash": "aac1e061176a93bd12b0e6a3f79e80eced2ff93f84eb72391dc819be59ebb83c",
+    "initial_table_nonadditive_rms": 0.4168406784669645,
+    "initial_table_rms": 0.55733117310194,
+    "joint_module": "J_table[|Omega|, r]",
+    "parameters": 215906,
+    "parameters_base_A": 228674,
+    "parameters_joint_module": 3648,
+    "train_supported_joint_parameters": 3648,
+    "variant": "C1"
+  },
+  "norm_fingerprint": "4e62dae70efa3be46ff8df631417abf051a95395de689e1b23bd0483ed1cc015",
+  "parameters": 215906,
+  "parameters_breakdown": {
+    "atom_encoder": 19040,
+    "bond_encoder": 63776,
+    "drop": 0,
+    "f": 4225,
+    "local": 117792,
+    "rho": 11073,
+    "total": 215906
+  },
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local representation h, before the per-atom contribution f and the global rho",
+    "early_stopping": false,
+    "ema": false,
+    "epochs": 360,
+    "epochs_by_task": {
+      "hiv": 100,
+      "lipo": 360
+    },
+    "gradient_clip": 5.0,
+    "hyperparameter_search": false,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "shuffle_offset": 917000,
+    "soup": false,
+    "ssl": false,
+    "swa": false,
+    "weight_decay": 0.001
+  },
+  "replicate_of": null,
+  "result_label": "DEVELOPMENT_TEST",
+  "round_id": "lcrc-support-joint-function-v0",
+  "schema": "lcrc-support-joint-function-run-v1",
+  "seed": 0,
+  "smoke": false,
+  "split_rows_sha256": {
+    "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+    "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+    "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+  },
+  "split_sizes": {
+    "test": 420,
+    "train": 3360,
+    "valid": 420
+  },
+  "support": {
+    "artifact_sha256": "ed059bd5e7d2f3e1c186c5dda3c17f9c5b173867fd8cb8679b7cf559d8874383",
+    "coverage": {
+      "test": {
+        "molecule_fraction_with_any_seen_pair": 1.0,
+        "molecule_fraction_with_any_unseen_pair": 0.004761904761904762,
+        "molecule_fraction_without_s2": 0.0,
+        "n_molecules": 420,
+        "n_molecules_without_s2": 0,
+        "n_occurrences": 34626,
+        "n_occurrences_unseen": 16,
+        "n_omega_rows_with_any_occurrence": 89,
+        "occurrence_coverage": 0.9995379194824698,
+        "paths_per_molecule_mean": 82.44285714285714,
+        "role": "descriptive coverage only"
+      },
+      "train": {
+        "molecule_fraction_with_any_seen_pair": 1.0,
+        "molecule_fraction_with_any_unseen_pair": 0.0,
+        "molecule_fraction_without_s2": 0.0,
+        "n_molecules": 3360,
+        "n_molecules_without_s2": 0,
+        "n_occurrences": 279084,
+        "n_occurrences_unseen": 0,
+        "n_omega_rows_with_any_occurrence": 114,
+        "occurrence_coverage": 1.0,
+        "paths_per_molecule_mean": 83.06071428571428,
+        "role": "definition split (Train-only support)"
+      },
+      "valid": {
+        "molecule_fraction_with_any_seen_pair": 1.0,
+        "molecule_fraction_with_any_unseen_pair": 0.0,
+        "molecule_fraction_without_s2": 0.0,
+        "n_molecules": 420,
+        "n_molecules_without_s2": 0,
+        "n_occurrences": 35284,
+        "n_occurrences_unseen": 0,
+        "n_omega_rows_with_any_occurrence": 85,
+        "occurrence_coverage": 1.0,
+        "paths_per_molecule_mean": 84.00952380952381,
+        "role": "descriptive coverage only"
+      }
+    },
+    "joint_dim": 64,
+    "omega": 114,
+    "rank": 50
+  },
+  "target_norm": {
+    "formula": "z = (y - mean) / scale; y_hat_raw = mean + scale * z_hat",
+    "mean": 2.176985119047619,
+    "n": 3360,
+    "scale": 1.2091154725538142,
+    "source": "train_split_only",
+    "valid_or_test_used": false
+  },
+  "task": "lipo",
+  "task_family": "regression",
+  "timing": {
+    "device": "cuda:0",
+    "eval_seconds_total": 130.18152027600445,
+    "gpu_hours": 0.06838605152682349,
+    "gpu_peak_allocated_bytes": 84656128,
+    "gpu_seconds": 246.18978549656458,
+    "mean_epoch_seconds": 1.045866081432905,
+    "process_wall_seconds": 378.72811857797205,
+    "steps_per_epoch": 27,
+    "train_seconds_total": 246.17963712569326,
+    "train_wall_seconds": 376.5117893158458
+  },
+  "variant": "C1"
+}

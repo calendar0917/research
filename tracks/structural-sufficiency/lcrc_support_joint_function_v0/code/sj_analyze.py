@@ -95,8 +95,8 @@ def reuse_baseline_record(task_key: str) -> dict[str, Any]:
     variants = {k: v for k, v in (r.get("expected") or {}).items()}
     if task_key == "hiv":
         run = C.read_json(r["run_json"])
-        tests = C.read_json(r["test_scores"])["scores"][f"mol_ogbg-molhiv_s0_{C.ARM_A}"]
-        val = C.read_json(r["validation_metrics"])["units"][f"{C.ARM_A}_s0"]
+        tests = C.read_json(r["test_scores"])["scores"]["mol_ogbg-molhiv_s0_A0"]
+        val = C.read_json(r["validation_metrics"])["units"]["A0_s0"]
         best = {
             "train": {"roc_auc": val["train_roc_auc"], "pr_auc": val["train_pr_auc"]},
             "valid": {"roc_auc": val["roc_auc"], "pr_auc": val["pr_auc"], "bce": val["bce"]},
@@ -104,13 +104,14 @@ def reuse_baseline_record(task_key: str) -> dict[str, Any]:
                      "bce": tests["metrics"]["bce"]},
         }
         extra = {
-            "parameters": int(run["model"]["parameters"]),
+            "parameters": int(run["parameters"]),
             "gpu_hours": float(run["timing"]["gpu_hours_estimate"]),
             "mean_epoch_seconds": float(run["timing"]["mean_epoch_seconds"]),
-            "valid_seconds_per_split": float(run["timing"]["valid_seconds_total"] / run["timing"]["epochs_run"])
-            if "epochs_run" in run["timing"] else None,
-            "best_epoch": int(tests["best_epoch"]),
-            "checkpoint_sha256": str(tests["checkpoint_sha256"]),
+            "valid_seconds_per_split": float(
+                run["timing"]["valid_seconds_total"] / int(run["epochs_run"])
+            ),
+            "best_epoch": int(tests.get("best_epoch", run["checkpoint"]["best_epoch"])),
+            "checkpoint_sha256": str(tests.get("model_sha256", run["checkpoint"]["sha256"])),
             "test_label": str(tests["result_label"]),
             "n_train_eval_available": False,
             "test_curve_available": False,
@@ -294,6 +295,18 @@ def cluster_ids(smiles: Sequence[str]) -> tuple[np.ndarray, dict[str, Any]]:
         "mean_cluster_size": float(sizes.mean()) if sizes.size else 0.0,
         "n_singleton_clusters": int((sizes == 1).sum()),
     }
+
+
+def raw_units(task: str, pred: np.ndarray, target_norm) -> np.ndarray:
+    """Model outputs -> the units the primary metric is defined in.
+
+    Regression models predict the standardised target; ROC-AUC/AP are invariant
+    to that affine map, so binary predictions are used as raw scores.
+    """
+    out = np.asarray(pred, dtype=np.float64).reshape(-1)
+    if task == "regression":
+        return out * float(target_norm["scale"]) + float(target_norm["mean"])
+    return out
 
 
 def metric_value(name: str, pred: np.ndarray, y: np.ndarray) -> float:
@@ -490,22 +503,27 @@ def intervention(task_key: str, support: S.Support, model_b, device) -> dict[str
         "unseen_policy": "unseen codes keep the trained table's fixed fallback value in every mode",
         "results": {},
     }
-    base_logits: dict[str, np.ndarray] = {}
+    base_raw: dict[str, np.ndarray] = {}
+    base_metric: dict[str, dict[str, Any]] = {}
     for mode, table_map in maps.items():
         local.set_override(table_map)
         try:
             for split, cache in (("valid", view.valid_cache), ("test", test_cache)):
-                pred = T.predict_raw(model_b, cache, device)
-                m = C.MET.task_metrics(task, pred, y[split], view.target_norm, names)
+                pred_std = T.predict_raw(model_b, cache, device)
+                m = C.MET.task_metrics(task, pred_std, y[split], view.target_norm, names)
+                pred = raw_units(task, pred_std, view.target_norm)
                 if mode == "ORIGINAL":
-                    base_logits[split] = pred
-                ref = base_logits[split]
+                    base_raw[split] = pred
+                    base_metric[split] = m
+                ref = base_raw[split]
                 entry = out["results"].setdefault(split, {})[mode] = {
                     pk: float(m[pk]),
                     sk: float(m[sk]),
-                    "delta_primary_vs_original": float(m[pk] - C.MET.task_metrics(task, ref, y[split], view.target_norm, names)[pk]),
-                    "logit_mean_abs_change": float(np.mean(np.abs(pred - ref))),
-                    "logit_max_abs_change": float(np.max(np.abs(pred - ref))),
+                    "delta_primary_vs_original": float(m[pk] - base_metric[split][pk]),
+                    "delta_secondary_vs_original": float(m[sk] - base_metric[split][sk]),
+                    "output_mean_abs_change": float(np.mean(np.abs(pred - ref))),
+                    "output_max_abs_change": float(np.max(np.abs(pred - ref))),
+                    "output_units": "raw target units" if task == "regression" else "logits",
                 }
         finally:
             local.clear_override()
@@ -523,11 +541,15 @@ def intervention(task_key: str, support: S.Support, model_b, device) -> dict[str
         f = np.asarray(cov.get(split, np.zeros(0, dtype=np.float32)), dtype=np.float64)
         if f.size == 0:
             continue
-        base = base_logits[split]
+        base = base_raw[split]
         add = None
         local.set_override(maps["ADD_ONLY"])
         try:
-            add = T.predict_raw(model_b, view.valid_cache if split == "valid" else test_cache, device)
+            add = raw_units(
+                task,
+                T.predict_raw(model_b, view.valid_cache if split == "valid" else test_cache, device),
+                view.target_norm,
+            )
         finally:
             local.clear_override()
         entry: dict[str, Any] = {}
@@ -537,7 +559,7 @@ def intervention(task_key: str, support: S.Support, model_b, device) -> dict[str
                 continue
             item = {
                 "n_molecules": int(mask.sum()),
-                "mean_logit_change_add_only": float(np.mean(np.abs(add[mask] - base[mask]))),
+                "mean_output_change_add_only": float(np.mean(np.abs(add[mask] - base[mask]))),
             }
             if len(np.unique(y[split][mask])) > 1 and pk in ("roc_auc", "pr_auc"):
                 item[f"{pk}_original"] = float(metric_value(pk, base[mask], y[split][mask]))
@@ -742,11 +764,12 @@ def run_task(task_key: str, device) -> dict[str, Any]:
     rows, detail = main_table(task_key, support, device)
 
     # paired scaffold-cluster bootstrap on Valid and Test
+    task = str(C.TASKS[task_key]["task"])
     y, test_cache = T.task_targets(task_key, view)
     preds = {arm: {} for arm in C.ARMS}
     for arm in C.ARMS:
-        preds[arm]["valid"] = T.predict_raw(models[arm], view.valid_cache, device)[:, 0]
-        preds[arm]["test"] = T.predict_raw(models[arm], test_cache, device)[:, 0]
+        preds[arm]["valid"] = raw_units(task, T.predict_raw(models[arm], view.valid_cache, device), view.target_norm)
+        preds[arm]["test"] = raw_units(task, T.predict_raw(models[arm], test_cache, device), view.target_norm)
     boot: dict[str, Any] = {}
     for split, cache in (("valid", view.valid_cache), ("test", test_cache)):
         ids, meta = cluster_ids([str(s) for s in cache["smiles"]])
@@ -762,7 +785,7 @@ def run_task(task_key: str, device) -> dict[str, Any]:
                 replicates=C.BOOTSTRAP_REPLICATES,
                 seed=C.BOOTSTRAP_SEED,
             )
-        if C.TASKS[task_key]["task"] == "regression":
+        if task == "regression":
             boot[split]["drop_extreme_sensitivity"] = {
                 f"{C.ARM_B}-{C.ARM_A}": drop_extreme_sensitivity(
                     preds[C.ARM_A][split], preds[C.ARM_B][split], y[split], METRIC[task_key], (1, 5, 10)
@@ -822,7 +845,7 @@ def main(argv=None) -> int:
         for key in row:
             if key not in fields:
                 fields.append(key)
-    C.write_csv(C.ANALYSIS / "main_table.csv", main_rows, fieldnames=fields)
+    C.write_csv(C.ANALYSIS / "main_table.csv", [{k: row.get(k) for k in fields} for row in main_rows])
     C.write_json(
         C.ANALYSIS / "main_table.json",
         {
