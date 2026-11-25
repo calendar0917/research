@@ -311,13 +311,21 @@ def paired_pcba(a: Mapping[str, Any], b: Mapping[str, Any], rng: np.random.Gener
     idx = rng.integers(0, int(mask.sum()), size=(N_BOOT, int(mask.sum())))
     va, vb = pa[mask], pb[mask]
     diffs = va[idx].mean(axis=1) - vb[idx].mean(axis=1)
-    def bce(logits: np.ndarray, y: np.ndarray) -> float:
+    # Masked BCE is a ratio of per-molecule sums, so a molecule bootstrap only
+    # needs to resample those sums: exact, and ~1000x cheaper than re-evaluating.
+    def parts(logits: np.ndarray, y: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         m = np.isfinite(y)
         loss = np.logaddexp(0.0, logits) - np.where(m, y, 0.0) * logits
-        return float((loss * m).sum() / m.sum())
+        return (loss * m).sum(axis=1), m.sum(axis=1).astype(np.float64)
 
-    rows = rng.integers(0, ya.shape[0], size=(200, ya.shape[0]))
-    bce_deltas = np.array([bce(a["logits"][r], ya[r]) - bce(b["logits"][r], ya[r]) for r in rows])
+    num_a, den_a = parts(a["logits"], ya)
+    num_b, den_b = parts(b["logits"], ya)
+
+    def bce_delta(rows: np.ndarray) -> float:
+        return float(num_a[rows].sum() / den_a[rows].sum() - num_b[rows].sum() / den_b[rows].sum())
+
+    bce_deltas = np.array([bce_delta(rng.integers(0, ya.shape[0], size=ya.shape[0])) for _ in range(200)])
+    bce_point = float(num_a.sum() / den_a.sum() - num_b.sum() / den_b.sum())
     return {
         "kind": "paired_task_bootstrap_macro_ap_delta + molecule_bootstrap_bce_delta",
         "delta_point": point,
@@ -327,7 +335,7 @@ def paired_pcba(a: Mapping[str, Any], b: Mapping[str, Any], rng: np.random.Gener
         "improved_tasks": int((pa[mask] > pb[mask]).sum()),
         "degraded_tasks": int((pa[mask] < pb[mask]).sum()),
         "median_task_delta": float(np.median(va - vb)),
-        "bce_delta_point": float(bce(a["logits"], ya) - bce(b["logits"], ya)),
+        "bce_delta_point": bce_point,
         "bce_delta_ci95": [float(np.percentile(bce_deltas, 2.5)), float(np.percentile(bce_deltas, 97.5))],
         "n_boot": int(N_BOOT),
     }
