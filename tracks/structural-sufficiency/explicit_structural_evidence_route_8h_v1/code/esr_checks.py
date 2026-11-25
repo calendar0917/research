@@ -231,7 +231,8 @@ def _verify_global(cache: Mapping[str, Any], pairs: Mapping[str, Any], *, rows: 
     checked = 0
     for m in [int(x) for x in rows]:
         n = int(atom_ptr[m + 1] - atom_ptr[m])
-        b = bond_index[bond_ptr[m] : bond_ptr[m + 1]] - int(atom_ptr[m])
+        # every inherited cache stores per-molecule *local* bond indices
+        b = bond_index[bond_ptr[m] : bond_ptr[m + 1]]
         if b.size:
             adj = coo_matrix((np.ones(b.shape[0]), (b[:, 0], b[:, 1])), shape=(n, n))
             adj = (adj + adj.T).tocsr()
