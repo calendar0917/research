@@ -394,6 +394,69 @@ def _prefers(dataset: str, result: Mapping[str, Any]) -> bool:
     return a > b
 
 
+#: stored Validation logits of a historical PCBA checkpoint (read-only).  The
+#: frozen reference numbers of the round come from PCBA_HISTORY; this artifact is
+#: additionally used for a paired task-level comparison and as an end-to-end
+#: check that this round's view and AP code reproduce its recorded AP.
+HIST_LOGITS = {
+    "W2_JOINT": {
+        "path": C.REPO / "tracks/structural-sufficiency/lcrc_support_joint_transfer_v1/runs/W2_JOINT/valid_logits_best.npy",
+        "recorded_valid_ap": 0.2602860433060059,
+        "note": "historical checkpoint of the previous round, read-only",
+    }
+}
+
+
+def historical_check(view_dataset: str, preds: Mapping[str, Mapping[str, Any]], records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Reproduce a historical checkpoint's AP and compare our arms to it pairwise."""
+    out: dict[str, Any] = {"artifacts": {}}
+    rng = np.random.default_rng(RNG_SEED)
+    for name, meta in HIST_LOGITS.items():
+        path = Path(meta["path"])
+        if not path.exists():
+            out["artifacts"][name] = {"available": False}
+            continue
+        logits = np.load(path)
+        sample = next((p for p in preds.values() if p["y"].shape == logits.shape), None)
+        if sample is None:
+            out["artifacts"][name] = {"available": True, "note": "no matching predictions loaded"}
+            continue
+        y = sample["y"]
+        from pc_metrics import per_task_ap
+
+        rep = per_task_ap(y, 1.0 / (1.0 + np.exp(-logits.astype(np.float64))))
+        ap_task = np.asarray(rep["per_task"], dtype=np.float64)
+        out["artifacts"][name] = {
+            "available": True,
+            "recorded_valid_ap": meta["recorded_valid_ap"],
+            "recomputed_macro_ap": float(np.nanmean(ap_task)),
+            "reproduced": bool(abs(float(np.nanmean(ap_task)) - float(meta["recorded_valid_ap"])) < 1e-9),
+            "note": meta["note"],
+        }
+        pairs = {}
+        for run_name, payload in preds.items():
+            rec = next((r for r in records if r.get("run_id") == run_name), None)
+            if rec is None or rec["dataset"] != view_dataset:
+                continue
+            ours = {
+                "logits": payload["logits"],
+                "y": payload["y"],
+                "raw_pred": payload["raw_pred"],
+                "task_names": payload["task_names"],
+            }
+            hist = {
+                "logits": logits.astype(np.float64),
+                "y": y,
+                "raw_pred": None,
+                "task_names": payload["task_names"],
+            }
+            res = paired_pcba(ours, hist, rng)
+            res.update({"dataset": C.PCBA, "arm_a": rec["arm"], "arm_b": name, "primary_a": view_primary(C.PCBA, rec["best_valid_metrics"]), "primary_b": meta["recorded_valid_ap"]})
+            pairs[rec["arm"]] = res
+        out.setdefault("paired_vs_historical", {})[name] = pairs
+    return out
+
+
 # ---------------------------------------------------------------------------
 # per-task table
 # ---------------------------------------------------------------------------
@@ -688,7 +751,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     write_csv(analysis / "main_table.csv", table)
     write_csv(analysis / "per_task_metrics.csv", per_task_rows(records, preds))
     write_csv(analysis / "efficiency_table.csv", efficiency_rows(records, analysis))
-    C.write_json(analysis / "paired_comparisons.json", comparisons(records, preds))
+    comp = comparisons(records, preds)
+    hist = historical_check(C.PCBA, preds, records)
+    if hist.get("paired_vs_historical"):
+        comp["pcba_vs_historical"] = hist
+    C.write_json(analysis / "paired_comparisons.json", comp)
+    if hist.get("artifacts"):
+        C.write_json(analysis / "pcba_reference_check.json", hist["artifacts"])
     rules_path = analysis / "phase_decisions_rules.json"
     if not rules_path.exists():
         rules_path = C.ANALYSIS / "phase_decisions_rules.json"
