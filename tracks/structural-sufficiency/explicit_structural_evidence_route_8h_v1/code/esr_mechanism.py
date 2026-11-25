@@ -250,7 +250,10 @@ def _subset_metrics(view: D.View, y: np.ndarray, logits: np.ndarray) -> dict[str
         return task_metrics("regression", logits.reshape(-1), y.reshape(-1), view.target_norm)
     if view.task == "multitask":
         return task_metrics("multitask", logits, y, None, view.task_names)
-    return D.ap_report(y, logits)
+    report = D.ap_report(y, logits)
+    if "ap" not in report:
+        report["ap"] = report.get("macro_ap", float("nan"))
+    return report
 
 
 # ---------------------------------------------------------------------------
