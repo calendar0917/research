@@ -715,9 +715,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             run_dir = arms[arm]
             C.log(f"mechanism: {dataset}/{arm}")
             try:
-            entry = analyse_run(run_dir, device, analysis=analysis)
-        except Exception as exc:  # diagnostics must not take the whole round down
-            LOG.warning("mechanism failed for %s: %s", run_dir.name, exc)
+                entry = analyse_run(run_dir, device, analysis=analysis)
+            except Exception as exc:  # diagnostics must not take the whole round down
+                C.log(f"mechanism failed for {run_dir.name}: {type(exc).__name__}: {exc}")
             entry = {
                 "run": run_dir.name,
                 "dataset": run_dir.parent.parent.name,
