@@ -199,7 +199,7 @@ def train_small(
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = tag or f"{dataset.lower()}-{arm.lower()}-s{seed}"
-    started = time.time()
+    started = time.perf_counter()
     C.register_run(
         {
             "run_id": run_id,
@@ -443,7 +443,7 @@ def train_pcba(
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     run_id = tag or f"pcba-{arm.lower()}-s{seed}-e{epochs}"
-    started = time.time()
+    started = time.perf_counter()
     C.register_run(
         {
             "run_id": run_id,
