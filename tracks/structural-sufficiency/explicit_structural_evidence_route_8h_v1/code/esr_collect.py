@@ -478,6 +478,8 @@ def per_task_rows(
             task = per_task_ap(payload["y"], 1.0 / (1.0 + np.exp(-payload["logits"])))
             metric = "ap"
             values = task["per_task"]
+            if isinstance(values, (list, tuple)):
+                values = {payload["task_names"][i]: v for i, v in enumerate(values)}
             observed = task["observed"]
             positive = task["positive"]
         elif dataset == C.TOX21:
