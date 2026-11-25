@@ -694,7 +694,8 @@ def main(argv: Sequence[str] | None = None) -> int:
             run = json.loads((run_dir / "run.json").read_text())
             scored.append((float((run.get("best_valid_metrics") or {}).get("ap", 0.0)) if dataset == C.PCBA else 0.0, run["arm"], run_dir))
         arms = {run_json["arm"]: run_dir for run_json, run_dir in ((json.loads((d / "run.json").read_text()), d) for d in run_dirs)}
-        wanted = [a for a in ("BASE", C.ADD, C.EVID) if a in arms]
+        order = ["BASE", C.ADD, C.EVID, C.BANK, C.COMPOUND, C.UNARY, C.HIDDEN, C.FLEX]
+        wanted = [a for a in order if a in arms] + [a for a in arms if a not in order]
         if dataset == C.PCBA:
             best = max((a for a in arms if a not in ("BASE", "HIDDEN")), key=lambda a: _prefix_best(arms[a]), default=None)
         else:
