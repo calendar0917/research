@@ -1,0 +1,157 @@
+{
+  "analysis": {
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20261126,
+    "contrast_max_candidates": 5,
+    "contrast_min_pair_docfreq": 20,
+    "scaffold_source": "RDKit MurckoScaffold.MurckoScaffoldSmiles(includeChirality=False)",
+    "tolerances": {
+      "forward_abs": 1e-05,
+      "interaction_abs": 1e-08,
+      "invariance_abs": 1e-05,
+      "joint_replay_abs": 1e-05,
+      "metric_recheck": 1e-05,
+      "orthogonality_abs": 1e-05,
+      "param_bitwise": 0.0
+    }
+  },
+  "arms": {
+    "A": "ORIGINAL LCRC (reused frozen baseline, no retraining)",
+    "B": "JOINT table over the Train-only Omega (support-indexed free matrix)",
+    "C": "ADDITIVE table J = U Theta (orthogonal marginal projection only)"
+  },
+  "budget": {
+    "gpu_hard_cap_hours": 3.0,
+    "gpu_soft_cap_hours": 2.0,
+    "preferred_gpu": 1,
+    "wall_clock_hard_cap_hours": 2.0
+  },
+  "execution_regime": "res / a100-2 / process / res-gpu1 (torch 2.5.1+cu124)",
+  "frozen_utc": "2026-11-25T00:00:00Z",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "batch_size": 128,
+    "dropout": 0.1,
+    "dropout_position": "final atom-level local representation h, before the per-atom contribution f and the global rho",
+    "early_stopping": false,
+    "ema": false,
+    "epochs": 360,
+    "epochs_by_task": {
+      "hiv": 100,
+      "lipo": 360
+    },
+    "gradient_clip": 5.0,
+    "hyperparameter_search": false,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine",
+    "shuffle_offset": 917000,
+    "soup": false,
+    "ssl": false,
+    "swa": false,
+    "weight_decay": 0.001
+  },
+  "reference_delta": {
+    "hiv": 0.005,
+    "lipo": 0.03
+  },
+  "reuse": {
+    "hiv": {
+      "checkpoint_sha256": "2340e38e85ed8c0f2ee2cfeab1bbb8667e8383d2e62cc81d4e8feb5aa40599ac",
+      "expected": {
+        "best_epoch": 53,
+        "checkpoint_sha256": "2340e38e85ed8c0f2ee2cfeab1bbb8667e8383d2e62cc81d4e8feb5aa40599ac",
+        "parameters": 247106,
+        "seed": 0,
+        "split_sizes": {
+          "test": 4113,
+          "train": 32901,
+          "valid": 4113
+        }
+      },
+      "round": "lcrc-sparse-identity-v1",
+      "run_dir": "tracks/structural-sufficiency/lcrc_sparse_identity_v1/runs/mol_ogbg-molhiv_s0_A0"
+    },
+    "lipo": {
+      "checkpoint_sha256": "414e6302679768715b7f9846eedc5c606513251f2eb45b77ab41b4e949803bbb",
+      "expected": {
+        "best_epoch": 132,
+        "checkpoint_sha256": "414e6302679768715b7f9846eedc5c606513251f2eb45b77ab41b4e949803bbb",
+        "parameters": 228674,
+        "seed": 0,
+        "split_sizes": {
+          "test": 420,
+          "train": 3360,
+          "valid": 420
+        }
+      },
+      "round": "lcrc-lipo-model-dissection-v1",
+      "run_dir": "tracks/structural-sufficiency/lcrc_lipo_model_dissection_v1/runs/r122_C1_s0"
+    }
+  },
+  "round_id": "lcrc-support-joint-function-v0",
+  "schema": "lcrc-support-joint-function-config-v1",
+  "seed": 0,
+  "support": {
+    "design": "X has one row per Omega element and exactly two unit entries per row: the column of its p and the column of its e (bipartite incidence matrix, |P|+|E| columns)",
+    "fallback": {
+      "otherwise": "type-equal mean over the Omega rows of J_table",
+      "same_component": "least-squares marginal fit Jhat = argmin ||X Theta - J_table||_F; J(p,e) = Theta[p] + Theta[e]"
+    },
+    "grouping": "p = path_cat, e = path_end63 (production S2 integer codes, no new fields)",
+    "legality": "bond_type_2 is encoded in both p and e; only p % n_bond == e % n_bond is legal",
+    "omega": "the set of distinct (p, e) pairs that actually occur in the Train split",
+    "projection": "P = U U^T; J_add = P J; J_int = J - P J",
+    "svd": "float64 reduced SVD of X; U = left singular vectors with s > 1e-10 * s_max",
+    "unseen_policy": "no new learnable parameter; the fallback is a deterministic function of J_table",
+    "weights": "type-equal: every Omega element has weight 1 (no occurrence / molecule weighting)"
+  },
+  "task_order": [
+    "hiv",
+    "lipo"
+  ],
+  "tasks": {
+    "hiv": {
+      "dataset": "ogbg-molhiv",
+      "direction": "higher",
+      "epochs": 100,
+      "primary": "roc_auc",
+      "secondary": "pr_auc",
+      "seed_timing": "before_build",
+      "split_sizes": {
+        "test": 4113,
+        "train": 32901,
+        "valid": 4113
+      },
+      "task": "binary",
+      "test_role": "DEVELOPMENT_TEST",
+      "variant": "A0"
+    },
+    "lipo": {
+      "dataset": "Lipophilicity",
+      "direction": "lower",
+      "epochs": 360,
+      "primary": "rmse",
+      "repeat": 122,
+      "secondary": "mae",
+      "seed_timing": "after_build",
+      "split_sizes": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      },
+      "task": "regression",
+      "test_role": "DEVELOPMENT_TEST",
+      "variant": "C1"
+    }
+  },
+  "trained_arms": [
+    "B",
+    "C"
+  ]
+}

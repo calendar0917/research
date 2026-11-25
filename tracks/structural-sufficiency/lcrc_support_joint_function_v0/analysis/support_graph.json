@@ -1,0 +1,206 @@
+{
+  "artifact_rule": "each task recomputes Omega + X + SVD from the frozen caches and must match the recorded .npz bit-for-bit (arrays) / 1e-12 (float64 matrices)",
+  "created_utc": "2026-11-25T09:13:48Z",
+  "frozen_definitions": {
+    "design": "X has one row per Omega element and exactly two unit entries per row: the column of its p and the column of its e (bipartite incidence matrix, |P|+|E| columns)",
+    "fallback": {
+      "otherwise": "type-equal mean over the Omega rows of J_table",
+      "same_component": "least-squares marginal fit Jhat = argmin ||X Theta - J_table||_F; J(p,e) = Theta[p] + Theta[e]"
+    },
+    "grouping": "p = path_cat, e = path_end63 (production S2 integer codes, no new fields)",
+    "legality": "bond_type_2 is encoded in both p and e; only p % n_bond == e % n_bond is legal",
+    "omega": "the set of distinct (p, e) pairs that actually occur in the Train split",
+    "projection": "P = U U^T; J_add = P J; J_int = J - P J",
+    "svd": "float64 reduced SVD of X; U = left singular vectors with s > 1e-10 * s_max",
+    "unseen_policy": "no new learnable parameter; the fallback is a deterministic function of J_table",
+    "weights": "type-equal: every Omega element has weight 1 (no occurrence / molecule weighting)"
+  },
+  "round_id": "lcrc-support-joint-function-v0",
+  "schema": "lcrc-support-joint-function-support-graph-v1",
+  "tasks": {
+    "hiv": {
+      "artifact": {
+        "content_hash": "b5b6d84e9e842432f8bac713ee85e104fd592436bad26dd715ebdad054f58584",
+        "path": "tracks/structural-sufficiency/lcrc_support_joint_function_v0/analysis/support/hiv_support.npz",
+        "sha256": "cd8bdcb0e2d6a91c73dd533d1e19a74af81b1bc47c36e0a00c9c3c2ea5142431"
+      },
+      "build": {
+        "n_records_train": 2527194,
+        "n_train_atoms": 830936,
+        "n_train_molecules": 32901,
+        "n_train_molecules_without_s2": 2,
+        "omega_order": "ascending (path_cat, path_end63)",
+        "source": "Train split S2 records only",
+        "svd": "numpy.linalg.svd(float64), keep s > 1e-10 * s_max"
+      },
+      "coverage": {
+        "test": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.004862630683199611,
+          "molecule_fraction_without_s2": 0.0,
+          "n_molecules": 4113,
+          "n_molecules_without_s2": 0,
+          "n_occurrences": 331532,
+          "n_occurrences_unseen": 85,
+          "n_omega_rows_with_any_occurrence": 221,
+          "occurrence_coverage": 0.9997436144927186,
+          "paths_per_molecule_mean": 80.60588378312667,
+          "role": "descriptive coverage only"
+        },
+        "train": {
+          "molecule_fraction_with_any_seen_pair": 0.9999392115741162,
+          "molecule_fraction_with_any_unseen_pair": 0.0,
+          "molecule_fraction_without_s2": 6.078842588371174e-05,
+          "n_molecules": 32901,
+          "n_molecules_without_s2": 2,
+          "n_occurrences": 2527194,
+          "n_occurrences_unseen": 0,
+          "n_omega_rows_with_any_occurrence": 290,
+          "occurrence_coverage": 1.0,
+          "paths_per_molecule_mean": 76.8120725813805,
+          "role": "definition split (Train-only support)"
+        },
+        "valid": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.0034038414782397277,
+          "molecule_fraction_without_s2": 0.0,
+          "n_molecules": 4113,
+          "n_molecules_without_s2": 0,
+          "n_occurrences": 366462,
+          "n_occurrences_unseen": 121,
+          "n_omega_rows_with_any_occurrence": 227,
+          "occurrence_coverage": 0.9996698156971255,
+          "paths_per_molecule_mean": 89.0984682713348,
+          "role": "descriptive coverage only"
+        }
+      },
+      "dataset": "ogbg-molhiv",
+      "docfreq_total": 483303,
+      "joint_subspace_dim": 202,
+      "legality": {
+        "all_omega_legal": true,
+        "fallback_mode_counts": {
+          "marginal_ls": 325,
+          "omega": 290,
+          "type_equal_mean": 31385
+        },
+        "n_omega": 290,
+        "n_omega_legal": 290,
+        "n_possible_legal_type_pairs": 6400,
+        "n_possible_type_pairs": 32000,
+        "observed_fraction_of_legal_type_pairs": 0.0453125,
+        "repeated_key_field": "bond_type_2 (the middle->end bond) is encoded in path_cat AND path_end63",
+        "rule": "bond_type_2 appears in both p and e; legal iff (p % n_bond_types) == (e % n_bond_types)"
+      },
+      "n_bond_types": 5,
+      "n_connected_components": 6,
+      "n_design_columns": 94,
+      "n_e_types": 35,
+      "n_nbr_codes": 80,
+      "n_omega": 290,
+      "n_omega_docfreq_ge_20": 177,
+      "n_omega_docfreq_ge_3": 228,
+      "n_p_types": 59,
+      "n_path_codes": 400,
+      "n_rectangles": 4658,
+      "occurrence_total": 2527194,
+      "rank_X": 88,
+      "rank_identity_P_plus_E_minus_components": 88,
+      "svd_singular_max": 5.16981305320585,
+      "svd_singular_min": 0.8444679566519054,
+      "task": "hiv"
+    },
+    "lipo": {
+      "artifact": {
+        "content_hash": "a1f6ffc53c4a43baaf59a6cad793671a6fb9a351a08d43df8a74dd47ca1d6f4e",
+        "path": "tracks/structural-sufficiency/lcrc_support_joint_function_v0/analysis/support/lipo_support.npz",
+        "sha256": "ed059bd5e7d2f3e1c186c5dda3c17f9c5b173867fd8cb8679b7cf559d8874383"
+      },
+      "build": {
+        "n_records_train": 279084,
+        "n_train_atoms": 90863,
+        "n_train_molecules": 3360,
+        "n_train_molecules_without_s2": 0,
+        "omega_order": "ascending (path_cat, path_end63)",
+        "source": "Train split S2 records only",
+        "svd": "numpy.linalg.svd(float64), keep s > 1e-10 * s_max"
+      },
+      "coverage": {
+        "test": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.004761904761904762,
+          "molecule_fraction_without_s2": 0.0,
+          "n_molecules": 420,
+          "n_molecules_without_s2": 0,
+          "n_occurrences": 34626,
+          "n_occurrences_unseen": 16,
+          "n_omega_rows_with_any_occurrence": 89,
+          "occurrence_coverage": 0.9995379194824698,
+          "paths_per_molecule_mean": 82.44285714285714,
+          "role": "descriptive coverage only"
+        },
+        "train": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.0,
+          "molecule_fraction_without_s2": 0.0,
+          "n_molecules": 3360,
+          "n_molecules_without_s2": 0,
+          "n_occurrences": 279084,
+          "n_occurrences_unseen": 0,
+          "n_omega_rows_with_any_occurrence": 114,
+          "occurrence_coverage": 1.0,
+          "paths_per_molecule_mean": 83.06071428571428,
+          "role": "definition split (Train-only support)"
+        },
+        "valid": {
+          "molecule_fraction_with_any_seen_pair": 1.0,
+          "molecule_fraction_with_any_unseen_pair": 0.0,
+          "molecule_fraction_without_s2": 0.0,
+          "n_molecules": 420,
+          "n_molecules_without_s2": 0,
+          "n_occurrences": 35284,
+          "n_occurrences_unseen": 0,
+          "n_omega_rows_with_any_occurrence": 85,
+          "occurrence_coverage": 1.0,
+          "paths_per_molecule_mean": 84.00952380952381,
+          "role": "descriptive coverage only"
+        }
+      },
+      "dataset": "Lipophilicity",
+      "docfreq_total": 56955,
+      "joint_subspace_dim": 64,
+      "legality": {
+        "all_omega_legal": true,
+        "fallback_mode_counts": {
+          "marginal_ls": 140,
+          "omega": 114,
+          "type_equal_mean": 31746
+        },
+        "n_omega": 114,
+        "n_omega_legal": 114,
+        "n_possible_legal_type_pairs": 6400,
+        "n_possible_type_pairs": 32000,
+        "observed_fraction_of_legal_type_pairs": 0.0178125,
+        "repeated_key_field": "bond_type_2 (the middle->end bond) is encoded in path_cat AND path_end63",
+        "rule": "bond_type_2 appears in both p and e; legal iff (p % n_bond_types) == (e % n_bond_types)"
+      },
+      "n_bond_types": 5,
+      "n_connected_components": 4,
+      "n_design_columns": 54,
+      "n_e_types": 25,
+      "n_nbr_codes": 80,
+      "n_omega": 114,
+      "n_omega_docfreq_ge_20": 71,
+      "n_omega_docfreq_ge_3": 97,
+      "n_p_types": 29,
+      "n_path_codes": 400,
+      "n_rectangles": 488,
+      "occurrence_total": 279084,
+      "rank_X": 50,
+      "rank_identity_P_plus_E_minus_components": 50,
+      "svd_singular_max": 3.9906682246724237,
+      "svd_singular_min": 0.82936257472849,
+      "task": "lipo"
+    }
+  }
+}
