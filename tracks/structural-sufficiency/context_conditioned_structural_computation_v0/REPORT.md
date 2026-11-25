@@ -223,7 +223,8 @@ SC 相对更强单组的相对 MAE 改善 0.05%（A）/ 0.07%（D），远低于
 - `results/decomposition/*.npz`（Lipo A/D × train/valid/test）、`results/manifest.json`
 - 复现命令（远端 `res`，GPU 队列）：
   - `uv run python code/cs_checks.py --dataset ogbg-mollipo --dataset ogbg-molesol`
-  - `uv run python code/cs_queue.py --units "ogbg-mollipo:A,ogbg-mollipo:C,ogbg-molesol:A" --device cuda:0`
+  - `uv run python code/cs_queue.py --units "ogbg-mollipo:A,ogbg-mollipo:C,ogbg-molesol:A" --device cuda:0 --wall-seconds 2400`
+  - `uv run python code/cs_queue.py --units "ogbg-mollipo:D,ogbg-mollipo:B,ogbg-molesol:C,ogbg-molesol:D" --device cuda:0 --wall-seconds 2400`（B 被墙钟自保护跳过，随后单独以 `--units "ogbg-mollipo:B"` 补跑）
   - `uv run python code/cs_mechanism.py`
   - `uv run python code/cs_decompose.py --datasets ogbg-mollipo --arms A,D`
   - `uv run python code/cs_rules.py --datasets ogbg-mollipo --arms A,D`
@@ -234,6 +235,6 @@ SC 相对更强单组的相对 MAE 改善 0.05%（A）/ 0.07%（D），远低于
 
 ## 11. 本轮结论与下一步（不新增训练）
 
-1. **在 Lipo/ESOL、1× 宽度、单 seed、360 epochs 的冻结配方下，"结构内容与环境调制分离 + 保留真实关系对应性"没有带来图级预测收益**；相反，A（FIXED1，Q=0）在两个数据集上都是最好的或并列最好的。
+1. **在 Lipo/ESOL、1× 宽度、单 seed、360 epochs 的冻结配方下，"结构内容与环境调制分离 + 保留真实关系对应性"没有带来图级预测收益**；Lipo 上 A（FIXED1，Q=0）在两个 split 都最好，ESOL 上三臂互相在 0.55% 以内（D 的 Valid 最好、C 的 Test 最好、A 居中），没有一个条件化臂在两处同时占优。
 2. **可解释性上，"可追踪"成立，"可归纳"不成立**：完整计算可精确分解到每条真实消息并闭合到预测变化，但由此得到的简单结构规律在未参与拟合的 Valid/Test 上没有迁移能力，重复结构签名的作用符号本身就不稳定。
 3. 机制诊断给出了与性能一致的因果性读数：把条件修正去掉或冻结为按关系类型的常数会让模型变好——本轮学到的逐节点环境调制是纯噪声。若要继续该方向，必须先解决"逐节点调制带来的方差"问题（例如：只在异质邻居上开启调制、对 `δ` 加结构化的低秩/分关系约束、或用 I2 那种常数化调制作为归纳偏置），而不是继续加容量；本轮不新增训练/seed/数据集/宽度。
