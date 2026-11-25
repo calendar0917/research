@@ -217,7 +217,7 @@ SC 相对更强单组的相对 MAE 改善 0.05%（A）/ 0.07%（D），远低于
 - `PROTOCOL.md`（冻结）、`configs/experiment.json`（冻结件）
 - `code/`：`cs_common.py`、`cs_data.py`、`cs_model.py`、`cs_train.py`、`cs_checks.py`、`cs_queue.py`、`cs_freeze.py`、`cs_analyze.py`、`cs_mechanism.py`、`cs_decompose.py`、`cs_rules.py`、`cs_manifest.py`
 - `analysis/`：`checks.json`、`preflight_timing.json`、`main_table.csv`、`paired_comparisons.json`、`strata.json`、`verdicts.json`（含性能轴、`interpretability_axis` 三维与联合归属）、`mechanism_diagnostics.json`、`decomposition_trace.json`、`structure_rules.json`、`explanation_cases.json`、`queue_cuda0_last_job.json`
-- `runs/`：7 个单元的 `run.json`、`train_curve.csv`、`best_checkpoint_eval.json`、`gate_history.json`、`training_order.json`、`predictions_{best,final,last20}.npz`，以及 `checkpoint_{best,final}.pt`（同步回本地，`results/manifest.json` 记录路径与 SHA-256）
+- `runs/`：7 个单元各 10 个文件——`run.json`、`train_curve.csv`、`best_checkpoint_eval.json`、`gate_history.json`、`training_order.json`、`predictions_{best,final,last20}.npz`、`checkpoint_{best,final}.pt`（全部从 `res` 主机拉回本地）。仓库内提交 `predictions_best.npz` 与两个 checkpoint（其余 `*.npz` 按仓库全局规则不入库），`results/manifest.json` 为每个文件记录路径与 SHA-256（本地镜像 + 主机路径）
 - `results/decomposition/*.npz`（Lipo A/D × train/valid/test）、`results/manifest.json`
 - 复现命令（远端 `res`，GPU 队列）：
   - `uv run python code/cs_checks.py --dataset ogbg-mollipo --dataset ogbg-molesol`
