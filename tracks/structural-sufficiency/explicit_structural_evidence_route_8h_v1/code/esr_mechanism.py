@@ -342,7 +342,7 @@ def analyse_run(run_dir: Path, device: torch.device, *, analysis: Path) -> dict[
     if dataset in (C.LIPO, C.ESOL):
         err = np.abs(logits.reshape(-1) * float(view.target_norm["scale"]) + float(view.target_norm["mean"]) - y.reshape(-1))
     else:
-        err = np.abs(y - np.round(1.0 / (1.0 + np.exp(-logits))))
+        err = np.abs(y - 1.0 / (1.0 + np.exp(-logits))).mean(axis=1)
     order = np.argsort(err)
     picks = (
         list(order[-COHORT_PER_BAND:])

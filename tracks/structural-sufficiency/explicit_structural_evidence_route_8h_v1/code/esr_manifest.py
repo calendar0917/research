@@ -86,7 +86,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         "t0_utc": C.T0_UTC,
         "generated_utc": C.utcnow(),
         "elapsed_hours": C.elapsed_hours(),
-        "git": git_head(C.ROOT),
+        "git": git_head(C.REPO),
         "files": collect(root),
         "runs": runs_digest(root),
     }
