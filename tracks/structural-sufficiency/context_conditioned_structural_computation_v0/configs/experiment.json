@@ -1,0 +1,315 @@
+{
+  "analysis_constants": {
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20261126,
+    "quadrature_nodes": 16,
+    "quadrature_nodes_fallback": 32,
+    "trace_abs_tol": 0.0001,
+    "trace_rel_tol": 0.001,
+    "tree_max_depth": 4,
+    "tree_min_leaf": 100,
+    "tree_random_state": 0,
+    "tree_top_codes": 32
+  },
+  "architecture": {
+    "base": "lcrc_pcba_backbone_scaling_v1.code.bs_model.BSModel, config_for_scale(1)",
+    "block_hidden": 128,
+    "bond_type_to_relation": {
+      "1": 0,
+      "2": 1,
+      "3": 2,
+      "4": 3,
+      "5": 4
+    },
+    "delta_scale": 0.5,
+    "expected_base_parameters": 259831,
+    "expected_new_parameters": {
+      "A": 34304,
+      "B": 34304,
+      "C": 47264,
+      "D": 47264
+    },
+    "expected_parameters": {
+      "A": 294135,
+      "B": 294135,
+      "C": 307095,
+      "D": 307095
+    },
+    "gate_hidden": 16,
+    "n_out": 1,
+    "n_relations": 5,
+    "relation_names": [
+      "SINGLE",
+      "DOUBLE",
+      "TRIPLE",
+      "AROMATIC",
+      "OTHER"
+    ],
+    "width": 64
+  },
+  "arms": {
+    "A": {
+      "name": "FIXED",
+      "role": "original FIXED1 second stage, Q = 0",
+      "statistics": 0
+    },
+    "B": {
+      "name": "ONE_READ",
+      "role": "second stage reads LN2(h0[i]) on every real incoming bond, Q = 0",
+      "statistics": 0
+    },
+    "C": {
+      "name": "MIXED",
+      "role": "Gate on the same environment, correction content replaced by the count-preserving mixed grouping",
+      "statistics": 1
+    },
+    "D": {
+      "name": "CSC",
+      "role": "Gate on the same environment, correction content = real relation-grouped content",
+      "statistics": 1
+    }
+  },
+  "batch_plans": {
+    "ogbg-molesol": {
+      "batch_size": 128,
+      "epochs": 360,
+      "n_train": 902,
+      "plan_sha256": "7ea312ba886bbd9e65a21b76f3c74b81722850d38282de24a5f8d812011a3c7f"
+    },
+    "ogbg-mollipo": {
+      "batch_size": 128,
+      "epochs": 360,
+      "n_train": 3360,
+      "plan_sha256": "f9c1398c5705ca5a31d2cee418fa1fda6d5bc944ad17451d3a6a98524ae31276"
+    }
+  },
+  "budget": {
+    "gpu_hard_hours": 3.0,
+    "gpu_target_hours": 2.0
+  },
+  "created_utc": "2026-11-25T04:17:44Z",
+  "data_identity": {
+    "ogbg-molesol": {
+      "cache_files": {
+        "ogbg_molesol_sq-pilot-cache-v1.npz": {
+          "actual_sha256": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+          "expected_sha256": "3b7a8e16ca9c7ab240add84fbe26050dc81e22359bcc36f1c8a8111b77aec24a",
+          "match": 1
+        },
+        "ogbg_molesol_sq-pilot-lipo-raw-v1.npz": {
+          "actual_sha256": "a3ab9f7e22798a8f6fdc7f0913b1136b7cf59d4ffc7168faecc7f8b3094710b1",
+          "expected_sha256": "a3ab9f7e22798a8f6fdc7f0913b1136b7cf59d4ffc7168faecc7f8b3094710b1",
+          "match": 1
+        }
+      },
+      "feature_spec_hash": "a65c67f9595d9190e7c913d2594ba984a07b51300d63916de865dccca434206c",
+      "norm_fingerprint": "c7358fb5bc27fc41045000b3efc833d64e3c6c59edd07f730dfcf742a4085894",
+      "relation_mapping": {
+        "bond_class_one_hot_exact": 1,
+        "bond_counts_by_bond_type": {
+          "1": 8255,
+          "2": 1091,
+          "3": 41,
+          "4": 6041,
+          "5": 0
+        },
+        "bond_counts_by_relation": {
+          "AROMATIC": 6041,
+          "DOUBLE": 1091,
+          "OTHER": 0,
+          "SINGLE": 8255,
+          "TRIPLE": 41
+        },
+        "bond_type_equals_argmax_plus_one": 1,
+        "bond_type_names": [
+          "SINGLE",
+          "DOUBLE",
+          "TRIPLE",
+          "AROMATIC",
+          "UNK"
+        ],
+        "bond_type_to_relation": {
+          "1": 0,
+          "2": 1,
+          "3": 2,
+          "4": 3,
+          "5": 4
+        },
+        "n_bonds": 15428,
+        "raw_edge_class_counts_by_bond_type": {
+          "1": 8255,
+          "2": 1091,
+          "3": 41,
+          "4": 6041,
+          "5": 0
+        },
+        "raw_edge_class_mismatches": 0,
+        "raw_endpoint_mismatches": 0,
+        "raw_physical_bonds_checked": 15428,
+        "relation_names": [
+          "SINGLE",
+          "DOUBLE",
+          "TRIPLE",
+          "AROMATIC",
+          "OTHER"
+        ]
+      },
+      "split_partition_sha256": "ebf690070322b726cbbd3c87f70320e8674d0ec47e42ae377c884200f92b8c4c",
+      "split_row_id_sha256": {
+        "test": "b24b25ba0be7f12b3a1fa5998f3218c758f17c5887d51b17a686d7d955fb5802",
+        "train": "47ffcb1e8f754942a72f05669f4101e9a08224089ee47b004e8c14d3bd2cbb83",
+        "valid": "2049361b3ae3fdd2b0a25b8dd61b633490731fb423efc1baa243a028726da616"
+      },
+      "split_sizes": {
+        "test": 113,
+        "train": 902,
+        "valid": 113
+      },
+      "target_scaler": {
+        "ddof": 0,
+        "mean": -2.866875829922651,
+        "n": 902,
+        "std": 2.0667241081324765
+      }
+    },
+    "ogbg-mollipo": {
+      "cache_files": {
+        "ogbg_mollipo_sq-pilot-cache-v1.npz": {
+          "actual_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+          "expected_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+          "match": 1
+        },
+        "ogbg_mollipo_sq-pilot-lipo-raw-v1.npz": {
+          "actual_sha256": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3",
+          "expected_sha256": "3005aa55e766d83a237b1659ad2cabb51b8702eef6d82c203fdecf9cb3c42cc3",
+          "match": 1
+        }
+      },
+      "feature_spec_hash": "a65c67f9595d9190e7c913d2594ba984a07b51300d63916de865dccca434206c",
+      "norm_fingerprint": "3c87249a325b1a59cba819d49dfca10df5004690efa7cc2ee22945aa548db4da",
+      "relation_mapping": {
+        "bond_class_one_hot_exact": 1,
+        "bond_counts_by_bond_type": {
+          "1": 55235,
+          "2": 6265,
+          "3": 378,
+          "4": 62021,
+          "5": 0
+        },
+        "bond_counts_by_relation": {
+          "AROMATIC": 62021,
+          "DOUBLE": 6265,
+          "OTHER": 0,
+          "SINGLE": 55235,
+          "TRIPLE": 378
+        },
+        "bond_type_equals_argmax_plus_one": 1,
+        "bond_type_names": [
+          "SINGLE",
+          "DOUBLE",
+          "TRIPLE",
+          "AROMATIC",
+          "UNK"
+        ],
+        "bond_type_to_relation": {
+          "1": 0,
+          "2": 1,
+          "3": 2,
+          "4": 3,
+          "5": 4
+        },
+        "n_bonds": 123899,
+        "raw_edge_class_counts_by_bond_type": {
+          "1": 55235,
+          "2": 6265,
+          "3": 378,
+          "4": 62021,
+          "5": 0
+        },
+        "raw_edge_class_mismatches": 0,
+        "raw_endpoint_mismatches": 0,
+        "raw_physical_bonds_checked": 123899,
+        "relation_names": [
+          "SINGLE",
+          "DOUBLE",
+          "TRIPLE",
+          "AROMATIC",
+          "OTHER"
+        ]
+      },
+      "split_partition_sha256": "0a901e401eb8e632ffe43a8d5882b226e4d346dc6bef7cb9087431b4c4691794",
+      "split_row_id_sha256": {
+        "test": "5c038b5725861129108cdc542c8aab9001d4355f9b1566d9872bb91b3f85e83b",
+        "train": "18da6e78c81009d78fcad535cb66ea0955b769f45998d1bbc964d1376d34000d",
+        "valid": "55eed40b1350993d594584b58f91638d2828f5e3175d7b5f6180dd1f7d1a6c1c"
+      },
+      "split_sizes": {
+        "test": 420,
+        "train": 3360,
+        "valid": 420
+      },
+      "target_scaler": {
+        "ddof": 0,
+        "mean": 2.1621607144740187,
+        "n": 3360,
+        "std": 1.211539840098397
+      }
+    }
+  },
+  "git_commit": "f0e67d6cfe3b6c571b640ba96bcc4bcf11cc8f31",
+  "protocol_id": "context-conditioned-structural-computation-v0",
+  "queue": {
+    "ogbg-molesol": [
+      "A",
+      "C",
+      "D"
+    ],
+    "ogbg-mollipo": [
+      "A",
+      "D",
+      "C",
+      "B"
+    ]
+  },
+  "queue_order_all_units": [
+    "ogbg-mollipo:A",
+    "ogbg-mollipo:D",
+    "ogbg-mollipo:C",
+    "ogbg-mollipo:B",
+    "ogbg-molesol:A",
+    "ogbg-molesol:C",
+    "ogbg-molesol:D"
+  ],
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "amp": 0,
+    "auxiliary_loss": 0,
+    "batch_size": 128,
+    "early_stopping": 0,
+    "ema": 0,
+    "epochs": 360,
+    "eval_batch_size": 256,
+    "gradient_clip": 5.0,
+    "min_lr": 1e-05,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "scheduler": "per_step_cosine_no_warmup",
+    "selection": "minimum full official Valid RMSE; strictly smaller replaces, ties keep the earlier epoch",
+    "shuffle": "np.random.default_rng(0).permutation over Train split-local rows, one draw per epoch, shared by every arm",
+    "soup": 0,
+    "swa": 0,
+    "weight_decay": 0.001
+  },
+  "reused_readonly": [
+    "tracks/structural-sufficiency/lcrc_pcba_backbone_scaling_v1/code/bs_model.py",
+    "tracks/structural-sufficiency/lcrc_pcba_structural_gain_sprint_v1/code/sg_model.py",
+    "tracks/structural-query-learning/code/{sq_data,sq_lcrc}.py",
+    "tracks/structural-sufficiency/lcrc_cross_task_preparation_v1/code/{feature_spec,lcrc_data,adapters}.py",
+    "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/code/{cr_common,cr_data}.py"
+  ],
+  "round_id": "csc-v0"
+}
