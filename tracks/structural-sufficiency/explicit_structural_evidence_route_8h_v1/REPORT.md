@@ -134,7 +134,55 @@ files, the schedule and every code module at freeze time.
 
 ## 7. Exact prediction accounting
 
-<!--ACCOUNTING-->
+## 7. Exact prediction accounting
+
+The accounting question is not decorative: a decomposition is only worth reading
+if it *reconstructs the model's own prediction*. For every traced molecule the
+diagnostic path recomputes the forward pass from the same modules and then
+rebuilds the logit vector from its parts, asserting `max |Δ| ≤ 2e-5`
+(`analysis/decomposition_trace.json`).
+
+What is decomposed, per arm:
+
+| arm | exact parts | note |
+|---|---|---|
+| `SREN-ADD` | `c(G) + Σ_i q_u(u_i)/√n + Σ_ij q_v(v_ij)/√m` | per-token contributions are exact because the readout is linear and the aggregation is a plain normalised sum |
+| `SREN-EVID` | `c(G) + Σ_t-part {local, relation} × {mean, pos, neg}` | entropy decomposition `mean + pos − neg` with `pos = π_pos·(LME − Mean)`, `neg = π_neg·(LME(−s) + Mean)`; both gaps are non-negative and the three parts sum to `A(s)` exactly |
+| `SREN-BANK`, `UNARY` | `c(G) + Σ_k q_u[t,k]·A_k(u) + Σ_k q_v[t,k]·A_k(v) + b_t` | per-channel contributions, `K` channels per stream |
+| `SREN-COMPOUND` | `c(G) + Σ_k q_w[t,k]·A_k(w) + b_t` | after the per-root composite, the pooling is per channel; the *root* level has no exact additive account (the composite is nonlinear) and is therefore reported only as an intervention |
+| `HIDDEN` | — | by construction no exact account: the readout `2K → H → T` is nonlinear. This is the price of the capacity control, and it is the one arm whose prediction cannot be audited |
+
+`SREN-BASE` has no object set at all, so accounting is undefined there by
+construction rather than by omission.
+
+Two honesty notes that the numbers below must be read with:
+
+1. `LME` is **not** a positive contribution and `π` is **not** an additive
+   attribution. `A(s)` is a sum of a mean term and two non-negative *gaps*, and
+   the gaps are what `π` weights. Reporting `π_pos` as "how much the model likes
+   spread-out evidence" is a statement about the aggregation, not about any atom.
+2. For a per-task model the parts are per task; a single molecule therefore has
+   `T` (or 12, or 128) accounts, not one.
+
+<!--ACCOUNTING_TABLE-->
+
+### What the account shows on Lipo
+
+* `ADD`: the relation stream is not decorative — killing the relation tokens
+  raises Valid RMSE from `0.7367` to `3.1222`, killing the local tokens to
+  `6.0703`, and zeroing `h0` to `2.0127`. The global descriptors alone carry a
+  little signal (`1.0571` after zeroing them the rest still works, but the
+  prediction degrades), so the graph part dominates.
+* Per-token shares: the local tokens account for most of the absolute
+  contribution mass on Lipo (mean share ≈ 0.7 across traced molecules), the
+  relation tokens for the rest. This is the opposite of what a "message passing"
+  narrative would predict, and it is consistent with a single-shot relation
+  token that never gets composed with its neighbours.
+* The intervention numbers are *not* an additive decomposition: zeroing the
+  local tokens also zeroes the input of the relation tokens (they are built from
+  `u`), so `local off` is an upper bound on local importance, while
+  `relation off` is clean (it only kills `v`). The two are reported side by side
+  and never subtracted from each other.
 
 ## 8. Mechanism diagnostics
 
@@ -154,4 +202,54 @@ files, the schedule and every code module at freeze time.
 
 ## 12. Deviations, errata and limitations
 
-<!--LIMITATIONS-->
+## 12. Deviations, errata and limitations
+
+**Registered deviations** (also listed in `PROTOCOL.md` §10):
+
+1. **PCBA Test cannot be scored.** The frozen label artifact is NaN on every
+   Test row; the loader refuses it. No PCBA Test number is produced by this
+   round, and the historical Test AP values are quoted as references only.
+2. The PCBA relation cache is one global array addressed by official row id
+   instead of one file per split. Same objects, no sampling.
+3. `UNARY` on the small datasets uses the BANK readout as specified; on PCBA the
+   conditional `UNARY_MATCHED` (not triggered) would have inherited the winning
+   aggregation.
+4. `HIDDEN` removes the task-linear heads entirely (they are unused once the
+   hidden MLP replaces them); its parameter difference to `BANK` is reported
+   instead of hidden.
+5. Training processes load only `train`/`valid`; a static scan verifies that no
+   training module can index `test`.
+
+**Errata (implementation only, no scientific parameter changed):**
+
+* `esr_model.SRENNet.forward` gained an optional `ablate=` argument used *only*
+  by the post-hoc diagnostics. The training path passes nothing; a bitwise
+  comparison on all seven arms showed a maximum difference of `0.0` between
+  `forward(batch)`, `forward(batch, {})` and `forward(batch, None)`.
+* The replay check tolerance was pre-registered after observing `1.3e-6`–`1.7e-6`
+  parameter and `2.5e-6` metric noise between a from-scratch run and a
+  checkpoint-resumed run on the remote host. State tolerance `1e-5`, metric
+  tolerance `1e-5` relative. Nothing about training changed.
+* The inherited PCBA structural normaliser was fitted on a Train subsample by
+  the earlier round. The check therefore verifies (a) Train-only provenance,
+  (b) agreement with a full-Train refit within documented tolerances, and
+  (c) that the stored values are closer to the Train refit than to a
+  Valid-inclusive refit.
+
+**Limitations, stated plainly:**
+
+* single seed (0); no seed-variance claim is made anywhere, and every interval
+  is sample/task uncertainty on one trained model.
+* The explicit arms cannot invent structure the trunk does not expose: `h0` is
+  the frozen `BSModel` trunk output, so the comparison isolates the *readout*
+  (attention pooling over updated node states vs explicit structural objects),
+  not the whole architecture.
+* `HIDDEN` is deliberately confounded (more capacity, nonlinear readout); it is
+  a control, not a candidate.
+* Structure rules are WL-2 signature aggregates over frozen-checkpoint
+  contributions, with a scaffold *proxy* (hash of a molecule's WL-2 multiset),
+  not Bemis–Murcko scaffolds. They describe the model's own account; they are
+  not causal claims.
+* Wall-clock discipline: the last training job may be launched only until
+  `T0+7h15m` and everything stops at `T0+8h`. Conditional branches that the
+  frozen triggers did not fire are not run at all.
