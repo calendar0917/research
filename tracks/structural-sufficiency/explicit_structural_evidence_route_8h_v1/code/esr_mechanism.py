@@ -714,7 +714,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         for arm in wanted:
             run_dir = arms[arm]
             C.log(f"mechanism: {dataset}/{arm}")
+            try:
             entry = analyse_run(run_dir, device, analysis=analysis)
+        except Exception as exc:  # diagnostics must not take the whole round down
+            LOG.warning("mechanism failed for %s: %s", run_dir.name, exc)
+            entry = {
+                "run": run_dir.name,
+                "dataset": run_dir.parent.parent.name,
+                "arm": None,
+                "error": f"{type(exc).__name__}: {exc}",
+            }
             diagnostics.append(entry)
             if arm in (best, C.ADD, C.EVID):
                 rules.append(structure_rules(run_dir, device, max_molecules=PCBA_SUBSET if dataset == C.PCBA else None))
