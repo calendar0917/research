@@ -166,6 +166,7 @@ class SupportLocal(DM.LocalContent):
         return out
 
     def code_values(self, codes: torch.Tensor) -> torch.Tensor:
+        codes = codes.to(device=self.support_index.device, dtype=torch.long)
         j = self.joint_table()
         rank = j.shape[1]
         if int(self.override_map.numel()):
