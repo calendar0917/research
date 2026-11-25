@@ -72,15 +72,16 @@ molecules.
 is the best arm on PCBA and Lipo. Its advantage is the *readout*, not the
 aggregation — and it is the one arm with **no exact account**.
 
-**8. Is the accounting exact?** Yes where it exists: the decomposition rebuilds
-the model's own logits with `max |Δ| ≤ 5e-7` for `ADD`, `EVID`, `BANK`,
-`COMPOUND` and `UNARY` (`analysis/decomposition_trace.json`). `HIDDEN` has no
-exact account by construction (nonlinear readout) and is reported as such.
+**8. Is the accounting exact?** Where Phase A verified it, yes: the
+decomposition rebuilds the model's own logits with `max |Δ| = 0.0` for
+`SREN-ADD` and `4.8e-7` for `UNARY` on Lipo, and the `LME`/`π` algebra matches an
+independent float64 reference to `~1e-7` (`analysis/checks.json`). A full
+per-arm trace over every dataset was **not** produced — the diagnostic pass
+aborted on the PCBA arm (§8). `HIDDEN` has no exact account by construction.
 
-**9. What do the structure rules look like?** Supported WL-2 rooted signatures
-and relation buckets are in `analysis/structure_rules.json`; the top rules per
-dataset are summarised in §9. They describe the frozen checkpoint's own
-per-token account, with a scaffold *proxy*, and are not causal claims.
+**9. What do the structure rules look like?** **Not produced.** The mechanism
+pass (§8, §9) did not complete before the hard stop, so this round makes no
+structure-rule claim — that deliverable is missing, not merely weak.
 
 **10. What is *not* supported?** No performance level; no catch-up at longer
 horizons; no claim that a single-shot relation token composes multi-hop
@@ -339,56 +340,40 @@ Two honesty notes the numbers must be read with:
 2. For per-task models the account is per task; a molecule has `T` accounts
    (12 for Tox21, 128 for PCBA), not one.
 
-## 8. Mechanism diagnostics
+## 8. Mechanism diagnostics — NOT PRODUCED IN THIS ROUND
 
-Frozen-checkpoint interventions (`analysis/mechanism_diagnostics.json`). The
-`zero_*` rows are *ablations of the input to the readout*, not additive
-decompositions, and `zero_local_tokens` also zeroes the relation stream's input
-(`v` is built from `u`) — so it is an upper bound on local importance, while
-`zero_relation_tokens` is clean.
+The frozen diagnostic pass (`code/esr_mechanism.py`: decomposition trace,
+stream interventions, structure rules, case studies) did **not** produce its
+artifacts before the hard stop. The script is committed and its small-dataset
+path was exercised repeatedly while the accounting was validated during Phase A
+(see below), but the remote analysis pass aborted on the PCBA arm and the
+remaining wall-clock budget was spent on the tables and the report rather than
+on further debugging. Consequently:
 
-Lipo, Valid RMSE (lower is better):
+* `analysis/decomposition_trace.json`, `analysis/mechanism_diagnostics.json`,
+  `analysis/structure_rules.json` and `analysis/explanation_cases.json`
+  **do not exist** for this round;
+* §7 above reports only the accounting facts that were verified during Phase A
+  (`analysis/checks.json`, check `accounting_*`), not a full per-arm trace;
+* the intervention numbers quoted anywhere in earlier drafts of this report are
+  withdrawn — no intervention result is claimed here.
 
-| arm | full | relation off | local off | `h0 = 0` | global off |
-|---|---|---|---|---|---|
-| SREN-ADD | 0.7367 | 3.1222 | 6.0703 | 2.0127 | 1.0571 |
-| HIDDEN | 0.6694 | 1.8210 | 1.4266 | 1.3511 | 1.0899 |
+This is a genuine gap in the round's deliverables, not a cosmetic one: the
+protocol promised a mechanism section and it is missing. The performance
+comparison (§5, §6), the decision record (§11) and the accounting *verification*
+(§7, Phase A) are unaffected, because they rest on `esr_collect.py` and
+`esr_checks.py` outputs that do exist.
 
-Both streams carry signal; the local tokens carry more absolute contribution
-mass on Lipo (mean share `≈0.7` across traced molecules), and `HIDDEN` degrades
-more gracefully under every ablation — consistent with a nonlinear readout that
-uses the pooled channels rather than a single linear projection.
+**What was verified instead** (Phase A, `analysis/checks.json`, all 18 PASS):
+the decomposition rebuilds the model's own logits with `max |Δ| = 0.0` for
+`SREN-ADD` on Lipo and `4.8e-7` for `UNARY` (float32 accumulation), the
+`LME`/`π` algebra matches an independent float64 reference to `~1e-7`, and the
+aggregation is invariant to atom renumbering and edge order (`≤1e-6`).
 
-PCBA (4096-molecule deterministic subset) and Tox21 numbers are in the same
-file; the pattern there is the same, with a larger drop when the relation stream
-is removed, but no ablation restores the missing AP — the deficit is not caused
-by a single harmful stream.
+## 9. Structure rules — NOT PRODUCED IN THIS ROUND
 
-## 9. Structure rules and case studies
-
-`analysis/structure_rules.json` keeps rooted WL-2 signatures with at least 20
-Validation molecules **and** at least 5 scaffold proxies, plus relation buckets
-(`distance`, common-neighbour count). Per-token contributions come from the
-frozen checkpoint's own account, so a "rule" here means "this rooted structure
-consistently contributes in one direction to this arm's prediction", not a
-causal mechanism.
-
-The strongest kept rules per dataset (element/degree, support, mean
-contribution) are listed in the file together with the number of signatures that
-passed the support filter and the relation buckets that did. Two things are
-worth stating in the report body:
-
-* the rules are built from the *linear-readout* arms, because `HIDDEN` — the
-  strongest arm — has no exact per-token account; interpretability and the best
-  performance do not coincide in this round;
-* the scaffold proxy is a hash of a molecule's WL-2 multiset, not a
-  Bemis–Murcko scaffold, so "5 scaffolds" is a diversity proxy, not a
-  chemistry-level claim.
-
-`analysis/explanation_cases.json` holds up to 8 real molecules per dataset
-(half largest `|error|`, a quarter around the median, a quarter smallest), each
-with SMILES-free atom lists (element, degree), the top local and relation token
-contributions and the reconstruction error.
+See §8: `analysis/structure_rules.json` was not written. No WL-2 signature,
+relation bucket or scaffold-proxy claim is made in this report.
 
 ## 10. Efficiency
 
@@ -486,3 +471,5 @@ ESOL not met.
 * `REL-BLIND` and `RANGE4` were never run, so this round cannot say whether
   relation content or distance-3/4 pairs would have helped; the triggers that
   would have bought those runs did not fire.
+* **the mechanism/structure deliverables are missing** (§8, §9). The round's
+  performance question is answered; its interpretability half is not.
