@@ -1,0 +1,56 @@
+{
+  "interpretability_axis": {
+    "dimensions": {
+      "RULE_REUSE": {
+        "best_sc_relative_mae_improvement": 0.000667268392571474,
+        "criterion": "SC beats the stronger single input set by >=10% relative MAE AND some Train-only candidate keeps its sign on >=1% of Valid messages",
+        "label": 0,
+        "n_candidates_supported_and_same_sign": 0
+      },
+      "STRUCTURE_DISCOVERY": {
+        "criterion": "a repeated exact structural record keeps its effect sign (median sign-change fraction <= 0.5) with effect size >= 1 x its within-family IQR",
+        "label": 0,
+        "per_arm": [
+          0,
+          0
+        ]
+      },
+      "TRACE": {
+        "criterion": "attribution closes to a non-zero prediction change on every split (0 molecules over tolerance)",
+        "label": 1,
+        "max_abs_closure_std": 2.1457672119140625e-06,
+        "max_pred_change_rms_std": 0.23697417815936533,
+        "n_over_tolerance": 0
+      }
+    },
+    "joint_attribution": {
+      "interpretability_labels": {
+        "RULE_REUSE": 0,
+        "STRUCTURE_DISCOVERY": 0,
+        "TRACE": 1
+      },
+      "label": "NEITHER",
+      "performance_kept": 1,
+      "performance_labels": [
+        "NO_MATERIAL_GAIN"
+      ],
+      "reading": "\u4e24\u8005\u5747\u65e0\u5b9e\u8d28\u6539\u5584",
+      "worst_relative_change_of_new_arms": 0.01920900837321518
+    }
+  },
+  "labels": [
+    "NO_MATERIAL_GAIN"
+  ],
+  "lipo_relative_best_rmse": {
+    "A_minus_B_test": -0.049349621104374464,
+    "A_minus_B_valid": -0.007503304127903559,
+    "C_minus_A_test": 0.038616814126277065,
+    "C_minus_A_valid": 0.011244682011556081,
+    "D_minus_A_test": 0.018666015047163333,
+    "D_minus_A_valid": 0.01686525761206696,
+    "D_minus_C_test": -0.01920900837321518,
+    "D_minus_C_valid": 0.005558076794362467
+  },
+  "note": "2% relative RMSE is a practical reference, not a significance threshold; split/uncertainty conflicts are reported next to the label, never averaged away",
+  "practical_threshold_relative": 0.02
+}

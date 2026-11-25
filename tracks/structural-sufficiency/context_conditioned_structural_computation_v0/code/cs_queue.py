@@ -96,7 +96,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "out_dir": C.track_rel(out_dir),
             }
         )
-        C.write_json(C.ANALYSIS_DIR / f"queue_{device.type}{str(device).replace(':', '_')}.json", {"units": records, "created_utc": C.utcnow()})
+        stamp = C.utcnow().replace(":", "").replace("-", "")[:15]
+        C.write_json(C.ANALYSIS_DIR / f"queue_{device.type}{device.index or 0}_{stamp}.json", {"units": records, "created_utc": C.utcnow()})
     C.log("queue finished: " + ", ".join(f"{r['dataset']}:{r['arm']}={r['status']}" for r in records))
     return 0
 
