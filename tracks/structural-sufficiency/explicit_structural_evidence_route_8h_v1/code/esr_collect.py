@@ -43,7 +43,7 @@ def load_runs(root: Path) -> list[dict[str, Any]]:
         payload = json.loads(run_json.read_text())
         if payload.get("smoke"):
             continue
-        if payload.get("status") != "completed":
+        if payload.get("status", "completed") != "completed":
             continue
         curve_path = run_json.parent / "curve.csv"
         curve = []

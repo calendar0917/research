@@ -88,6 +88,18 @@ def _collate_rows(view: D.View, split: str, positions: Sequence[int]) -> dict[st
 # ---------------------------------------------------------------------------
 
 
+def _bias_sum(*linears: Any) -> torch.Tensor:
+    """Sum of the readout biases as a ``[1, T]`` row (zeros when bias=False)."""
+    total = None
+    for lin in linears:
+        if lin is None:
+            continue
+        term = lin.bias.unsqueeze(0) if lin.bias is not None else lin.weight.new_zeros((1, lin.weight.shape[0]))
+        total = term if total is None else total + term
+    assert total is not None
+    return total
+
+
 def accounting(model: M.SRENNet, batch: Mapping[str, Any]) -> dict[str, np.ndarray]:
     """Per-part contributions whose sum is the logit vector (checked by caller)."""
     with torch.no_grad():
@@ -125,10 +137,16 @@ def accounting(model: M.SRENNet, batch: Mapping[str, Any]) -> dict[str, np.ndarr
         elif model.variant in (C.BANK, C.UNARY):
             v = model.self_tokens(u) if model.variant == C.UNARY else model.relation_tokens(u, batch)
             u_bank = M.evidence_aggregate(u, atom_seg, atom_counts, model.theta_u)
-            v_bank = M.evidence_aggregate(v, pair_seg if model.variant != C.UNARY else atom_seg,
-                                          pair_counts if model.variant != C.UNARY else atom_counts, model.theta_v)
-            out["channel_local"] = u_bank.unsqueeze(1) * model.q_u.weight.unsqueeze(0)
+            v_bank = M.evidence_aggregate(
+                v,
+                atom_seg if model.variant == C.UNARY else pair_seg,
+                atom_counts if model.variant == C.UNARY else pair_counts,
+                model.theta_v,
+            )
+            # q(u_bank) = u_bank @ W^T + b  ->  per-channel term u_bank[:, k] * W[t, k]
+            out["channel_local"] = u_bank.unsqueeze(1) * model.q_u.weight.unsqueeze(0)   # [n, T, K]
             out["channel_relation"] = v_bank.unsqueeze(1) * model.q_v.weight.unsqueeze(0)
+            out["readout_bias"] = _bias_sum(model.q_u, model.q_v)
             out["local"] = model.q_u(u_bank)
             out["relation"] = model.q_v(v_bank)
         elif model.variant == C.HIDDEN:
@@ -148,6 +166,7 @@ def accounting(model: M.SRENNet, batch: Mapping[str, Any]) -> dict[str, np.ndarr
             w = model.compound_norm(u + model.compound(u, c_i, torch.log1p(deg)))
             w_bank = M.evidence_aggregate(w, atom_seg, atom_counts, model.theta_w)
             out["channel_relation"] = w_bank.unsqueeze(1) * model.q_w.weight.unsqueeze(0)
+            out["readout_bias"] = _bias_sum(model.q_w)
             out["relation"] = model.q_w(w_bank)
             out["local"] = torch.zeros_like(out["relation"])
         elif model.variant == C.FLEX:
@@ -165,14 +184,17 @@ def accounting(model: M.SRENNet, batch: Mapping[str, Any]) -> dict[str, np.ndarr
 
 
 def _reconstruct(model: M.SRENNet, parts: Mapping[str, np.ndarray]) -> np.ndarray:
-    if model.variant in (C.ADD, C.EVID, C.COMPOUND):
+    if model.variant in (C.ADD, C.EVID):
         return parts["global"] + parts["local"] + parts["relation"]
     if model.variant in (C.BANK, C.UNARY):
         return (
             parts["global"]
-            + parts["channel_local"].sum(axis=1)
-            + parts["channel_relation"].sum(axis=1)
+            + parts["channel_local"].sum(axis=2)
+            + parts["channel_relation"].sum(axis=2)
+            + parts["readout_bias"]
         )
+    if model.variant == C.COMPOUND:
+        return parts["global"] + parts["channel_relation"].sum(axis=2) + parts["readout_bias"]
     if model.variant == C.FLEX:
         return parts["global"] + parts["local"] + parts["relation"]
     raise KeyError(model.variant)
@@ -647,7 +669,7 @@ def _pick_runs(runs_root: Path) -> dict[str, list[Path]]:
     groups: dict[str, list[Path]] = {}
     for run_json in sorted(runs_root.glob("*/run.json")):
         payload = json.loads(run_json.read_text())
-        if payload.get("smoke") or payload.get("status") != "completed":
+        if payload.get("smoke") or payload.get("status", "completed") != "completed":
             continue
         groups.setdefault(payload["dataset"], []).append(run_json.parent)
     return groups
