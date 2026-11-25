@@ -5,7 +5,7 @@
 - 冻结配置：`configs/experiment.json`（sha256 `caf0dea7db8ec1ba8d83b9c8973d726ec4a5d168420ac1c0b2a25cb11738918d`）
 - 训练代码 commit：`6352d528`；正确性检查 commit：`0d8079d4`（两者之间只有 `analysis/` 产物差异）
 - 执行 regime：`res` / `a100-2` / process 后端 / pool `res-gpu1` / torch 2.5.1+cu124 / CUDA 12.4 / driver 550.163.01，单卡顺序执行（GPU0 全程被其他任务占用，未并行、未抢卡）
-- 实际 GPU 消耗：**0.558 GPU·h**（预算目标 2，硬上限 3）；墙钟 71 min（上限 2 h）
+- 实际 GPU 消耗：**0.558 GPU·h**（四个正式单元；预算目标 2，硬上限 3）。含 12 项检查与吞吐探测的全部 GPU 用量约 **0.57 GPU·h**；墙钟 71 min（上限 2 h）
 - Test 角色：`DEVELOPMENT_TEST`（仅报告，不参与任何选择；A 臂沿用它原轮次的 `EXPOSED_TEST_EXPLORATORY` 标签）
 
 ---
