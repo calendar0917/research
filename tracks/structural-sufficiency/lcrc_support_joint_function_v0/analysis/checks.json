@@ -1,0 +1,944 @@
+{
+  "all_passed": true,
+  "created_utc": "2026-11-25T09:42:05Z",
+  "device": "cuda:0",
+  "env": {
+    "cuda_available": true,
+    "cuda_device_names": [
+      "NVIDIA A100-SXM4-40GB"
+    ],
+    "cuda_driver": null,
+    "hostname": "a100-2",
+    "numpy": "2.1.3",
+    "python": "3.12.14",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4"
+  },
+  "failed_tasks": [],
+  "gate_list": {
+    "1": "official split, row ids, labels and cache identity",
+    "10": "C's table satisfies (I - P) J ~ 0",
+    "11": "C's interaction contrast is zero on every real rectangle",
+    "12": "the unseen-pair fallback is identical, finite and parameter-free",
+    "2": "Omega uses Train only",
+    "3": "p/e types and model encoding match the production caches",
+    "4": "A and B/C share bitwise identical common parameters",
+    "5": "materialised B replays A's initial joint, h0 and prediction (Train-seen types)",
+    "6": "every B/C parameter receives a gradient",
+    "7": "atom renumbering, path order and batch regrouping invariance",
+    "8": "graphs without S2 paths run correctly",
+    "9": "P^2 = P and P^T = P"
+  },
+  "git_commit": "0d8079d4811ae727a071903437720d6f2ffde2d5",
+  "git_dirty_tracked": false,
+  "round_id": "lcrc-support-joint-function-v0",
+  "schema": "lcrc-support-joint-function-checks-v1",
+  "tasks": {
+    "hiv": {
+      "all_passed": true,
+      "dataset": "ogbg-molhiv",
+      "device": "cuda:0",
+      "failed": [],
+      "gates": {
+        "10_additive_constraint": {
+          "float32_roundoff_scale": 1.1920928955078125e-07,
+          "max_abs_theta_projection_error_float64": 2.886579864025407e-15,
+          "nonadditive_rms_float32_model_path": 1.526422302060447e-08,
+          "passed": true,
+          "relative_nonadditive_residual_float32_model_path": 4.7765027162194524e-08,
+          "relative_nonadditive_residual_float64_parameterisation": 1.651477961935336e-15,
+          "table_rms": 0.31956902209585525,
+          "theta_shape": [
+            88,
+            32
+          ]
+        },
+        "11_interaction_zero": {
+          "max_abs_contrast_float32_model_path": 2.682209014892578e-07,
+          "max_abs_contrast_float64": 1.887379141862766e-15,
+          "n_rectangles": 4658,
+          "note": "D = J(p1,e1) + J(p2,e2) - J(p1,e2) - J(p2,e1) on quadruples that really exist in Omega",
+          "passed": true,
+          "rms_contrast_float32_model_path": 3.5660706404324126e-08,
+          "table_rms": 0.31956902209585525
+        },
+        "12_fallback": {
+          "B": {
+            "finite": true,
+            "has_extra_parameters": 9280,
+            "ls_row_norms_finite": true,
+            "mean_row_norms_finite": true,
+            "mean_rows_identical": true,
+            "types_seen_flags": [
+              0,
+              2
+            ]
+          },
+          "C": {
+            "finite": true,
+            "has_extra_parameters": 2816,
+            "ls_row_norms_finite": true,
+            "mean_row_norms_finite": true,
+            "mean_rows_identical": true,
+            "types_seen_flags": [
+              0,
+              2
+            ]
+          },
+          "identical_rule": true,
+          "n_marginal_ls_codes": 325,
+          "n_omega_codes": 290,
+          "n_type_mean_codes": 31385,
+          "no_new_parameters": true,
+          "passed": true,
+          "probe_note": "first 8 codes of each fallback branch (deterministic, ascending code order)",
+          "ratio_valid_unseen_occurrence": {
+            "test": 0.9997436144927186,
+            "train": 1.0,
+            "valid": 0.9996698156971255
+          },
+          "same_component_example": {
+            "code": 5,
+            "e": 5,
+            "legal": true,
+            "p": 0
+          },
+          "shared_pair_mode_table": true
+        },
+        "1_split_identity": {
+          "cache_feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "label_counts": {
+            "test": 4113,
+            "train": 32901,
+            "valid": 4113
+          },
+          "labels_finite": {
+            "test": true,
+            "train": true,
+            "valid": true
+          },
+          "norm_fingerprint": "c339e63b8f1101271d908834b6df5c218c1fd6b11e21dc2fdc00bfb5f8852ca1",
+          "ogb_release": "v1 (2020-05-04)",
+          "passed": true,
+          "positive_rates": {
+            "test": 0.031607099440797475,
+            "train": 0.03744567034436643,
+            "valid": 0.019693654266958426
+          },
+          "rows_equal_published": {
+            "test": true,
+            "train": true,
+            "valid": true
+          },
+          "rows_sha256": {
+            "test": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+            "train": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+            "valid": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+          },
+          "spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "spec_hash_matches_cache": true,
+          "split_disjoint": true,
+          "split_names": [
+            "ogbg-molhiv_train",
+            "ogbg-molhiv_valid",
+            "ogbg-molhiv_test"
+          ],
+          "split_sizes": {
+            "test": 4113,
+            "train": 32901,
+            "valid": 4113
+          },
+          "split_sizes_match": true,
+          "split_source": "split/scaffold/{train,valid,test}.csv.gz",
+          "test_cache_is_a_separate_object": true,
+          "train_norm_uses_valid_or_test": false,
+          "train_valid_cache_version": [
+            "lcrc-molnet-v2",
+            "lcrc-molnet-v2"
+          ]
+        },
+        "2_omega_train_only": {
+          "coverage": {
+            "test": {
+              "molecule_fraction_with_any_seen_pair": 1.0,
+              "molecule_fraction_with_any_unseen_pair": 0.004862630683199611,
+              "molecule_fraction_without_s2": 0.0,
+              "n_molecules": 4113,
+              "n_molecules_without_s2": 0,
+              "n_occurrences": 331532,
+              "n_occurrences_unseen": 85,
+              "n_omega_rows_with_any_occurrence": 221,
+              "occurrence_coverage": 0.9997436144927186,
+              "paths_per_molecule_mean": 80.60588378312667,
+              "role": "descriptive coverage only"
+            },
+            "train": {
+              "molecule_fraction_with_any_seen_pair": 0.9999392115741162,
+              "molecule_fraction_with_any_unseen_pair": 0.0,
+              "molecule_fraction_without_s2": 6.078842588371174e-05,
+              "n_molecules": 32901,
+              "n_molecules_without_s2": 2,
+              "n_occurrences": 2527194,
+              "n_occurrences_unseen": 0,
+              "n_omega_rows_with_any_occurrence": 290,
+              "occurrence_coverage": 1.0,
+              "paths_per_molecule_mean": 76.8120725813805,
+              "role": "definition split (Train-only support)"
+            },
+            "valid": {
+              "molecule_fraction_with_any_seen_pair": 1.0,
+              "molecule_fraction_with_any_unseen_pair": 0.0034038414782397277,
+              "molecule_fraction_without_s2": 0.0,
+              "n_molecules": 4113,
+              "n_molecules_without_s2": 0,
+              "n_occurrences": 366462,
+              "n_occurrences_unseen": 121,
+              "n_omega_rows_with_any_occurrence": 227,
+              "occurrence_coverage": 0.9996698156971255,
+              "paths_per_molecule_mean": 89.0984682713348,
+              "role": "descriptive coverage only"
+            }
+          },
+          "document_frequency_le_occurrence": true,
+          "document_frequency_le_train_molecules": true,
+          "labels_never_read": true,
+          "n_omega": 290,
+          "n_train_unique_pairs": 290,
+          "occurrence_counts_equal_bincount": true,
+          "omega_contains_no_valid_or_test_only_pair": true,
+          "omega_equals_train_unique_pairs": true,
+          "passed": true,
+          "test_only_pairs_excluded": 13,
+          "valid_only_pairs_excluded": 12
+        },
+        "3_type_encoding": {
+          "all_types_legal": true,
+          "collate_first_molecule_codes_identical": true,
+          "collate_record_count_matches": true,
+          "end_emb_matches_end_codes": true,
+          "end_emb_rows": 80,
+          "legality": {
+            "all_omega_legal": true,
+            "fallback_mode_counts": {
+              "marginal_ls": 325,
+              "omega": 290,
+              "type_equal_mean": 31385
+            },
+            "n_omega": 290,
+            "n_omega_legal": 290,
+            "n_possible_legal_type_pairs": 6400,
+            "n_possible_type_pairs": 32000,
+            "observed_fraction_of_legal_type_pairs": 0.0453125,
+            "repeated_key_field": "bond_type_2 (the middle->end bond) is encoded in path_cat AND path_end63",
+            "rule": "bond_type_2 appears in both p and e; legal iff (p % n_bond_types) == (e % n_bond_types)"
+          },
+          "n_e_types_used": 35,
+          "n_p_types_used": 59,
+          "n_records_train": 2527194,
+          "omega_e_within_vocabulary": true,
+          "omega_p_within_vocabulary": true,
+          "passed": true,
+          "path_emb_matches_path_codes": true,
+          "path_emb_rows": 400,
+          "spec_n_nbr_codes": 80,
+          "spec_n_path_codes": 400
+        },
+        "4_shared_parameters": {
+          "joint_module_parameters": {
+            "A": 16416,
+            "B": 9280,
+            "C": 2816
+          },
+          "mismatched_keys": [],
+          "n_common_tensors": 31,
+          "parameters": {
+            "A": 247106,
+            "B": 239970,
+            "C": 233506
+          },
+          "passed": true,
+          "values_bitequal_B": true,
+          "values_bitequal_C": true,
+          "wider_minus_A": {
+            "A_minus_common": [
+              "local.joint_proj.bias",
+              "local.joint_proj.weight",
+              "local.path_u.weight",
+              "local.path_v.weight"
+            ],
+            "B": [
+              "local.J_table"
+            ],
+            "C": [
+              "local.Theta"
+            ]
+          }
+        },
+        "5_init_replay": {
+          "c_deviation_is_expected": true,
+          "final_logit_max_abs_diff_B": 1.9073486328125e-06,
+          "final_logit_max_abs_diff_C": 1.11895751953125,
+          "h0_local_input_max_abs_diff_B": 1.430511474609375e-06,
+          "h0_local_input_max_abs_diff_C": 6.6474873423576355,
+          "joint_max_abs_diff_B": 3.5762786865234375e-07,
+          "joint_max_abs_diff_C": 1.753597840666771,
+          "n_paths_checked": 2674,
+          "note": "C is the orthogonal marginal projection of the same draw, so it is reported but not required to equal A; only B must replay A exactly",
+          "passed": true,
+          "train_seen_only": true
+        },
+        "6_gradients": {
+          "B": {
+            "joint_grad_abs_sum": 0.4295769929885864,
+            "joint_grad_finite": true,
+            "joint_grad_rows_nonzero": 91,
+            "joint_grad_rows_seen_in_batch": 91,
+            "joint_grad_rows_total": 290,
+            "joint_tensor": "local.J_table",
+            "loss": 0.18083052337169647,
+            "n_parameters_tensors": 28,
+            "n_without_grad": 0,
+            "n_zero_grad": 0,
+            "passed": true,
+            "tensors_with_zero_grad": [],
+            "tensors_without_grad": []
+          },
+          "C": {
+            "joint_grad_abs_sum": 0.2768334448337555,
+            "joint_grad_finite": true,
+            "joint_grad_rows_nonzero": 88,
+            "joint_grad_rows_total": 88,
+            "joint_tensor": "local.Theta",
+            "loss": 0.18099164962768555,
+            "n_parameters_tensors": 28,
+            "n_without_grad": 0,
+            "n_zero_grad": 0,
+            "passed": true,
+            "tensors_with_zero_grad": [],
+            "tensors_without_grad": []
+          },
+          "passed": true
+        },
+        "7_invariance": {
+          "A": {
+            "atom_renumbering_max_abs_diff": 9.5367431640625e-07,
+            "batch_regrouping_max_abs_diff": 1.430511474609375e-06,
+            "passed": true,
+            "path_order_max_abs_diff": 9.5367431640625e-07
+          },
+          "B": {
+            "atom_renumbering_max_abs_diff": 9.5367431640625e-07,
+            "batch_regrouping_max_abs_diff": 1.430511474609375e-06,
+            "passed": true,
+            "path_order_max_abs_diff": 9.5367431640625e-07
+          },
+          "C": {
+            "atom_renumbering_max_abs_diff": 1.9073486328125e-06,
+            "batch_regrouping_max_abs_diff": 1.430511474609375e-06,
+            "passed": true,
+            "path_order_max_abs_diff": 1.430511474609375e-06
+          },
+          "n_molecules": 48,
+          "passed": true
+        },
+        "8_empty_paths": {
+          "A": {
+            "all_empty_finite": true,
+            "all_empty_shift_max_abs": 5.3923757672309875,
+            "partial_finite": true,
+            "partial_matches_where_no_paths": 5.3923757672309875,
+            "passed": true
+          },
+          "B": {
+            "all_empty_finite": true,
+            "all_empty_shift_max_abs": 5.392376244068146,
+            "partial_finite": true,
+            "partial_matches_where_no_paths": 5.392376244068146,
+            "passed": true
+          },
+          "C": {
+            "all_empty_finite": true,
+            "all_empty_shift_max_abs": 4.948773205280304,
+            "partial_finite": true,
+            "partial_matches_where_no_paths": 4.948773205280304,
+            "passed": true
+          },
+          "all": {
+            "dropped_records": 1420,
+            "kept_records": 0,
+            "n_atoms_emptied": 529
+          },
+          "n_atoms": 529,
+          "n_molecules": 32,
+          "partial": {
+            "dropped_records": 738,
+            "kept_records": 682,
+            "n_atoms_emptied": 258
+          },
+          "passed": true
+        },
+        "9_projector": {
+          "U_orthonormal_max_abs_error": 3.3306690738754696e-15,
+          "idempotent_max_abs_error": 1.1102230246251565e-15,
+          "passed": true,
+          "rank_X": 88,
+          "rank_identity_holds": true,
+          "shape": [
+            290,
+            290
+          ],
+          "symmetric_max_abs_error": 0.0
+        }
+      },
+      "init": {
+        "historical_init_state_hash": "849adda7fc6a4f60c49ed8ff2b08c4d8a3d76c14aacc0f6f2e353e63405e1f3d",
+        "init_hash_matches_history": true,
+        "init_state_hash_A": "849adda7fc6a4f60c49ed8ff2b08c4d8a3d76c14aacc0f6f2e353e63405e1f3d"
+      },
+      "seed": 0,
+      "support": {
+        "build": {
+          "n_records_train": 2527194,
+          "n_train_atoms": 830936,
+          "n_train_molecules": 32901,
+          "n_train_molecules_without_s2": 2,
+          "omega_order": "ascending (path_cat, path_end63)",
+          "source": "Train split S2 records only",
+          "svd": "numpy.linalg.svd(float64), keep s > 1e-10 * s_max"
+        },
+        "coverage": {
+          "test": {
+            "molecule_fraction_with_any_seen_pair": 1.0,
+            "molecule_fraction_with_any_unseen_pair": 0.004862630683199611,
+            "molecule_fraction_without_s2": 0.0,
+            "n_molecules": 4113,
+            "n_molecules_without_s2": 0,
+            "n_occurrences": 331532,
+            "n_occurrences_unseen": 85,
+            "n_omega_rows_with_any_occurrence": 221,
+            "occurrence_coverage": 0.9997436144927186,
+            "paths_per_molecule_mean": 80.60588378312667,
+            "role": "descriptive coverage only"
+          },
+          "train": {
+            "molecule_fraction_with_any_seen_pair": 0.9999392115741162,
+            "molecule_fraction_with_any_unseen_pair": 0.0,
+            "molecule_fraction_without_s2": 6.078842588371174e-05,
+            "n_molecules": 32901,
+            "n_molecules_without_s2": 2,
+            "n_occurrences": 2527194,
+            "n_occurrences_unseen": 0,
+            "n_omega_rows_with_any_occurrence": 290,
+            "occurrence_coverage": 1.0,
+            "paths_per_molecule_mean": 76.8120725813805,
+            "role": "definition split (Train-only support)"
+          },
+          "valid": {
+            "molecule_fraction_with_any_seen_pair": 1.0,
+            "molecule_fraction_with_any_unseen_pair": 0.0034038414782397277,
+            "molecule_fraction_without_s2": 0.0,
+            "n_molecules": 4113,
+            "n_molecules_without_s2": 0,
+            "n_occurrences": 366462,
+            "n_occurrences_unseen": 121,
+            "n_omega_rows_with_any_occurrence": 227,
+            "occurrence_coverage": 0.9996698156971255,
+            "paths_per_molecule_mean": 89.0984682713348,
+            "role": "descriptive coverage only"
+          }
+        },
+        "dataset": "ogbg-molhiv",
+        "docfreq_total": 483303,
+        "joint_subspace_dim": 202,
+        "legality": {
+          "all_omega_legal": true,
+          "fallback_mode_counts": {
+            "marginal_ls": 325,
+            "omega": 290,
+            "type_equal_mean": 31385
+          },
+          "n_omega": 290,
+          "n_omega_legal": 290,
+          "n_possible_legal_type_pairs": 6400,
+          "n_possible_type_pairs": 32000,
+          "observed_fraction_of_legal_type_pairs": 0.0453125,
+          "repeated_key_field": "bond_type_2 (the middle->end bond) is encoded in path_cat AND path_end63",
+          "rule": "bond_type_2 appears in both p and e; legal iff (p % n_bond_types) == (e % n_bond_types)"
+        },
+        "n_bond_types": 5,
+        "n_connected_components": 6,
+        "n_design_columns": 94,
+        "n_e_types": 35,
+        "n_nbr_codes": 80,
+        "n_omega": 290,
+        "n_omega_docfreq_ge_20": 177,
+        "n_omega_docfreq_ge_3": 228,
+        "n_p_types": 59,
+        "n_path_codes": 400,
+        "n_rectangles": 4658,
+        "occurrence_total": 2527194,
+        "rank_X": 88,
+        "rank_identity_P_plus_E_minus_components": 88,
+        "svd_singular_max": 5.16981305320585,
+        "svd_singular_min": 0.8444679566519054,
+        "task": "hiv"
+      },
+      "task": "hiv"
+    },
+    "lipo": {
+      "all_passed": true,
+      "dataset": "Lipophilicity",
+      "device": "cuda:0",
+      "failed": [],
+      "gates": {
+        "10_additive_constraint": {
+          "float32_roundoff_scale": 1.1920928955078125e-07,
+          "max_abs_theta_projection_error_float64": 2.55351295663786e-15,
+          "nonadditive_rms_float32_model_path": 1.5194480267351492e-08,
+          "passed": true,
+          "relative_nonadditive_residual_float32_model_path": 4.107188081017776e-08,
+          "relative_nonadditive_residual_float64_parameterisation": 1.4276557290111358e-15,
+          "table_rms": 0.36994848951709663,
+          "theta_shape": [
+            50,
+            32
+          ]
+        },
+        "11_interaction_zero": {
+          "max_abs_contrast_float32_model_path": 2.384185791015625e-07,
+          "max_abs_contrast_float64": 1.4988010832439613e-15,
+          "n_rectangles": 488,
+          "note": "D = J(p1,e1) + J(p2,e2) - J(p1,e2) - J(p2,e1) on quadruples that really exist in Omega",
+          "passed": true,
+          "rms_contrast_float32_model_path": 3.974062757714487e-08,
+          "table_rms": 0.36994848951709663
+        },
+        "12_fallback": {
+          "B": {
+            "finite": true,
+            "has_extra_parameters": 3648,
+            "ls_row_norms_finite": true,
+            "mean_row_norms_finite": true,
+            "mean_rows_identical": true,
+            "types_seen_flags": [
+              0,
+              0
+            ]
+          },
+          "C": {
+            "finite": true,
+            "has_extra_parameters": 1600,
+            "ls_row_norms_finite": true,
+            "mean_row_norms_finite": true,
+            "mean_rows_identical": true,
+            "types_seen_flags": [
+              0,
+              0
+            ]
+          },
+          "identical_rule": true,
+          "n_marginal_ls_codes": 140,
+          "n_omega_codes": 114,
+          "n_type_mean_codes": 31746,
+          "no_new_parameters": true,
+          "passed": true,
+          "probe_note": "first 8 codes of each fallback branch (deterministic, ascending code order)",
+          "ratio_valid_unseen_occurrence": {
+            "test": 0.9995379194824698,
+            "train": 1.0,
+            "valid": 1.0
+          },
+          "same_component_example": {
+            "code": 0,
+            "e": 0,
+            "legal": true,
+            "p": 0
+          },
+          "shared_pair_mode_table": true
+        },
+        "1_split_identity": {
+          "cache_feature_spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "label_counts": {
+            "test": 420,
+            "train": 3360,
+            "valid": 420
+          },
+          "labels_finite": {
+            "test": true,
+            "train": true,
+            "valid": true
+          },
+          "norm_fingerprint": "4e62dae70efa3be46ff8df631417abf051a95395de689e1b23bd0483ed1cc015",
+          "passed": true,
+          "rows_equal_published": {
+            "test": true,
+            "train": true,
+            "valid": true
+          },
+          "rows_sha256": {
+            "test": "a4d92ad939bf268c00ff69afe77aa5d58c19a6f809b6a09f6dadc51cd648ec93",
+            "train": "4e8d42a95c0b705f43f932b3bbb265277c76a7aa65684b0e5e6ca028580aaf96",
+            "valid": "31e3f28f31da69249f70922126f19795920bc1e32cc05d5e29e27507bd5aa365"
+          },
+          "spec_hash": "7270f7677b349a46bb193174381abcb84f14d1b4f83bd1362d4aa20389a515ee",
+          "spec_hash_matches_cache": true,
+          "split_disjoint": true,
+          "split_file": "Lipop.random122.ind.pkl",
+          "split_file_sha256": "bf7acb177e080caf2be9ee220f479f8ea91e0039ff4867a7281753a2fce24a7d",
+          "split_names": [
+            "Lipophilicity_r122_train",
+            "Lipophilicity_r122_valid",
+            "Lipophilicity_r122_test"
+          ],
+          "split_sizes": {
+            "test": 420,
+            "train": 3360,
+            "valid": 420
+          },
+          "split_sizes_match": true,
+          "test_cache_is_a_separate_object": true,
+          "train_norm_uses_valid_or_test": false,
+          "train_valid_cache_version": [
+            "lcrc-lipo-dissection-v1",
+            "lcrc-lipo-dissection-v1"
+          ]
+        },
+        "2_omega_train_only": {
+          "coverage": {
+            "test": {
+              "molecule_fraction_with_any_seen_pair": 1.0,
+              "molecule_fraction_with_any_unseen_pair": 0.004761904761904762,
+              "molecule_fraction_without_s2": 0.0,
+              "n_molecules": 420,
+              "n_molecules_without_s2": 0,
+              "n_occurrences": 34626,
+              "n_occurrences_unseen": 16,
+              "n_omega_rows_with_any_occurrence": 89,
+              "occurrence_coverage": 0.9995379194824698,
+              "paths_per_molecule_mean": 82.44285714285714,
+              "role": "descriptive coverage only"
+            },
+            "train": {
+              "molecule_fraction_with_any_seen_pair": 1.0,
+              "molecule_fraction_with_any_unseen_pair": 0.0,
+              "molecule_fraction_without_s2": 0.0,
+              "n_molecules": 3360,
+              "n_molecules_without_s2": 0,
+              "n_occurrences": 279084,
+              "n_occurrences_unseen": 0,
+              "n_omega_rows_with_any_occurrence": 114,
+              "occurrence_coverage": 1.0,
+              "paths_per_molecule_mean": 83.06071428571428,
+              "role": "definition split (Train-only support)"
+            },
+            "valid": {
+              "molecule_fraction_with_any_seen_pair": 1.0,
+              "molecule_fraction_with_any_unseen_pair": 0.0,
+              "molecule_fraction_without_s2": 0.0,
+              "n_molecules": 420,
+              "n_molecules_without_s2": 0,
+              "n_occurrences": 35284,
+              "n_occurrences_unseen": 0,
+              "n_omega_rows_with_any_occurrence": 85,
+              "occurrence_coverage": 1.0,
+              "paths_per_molecule_mean": 84.00952380952381,
+              "role": "descriptive coverage only"
+            }
+          },
+          "document_frequency_le_occurrence": true,
+          "document_frequency_le_train_molecules": true,
+          "labels_never_read": true,
+          "n_omega": 114,
+          "n_train_unique_pairs": 114,
+          "occurrence_counts_equal_bincount": true,
+          "omega_contains_no_valid_or_test_only_pair": true,
+          "omega_equals_train_unique_pairs": true,
+          "passed": true,
+          "test_only_pairs_excluded": 7,
+          "valid_only_pairs_excluded": 0
+        },
+        "3_type_encoding": {
+          "all_types_legal": true,
+          "collate_first_molecule_codes_identical": true,
+          "collate_record_count_matches": true,
+          "end_emb_matches_end_codes": true,
+          "end_emb_rows": 80,
+          "legality": {
+            "all_omega_legal": true,
+            "fallback_mode_counts": {
+              "marginal_ls": 140,
+              "omega": 114,
+              "type_equal_mean": 31746
+            },
+            "n_omega": 114,
+            "n_omega_legal": 114,
+            "n_possible_legal_type_pairs": 6400,
+            "n_possible_type_pairs": 32000,
+            "observed_fraction_of_legal_type_pairs": 0.0178125,
+            "repeated_key_field": "bond_type_2 (the middle->end bond) is encoded in path_cat AND path_end63",
+            "rule": "bond_type_2 appears in both p and e; legal iff (p % n_bond_types) == (e % n_bond_types)"
+          },
+          "n_e_types_used": 25,
+          "n_p_types_used": 29,
+          "n_records_train": 279084,
+          "omega_e_within_vocabulary": true,
+          "omega_p_within_vocabulary": true,
+          "passed": true,
+          "path_emb_matches_path_codes": true,
+          "path_emb_rows": 400,
+          "spec_n_nbr_codes": 80,
+          "spec_n_path_codes": 400
+        },
+        "4_shared_parameters": {
+          "joint_module_parameters": {
+            "A": 16416,
+            "B": 3648,
+            "C": 1600
+          },
+          "mismatched_keys": [],
+          "n_common_tensors": 31,
+          "parameters": {
+            "A": 228674,
+            "B": 215906,
+            "C": 213858
+          },
+          "passed": true,
+          "values_bitequal_B": true,
+          "values_bitequal_C": true,
+          "wider_minus_A": {
+            "A_minus_common": [
+              "local.joint_proj.bias",
+              "local.joint_proj.weight",
+              "local.path_u.weight",
+              "local.path_v.weight"
+            ],
+            "B": [
+              "local.J_table"
+            ],
+            "C": [
+              "local.Theta"
+            ]
+          }
+        },
+        "5_init_replay": {
+          "c_deviation_is_expected": true,
+          "final_logit_max_abs_diff_B": 1.430511474609375e-06,
+          "final_logit_max_abs_diff_C": 1.0729403495788574,
+          "h0_local_input_max_abs_diff_B": 1.9073486328125e-06,
+          "h0_local_input_max_abs_diff_C": 4.58034111559391,
+          "joint_max_abs_diff_B": 3.5762786865234375e-07,
+          "joint_max_abs_diff_C": 1.5646336823701859,
+          "n_paths_checked": 5132,
+          "note": "C is the orthogonal marginal projection of the same draw, so it is reported but not required to equal A; only B must replay A exactly",
+          "passed": true,
+          "train_seen_only": true
+        },
+        "6_gradients": {
+          "B": {
+            "joint_grad_abs_sum": 207.07818603515625,
+            "joint_grad_finite": true,
+            "joint_grad_rows_nonzero": 77,
+            "joint_grad_rows_seen_in_batch": 77,
+            "joint_grad_rows_total": 114,
+            "joint_tensor": "local.J_table",
+            "loss": 32.362213134765625,
+            "n_parameters_tensors": 28,
+            "n_without_grad": 0,
+            "n_zero_grad": 0,
+            "passed": true,
+            "tensors_with_zero_grad": [],
+            "tensors_without_grad": []
+          },
+          "C": {
+            "joint_grad_abs_sum": 233.63894653320312,
+            "joint_grad_finite": true,
+            "joint_grad_rows_nonzero": 50,
+            "joint_grad_rows_total": 50,
+            "joint_tensor": "local.Theta",
+            "loss": 32.675167083740234,
+            "n_parameters_tensors": 28,
+            "n_without_grad": 0,
+            "n_zero_grad": 0,
+            "passed": true,
+            "tensors_with_zero_grad": [],
+            "tensors_without_grad": []
+          },
+          "passed": true
+        },
+        "7_invariance": {
+          "A": {
+            "atom_renumbering_max_abs_diff": 3.814697265625e-06,
+            "batch_regrouping_max_abs_diff": 2.384185791015625e-06,
+            "passed": true,
+            "path_order_max_abs_diff": 1.430511474609375e-06
+          },
+          "B": {
+            "atom_renumbering_max_abs_diff": 1.430511474609375e-06,
+            "batch_regrouping_max_abs_diff": 2.384185791015625e-06,
+            "passed": true,
+            "path_order_max_abs_diff": 1.430511474609375e-06
+          },
+          "C": {
+            "atom_renumbering_max_abs_diff": 1.9073486328125e-06,
+            "batch_regrouping_max_abs_diff": 1.9073486328125e-06,
+            "passed": true,
+            "path_order_max_abs_diff": 1.430511474609375e-06
+          },
+          "n_molecules": 48,
+          "passed": true
+        },
+        "8_empty_paths": {
+          "A": {
+            "all_empty_finite": true,
+            "all_empty_shift_max_abs": 8.828552961349487,
+            "partial_finite": true,
+            "partial_matches_where_no_paths": 6.5054017305374146,
+            "passed": true
+          },
+          "B": {
+            "all_empty_finite": true,
+            "all_empty_shift_max_abs": 8.828552842140198,
+            "partial_finite": true,
+            "partial_matches_where_no_paths": 6.505402207374573,
+            "passed": true
+          },
+          "C": {
+            "all_empty_finite": true,
+            "all_empty_shift_max_abs": 9.90149474143982,
+            "partial_finite": true,
+            "partial_matches_where_no_paths": 6.391045689582825,
+            "passed": true
+          },
+          "all": {
+            "dropped_records": 2582,
+            "kept_records": 0,
+            "n_atoms_emptied": 847
+          },
+          "n_atoms": 847,
+          "n_molecules": 32,
+          "partial": {
+            "dropped_records": 1250,
+            "kept_records": 1332,
+            "n_atoms_emptied": 404
+          },
+          "passed": true
+        },
+        "9_projector": {
+          "U_orthonormal_max_abs_error": 3.1086244689504383e-15,
+          "idempotent_max_abs_error": 7.771561172376096e-16,
+          "passed": true,
+          "rank_X": 50,
+          "rank_identity_holds": true,
+          "shape": [
+            114,
+            114
+          ],
+          "symmetric_max_abs_error": 0.0
+        }
+      },
+      "init": {
+        "historical_init_state_hash": "aac1e061176a93bd12b0e6a3f79e80eced2ff93f84eb72391dc819be59ebb83c",
+        "init_hash_matches_history": true,
+        "init_state_hash_A": "aac1e061176a93bd12b0e6a3f79e80eced2ff93f84eb72391dc819be59ebb83c"
+      },
+      "seed": 0,
+      "support": {
+        "build": {
+          "n_records_train": 279084,
+          "n_train_atoms": 90863,
+          "n_train_molecules": 3360,
+          "n_train_molecules_without_s2": 0,
+          "omega_order": "ascending (path_cat, path_end63)",
+          "source": "Train split S2 records only",
+          "svd": "numpy.linalg.svd(float64), keep s > 1e-10 * s_max"
+        },
+        "coverage": {
+          "test": {
+            "molecule_fraction_with_any_seen_pair": 1.0,
+            "molecule_fraction_with_any_unseen_pair": 0.004761904761904762,
+            "molecule_fraction_without_s2": 0.0,
+            "n_molecules": 420,
+            "n_molecules_without_s2": 0,
+            "n_occurrences": 34626,
+            "n_occurrences_unseen": 16,
+            "n_omega_rows_with_any_occurrence": 89,
+            "occurrence_coverage": 0.9995379194824698,
+            "paths_per_molecule_mean": 82.44285714285714,
+            "role": "descriptive coverage only"
+          },
+          "train": {
+            "molecule_fraction_with_any_seen_pair": 1.0,
+            "molecule_fraction_with_any_unseen_pair": 0.0,
+            "molecule_fraction_without_s2": 0.0,
+            "n_molecules": 3360,
+            "n_molecules_without_s2": 0,
+            "n_occurrences": 279084,
+            "n_occurrences_unseen": 0,
+            "n_omega_rows_with_any_occurrence": 114,
+            "occurrence_coverage": 1.0,
+            "paths_per_molecule_mean": 83.06071428571428,
+            "role": "definition split (Train-only support)"
+          },
+          "valid": {
+            "molecule_fraction_with_any_seen_pair": 1.0,
+            "molecule_fraction_with_any_unseen_pair": 0.0,
+            "molecule_fraction_without_s2": 0.0,
+            "n_molecules": 420,
+            "n_molecules_without_s2": 0,
+            "n_occurrences": 35284,
+            "n_occurrences_unseen": 0,
+            "n_omega_rows_with_any_occurrence": 85,
+            "occurrence_coverage": 1.0,
+            "paths_per_molecule_mean": 84.00952380952381,
+            "role": "descriptive coverage only"
+          }
+        },
+        "dataset": "Lipophilicity",
+        "docfreq_total": 56955,
+        "joint_subspace_dim": 64,
+        "legality": {
+          "all_omega_legal": true,
+          "fallback_mode_counts": {
+            "marginal_ls": 140,
+            "omega": 114,
+            "type_equal_mean": 31746
+          },
+          "n_omega": 114,
+          "n_omega_legal": 114,
+          "n_possible_legal_type_pairs": 6400,
+          "n_possible_type_pairs": 32000,
+          "observed_fraction_of_legal_type_pairs": 0.0178125,
+          "repeated_key_field": "bond_type_2 (the middle->end bond) is encoded in path_cat AND path_end63",
+          "rule": "bond_type_2 appears in both p and e; legal iff (p % n_bond_types) == (e % n_bond_types)"
+        },
+        "n_bond_types": 5,
+        "n_connected_components": 4,
+        "n_design_columns": 54,
+        "n_e_types": 25,
+        "n_nbr_codes": 80,
+        "n_omega": 114,
+        "n_omega_docfreq_ge_20": 71,
+        "n_omega_docfreq_ge_3": 97,
+        "n_p_types": 29,
+        "n_path_codes": 400,
+        "n_rectangles": 488,
+        "occurrence_total": 279084,
+        "rank_X": 50,
+        "rank_identity_P_plus_E_minus_components": 50,
+        "svd_singular_max": 3.9906682246724237,
+        "svd_singular_min": 0.82936257472849,
+        "task": "lipo"
+      },
+      "task": "lipo"
+    }
+  },
+  "tolerances": {
+    "forward_abs": 1e-05,
+    "interaction_abs": 1e-08,
+    "invariance_abs": 1e-05,
+    "joint_replay_abs": 1e-05,
+    "metric_recheck": 1e-05,
+    "orthogonality_abs": 1e-05,
+    "param_bitwise": 0.0
+  }
+}
