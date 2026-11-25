@@ -577,6 +577,57 @@ def decisions(
 
 
 # ---------------------------------------------------------------------------
+# compute ledger (rebuilt from run.json so it survives registry loss)
+# ---------------------------------------------------------------------------
+
+
+def ledger(records: Sequence[Mapping[str, Any]], analysis: Path) -> dict[str, Any]:
+    rows = []
+    total = 0.0
+    for rec in records:
+        gpu_h = float(rec.get("gpu_hours") or 0.0)
+        total += gpu_h
+        rows.append(
+            {
+                "run_id": rec.get("run_id"),
+                "dataset": rec["dataset"],
+                "arm": rec["arm"],
+                "epochs": int(rec.get("epochs") or 0),
+                "wall_minutes": float(rec.get("wall_seconds", 0.0)) / 60.0,
+                "gpu_hours": gpu_h,
+                "gpu_device": (rec.get("environment") or {}).get("device", "cuda"),
+                "finished_utc": rec.get("finished_utc"),
+                "parameters": int(rec.get("parameters") or 0),
+                "grad_clip_events": int(rec.get("grad_clip_events") or 0),
+                "checkpoint_epoch": rec.get("best_epoch"),
+            }
+        )
+    rows.sort(key=lambda r: (r["dataset"], r["arm"]))
+    payload = {
+        "round_id": C.ROUND_ID,
+        "t0_utc": C.T0_UTC,
+        "generated_utc": C.utcnow(),
+        "elapsed_hours": C.elapsed_hours(),
+        "gpu_hours_total": total,
+        "gpu_soft_cap_hours": C.GPU_SOFT_HOURS,
+        "gpu_hard_cap_hours": C.GPU_HARD_HOURS,
+        "runs": rows,
+        "note": "rebuilt from runs/*/run.json (GPU hours counted only for CUDA runs)",
+        "budget": C.budget_state(),
+    }
+    C.write_json(analysis / "compute_ledger.json", payload)
+    C.write_json(
+        analysis / "run_registry.json",
+        {
+            "round_id": C.ROUND_ID,
+            "runs": {r["run_id"]: r for r in rows if r["run_id"]},
+            "updated_utc": C.utcnow(),
+        },
+    )
+    return payload
+
+
+# ---------------------------------------------------------------------------
 # summary
 # ---------------------------------------------------------------------------
 
@@ -640,6 +691,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     C.write_json(analysis / "paired_comparisons.json", comparisons(records, preds))
     dec = decisions(records, analysis / "phase_decisions_rules.json", analysis)
     C.write_json(analysis / "phase_decisions.json", dec)
+    ledger(records, analysis)
     C.write_json(analysis / "summary.json", summary(records, dec, analysis))
     C.log(f"collected {len(records)} run(s), {len(preds)} prediction file(s)")
     return 0
