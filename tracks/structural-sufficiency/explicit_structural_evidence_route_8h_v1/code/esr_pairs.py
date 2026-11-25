@@ -95,8 +95,14 @@ def molecule_pairs(
     return {"u": u, "v": v, "dist": d, "common": common, "bond": bond}
 
 
-def _molecule_task(args: tuple[int, int, int, int, np.ndarray, int]) -> tuple[int, dict[str, np.ndarray]]:
-    mol, n_atoms, b0, b1, bond_index, max_dist = args
+#: fork-inherited shared arrays; tasks carry only integers so the 196 MB PCBA
+#: bond array is never pickled per task
+_WORKER: dict[str, Any] = {}
+
+
+def _molecule_task(args: tuple[int, int, int, int, int]) -> tuple[int, dict[str, np.ndarray]]:
+    mol, n_atoms, b0, b1, max_dist = args
+    bond_index = _WORKER["bond_index"]
     return mol, molecule_pairs(n_atoms, bond_index[b0:b1], max_dist=max_dist)
 
 
@@ -144,9 +150,10 @@ def build_pair_cache(
     n_mol = int(cache["n_molecules"])
     n_atoms = np.diff(atom_ptr)
     tasks = [
-        (m, int(n_atoms[m]), int(bond_ptr[m]), int(bond_ptr[m + 1]), bond_index, int(max_dist))
+        (m, int(n_atoms[m]), int(bond_ptr[m]), int(bond_ptr[m + 1]), int(max_dist))
         for m in range(n_mol)
     ]
+    _WORKER["bond_index"] = bond_index
     results: list[dict[str, np.ndarray] | None] = [None] * n_mol
     if workers > 1 and n_mol > 2000:
         import multiprocessing as mp
