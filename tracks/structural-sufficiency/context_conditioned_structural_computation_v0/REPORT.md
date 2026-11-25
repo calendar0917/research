@@ -7,6 +7,7 @@
 - Test 角色：`DEVELOPMENT_TEST`。每 epoch 全量评价、进入全部诊断，但**不参与**任何选择（checkpoint 只按最小 Valid RMSE，平局取更早 epoch）
 - 主指标 RMSE（原始标签单位），MAE 为次要；11 项正确性检查在两个数据集上全部通过（`analysis/checks.json`，`all_passed=1`）
 - 实际训练：7 个单元 × 360 epochs，全部 `COMPLETED`，无早停/无降级/无中断；**新训练 GPU·h ≈ 1.107**（目标 ≤2、硬上限 3）；训练墙钟 04:21–04:57 UTC（≈36 min），远小于 2 h 上限
+- 独立复算：从提交的 `checkpoint_best.pt` 重新加载并全量评分，`mollipo A`（ep140）、`mollipo D`（ep148）、`molesol A`（ep265）的 Valid/Test RMSE 与 `run.json` 记录**逐位相同**（0.7267/0.7166、0.7389/0.7300、0.8601/0.8302）；21 个结果文件的 SHA-256 与 `run.json` 记录全部一致
 
 ---
 
