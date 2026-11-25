@@ -31,9 +31,14 @@ def parse_unit(token: str) -> dict[str, Any]:
     parts = token.split(":")
     if len(parts) < 2:
         raise ValueError(f"unit token {token!r} must be DATASET:ARM[:epochs[:max_dist[:relation_mode]]]")
+    arm = "-".join(parts[1].split("+"))
+    if not arm.startswith("SREN-") and arm not in ("BASE", "HIDDEN", "UNARY"):
+        arm = f"SREN-{arm}"
+    if arm not in C.ARMS and arm != C.FLEX:
+        raise ValueError(f"unknown arm {arm!r}; known: {list(C.ARMS) + [C.FLEX]}")
     unit = {
         "dataset": parts[0],
-        "arm": parts[1],
+        "arm": arm,
         "epochs": int(parts[2]) if len(parts) > 2 and parts[2] else None,
         "max_dist": int(parts[3]) if len(parts) > 3 and parts[3] else 2,
         "relation_mode": parts[4] if len(parts) > 4 and parts[4] else "real",
