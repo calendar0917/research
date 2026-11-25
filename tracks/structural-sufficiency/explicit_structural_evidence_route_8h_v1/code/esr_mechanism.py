@@ -44,6 +44,8 @@ PCBA_SUBSET = 4096
 
 
 def _row_primary(view: D.View, metrics: Mapping[str, Any]) -> float:
+    if "ap" not in metrics and "macro_ap" in metrics:
+        return float(metrics["macro_ap"])
     return float(view.primary(metrics))
 
 
