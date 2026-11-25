@@ -3,8 +3,8 @@
 Round id: `lcrc-support-joint-transfer-v1`.
 Protocol frozen before the first formal training step. The machine-readable freeze is
 [`analysis/protocol_freeze.json`](analysis/protocol_freeze.json)
-(`freeze_hash = 1d4963a0fc424c3665644cc43277bea8012d545fbc870c842ae8e475e7f6d093`,
-config SHA256 `59ea4f768149d0cd4866aa8aaf0d4822f02df355aa4367842cb40159340f8f14`).
+(`freeze_hash = fdd2c15f7f47264bbc7173a14a4bf78ff50a3669ced65e9c7ede59420265f9e9`,
+config SHA256 `0de19575a0330e43f86ba7678098aa47b784cbfa10957007cd2b2f301f1e34b6`).
 Any change after this point is recorded as a deviation in [`REPORT.md`](REPORT.md),
 not silently folded into the frozen protocol.
 
