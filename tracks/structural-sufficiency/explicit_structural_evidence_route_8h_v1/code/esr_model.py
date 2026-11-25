@@ -170,6 +170,16 @@ class CompoundMLP(nn.Module):
 # ---------------------------------------------------------------------------
 
 
+def _ablate_tokens(v: torch.Tensor, ablate: Mapping[str, Any]) -> torch.Tensor:
+    """Diagnostics-only masking of relation tokens (identity when unused)."""
+    if ablate.get("zero_v"):
+        return torch.zeros_like(v)
+    keep = ablate.get("pair_keep")
+    if keep is not None and v.numel():
+        return v * keep.to(device=v.device, dtype=v.dtype).reshape(-1, 1)
+    return v
+
+
 class SRENNet(nn.Module):
     """One explicit-evidence prediction function on the frozen trunk."""
 
@@ -332,14 +342,33 @@ class SRENNet(nn.Module):
         x = torch.cat([u + u, u * u, torch.zeros_like(u), r], dim=1)
         return self.V(x)
 
-    def forward(self, batch: Mapping[str, Any]) -> torch.Tensor:
+    def forward(self, batch: Mapping[str, Any], ablate: Mapping[str, Any] | None = None) -> torch.Tensor:
+        """Logits for one batch.
+
+        ``ablate`` exists only for post-hoc diagnostics (``code/esr_mechanism.py``);
+        it defaults to ``None`` and the training path never passes it.  Supported
+        keys: ``zero_h0``, ``zero_u``, ``zero_v``, ``zero_global`` (bools) and
+        ``pair_keep`` / ``atom_keep`` (0/1 masks over tokens).
+        """
+        ablate = ablate or {}
         h0, u = self.encode_tokens(batch)
+        if ablate.get("zero_h0"):
+            h0 = torch.zeros_like(h0)
+            u = self.U(h0)
+        if ablate.get("zero_u"):
+            u = torch.zeros_like(u)
+        atom_keep = ablate.get("atom_keep")
+        if atom_keep is not None:
+            u = u * atom_keep.to(device=u.device, dtype=u.dtype).reshape(-1, 1)
         atom_batch = batch["atom_batch"]
         atom_counts = batch["atom_counts"]
         n_graphs = int(batch["n_graphs"])
         c = self.global_linear(batch["global_ext"])
+        if ablate.get("zero_global"):
+            c = torch.zeros_like(c)
         if self.variant in (C.ADD, C.EVID):
             v = self.relation_tokens(u, batch)
+            v = _ablate_tokens(v, ablate)
             a_scores = self.q_u(u)
             b_scores = self.q_v(v)
             mode = "add" if self.variant == C.ADD else "evid"
@@ -354,19 +383,19 @@ class SRENNet(nn.Module):
             return c + local + pair
         if self.variant == C.BANK:
             assert self.theta_u is not None and self.theta_v is not None
-            v = self.relation_tokens(u, batch)
+            v = _ablate_tokens(self.relation_tokens(u, batch), ablate)
             u_bank = evidence_aggregate(u, atom_batch, atom_counts, self.theta_u)
             v_bank = evidence_aggregate(v, batch["pair_batch"], batch["pair_counts"], self.theta_v)
             return c + self.q_u(u_bank) + self.q_v(v_bank)
         if self.variant == C.UNARY:
             assert self.theta_u is not None and self.theta_v is not None
-            v = self.self_tokens(u)
+            v = _ablate_tokens(self.self_tokens(u), ablate)
             u_bank = evidence_aggregate(u, atom_batch, atom_counts, self.theta_u)
             v_bank = evidence_aggregate(v, atom_batch, atom_counts, self.theta_v)
             return c + self.q_u(u_bank) + self.q_v(v_bank)
         if self.variant == C.HIDDEN:
             assert self.theta_u is not None and self.theta_v is not None
-            v = self.relation_tokens(u, batch)
+            v = _ablate_tokens(self.relation_tokens(u, batch), ablate)
             u_bank = evidence_aggregate(u, atom_batch, atom_counts, self.theta_u)
             v_bank = evidence_aggregate(v, batch["pair_batch"], batch["pair_counts"], self.theta_v)
             z = torch.cat([u_bank, v_bank], dim=1)
@@ -374,7 +403,7 @@ class SRENNet(nn.Module):
             return c + self.hidden_fc2(F.silu(self.hidden_fc1(z)))
         if self.variant == C.COMPOUND:
             assert self.theta_w is not None and self.q_w is not None and self.compound is not None
-            v = self.relation_tokens(u, batch)
+            v = _ablate_tokens(self.relation_tokens(u, batch), ablate)
             pu, pv = batch["pair_u"], batch["pair_v"]
             n_atoms = int(u.shape[0])
             deg = u.new_zeros(n_atoms)
@@ -390,7 +419,7 @@ class SRENNet(nn.Module):
             return c + self.q_w(w_bank)
         if self.variant == C.FLEX:
             assert self.theta_u is not None and self.theta_v is not None and self.flex is not None
-            v = self.relation_tokens(u, batch)
+            v = _ablate_tokens(self.relation_tokens(u, batch), ablate)
             u_dec = evidence_decompose(u, atom_batch, atom_counts, self.theta_u)
             v_dec = evidence_decompose(v, batch["pair_batch"], batch["pair_counts"], self.theta_v)
             out = c

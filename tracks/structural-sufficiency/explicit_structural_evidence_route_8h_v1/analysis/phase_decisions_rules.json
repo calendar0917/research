@@ -1,0 +1,40 @@
+{
+ "round_id": "explicit-structural-evidence-route-8h-v1",
+ "frozen_utc": "2026-11-25T17:10:00Z",
+ "note": "Numeric decision rules fixed before any PCBA arm finished its 25-epoch prefix (at freeze time PCBA SREN-ADD was at epoch 3/25; no small-dataset arm had finished). Applied mechanically by code/esr_collect.py.",
+ "reference_points": {
+  "W2_best_within_25": 0.26527331610028143,
+  "W2_prefix25_final": 0.2630573,
+  "FIXED1_prefix25_final": 0.2758455,
+  "DYNAMIC_best_40": 0.275067,
+  "W2_best_40": 0.26527331610028143
+ },
+ "best_explicit": {
+  "candidates": ["SREN-ADD", "SREN-EVID", "SREN-BANK", "SREN-COMPOUND"],
+  "statistic": "best Validation AP inside the 25-epoch prefix",
+  "tie_rule": "if the top two are within 0.001 AP, prefer the earlier entry of [SREN-ADD, SREN-EVID, SREN-BANK, SREN-COMPOUND]"
+ },
+ "levels": {
+  "L1": "best_explicit >= W2_best_within_25 + 0.005",
+  "L2": "best_explicit >= FIXED1_prefix25_final - 0.003",
+  "L3": "best_explicit >= 0.280",
+  "L4": "best_explicit >= 0.290"
+ },
+ "triggers": {
+  "D1_UNARY_MATCHED": "L1 or L2",
+  "D2_extension_40": "L1 and curve still improving: argmax epoch >= 20 and mean(AP epochs 21..25) > mean(AP epochs 16..20); pairs EVID->ADD, BANK->HIDDEN, COMPOUND->BANK, ADD->HIDDEN",
+  "D3_BANK_FLEX": "HIDDEN >= best_explicit + 0.005 and HIDDEN satisfies L1",
+  "D4_REL_BLIND": "L1 or L2",
+  "D5_RANGE4": "L1 and wall clock and GPU budget allow after D1-D4 (lowest priority, cancelled first)"
+ },
+ "small_data_signals": {
+  "LIPO": "BASE_valid_rmse * 0.98 (>=2% relative RMSE reduction) for at least one explicit arm",
+  "TOX21": "BASE_macro_roc_auc + 0.005 for at least one explicit arm",
+  "ESOL": "BASE_valid_rmse * 0.98"
+ },
+ "honesty_rules": [
+  "no Test number influences any decision",
+  "no arm, width, epoch or promotion rule changes after this file is committed",
+  "a level that is not reached is reported as not reached"
+ ]
+}
