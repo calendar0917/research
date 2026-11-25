@@ -1,0 +1,247 @@
+{
+ "aggregation": {
+  "LME": "tau*log(mean(exp(s/tau)))",
+  "R": "pi_mean*Mean + pi_pos*LME - pi_neg*LME(-s)",
+  "count_scaling": "A(s) = sqrt(m) * R(s); ADD = sum(s)/sqrt(m)",
+  "empty_set": 0.0,
+  "numerics": "max/min-shifted segment log-sum-exp, float32",
+  "pi_init": [
+   0.5,
+   0.25,
+   0.25
+  ],
+  "single_token": "R(s) = s",
+  "tau": 1.0
+ },
+ "arms": {
+  "BASE": {
+   "explicit_evidence": false,
+   "note": "original BSModel: local h0 + f + rho + 4-head attention readout (unchanged)",
+   "readout_deleted_from_base": false
+  },
+  "HIDDEN": {
+   "explicit_evidence": false,
+   "note": "BANK channels + hidden-space nonlinear task combination (capacity control, not a proposed model)",
+   "readout_deleted_from_base": true
+  },
+  "SREN-ADD": {
+   "explicit_evidence": true,
+   "note": "task-space scores already projected; sqrt(m) * mean aggregation",
+   "readout_deleted_from_base": true
+  },
+  "SREN-BANK": {
+   "explicit_evidence": true,
+   "note": "channel-wise evidence aggregation then task-linear projection",
+   "readout_deleted_from_base": true
+  },
+  "SREN-BANK-FLEX": {
+   "explicit_evidence": false,
+   "note": "BANK channels decomposed into mean / positive-gap / negative-gap with six task read heads",
+   "readout_deleted_from_base": true
+  },
+  "SREN-COMPOUND": {
+   "explicit_evidence": true,
+   "note": "per-root composite of incident relation tokens, then channel evidence + task-linear projection",
+   "readout_deleted_from_base": true
+  },
+  "SREN-EVID": {
+   "explicit_evidence": true,
+   "note": "task-space scores; sqrt(m) * (pi_mean*Mean + pi_pos*LME - pi_neg*LME(-)) aggregation",
+   "readout_deleted_from_base": true
+  },
+  "UNARY": {
+   "explicit_evidence": false,
+   "note": "real-pair token stream replaced by one SELF token per root (same relation MLP), BANK readout",
+   "readout_deleted_from_base": true
+  }
+ },
+ "datasets": {
+  "ESOL": {
+   "K": 48,
+   "direction": "lower",
+   "epochs": 360,
+   "n_tasks": 1,
+   "n_train": 902,
+   "n_valid": 113,
+   "primary_metric": "rmse",
+   "scale": 1,
+   "split": "ogbg-molesol official scaffold split",
+   "task": "regression",
+   "units": "logS (log10 mol/L)"
+  },
+  "LIPO": {
+   "K": 48,
+   "direction": "lower",
+   "epochs": 360,
+   "n_tasks": 1,
+   "n_train": 3360,
+   "n_valid": 420,
+   "primary_metric": "rmse",
+   "scale": 1,
+   "split": "ogbg-mollipo official scaffold split (row ids of mol.csv.gz)",
+   "task": "regression",
+   "units": "logD (raw OGB target)"
+  },
+  "PCBA": {
+   "K": 64,
+   "direction": "higher",
+   "epochs": 25,
+   "n_tasks": 128,
+   "n_train": 350343,
+   "n_valid": 43793,
+   "primary_metric": "ap",
+   "scale": 2,
+   "split": "ogbg-molpcba official scaffold split",
+   "task": "multitask",
+   "units": "official OGB macro AP"
+  },
+  "TOX21": {
+   "K": 48,
+   "direction": "higher",
+   "epochs": 360,
+   "n_tasks": 12,
+   "n_train": 6264,
+   "n_valid": 783,
+   "primary_metric": "macro_roc_auc",
+   "scale": 1,
+   "split": "frozen ChemBench Tox21 split (lcrc_predictive_trace_benchmark_v1 / molnet v2)",
+   "task": "multitask",
+   "units": "observed-label macro ROC-AUC over 12 endpoints"
+  }
+ },
+ "global_term": {
+  "forbidden_inputs": [
+   "pooled hidden state",
+   "attention output",
+   "independent graph MLP"
+  ],
+  "form": "c_t(G) = w_t^T g(G) + b_t",
+  "g": "frozen label-free global descriptors (standardised) + Train-standardised log1p(n_atoms), log1p(n_relation_pairs)"
+ },
+ "gpu_hard_hours": 16.0,
+ "gpu_soft_hours": 14.0,
+ "history": {
+  "pcba": {
+   "DYNAMIC": {
+    "horizon": 40,
+    "params": 1128468,
+    "test_ap": 0.262226,
+    "valid_ap": 0.275067
+   },
+   "FIXED1": {
+    "best_epoch": 25,
+    "horizon": 25,
+    "params": 1128468,
+    "test_ap": 0.257002,
+    "valid_ap": 0.2758464
+   },
+   "FIXED1_prefix25_final": 0.2758455,
+   "W2": {
+    "best_epoch": 24,
+    "horizon": 40,
+    "params": 994324,
+    "test_ap": 0.2536156,
+    "valid_ap": 0.26527331610028143
+   },
+   "W2_prefix25_final": 0.2630573
+  },
+  "small": {
+   "LIPO": {
+    "C1_ADD_test_rmse": 0.703645,
+    "C1_ADD_valid_rmse": 0.709184,
+    "C1_JOINT_test_rmse": 0.725703,
+    "C1_JOINT_valid_rmse": 0.702272,
+    "C1_test_rmse": 0.725392,
+    "C1_valid_rmse": 0.708624,
+    "GINE_test_rmse": 0.6456,
+    "GINE_valid_rmse": 0.6091
+   }
+  }
+ },
+ "levels": {
+  "level1_delta_ap": 0.005,
+  "level2_gap_to_fixed1_dynamic": 0.003,
+  "level3_ap": 0.28,
+  "level4_ap": 0.29
+ },
+ "param_matching": {
+  "hidden_widths": [
+   "K/2",
+   "K",
+   "2K"
+  ],
+  "rule": "closest active total parameter count to BANK; ties keep the smaller H; <=5% total or mark APPROX_CAPACITY_CONTROL"
+ },
+ "pcba_protocol": {
+  "formal_horizon_epochs": 25,
+  "full_horizon_epochs": 40,
+  "order_plan": "ld.make_order_plan(official train rows, batch 128, seed 0, 40 epochs)",
+  "schedule": "1-epoch linear warmup 3e-5 -> 3e-4 then per-step cosine to 1e-5 over the 40-epoch horizon (never compressed)",
+  "selection": "best Validation AP within the common horizon; extension resumes from checkpoint_last"
+ },
+ "recipes": {
+  "pcba": {
+   "adam_betas": [
+    0.9,
+    0.999
+   ],
+   "adam_eps": 1e-08,
+   "batch_size": 128,
+   "dropout": 0.1,
+   "early_stopping": false,
+   "end_lr": 1e-05,
+   "epochs": 40,
+   "gradient_clip": 5.0,
+   "learning_rate": 0.0003,
+   "loss": "masked BCEWithLogitsLoss over observed entries only",
+   "optimizer": "AdamW",
+   "precision": "fp32",
+   "scheduler": "1-epoch linear warmup then per-step cosine over the 40-epoch horizon",
+   "test_policy": "official Test targets are NaN in the label artifact and are never indexed",
+   "warmup_epochs": 1.0,
+   "warmup_start_lr": 3e-05,
+   "weight_decay": 0.001
+  },
+  "small": {
+   "adam_betas": [
+    0.9,
+    0.999
+   ],
+   "adam_eps": 1e-08,
+   "batch_size": 128,
+   "dropout": 0.1,
+   "epochs": 360,
+   "gradient_clip": 5.0,
+   "min_lr": 1e-05,
+   "peak_lr": 0.0003,
+   "precision": "fp32",
+   "scheduler": "per_step_cosine_no_warmup",
+   "seed": 0,
+   "shuffle_offset": 917000,
+   "weight_decay": 0.001
+  }
+ },
+ "round_id": "explicit-structural-evidence-route-8h-v1",
+ "seed": 0,
+ "small_signal_thresholds": {
+  "ESOL_rel_rmse": 0.02,
+  "LIPO_rel_rmse": 0.02,
+  "TOX21_macro_auc": 0.005
+ },
+ "t0_utc": "2026-11-25T16:04:18Z",
+ "test_policy": {
+  "label": "EXPOSED_TEST_ENGINEERING_COMPARISON_SET",
+  "rule": "one final scoring pass after every architecture/checkpoint/conditional decision is frozen; no architecture change afterwards; PCBA Test labels are NaN in the frozen artifact and cannot be scored"
+ },
+ "tokens": {
+  "local": "u_i = LN(Linear(2K,K)(SiLU(Linear(d,2K)(h0_i))))",
+  "pair_set": "all unordered root pairs with 1 <= shortest-path distance <= 2 (D=4 only for BEST_EXPLICIT_RANGE4)",
+  "relation": "v_ij = LN(Linear(2K,K)(SiLU(Linear(3K+19,2K)(x_ij))))",
+  "relation_dim": 19,
+  "relation_features": "5 distance one-hots (SELF,1,2,3,4) + log1p(common neighbours) + 13 raw bond features",
+  "relation_input": "x_ij = [u_i+u_j, u_i*u_j, |u_i-u_j|, r_ij]"
+ },
+ "version": "esr-protocol-v1",
+ "wall_hard_hours": 8.0,
+ "wall_train_stop_hours": 7.25
+}

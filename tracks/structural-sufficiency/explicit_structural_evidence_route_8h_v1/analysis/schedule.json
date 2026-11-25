@@ -1,0 +1,34 @@
+{
+ "created_utc": "2026-11-25T16:19:44Z",
+ "gpus": {
+  "res-gpu0": [
+   "LIPO 7 arms (B1)",
+   "TOX21 7 arms (B2)",
+   "ESOL BASE/HIDDEN/candidates (B3)",
+   "PCBA BANK, HIDDEN, COMPOUND (C1)",
+   "conditional D1/D3/D4/D5"
+  ],
+  "res-gpu1": [
+   "PCBA SREN-ADD, SREN-EVID (C1, first)",
+   "PCBA COMPOUND if gpu0 is busy",
+   "D2 paired 40-epoch extensions",
+   "mechanism/decomposition inference"
+  ]
+ },
+ "launch_order": [
+  "CPU: pair caches (all datasets) + Phase-A checks",
+  "GPU preflight on both cards (timing + memory)",
+  "res-gpu1: pcba SREN-ADD (25 epochs), then pcba SREN-EVID",
+  "res-gpu0: LIPO BASE, UNARY, ADD, EVID, BANK, COMPOUND, HIDDEN; then TOX21 same order; ESOL",
+  "res-gpu0: PCBA BANK, HIDDEN, COMPOUND",
+  "conditional branches by the frozen triggers"
+ ],
+ "round_id": "explicit-structural-evidence-route-8h-v1",
+ "stop_rules": {
+  "gpu_hard_hours": 16.0,
+  "gpu_soft_hours": 14.0,
+  "hard_deadline_hours": 8.0,
+  "min_remaining_for_launch": "1.15 * projected job time + 1.0 h analysis reserve",
+  "no_new_formal_training_after_hours": 7.25
+ }
+}

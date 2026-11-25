@@ -1,0 +1,316 @@
+{
+ "conditional": [
+  {
+   "dataset": "PCBA",
+   "matches_best_explicit": true,
+   "model": "UNARY",
+   "requested_epochs": 25,
+   "run_id": "pcba-unary-matched-s0-e25",
+   "stage": "D1",
+   "trigger": "BEST_EXPLICIT improves >= 0.005 AP over the same-horizon W2 reference, or reaches Level 2 (gap <= 0.003 to FIXED1/DYNAMIC)"
+  },
+  {
+   "dataset": "PCBA",
+   "model": "BEST_EXPLICIT",
+   "requested_epochs": 40,
+   "resume": true,
+   "run_id": "pcba-best-explicit-s0-e40",
+   "stage": "D2",
+   "trigger": "BEST_EXPLICIT reaches Level 1 and the Validation curve still improves"
+  },
+  {
+   "dataset": "PCBA",
+   "model": "EXTENSION_PAIR_OF_BEST_EXPLICIT",
+   "requested_epochs": 40,
+   "resume": true,
+   "run_id": "pcba-paired-control-s0-e40",
+   "stage": "D2",
+   "trigger": "same as D2; pairs EVID->ADD, BANK->HIDDEN, COMPOUND->BANK, ADD->HIDDEN"
+  },
+  {
+   "dataset": "PCBA",
+   "model": "SREN-BANK-FLEX",
+   "requested_epochs": 25,
+   "run_id": "pcba-bank-flex-s0-e25",
+   "stage": "D3",
+   "trigger": "HIDDEN - BEST_EXPLICIT >= 0.005 AP, HIDDEN reaches Level 1, diagnostics show no implementation or input confound"
+  },
+  {
+   "dataset": "PCBA",
+   "model": "BEST_EXPLICIT",
+   "relation_mode": "blind",
+   "requested_epochs": 25,
+   "run_id": "pcba-best-explicit-blind-s0-e25",
+   "stage": "D4",
+   "trigger": "BEST_EXPLICIT Level 1+; D1 shows a positive real-relation gain; full training budget remains"
+  },
+  {
+   "dataset": "PCBA",
+   "max_dist": 4,
+   "model": "BEST_EXPLICIT",
+   "requested_epochs": 25,
+   "run_id": "pcba-best-explicit-range4-s0-e25",
+   "stage": "D5",
+   "trigger": "BEST_EXPLICIT Level 2/3; D1 supports relations; relation stream not collapsed; D2 done; independent budget"
+  }
+ ],
+ "degrade_order": [
+  "cancel D5",
+  "cancel D4",
+  "drop non-core ESOL candidates",
+  "skip untriggered D branches",
+  "cancel PCBA COMPOUND",
+  "drop every PCBA core arm to 20 epochs (only before the first formal PCBA step)"
+ ],
+ "esol": [
+  {
+   "dataset": "ESOL",
+   "gpu_pool": "any",
+   "model": "BASE",
+   "priority": 2,
+   "requested_epochs": 360,
+   "run_id": "esol-base-s0",
+   "seed": 0,
+   "stage": "B3"
+  },
+  {
+   "dataset": "ESOL",
+   "gpu_pool": "any",
+   "model": "HIDDEN",
+   "priority": 2,
+   "requested_epochs": 360,
+   "run_id": "esol-hidden-s0",
+   "seed": 0,
+   "stage": "B3"
+  },
+  {
+   "dataset": "ESOL",
+   "model": "SELECT_BEST_EXPLICIT_LIPO",
+   "priority": 2,
+   "requested_epochs": 360,
+   "run_id": "esol-best-explicit-lipo-s0",
+   "seed": 0,
+   "selection_rule": "best Validation primary metric among ADD/EVID/BANK/COMPOUND on LIPO",
+   "stage": "B3"
+  },
+  {
+   "dataset": "ESOL",
+   "model": "SELECT_BEST_EXPLICIT_TOX21",
+   "note": "run only if it differs from the LIPO-selected arm",
+   "priority": 2,
+   "requested_epochs": 360,
+   "run_id": "esol-best-explicit-tox21-s0",
+   "seed": 0,
+   "selection_rule": "best Validation primary metric among ADD/EVID/BANK/COMPOUND on TOX21",
+   "stage": "B3"
+  }
+ ],
+ "pcba": [
+  {
+   "dataset": "PCBA",
+   "gpu_pool": "res-gpu1",
+   "model": "SREN-ADD",
+   "priority": 1,
+   "requested_epochs": 25,
+   "run_id": "pcba-sren-add-s0-e25",
+   "seed": 0,
+   "stage": "C1"
+  },
+  {
+   "dataset": "PCBA",
+   "gpu_pool": "res-gpu1",
+   "model": "SREN-EVID",
+   "priority": 1,
+   "requested_epochs": 25,
+   "run_id": "pcba-sren-evid-s0-e25",
+   "seed": 0,
+   "stage": "C1"
+  },
+  {
+   "dataset": "PCBA",
+   "gpu_pool": "res-gpu0",
+   "model": "SREN-BANK",
+   "priority": 2,
+   "requested_epochs": 25,
+   "run_id": "pcba-sren-bank-s0-e25",
+   "seed": 0,
+   "stage": "C1"
+  },
+  {
+   "dataset": "PCBA",
+   "gpu_pool": "res-gpu0",
+   "model": "HIDDEN",
+   "priority": 2,
+   "requested_epochs": 25,
+   "run_id": "pcba-hidden-s0-e25",
+   "seed": 0,
+   "stage": "C1"
+  },
+  {
+   "dataset": "PCBA",
+   "gpu_pool": "res-gpu0",
+   "model": "SREN-COMPOUND",
+   "priority": 2,
+   "requested_epochs": 25,
+   "run_id": "pcba-sren-compound-s0-e25",
+   "seed": 0,
+   "stage": "C1"
+  }
+ ],
+ "priority_order": [
+  "B",
+  "C1",
+  "B3",
+  "C1-compound",
+  "D1",
+  "D2",
+  "D3",
+  "D4",
+  "D5",
+  "mechanism-extension"
+ ],
+ "round_id": "explicit-structural-evidence-route-8h-v1",
+ "small": [
+  {
+   "dataset": "LIPO",
+   "gpu_pool": "any",
+   "model": "BASE",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "lipo-base-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "LIPO",
+   "gpu_pool": "any",
+   "model": "UNARY",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "lipo-unary-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "LIPO",
+   "gpu_pool": "any",
+   "model": "SREN-ADD",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "lipo-sren-add-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "LIPO",
+   "gpu_pool": "any",
+   "model": "SREN-EVID",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "lipo-sren-evid-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "LIPO",
+   "gpu_pool": "any",
+   "model": "SREN-BANK",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "lipo-sren-bank-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "LIPO",
+   "gpu_pool": "any",
+   "model": "SREN-COMPOUND",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "lipo-sren-compound-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "LIPO",
+   "gpu_pool": "any",
+   "model": "HIDDEN",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "lipo-hidden-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "TOX21",
+   "gpu_pool": "any",
+   "model": "BASE",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "tox21-base-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "TOX21",
+   "gpu_pool": "any",
+   "model": "UNARY",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "tox21-unary-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "TOX21",
+   "gpu_pool": "any",
+   "model": "SREN-ADD",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "tox21-sren-add-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "TOX21",
+   "gpu_pool": "any",
+   "model": "SREN-EVID",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "tox21-sren-evid-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "TOX21",
+   "gpu_pool": "any",
+   "model": "SREN-BANK",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "tox21-sren-bank-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "TOX21",
+   "gpu_pool": "any",
+   "model": "SREN-COMPOUND",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "tox21-sren-compound-s0",
+   "seed": 0,
+   "stage": "B"
+  },
+  {
+   "dataset": "TOX21",
+   "gpu_pool": "any",
+   "model": "HIDDEN",
+   "priority": 1,
+   "requested_epochs": 360,
+   "run_id": "tox21-hidden-s0",
+   "seed": 0,
+   "stage": "B"
+  }
+ ],
+ "version": "esr-protocol-v1"
+}
