@@ -481,7 +481,8 @@ def gate6_gradients(task_key: str, support: S.Support, models: dict[str, Any], d
             codes = torch.unique(
                 batch["path_cat"].to(torch.long) * int(spec.n_nbr_codes) + batch["path_end63"].to(torch.long)
             )
-            rows_seen = torch.as_tensor(support.index_table, dtype=torch.long)[codes]
+            table_idx = torch.as_tensor(support.index_table, dtype=torch.long, device=codes.device)
+            rows_seen = table_idx[codes]
             entry["joint_grad_rows_seen_in_batch"] = int((rows_seen >= 0).sum())
             del codes, rows_seen
         entry["passed"] = bool(
