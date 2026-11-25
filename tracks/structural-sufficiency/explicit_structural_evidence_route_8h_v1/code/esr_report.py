@@ -215,8 +215,38 @@ def decisions_table(dec: Mapping[str, Any]) -> str:
     return _md_table(body, ["decision", "fired", "rule / value"])
 
 
+HIST_W2_CURVE = C.REPO / "tracks/structural-sufficiency/lcrc_support_joint_transfer_v1/runs/W2_JOINT/train_curve.csv"
+
+
+def pcba_gap_table(runs: Path, epochs: Sequence[int] = (5, 10, 15, 20, 25)) -> str:
+    """Per-epoch gap to the historical W2 curve at the same epoch (descriptive)."""
+    if not HIST_W2_CURVE.exists():
+        return "historical W2 curve not available"
+    hist = {int(float(r["epoch"])): float(r["valid_ap"]) for r in _csv(HIST_W2_CURVE)}
+    rows: dict[str, dict[int, float]] = {}
+    for run_json in sorted(runs.glob("*/run.json")):
+        payload = json.loads(run_json.read_text())
+        if payload.get("dataset") != C.PCBA or payload.get("smoke"):
+            continue
+        curve = run_json.parent / "curve.csv"
+        if not curve.exists():
+            continue
+        vals = {int(float(r["epoch"])): float(r["valid_ap"]) for r in _csv(curve)}
+        rows[payload["arm"]] = {e: vals.get(e) for e in epochs}
+    if not rows:
+        return "no PCBA curves yet"
+    body = []
+    for arm, vals in sorted(rows.items()):
+        body.append([arm] + [(_fmt(vals[e]) if vals[e] is not None else "—") for e in epochs] + [
+            (f"{vals[epochs[-1]] - hist[epochs[-1]]:+.4f}" if vals.get(epochs[-1]) and epochs[-1] in hist else "—")
+        ])
+    body.append(["*historical W2 (reference curve)*"] + [f"{hist[e]:.4f}" if e in hist else "—" for e in epochs] + ["—"])
+    return _md_table(body, ["arm"] + [f"ep {e}" for e in epochs] + [f"gap at ep {epochs[-1]}"])
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="render report tables")
+    ap.add_argument("--runs", default=str(C.RUNS))
     ap.add_argument("--analysis", default=str(C.ANALYSIS))
     ap.add_argument("--out", default=str(C.ANALYSIS / "report_tables.md"))
     args = ap.parse_args(argv)
@@ -232,6 +262,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         training_table(rows),
         "\n## PCBA\n",
         pcba_table(rows, dec, paired),
+        "\n### Per-epoch gap to the historical W2 curve\n",
+        pcba_gap_table(Path(args.runs)),
         "\n## Lipo\n",
         small_table(rows, dec, paired, "LIPO"),
         "\n## Tox21\n",
