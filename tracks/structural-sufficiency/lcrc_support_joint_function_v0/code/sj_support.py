@@ -22,9 +22,10 @@ Everything here is deterministic, label-free and Train-only.
 from __future__ import annotations
 
 import hashlib
+import json
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 
@@ -510,3 +511,85 @@ def build_task_support(task_key: str, *, verify_artifact: bool = True) -> Suppor
 
 
 __all__ = [n for n in dir() if not n.startswith("_")]
+
+
+# ---------------------------------------------------------------------------
+# CLI: (re)build the Train-only support artefacts and the support graph
+# ---------------------------------------------------------------------------
+
+FROZEN_DEFINITIONS = {
+    "grouping": "p = path_cat, e = path_end63 (production S2 integer codes, no new fields)",
+    "omega": "the set of distinct (p, e) pairs that actually occur in the Train split",
+    "design": (
+        "X has one row per Omega element and exactly two unit entries per row: the column of its p "
+        "and the column of its e (bipartite incidence matrix, |P|+|E| columns)"
+    ),
+    "svd": "float64 reduced SVD of X; U = left singular vectors with s > 1e-10 * s_max",
+    "projection": "P = U U^T; J_add = P J; J_int = J - P J",
+    "weights": "type-equal: every Omega element has weight 1 (no occurrence / molecule weighting)",
+    "legality": "bond_type_2 is encoded in both p and e; only p % n_bond == e % n_bond is legal",
+    "unseen_policy": "no new learnable parameter; the fallback is a deterministic function of J_table",
+    "fallback": {
+        "same_component": (
+            "least-squares marginal fit Jhat = argmin ||X Theta - J_table||_F; J(p,e) = Theta[p] + Theta[e]"
+        ),
+        "otherwise": "type-equal mean over the Omega rows of J_table",
+    },
+}
+
+ARTIFACT_RULE = (
+    "each task recomputes Omega + X + SVD from the frozen caches and must match the recorded .npz "
+    "bit-for-bit (arrays) / 1e-12 (float64 matrices)"
+)
+
+
+def write_artifacts(task_keys: Sequence[str], *, out_dir=None, graph_path=None) -> dict[str, Any]:
+    out = Path(out_dir) if out_dir else C.ANALYSIS / "support"
+    out.mkdir(parents=True, exist_ok=True)
+    graph = Path(graph_path) if graph_path else C.ANALYSIS / "support_graph.json"
+    payload: dict[str, Any] = {
+        "schema": "lcrc-support-joint-function-support-graph-v1",
+        "round_id": C.ROUND_ID,
+        "created_utc": C.utcnow(),
+        "artifact_rule": ARTIFACT_RULE,
+        "frozen_definitions": FROZEN_DEFINITIONS,
+        "tasks": {},
+    }
+    for task_key in task_keys:
+        sup = build_task_support(task_key, verify_artifact=False)
+        path = out / f"{task_key}_support.npz"
+        save(sup, path)
+        entry = dict(sup.summary())
+        entry["artifact"] = {
+            "path": C.track_rel(path),
+            "sha256": C.sha256_file(path),
+            "content_hash": artifact_hash(sup),
+        }
+        payload["tasks"][task_key] = entry
+        C.log(
+            f"{task_key}: |Omega|={sup.n_omega} rank(X)={sup.rank} joint_dim={sup.joint_dim} "
+            f"rectangles={sup.n_rectangles} -> {C.track_rel(path)}"
+        )
+    graph.write_text(json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False) + "\n", encoding="utf-8")
+    C.log(f"support graph -> {C.track_rel(graph)}")
+    return payload
+
+
+def main(argv=None) -> int:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="build the Train-only joint support + support graph")
+    ap.add_argument("--tasks", nargs="+", default=list(C.TASK_ORDER))
+    ap.add_argument("--out-dir", default=None)
+    ap.add_argument("--graph", default=None)
+    args = ap.parse_args(argv)
+    payload = write_artifacts(args.tasks, out_dir=args.out_dir, graph_path=args.graph)
+    print(C.stable_json({t: {"n_omega": v["n_omega"], "rank_X": v["rank_X"],
+                             "joint_subspace_dim": v["joint_subspace_dim"],
+                             "n_rectangles": v["n_rectangles"]}
+                         for t, v in payload["tasks"].items()}))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
