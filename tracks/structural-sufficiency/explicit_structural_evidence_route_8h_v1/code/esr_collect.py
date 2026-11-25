@@ -689,7 +689,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     write_csv(analysis / "per_task_metrics.csv", per_task_rows(records, preds))
     write_csv(analysis / "efficiency_table.csv", efficiency_rows(records, analysis))
     C.write_json(analysis / "paired_comparisons.json", comparisons(records, preds))
-    dec = decisions(records, analysis / "phase_decisions_rules.json", analysis)
+    rules_path = analysis / "phase_decisions_rules.json"
+    if not rules_path.exists():
+        rules_path = C.ANALYSIS / "phase_decisions_rules.json"
+    dec = decisions(records, rules_path, analysis)
     C.write_json(analysis / "phase_decisions.json", dec)
     ledger(records, analysis)
     C.write_json(analysis / "summary.json", summary(records, dec, analysis))
