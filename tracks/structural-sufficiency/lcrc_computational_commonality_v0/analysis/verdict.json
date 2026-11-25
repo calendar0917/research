@@ -1,0 +1,155 @@
+{
+ "created_utc": "2026-11-25T07:23:48Z",
+ "inconclusive_flags": [
+  "Part A: heterogeneous pairs are confounded with horizon (25 vs 40 epochs) and parameter-count differences.",
+  "Part B: only 214 Train-observed type pairs and 34 held-out types -> low power for the type-holdout protocol.",
+  "Part B: replacement coverage is ~100%, so the AP drop is not caused by unreplaced paths."
+ ],
+ "matrix": {
+  "A": "A+ (combination space exists) but the effect is GENERIC_ENSEMBLE_GAIN, not architecture-specific complementarity",
+  "B": "B- (no validated structural-function commonality; only in-sample reconstruction)",
+  "joint": "A+generic / B- -> no design evidence for a shared structure-function library; also no evidence for architecture-complementary experts.  Next-version training is NOT started."
+ },
+ "part_a": {
+  "best_cross_pair_test": {
+   "name": "cross:W2_s0+DYNAMIC_s0",
+   "test": 0.2791899617817892,
+   "test_gain": 0.016963912795024294,
+   "valid": 0.29602512005381937,
+   "valid_gain": 0.020956066490354863
+  },
+  "best_cross_pair_valid": {
+   "name": "cross:W2_s0+DYNAMIC_s0",
+   "test": 0.2791899617817892,
+   "test_gain": 0.016963912795024294,
+   "valid": 0.29602512005381937,
+   "valid_gain": 0.020956066490354863
+  },
+  "best_single_by_valid": {
+   "label": "FIXED1_s0",
+   "test": 0.2570429122722482,
+   "valid": 0.2758505348421025
+  },
+  "cross_arch_mean_gain": {
+   "test": 0.015797367507638785,
+   "valid": 0.017169604408392873
+  },
+  "distance_to_0.28_0.29": {
+   "CORE_test": -0.003199222851033967,
+   "EXTENDED_test": -0.015343750949343538,
+   "best_cross_test": 0.0008100382182108512
+  },
+  "distance_to_0.29_multi": {
+   "CORE_test": 0.006800777148965986,
+   "EXTENDED_test": -0.005343750949343584
+  },
+  "interpretation": "Heterogeneous rank combinations beat their strongest member by more than the 0.005 practical reference, but they do not exceed matched-count same-architecture seed ensembles; the gain is a generic ensemble effect.",
+  "labels": [
+   "GENERIC_ENSEMBLE_GAIN"
+  ],
+  "multi_model_space": {
+   "CORE": {
+    "test": 0.283199222851034,
+    "valid": 0.30272706338066785
+   },
+   "EXTENDED": {
+    "test": 0.29534375094934356,
+    "valid": 0.3134116768390517
+   }
+  },
+  "same_arch_mean_gain": {
+   "test": 0.01806233539789165,
+   "valid": 0.023020258807492495
+  },
+  "task_weight_transfer": [
+   {
+    "n_fallback": 21,
+    "oof_gain_vs_global": -8.633701983917774e-05,
+    "pair": "FIXED1_s1+DYNAMIC_s1",
+    "test_gain_vs_global": -0.0003522207247195208
+   },
+   {
+    "n_fallback": 21,
+    "oof_gain_vs_global": 4.019928796761274e-05,
+    "pair": "W2_s0+DYNAMIC_s0",
+    "test_gain_vs_global": -0.00021168130510429428
+   },
+   {
+    "n_fallback": 21,
+    "oof_gain_vs_global": 9.583454093026189e-05,
+    "pair": "W2_s0+FIXED1_s0",
+    "test_gain_vs_global": 0.00013052650439326907
+   },
+   {
+    "n_fallback": 21,
+    "oof_gain_vs_global": 1.4752929184180807e-05,
+    "pair": "W2_s1+DYNAMIC_s1",
+    "test_gain_vs_global": -0.0002669911685223014
+   },
+   {
+    "n_fallback": 21,
+    "oof_gain_vs_global": 0.00014622640417771837,
+    "pair": "W2_s1+FIXED1_s1",
+    "test_gain_vs_global": 0.0006299679742187703
+   }
+  ]
+ },
+ "part_b": {
+  "holdout_relative_error": {
+   "CODE_ADD": 0.7910562281421686,
+   "MEAN": 0.9418638071177727,
+   "NULL_1": 1.038337074874631,
+   "NULL_2": 1.8181570197594275,
+   "SEM_1": 0.8584739840636194,
+   "SEM_2": 1.2695510970271486
+  },
+  "holdout_relative_error_T_joint": {
+   "CODE_ADD": 1.295637700572658,
+   "MEAN": 0.9949988105357175,
+   "NULL_1": 1.0866548219702197,
+   "NULL_2": 1.9016929513626513,
+   "SEM_1": 1.1199022915756771,
+   "SEM_2": 2.013768879799072
+  },
+  "interpretation": "The typed-S2 function is reconstructible by real component functions in-sample and far better than a random description, but the replacement degrades official AP by ~0.05, so the reconstruction does not preserve task function; the joint term is not explained better than its random control.",
+  "known_type_coverage": {
+   "test": 0.9999885414648919,
+   "train_subset": 1.0,
+   "valid": 0.9999807829255745
+  },
+  "labels": {
+   "FUNCTIONAL_PRESERVATION": false,
+   "FUNCTION_RECONSTRUCTION": true,
+   "NONTRIVIAL_INTERACTION": false,
+   "SEMANTIC_REUSE": false
+  },
+  "replacement": {
+   "CODE_ADD": {
+    "test_delta_ap": -0.09538508414478039,
+    "valid_delta_ap": -0.10189815242681566
+   },
+   "MEAN": {
+    "test_delta_ap": -0.1824109105805244,
+    "valid_delta_ap": -0.19266652330028144
+   },
+   "NULL_2": {
+    "test_delta_ap": -0.20576874961860162,
+    "valid_delta_ap": -0.21656714429425303
+   },
+   "SEM_1": {
+    "test_delta_ap": -0.1465713333236537,
+    "valid_delta_ap": -0.15330228267146134
+   },
+   "SEM_2": {
+    "test_delta_ap": -0.04768513985594672,
+    "valid_delta_ap": -0.054021861904822804
+   }
+  },
+  "semantic_vs_null_holdout_improvement": {
+   "SEM_1_vs_NULL_1": 0.1732222562049307,
+   "SEM_2_vs_NULL_2": 0.30173737293870717
+  }
+ },
+ "round_id": "lcrc-computational-commonality-v0",
+ "schema": "cc-verdict-v1"
+}

@@ -585,7 +585,11 @@ def topk_overlap(a: np.ndarray, b: np.ndarray, frac: float = 0.01) -> float:
     return float(len(set(ia.tolist()) & set(ib.tolist())) / k)
 
 
+CAPTURE_ROWS = 2048
+
+
 def run_replace(tab: Mapping[str, np.ndarray], tables: dict[str, np.ndarray], *, train_sample: int = 4096) -> dict[str, Any]:
+    torch.set_num_threads(8)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model, task, meta = load_teacher(device)
     layout = meta["layout"]
@@ -616,18 +620,24 @@ def run_replace(tab: Mapping[str, np.ndarray], tables: dict[str, np.ndarray], *,
                               "coverage": coverage, "variants": {}, "lambda": LAMBDA}
     base: dict[str, dict[str, np.ndarray]] = {}
     for split in rows:
-        base[split] = _predict(model, task, rows[split], device, capture=(split != "train_subset"))
+        cap = rows[split][:CAPTURE_ROWS] if split != "train_subset" else None
+        base[split] = _predict(model, task, rows[split], device, capture=False)
+        if cap is not None:
+            base[split].update({f"cap_{k}": v for k, v in _predict(model, task, cap, device, capture=True).items() if k != "logits"})
         ap = C.macro_ap(labels[split], C.score_logits(base[split]["logits"]))
         record["variants"].setdefault("ORIGINAL", {})[split] = {
             "macro_ap": ap["macro_ap"], "per_task_ap": ap["per_task_ap"],
             "logits_sha256": C.sha256_array(base[split]["logits"]),
-            "h0_rms": float(np.sqrt((base[split]["h0"] ** 2).mean())) if "h0" in base[split] else None,
-            "preactivation_rms": float(np.sqrt((base[split]["preactivation"] ** 2).mean())) if "preactivation" in base[split] else None,
+            "h0_rms": float(np.sqrt((base[split]["cap_h0"] ** 2).mean())) if "cap_h0" in base[split] else None,
+            "preactivation_rms": float(np.sqrt((base[split]["cap_preactivation"] ** 2).mean())) if "cap_preactivation" in base[split] else None,
         }
     for name in REPLACE_ORDER:
         install(model, layout, tables[name], teacher, known, device)
         for split in rows:
-            r = _predict(model, task, rows[split], device, capture=(split != "train_subset"))
+            r = _predict(model, task, rows[split], device, capture=False)
+            cap = rows[split][:CAPTURE_ROWS] if split != "train_subset" else None
+            if cap is not None:
+                r.update({f"cap_{k}": v for k, v in _predict(model, task, cap, device, capture=True).items() if k != "logits"})
             ap = C.macro_ap(labels[split], C.score_logits(r["logits"]))
             b = base[split]["logits"]
             per_task_delta = [None if (a is None or bb is None) else float(a - bb) for a, bb in
@@ -639,17 +649,19 @@ def run_replace(tab: Mapping[str, np.ndarray], tables: dict[str, np.ndarray], *,
                 "logits_rms_delta": float(np.sqrt(((r["logits"] - b) ** 2).mean())),
                 "logits_rms": float(np.sqrt((b ** 2).mean())),
             }
-            if "h0" in r:
-                entry["h0_rel_rms_error"] = float(np.sqrt(((r["h0"] - base[split]["h0"]) ** 2).mean())
-                                                  / np.sqrt((base[split]["h0"] ** 2).mean()))
+            if "cap_h0" in r:
+                entry["capture_rows"] = int(CAPTURE_ROWS)
+                entry["h0_rel_rms_error"] = float(np.sqrt(((r["cap_h0"] - base[split]["cap_h0"]) ** 2).mean())
+                                                  / np.sqrt((base[split]["cap_h0"] ** 2).mean()))
                 entry["preactivation_rel_rms_error"] = float(
-                    np.sqrt(((r["preactivation"] - base[split]["preactivation"]) ** 2).mean())
-                    / np.sqrt((base[split]["preactivation"] ** 2).mean()))
-                entry["preactivation_max_abs_error"] = float(np.abs(r["preactivation"] - base[split]["preactivation"]).max())
+                    np.sqrt(((r["cap_preactivation"] - base[split]["cap_preactivation"]) ** 2).mean())
+                    / np.sqrt((base[split]["cap_preactivation"] ** 2).mean()))
+                entry["preactivation_max_abs_error"] = float(np.abs(r["cap_preactivation"] - base[split]["cap_preactivation"]).max())
+                del r["cap_h0"], r["cap_preactivation"]
                 entry["spearman_mean"] = float(np.nanmean([s for s in (
-                    _spearman(r["logits"][:, t], b[:, t]) for t in range(N_TASKS)) if s is not None]))
+                    _spearman(r["logits"][:, t], b[:, t]) for t in range(C.N_TASKS)) if s is not None]))
                 entry["top1pct_overlap_mean"] = float(np.mean([topk_overlap(r["logits"][:, t], b[:, t])
-                                                               for t in range(N_TASKS)]))
+                                                               for t in range(C.N_TASKS)]))
             record["variants"].setdefault(name, {})[split] = entry
             np.save(LOCAL / f"logits_{name}_{split}.npy", r["logits"].astype(np.float32))
         restore(model)
