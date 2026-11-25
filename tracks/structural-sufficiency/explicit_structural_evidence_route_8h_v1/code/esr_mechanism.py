@@ -322,6 +322,8 @@ def analyse_run(run_dir: Path, device: torch.device, *, analysis: Path) -> dict[
     metrics, logits = D.evaluate(model, view, "valid", device)
     positions = _split_rows(view, "valid", limit)
     y = view.y["valid"] if limit is None else view.y["valid"][positions]
+    if limit is not None:
+        logits = logits[positions]
     primary = _row_primary(view, metrics)
     entry: dict[str, Any] = {
         "dataset": dataset,
