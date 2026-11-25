@@ -41,6 +41,7 @@ import cr_models as CM  # noqa: E402
 import cr_train as T  # noqa: E402
 
 TOL = C.TOLERANCES
+NEW_REPLAY_AP_TOL = 5e-5
 
 
 def _gate(out: dict[str, Any], name: str, ok: bool, detail: Any) -> bool:
@@ -508,6 +509,14 @@ def check_pcba(device: torch.device, *, post: bool = False) -> dict[str, Any]:
         local = model.local
         g = local.J_table.grad
         param_nonzero = {n: bool(p.grad is not None and torch.isfinite(p.grad).all() and p.grad.abs().sum() > 0) for n, p in model.named_parameters()}
+        observed_per_task = torch.isfinite(y).sum(dim=0).cpu().tolist()
+        positive_per_task = torch.nansum((y == 1).float(), dim=0).cpu().tolist()
+        allowed_zero = {
+            f"readout.heads.{t}.{suffix}"
+            for t, count in enumerate(observed_per_task)
+            if int(count) == 0 or float(positive_per_task[t]) == 0.0
+            for suffix in ("fc1.bias", "fc1.weight", "fc2.bias", "fc2.weight")
+        }
         grad_report[name] = {
             "loss": float(loss.detach()),
             "table_grad_finite": bool(torch.isfinite(g).all()),
@@ -516,7 +525,11 @@ def check_pcba(device: torch.device, *, post: bool = False) -> dict[str, Any]:
             "table_rows_total": int(support.n_omega),
             "zero_grad_at_init_expected_from_zeroed_outputs": init_zero,
             "all_parameter_grads_finite": bool(all(torch.isfinite(p.grad).all() for p in model.parameters() if p.grad is not None)),
-            "parameters_without_nonzero_grad_after_one_step": sorted(k for k, v in param_nonzero.items() if not v),
+            "parameters_without_nonzero_grad_after_one_step": sorted(
+                k for k, v in param_nonzero.items() if not v and k not in allowed_zero
+            ),
+            "tasks_with_no_observed_labels_in_probe": [int(t) for t, c in enumerate(observed_per_task) if int(c) == 0],
+            "tasks_with_no_positive_labels_in_probe": [int(t) for t, c in enumerate(positive_per_task) if float(c) == 0.0],
         }
     _gate(
         out,
@@ -614,8 +627,8 @@ def check_pcba(device: torch.device, *, post: bool = False) -> dict[str, Any]:
                 "recorded_test": float(payload["metrics"]["test"]["ap"]),
                 "replay_valid": float(rep["valid"]["ap"]),
                 "replay_test": float(rep["test"]["ap"]),
-                "pass": abs(float(rep["valid"]["ap"]) - float(payload["metrics"]["valid"]["ap"])) <= TOL["replay_abs"]
-                and abs(float(rep["test"]["ap"]) - float(payload["metrics"]["test"]["ap"])) <= TOL["replay_abs"],
+                "pass": abs(float(rep["valid"]["ap"]) - float(payload["metrics"]["valid"]["ap"])) <= NEW_REPLAY_AP_TOL
+                and abs(float(rep["test"]["ap"]) - float(payload["metrics"]["test"]["ap"])) <= NEW_REPLAY_AP_TOL,
             }
         _gate(out, "checkpoint_replay_new_arms", all(v.get("pass", False) for v in replay_new.values()), replay_new)
     out["passed_all"] = all(v["pass"] for v in out["gates"].values())

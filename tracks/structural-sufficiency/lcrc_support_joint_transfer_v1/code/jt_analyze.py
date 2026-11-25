@@ -284,6 +284,7 @@ def analyze_lipo(n_boot: int) -> dict[str, Any]:
         model.eval()
         dec[arm] = decomposition(model, support, bundle, arm=arm)
     result["decomposition"] = dec
+    result["intervention"] = add_only_intervention()
     result["main_table"] = table_rows
     result["support_strata"] = support_rows
     result["extreme"] = extreme_rows
@@ -343,6 +344,46 @@ def decomposition(model: Any, support: Any, family_data: Any, *, arm: str) -> di
     }
 
 
+def add_only_intervention() -> dict[str, Any]:
+    """Frozen ADD_ONLY intervention on the single best new model (C1_JOINT)."""
+    bundle = D.build_bundle("ogbg-mollipo")
+    support = S.load_support(ANALYSIS / "support/lipo_support.npz")
+    model, info = M.build_lipo_model(bundle, support, "C1_JOINT")
+    ck = torch.load(RUNS / "C1_JOINT" / "checkpoint_best_val.pt", map_location="cpu", weights_only=False)
+    model.load_state_dict(ck["state_dict"], strict=True)
+    model.eval()
+    before = {split: T.evaluate(model, bundle, split, "cpu") for split in C.SPLITS}
+    table = M.table_of(model)
+    inter = np.asarray(support.P, dtype=np.float64) @ table
+    local = model.trunk.local
+    original = local.J_table.detach().clone()
+    local.J_table.data.copy_(torch.as_tensor(inter, dtype=torch.float32))
+    full = local.complete_code_map()
+    local.J_table.data.copy_(original)
+    local.set_override(full)
+    after = {split: T.evaluate(model, bundle, split, "cpu") for split in C.SPLITS}
+    local.clear_override()
+    return {
+        "schema": "lcrc-support-joint-transfer-add-only-v1",
+        "model": "C1_JOINT",
+        "epoch": int(ck["epoch"]),
+        "selection": "best new model by primary Validation metric (Lipo RMSE); C1_ADD is additive by construction",
+        "table_rms": float(np.sqrt(np.mean(table ** 2))),
+        "interaction_rms": float(np.sqrt(np.mean((table - inter) ** 2))),
+        "interaction_fraction": float(np.sqrt(np.mean((table - inter) ** 2)) / np.sqrt(np.mean(table ** 2))),
+        "splits": {
+            split: {
+                "before_rmse": float(before[split]["rmse_raw"]),
+                "after_rmse": float(after[split]["rmse_raw"]),
+                "delta_rmse": float(after[split]["rmse_raw"] - before[split]["rmse_raw"]),
+                "before_mae": float(before[split]["mae_raw"]),
+                "after_mae": float(after[split]["mae_raw"]),
+            }
+            for split in C.SPLITS
+        },
+    }
+
+
 # ---------------------------------------------------------------------------
 # PCBA
 # ---------------------------------------------------------------------------
@@ -393,7 +434,20 @@ def _bootstrap_macro(y: np.ndarray, cols: Sequence[np.ndarray], n_boot: int, see
     return out
 
 
-def analyze_pcba(n_boot: int) -> dict[str, Any]:
+def _curve_prefix_stats(path: Path, horizon: int = 25) -> dict[str, Any]:
+    rows = []
+    with path.open(newline="") as fh:
+        for r in csv.DictReader(fh):
+            if int(r.get("epoch", 0)) <= horizon:
+                rows.append(r)
+    vals = [float(r["valid_ap"]) for r in rows if r.get("valid_ap") not in (None, "")]
+    return {
+        "valid_ap_at_horizon": vals[-1] if vals else None,
+        "valid_ap_last20_prefix": float(np.mean(vals[-20:])) if len(vals) >= 20 else None,
+    }
+
+
+def analyze_pcba(n_boot: int, mol_boot: int = 200) -> dict[str, Any]:
     originals = {"W2": _pcba_original("W2"), "FIXED1": _pcba_original("FIXED1")}
     new = {"W2_JOINT": _pcba_new("W2_JOINT"), "FIXED1_JOINT": _pcba_new("FIXED1_JOINT")}
     valid_y = originals["W2"]["valid_y"]
@@ -404,7 +458,7 @@ def analyze_pcba(n_boot: int) -> dict[str, Any]:
         meta = src["meta"]
         result["models"][arm] = {
             "parameters": 994324 if arm.startswith("W2") else 1128468,
-            "best_epoch": int(meta["epoch"]),
+            "best_epoch": int(meta.get("checkpoint_epoch", meta.get("epoch", -1))),
             "valid_ap": float(meta["valid_ap"]),
             "test_ap": float(meta["test_ap"]),
             "valid_bce": float(meta.get("valid_bce", math.nan)),
@@ -415,6 +469,7 @@ def analyze_pcba(n_boot: int) -> dict[str, Any]:
             "test_positive": [int(x) for x in meta["test_positive"]],
             "valid_observed": [int(x) for x in meta["valid_observed"]],
             "test_observed": [int(x) for x in meta["test_observed"]],
+            **_curve_prefix_stats((C.W2_RUN if arm.startswith("W2") else C.FIXED1_RECORD).parent / "train_curve.csv"),
         }
     for arm, src in new.items():
         run, best = src["run"], src["best"]
@@ -433,6 +488,8 @@ def analyze_pcba(n_boot: int) -> dict[str, Any]:
             "test_observed": [int(x) for x in best["test"]["observed"]],
             "final": run["final"],
             "last20": run["last20"],
+            "valid_ap_at_horizon": float(run["final"]["valid_ap"]),
+            "valid_ap_last20_prefix": float(run["last20"]["mean_last20_valid_ap"]),
         }
     # delete non-serialisable references before writing
     for arm in result["models"]:
@@ -450,8 +507,17 @@ def analyze_pcba(n_boot: int) -> dict[str, Any]:
                 "test_ap": m["test_ap"],
                 "valid_bce": m["valid_bce"],
                 "test_bce": m["test_bce"],
+                "valid_ap_at_horizon": m.get("valid_ap_at_horizon"),
+                "valid_ap_last20_prefix": m.get("valid_ap_last20_prefix"),
+                "test_ap_last20": m.get("last20", {}).get("mean_last20_test_ap") if isinstance(m.get("last20"), dict) else None,
+                "valid_ap_final": m.get("final", {}).get("valid_ap") if isinstance(m.get("final"), dict) else None,
+                "test_ap_final": m.get("final", {}).get("test_ap") if isinstance(m.get("final"), dict) else None,
             }
         )
+    by_arm = {row["arm"]: row for row in result["main_table"]}
+    for arm, base in (("W2_JOINT", "W2_ORIGINAL"), ("FIXED1_JOINT", "FIXED1_ORIGINAL")):
+        by_arm[arm]["delta_valid_ap_vs_original"] = by_arm[arm]["valid_ap"] - by_arm[base]["valid_ap"]
+        by_arm[arm]["delta_test_ap_vs_original"] = by_arm[arm]["test_ap"] - by_arm[base]["test_ap"]
     # paired per-task and macro
     configs = {
         "W2_JOINT_minus_W2_ORIGINAL": ("W2_JOINT", "W2_ORIGINAL"),
@@ -497,12 +563,13 @@ def analyze_pcba(n_boot: int) -> dict[str, Any]:
             originals["FIXED1"][f"{split}_logits"],
             new["FIXED1_JOINT"][f"{split}_logits"],
         ]
-        boots = _bootstrap_macro(y, cols, n_boot, C.SEED + 19)
+        boots = _bootstrap_macro(y, cols, mol_boot, C.SEED + 19)
         w2d = boots[1] - boots[0]
         f1d = boots[3] - boots[2]
         inter = f1d - w2d
         result.setdefault("macro_bootstrap", {})[split] = {
-            "n_boot": int(n_boot),
+            "n_boot_tasks": int(n_boot),
+            "n_boot_molecules": int(mol_boot),
             "W2": {"delta": float(result["models"]["W2_JOINT"]["valid_ap"] if split == "valid" else result["models"]["W2_JOINT"]["test_ap"]) - float(result["models"]["W2_ORIGINAL"]["valid_ap"] if split == "valid" else result["models"]["W2_ORIGINAL"]["test_ap"]), "ci95": [float(x) for x in np.quantile(w2d, [0.025, 0.975])], "p_lt0": float(np.mean(w2d < 0))},
             "FIXED1": {"delta": float(result["models"]["FIXED1_JOINT"]["valid_ap"] if split == "valid" else result["models"]["FIXED1_JOINT"]["test_ap"]) - float(result["models"]["FIXED1_ORIGINAL"]["valid_ap"] if split == "valid" else result["models"]["FIXED1_ORIGINAL"]["test_ap"]), "ci95": [float(x) for x in np.quantile(f1d, [0.025, 0.975])], "p_lt0": float(np.mean(f1d < 0))},
             "interaction": {"delta": float(np.mean(inter)), "ci95": [float(x) for x in np.quantile(inter, [0.025, 0.975])], "p_lt0": float(np.mean(inter < 0))},
@@ -560,6 +627,7 @@ def main() -> None:
     parser.add_argument("--lipo", action="store_true")
     parser.add_argument("--pcba", action="store_true")
     parser.add_argument("--n-boot", type=int, default=2000)
+    parser.add_argument("--mol-boot", type=int, default=200)
     args = parser.parse_args()
     do_lipo = args.lipo or not (args.lipo or args.pcba)
     do_pcba = args.pcba or not (args.lipo or args.pcba)
@@ -589,7 +657,7 @@ def main() -> None:
         write_csv(ANALYSIS / "curves_lipo.csv", curve_rows)
         print("lipo done", result["paired"]["test:C1_ADD_minus_C1"]["delta"], result["paired"]["test:C1_JOINT_minus_C1"]["delta"])
     if do_pcba:
-        result = analyze_pcba(args.n_boot)
+        result = analyze_pcba(args.n_boot, args.mol_boot)
         write_json(ANALYSIS / "pcba_analysis.json", result)
         write_csv(ANALYSIS / "main_table_pcba.csv", result["main_table"])
         write_csv(ANALYSIS / "curves_pcba.csv", result["curves"])

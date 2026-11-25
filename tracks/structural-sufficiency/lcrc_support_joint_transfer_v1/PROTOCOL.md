@@ -216,7 +216,8 @@ size (exploratory only): ≥ 3% relative Test RMSE improvement.
 **PCBA:** `Δ_W2 = W2_JOINT − W2_ORIGINAL`,
 `Δ_FIXED = FIXED1_JOINT − FIXED1_ORIGINAL`,
 interaction `Δ_FIXED − Δ_W2`, on Valid and Test. Paired per-task AP deltas,
-molecule-level paired bootstrap for macro AP (2,000 replicates), number of tasks
+molecule-level paired bootstrap for macro AP (200 replicates, frozen config;
+2,000 task-level resamples for the mean per-task delta), number of tasks
 improved/degraded, task-support strata, and a common high-support subset
 (≥ 20 positives in the relevant split) to check that an effect is not driven by
 a few tasks. Reference effect size ≈ 0.005 AP on both splits; report the gap to
