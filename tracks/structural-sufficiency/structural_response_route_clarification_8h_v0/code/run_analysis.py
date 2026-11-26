@@ -72,8 +72,9 @@ def _resp_predictor(ckpt_path: Path, ctx, meta: Mapping[str, Any], fit_rows, sca
     subset = bundle.fit
 
     def predict(rows: np.ndarray) -> np.ndarray:
-        return SR.predict_std(model, bundle, subset, np.asarray(rows, dtype=np.int64),
-                              device, batch_size=256)
+        rows = np.asarray(rows, dtype=np.int64)
+        return SR.predict_std(model, bundle, subset, subset.local(rows), device,
+                              batch_size=256)
 
     return predict
 

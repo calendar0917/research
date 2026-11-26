@@ -226,7 +226,11 @@ def predict_std(model, bundle: RespBundle, subset: Subset, rows: np.ndarray,
     start = 0
     while start < rows.size:
         idx = np.arange(start, min(rows.size, start + int(batch_size)))
-        out[idx] = predict_tensor(model, bundle, subset, idx, device).double().cpu().numpy()
+        # ``rows`` are positions inside ``subset``; the model must see those, not the
+        # positions inside ``rows`` (2026-11-27: fixed after the dev eval was found to
+        # score molecules 0..n-1 of the split instead of the requested rows).
+        out[idx] = predict_tensor(model, bundle, subset, rows[idx],
+                                  device).double().cpu().numpy()
         start += idx.size
     return out
 
