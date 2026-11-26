@@ -184,8 +184,10 @@ def _frozen_intervention(
         for name, p in model.named_parameters():
             if name in saved:
                 p.copy_(saved[name])
-    dl = (after["logits"] - before["logits"])
-    delta_abs = dl.abs()
+    import numpy as np
+
+    dl = np.asarray(after["logits"], dtype=np.float64) - np.asarray(before["logits"], dtype=np.float64)
+    delta_abs = np.abs(dl)
     per_task_delta = [
         (None if (a is None or b is None) else float(b - a))
         for a, b in zip(before["per_task_ap"], after["per_task_ap"])
@@ -201,10 +203,10 @@ def _frozen_intervention(
         "valid_bce_with_branch": float(before["bce"]),
         "valid_bce_without_branch": float(after["bce"]),
         "valid_bce_delta": float(after["bce"] - before["bce"]),
-        "logits_max_abs_change": float(delta_abs.max().item()),
-        "logits_mean_abs_change": float(delta_abs.mean().item()),
-        "logits_rms_change": _rms(dl),
-        "logits_changed_fraction_gt_1e-6": float((delta_abs > 1e-6).float().mean().item()),
+        "logits_max_abs_change": float(delta_abs.max()),
+        "logits_mean_abs_change": float(delta_abs.mean()),
+        "logits_rms_change": float(np.sqrt((dl ** 2).mean())),
+        "logits_changed_fraction_gt_1e-6": float((delta_abs > 1e-6).mean()),
         "tasks_improved_without_branch": int(sum(1 for d in scored if d > 1e-6)),
         "tasks_degraded_without_branch": int(sum(1 for d in scored if d < -1e-6)),
         "note": "frozen intervention only shows whether the trained model uses the branch; it is not an independent training result",

@@ -123,13 +123,14 @@ def hist_curve_rows(horizon: int) -> list[dict[str, Any]]:
     return out
 
 
-def run_table_row(arm: str) -> dict[str, Any]:
+def run_table_row(arm: str, prefix_used: int) -> dict[str, Any]:
     run = FC.read_json(FC.arm_out_dir(arm) / "run.json")
     best_eval = FC.read_json(FC.arm_out_dir(arm) / "best_checkpoint_eval.json")
     return {
         "arm": arm,
         "status": run.get("status"),
         "horizon": int(run.get("horizon")),
+        "prefix_used": int(prefix_used),
         "epochs_run": int(run.get("epochs_run")),
         "best_epoch": run.get("best_epoch"),
         "best_valid_ap": run.get("best_valid_ap"),
@@ -157,6 +158,7 @@ def hist_table_row(horizon: int) -> dict[str, Any]:
         "arm": "FIXED1_hist",
         "status": FC.HIST["status"],
         "horizon": int(horizon),
+        "prefix_used": int(horizon),
         "epochs_run": int(horizon),
         "best_epoch": pre["best_epoch"],
         "best_valid_ap": pre["best_valid_ap"],
@@ -325,11 +327,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     missing = [a for a in FC.ARMS if a not in runs]
     statuses = {a: runs[a].get("status") for a in runs}
     complete = all(statuses.get(a) == "COMPLETED" for a in FC.ARMS)
-    horizon = int(max(runs[a].get("horizon", 0) for a in runs)) if runs else FC.PREFERRED_HORIZON
+    requested_horizon = int(max(runs[a].get("horizon", 0) for a in runs)) if runs else FC.PREFERRED_HORIZON
     horizons = sorted({int(runs[a].get("horizon", 0)) for a in runs})
     same_horizon = len(horizons) == 1
-    if not same_horizon:
-        horizon = max(horizons) if horizons else FC.PREFERRED_HORIZON
+    # a wall-limit truncation yields fewer *completed* epochs than the requested
+    # horizon; the paired comparison then uses the shared completed prefix
+    epochs_run = {a: int(runs[a].get("epochs_run") or 0) for a in runs}
+    horizon = min([requested_horizon] + [v for v in epochs_run.values() if v > 0]) if runs else requested_horizon
 
     # ---- epoch curves -------------------------------------------------------
     curve_fields = [
@@ -354,12 +358,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # ---- main table ---------------------------------------------------------
     main_fields = [
-        "arm", "status", "horizon", "epochs_run", "best_epoch", "best_valid_ap",
+        "arm", "status", "horizon", "prefix_used", "epochs_run", "best_epoch", "best_valid_ap",
         "best_valid_bce", "endpoint_valid_ap", "endpoint_valid_bce",
         "last3_mean_valid_ap", "best_train_ap", "best_train_bce", "parameters",
         "rank", "gpu_hours", "test_scored",
     ]
-    main_rows = [run_table_row(arm) for arm in FC.ARMS if arm in runs]
+    main_rows = [run_table_row(arm, horizon) for arm in FC.ARMS if arm in runs]
     main_rows.append(hist_table_row(horizon))
     main_sha = _write_csv(out_dir / "main_table.csv", main_fields, main_rows)
 
@@ -439,7 +443,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     paired_payload = {
         "round_id": FC.ROUND_ID,
         "horizon": int(horizon),
+        "requested_horizon": int(requested_horizon),
         "horizons_per_arm": {a: int(runs[a].get("horizon", 0)) for a in runs},
+        "epochs_run_per_arm": epochs_run,
+        "truncated": bool(any(v < requested_horizon for v in epochs_run.values())),
         "same_horizon": bool(same_horizon),
         "historical_reference": {
             "available": bool(reference_ok),
@@ -483,6 +490,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     flags: list[str] = []
     if not complete:
         flags.append("BUDGET_LIMITED")
+    if any(v < requested_horizon for v in epochs_run.values()):
+        flags.append("HORIZON_TRUNCATED")
     if not reference_ok:
         flags.append("REFERENCE_MISSING")
     if not same_horizon:
@@ -513,10 +522,40 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         label = "NO_CLEAR_ROLE_SEPARATION_SIGNAL"
 
+    # directional reading on the common completed prefix, independent of the
+    # budget label: it never upgrades the official decision
+    if d_rssc_tied is None:
+        directional = "NO_CLEAR_ROLE_SEPARATION_SIGNAL"
+    elif (
+        d_rssc_fixed1 is not None
+        and d_rssc_tied >= SIGNAL_AP
+        and d_rssc_fixed1 >= SIGNAL_AP
+        and (high_rssc_tied is None or high_rssc_tied >= -TIE_AP)
+        and late_ok
+    ):
+        directional = "ROLE_SEPARATION_PROMISING"
+    elif (
+        d_tied_fixed1 is not None
+        and d_tied_fixed1 >= SIGNAL_AP
+        and d_rssc_fixed1 is not None
+        and d_rssc_fixed1 >= SIGNAL_AP
+        and d_rssc_tied < SIGNAL_AP
+    ):
+        directional = "GENERIC_PARAMETERIZATION_SIGNAL"
+    elif d_rssc_tied >= SIGNAL_AP and (d_rssc_fixed1 is None or d_rssc_fixed1 < SIGNAL_AP):
+        directional = "ROLE_DIFFERENCE_WITHOUT_PERFORMANCE_ADVANCE"
+    else:
+        directional = "NO_CLEAR_ROLE_SEPARATION_SIGNAL"
+
     gpu_hours_total = float(sum(float(runs[a].get("gpu_hours") or 0.0) for a in runs))
     summary = {
         "round_id": FC.ROUND_ID,
         "decision": label,
+        "directional_reading_on_completed_prefix": directional,
+        "directional_reading_interpretation": (
+            "same thresholds applied to the shared completed prefix; it does not upgrade "
+            "the budget-limited decision"
+        ),
         "flags": flags,
         "answers": {
             "Q1_RSSC_beats_TIED": (None if d_rssc_tied is None else d_rssc_tied > 0),
@@ -542,6 +581,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         },
         "curve_summaries": curve_summaries,
         "paired_deltas": {k: v["meta"] for k, v in comparisons.items()},
+        "horizon": {"requested": int(requested_horizon), "completed_prefix_used": int(horizon),
+                    "epochs_run_per_arm": epochs_run},
         "budget": {
             "gpu_hours_total_two_arms": gpu_hours_total,
             "wall_clock_seconds_sum": float(sum(float(runs[a].get("gpu_seconds") or 0.0) for a in runs)),
