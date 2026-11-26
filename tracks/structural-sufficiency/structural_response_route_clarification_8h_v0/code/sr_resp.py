@@ -142,6 +142,13 @@ class RespBundle:
         return subset_split(self.payload, split_name, rows, self.scaler)
 
 
+def subset_of(dataset: str, split_name: str, rows: Sequence[int],
+              scaler: Mapping[str, float]) -> Subset:
+    """An evaluation subset from a fragment split that is not the training split."""
+    payload = load_fragment_cache(dataset)
+    return subset_split(payload, split_name, rows, scaler)
+
+
 def build_model(dims, init_state, operator: str,
                 config: Mapping[str, Any] | None = None) -> torch.nn.Module:
     mode = MODE[operator]

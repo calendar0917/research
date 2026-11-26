@@ -166,11 +166,13 @@ def make_resp_arm(ctx: Ctx, *, rows: Sequence[int], split_name: str,
                   eval_rows: Sequence[int] | None = None,
                   eval_labels_raw: np.ndarray | None = None,
                   fit_cache: Any = None,
+                  eval_subset: SR.Subset | None = None,
                   meta: Mapping[str, Any] | None = None) -> tuple[ST.Arm, SR.RespBundle]:
     recipe = dict(recipe or C.RESP_RECIPE)
     bundle = fit_cache or SR.RespBundle(ctx.dataset, rows, scaler, split_name=split_name)
     model = SR.build_model(bundle.dims, init_state, operator, recipe).to(device)
     fit_subset = bundle.fit
+    predict_subset = eval_subset if eval_subset is not None else fit_subset
 
     def base_loss(chunk: np.ndarray) -> torch.Tensor:
         return SR.base_loss(model, bundle, fit_subset, fit_subset.local(chunk), device)
@@ -179,8 +181,8 @@ def make_resp_arm(ctx: Ctx, *, rows: Sequence[int], split_name: str,
         return SR.predict_tensor(model, bundle, fit_subset, fit_subset.local(chunk), device)
 
     def predict(chunk: np.ndarray) -> np.ndarray:
-        return SR.predict_std(model, bundle, fit_subset, fit_subset.local(chunk), device,
-                              batch_size=int(recipe["eval_batch_molecules"]))
+        return SR.predict_std(model, bundle, predict_subset, predict_subset.local(chunk),
+                              device, batch_size=int(recipe["eval_batch_molecules"]))
 
     extra = {"meta": dict(meta or {}), "operator": operator,
              "n_parameters": int(sum(p.numel() for p in model.parameters()))}

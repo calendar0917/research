@@ -80,7 +80,8 @@ def main() -> int:
         return 0
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    arm = _build_arm(ctx, family, operator, args.device, (train_rows, valid_labels))
+    arm = _build_arm(ctx, family, operator, args.device,
+                     (train_rows, valid_labels, valid_rows))
     result = ST.train_one(arm=arm, target="BASE", train_rows=train_rows, order=order,
                           schedule=np.zeros((0, 64), dtype=np.int32),
                           labels_std=ctx.bundle.labels_std, scaler=scaler,
@@ -122,7 +123,7 @@ def main() -> int:
 
 
 def _build_arm(ctx, family, operator, device, extra):
-    train_rows, valid_labels = extra
+    train_rows, valid_labels, valid_rows = extra
     if family == "FGCR":
         model, info = SF.build_variant(ctx.bundle.atom_dims, ctx.bundle.bond_dims,
                                        h_mode=operator[0], eta_mode=operator[1],
@@ -133,12 +134,16 @@ def _build_arm(ctx, family, operator, device, extra):
                                 eval_labels_raw=valid_labels,
                                 meta={"row": "ESOL", "dataset": "ogbg-molesol"})
     if family == "RESP":
+        # Fit + Valid so the evaluation rows are addressable; training and the
+        # target scaler stay Fit-only.
         bundle = SR.RespBundle(ctx.dataset, train_rows, ctx.scaler, split_name="train")
         init = SR.canonical_init(bundle.dims)
+        eval_subset = SR.subset_of(ctx.dataset, "valid", valid_rows, ctx.scaler)
         arm, _ = SX.make_resp_arm(ctx, rows=train_rows, split_name="train",
                                   scaler=ctx.scaler, operator=operator,
                                   init_state=init, device=device,
                                   eval_labels_raw=valid_labels, fit_cache=bundle,
+                                  eval_subset=eval_subset,
                                   meta={"row": "ESOL", "dataset": "ogbg-molesol"})
         return arm
     if family == "GINE":
