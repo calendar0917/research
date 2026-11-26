@@ -315,7 +315,9 @@ def main() -> int:
             )
         print(f"scored {row}/{target}", flush=True)
 
-    C.write_json(C.ANALYSIS_DIR / "checkpoint_hashes.json", checkpoint_rows)
+    # the frozen hash list lives in checkpoints/manifest.json (written before evaluation);
+    # this file records what the analysis actually loaded
+    C.write_json(C.ANALYSIS_DIR / "scored_checkpoints.json", checkpoint_rows)
     C.write_csv(C.ANALYSIS_DIR / "main_molecule_table.csv", molecule_rows)
 
     # ---------------- edit tables -------------------------------------
