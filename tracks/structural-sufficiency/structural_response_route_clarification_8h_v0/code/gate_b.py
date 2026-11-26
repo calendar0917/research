@@ -40,9 +40,9 @@ def main() -> int:
     abs_gain = 0.015 * sigma_fit
     mae_slack = mae_rel * sigma_fit
 
-    edits = _table(C.ANALYSIS_DIR / "edit_response_table.csv")
-    mols = _table(C.ANALYSIS_DIR / "main_molecule_table.csv")
-    contrasts = _table(C.ANALYSIS_DIR / "paired_contrasts.csv")
+    edits = _table(C.ROUND_DIR / "edit_response_table.csv")
+    mols = _table(C.ROUND_DIR / "main_molecule_table.csv")
+    contrasts = _table(C.ROUND_DIR / "paired_contrasts.csv")
     decision = C.read_json(C.ANALYSIS_DIR / "branch_decision.json")
     rows = sorted({r["row"] for r in mols})
 

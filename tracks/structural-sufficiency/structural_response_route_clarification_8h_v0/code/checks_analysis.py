@@ -48,7 +48,7 @@ def main() -> int:
     manifests = {e["row"] + "|" + e["target"]: e
                  for e in C.read_json(C.CKPT_DIR / "manifest.json")["entries"]
                  if e["checkpoint"] == "best"}
-    table = list(csv.DictReader((C.ANALYSIS_DIR / "edit_response_table.csv").open()))
+    table = list(csv.DictReader((C.ROUND_DIR / "edit_response_table.csv").open()))
     max_delta_diff = 0.0
     max_ce_diff = 0.0
     compared = 0

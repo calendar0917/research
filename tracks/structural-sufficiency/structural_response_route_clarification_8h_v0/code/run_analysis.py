@@ -318,7 +318,7 @@ def main() -> int:
     # the frozen hash list lives in checkpoints/manifest.json (written before evaluation);
     # this file records what the analysis actually loaded
     C.write_json(C.ANALYSIS_DIR / "scored_checkpoints.json", checkpoint_rows)
-    C.write_csv(C.ANALYSIS_DIR / "main_molecule_table.csv", molecule_rows)
+    C.write_csv(C.ROUND_DIR / "main_molecule_table.csv", molecule_rows)
 
     # ---------------- edit tables -------------------------------------
     edit_rows: list[dict[str, Any]] = []
@@ -376,7 +376,7 @@ def main() -> int:
                                          | set(lab["row_b"][sel].tolist()))})
             edit_rows.append(m)
 
-    C.write_csv(C.ANALYSIS_DIR / "edit_response_table.csv", edit_rows)
+    C.write_csv(C.ROUND_DIR / "edit_response_table.csv", edit_rows)
 
     # ---------------- paired contrasts --------------------------------
     contrast_rows: list[dict[str, Any]] = []
@@ -428,7 +428,7 @@ def main() -> int:
                     res["drop_worst_component"]))
                 contrast_rows.append(row_out)
 
-    C.write_csv(C.ANALYSIS_DIR / "paired_contrasts.csv", contrast_rows)
+    C.write_csv(C.ROUND_DIR / "paired_contrasts.csv", contrast_rows)
 
     # ---------------- error decomposition -----------------------------
     decomposition = {}
