@@ -6,7 +6,7 @@
   本轮代码不构造 Test batch、不评分、不报告任何 Test 指标（`test_scored=false`，
   `splits_used=[train, valid]`）。
 - seed 0；新训练单元 1 个（B）；A 只读复用 CSC v0 的完整 360-epoch 运行。
-- 实际资源：B 训练 **485.2 s = 0.1348 GPU·h**（硬上限 0.6）；整体墙钟约 40 min
+- 实际资源：B 训练 **485.2 s = 0.1348 GPU·h**（硬上限 0.6）；整体墙钟约 45 min
   （硬上限 60 min，含排队与一次 deploy 排障）。运行环境 `res` / A100-SXM4-40GB / driver 550.163.01 /
   torch 2.5.1+cu124。
 
@@ -84,7 +84,7 @@ checkpoint 只看最小 Valid RMSE（严格更小才替换）。
 
 best 与 last-20 方向一致，endpoint 也未反转；Train–Valid gap 两边接近
 （A 0.4187、B 0.4455），B 的优势不是只靠“拟合得更狠”。训练时间几乎相同
-（A 390 s / B 399 s），B 的评价更快（A 三 split 197.9 s；B 两 split 80.6 s，评价更快主要因为本轮少评一个 split）。
+（A 390 s / B 399 s；A 的历史 GPU·h 0.167 不计入本轮，B 本轮 0.135 GPU·h），B 的评价更快（A 三 split 197.9 s；B 两 split 80.6 s，评价更快主要因为本轮少评一个 split）。
 
 完整主表：`analysis/main_table.csv`；曲线：`analysis/curves.csv`、
 `analysis/figures/curves_and_errors.png`。
