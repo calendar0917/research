@@ -116,7 +116,9 @@ def measure(task: Any, model: torch.nn.Module, device: torch.device) -> dict[str
             n_edges += int(p1.shape[0])
             n_changed += int((p1_mf != p1).any(dim=1).sum().item())
 
-            before = torch.zeros(n_groups, p1.shape[1], dtype=torch.float64)
+            before = torch.zeros(
+                n_groups, p1.shape[1], dtype=torch.float64, device=p1.device
+            )
             before.index_add_(0, gid, p1.double())
             after = torch.zeros_like(before)
             after.index_add_(0, gid, p1_mf.double())
@@ -176,7 +178,7 @@ def measure(task: Any, model: torch.nn.Module, device: torch.device) -> dict[str
         "intervention": {
             "changed_message_fraction": (float(n_changed / n_edges) if n_edges else 0.0),
             "n_messages_content_changed": int(n_changed),
-            "block1_rms_fixed1_aggregation": rms[1] * 0.0 + base[1],
+            "block1_rms_fixed1_aggregation": base[1],
             "block1_rms_change": rms[1],
             "block1_relative_rms_change": rel_rms[1],
             "block2_rms_fixed1_aggregation_same_state": base[2],
