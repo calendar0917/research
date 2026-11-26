@@ -1,0 +1,92 @@
+{
+  "round_id": "lcrc-encoder-boundary-reference-v0",
+  "protocol_id": "lcrc-encoder-boundary-reference-v0",
+  "frozen_utc": "2026-11-26",
+  "dataset": "ogbg-mollipo",
+  "splits_used": ["train", "valid"],
+  "split_sizes": {"train": 3360, "valid": 420},
+  "test_policy": "NOT_USED: no Test prediction, metric or analysis in this round",
+  "seed": 0,
+  "new_training_units": 1,
+  "budget": {
+    "gpu_hard_hours": 0.6,
+    "wall_hard_minutes": 60,
+    "queue_max_minutes": 5,
+    "train_hard_seconds": 1500.0
+  },
+  "arm_a": {
+    "role": "FIXED1 / CSC v0 mollipo A, read-only reuse (no retraining)",
+    "source_run": "tracks/structural-sufficiency/context_conditioned_structural_computation_v0/runs/mollipo_A_seed0",
+    "parameters": 294135,
+    "best_epoch": 140,
+    "widths": {"width": 64, "block_hidden": 128, "gate": null},
+    "init_rule": "BM.build_model(scale=1, seed=0) base init + zeroed stage-2 fc; reproduced base_state_sha256 recorded in the run"
+  },
+  "arm_b": {
+    "role": "GINE_ENCODER capability-boundary reference",
+    "base_implementation": "tracks/structural-query-learning/code/sq_gine.py",
+    "layers": 4,
+    "hidden": 128,
+    "mlp_hidden": 256,
+    "out_width": 64,
+    "dropout": 0.10,
+    "final_projection": "Linear(128 -> 64)",
+    "head": "BSModel.post_local (literal call) with f, rho, 4-head attention readout and global buffers",
+    "head_init": "identical to A's recorded initialisation (verified by fingerprint)",
+    "encoder_init": "torch.manual_seed(0) inside fork_rng, default PyTorch init",
+    "init_pairing_claim": "none for the encoder; different architectures cannot be parameter-matched",
+    "depth_rule": "reuse hidden=128; take the largest L in {5,4,3,...} whose total parameters fall in A +/-15%; L=5 exceeds, L=4 fits; frozen before training",
+    "parameters_expected": 332731,
+    "parameter_budget": [250014, 338255]
+  },
+  "shared_raw_inputs": {
+    "source_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+    "source_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "atom_columns": ["atomic_num", "chirality", "degree", "formal_charge", "num_hs", "num_radical_electrons", "hybridization", "is_aromatic", "is_in_ring"],
+    "atom_scalars": ["degree", "min_ring"],
+    "bond_columns": ["bond_type", "bond_stereo", "bond_is_in_ring"],
+    "external_chemical_data": false,
+    "note": "Same OGB raw attribute table and same real graph as A; A additionally derives S1/S2 local content (2-hop path statistics, incident bond-class fractions), B does not. This is a matched-budget encoder-level comparison, not a single-operator ablation."
+  },
+  "recipe": {
+    "epochs": 360,
+    "batch_size": 128,
+    "eval_batch_size": 256,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "min_lr": 1e-05,
+    "scheduler": "per_step_cosine_no_warmup",
+    "weight_decay": 0.001,
+    "gradient_clip": 5.0,
+    "dropout": 0.10,
+    "objective": "MSE on Train-standardised target",
+    "selection": "minimum full official Valid RMSE; strictly smaller replaces, ties keep the earlier epoch",
+    "batch_order": "inherited np.random.default_rng(0) plan, sha256 f9c1398c5705ca5a31d2cee418fa1fda6d5bc944ad17451d3a6a98524ae31276",
+    "end_to_end": true
+  },
+  "analysis": {
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20261126,
+    "drop_top_error_fraction": 0.05,
+    "diagnostic_thresholds": "Train medians, fixed before analysis; atom signature = (atomic_num, degree, min_ring), rarity = -log Train frequency",
+    "metrics": ["rmse_raw", "mae_raw"]
+  },
+  "verdict": {
+    "reference_relative_gain": 0.02,
+    "rule": "ENCODER_ADVANTAGE_SIGNAL iff (RMSE_B - RMSE_A)/RMSE_A <= -0.02 on Valid best checkpoint AND paired molecule-bootstrap 95% CI of the RMSE difference is entirely below 0; NO_CLEAR_ENCODER_ADVANTAGE if |rel| < 2% or CI contains 0; INCONCLUSIVE if the comparison is not supported; REFERENCE_NOT_COMPARABLE if any comparability condition fails"
+  },
+  "comparability_conditions": [
+    "same official split and molecule set",
+    "both encoders consume only the same raw OGB atom/bond table and the same real graph",
+    "one literal post_local implementation and initialisation",
+    "B total parameters within A +/-15%"
+  ],
+  "limits": {
+    "single_seed": true,
+    "distillation": false,
+    "ensemble": false,
+    "hyperparameter_search": false,
+    "extra_supervision": false,
+    "pcba_or_pcqm4mv2": false
+  }
+}
