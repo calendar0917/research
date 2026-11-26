@@ -170,6 +170,9 @@ B 在剩余 399 个分子上反而差 4.9%。这与 bootstrap CI 跨 0 一致。
 
 ## 7. 正确性、工程记录与交付
 
+- **Test 边界**：继承的 bundle 构建器会为缓存/身份校验在内存中构建 Test split；
+  本轮代码不把它传给任何模型、不构造 Test batch、不评分、不产生任何 Test 分析量。
+  本轮新增 run 的 `run.json` 记录 `test_scored=false`、`splits_used=[train,valid]`。
 - **训练前检查 23/23 通过**（`analysis/checks.json`）：split/缓存身份、Train-only
   scaler、sq-cache 字节 SHA、逐分子原子/键/SMILES 对齐、GINE 词表与历史一致、
   batch plan 与 A 逐位相同、A 参数量/预测复算、A 初始化指纹复现、B head init
