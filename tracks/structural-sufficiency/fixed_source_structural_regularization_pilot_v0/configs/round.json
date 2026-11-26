@@ -1,0 +1,34 @@
+{
+  "round_id": "fixed-source-structural-regularization-pilot-v0",
+  "protocol_id": "fsrp-v0",
+  "dataset": "ogbg-molpcba official Train/Valid",
+  "seed": 0,
+  "base_checkpoint": "tracks/structural-sufficiency/direct_structural_computation_recurrence_v0/runs/FIXED1_seed0/checkpoint_last.pt",
+  "base_epoch": 25,
+  "base_global_step": 68450,
+  "base_valid_ap": 0.27584552136653284,
+  "start_epoch": 25,
+  "end_epoch": 33,
+  "arms": {
+    "BASE_CONT": {"structural_dropout": null},
+    "STRUCT_DROP": {"structural_dropout": {"q": 0.1, "mask_seed": 20261126, "grain": "physical_undirected_bond", "blocks": [0, 1]}}
+  },
+  "recipe": {
+    "batch_size": 128,
+    "optimizer": "AdamW",
+    "weight_decay": 0.001,
+    "gradient_clip": 5.0,
+    "loss": "masked BCE",
+    "learning_rate_schedule": "original 40-epoch warmup+cosine prefix",
+    "model_dropout": 0.1,
+    "precision": "fp32"
+  },
+  "evaluation": {
+    "valid": "complete official Valid split every epoch",
+    "train": "complete official Train split at epochs 25, 29, 33 and at each arm's best checkpoint",
+    "test": "not scored, not loaded"
+  },
+  "selection": "highest full official Valid macro AP over epochs 26-33 (strict improvement)",
+  "bootstrap": {"unit": "task", "b": 10000, "seed": 20261126},
+  "resource": {"gpu_hour_target": 0.9, "gpu_hour_hard_limit": 1.1, "wall_minutes_hard_limit": 75}
+}
