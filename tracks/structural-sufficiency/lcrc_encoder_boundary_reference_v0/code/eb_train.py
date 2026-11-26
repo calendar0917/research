@@ -79,10 +79,9 @@ def evaluate(split: BD.GineSplit, rows: np.ndarray, targets_raw: np.ndarray, mod
     if was_training:
         model.train()
     pred_std = np.concatenate(preds) if preds else np.zeros(0, np.float64)
-    y_std = np.concatenate(ys) if ys else np.zeros(0, np.float64)
+    y_raw = np.concatenate(ys) if ys else np.zeros(0, np.float64)
     mean, std = float(scaler["mean"]), float(scaler["std"])
     pred_raw = pred_std * std + mean
-    y_raw = y_std * std + mean
     return {
         "row_ids": np.asarray(split.row_ids[order], dtype=np.int64),
         "pred_raw": pred_raw,
