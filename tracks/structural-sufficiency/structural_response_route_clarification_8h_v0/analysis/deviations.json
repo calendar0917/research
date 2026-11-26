@@ -1,0 +1,48 @@
+{
+  "round_id": "structural-response-route-clarification-8h-v0",
+  "generated_at": "2026-11-27T02:40:00Z",
+  "deviations": [
+    {
+      "id": "D1",
+      "what": "RESP predict_std scored the wrong molecules",
+      "found_at": "2026-11-27T01:12:00+08:00",
+      "detail": "sr_resp.predict_std passed positions inside the requested row array to predict_tensor instead of the requested positions inside the fragment subset, so every RESP evaluation scored molecules 0..n-1 of the split. base_loss was unaffected because it indexes by the same local positions it receives.",
+      "symptom": "Dev RMSE rose from 1.2248 at epoch 1 to 1.6864 at epoch 120 while the training loss fell; arm.predict(fit) gave 1.61 instead of ~0.24.",
+      "fix": "rows[idx] instead of idx; regression check resp_predict_addresses_requested_rows added to checks_d0.py",
+      "scientific_impact": "both in-flight RESP rows (RESP_PRODUCT, RESP_FUSION_MLP) were invalidated: their BASE arms had completed under the broken evaluation and the ENDPOINT arms were mid-run. Outputs archived to results/B_invalidated/, all three targets per row retrained from reset at commit c6c2142. GINE and FGCR predict_std were already correct, so the GINE row and phase A were not rerun.",
+      "gpu_hours_wasted": 0.227
+    },
+    {
+      "id": "D2",
+      "what": "phase-A contrast sign convention was inconsistent, and the MAE gate compared the wrong direction",
+      "found_at": "2026-11-27T00:59:00+08:00",
+      "detail": "_paired returned RMSE(b)-RMSE(a) while delta_best/delta_last20/delta_mae_best used a-b, so g_eta_final had the opposite sign; the protocol's MAE condition is MAE_FULL - MAE_STAR <= 0.01 sigma_A but was implemented as delta_mae_best <= +0.01 sigma_A.",
+      "fix": "_paired now returns a-b everywhere; cond3 is delta_mae_best >= -0.01 sigma_A; cond2 is the protocol's literal 'same direction' (sign, not gate).",
+      "scientific_impact": "branch conclusion unchanged (RESPONSE), but the failure reason changed from 'MAE condition fails' to 'only the competitiveness condition fails'. Both fixed H cells actually pass the eta-signal and MAE conditions.",
+      "found_before_any_conclusion_was_written": true
+    },
+    {
+      "id": "D3",
+      "what": "RESP training and evaluation subsets split",
+      "detail": "RESP bundles are built on Fit + Dev = all official Train rows so that Dev rows are addressable in the fragment split; training still only sees Fit rows and the target scaler stays Fit-only. For ESOL the arm is built on the train fragment split and a separate valid-split subset is used for scoring (the ESOL cache keeps train/valid fragments separately).",
+      "scientific_impact": "none: no label or view from Dev/Valid enters training, and the scaler is unchanged."
+    },
+    {
+      "id": "D4",
+      "what": "run outputs moved out of git tracking",
+      "detail": "results/ is git-ignored at the round level; the first deploy of the A results collided with untracked run outputs on the remote and was reverted. checkpoints stay on disk and are frozen by SHA-256 in checkpoints/manifest.json; the run-time resource ledger is written to results/ and assembled into the round-root resource_ledger.json at reporting time.",
+      "scientific_impact": "none; the freeze-before-evaluation guarantee is enforced by hash, not by git."
+    },
+    {
+      "id": "D5",
+      "what": "environment repair on the host",
+      "detail": "res already carried untracked files under a different track's runs directory (lcrc_encoder_boundary_reference_v0/runs/gine_B_seed0) that blocked the first deployment; they were archived to /home/hxy/cy/ebr_runs_backup_20261127T000830.tar.gz (sha256 2f95a9a5...e04a4) and removed. An untracked remote resource_ledger.json modification (written by the phase-A runs) was replayed locally and the remote file restored to its committed state.",
+      "scientific_impact": "none."
+    }
+  ],
+  "not_deviations": [
+    "phase R was not executed because the branch is RESPONSE (protocol: ROOT-only).",
+    "official Test was never scored; the Test block is dropped right after materialisation.",
+    "the phase-A arm A_IS finished in 305 s while A_IJ needed 1553 s: A_IS does no belief pass at all (H_IND + ETA_STAR), so the cost gap is the response operator itself."
+  ]
+}

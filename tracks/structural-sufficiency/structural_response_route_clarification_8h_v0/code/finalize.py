@@ -43,6 +43,11 @@ def curves() -> None:
             payload = C.read_json(path)
             C.write_json(DELIVER_CURVES / f"{phase}__{row}__{target}.json", payload)
             n += 1
+    if (C.RESULTS_DIR / "A").is_dir():
+        for path in sorted((C.RESULTS_DIR / "A").glob("*/curves.json")):
+            payload = C.read_json(path)
+            C.write_json(DELIVER_CURVES / f"A__{path.parent.name}.json", payload)
+            n += 1
     for path in sorted((C.RESULTS_DIR / "C").glob("*/curves.json")) if (C.RESULTS_DIR / "C").is_dir() else []:
         payload = C.read_json(path)
         C.write_json(DELIVER_CURVES / f"C__{path.parent.name}__BASE.json", payload)
@@ -99,9 +104,45 @@ def dev_predictions() -> None:
                    ["phase", "row", "target", "checkpoint", "row_id", "y_true", "y_pred"])
 
 
+def edit_pairs() -> None:
+    """Tidy per-pair deltas of the frozen 276-pair strict-edit set (best checkpoint)."""
+    paths = sorted(C.PRED_DIR.glob("edit_response__*__best.npz"))
+    if not paths:
+        return
+    base: dict[str, np.ndarray] = {}
+    columns: list[str] = []
+    for path in paths:
+        row, target = path.name.split("__")[1], path.name.split("__")[2]
+        with np.load(path, allow_pickle=True) as handle:
+            keys = ("pair_id", "row_a", "row_b", "component_id", "cell", "transform_id",
+                    "core_uid", "core_size", "cut_bond_type", "s_size_a", "s_size_b",
+                    "support_other_component", "support_two_components", "delta_y",
+                    "delta_hat")
+            data = {k: np.asarray(handle[k]) for k in keys}
+        sel = data["cell"] == "DD"
+        if not base:
+            base = {k: data[k][sel] for k in keys if k != "delta_hat"}
+            base["n_pairs_all"] = np.asarray([data["pair_id"].size])
+        col = f"{row}__{target}"
+        base[col] = data["delta_hat"][sel]
+        columns.append(col)
+    rows = []
+    for i in range(base["pair_id"].size):
+        out = {k: (float(v[i]) if isinstance(v[i], (np.floating, float)) else
+                   (int(v[i]) if isinstance(v[i], (np.integer, int)) else v[i]))
+               for k, v in base.items() if k not in ("n_pairs_all",)}
+        out.update({c: float(base[c][i]) for c in columns})
+        rows.append(out)
+    _write_csv(DELIVER_PRED / "edit_pair_predictions.csv", rows,
+               ["pair_id", "row_a", "row_b", "component_id", "cell", "transform_id",
+                "core_uid", "core_size", "cut_bond_type", "s_size_a", "s_size_b",
+                "support_other_component", "support_two_components", "delta_y"] + columns)
+
+
 def ledger() -> None:
-    sources = [C.RESULTS_DIR / "resource_ledger.json",
-               C.RESULTS_DIR / "resource_ledger_A_remote.json"]
+    sources = [C.RESULTS_DIR / "resource_ledger_remote.json",
+               C.RESULTS_DIR / "resource_ledger_A_remote.json",
+               C.RESULTS_DIR / "resource_ledger.json"]
     entries: list[dict] = []
     seen = set()
     for path in sources:
@@ -113,6 +154,17 @@ def ledger() -> None:
                 continue
             seen.add(key)
             entries.append(e)
+    # runs killed before they could append: bounded by the rr job records
+    entries.extend([
+        {"phase": "B", "unit": "RESP_PRODUCT/BASE (cancelled)", "device": "cuda:0",
+         "seconds": 420.0, "gpu_hours": 420.0 / 3600.0, "status": "cancelled_invalidated",
+         "estimated": True, "finished_at": "2026-11-27T01:12:00Z",
+         "note": "first-response run, killed after the RESP prediction-index bug was found"},
+        {"phase": "B", "unit": "RESP_FUSION_MLP/BASE (cancelled)", "device": "cuda:0",
+         "seconds": 400.0, "gpu_hours": 400.0 / 3600.0, "status": "cancelled_invalidated",
+         "estimated": True, "finished_at": "2026-11-27T01:12:00Z",
+         "note": "first-response run, killed after the RESP prediction-index bug was found"},
+    ])
     for e in entries:
         e.setdefault("gpu_hours", 0.0)
     total = float(sum(float(e.get("gpu_hours") or 0.0) for e in entries))
@@ -140,6 +192,7 @@ def main() -> int:
         curves()
     if args.what in ("all", "predictions"):
         dev_predictions()
+        edit_pairs()
     if args.what in ("all", "ledger"):
         ledger()
     return 0

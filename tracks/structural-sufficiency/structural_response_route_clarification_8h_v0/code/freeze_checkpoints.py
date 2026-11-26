@@ -54,20 +54,26 @@ def main() -> int:
                     })
     else:
         base = C.RESULTS_DIR / args.phase
-        for row_dir in sorted(base.iterdir()) if base.is_dir() else []:
-            if not row_dir.is_dir():
-                continue
+        units = sorted({p.parent for p in base.glob("*/*/summary.json")}
+                       | {p.parent for p in base.glob("*/summary.json")}) \
+            if base.is_dir() else []
+        for unit_dir in units:
+            summary_path = unit_dir / "summary.json"
+            summary = C.read_json(summary_path) if summary_path.is_file() else {}
             for ckpt in ("best", "final"):
-                path = row_dir / f"{ckpt}.pt"
+                path = unit_dir / f"{ckpt}.pt"
                 if not path.is_file():
                     continue
-                summary_path = row_dir / "summary.json"
-                summary = C.read_json(summary_path) if summary_path.is_file() else {}
                 entries.append({
-                    "phase": args.phase, "row": row_dir.name, "checkpoint": ckpt,
+                    "phase": args.phase,
+                    "row": summary.get("row", unit_dir.parent.name),
+                    "target": summary.get("target", unit_dir.name),
+                    "checkpoint": ckpt,
                     "path": str(path.relative_to(C.REPO_ROOT)),
                     "sha256": C.sha256_file(path),
                     "best_epoch": summary.get("best_epoch"),
+                    "valid_rmse": (summary.get("best_eval_rmse") if ckpt == "best"
+                                   else summary.get("final_eval_rmse")),
                 })
 
     payload = {

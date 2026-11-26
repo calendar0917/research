@@ -1,0 +1,93 @@
+{
+  "B_ref": 0.628743586510216,
+  "arms": {
+    "BASE": {
+      "best_epoch": 174,
+      "best_valid_mae": 0.46719853039385006,
+      "best_valid_rmse": 0.6258896173551729,
+      "curve_probe": {
+        "epoch_of_max": 1,
+        "last_epoch": 0.6544715039920043,
+        "max": 6.482463279670204,
+        "min": 0.6258896173551729,
+        "n_epochs": 360,
+        "p50": 0.6548960117365912,
+        "ratio_max_over_min": 10.357198937191521
+      },
+      "final_valid_mae": 0.47359052350268255,
+      "final_valid_rmse": 0.6544715039920043,
+      "last20_valid_mae": 0.473668400209405,
+      "last20_valid_rmse": 0.6536707174845893,
+      "n_pair_components": 391,
+      "n_pairs": 2133,
+      "n_parameters": 377350,
+      "peak_vram_gb": 0.12586593627929688,
+      "ratio_to_B_ref": 0.9954608377464591,
+      "seconds": 322.71580840600654
+    },
+    "DELTA": {
+      "best_epoch": 292,
+      "best_valid_mae": 0.46622434674584445,
+      "best_valid_rmse": 0.6494927954795371,
+      "curve_probe": {
+        "epoch_of_max": 1,
+        "last_epoch": 0.8608180400126492,
+        "max": 6.21993405601615,
+        "min": 0.6494927954795371,
+        "n_epochs": 360,
+        "p50": 1.0176878514910572,
+        "ratio_max_over_min": 9.576602079818013
+      },
+      "final_valid_mae": 0.7090442068862295,
+      "final_valid_rmse": 0.8608180400126492,
+      "last20_valid_mae": 0.7113493378451192,
+      "last20_valid_rmse": 0.8660487815163902,
+      "n_pair_components": 391,
+      "n_pairs": 2133,
+      "n_parameters": 377350,
+      "peak_vram_gb": 0.22733211517333984,
+      "ratio_to_B_ref": 1.033001066594552,
+      "seconds": 502.1564723411575
+    },
+    "ENDPOINT": {
+      "best_epoch": 301,
+      "best_valid_mae": 0.47826559611650366,
+      "best_valid_rmse": 0.6453381262194366,
+      "curve_probe": {
+        "epoch_of_max": 1,
+        "last_epoch": 0.6572586304328224,
+        "max": 2.0132807963606703,
+        "min": 0.6453381262194366,
+        "n_epochs": 360,
+        "p50": 0.690619482124638,
+        "ratio_max_over_min": 3.1197301299320523
+      },
+      "final_valid_mae": 0.48138154963571766,
+      "final_valid_rmse": 0.6572586304328224,
+      "last20_valid_mae": 0.4814340121119923,
+      "last20_valid_rmse": 0.6567181686149886,
+      "n_pair_components": 391,
+      "n_pairs": 2133,
+      "n_parameters": 377350,
+      "peak_vram_gb": 0.22733211517333984,
+      "ratio_to_B_ref": 1.0263931753186177,
+      "seconds": 502.8088666619733
+    }
+  },
+  "branch": "RESPONSE",
+  "generated_at": "2026-11-26T18:17:27Z",
+  "n_pair_components": 391,
+  "n_pairs": 2133,
+  "optimization_note": "The DELTA arm's official-Valid curve swings between 0.649 and 6.220 across epochs and ends at 0.861, so its best-epoch number is a frozen-rule selection from a noisy trajectory, not a stable level. The auxiliary pair forward runs with the module in eval() mode (frozen protocol, keeps batch-norm buffers untouched), so the pair term and the base term see different normalisation statistics; this arm is optimization-fragile under that design.",
+  "reading": {
+    "BASE_vs_reference": 0.9954608377464591,
+    "DELTA_vs_BASE": 1.0377114070434725,
+    "ENDPOINT_vs_BASE": 1.031073384707111,
+    "band": "<=1.05 close, 1.05-1.10 pays a cost, >1.10 clear gap (resource bands)"
+  },
+  "reference_status": "PREDICTION_VERIFIED_REFERENCE",
+  "round_id": "structural-response-route-clarification-8h-v0",
+  "row": "GINE_G0",
+  "train_rows": 3360,
+  "valid_rows": 420
+}
