@@ -1,0 +1,136 @@
+{
+  "all_passed": true,
+  "arm": "MEANFIELD",
+  "checks": [
+    {
+      "byte_identical_state_dicts": true,
+      "check": "P1_parameter_and_init_parity",
+      "differing_tensors": [],
+      "expected_parameters": 1128468,
+      "fixed1_param_audit_all_match": true,
+      "meanfield_param_audit_all_match": true,
+      "n_state_tensors": 71,
+      "n_state_tensors_differing": 0,
+      "n_tensors_compared": 71,
+      "normaliser": "official Train-only norm",
+      "parameters_fixed1": 1128468,
+      "parameters_meanfield": 1128468,
+      "passed": true,
+      "w2_trunk_fingerprint": "5f7101a8f378e7c9283caaade8d61eee733c0c9f3cfb65b5584c8a1e495ef63d",
+      "w2_trunk_matches_recorded_seed0": true
+    },
+    {
+      "check": "P2_group_isolation",
+      "every_group_single_graph_and_single_signature": true,
+      "graph_ids_present": [
+        0,
+        1
+      ],
+      "groups_per_graph": {
+        "0": 2,
+        "1": 1
+      },
+      "n_directed_edges": 8,
+      "n_groups": 3,
+      "n_signatures": 3,
+      "passed": true,
+      "per_group": [
+        {
+          "graph_id": 0,
+          "group": 0,
+          "single_graph": true,
+          "single_signature": true,
+          "size": 2
+        },
+        {
+          "graph_id": 0,
+          "group": 1,
+          "single_graph": true,
+          "single_signature": true,
+          "size": 4
+        },
+        {
+          "graph_id": 1,
+          "group": 2,
+          "single_graph": true,
+          "single_signature": true,
+          "size": 2
+        }
+      ]
+    },
+    {
+      "check": "P3_conservation_and_P4_counts",
+      "group_size_max": 4,
+      "group_size_min": 2,
+      "max_abs_conservation_error": 0.0,
+      "max_relative_conservation_error": 0.0,
+      "message_content_changed": true,
+      "message_rows_equal_directed_edges": true,
+      "n_centre_bond_type_cells": 15,
+      "n_groups": 3,
+      "passed": true,
+      "per_centre_bond_type_counts_preserved": true,
+      "per_centre_in_degree_preserved": true
+    },
+    {
+      "centre_2_message_change_absmax": 5.630357329336349,
+      "check": "P5_binding_witness",
+      "construction": "atoms 0 and 1 both bond to atom 2 with the same raw bond signature; FIXED1 keeps two different source contents, MEANFIELD assigns both edges the group mean",
+      "group_size": 4,
+      "max_abs_p_diff_after_meanfield": 0.0,
+      "max_abs_p_diff_between_two_sources_fixed1": 11.288862124033509,
+      "n_groups": 1,
+      "passed": true
+    },
+    {
+      "atom_renumbering_max_abs_diff": 0.0,
+      "check": "P6_invariance",
+      "direction_reversal_max_abs_diff": 4.440892098500626e-16,
+      "edge_order_max_abs_diff": 0.0,
+      "fixed1_content_max_abs_asymmetry_between_directions": 3.1594422957970236,
+      "float_dtype": "float64",
+      "meanfield_content_direction_symmetric": true,
+      "note": "FIXED1 is not direction-reversal invariant; MEANFIELD is, because the two directions of a physical bond always share one group and therefore one content vector",
+      "passed": true,
+      "tolerance": 1e-12
+    },
+    {
+      "aggregation_is_exactly_zero": true,
+      "block_gradients_present": true,
+      "bond_proj_grad": null,
+      "check": "P7_empty_bonds_and_gradients",
+      "finite_outputs": true,
+      "gradient_reaches_h0": true,
+      "max_abs_block_grad": 25.67325782775879,
+      "n_directed_edges": 0,
+      "n_groups": 0,
+      "passed": true
+    },
+    {
+      "check": "P8_test_isolation",
+      "n_test_rows": 43793,
+      "note": "no Test row is ever read, scored or labelled in this round: the only permitted references are the isolation guards in this file",
+      "passed": true,
+      "split_calls_with_test": [],
+      "test_evaluated": false,
+      "test_labels_all_nonfinite": true,
+      "test_row_references": {
+        "mf_checks.py": [
+          "load_test_labels",
+          "test_labels",
+          "test_rows"
+        ]
+      },
+      "trainer_eval_splits_allowed": [
+        "train",
+        "valid"
+      ]
+    }
+  ],
+  "created_utc": "2026-11-26T05:13:35Z",
+  "n_checks": 7,
+  "n_passed": 7,
+  "protocol_id": "fsdp-v0",
+  "round_id": "fixed-source-structural-distribution-pilot-v0",
+  "schema": "fsdp-allocation-checks-v1"
+}

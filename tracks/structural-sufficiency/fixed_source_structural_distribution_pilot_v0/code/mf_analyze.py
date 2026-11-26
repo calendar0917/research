@@ -284,7 +284,7 @@ def main() -> int:
         "role": "distributional message content, per-centre relation counts kept",
         "path": run_dir / "train_curve.csv",
         "per_task": run_dir / "per_task_ap.csv",
-        "per_task_split": None,
+        "per_task_split": "valid",
         "source": "fsdp-v0 new run",
         "params": R.PARAMS_TOTAL,
     }
@@ -398,7 +398,9 @@ def main() -> int:
             {
                 "task": t,
                 "valid_positive": int(counts["valid"]["positive"][t]),
-                "valid_negative": int(counts["valid"]["negative"][t]),
+                "valid_negative": (
+                    int(counts["valid"]["negative"][t]) if "negative" in counts["valid"] else None
+                ),
                 "high_support": bool(t in support),
                 "meanfield_ap": None if mf is None else mf["ap"],
                 "fixed1_ap": None if f1 is None else f1["ap"],
