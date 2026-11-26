@@ -67,6 +67,10 @@ def _batch(task: Any, rows: np.ndarray, device: torch.device) -> dict[str, Any]:
     return {k: (v.to(device) if torch.is_tensor(v) else v) for k, v in C.PC.collate(task.cache, rows.tolist()).items()}
 
 
+def _cpu_batch(batch: Mapping[str, Any]) -> dict[str, Any]:
+    return {k: (v.detach().cpu() if torch.is_tensor(v) else v) for k, v in batch.items()}
+
+
 def _max_abs_diff(a: torch.Tensor, b: torch.Tensor) -> float:
     return float((a - b).abs().max().item()) if a.numel() else 0.0
 
@@ -83,13 +87,15 @@ def check_c1_c8(task: Any, payload: Mapping[str, Any], base_audit: Mapping[str, 
         model = _build(arm, task, device)
         optimizer, opt_audit = DT.build_optimizer(model)
         resume = DT.restore(payload, model, optimizer, arm="FIXED1", seed=R.SEED)
-        lr = R.current_lr_at(optimizer, R.EXPECTED_BASE_STEP)
+        lr_restore = float(optimizer.param_groups[0]["lr"])
+        lr_first_step = R.current_lr_at(optimizer, R.EXPECTED_BASE_STEP)
         fp = {
             "arm": arm,
             "state_fingerprint": R.model_state_fingerprint(model),
             "optimizer_fingerprint": R.optimizer_fingerprint(optimizer),
             "rng_state_hashes": C.rng_state_hashes(C.capture_rng_state()),
-            "lr_at_68450": lr,
+            "lr_at_restore": lr_restore,
+            "lr_first_continued_step": lr_first_step,
             "parameters": int(sum(p.numel() for p in model.parameters())),
             "resume": resume,
         }
@@ -99,16 +105,20 @@ def check_c1_c8(task: Any, payload: Mapping[str, Any], base_audit: Mapping[str, 
         "state": len({r["state_fingerprint"] for r in rows}) == 1,
         "optimizer": len({r["optimizer_fingerprint"] for r in rows}) == 1,
         "rng": len({str(r["rng_state_hashes"]["combined_sha256"]) for r in rows}) == 1,
-        "lr": len({float(r["lr_at_68450"]) for r in rows}) == 1,
+        "lr_restore": len({float(r["lr_at_restore"]) for r in rows}) == 1,
+        "lr_first_step": len({float(r["lr_first_continued_step"]) for r in rows}) == 1,
         "parameters": len({r["parameters"] for r in rows}) == 1,
     }
     record(
         "C1", "both arms start from the same weights / optimizer / RNG / LR",
-        all(same.values()) and abs(rows[0]["lr_at_68450"] - R.EXPECTED_LR_AT_68450) <= 1e-15,
+        all(same.values())
+        and abs(rows[0]["lr_at_restore"] - R.EXPECTED_LR_AT_RESTORE) <= 1e-15
+        and abs(rows[0]["lr_first_continued_step"] - R.EXPECTED_LR_FIRST_STEP) <= 1e-15,
         {
             "same": same,
             "arms": rows,
-            "expected_lr": R.EXPECTED_LR_AT_68450,
+            "expected_lr_at_restore": R.EXPECTED_LR_AT_RESTORE,
+            "expected_lr_first_continued_step": R.EXPECTED_LR_FIRST_STEP,
             "base_plan": base_audit["batch_plan"],
             "recomputed_plan": C.plan_meta(plan, R.START_EPOCH, R.ORDER_SEED),
             "mask_rng_note": "STRUCT_DROP adds an independent mask generator; the model RNG is untouched",
@@ -137,7 +147,7 @@ def check_c1_c8(task: Any, payload: Mapping[str, Any], base_audit: Mapping[str, 
         and int(payload["batch_plan"]["consumed_epochs"]) == R.START_EPOCH,
         c8_details,
     )
-    return models["BASE_CONT"], models["STRUCT_DROP"]
+    return models
 
 
 def check_c2(models: Mapping[str, tuple[Any, Any]], task: Any, device: torch.device) -> dict[str, Any]:
@@ -201,17 +211,52 @@ def check_c3(payload: Mapping[str, Any], task: Any, device: torch.device, plan: 
     logit_diff = _max_abs_diff(a["logits"], b["logits"])
     loss_diff = abs(a["loss"] - b["loss"])
     grad_diff = _max_abs_diff(a["grad"], b["grad"])
+    # exact CPU reference: scatter kernels are deterministic on CPU
+    cpu = torch.device("cpu")
+    batch_cpu = _cpu_batch(batch)
+    y_cpu = torch.as_tensor(np.ascontiguousarray(y, dtype=np.float32), device=cpu)
+    cpu_results = {}
+    for name, arm in (("BASE_CONT", "BASE_CONT"), ("STRUCT_DROP_q0", "STRUCT_DROP")):
+        model_cpu = _build(arm, task, cpu)
+        if arm == "STRUCT_DROP":
+            model_cpu.struct_drop_q = 0.0
+        _load_base_into(model_cpu, payload)
+        C.seed_everything(20261126)
+        model_cpu.train()
+        model_cpu.zero_grad(set_to_none=True)
+        logits_cpu = model_cpu(batch_cpu)
+        loss_cpu = MET.masked_bce_loss(logits_cpu, y_cpu)
+        loss_cpu.backward()
+        cpu_results[name] = {
+            "logits": logits_cpu.detach().clone(),
+            "loss": float(loss_cpu.detach()),
+            "grad": _grad_vector(model_cpu).clone(),
+        }
+    ca, cb = cpu_results["BASE_CONT"], cpu_results["STRUCT_DROP_q0"]
+    cpu_logit_diff = _max_abs_diff(ca["logits"], cb["logits"])
+    cpu_loss_diff = abs(ca["loss"] - cb["loss"])
+    cpu_grad_diff = _max_abs_diff(ca["grad"], cb["grad"])
+    passed = (
+        cpu_logit_diff == 0.0 and cpu_loss_diff == 0.0 and cpu_grad_diff == 0.0
+        and logit_diff <= 2e-5 and loss_diff <= 1e-7 and grad_diff <= 1e-7
+    )
     record(
         "C3", "STRUCT_DROP at q=0 reproduces FIXED1 forward and gradients",
-        logit_diff == 0.0 and loss_diff == 0.0 and grad_diff == 0.0,
+        passed,
         {
             "batch_rows": int(len(rows)),
-            "max_abs_logit_diff": logit_diff,
-            "abs_loss_diff": loss_diff,
-            "max_abs_grad_diff": grad_diff,
+            "gpu_max_abs_logit_diff": logit_diff,
+            "gpu_abs_loss_diff": loss_diff,
+            "gpu_max_abs_grad_diff": grad_diff,
+            "cpu_max_abs_logit_diff": cpu_logit_diff,
+            "cpu_abs_loss_diff": cpu_loss_diff,
+            "cpu_max_abs_grad_diff": cpu_grad_diff,
             "grad_tensor_elements": int(a["grad"].numel()),
             "mask_draws_at_q0": int(drop.mask_draws),
-            "note": "q=0 masked path executes keep=1 exactly; the base path has no mask tensor",
+            "note": (
+                "q=0 masked path executes keep=1 exactly; the base path has no mask tensor. "
+                "CPU scatter is deterministic -> exact equality; GPU differs only by atomic-add order (<=2e-5)."
+            ),
         },
     )
 
@@ -316,15 +361,40 @@ def check_c6(task: Any, payload: Mapping[str, Any], device: torch.device, plan: 
         logits_drop = drop(batch)
         logits_plain = plain.eval()(batch)
     diff = _max_abs_diff(logits_drop, logits_plain)
+    cpu = torch.device("cpu")
+    batch_cpu = _cpu_batch(batch)
+    drop_cpu = _build("STRUCT_DROP", task, cpu)
+    plain_cpu = _build("BASE_CONT", task, cpu)
+    _load_base_into(drop_cpu, payload)
+    _load_base_into(plain_cpu, payload)
+    drop_cpu.train()
+    _ = drop_cpu(batch_cpu)
+    draws_cpu = int(drop_cpu.mask_draws)
+    drop_cpu.eval()
+    plain_cpu.eval()
+    with torch.inference_mode():
+        cpu_drop = drop_cpu(batch_cpu)
+        cpu_plain = plain_cpu(batch_cpu)
+    cpu_diff = _max_abs_diff(cpu_drop, cpu_plain)
+    passed = (
+        int(drop.mask_draws) == draws_after_train
+        and int(drop_cpu.mask_draws) == draws_cpu
+        and diff <= 2e-5
+        and cpu_diff == 0.0
+    )
     record(
         "C6", "eval mode draws no mask and equals inherited FIXED1 arithmetic",
-        int(drop.mask_draws) == draws_after_train and diff <= 1e-6,
+        passed,
         {
             "mask_draws_after_training_forward": draws_after_train,
             "mask_draws_after_eval_forward": int(drop.mask_draws),
             "eval_forward_calls": int(drop.eval_forward_calls),
-            "max_abs_logit_diff_vs_plain_FIXED1": diff,
-            "tolerance_note": "identical eval code path (delegated); CUDA atomics tolerance 1e-6",
+            "gpu_max_abs_logit_diff_vs_plain_FIXED1": diff,
+            "cpu_max_abs_logit_diff_vs_plain_FIXED1": cpu_diff,
+            "tolerance_note": (
+                "eval delegates to the inherited FIXED1 code path (no mask, no scaling); "
+                "CPU exact, GPU only atomic-add order"
+            ),
         },
     )
 
