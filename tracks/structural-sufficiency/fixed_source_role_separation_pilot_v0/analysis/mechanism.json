@@ -1,0 +1,250 @@
+{
+  "arms": {
+    "RSSC": {
+      "best_epoch": 12,
+      "blocks": {
+        "0": {
+          "D_cosine_to_W": -0.14315839111804962,
+          "D_frobenius": 7.284893035888672,
+          "R_ratio": 0.49439588606421336,
+          "W_frobenius": 14.734938621520996,
+          "correction_to_fc1_ratio": 0.3438236800452852,
+          "rms_fc1_z_plus_m": 3.3964433670043945,
+          "rms_lowrank_correction": 1.16777765750885,
+          "rms_m": 1.3286114931106567,
+          "rms_z": 1.0874288082122803
+        },
+        "1": {
+          "D_cosine_to_W": -0.13309046626091003,
+          "D_frobenius": 7.329697608947754,
+          "R_ratio": 0.4949856088109589,
+          "W_frobenius": 14.807900428771973,
+          "correction_to_fc1_ratio": 0.3557771002517776,
+          "rms_fc1_z_plus_m": 3.4028327465057373,
+          "rms_lowrank_correction": 1.2106499671936035,
+          "rms_m": 1.3198609352111816,
+          "rms_z": 1.0903840065002441
+        }
+      },
+      "frozen_branch_zero": {
+        "applied": true,
+        "intervention": "A.weight := 0 in both blocks (equivalently D = 0); fc1, LN, residual, readout untouched",
+        "logits_changed_fraction_gt_1e-6": 0.9999985728312744,
+        "logits_max_abs_change": 35.509483337402344,
+        "logits_mean_abs_change": 0.7461906181756225,
+        "logits_rms_change": 0.9894065997645995,
+        "n_tasks_scored": 127,
+        "note": "frozen intervention only shows whether the trained model uses the branch; it is not an independent training result",
+        "tasks_degraded_without_branch": 112,
+        "tasks_improved_without_branch": 15,
+        "valid_ap_delta": -0.031979676317095085,
+        "valid_ap_with_branch": 0.26703128331681664,
+        "valid_ap_without_branch": 0.23505160699972155,
+        "valid_bce_delta": 0.0019790471584461913,
+        "valid_bce_with_branch": 0.045210025789394225,
+        "valid_bce_without_branch": 0.047189072947840416
+      },
+      "lowrank_gradients": {
+        "any_nonzero": true,
+        "loss": 0.03771556168794632,
+        "n_rows": 64,
+        "note": "diagnostic backward on real Valid rows; no optimiser step",
+        "per_tensor_norm": {
+          "lowrank.0.A.weight": 0.007229653652757406,
+          "lowrank.0.B.weight": 0.0049225264228880405,
+          "lowrank.1.A.weight": 0.007151843048632145,
+          "lowrank.1.B.weight": 0.0054978360421955585
+        }
+      },
+      "molecules": [
+        {
+          "blocks": {
+            "0": {
+              "centre_share": 0.32948149151379585,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 1.8194761253198521e-07,
+              "rms_centre_term": 1.5242688655853271,
+              "rms_direct_preactivation": 3.5703725814819336,
+              "rms_neighbour_term": 3.101996660232544
+            },
+            "1": {
+              "centre_share": 0.3485115434863299,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 1.7106275151945738e-07,
+              "rms_centre_term": 1.5548287630081177,
+              "rms_direct_preactivation": 3.4677841663360596,
+              "rms_neighbour_term": 2.9065120220184326
+            }
+          },
+          "n_atoms": 29,
+          "n_directed_edges": 62,
+          "valid_row": 23
+        },
+        {
+          "blocks": {
+            "0": {
+              "centre_share": 0.32796158524773783,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 1.946906138527993e-07,
+              "rms_centre_term": 1.5254149436950684,
+              "rms_direct_preactivation": 3.6897196769714355,
+              "rms_neighbour_term": 3.1257851123809814
+            },
+            "1": {
+              "centre_share": 0.3372134788227133,
+              "reconstruction_max_abs_error": 1.9073486328125e-06,
+              "reconstruction_rel_error": 1.1015130496616621e-07,
+              "rms_centre_term": 1.5420219898223877,
+              "rms_direct_preactivation": 3.697157859802246,
+              "rms_neighbour_term": 3.0308141708374023
+            }
+          },
+          "n_atoms": 29,
+          "n_directed_edges": 64,
+          "valid_row": 26
+        },
+        {
+          "blocks": {
+            "0": {
+              "centre_share": 0.31439423235251557,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 1.7839091981386446e-07,
+              "rms_centre_term": 1.4421401023864746,
+              "rms_direct_preactivation": 3.7070369720458984,
+              "rms_neighbour_term": 3.1449036598205566
+            },
+            "1": {
+              "centre_share": 0.3224297997512829,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 1.6080008435892523e-07,
+              "rms_centre_term": 1.4750181436538696,
+              "rms_direct_preactivation": 3.776076078414917,
+              "rms_neighbour_term": 3.099677324295044
+            }
+          },
+          "n_atoms": 29,
+          "n_directed_edges": 60,
+          "valid_row": 27
+        }
+      ],
+      "weights_source": "best_checkpoint"
+    },
+    "TIED": {
+      "best_epoch": 10,
+      "blocks": {
+        "0": {
+          "D_cosine_to_W": 0.2969774305820465,
+          "D_frobenius": 3.3096508979797363,
+          "R_ratio": 0.23261930986258758,
+          "W_frobenius": 14.22775650024414,
+          "correction_to_fc1_ratio": 0.10476702780456078,
+          "rms_fc1_z_plus_m": 3.4497196674346924,
+          "rms_lowrank_correction": 0.36141687631607056,
+          "rms_m": 1.3850150108337402,
+          "rms_z": 1.073582649230957
+        },
+        "1": {
+          "D_cosine_to_W": 0.3057324290275574,
+          "D_frobenius": 3.3126254081726074,
+          "R_ratio": 0.23246050709208965,
+          "W_frobenius": 14.250271797180176,
+          "correction_to_fc1_ratio": 0.10860167479759462,
+          "rms_fc1_z_plus_m": 3.4890761375427246,
+          "rms_lowrank_correction": 0.3789195120334625,
+          "rms_m": 1.3785029649734497,
+          "rms_z": 1.074838399887085
+        }
+      },
+      "frozen_branch_zero": {
+        "applied": false,
+        "reason": "protocol asks for the frozen branch-off intervention on the RSSC best checkpoint only"
+      },
+      "lowrank_gradients": {
+        "any_nonzero": true,
+        "loss": 0.037696219980716705,
+        "n_rows": 64,
+        "note": "diagnostic backward on real Valid rows; no optimiser step",
+        "per_tensor_norm": {
+          "lowrank.0.A.weight": 0.004477004054933786,
+          "lowrank.0.B.weight": 0.003383641131222248,
+          "lowrank.1.A.weight": 0.004021103493869305,
+          "lowrank.1.B.weight": 0.0038373323623090982
+        }
+      },
+      "molecules": [
+        {
+          "blocks": {
+            "0": {
+              "centre_share": 0.3625322269149713,
+              "reconstruction_max_abs_error": 1.9073486328125e-06,
+              "reconstruction_rel_error": 1.4835740103080752e-07,
+              "rms_centre_term": 1.4294357299804688,
+              "rms_direct_preactivation": 3.171182632446289,
+              "rms_neighbour_term": 2.5134847164154053
+            },
+            "1": {
+              "centre_share": 0.3706492555007877,
+              "reconstruction_max_abs_error": 1.9073486328125e-06,
+              "reconstruction_rel_error": 1.3591615299901605e-07,
+              "rms_centre_term": 1.481303334236145,
+              "rms_direct_preactivation": 3.263821601867676,
+              "rms_neighbour_term": 2.5152063369750977
+            }
+          },
+          "n_atoms": 29,
+          "n_directed_edges": 62,
+          "valid_row": 23
+        },
+        {
+          "blocks": {
+            "0": {
+              "centre_share": 0.3560491818989175,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 2.041104352201728e-07,
+              "rms_centre_term": 1.4597814083099365,
+              "rms_direct_preactivation": 3.368922472000122,
+              "rms_neighbour_term": 2.6401617527008057
+            },
+            "1": {
+              "centre_share": 0.3620086162526818,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 2.1370652802943368e-07,
+              "rms_centre_term": 1.5281836986541748,
+              "rms_direct_preactivation": 3.498267889022827,
+              "rms_neighbour_term": 2.6932177543640137
+            }
+          },
+          "n_atoms": 29,
+          "n_directed_edges": 64,
+          "valid_row": 26
+        },
+        {
+          "blocks": {
+            "0": {
+              "centre_share": 0.35418063298892766,
+              "reconstruction_max_abs_error": 2.86102294921875e-06,
+              "reconstruction_rel_error": 1.973269547761447e-07,
+              "rms_centre_term": 1.471243143081665,
+              "rms_direct_preactivation": 3.5684361457824707,
+              "rms_neighbour_term": 2.6826913356781006
+            },
+            "1": {
+              "centre_share": 0.35632105700608974,
+              "reconstruction_max_abs_error": 1.9073486328125e-06,
+              "reconstruction_rel_error": 1.3044540025930473e-07,
+              "rms_centre_term": 1.4620801210403442,
+              "rms_direct_preactivation": 3.519070625305176,
+              "rms_neighbour_term": 2.641185998916626
+            }
+          },
+          "n_atoms": 29,
+          "n_directed_edges": 60,
+          "valid_row": 27
+        }
+      ],
+      "weights_source": "best_checkpoint"
+    }
+  },
+  "note": "light diagnostics only: D=A@B, scale ratios, gradients, frozen branch-off on the RSSC best checkpoint",
+  "round_id": "fixed-source-role-separation-pilot-v0"
+}

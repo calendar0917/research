@@ -1,0 +1,145 @@
+{
+  "answers": {
+    "Q1_RSSC_beats_TIED": true,
+    "Q1_delta_valid_ap": 0.006446776217264583,
+    "Q2_RSSC_beats_same_horizon_FIXED1": false,
+    "Q2_TIED_vs_FIXED1": -0.009409708147719797,
+    "Q2_delta_valid_ap": -0.002962931930455215,
+    "Q2_reference_available": true,
+    "Q3_train_fit_vs_validation_generalisation": {
+      "RSSC": {
+        "best_train_ap": 0.454650945948427,
+        "best_valid_ap": 0.2670286554582952,
+        "endpoint_train_ap": 0.45466531085311934,
+        "endpoint_valid_ap": 0.2670286554582952
+      },
+      "TIED": {
+        "best_train_ap": 0.4165020212470356,
+        "best_valid_ap": 0.2605818792410306,
+        "endpoint_train_ap": 0.44536530777868644,
+        "endpoint_valid_ap": 0.25941472898408474
+      }
+    },
+    "Q4_branch_participates": {
+      "RSSC": {
+        "applied": true,
+        "intervention": "A.weight := 0 in both blocks (equivalently D = 0); fc1, LN, residual, readout untouched",
+        "logits_changed_fraction_gt_1e-6": 0.9999985728312744,
+        "logits_max_abs_change": 35.509483337402344,
+        "logits_mean_abs_change": 0.7461906181756225,
+        "logits_rms_change": 0.9894065997645995,
+        "n_tasks_scored": 127,
+        "note": "frozen intervention only shows whether the trained model uses the branch; it is not an independent training result",
+        "tasks_degraded_without_branch": 112,
+        "tasks_improved_without_branch": 15,
+        "valid_ap_delta": -0.031979676317095085,
+        "valid_ap_with_branch": 0.26703128331681664,
+        "valid_ap_without_branch": 0.23505160699972155,
+        "valid_bce_delta": 0.0019790471584461913,
+        "valid_bce_with_branch": 0.045210025789394225,
+        "valid_bce_without_branch": 0.047189072947840416
+      },
+      "TIED": {
+        "applied": false,
+        "reason": "protocol asks for the frozen branch-off intervention on the RSSC best checkpoint only"
+      }
+    }
+  },
+  "artifacts": {
+    "epoch_curves_csv_sha256": "dc753cf896b010cd9ec95a4c9595b2b4f3b0fad60fee67f186c515f988ee4503",
+    "main_table_csv_sha256": "53cf35194fecf8ca3379622cb279aa88d626bd5ca4f0c12f3a198e30d8e6129c"
+  },
+  "budget": {
+    "dataset": "ogbg-molpcba",
+    "gpu_hours_total_two_arms": 1.4330283072113525,
+    "seeds": [
+      0
+    ],
+    "units": 2,
+    "wall_clock_seconds_sum": 5158.901905960869
+  },
+  "created_utc": "2026-11-26T02:42:08Z",
+  "curve_summaries": {
+    "FIXED1_hist": {
+      "best_epoch": 12,
+      "best_valid_ap": 0.2699915873887504,
+      "endpoint_epoch": 12,
+      "endpoint_valid_ap": 0.2699915873887504,
+      "last3_mean_valid_ap": 0.26325568958752027,
+      "last5_mean_valid_ap": 0.258212948304579
+    },
+    "RSSC": {
+      "best_epoch": 12,
+      "best_valid_ap": 0.2670286554582952,
+      "endpoint_epoch": 12,
+      "endpoint_valid_ap": 0.2670286554582952,
+      "last3_mean_valid_ap": 0.2625238171947463,
+      "last5_mean_valid_ap": 0.258607354919492
+    },
+    "TIED": {
+      "best_epoch": 10,
+      "best_valid_ap": 0.2605818792410306,
+      "endpoint_epoch": 12,
+      "endpoint_valid_ap": 0.25941472898408474,
+      "last3_mean_valid_ap": 0.25955809290251564,
+      "last5_mean_valid_ap": 0.2546443289978661
+    }
+  },
+  "decision": "ROLE_DIFFERENCE_WITHOUT_PERFORMANCE_ADVANCE",
+  "directional_reading_interpretation": "same thresholds applied to the shared completed prefix; it does not upgrade the budget-limited decision",
+  "directional_reading_on_completed_prefix": "ROLE_DIFFERENCE_WITHOUT_PERFORMANCE_ADVANCE",
+  "flags": [],
+  "horizon": {
+    "completed_prefix_used": 12,
+    "epochs_run_per_arm": {
+      "RSSC": 12,
+      "TIED": 12
+    },
+    "requested": 12
+  },
+  "paired_deltas": {
+    "RSSC_minus_FIXED1_hist_best": {
+      "a_epoch": 12,
+      "a_valid_ap": 0.2670286554582952,
+      "b_epoch": 12,
+      "b_valid_ap": 0.2699915873887504,
+      "delta_ap": -0.002962931930455215
+    },
+    "RSSC_minus_FIXED1_hist_endpoint": {
+      "a_epoch": 12,
+      "a_valid_ap": 0.2670286554582952,
+      "b_epoch": 12,
+      "b_valid_ap": 0.2699915873887504,
+      "delta_ap": -0.002962931930455215
+    },
+    "RSSC_minus_TIED_best": {
+      "a_epoch": 12,
+      "a_valid_ap": 0.2670286554582952,
+      "b_epoch": 10,
+      "b_valid_ap": 0.2605818792410306,
+      "delta_ap": 0.006446776217264583
+    },
+    "RSSC_minus_TIED_endpoint": {
+      "a_epoch": 12,
+      "a_valid_ap": 0.2670286554582952,
+      "b_epoch": 12,
+      "b_valid_ap": 0.25941472898408474,
+      "delta_ap": 0.007613926474210442
+    },
+    "TIED_minus_FIXED1_hist_best": {
+      "a_epoch": 10,
+      "a_valid_ap": 0.2605818792410306,
+      "b_epoch": 12,
+      "b_valid_ap": 0.2699915873887504,
+      "delta_ap": -0.009409708147719797
+    },
+    "TIED_minus_FIXED1_hist_endpoint": {
+      "a_epoch": 12,
+      "a_valid_ap": 0.25941472898408474,
+      "b_epoch": 12,
+      "b_valid_ap": 0.2699915873887504,
+      "delta_ap": -0.010576858404665657
+    }
+  },
+  "round_id": "fixed-source-role-separation-pilot-v0"
+}

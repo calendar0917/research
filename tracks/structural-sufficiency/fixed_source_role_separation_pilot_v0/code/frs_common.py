@@ -311,7 +311,7 @@ def hist_per_task(horizon: int, epoch: int) -> dict[int, dict[str, Any]]:
     out: dict[int, dict[str, Any]] = {}
     for r in rows:
         out[int(r["task"])] = {
-            "ap": float(r["ap"]),
+            "ap": (None if r["ap"] == "" else float(r["ap"])),
             "observed": int(r["observed"]),
             "positive": int(r["positive"]),
             "negative": int(r["negative"]),
