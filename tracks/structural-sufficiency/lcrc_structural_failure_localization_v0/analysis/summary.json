@@ -1,0 +1,1159 @@
+{
+  "input_representation": {
+    "declared_absent_in_both": [
+      "pH / solution context",
+      "pKa or any measured ionization constant",
+      "microstate / protonation-state label"
+    ],
+    "encoder_A_input_fields": {
+      "atom_fields": [
+        "atom_type one-hot(16: element x aromatic, P and S_aromatic present)",
+        "formal_charge one-hot(6: -2,-1,0,+1,+2,UNK)",
+        "n_hydrogens one-hot(6: 0,1,2,3,4,UNK)",
+        "degree one-hot(6)",
+        "in_ring",
+        "min_ring_size one-hot(7)",
+        "ring_bond_count_over_4",
+        "ring_bond_fraction",
+        "incident_bond_class_fraction(5)",
+        "is_terminal",
+        "is_fused_or_spiro"
+      ],
+      "atom_fields_absent": [
+        "chirality (no stereo descriptor on atoms)",
+        "hybridization",
+        "num_radical_electrons",
+        "explicit H count above 4 (bucket UNK)"
+      ],
+      "bond_fields": [
+        "bond_class(5)",
+        "is_ring",
+        "exactly_one_endpoint_in_ring",
+        "both_endpoints_in_ring",
+        "stereo(5)"
+      ],
+      "global_fields": "33 graph-topology scalars (shared with B via post_local)",
+      "local_structure": "S1/S2 rooted 2-path content: log1p_n_paths2, closure_ratio, log1p_n_d2 + ring/bond-class fractions per atom",
+      "receptive_field": "2 hops (S2 enumeration) + 2 fixed-source message stages",
+      "solution_context": "none (no pH, no pKa, no solvent, no experimental context)"
+    },
+    "encoder_B_input_fields": {
+      "atom_fields": [
+        "atomic_num index",
+        "chirality",
+        "degree",
+        "formal_charge",
+        "num_hs",
+        "num_radical_electrons",
+        "hybridization",
+        "is_aromatic",
+        "is_in_ring"
+      ],
+      "atom_fields_absent": [
+        "element x aromatic class beyond the raw atomic_num index",
+        "min-ring size as an atom label (ring index is only a separate embedding)"
+      ],
+      "bond_fields": [
+        "bond_type",
+        "bond_stereo",
+        "bond_is_in_ring"
+      ],
+      "global_fields": "same 33 graph-topology scalars via the shared post_local",
+      "local_structure": "4 x GINEConv message passing (4 hops), edge-conditioned",
+      "receptive_field": "4 hops",
+      "solution_context": "none (no pH, no pKa, no solvent, no experimental context)"
+    },
+    "representation_conflict_claim": "NOT_MADE",
+    "representation_status": "REPRESENTATION_UNRESOLVED",
+    "rows_with_nonzero_formal_charge": 89,
+    "rows_with_nonzero_formal_charge_train": 81,
+    "rows_with_nonzero_formal_charge_valid": 8,
+    "train_acid_molecules_with_charged_representation": 5,
+    "train_rows_with_P_OH_or_P_O_minus": 1,
+    "train_rows_with_P_TRIESTER": 0,
+    "train_rows_with_SULFONIC": 1,
+    "train_rows_with_element_P": 1,
+    "valid_rows_with_P_OH_or_P_O_minus": 1,
+    "valid_rows_with_P_TRIESTER": 0,
+    "valid_rows_with_SULFONIC": 0,
+    "valid_rows_with_element_P": 1
+  },
+  "net_gain_decomposition": {
+    "n_rows_with_negative_gain": 207,
+    "negatives_sum": -59.48370904636083,
+    "top1_gain": 10.403448684473908,
+    "top1_row": 1425,
+    "top3_gain": 23.635714522423772,
+    "top3_share": 0.8242455157004774,
+    "top5_gain": 28.701450928664492,
+    "top5_rows": [
+      1425,
+      1818,
+      1647,
+      1653,
+      1601
+    ],
+    "top5_share": 1.0009023505341887,
+    "valid_sum_sq_err_A_minus_B": 28.675575507786874
+  },
+  "phase_a": {
+    "acid_cases": [
+      {
+        "families": "PHOSPHO",
+        "row_id": 1425
+      },
+      {
+        "families": "CARBOXYL",
+        "row_id": 1397
+      }
+    ],
+    "n_case_slots": 15,
+    "n_cases_with_frozen_acid_family": 2,
+    "n_cases_without_any_frozen_acid_family": 9,
+    "n_unique_cases": 11
+  },
+  "phase_b1": {
+    "case_support": [
+      {
+        "case_row_id": 1425,
+        "max_sim_train": 0.27184466019417475,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 3783,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1818,
+        "max_sim_train": 0.16037735849056603,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 2670,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1647,
+        "max_sim_train": 0.2765957446808511,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 2279,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1653,
+        "max_sim_train": 0.28169014084507044,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 2129,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1601,
+        "max_sim_train": 0.325,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 381,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1029,
+        "max_sim_train": 0.3684210526315789,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 518,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1397,
+        "max_sim_train": 0.2978723404255319,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 3592,
+        "top1_train_row_families": "CARBOXYL"
+      },
+      {
+        "case_row_id": 1188,
+        "max_sim_train": 0.6415094339622641,
+        "n_sim_ge_0.6": 5,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 2218,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1213,
+        "max_sim_train": 0.25,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 4014,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1810,
+        "max_sim_train": 0.6896551724137931,
+        "n_sim_ge_0.6": 1,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 3975,
+        "top1_train_row_families": "none"
+      },
+      {
+        "case_row_id": 1816,
+        "max_sim_train": 0.43636363636363634,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "top1_train_row": 720,
+        "top1_train_row_families": "none"
+      }
+    ],
+    "cases": [
+      {
+        "case_row_id": 1425,
+        "max_sim": 0.27184466019417475,
+        "median_sim": 0.1262135922330097,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.27184466019417475
+      },
+      {
+        "case_row_id": 1818,
+        "max_sim": 0.16037735849056603,
+        "median_sim": 0.08264462809917356,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.16037735849056603
+      },
+      {
+        "case_row_id": 1647,
+        "max_sim": 0.2765957446808511,
+        "median_sim": 0.0967741935483871,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.2765957446808511
+      },
+      {
+        "case_row_id": 1653,
+        "max_sim": 0.28169014084507044,
+        "median_sim": 0.08695652173913043,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.28169014084507044
+      },
+      {
+        "case_row_id": 1601,
+        "max_sim": 0.325,
+        "median_sim": 0.12,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.325
+      },
+      {
+        "case_row_id": 1029,
+        "max_sim": 0.3684210526315789,
+        "median_sim": 0.07692307692307693,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.3684210526315789
+      },
+      {
+        "case_row_id": 1397,
+        "max_sim": 0.2978723404255319,
+        "median_sim": 0.08917197452229299,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.2978723404255319
+      },
+      {
+        "case_row_id": 1188,
+        "max_sim": 0.6415094339622641,
+        "median_sim": 0.12903225806451613,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 5,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.6415094339622641
+      },
+      {
+        "case_row_id": 1213,
+        "max_sim": 0.25,
+        "median_sim": 0.09626969416126044,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.25
+      },
+      {
+        "case_row_id": 1810,
+        "max_sim": 0.6896551724137931,
+        "median_sim": 0.11764705882352941,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 1,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.6896551724137931
+      },
+      {
+        "case_row_id": 1816,
+        "max_sim": 0.43636363636363634,
+        "median_sim": 0.12903225806451613,
+        "n_exact_duplicate_canonical_in_train": 0,
+        "n_fp_equivalent_different_molecule": 0,
+        "n_sim_ge_0.6": 0,
+        "n_sim_ge_0.8": 0,
+        "n_train": 3360,
+        "top1_sim": 0.43636363636363634
+      }
+    ],
+    "fingerprint": "Morgan radius=2, 2048 bits, RDKit default (useChirality=False)",
+    "fp_equivalent_groups": [
+      {
+        "canonical_smiles": [
+          "O=C(NC1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+          "O=C(N[C@@H]1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+          "O=C(N[C@H]1Cc2ccccc2N(C[C@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1",
+          "O=C(N[C@H]1Cc2ccccc2N(C[C@@H](O)CO)C1=O)c1cc2cc(Cl)sc2[nH]1"
+        ],
+        "rows": [
+          3,
+          2411,
+          2566,
+          3534
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "CO[C@H]1CN(CCn2c(=O)ccc3ccc(C#N)cc32)CC[C@H]1NCc1ccc2c(n1)NC(=O)CO2",
+          "CO[C@@H]1CN(CCn2c(=O)ccc3ccc(C#N)cc32)CC[C@H]1NCc1ccc2c(n1)NC(=O)CO2"
+        ],
+        "rows": [
+          19,
+          3099
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "CN(C(=O)Cc1ccc(-n2cnnn2)cc1)[C@@H]1CCN(Cc2ccc(C(F)(F)F)cc2)C[C@@H]1F",
+          "CN(C(=O)Cc1ccc(-n2cnnn2)cc1)[C@H]1CCN(Cc2ccc(C(F)(F)F)cc2)C[C@H]1F"
+        ],
+        "rows": [
+          31,
+          1408
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "NC(Cc1c[nH]c2ccccc12)C(=O)O",
+          "N[C@H](Cc1c[nH]c2ccccc12)C(=O)O",
+          "N[C@@H](Cc1c[nH]c2ccccc12)C(=O)O"
+        ],
+        "rows": [
+          51,
+          1309,
+          3677
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "C[C@H](NC(=O)c1cccnc1Oc1ccccc1)c1ccccc1",
+          "C[C@@H](NC(=O)c1cccnc1Oc1ccccc1)c1ccccc1"
+        ],
+        "rows": [
+          73,
+          1024
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "CC1COc2c(N3CCN(C)CC3)c(F)cc3c(=O)c(C(=O)O)cn1c23",
+          "C[C@H]1COc2c(N3CCN(C)CC3)c(F)cc3c(=O)c(C(=O)O)cn1c23"
+        ],
+        "rows": [
+          79,
+          644
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "Cc1nc(C)c(-c2ccc([C@H]3CC[C@H](CC(=O)O)CC3)c(F)c2)nc1C(N)=O",
+          "Cc1nc(C)c(-c2ccc([C@H]3CC[C@@H](CC(=O)O)CC3)c(F)c2)nc1C(N)=O"
+        ],
+        "rows": [
+          89,
+          1954
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "CNCC[C@H](Oc1ccc(C(F)(F)F)cc1)c1ccccc1",
+          "CNCC[C@@H](Oc1ccc(C(F)(F)F)cc1)c1ccccc1",
+          "CNCCC(Oc1ccc(C(F)(F)F)cc1)c1ccccc1"
+        ],
+        "rows": [
+          129,
+          337,
+          1168
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "C[C@@H](C#N)NC(=O)[C@@H]1CCCC[C@H]1C(=O)N1CCc2[nH]c3ccc(F)cc3c2C1",
+          "C[C@H](C#N)NC(=O)[C@@H]1CCCC[C@H]1C(=O)N1CCc2[nH]c3ccc(F)cc3c2C1"
+        ],
+        "rows": [
+          205,
+          3628
+        ]
+      },
+      {
+        "canonical_smiles": [
+          "O=C(O)[C@@H](Cc1ccccc1)N1CCC(CN2CCC(Oc3ccc(Cl)c(Cl)c3)CC2)CC1",
+          "O=C(O)[C@H](Cc1ccccc1)N1CCC(CN2CCC(Oc3ccc(Cl)c(Cl)c3)CC2)CC1"
+        ],
+        "rows": [
+          216,
+          230
+        ]
+      }
+    ],
+    "n_duplicate_canonical_smiles_in_train": 0,
+    "n_fp_equivalent_groups_with_different_smiles": 79,
+    "n_train": 3360
+  },
+  "phase_b2": {
+    "canonical_equal": 0,
+    "fragment_element_mismatch": [],
+    "mapping_file_sha256": "fdfb2bf74585781ee71d2a89495765558e10f369b05692fce171f7947e7c32bc",
+    "n_pairs_analysed": 796,
+    "n_pairs_forming_charge": 0,
+    "n_pairs_stereo_bearing": 139,
+    "n_pairs_with_gained_acid_in_changed_fragment": 8,
+    "n_source_pairs": 823,
+    "n_source_pairs_with_test_endpoint_dropped": 27,
+    "n_source_split_labels_disagreeing_with_official": 309,
+    "n_train_valid_pairs": 796,
+    "official_split_combo_counts": {
+      "Train-Train": 791,
+      "Train-Valid": 5
+    },
+    "orientation_mismatch": 0,
+    "source_file": "tracks/structural-sufficiency/lcrc_lipo_edit_supervision_public122_s0_v1/analysis/pairs.csv",
+    "source_sha256": "1003f861dfd66456d5b2e99740dd19a7a9fa3a62a4163a122b6e0dec1f5dc78a",
+    "sterocentre_molecules_skipped": 0
+  },
+  "phase_c2": [
+    {
+      "counterexamples": [
+        {
+          "core_smiles": "[1*]c1ccc2cccc(O)c2n1",
+          "delta_A": -0.5342772260522177,
+          "delta_B": 1.301821215562635,
+          "delta_y": 1.4899999999999998,
+          "pair_id": "p01494_03634",
+          "row_a": 3634,
+          "row_b": 1494
+        }
+      ],
+      "delta_A_median": -2.6463456096396705,
+      "delta_B_median": -3.0719973966752785,
+      "delta_mol_logp_median": 0.09230000000000071,
+      "delta_y_iqr": 0.7700000000000005,
+      "delta_y_majority_sign": -1.0,
+      "delta_y_max": 1.4899999999999998,
+      "delta_y_median": -3.2,
+      "delta_y_min": -3.6199999999999997,
+      "delta_y_q1": -3.5700000000000003,
+      "delta_y_q3": -2.8,
+      "delta_y_sign_consistency": 0.9411764705882353,
+      "group": "ANY_ACID_APPEARS",
+      "n_distinct_cores": 14,
+      "n_molecules": 29,
+      "n_pairs": 17,
+      "n_pairs_A_larger_than_true": 3,
+      "n_pairs_A_right_sign": 17,
+      "n_pairs_A_smaller_than_true": 14,
+      "n_pairs_B_larger_than_true": 4,
+      "n_pairs_B_right_sign": 16,
+      "n_pairs_B_smaller_than_true": 13,
+      "n_shared_endpoints_components": 12,
+      "n_train_pairs": 17,
+      "response_error_A_iqr": 0.43342471860168086,
+      "response_error_A_median": 0.45658730008372395,
+      "response_error_B_iqr": 0.2981123007219748,
+      "response_error_B_median": 0.1179665708159221,
+      "status": "MATCHED_ANALOG"
+    },
+    {
+      "counterexamples": [
+        {
+          "core_smiles": "[1*]c1ccc2cccc(O)c2n1",
+          "delta_A": -0.5342772260522177,
+          "delta_B": 1.301821215562635,
+          "delta_y": 1.4899999999999998,
+          "pair_id": "p01494_03634",
+          "row_a": 3634,
+          "row_b": 1494
+        }
+      ],
+      "delta_A_median": -2.6463456096396705,
+      "delta_B_median": -3.0719973966752785,
+      "delta_mol_logp_median": 0.09230000000000071,
+      "delta_y_iqr": 0.7700000000000005,
+      "delta_y_majority_sign": -1.0,
+      "delta_y_max": 1.4899999999999998,
+      "delta_y_median": -3.2,
+      "delta_y_min": -3.6199999999999997,
+      "delta_y_q1": -3.5700000000000003,
+      "delta_y_q3": -2.8,
+      "delta_y_sign_consistency": 0.9411764705882353,
+      "group": "CARBOXYL_APPEARS",
+      "n_distinct_cores": 14,
+      "n_molecules": 29,
+      "n_pairs": 17,
+      "n_pairs_A_larger_than_true": 3,
+      "n_pairs_A_right_sign": 17,
+      "n_pairs_A_smaller_than_true": 14,
+      "n_pairs_B_larger_than_true": 4,
+      "n_pairs_B_right_sign": 16,
+      "n_pairs_B_smaller_than_true": 13,
+      "n_shared_endpoints_components": 12,
+      "n_train_pairs": 17,
+      "response_error_A_iqr": 0.43342471860168086,
+      "response_error_A_median": 0.45658730008372395,
+      "response_error_B_iqr": 0.2981123007219748,
+      "response_error_B_median": 0.1179665708159221,
+      "status": "MATCHED_ANALOG"
+    },
+    {
+      "group": "PHOSPHO_ACID_APPEARS",
+      "n_pairs": 0,
+      "status": "NO_MATCHED_ANALOG"
+    },
+    {
+      "group": "SULFONIC_APPEARS",
+      "n_pairs": 0,
+      "status": "NO_MATCHED_ANALOG"
+    },
+    {
+      "counterexamples": [],
+      "delta_A_median": -3.0018368052479563,
+      "delta_B_median": -3.079384827679448,
+      "delta_mol_logp_median": -0.08839999999999981,
+      "delta_y_iqr": 0.33999999999999986,
+      "delta_y_majority_sign": -1.0,
+      "delta_y_max": -2.94,
+      "delta_y_median": -3.5900000000000003,
+      "delta_y_min": -3.6199999999999997,
+      "delta_y_q1": -3.605,
+      "delta_y_q3": -3.265,
+      "delta_y_sign_consistency": 1.0,
+      "group": "ESTER_TO_CARBOXYL",
+      "n_distinct_cores": 3,
+      "n_molecules": 6,
+      "n_pairs": 3,
+      "n_pairs_A_larger_than_true": 0,
+      "n_pairs_A_right_sign": 3,
+      "n_pairs_A_smaller_than_true": 3,
+      "n_pairs_B_larger_than_true": 1,
+      "n_pairs_B_right_sign": 3,
+      "n_pairs_B_smaller_than_true": 2,
+      "n_shared_endpoints_components": 3,
+      "n_train_pairs": 3,
+      "response_error_A_iqr": 0.21671235930084043,
+      "response_error_A_median": 0.4062972956126458,
+      "response_error_B_iqr": 0.320046651761833,
+      "response_error_B_median": 0.1179665708159221,
+      "status": "MATCHED_ANALOG"
+    }
+  ],
+  "phase_c3": {
+    "COMMON5": {
+      "n_cases": 5,
+      "n_rdkit_neg_ionizable": 1,
+      "n_rdkit_pos_ionizable": 1,
+      "rows": [
+        1425,
+        1818,
+        1647,
+        1397,
+        1816
+      ],
+      "rows_with_acid": [
+        1425,
+        1397
+      ],
+      "with_ANY_acid": 2,
+      "with_PHOSPHO": 1
+    },
+    "GAIN5": {
+      "n_cases": 5,
+      "n_rdkit_neg_ionizable": 0,
+      "n_rdkit_pos_ionizable": 1,
+      "rows": [
+        1425,
+        1818,
+        1647,
+        1653,
+        1601
+      ],
+      "rows_with_acid": [
+        1425
+      ],
+      "with_ANY_acid": 1,
+      "with_PHOSPHO": 1
+    },
+    "LOSS5": {
+      "n_cases": 5,
+      "n_rdkit_neg_ionizable": 1,
+      "n_rdkit_pos_ionizable": 3,
+      "rows": [
+        1029,
+        1397,
+        1188,
+        1213,
+        1810
+      ],
+      "rows_with_acid": [
+        1397
+      ],
+      "with_ANY_acid": 1,
+      "with_PHOSPHO": 0
+    },
+    "UNION": {
+      "n_cases": 11,
+      "n_rdkit_neg_ionizable": 1,
+      "n_rdkit_pos_ionizable": 4,
+      "rows": [
+        1425,
+        1818,
+        1647,
+        1653,
+        1601,
+        1029,
+        1397,
+        1188,
+        1213,
+        1810,
+        1816
+      ],
+      "rows_with_acid": [
+        1425,
+        1397
+      ],
+      "with_ANY_acid": 2,
+      "with_PHOSPHO": 1
+    },
+    "note": "Valid has already been used in the discovery step; these are not independent confirmations.",
+    "valid_any_acid_rows": [
+      976,
+      978,
+      989,
+      1002,
+      1007,
+      1016,
+      1032,
+      1036,
+      1085,
+      1090,
+      1116,
+      1154,
+      1172,
+      1189,
+      1197,
+      1233,
+      1236,
+      1270,
+      1362,
+      1397,
+      1399,
+      1407,
+      1413,
+      1425,
+      1466,
+      1481,
+      1529,
+      1645,
+      1706,
+      1724,
+      1728,
+      1760,
+      1761,
+      1767,
+      1819,
+      1837,
+      1902
+    ],
+    "valid_phospho_rows": [
+      1425
+    ],
+    "valid_y_quartile_by_acid": [
+      {
+        "errA_mean": 0.617559790569076,
+        "errB_mean": 0.4183764890260854,
+        "group": "ANY_ACID",
+        "n": 17,
+        "rmse_A": 1.6709412870158153,
+        "rmse_B": 1.5137095858269072,
+        "sum_sqerr_A_minus_B": 8.512377265306641,
+        "y_mean": -0.07823529411764704,
+        "y_quartile": "Q1_low"
+      },
+      {
+        "errA_mean": -0.11806097122726675,
+        "errB_mean": 0.06892616861281248,
+        "group": "ANY_ACID",
+        "n": 13,
+        "rmse_A": 0.5536174034224356,
+        "rmse_B": 0.5328082187389985,
+        "sum_sqerr_A_minus_B": 0.2938992084128804,
+        "y_mean": 1.8661538461538463,
+        "y_quartile": "Q2"
+      },
+      {
+        "errA_mean": -0.6240231590796761,
+        "errB_mean": -0.7044876172309655,
+        "group": "ANY_ACID",
+        "n": 5,
+        "rmse_A": 0.7157113142138575,
+        "rmse_B": 0.7513696189975196,
+        "sum_sqerr_A_minus_B": -0.26156809529375413,
+        "y_mean": 2.876,
+        "y_quartile": "Q3"
+      },
+      {
+        "errA_mean": -1.0725277397000692,
+        "errB_mean": -0.8999428184955331,
+        "group": "ANY_ACID",
+        "n": 2,
+        "rmse_A": 1.1927814101124115,
+        "rmse_B": 1.0816126495913305,
+        "sum_sqerr_A_minus_B": 0.5056831371075488,
+        "y_mean": 3.885,
+        "y_quartile": "Q4_high"
+      },
+      {
+        "errA_mean": 0.5186830081873275,
+        "errB_mean": 0.44953083096216434,
+        "group": "NO_ACID",
+        "n": 88,
+        "rmse_A": 0.911033055176273,
+        "rmse_B": 0.805696683724545,
+        "sum_sqerr_A_minus_B": 15.913399168399426,
+        "y_mean": 0.6144318181818181,
+        "y_quartile": "Q1_low"
+      },
+      {
+        "errA_mean": 0.09220962831698888,
+        "errB_mean": 0.09204507359749299,
+        "group": "NO_ACID",
+        "n": 92,
+        "rmse_A": 0.4994735232424787,
+        "rmse_B": 0.4606560306416945,
+        "sum_sqerr_A_minus_B": 3.42882361053976,
+        "y_mean": 1.9331521739130437,
+        "y_quartile": "Q2"
+      },
+      {
+        "errA_mean": -0.0441519830097657,
+        "errB_mean": 0.0001614070945757537,
+        "group": "NO_ACID",
+        "n": 100,
+        "rmse_A": 0.5294282309606727,
+        "rmse_B": 0.5752694281782044,
+        "sum_sqerr_A_minus_B": -5.064066325833087,
+        "y_mean": 2.7662,
+        "y_quartile": "Q3"
+      },
+      {
+        "errA_mean": -0.31566053336404726,
+        "errB_mean": -0.28957580993227755,
+        "group": "NO_ACID",
+        "n": 103,
+        "rmse_A": 0.630228786297194,
+        "rmse_B": 0.5876014247328263,
+        "sum_sqerr_A_minus_B": 5.347027539147468,
+        "y_mean": 3.6015533980582526,
+        "y_quartile": "Q4_high"
+      }
+    ]
+  },
+  "protocol": {
+    "case_sets": {
+      "COMMON5": [
+        1425,
+        1647,
+        1816,
+        1397,
+        1818
+      ],
+      "GAIN5": [
+        1425,
+        1818,
+        1647,
+        1653,
+        1601
+      ],
+      "LOSS5": [
+        1029,
+        1397,
+        1188,
+        1213,
+        1810
+      ]
+    },
+    "cpu_only": true,
+    "data": "official ogbg-mollipo scaffold split, Train 3360 / Valid 420",
+    "external_services": "none (no pKa service, no external label)",
+    "frozen_smarts": {
+      "C_ACID_OH": "[C;X3](=[OX1])[O;X2;H1]",
+      "C_ACID_O_MINUS": "[C;X3](=[OX1])[O;X1;-1]",
+      "C_ESTER": "[C;X3](=[OX1])[O;X2][#6]",
+      "P_OH": "[P;X4][O;X2;H1]",
+      "P_O_MINUS": "[P;X4][O;X1;-1]",
+      "P_TRIESTER": "[P;X4](=[OX1])([OX2][#6])([OX2][#6])([OX2][#6])",
+      "S_ACID_OH": "[S;X4](=[OX1])(=[OX1])[O;X2;H1]",
+      "S_ACID_O_MINUS": "[S;X4](=[OX1])(=[OX1])[O;X1;-1]"
+    },
+    "frozen_smarts_sha256": "e4bd3d94d64e00080d1563d8f1e641dfd9ee0eafb5f71b0d0311b781c1770a5e",
+    "gpu_hours": 0.0,
+    "rdkit_version": "2026.09.1",
+    "sim_thresholds": {
+      "hi": 0.6,
+      "vhi": 0.8
+    },
+    "test_used": false,
+    "top_k": 5,
+    "training": "none (no model was trained, fitted, tuned or distilled)"
+  },
+  "round_id": "lcrc-structural-failure-localization-v0",
+  "schema": "sfl-summary-v1",
+  "sensitivity_without_top1": {
+    "row_removed": 1425,
+    "valid_any_acid_errA_mean_without_1425": -0.07132106448696551,
+    "valid_any_acid_n_without_1425": 36,
+    "valid_any_acid_rmse_A_without_1425": 0.6990406802772767,
+    "valid_any_acid_rmse_B_without_1425": 0.7254259397360826,
+    "valid_rmse_A": 0.6600091189377645,
+    "valid_rmse_B": 0.6261015432935977,
+    "valid_sum_gain_remaining": 18.272126823312973
+  },
+  "size_lipophilicity_control": {
+    "cuts": {
+      "mol_logp_median_train": 3.2787000000000015,
+      "n_heavy_median_train": 27.0
+    },
+    "valid_CARBOXYL_high_logp": {
+      "errA_mean": -0.12610630044084767,
+      "errB_mean": -0.13540733243267483,
+      "n": 28
+    },
+    "valid_CARBOXYL_large": {
+      "errA_mean": -0.0839799588600993,
+      "errB_mean": -0.0425368933751032,
+      "n": 25
+    },
+    "valid_CARBOXYL_low_logp": {
+      "errA_mean": 0.12042726135162207,
+      "errB_mean": 0.13816335576089997,
+      "n": 8
+    },
+    "valid_CARBOXYL_small": {
+      "errA_mean": -0.04255085000257052,
+      "errB_mean": -0.14751601160455596,
+      "n": 11
+    },
+    "valid_NO_ACID_high_logp": {
+      "errA_mean": 0.02231217546153982,
+      "errB_mean": 0.010962022572743044,
+      "n": 178
+    },
+    "valid_NO_ACID_large": {
+      "errA_mean": 0.02005018346305035,
+      "errB_mean": 0.054070618122946806,
+      "n": 168
+    },
+    "valid_NO_ACID_low_logp": {
+      "errA_mean": 0.06452482954156231,
+      "errB_mean": 0.07934366909329044,
+      "n": 205
+    },
+    "valid_NO_ACID_small": {
+      "errA_mean": 0.06432896030875307,
+      "errB_mean": 0.042478271336826724,
+      "n": 215
+    }
+  },
+  "train_support": {
+    "CARBOXYL_ACID": {
+      "n_distinct_scaffolds": 165,
+      "n_molecules": 404,
+      "y_minus_mol_logp_median": -3.100050000000002
+    },
+    "PHOSPHO_ACID": {
+      "n_distinct_scaffolds": 1,
+      "n_molecules": 1,
+      "y_minus_mol_logp_median": 3.6023000000000005
+    },
+    "VALID_CARBOXYL_ACID": {
+      "err_A_mean": -0.07132106448696551,
+      "err_B_mean": -0.074613846167436,
+      "n_molecules": 36,
+      "rmse_A": 0.6990406802772767,
+      "rmse_B": 0.7254259397360826
+    },
+    "VALID_NO_FROZEN_ACID": {
+      "n_molecules": 383,
+      "rmse_A": 0.6562210035774643,
+      "rmse_B": 0.6159426241634858
+    },
+    "VALID_PHOSPHO_ACID": {
+      "n_molecules": 1,
+      "rows": [
+        1425
+      ]
+    }
+  },
+  "verdict": {
+    "input_information_gap_claimed": false,
+    "notes": [
+      "Train-side model predictions are in-sample observations; no cross-molecule generalisation is claimed from them.",
+      "Valid was already used in the discovery step; nothing here is an independent confirmation.",
+      "No hidden-vector comparison was performed; representation questions are answered only at the level of the declared input fields."
+    ],
+    "rules": {
+      "CASE_LEVEL_HYPOTHESIS_ONLY": "single-molecule chemical explanation only",
+      "COMMON_FAILURE_UNRESOLVED": "both models fail the same molecules with no repeated structural response and no information gap",
+      "INPUT_INFORMATION_GAP_SIGNAL": "at least one frozen acidic family that the model response ignores is absent from the actual input representation; requires an explicit field-level demonstration, otherwise it is NOT claimed",
+      "LIMITED_TRAIN_SUPPORT": "Train support of the key structure < 5 molecules or < 3 distinct scaffolds",
+      "REPEATED_STRUCTURAL_RESPONSE_SIGNAL": "n_pairs >= 6 and n_distinct_cores >= 3 and n_shared_endpoints_components >= 3 and |delta_y_median| >= 1.0 and delta_y_sign_consistency >= 0.80"
+    },
+    "supported_labels": [
+      "REPEATED_STRUCTURAL_RESPONSE_SIGNAL",
+      "LIMITED_TRAIN_SUPPORT",
+      "COMMON_FAILURE_UNRESOLVED",
+      "CASE_LEVEL_HYPOTHESIS_ONLY"
+    ]
+  },
+  "verification": {
+    "frozen_smarts_probe": {
+      "all_pass": true,
+      "probes": [
+        {
+          "expected": {
+            "C_ACID_OH": false,
+            "P_OH": true,
+            "P_O_MINUS": false,
+            "P_TRIESTER": false
+          },
+          "observed": {
+            "C_ACID_OH": false,
+            "P_OH": true,
+            "P_O_MINUS": false,
+            "P_TRIESTER": false
+          },
+          "pass": true,
+          "probe": "phosphate monoester (row-1425 motif)",
+          "smiles": "CCOP(=O)(O)O"
+        },
+        {
+          "expected": {
+            "P_OH": true,
+            "P_O_MINUS": false,
+            "P_TRIESTER": false
+          },
+          "observed": {
+            "P_OH": true,
+            "P_O_MINUS": false,
+            "P_TRIESTER": false
+          },
+          "pass": true,
+          "probe": "phosphate diester",
+          "smiles": "CCOP(=O)(O)OCC"
+        },
+        {
+          "expected": {
+            "P_OH": false,
+            "P_O_MINUS": false,
+            "P_TRIESTER": true
+          },
+          "observed": {
+            "P_OH": false,
+            "P_O_MINUS": false,
+            "P_TRIESTER": true
+          },
+          "pass": true,
+          "probe": "phosphate triester (must NOT be acidic P-OH)",
+          "smiles": "COP(=O)(OC)OC"
+        },
+        {
+          "expected": {
+            "P_OH": false,
+            "P_O_MINUS": true
+          },
+          "observed": {
+            "P_OH": false,
+            "P_O_MINUS": true
+          },
+          "pass": true,
+          "probe": "phosphate dianion fragment",
+          "smiles": "CCOP(=O)([O-])[O-]"
+        },
+        {
+          "expected": {
+            "C_ACID_OH": true,
+            "C_ESTER": false
+          },
+          "observed": {
+            "C_ACID_OH": true,
+            "C_ESTER": false
+          },
+          "pass": true,
+          "probe": "acetic acid",
+          "smiles": "CC(=O)O"
+        },
+        {
+          "expected": {
+            "C_ACID_OH": false,
+            "C_ACID_O_MINUS": true
+          },
+          "observed": {
+            "C_ACID_OH": false,
+            "C_ACID_O_MINUS": true
+          },
+          "pass": true,
+          "probe": "acetate",
+          "smiles": "CC(=O)[O-]"
+        },
+        {
+          "expected": {
+            "C_ACID_OH": false,
+            "C_ESTER": true
+          },
+          "observed": {
+            "C_ACID_OH": false,
+            "C_ESTER": true
+          },
+          "pass": true,
+          "probe": "methyl acetate (ester, not acid)",
+          "smiles": "CC(=O)OC"
+        },
+        {
+          "expected": {
+            "S_ACID_OH": true
+          },
+          "observed": {
+            "S_ACID_OH": true
+          },
+          "pass": true,
+          "probe": "methanesulfonic acid",
+          "smiles": "CS(=O)(=O)O"
+        },
+        {
+          "expected": {
+            "S_ACID_OH": false
+          },
+          "observed": {
+            "S_ACID_OH": false
+          },
+          "pass": true,
+          "probe": "methyl methanesulfonate",
+          "smiles": "CS(=O)(=O)OC"
+        },
+        {
+          "expected": {
+            "C_ACID_OH": false,
+            "P_OH": false
+          },
+          "observed": {
+            "C_ACID_OH": false,
+            "P_OH": false
+          },
+          "pass": true,
+          "probe": "benzamide (no acidic OH)",
+          "smiles": "c1ccccc1C(N)=O"
+        }
+      ]
+    },
+    "historical_case_1425": {
+      "canonical_smiles_identical": true,
+      "frozen_pred_A": 6.226110861346132,
+      "frozen_pred_B": 5.3322152451858855,
+      "identity_ok": true,
+      "json_pred_raw": 5.103834584920298,
+      "json_y_raw": -0.03999999910593033,
+      "official_row_id_in_json": 1425,
+      "official_y": -0.04,
+      "path": "tracks/structural-sufficiency/lcrc_readout_context_pilot_small_v1/analysis/cases/ogbg-mollipo_1425.json",
+      "sha256": "2eca13309f458dfdefe835f483b5ccd286fce384f90586a8c019b85fdac9985c",
+      "smiles_string_identical": true,
+      "y_abs_diff": 8.940696724635266e-10
+    },
+    "identity_vs_raw_ogb_graph": {
+      "atom_count_mismatch_rows": [],
+      "atom_multiset_mismatch_rows": [],
+      "charge_multiset_mismatch_rows": [],
+      "duplicate_canonical_smiles": 0,
+      "duplicate_smiles_strings": 0,
+      "identity_ok": true,
+      "n_atom_count_mismatch": 0,
+      "n_atom_multiset_mismatch": 0,
+      "n_charge_multiset_mismatch": 0,
+      "rows_checked": 3780,
+      "rows_with_nonzero_formal_charge_raw": 89,
+      "rows_with_nonzero_formal_charge_smiles": 89
+    },
+    "max_label_gap_vs_mol_csv": 2.2888183615066282e-07,
+    "paired_errors_sha256": "d0090349b955320fcfd65baf8db04030be6a4b8d7df9ad3e42cbedb8308509c7",
+    "rmse_recomputed": {
+      "train": {
+        "A": 0.3079864751738112,
+        "B": 0.23262396282749428,
+        "MAE_A": 0.23350284132462634,
+        "MAE_B": 0.17312960676685302
+      },
+      "valid": {
+        "A": 0.7266780069873353,
+        "B": 0.6780750298150204,
+        "MAE_A": 0.49844932380229395,
+        "MAE_B": 0.487331749229366
+      }
+    },
+    "rmse_reference_alignment": {
+      "valid_A": {
+        "abs_diff": 6.987335265939976e-09,
+        "recomputed": 0.7266780069873353,
+        "reference": 0.726678,
+        "within_1e-5": true
+      },
+      "valid_B": {
+        "abs_diff": 2.981502045251716e-08,
+        "recomputed": 0.6780750298150204,
+        "reference": 0.678075,
+        "within_1e-5": true
+      }
+    },
+    "split_agreement_with_official_file": true
+  },
+  "wall_clock_seconds": 22.501825094223022
+}
