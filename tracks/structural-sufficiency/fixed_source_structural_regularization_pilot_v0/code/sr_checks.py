@@ -83,13 +83,15 @@ def check_c1_c8(task: Any, payload: Mapping[str, Any], base_audit: Mapping[str, 
         model = _build(arm, task, device)
         optimizer, opt_audit = DT.build_optimizer(model)
         resume = DT.restore(payload, model, optimizer, arm="FIXED1", seed=R.SEED)
-        lr = R.current_lr_at(optimizer, R.EXPECTED_BASE_STEP)
+        lr_restore = float(optimizer.param_groups[0]["lr"])
+        lr_first_step = R.current_lr_at(optimizer, R.EXPECTED_BASE_STEP)
         fp = {
             "arm": arm,
             "state_fingerprint": R.model_state_fingerprint(model),
             "optimizer_fingerprint": R.optimizer_fingerprint(optimizer),
             "rng_state_hashes": C.rng_state_hashes(C.capture_rng_state()),
-            "lr_at_68450": lr,
+            "lr_at_restore": lr_restore,
+            "lr_first_continued_step": lr_first_step,
             "parameters": int(sum(p.numel() for p in model.parameters())),
             "resume": resume,
         }
@@ -99,16 +101,20 @@ def check_c1_c8(task: Any, payload: Mapping[str, Any], base_audit: Mapping[str, 
         "state": len({r["state_fingerprint"] for r in rows}) == 1,
         "optimizer": len({r["optimizer_fingerprint"] for r in rows}) == 1,
         "rng": len({str(r["rng_state_hashes"]["combined_sha256"]) for r in rows}) == 1,
-        "lr": len({float(r["lr_at_68450"]) for r in rows}) == 1,
+        "lr_restore": len({float(r["lr_at_restore"]) for r in rows}) == 1,
+        "lr_first_step": len({float(r["lr_first_continued_step"]) for r in rows}) == 1,
         "parameters": len({r["parameters"] for r in rows}) == 1,
     }
     record(
         "C1", "both arms start from the same weights / optimizer / RNG / LR",
-        all(same.values()) and abs(rows[0]["lr_at_68450"] - R.EXPECTED_LR_AT_68450) <= 1e-15,
+        all(same.values())
+        and abs(rows[0]["lr_at_restore"] - R.EXPECTED_LR_AT_RESTORE) <= 1e-15
+        and abs(rows[0]["lr_first_continued_step"] - R.EXPECTED_LR_FIRST_STEP) <= 1e-15,
         {
             "same": same,
             "arms": rows,
-            "expected_lr": R.EXPECTED_LR_AT_68450,
+            "expected_lr_at_restore": R.EXPECTED_LR_AT_RESTORE,
+            "expected_lr_first_continued_step": R.EXPECTED_LR_FIRST_STEP,
             "base_plan": base_audit["batch_plan"],
             "recomputed_plan": C.plan_meta(plan, R.START_EPOCH, R.ORDER_SEED),
             "mask_rng_note": "STRUCT_DROP adds an independent mask generator; the model RNG is untouched",
@@ -137,7 +143,7 @@ def check_c1_c8(task: Any, payload: Mapping[str, Any], base_audit: Mapping[str, 
         and int(payload["batch_plan"]["consumed_epochs"]) == R.START_EPOCH,
         c8_details,
     )
-    return models["BASE_CONT"], models["STRUCT_DROP"]
+    return models
 
 
 def check_c2(models: Mapping[str, tuple[Any, Any]], task: Any, device: torch.device) -> dict[str, Any]:

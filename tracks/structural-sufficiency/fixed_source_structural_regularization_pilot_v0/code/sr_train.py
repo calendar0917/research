@@ -135,9 +135,12 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
     resume_audit = DT.restore(payload, model, optimizer, arm="FIXED1", seed=R.SEED)
     if arm == "STRUCT_DROP":
         model.restore_mask_rng_state(payload.get("mask_rng_state"))
-    lr_at_start = R.current_lr_at(optimizer, R.EXPECTED_BASE_STEP)
-    if abs(lr_at_start - R.EXPECTED_LR_AT_68450) > 1e-15:
-        raise RuntimeError(f"restored LR at step {R.EXPECTED_BASE_STEP} is {lr_at_start}")
+    lr_at_restore = float(optimizer.param_groups[0]["lr"])
+    if abs(lr_at_restore - R.EXPECTED_LR_AT_RESTORE) > 1e-15:
+        raise RuntimeError(f"restored optimizer LR {lr_at_restore} != recorded {R.EXPECTED_LR_AT_RESTORE}")
+    lr_first_step = R.current_lr_at(optimizer, R.EXPECTED_BASE_STEP)
+    if abs(lr_first_step - R.EXPECTED_LR_FIRST_STEP) > 1e-15:
+        raise RuntimeError(f"first continued step LR {lr_first_step} != frozen schedule {R.EXPECTED_LR_FIRST_STEP}")
     global_steps = R.EXPECTED_BASE_STEP
     init_state_fingerprint = R.model_state_fingerprint(model)
     init_optimizer_fingerprint = R.optimizer_fingerprint(optimizer)
@@ -186,7 +189,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
                 "resume_audit": resume_audit,
                 "initial_state_fingerprint": init_state_fingerprint,
                 "initial_optimizer_fingerprint": init_optimizer_fingerprint,
-                "lr_at_resume": lr_at_start,
+                "lr_at_restore": lr_at_restore,
+                "lr_first_continued_step": lr_first_step,
                 "consumed_epochs": int(epoch),
                 "consumed_steps": int(global_steps),
                 "test_used_for_selection": False,
@@ -219,7 +223,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
             for k in ("ap", "bce", "n_tasks_scored", "logits_sha256", "per_task_ap",
                       "observed", "positive", "negative")
         },
-        "lr": lr_at_start,
+        "lr_at_restore": lr_at_restore,
+        "lr_first_continued_step": lr_first_step,
         "seconds": baseline_seconds,
         "model_state_fingerprint": init_state_fingerprint,
         "optimizer_fingerprint": init_optimizer_fingerprint,
@@ -473,7 +478,8 @@ def train(args: argparse.Namespace) -> dict[str, Any]:
         "resume_gate": resume_gate,
         "plan_identity": plan_audit,
         "batch_plan": C.plan_meta(plan, (done[-1] if done else R.START_EPOCH), R.ORDER_SEED),
-        "lr_at_resume": lr_at_start,
+        "lr_at_restore": lr_at_restore,
+                "lr_first_continued_step": lr_first_step,
         "initial_state_fingerprint": init_state_fingerprint,
         "initial_optimizer_fingerprint": init_optimizer_fingerprint,
         "baseline_epoch25": {
