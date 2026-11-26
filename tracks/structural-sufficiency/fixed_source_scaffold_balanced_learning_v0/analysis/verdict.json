@@ -1,0 +1,36 @@
+{
+  "C1_valid_rmse": 0.7086243164299489,
+  "beats_gine_reference": 0,
+  "beats_historical_C1": 0,
+  "caveats": [
+    "single seed; the official Valid split has been used many times in this repository",
+    "0.03 is a resource-allocation reference, not a significance threshold",
+    "the support split is a descriptive diagnostic; it does not replace the official full-Valid metric",
+    "no Test data was read, scored or used"
+  ],
+  "created_utc": "2026-11-26T13:52:46Z",
+  "inputs": {
+    "best_valid_rmse_fixed1": 0.7266780069873353,
+    "best_valid_rmse_new": 0.7274001054896683,
+    "delta_best_mae": 0.020521082158412807,
+    "delta_best_rmse": 0.0007220985023329574,
+    "delta_endpoint_rmse": 0.004811178543415284,
+    "delta_last20_rmse": 0.006418747106849643,
+    "tail_only_rule": "delta_best < 0 and top-5% molecules carry >= 75% of the net squared-error gain",
+    "threshold_delta_best": -0.03,
+    "threshold_mae_degradation": 0.005,
+    "top_5pct_share_of_net_gain": null
+  },
+  "label": "NO_CLEAR_GAIN",
+  "low_support_group_improved": 1,
+  "primary_metric": "best full official Valid RMSE (420 molecules, plain per-molecule weighting)",
+  "promising_rule_satisfied": 0,
+  "round_id": "fixed-source-scaffold-balanced-learning-v0",
+  "rules": {
+    "INCONCLUSIVE": "data / implementation / budget anomaly (failed checks or incomplete run)",
+    "NO_CLEAR_GAIN": "no improvement or clear degradation",
+    "STRUCTURAL_DISTRIBUTION_PROMISING": "delta_best <= -0.03 AND endpoint < 0 AND last20 < 0 AND delta_mae <= +0.005",
+    "WEAK_OR_TAIL_ONLY_GAIN": "small gain (delta_best < 0 without the PROMISING rule) or gain concentrated in a few cases"
+  },
+  "tail_only_flag": 0
+}

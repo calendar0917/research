@@ -1,0 +1,166 @@
+{
+  "analysis_constants": {
+    "bootstrap_replicates": 2000,
+    "bootstrap_seed": 20261126,
+    "morgan_bits": 2048,
+    "morgan_radius": 2,
+    "support_threshold": "Train leave-one-out max-Tanimoto median (fixed, not searched)",
+    "trim_fraction": 0.05
+  },
+  "arm": "SCAFFOLD_BALANCED",
+  "batch_plan": {
+    "batch_size": 128,
+    "epochs": 360,
+    "matches_historical_fixed1_plan": 1,
+    "n_train": 3360,
+    "plan_sha256": "f9c1398c5705ca5a31d2cee418fa1fda6d5bc944ad17451d3a6a98524ae31276"
+  },
+  "budget": {
+    "device": "cpu (no local CUDA device)",
+    "gpu_hours_hard": 0.25,
+    "gpu_hours_used": 0.0,
+    "trainer_hard_seconds": 2100.0,
+    "wall_clock_hard_minutes": 40
+  },
+  "created_utc": "2026-11-26T13:38:11Z",
+  "dataset": "ogbg-mollipo",
+  "descriptive_references": {
+    "C1": {
+      "best_epoch": 275,
+      "valid_mae_raw": 0.5123326828400689,
+      "valid_rmse_raw": 0.7086243164299489
+    },
+    "GINE": {
+      "valid_mae_raw": 0.487331749229366,
+      "valid_rmse_raw": 0.6780750298150204
+    }
+  },
+  "freeze_seconds": 10.965816323063336,
+  "git_commit": "d2d9c04d574c600af9bd73c6a783416f5bb71dbc",
+  "historical_baseline": {
+    "base_state_sha256": "539e0dbec7cb80a78b39b94884b9265c111b085136a20e77511f8313bf16eb62",
+    "best_epoch": 140,
+    "best_train_mae_raw": 0.23350284132462634,
+    "best_train_rmse_raw": 0.3079864751738112,
+    "best_valid_mae_raw": 0.49844932380229395,
+    "best_valid_rmse_raw": 0.7266780069873353,
+    "endpoint_valid_mae_raw": 0.5060955929875536,
+    "endpoint_valid_rmse_raw": 0.7415200258174056,
+    "initial_state_sha256": "8b2df74e8a18a4cc0c4e6933340fbe1829f240d210f0c02d0626cee29086fdb1",
+    "last20_valid_mae_raw": 0.5061564662748497,
+    "last20_valid_rmse_raw": 0.7406963081735681,
+    "parameters": 294135,
+    "run_dir": "tracks/structural-sufficiency/context_conditioned_structural_computation_v0/runs/mollipo_A_seed0",
+    "train_plan_sha256": "f9c1398c5705ca5a31d2cee418fa1fda6d5bc944ad17451d3a6a98524ae31276"
+  },
+  "protocol_id": "fixed-source-scaffold-balanced-learning-v0",
+  "recipe": {
+    "adam_betas": [
+      0.9,
+      0.999
+    ],
+    "adam_eps": 1e-08,
+    "amp": 0,
+    "arm": "SCAFFOLD_BALANCED",
+    "auxiliary_loss": 0,
+    "batch_size": 128,
+    "dataset": "ogbg-mollipo",
+    "early_stopping": 0,
+    "ema": 0,
+    "epochs": 360,
+    "eval_batch_size": 256,
+    "gradient_clip": 5.0,
+    "k_train": 1604,
+    "loss": "weighted MSE on standardised targets",
+    "lr_final_step": 1e-05,
+    "lr_step0": 0.0003,
+    "min_lr": 1e-05,
+    "n_train": 3360,
+    "optimizer": "AdamW",
+    "peak_lr": 0.0003,
+    "protocol_id": "fixed-source-scaffold-balanced-learning-v0",
+    "round_id": "fixed-source-scaffold-balanced-learning-v0",
+    "scheduler": "per_step_cosine_no_warmup",
+    "seed": 0,
+    "selection": "minimum full official Valid RMSE; strictly smaller replaces, ties keep the earlier epoch",
+    "shuffle": "np.random.default_rng(0).permutation over Train split-local rows, one draw per epoch, shared by every arm",
+    "soup": 0,
+    "steps_per_epoch": 27,
+    "swa": 0,
+    "test_role": "NOT_READ_NOT_SCORED",
+    "total_steps": 9720,
+    "weight_decay": 0.001,
+    "weight_rule": "weight_i = N_train / (K_train * n_scaffold_i); loss = mean_batch(weight_i * per_molecule_mse)",
+    "weight_sha256": "09bfe5f603dfa564d714952384c8fa1072905e756ee7bce4ab5c2dc7f4ebdd82"
+  },
+  "reused_readonly": {
+    "data": "context_conditioned_structural_computation_v0/code/cs_data.py + lcrc_readout_context_pilot_small_v1 + tracks/structural-query-learning",
+    "historical_predictions": "tracks/structural-sufficiency/context_conditioned_structural_computation_v0/runs/mollipo_A_seed0",
+    "model": "tracks/structural-sufficiency/context_conditioned_structural_computation_v0/code/cs_model.py (arm A, FIXED1)",
+    "recipe": "context_conditioned_structural_computation_v0/code/cs_common.py::RECIPE",
+    "scaffold_rule": "lcrc_structural_failure_localization_v0/code/sfl_common.py::scaffold_key"
+  },
+  "round_id": "fixed-source-scaffold-balanced-learning-v0",
+  "scaffold_seconds": 0.7245118870632723,
+  "seed": 0,
+  "splits_used": [
+    "train",
+    "valid"
+  ],
+  "test_policy": "NOT_READ_NOT_SCORED",
+  "verdict_rules": {
+    "c1_reference": 0.7086243164299489,
+    "mae_no_degradation": 0.005,
+    "rmse_delta_gain": -0.03
+  },
+  "weights": {
+    "audit": {
+      "all_per_scaffold_totals_equal": 1,
+      "effective_sample_size": 2046.4642218840756,
+      "effective_sample_size_fraction": 0.6090667327035939,
+      "expected_total_per_scaffold": 2.0947630922693268,
+      "k_scaffolds": 1604,
+      "mean_weight": 0.9999999999999999,
+      "n_train": 3360,
+      "per_scaffold_total_max": 2.094763092269327,
+      "per_scaffold_total_max_abs_deviation": 8.881784197001252e-16,
+      "per_scaffold_total_min": 2.094763092269326,
+      "per_scaffold_total_relative_deviation": 4.23999459880655e-16,
+      "sum_weight": 3359.9999999999995,
+      "uniform_weight_scaffold_total": {
+        "max": 0.02261904761904762,
+        "max_over_min": 76.0,
+        "min": 0.00029761904761904765
+      },
+      "weight_sha256": "09bfe5f603dfa564d714952384c8fa1072905e756ee7bce4ab5c2dc7f4ebdd82",
+      "weight_summary": {
+        "max": 2.0947630922693268,
+        "max_over_min": 76.0,
+        "mean": 0.9999999999999999,
+        "min": 0.027562672266701668,
+        "n": 3360,
+        "n_distinct": 27,
+        "p01": 0.027562672266701668,
+        "p05": 0.08728179551122195,
+        "p25": 0.29925187032418954,
+        "p50": 0.6982543640897756,
+        "p75": 2.0947630922693268,
+        "p95": 2.0947630922693268,
+        "p99": 2.0947630922693268,
+        "std": 0.8011592939478362
+      }
+    },
+    "gate": {
+      "ess_fraction": 0.6090667327035939,
+      "insufficient_weight_contrast": 0,
+      "max_ess_fraction_threshold": 0.9,
+      "max_over_min_weight": 76.0,
+      "min_weight_ratio_threshold": 1.5,
+      "rule": "INSUFFICIENT_WEIGHT_CONTRAST iff max/min weight < 1.5 AND ESS/N > 0.9"
+    },
+    "k_train": 1604,
+    "n_train": 3360,
+    "rule": "weight_i = N_train / (K_train * n_scaffold_i); loss = mean_batch(weight_i * per_molecule_mse)",
+    "sha256": "09bfe5f603dfa564d714952384c8fa1072905e756ee7bce4ab5c2dc7f4ebdd82"
+  }
+}
