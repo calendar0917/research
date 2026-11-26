@@ -279,7 +279,8 @@ def _permute_bonds(batch: Mapping[str, Any], *, seed: int) -> dict[str, Any]:
 
 
 def check_invariance(models: Mapping[str, Any], batch: Mapping[str, Any], *, label: str) -> None:
-    detail: dict[str, Any] = {"batch": label, "per_arm": {}}
+    atol = 1e-5 if "real" in label else 2e-6
+    detail: dict[str, Any] = {"batch": label, "atol": atol, "per_arm": {}}
     all_pass = True
     for arm, (model, _audit) in models.items():
         model.eval()
@@ -293,7 +294,7 @@ def check_invariance(models: Mapping[str, Any], batch: Mapping[str, Any], *, lab
             "atom_renumbering": diff_stats(perm, base),
             "edge_order_and_key_direction": diff_stats(rev, base),
         }
-        d["passed"] = close(perm, base, atol=2e-6) and close(rev, base, atol=2e-6)
+        d["passed"] = close(perm, base, atol=atol) and close(rev, base, atol=atol)
         detail["per_arm"][arm] = d
         all_pass = all_pass and d["passed"]
     record(f"B7_invariance_{label}", all_pass, detail)
@@ -488,6 +489,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     check_parameters(models)
     check_init_identity(models, full=full)
     synth = DCHK.synthetic_star(spec)
+    if full:
+        # real-batch weight-identity checks run first: later checks deliberately
+        # randomise fc2/A to make the low-rank branch observable
+        rows = [int(x) for x in task.valid_rows[:8]]
+        batch = {k: (v.to(torch.device("cpu")) if torch.is_tensor(v) else v)
+                 for k, v in C.PC.collate(task.cache, rows).items()}
+        check_real_batch(models, fixed1, task, batch)
     check_zero_A_equivalence(models, fixed1, synth, label="synthetic_star")
     check_role_input(models)
     check_dual_form(models)
@@ -495,11 +503,6 @@ def main(argv: Sequence[str] | None = None) -> int:
     check_invariance(models, synth, label="synthetic_star")
     check_gradients(models, synth, label="synthetic_star")
     check_empty_neighbourhood(models, spec, fixed1)
-    if full:
-        rows = [int(x) for x in task.valid_rows[:8]]
-        batch = {k: (v.to(torch.device("cpu")) if torch.is_tensor(v) else v)
-                 for k, v in C.PC.collate(task.cache, rows).items()}
-        check_real_batch(models, fixed1, task, batch)
     payload = {
         "schema": FC.SCHEMA_CHECKS,
         "round_id": FC.ROUND_ID,

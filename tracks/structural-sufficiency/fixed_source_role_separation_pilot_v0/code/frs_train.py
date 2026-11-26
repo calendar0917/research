@@ -367,7 +367,9 @@ def preflight(task: Any, *, device: torch.device, steps: int, out: Path) -> dict
         step_times.append(float(time.perf_counter() - t1))
     stager.release()
     arr = np.asarray(step_times, dtype=np.float64)
-    step_mean = float(arr.mean())
+    warm = int(min(3, max(0, arr.size - 1)))
+    steady = arr[warm:] if arr.size > warm else arr
+    step_mean = float(np.median(steady)) if steady.size else float(arr.mean())
     t_valid = time.perf_counter()
     valid = C.evaluate_split(model, task, device, "valid", per_task=True, reason="preflight")
     valid_seconds = float(time.perf_counter() - t_valid)
@@ -414,6 +416,8 @@ def preflight(task: Any, *, device: torch.device, steps: int, out: Path) -> dict
         "steps_per_epoch": int(C.STEPS_PER_EPOCH),
         "measured_steps": int(steps),
         "step_ms_mean": float(step_mean * 1e3),
+        "step_ms_raw_mean": float(arr.mean() * 1e3),
+        "warmup_steps_excluded": int(warm),
         "step_ms_p50": float(np.percentile(arr, 50) * 1e3),
         "step_ms_p90": float(np.percentile(arr, 90) * 1e3),
         "assemble_ms_mean": float(np.mean(assemble_times) * 1e3),
