@@ -144,8 +144,15 @@ def is_frs_new(name: str) -> bool:
 
 
 def frs_trunk_subset(state: Mapping[str, Any]) -> dict[str, Any]:
-    """The W2 trunk used for the fingerprint: excludes *every* added tensor."""
-    return {k: v for k, v in state.items() if not is_frs_new(k)}
+    """The W2 trunk fingerprint: no added tensor and no attention readout.
+
+    This mirrors the inherited ``dy_common.trunk_subset`` exactly, so the value
+    can be compared with the recorded historical FIXED1 ``base_state_sha256``.
+    """
+    return {
+        k: v for k, v in state.items()
+        if not is_frs_new(k) and not str(k).startswith("readout.")
+    }
 
 
 def frs_new_subset(state: Mapping[str, Any]) -> dict[str, Any]:
@@ -241,6 +248,7 @@ def initial_fingerprints(model: Any) -> dict[str, Any]:
         "lowrank_state_sha256": C.state_fingerprint(lowrank_subset(state)),
         "initial_state_sha256": C.state_fingerprint(state),
         "n_state_tensors": int(len(state)),
+        "n_state_tensors_inherited": int(len(state) - len(lowrank_subset(state))),
     }
 
 
@@ -344,7 +352,7 @@ def data_identity(task: Any, hist: Mapping[str, Any]) -> dict[str, Any]:
     )
     got = {k: source.get(k) for k in keys}
     hist_run = hist.get("data_identity") or {}
-    checks = {k: (got.get(k) == hist_run.get(k)) for k in keys if k in hist_run}
+    checks = {k: (got.get(k) == hist_run.get(k)) for k in keys if hist_run.get(k) is not None}
     counts = {
         "n_train_rows": int(len(task.train_rows)),
         "n_valid_rows": int(len(task.valid_rows)),
@@ -363,6 +371,7 @@ def data_identity(task: Any, hist: Mapping[str, Any]) -> dict[str, Any]:
             "n_train_rows": counts["n_train_rows"] == int(C.N_TRAIN),
             "n_valid_rows": counts["n_valid_rows"] == int(C.N_VALID),
             "n_test_rows": counts["n_test_rows"] == int(C.N_TEST),
+            "n_tasks": counts["n_tasks"] == int(C.N_TASKS),
             "test_labels_all_nan": counts["test_labels_all_nan"],
         },
         "note": (

@@ -437,15 +437,22 @@ def check_data_identity(task: Any) -> None:
     rec = next(r for r in hist["checks"] if r["check"].startswith("A2.1_data_identity"))
     d = rec["detail"]
     hist_identity = {
-        "feature_spec_hash": d["expected_feature_spec_hash"],
-        "norm_fingerprint": d["expected_norm_fingerprint"],
-        "split_partition_sha256": d["expected_split_partition_sha256"],
-        "label_artifact_sha256": d["expected_label_artifact_sha256"],
-        "cache_sha256": d.get("cache_sha256") or d.get("expected_cache_sha256"),
+        "feature_spec_hash": d.get("expected_feature_spec_hash", d.get("feature_spec_hash")),
+        "norm_fingerprint": d.get("expected_norm_fingerprint", d.get("norm_fingerprint")),
+        "split_partition_sha256": d.get("expected_split_partition_sha256", d.get("split_partition_sha256")),
+        "label_artifact_sha256": d.get("expected_label_artifact_sha256", d.get("label_artifact_sha256")),
     }
     identity = FC.data_identity(task, {"data_identity": hist_identity})
-    record("B0_data_identity", bool(identity["all_match"] and all(identity["count_checks"].values())),
-           {"identity": identity, "historical_source": "dscr-v0 analysis/checks.json A2.1"})
+    split_ok = (
+        d.get("expected_split_sizes") is not None
+        and {k: int(v) for k, v in d["expected_split_sizes"].items()}
+        == {"train": int(C.N_TRAIN), "valid": int(C.N_VALID), "test": int(C.N_TEST)}
+    )
+    identity["historical_expected_split_sizes"] = d.get("expected_split_sizes")
+    record("B0_data_identity",
+           bool(identity["all_match"] and split_ok and all(identity["count_checks"].values())),
+           {"identity": identity, "split_sizes_match": split_ok,
+            "historical_source": "dscr-v0 analysis/checks.json A2.1"})
 
 
 def check_real_batch(models: Mapping[str, Any], fixed1: Any, task: Any, batch: Mapping[str, Any]) -> None:

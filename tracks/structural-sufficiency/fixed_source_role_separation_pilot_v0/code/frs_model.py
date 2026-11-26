@@ -231,7 +231,7 @@ def build_frs_model(
     matches_hist = {
         "base_state_sha256": fp["base_state_sha256"] == FC.HIST_FIXED1_INIT["base_state_sha256"],
         "new_state_sha256": fp["new_state_sha256"] == FC.HIST_FIXED1_INIT["new_state_sha256"],
-        "n_state_tensors": fp["n_state_tensors"] == FC.HIST_FIXED1_INIT["n_state_tensors"],
+        "n_state_tensors_inherited": fp["n_state_tensors_inherited"] == FC.HIST_FIXED1_INIT["n_state_tensors"],
     }
     if verify and not all(matches_hist.values()):
         raise RuntimeError(f"inherited FIXED1 init fingerprints differ: {matches_hist}")
