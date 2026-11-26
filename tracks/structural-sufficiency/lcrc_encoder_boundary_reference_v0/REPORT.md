@@ -6,7 +6,7 @@
   本轮代码不构造 Test batch、不评分、不报告任何 Test 指标（`test_scored=false`，
   `splits_used=[train, valid]`）。
 - seed 0；新训练单元 1 个（B）；A 只读复用 CSC v0 的完整 360-epoch 运行。
-- 实际资源：B 训练 **485.2 s = 0.1348 GPU·h**（硬上限 0.6）；整体墙钟约 45 min
+- 实际资源：B 训练 **485.2 s = 0.1348 GPU·h**（硬上限 0.6）；整体墙钟约 38 min
   （硬上限 60 min，含排队与一次 deploy 排障）。运行环境 `res` / A100-SXM4-40GB / driver 550.163.01 /
   torch 2.5.1+cu124。
 
