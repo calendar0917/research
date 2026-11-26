@@ -372,7 +372,9 @@ def drop_worst_component(per_pair_a: np.ndarray, per_pair_b: np.ndarray,
 
 
 def ledger_path() -> Path:
-    return ROUND_DIR / "resource_ledger.json"
+    """Run-time ledger lives under results/ (never a tracked file that a run mutates);
+    the round-root copy is assembled at reporting time."""
+    return RESULTS_DIR / "resource_ledger.json"
 
 
 def ledger_append(entry: Mapping[str, Any]) -> None:
