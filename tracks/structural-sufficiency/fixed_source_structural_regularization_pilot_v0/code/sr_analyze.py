@@ -194,7 +194,7 @@ def main(argv: list[str] | None = None) -> int:
         row: dict[str, Any] = {"epoch": epoch}
         for arm, rr in runs.items():
             if epoch == R.START_EPOCH:
-                row[f"{arm}_lr"] = rr["baseline"]["lr"]
+                row[f"{arm}_lr"] = rr["baseline"]["lr_at_restore"]
                 row[f"{arm}_valid_ap"] = rr["baseline"]["valid"]["ap"]
                 row[f"{arm}_valid_bce"] = rr["baseline"]["valid"]["bce"]
                 row[f"{arm}_train_ap"] = rr["baseline"]["train"]["ap"]
