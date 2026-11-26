@@ -1,0 +1,51 @@
+{
+  "round_id": "fgcr-joint-response-increment-audit-v0",
+  "version": "2027-01-15/v1",
+  "historical_round": "full_graph_cavity_response_pilot_v0",
+  "historical_dir": "tracks/structural-sufficiency/full_graph_cavity_response_pilot_v0",
+  "historical_run": "results/seed0",
+  "checkpoint": "results/seed0/best.pt",
+  "checkpoint_sha256": "b62d9cd6d399a87f7ee1e47be16015f9382e48875aac7e274e81e9f1b516175a",
+  "historical_predictions": "results/seed0/predictions_best.npz",
+  "historical_predictions_sha256": "250581fe7dcdb231680fbfc64953ebf05505bbe1db5a019d9177178dc0c8f5e3",
+  "historical_config": "configs/fgcr.json",
+  "historical_config_sha256": "7c263248c493e5aa45fe4cb1acaa71b5db2bd4fe6d024903bf5f8995fdd8e9f4",
+  "historical_code": {
+    "code/fgcr_model.py": "a4adc8272e34d02d8e60a4f6e17c23669042e222b723456374e8e57dcb58ea73",
+    "code/fgcr_inference.py": "77267dddfe174415789047160e08595a1ccdb4533c3166344daf0f93c9a10cb5",
+    "code/fgcr_data.py": "ecaf6c1c833e00f7612f921763a0b9ee3bc2f7374623c7697918147c86649ad1",
+    "code/fgcr_common.py": "24d3541e0608061935bf726bcface07ff5fa64b8cde1338f902b84bf4a45230f",
+    "code/bamf_inference.py": "34024597b290451d931abe9d806d3497de1585722731bb09f21b1057ec39f2a7"
+  },
+  "cache": {
+    "path": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+    "sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c"
+  },
+  "splits": {
+    "train": 3360,
+    "valid": 420,
+    "test_used": false
+  },
+  "expected_historical_valid_rmse": 0.7128937193209034,
+  "valid_rmse_tolerance": 1e-05,
+  "prediction_replay_tolerance": 0.0001,
+  "conditions": {
+    "FULL": {"H": "FULL", "eta": "FULL"},
+    "LOCAL_H": {"H": "IND", "eta": "FULL"},
+    "LOCAL_ETA": {"H": "FULL", "eta": "STAR"},
+    "LOCAL_BOTH": {"H": "IND", "eta": "STAR"}
+  },
+  "eval_batch_molecules": 256,
+  "device": "cpu",
+  "torch_threads": 4,
+  "bootstrap": {
+    "n_resamples": 2000,
+    "seed": 20270115,
+    "ci": 0.95
+  },
+  "trim_fraction": 0.05,
+  "wall_clock_limit_seconds": 1200,
+  "no_training": true,
+  "no_test_access": true,
+  "no_hyperparameter_search": true
+}
