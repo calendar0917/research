@@ -63,7 +63,7 @@ seed 0，FP32/TF32 全关，双 A100-40GB（pool `res-gpu0` / `res-gpu1` 各绑�
 | 片段缓存 | Lipo `ba6e9a41…a1d8`、ESOL `fac644d0…a62d` |
 | D0 划分 | `675289f6…e845`，Fit 2856 / Dev 504，全部为 official Train 行号 |
 | 严格编辑目录 | `catalogue_pairs.csv` sha256 `64186ac5…4bcc`，2597 对 → 双边都在 official Train 的 **2133** 对、**391** 分量 |
-| 支持结构 | Fit-Fit 1619 对 / 340 分量；Fit-Dev 238 对 / 44 分量；Dev-Dev 276 对 / 62 分量；其他 Fit 分量支持的 Dev-Dev **119** 对 / 51 分量；≥2 分量支持 **97** 对 / 45 分量；未支持 **157** 对 / 29 分量 |
+| 支持结构 | Fit-Fit 1619 对 / 340 分量；Fit-Dev 238 对 / 44 分量；Dev-Dev 276 对 / 62 分量 / 220 transform；其他 Fit 分量支持的 Dev-Dev **119** 对 / 51 分量 / 65 transform；≥2 分量支持 **97** 对 / 45 分量 / 46 transform；未支持 **157** 对 / 29 分量 / 155 transform。1389 个分子参与这 2133 对 |
 | pair 方向 | `transform_id = s_key_a > s_key_b`，每行存储方向即 canonical 方向，`orientation_sign` 全为 +1（2133/2133） |
 | σ | `σ_A = 1.211539840098397`、`σ_Fit = 1.2139664740467941`；门 `0.015σ_A = 0.0181731`、`0.01σ_A = 0.0121154` |
 | `B_ref` | **0.628743586510216**，状态 `PREDICTION_VERIFIED_REFERENCE`（RESP 与 FUSION_MLP 两条历史强参照逐预测重放核验，diff 1.2e-06）。GINE_G0 只有 REPORTED 数字（0.6161）且无 checkpoint，**不入** `B_ref` |
@@ -283,7 +283,7 @@ pairs 为全部 **2133** official-Train 对（391 分量），scaler 按 officia
 
 | 项 | 值 |
 | --- | --- |
-| 墙钟 | 2026-11-26 23:56 → 2026-11-27 02:50（CST），约 **2 h 55 min** |
+| 墙钟 | 2026-11-26 23:56 → 2026-11-27 02:40（CST），约 **2 h 45 min** |
 | GPU·h（`resource_ledger.json`，26 条，含预跑/失败/作废） | **3.22**（软包络 14，硬上限 16） |
 | 分项 | 预跑 0.01、A 1.22、B 1.29、C 0.10、P 0.37、两次作废重跑 0.23（已含在总数内） |
 | 峰值显存 | 0.30 GB（RESP/FUSION 辅助臂）；GINE 0.23 GB；FGCR 0.08 GB |
