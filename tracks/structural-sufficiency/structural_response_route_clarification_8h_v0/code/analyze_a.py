@@ -37,21 +37,21 @@ def _paired(a: np.ndarray, b: np.ndarray, y: np.ndarray, n_boot: int = 2000,
     rng = np.random.default_rng(int(seed))
     n = y.size
     idx = rng.integers(0, n, size=(int(n_boot), n))
-    d_rmse = np.sqrt(se_b[idx].mean(axis=1)) - np.sqrt(se_a[idx].mean(axis=1))
-    d_mae = np.abs(b[idx] - y[idx]).mean(axis=1) - np.abs(a[idx] - y[idx]).mean(axis=1)
+    d_rmse = np.sqrt(se_a[idx].mean(axis=1)) - np.sqrt(se_b[idx].mean(axis=1))
+    d_mae = np.abs(a[idx] - y[idx]).mean(axis=1) - np.abs(b[idx] - y[idx]).mean(axis=1)
     k = int(math.ceil(0.05 * n))
     key = 0.5 * (se_a + se_b)
     keep = np.argsort(key)[:-k]
     return {
         "n": int(n),
-        "delta_rmse": float(np.sqrt(se_b.mean()) - np.sqrt(se_a.mean())),
+        "delta_rmse": float(np.sqrt(se_a.mean()) - np.sqrt(se_b.mean())),
         "delta_rmse_ci_low": float(np.quantile(d_rmse, 0.025)),
         "delta_rmse_ci_high": float(np.quantile(d_rmse, 0.975)),
-        "delta_mae": float(np.abs(b - y).mean() - np.abs(a - y).mean()),
+        "delta_mae": float(np.abs(a - y).mean() - np.abs(b - y).mean()),
         "delta_mae_ci_low": float(np.quantile(d_mae, 0.025)),
         "delta_mae_ci_high": float(np.quantile(d_mae, 0.975)),
         "frac_molecules_b_better": float((se_b < se_a).mean()),
-        "trim5pct_delta_rmse": float(np.sqrt(se_b[keep].mean()) - np.sqrt(se_a[keep].mean())),
+        "trim5pct_delta_rmse": float(np.sqrt(se_a[keep].mean()) - np.sqrt(se_b[keep].mean())),
         "trim5pct_n_dropped": int(k),
     }
 
@@ -158,8 +158,10 @@ def main() -> int:
         full_arm = "A_IJ" if h == "IND" else "A_FJ"
         e = contrasts[eta_key]
         cond1 = e["delta_best"] >= gate_signal
-        cond2 = (e["delta_final"] >= gate_signal) or (e["delta_last20"] >= gate_signal)
-        cond3 = e["delta_mae_best"] <= gate_mae
+        # protocol wording: "final or last20 at least same direction" (sign, not gate)
+        cond2 = (e["delta_final"] > 0.0) or (e["delta_last20"] > 0.0)
+        # MAE(FULL) - MAE(STAR) <= 0.01 sigma_A, expressed with delta = STAR - FULL
+        cond3 = e["delta_mae_best"] >= -gate_mae
         rmse_full = float(data[full_arm]["summary"]["best_valid_rmse"])
         cond4 = b_ref is not None and rmse_full <= root_ratio * float(b_ref)
         gate[h] = {
