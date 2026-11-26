@@ -72,8 +72,9 @@ recorded Valid AP 0.2758455214).
 | 33 | 0.272753 | 0.276899 | +0.004146 | 0.0473797 | 0.0467440 | 0.642637 | 0.632375 | 0.09984 |
 
 `BASE_CONT` continuation decayed below the epoch-25 start from epoch 26 onward.
-`STRUCT_DROP` stayed within ~0.001 of the start, then exceeded it at epochs 27,
-31 and 32. The mask fraction is 0.09998 ± 0.00011 across the 8 epochs.
+`STRUCT_DROP` stayed within ~0.001 of the start and exceeded it at six of the
+eight epochs (27, 28, 29, 31, 32, 33). The mask fraction is 0.09998 ± 0.00011
+across the 8 epochs.
 
 ## 4. Main table
 
@@ -192,9 +193,10 @@ results were selected using Test. Only seed 0, only q = 0.10 was run.
 * GPU hours (formal, both arms): 0.4149 + 0.3495 = **0.7644**; plus checks/timing
   (~0.01) and failed check attempts (~0.02) → **≈0.79 GPU-hour**, within the
   0.9 target and 1.1 hard limit.
-* Wall clock: implementation + local tests ≈35 min; deploy/checks ≈5 min;
-  parallel formal training 24.9 min (longest arm); analysis/report ≈6 min →
-  **≈70 min**, inside the 75-min hard limit.
+* Wall clock: implementation + local unit tests ≈7 min; deploy and checks
+  (including two failed check attempts) ≈7 min; parallel formal training
+  24.9 min (longest arm); analysis/report ≈11 min → **≈54 min**, inside the
+  75-min hard limit.
 * Both arms were run in parallel on the two idle A100-40GB cards of `res`
   (`res-gpu0`, `res-gpu1`); no queue wait, no preemption.
 
