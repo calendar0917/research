@@ -209,10 +209,12 @@ def run_checks(
         torch.isfinite(v).all().item()
         for st in opt_state["state"].values() for k, v in st.items() if torch.is_tensor(v) and v.is_floating_point()
     )
-    loaded_equal = F.optimizer_state_equal(
-        {k: v.cpu() for k, v in optimizer.state_dict()["state"].items()},
-        opt_state["state"],
-    )
+    loaded_state = optimizer.state_dict()["state"]
+    loaded_cpu = {
+        pid: {k: (v.detach().cpu() if torch.is_tensor(v) else v) for k, v in st.items()}
+        for pid, st in loaded_state.items()
+    }
+    loaded_equal = F.optimizer_state_equal({"state": loaded_cpu}, opt_state)
     recipe_ok = (
         tuple(group["betas"]) == tuple(F.C.RECIPE["adam_betas"])
         and abs(float(group["eps"]) - float(F.C.RECIPE["adam_eps"])) == 0.0
