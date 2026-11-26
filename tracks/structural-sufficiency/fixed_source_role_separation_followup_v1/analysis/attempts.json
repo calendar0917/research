@@ -1,0 +1,78 @@
+{
+ "schema": "fsf-attempts-v1",
+ "round_id": "fixed-source-role-separation-followup-v1",
+ "note": "All failed attempts stopped before any epoch of the resumed run was recorded; the successful 25-epoch run is attempt 5.",
+ "attempts": [
+  {
+   "utc": "2026-11-26T03:16:10Z",
+   "experiment": "fsf-checks-s0",
+   "state": "failed",
+   "stage": "resume checks C3",
+   "reason": "comparison helper received an optimizer-state dict instead of tensors",
+   "fix": "compare the loaded optimizer state per tensor",
+   "epochs_trained": 0
+  },
+  {
+   "utc": "2026-11-26T03:18:10Z",
+   "experiment": "fsf-checks-s0b",
+   "state": "failed",
+   "stage": "resume checks C2/C8",
+   "reason": "RNG was not restored before the C8 check; C2 passed AP/BCE but the logits-SHA equality check was too strict for CUDA scatter order",
+   "fix": "restore RNG immediately after loading the checkpoint; pass on AP/BCE/per-task within explicit tolerances and record the same-process repeatability",
+   "epochs_trained": 0
+  },
+  {
+   "utc": "2026-11-26T03:21:09Z",
+   "experiment": "fsf-checks-s0c",
+   "state": "completed (checks only)",
+   "stage": "budget gate",
+   "reason": "old projection used a double replay time and the 2100 s wall cap; decision NO_GO",
+   "fix": "use the measured single Valid replay and the v0 Train/Valid eval ratio; the formal run used a 3300 s cap and projected 40.25 min, actual 35.3 min",
+   "epochs_trained": 0
+  },
+  {
+   "utc": "2026-11-26T03:25:17Z",
+   "experiment": "fsf-resume-s0",
+   "state": "failed",
+   "stage": "first resumed step parity",
+   "reason": "zero-element state buffer passed to max()",
+   "fix": "skip zero-element buffers in the parity comparison",
+   "epochs_trained": 0,
+   "detail": "max(): Expected reduction dim to be specified for input.numel() == 0. Specify the reduction dim with the 'dim' argument."
+  },
+  {
+   "utc": "2026-11-26T03:28:13Z",
+   "experiment": "fsf-resume-s0b",
+   "state": "completed",
+   "stage": "formal 25-epoch continuation",
+   "reason": "",
+   "epochs_trained": 13,
+   "result": "best Valid AP 0.2760276537711122 at epoch 25"
+  }
+ ],
+ "old_budget_projection": {
+  "projection": {
+   "decision": "NO_GO",
+   "elapsed_seconds_so_far": 38.16329958289862,
+   "finalize_reserve_seconds": 240.0,
+   "gpu_hour_cap": 0.95,
+   "n_train_evals": 4,
+   "per_epoch_train_seconds": 171.25847708201036,
+   "projected_remaining_minutes": 50.83044872180714,
+   "projected_remaining_seconds": 3049.8269233084284,
+   "projected_total_gpu_hours": 0.8577750619142575,
+   "remaining_epochs": 13,
+   "remaining_wall_seconds": 1821.8367004171014,
+   "rule": "start only if projected_remaining <= remaining wall and projected GPU-hours <= 0.95",
+   "step_ms_median": 62.548749847337604,
+   "train_eval_seconds_estimate": 89.50519488751888,
+   "valid_eval_seconds_measured": 11.18814936093986,
+   "wall_cap_seconds": 2100.0
+  },
+  "status": "NOT_STARTED_BUDGET",
+  "utc": "2026-11-26T03:21:54Z"
+ },
+ "final_checks": "analysis/resume_checks.json",
+ "final_timing": "analysis/timing.json",
+ "final_budget_projection": "analysis/budget_projection.json"
+}

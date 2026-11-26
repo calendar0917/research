@@ -324,10 +324,13 @@ def main() -> int:
                    "delta_ap", "valid_positive", "valid_negative", "high_support"]
     task_rows = []
     for rec in comparisons["RSSC_minus_FIXED1_best"]["per_task"]:
-        task_rows.append({**rec, "rssc_best_epoch": best_epoch,
-                          "fixed1_best_epoch": fixed1_best_epoch,
-                          "high_support": bool(rec["valid_positive"] >= HIGH_SUPPORT_MIN
-                                               and rec["valid_negative"] >= HIGH_SUPPORT_MIN)})
+        task_rows.append({
+            "task": rec["task"], "rssc_best_epoch": best_epoch,
+            "fixed1_best_epoch": fixed1_best_epoch,
+            "rssc_ap": rec["a_ap"], "fixed1_ap": rec["b_ap"], "delta_ap": rec["delta_ap"],
+            "valid_positive": rec["valid_positive"], "valid_negative": rec["valid_negative"],
+            "high_support": bool(rec["valid_positive"] >= HIGH_SUPPORT_MIN
+                                 and rec["valid_negative"] >= HIGH_SUPPORT_MIN)})
     task_sha = _write_csv(F.ANALYSIS / "task_deltas.csv", task_fields, task_rows)
 
     # mechanism light --------------------------------------------------------
