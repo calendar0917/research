@@ -1,0 +1,28 @@
+{
+  "schema": "fsdp-round-config-v1",
+  "round_id": "fixed-source-structural-distribution-pilot-v0",
+  "protocol_id": "fsdp-v0",
+  "arm": "MEANFIELD",
+  "reference_arm": "FIXED1",
+  "seed": 0,
+  "horizon_epochs": 12,
+  "batch_size": 128,
+  "steps_per_epoch": 2738,
+  "parameters": 1128468,
+  "train_eval_epochs": [4, 8, 12],
+  "valid_eval": "every epoch, full official Valid split",
+  "test_evaluated": false,
+  "order_plan": "frozen seed-0 40-epoch DSCR plan (prefix of the 40-epoch cosine, never recompressed)",
+  "contrast_gate": {
+    "sample": "first 1024 rows of the frozen official Valid split",
+    "min_block1_relative_rms_change": 0.01,
+    "min_changed_message_fraction": 0.5,
+    "verdict_if_failed": "INSUFFICIENT_CONTRAST (no formal training)"
+  },
+  "decision_bands": {
+    "LOCAL_ALLOCATION_ADVANTAGE_SIGNAL": "gap < -0.008 and high-support same direction",
+    "DISTRIBUTIONAL_COMPUTATION_PROMISING": "|gap| <= 0.003, no late/high-support conflict",
+    "DISTRIBUTIONAL_PERFORMANCE_ADVANCE": "gap >= +0.005 and broad task support",
+    "otherwise": "INCONCLUSIVE"
+  }
+}
