@@ -73,6 +73,20 @@ def main() -> int:
            n_steps_observed=1,
            note="one full epoch of DELTA training at the frozen recipe")
 
+    # ---- predict addresses the requested rows (2026-11-27 regression) ---
+    rows_small = np.asarray(ctx.d0["dev_rows"], dtype=np.int64)[:64]
+    full = arm.predict(np.asarray(ctx.d0["dev_rows"], dtype=np.int64))
+    direct = arm.predict(rows_small)
+    perm = np.random.default_rng(11).permutation(rows_small.size)
+    inv = np.argsort(perm)
+    shuffled = arm.predict(rows_small[perm])
+    record("resp_predict_addresses_requested_rows",
+           float(np.max(np.abs(direct - full[:64]))) < 1e-6
+           and float(np.max(np.abs(shuffled[inv] - direct))) < 1e-6,
+           max_abs_diff_vs_full=float(np.max(np.abs(direct - full[:64]))),
+           max_abs_diff_after_permutation=float(np.max(np.abs(shuffled[inv] - direct))),
+           note="a batch-position bug would score molecules 0..n-1 instead of the rows")
+
     # ---- aux gradient non-empty for every family ----------------------
     grad_report = {}
     for row, family in (("ROOT_STAR", "FGCR"), ("RESP_PRODUCT", "RESP"), ("GINE_G0", "GINE")):
