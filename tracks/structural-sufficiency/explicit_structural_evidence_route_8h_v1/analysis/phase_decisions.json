@@ -1,0 +1,163 @@
+{
+ "best_explicit": {
+  "arm": "SREN-BANK",
+  "prefix_best_ap": {
+   "SREN-ADD": 0.22903197018711316,
+   "SREN-BANK": 0.2396343239099075,
+   "SREN-COMPOUND": 0.23855409110559128,
+   "SREN-EVID": 0.23269669886475758
+  }
+ },
+ "frozen_utc": "2026-11-25T17:10:00Z",
+ "levels": {
+  "L1": {
+   "reached": false,
+   "threshold": 0.27027331610028144,
+   "value": 0.2396343239099075
+  },
+  "L2": {
+   "reached": false,
+   "threshold": 0.2728455,
+   "value": 0.2396343239099075
+  },
+  "L3": {
+   "reached": false,
+   "threshold": 0.28,
+   "value": 0.2396343239099075
+  },
+  "L4": {
+   "reached": false,
+   "threshold": 0.29,
+   "value": 0.2396343239099075
+  },
+  "delta_vs_FIXED1_prefix25_final": -0.03621117609009253,
+  "delta_vs_W2_best_within_25": -0.025638992190373938,
+  "delta_vs_W2_prefix25_final": -0.0234229760900925
+ },
+ "reference_points": {
+  "DYNAMIC_best_40": 0.275067,
+  "FIXED1_prefix25_final": 0.2758455,
+  "W2_best_40": 0.26527331610028143,
+  "W2_best_within_25": 0.26527331610028143,
+  "W2_prefix25_final": 0.2630573
+ },
+ "small_data": {
+  "ESOL": {
+   "arms": {
+    "HIDDEN": {
+     "primary": 0.9521221340576761,
+     "relative_delta": 0.11463948392406843,
+     "signal": false
+    },
+    "SREN-BANK": {
+     "primary": 1.0397174761778671,
+     "relative_delta": 0.21718644028868903,
+     "signal": false
+    },
+    "SREN-COMPOUND": {
+     "primary": 0.998014024519162,
+     "relative_delta": 0.16836464298773943,
+     "signal": false
+    }
+   },
+   "base_primary": 0.8541973865000252
+  },
+  "LIPO": {
+   "arms": {
+    "HIDDEN": {
+     "primary": 0.6693842430668758,
+     "relative_delta": -0.09251686391726184,
+     "signal": true
+    },
+    "SREN-ADD": {
+     "primary": 0.7367472691544148,
+     "relative_delta": -0.001192918361172917,
+     "signal": false
+    },
+    "SREN-BANK": {
+     "primary": 0.7301217666329484,
+     "relative_delta": -0.010175101417584891,
+     "signal": false
+    },
+    "SREN-COMPOUND": {
+     "primary": 0.7131674194712737,
+     "relative_delta": -0.03316008245331992,
+     "signal": true
+    },
+    "SREN-EVID": {
+     "primary": 0.7810147025003823,
+     "relative_delta": 0.05882036945552092,
+     "signal": false
+    },
+    "UNARY": {
+     "primary": 0.7596700340491065,
+     "relative_delta": 0.02988343694563083,
+     "signal": false
+    }
+   },
+   "base_primary": 0.7376271981828276
+  },
+  "TOX21": {
+   "arms": {
+    "HIDDEN": {
+     "absolute_delta": -0.008498670506930317,
+     "primary": 0.8554630708383352,
+     "signal": false
+    },
+    "SREN-ADD": {
+     "absolute_delta": -0.013657677863869067,
+     "primary": 0.8503040634813964,
+     "signal": false
+    },
+    "SREN-BANK": {
+     "absolute_delta": -0.010550570368164758,
+     "primary": 0.8534111709771007,
+     "signal": false
+    },
+    "SREN-COMPOUND": {
+     "absolute_delta": -0.012175083118479701,
+     "primary": 0.8517866582267858,
+     "signal": false
+    },
+    "SREN-EVID": {
+     "absolute_delta": -0.013015349120450659,
+     "primary": 0.8509463922248148,
+     "signal": false
+    },
+    "UNARY": {
+     "absolute_delta": -0.010396098620240046,
+     "primary": 0.8535656427250254,
+     "signal": false
+    }
+   },
+   "base_primary": 0.8639617413452655
+  }
+ },
+ "triggers": {
+  "D1_UNARY_MATCHED": {
+   "rule": "L1 or L2",
+   "triggered": false
+  },
+  "D2_extension_40": {
+   "best_epoch": 25,
+   "curve_improving": true,
+   "mean_last5": 0.2366364019186386,
+   "mean_prev5": 0.23214060979414186,
+   "rule": "L1 and curve still improving: argmax epoch >= 20 and mean(AP epochs 21..25) > mean(AP epochs 16..20); pairs EVID->ADD, BANK->HIDDEN, COMPOUND->BANK, ADD->HIDDEN",
+   "triggered": false
+  },
+  "D3_BANK_FLEX": {
+   "hidden_prefix_best": 0.24976317436604592,
+   "rule": "HIDDEN >= best_explicit + 0.005 and HIDDEN satisfies L1",
+   "triggered": false
+  },
+  "D4_REL_BLIND": {
+   "rule": "L1 or L2",
+   "triggered": false
+  },
+  "D5_RANGE4": {
+   "rule": "L1 and wall clock and GPU budget allow after D1-D4 (lowest priority, cancelled first)",
+   "triggered": false
+  }
+ }
+}
