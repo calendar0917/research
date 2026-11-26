@@ -199,6 +199,7 @@ def run_checks(
         "n_tasks_replayed": len(per_task_diff),
         "max_abs_per_task_ap_diff": (max(per_task_diff) if per_task_diff else None),
         "replay_seconds": float(replay["seconds"]) + float(replay_repeat["seconds"]),
+        "replay_single_seconds": float(replay["seconds"]),
         "replay_n_tasks_scored": int(replay["n_tasks_scored"]),
         "same_process_repeat_ap_diff": float(repeat_ap_diff),
         "same_process_repeat_max_abs_per_task_ap_diff": float(repeat_task_diff),
@@ -425,7 +426,8 @@ def run_checks(
         "n_checks": len(checks), "n_passed": passed,
         "all_passed": bool(passed == len(checks)),
         "checks": checks,
-        "replay_seconds": float(replay["seconds"]),
+        "replay_seconds": float(replay["seconds"]) + float(replay_repeat["seconds"]),
+        "replay_single_seconds": float(replay["seconds"]),
         "model_audit": model_audit,
         "optimizer_audit": opt_audit,
         "git_commit": F.C.git_commit(),
@@ -1017,10 +1019,12 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # budget projection
     remaining_epochs = F.TARGET_HORIZON - resume_epoch
-    valid_seconds = float(checks["replay_seconds"])
-    train_eval_estimate = max(45.0, 8.0 * valid_seconds)
+    valid_seconds = float(checks.get("replay_single_seconds") or checks.get("replay_seconds") or 12.0)
+    # v0 preflight on the same regime measured Train/Valid eval = 38.1s/6.6s = 5.8x;
+    # 6x is the conservative re-use of that measurement (no repeated large preflight).
+    train_eval_estimate = max(45.0, 6.0 * valid_seconds)
     n_train_evals = len([e for e in F.TRAIN_EVAL_EPOCHS if e > resume_epoch]) + 1
-    per_epoch = float(timing["step_ms_median"]) / 1e3 * F.STEPS_PER_EPOCH + valid_seconds + 20.0
+    per_epoch = float(timing["step_ms_median"]) / 1e3 * F.STEPS_PER_EPOCH + valid_seconds + 10.0
     projected_remaining = remaining_epochs * per_epoch + n_train_evals * train_eval_estimate + 60.0
     elapsed = float(time.perf_counter() - t_all)
     remaining_wall = float(args.wall_seconds) - elapsed - float(args.finalize_reserve)
