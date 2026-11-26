@@ -647,8 +647,14 @@ def train_followup(
                 max_diff = None
                 equal = None
                 if probe_state is not None:
-                    diffs = [float((state_now[k].float() - probe_state[k].float()).abs().max().item())
-                             for k in state_now if k in probe_state]
+                    diffs = []
+                    for k in state_now:
+                        if k not in probe_state:
+                            continue
+                        a, b = state_now[k], probe_state[k]
+                        if a.numel() == 0:
+                            continue
+                        diffs.append(float((a.float() - b.float()).abs().max().item()))
                     max_diff = max(diffs) if diffs else None
                     equal = bool(max_diff is not None and max_diff <= 1e-5)
                 first_step_check = {
