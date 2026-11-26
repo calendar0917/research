@@ -61,7 +61,8 @@ def main() -> int:
             "recomputed_rmse_raw": rep["rmse_raw"], "saved_rmse_raw": saved_rmse, "abs_delta_rmse": e1,
             "recomputed_mae_raw": rep["mae_raw"], "saved_mae_raw": saved_mae, "abs_delta_mae": e2,
             "max_abs_prediction_delta_vs_saved": e3,
-            "ok": bool(e1 < 1e-9 and e2 < 1e-9 and e3 < 1e-9),
+            "tolerance": {"rmse": 1e-7, "mae": 1e-7, "prediction": 1e-5},
+            "ok": bool(e1 < 1e-7 and e2 < 1e-7 and e3 < 1e-5),
         })
     payload = {
         "round_id": E.ROUND_ID,

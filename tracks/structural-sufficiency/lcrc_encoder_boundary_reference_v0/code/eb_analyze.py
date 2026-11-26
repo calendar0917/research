@@ -169,6 +169,11 @@ def diagnostic(bundle, splits, pair_valid: dict[str, Any]) -> dict[str, Any]:
     atom_batch = np.repeat(np.arange(va.atom_ptr.size - 1, dtype=np.int64), np.diff(va.atom_ptr))
     rarity = np.bincount(atom_batch, weights=rarity_atom, minlength=int(va.row_ids.size)) / np.diff(va.atom_ptr)
 
+    sig_tr_atoms = splits["train"]
+    rarity_atom_tr = np.asarray([-np.log((lookup.get(tuple(row.tolist()), 0) + 1.0) / (total + 1.0)) for row in sig_tr])
+    tr_batch = np.repeat(np.arange(sig_tr_atoms.atom_ptr.size - 1, dtype=np.int64), np.diff(sig_tr_atoms.atom_ptr))
+    rarity_tr = np.bincount(tr_batch, weights=rarity_atom_tr, minlength=int(sig_tr_atoms.row_ids.size)) / np.diff(sig_tr_atoms.atom_ptr)
+
     # align diagnostic arrays to the sorted-row-id order used by the paired block
     row_ids_sorted = np.sort(np.asarray(va.row_ids, dtype=np.int64))
     order = np.argsort(np.asarray(va.row_ids, dtype=np.int64))
@@ -187,7 +192,7 @@ def diagnostic(bundle, splits, pair_valid: dict[str, Any]) -> dict[str, Any]:
         "n_atoms": float(np.median(train_n_atoms)),
         "diameter_max_finite": float(np.median(train_diam)),
         "ring_atom_fraction": float(np.median(train_ring)),
-        "local_environment_rarity": float(np.median(rarity)),
+        "local_environment_rarity": float(np.median(rarity_tr)),
     }
     better = (e["err_b"] ** 2) < (e["err_a"] ** 2)
     dm = {}
@@ -221,7 +226,7 @@ def diagnostic(bundle, splits, pair_valid: dict[str, Any]) -> dict[str, Any]:
                 "ring_atom_fraction": "frozen lipo_v1 global descriptor",
                 "local_environment_rarity": "mean over atoms of -log((Train count(atom signature)+1)/(N_train+1)); signature = (atomic_num, degree, min_ring)",
             },
-            "groups": "Train median threshold per descriptor (rarity uses the Valid array median because its scale is defined on Train frequencies); no threshold search",
+            "groups": "Train median threshold per descriptor (rarity threshold = Train molecule mean-rarity median); no threshold search",
             "usage": "exploratory explanation only; never replaces the official RMSE",
         },
         "n_molecules": int(e["row_id"].size),
@@ -273,6 +278,7 @@ def main() -> int:
             "last20_valid_mae_raw": float(run["last20_mean_metrics"]["valid_mae_raw"]),
             "train_seconds": float(run["train_seconds"]), "eval_seconds": float(run["eval_seconds"]),
             "total_seconds": float(run["total_seconds"]), "gpu_hours": float(run["gpu_hours"]),
+            "inference_rows": int(run.get("inference_rows") or 0),
             "inference_rows_per_second": float(run.get("inference_rows_per_second") or 0.0),
             "train_minus_valid_rmse_best": float(run["best_metrics"]["train"]["rmse_raw"] - run["best_metrics"]["valid"]["rmse_raw"]),
         }
@@ -395,6 +401,12 @@ def main() -> int:
             "last20_mean_delta_rmse_B_minus_A_valid": direction_last20,
             "same_direction": bool(np.sign(direction_last20) == np.sign(pairs["valid"]["delta_rmse_B_minus_A"])),
         },
+        "interpretation": (
+            "The point estimate exceeds the 2% reference, but the pre-registered signal condition "
+            "(bootstrap 95% CI entirely below 0) fails; the Valid advantage is not robust at 420 molecules "
+            "and is concentrated in the molecules where A has the largest errors. This is not a claim that "
+            "the gap disappeared."
+        ),
         "gpu_hours_used_this_round": float(b_run["gpu_hours"]),
         "gpu_hours_hard_limit": E.GPU_HARD_HOURS,
         "test_scored": False,

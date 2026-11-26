@@ -1,0 +1,29 @@
+{
+  "best_vs_last20": {
+    "best_delta_rmse_B_minus_A_valid": -0.048602977172314876,
+    "last20_mean_delta_rmse_B_minus_A_valid": -0.04439478932701413,
+    "same_direction": 1
+  },
+  "comparability_label": "MATCHED_BUDGET_ENCODER_REFERENCE (shared post_local + same raw OGB table + same graph; encoders differ in derived inputs and computation)",
+  "criterion": {
+    "advantage_rule_satisfied": 0,
+    "bootstrap_delta_rmse_ci95": [
+      -0.09940096328362596,
+      0.0073215167001077575
+    ],
+    "bootstrap_prob_B_better": 0.9555,
+    "observed_relative_delta_B_minus_A_valid": -0.06688378718631283,
+    "relative_gain_reference": 0.02
+  },
+  "gpu_hours_hard_limit": 0.6,
+  "gpu_hours_used_this_round": 0.13476885165695826,
+  "interpretation": "The point estimate exceeds the 2% reference, but the pre-registered signal condition (bootstrap 95% CI entirely below 0) fails; the Valid advantage is not robust at 420 molecules and is concentrated in the molecules where A has the largest errors. This is not a claim that the gap disappeared.",
+  "notes": [
+    "Single seed, one training unit for B; A is a read-only reuse of a completed 360-epoch run.",
+    "The encoder-level difference cannot be attributed to iterative message passing alone: input derivations and structure scope also differ."
+  ],
+  "round_id": "lcrc-encoder-boundary-reference-v0",
+  "single_seed": 1,
+  "test_scored": 0,
+  "verdict": "NO_CLEAR_ENCODER_ADVANTAGE"
+}
