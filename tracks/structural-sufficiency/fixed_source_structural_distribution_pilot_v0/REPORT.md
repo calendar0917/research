@@ -152,7 +152,8 @@ Valid 官方全任务 macro AP −0.020575（−7.6% 相对），高支持子集
 
 ## 8. 运行事实与复现入口
 
-- Git commit：`5528f83bb767`（`fsdp-v0: fix contrast segment-reduce device placement; add frozen FIXED1 checkpoint intervention`）
+- 运行时的 Git commit：`5528f83bb767`（正式训练只执行该提交；结果与报告随后提交为 `973e327d`）
+- 墙钟说明：计算本身 0.514 GPU-hour 在预算内，但 `res-2` 队列 41 分钟未获资源（`(Resources)`），最终改在 `res` 执行；加上实现与本地验证，本轮 agent 墙钟超出 75 分钟硬上限，超时全部来自排队与开发，不来自训练本身
 - 执行：`rr run res fsdp-meanfield-s0-res2 --pool res-gpu1 -- uv run python tracks/.../code/mf_train.py --out-dir ... --epochs 12`；node `a100-2`，GPU `NVIDIA A100-SXM4-40GB`（CUDA_VISIBLE_DEVICES=1），torch `2.5.1+cu124`，driver 550.163.01
 - 训练：32,856 steps = 12 × 2,738，batch 128，冻结 40-epoch cosine 前缀（LR 3.0e-4 → 2.467e-4 @ ep12），fp32，dropout 0.10，clip 5
 - 时间/预算：单 epoch 训练 ≈ 131 s；总 GPU 0.5139 h；GPU peak allocated 431 MB
