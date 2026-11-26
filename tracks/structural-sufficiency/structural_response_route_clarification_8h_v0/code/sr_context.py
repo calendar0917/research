@@ -173,13 +173,13 @@ def make_resp_arm(ctx: Ctx, *, rows: Sequence[int], split_name: str,
     fit_subset = bundle.fit
 
     def base_loss(chunk: np.ndarray) -> torch.Tensor:
-        return SR.base_loss(model, bundle, fit_subset, chunk, device)
+        return SR.base_loss(model, bundle, fit_subset, fit_subset.local(chunk), device)
 
     def aux_predict(chunk: np.ndarray) -> torch.Tensor:
-        return SR.predict_tensor(model, bundle, fit_subset, chunk, device)
+        return SR.predict_tensor(model, bundle, fit_subset, fit_subset.local(chunk), device)
 
     def predict(chunk: np.ndarray) -> np.ndarray:
-        return SR.predict_std(model, bundle, fit_subset, chunk, device,
+        return SR.predict_std(model, bundle, fit_subset, fit_subset.local(chunk), device,
                               batch_size=int(recipe["eval_batch_molecules"]))
 
     extra = {"meta": dict(meta or {}), "operator": operator,

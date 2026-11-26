@@ -35,6 +35,8 @@ import rd_train as RT  # noqa: E402
 import fu_model as FM  # noqa: E402
 
 MODE = {"PRODUCT": "RESP", "FUSION_MLP": "JOINT"}
+#: Frozen architecture of ``response_dictionary_small_s0_v1`` (never searched).
+ARCH = {"hidden": 96, "latent": 16, "n_layers": 3, "dropout": 0.10}
 EXPECTED_PARAMETERS = 198262
 EXPECTED_INIT_HASH = "ccc8171d4cdc47daadd226c382947a0e3e62f6c9266dcad6f952ba98a989072c"
 
@@ -62,6 +64,14 @@ class Subset:
     label_raw: np.ndarray
     label_std: np.ndarray
     split: RT.Split
+
+    def local(self, rows: Sequence[int]) -> np.ndarray:
+        """Official row ids -> positions inside this subset (must be a subset)."""
+        rows = np.asarray(rows, dtype=np.int64)
+        pos = np.searchsorted(self.row_id, rows)
+        if not np.array_equal(self.row_id[pos], rows):
+            raise RuntimeError("requested rows are not part of this RESP subset")
+        return pos
 
 
 def subset_split(payload: Mapping[str, Any], split_name: str, rows: Sequence[int],
@@ -128,10 +138,14 @@ class RespBundle:
     def subset(self, rows: Sequence[int], name: str) -> Subset:
         return subset_split(self.payload, self.split_name, rows, self.scaler)
 
+    def subset_of(self, split_name: str, rows: Sequence[int], name: str) -> Subset:
+        return subset_split(self.payload, split_name, rows, self.scaler)
 
-def build_model(dims, init_state, operator: str, config: Mapping[str, Any]) -> torch.nn.Module:
+
+def build_model(dims, init_state, operator: str,
+                config: Mapping[str, Any] | None = None) -> torch.nn.Module:
     mode = MODE[operator]
-    model_config = FM.model_config(config, mode)
+    model_config = FM.model_config(dict(ARCH), mode)
     model = FM.build_model(dims, model_config, init_state)
     n = RM.n_parameters(model)
     if n != EXPECTED_PARAMETERS:
