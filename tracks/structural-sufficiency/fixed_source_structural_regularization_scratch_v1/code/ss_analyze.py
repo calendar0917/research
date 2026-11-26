@@ -25,6 +25,7 @@ BOOTSTRAP_SEED = 20261126
 NEGLIGIBLE = 1e-12
 ADVANCE_MIN_AP = 0.003
 NO_REVERSE_TOL = -0.001
+SIGNAL_MIN_AP = 0.001
 HIGH_SUPPORT_POS = 20
 HIGH_SUPPORT_NEG = 20
 PHASES = ((1, 12), (13, 20), (21, 25))
@@ -545,24 +546,38 @@ def main(argv: list[str] | None = None) -> int:
     d_hs_best = paired["high_support"]["delta_best"]
     d_hs_endpoint = paired["high_support"]["delta_endpoint"]
     d_hs_last5 = paired["high_support"]["delta_last5"]
+    # same-stage fit comparison (epoch 25 vs epoch 25) is the honest one; the
+    # best-checkpoint Train AP is reported separately because this run's best is
+    # at epoch 19 while the historical best is at epoch 25.
+    d_train_e25 = float(_f(next(r for r in curve if int(r["epoch"]) == 25).get("train_ap"))) - float(
+        R.HIST["train_ap_e25"]
+    )
     d_train_best = float(best["train"]["ap"]) - float(R.HIST["best_train_ap"])
     phase_late = phases["epochs_21_25"]["delta_mean_valid_ap"]
     phase_early = phases["epochs_1_12"]["delta_mean_valid_ap"]
     phase_mid = phases["epochs_13_20"]["delta_mean_valid_ap"]
+    n_better = sum(1 for row in curve_rows if row["delta_valid_ap"] > 0)
+    n_worse = sum(1 for row in curve_rows if row["delta_valid_ap"] < 0)
 
     no_reverse = all(
         v is None or v >= NO_REVERSE_TOL for v in (d_endpoint, d_last5, d_hs_best, d_hs_endpoint, d_hs_last5)
     )
+    # ordered, pre-registered decision rule (PROTOCOL.md section "Decision labels")
+    sustained_signal = bool(
+        (phase_late is not None and phase_late >= SIGNAL_MIN_AP)
+        or (d_hs_best is not None and d_hs_best >= SIGNAL_MIN_AP)
+        or (d_hs_last5 is not None and d_hs_last5 >= SIGNAL_MIN_AP)
+    )
     if d_best >= ADVANCE_MIN_AP and no_reverse:
         verdict = "SCRATCH_STRUCTURAL_REGULARIZATION_ADVANCE"
-    elif (phase_late is not None and phase_late > 0) or (d_hs_best is not None and d_hs_best > 0):
+    elif sustained_signal:
         verdict = "WEAK_REGULARIZATION_SIGNAL"
-    elif d_train_best < 0 and d_best <= 0:
+    elif d_train_e25 < 0 and d_best < ADVANCE_MIN_AP:
         verdict = "FIT_REDUCTION_WITHOUT_GAIN"
     elif d_best <= 0:
         verdict = "NO_CLEAR_GAIN"
     else:
-        verdict = "REGRESSION"
+        verdict = "NO_CLEAR_GAIN"
 
     summary = {
         "schema": R.SCHEMA_SUMMARY,
@@ -575,6 +590,13 @@ def main(argv: list[str] | None = None) -> int:
         "verdict_rules": {
             "advance_min_best_valid_ap_delta": ADVANCE_MIN_AP,
             "no_reverse_tolerance": NO_REVERSE_TOL,
+            "signal_min_ap": SIGNAL_MIN_AP,
+            "order": [
+                "ADVANCE if best >= +0.003 and endpoint/last-5/high-support >= -0.001",
+                "WEAK_REGULARIZATION_SIGNAL if late-phase (21-25) mean or high-support delta >= +0.001",
+                "FIT_REDUCTION_WITHOUT_GAIN if same-stage (epoch-25) Train AP is lower and best Valid AP < +0.003",
+                "NO_CLEAR_GAIN otherwise",
+            ],
             "applied": {
                 "delta_best_valid_ap": d_best,
                 "delta_endpoint_valid_ap": d_endpoint,
@@ -583,7 +605,10 @@ def main(argv: list[str] | None = None) -> int:
                 "delta_high_support_endpoint": d_hs_endpoint,
                 "delta_high_support_last5": d_hs_last5,
                 "no_reverse_condition_satisfied": no_reverse,
-                "delta_train_ap_best": d_train_best,
+                "delta_train_ap_best_checkpoint": d_train_best,
+                "delta_train_ap_epoch25_same_stage": d_train_e25,
+                "n_epochs_valid_better": int(n_better),
+                "n_epochs_valid_worse": int(n_worse),
                 "delta_phase_means": {"1-12": phase_early, "13-20": phase_mid, "21-25": phase_late},
             },
         },
@@ -617,7 +642,12 @@ def main(argv: list[str] | None = None) -> int:
         },
         "phases": phases,
         "learning_speed_landmarks": landmarks,
-        "train_fit": paired["train_fit"],
+        "train_fit": {**paired["train_fit"], "delta_train_ap_epoch25_same_stage": d_train_e25,
+                      "best_epoch_note": "this run's best checkpoint is epoch "
+                                         f"{best_epoch}; the historical best is epoch {R.HIST['best_epoch']}, "
+                                         "so best-checkpoint Train metrics are not like-for-like"},
+        "curve_positivity": {"n_epochs_better": int(n_better), "n_epochs_worse": int(n_worse),
+                             "n_epochs": len(curve_rows)},
         "train_valid_gap": gaps,
         "mask": paired["mask"],
         "resource": paired["resource"],

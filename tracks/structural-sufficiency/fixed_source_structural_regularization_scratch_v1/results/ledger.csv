@@ -1,0 +1,4 @@
+unit,purpose,command,gpu,status,gpu_hours,wall_seconds,commit,note
+fss-probe-g0,checks + timing probe (rejected: contended GPU),ss_checks.py --device cuda (res-gpu0),res-gpu0 / A100-40GB,checks passed except timing gate,0.0203,73.0,e066e862a7a2,0.0729 s/step and 19.7 GB free -> projected 90 min / 1.50 GPU-h; not used
+fss-probe-g1,checks + timing probe (selected GPU),ss_checks.py --device cuda (res-gpu1),res-gpu1 / A100-40GB,gates passed after code fixes (probe probe),0.0181,65.0,d08e15b02f90,"0.0421 s/step, 41.2 GB free -> projected 54 min / 0.90 GPU-h"
+fss-scratch-s0,formal unit: gates (24.8 s) + 25-epoch STRUCT_DROP_SCRATCH training,ss_formal.py --remaining-seconds 3300 --soft-seconds 3900 --hard-seconds 4200,res-gpu1 / A100-40GB,COMPLETED,0.9174,3302.6,011a1dc67382877bd2073c16fefba65796dd4f3b,checkpoint gate completed; best epoch 19

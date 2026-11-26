@@ -343,8 +343,24 @@ def load_historical_fixed1() -> dict[str, Any]:
     if not all(checks.values()):
         raise RuntimeError(f"historical FIXED1 record failed verification: {checks}")
     per_task = read_csv_rows(HIST_PER_TASK)
-    valid = {int(r["task"]): float(r["ap"]) for r in per_task if r["split"] == "valid" and int(r["epoch"]) == EPOCHS}
-    train = {int(r["task"]): float(r["ap"]) for r in per_task if r["split"] == "train" and int(r["epoch"]) == EPOCHS}
+    def _finite(value: Any) -> bool:
+        if value is None or value == "":
+            return False
+        try:
+            return bool(np.isfinite(float(value)))
+        except (TypeError, ValueError):
+            return False
+
+    valid = {
+        int(r["task"]): float(r["ap"])
+        for r in per_task
+        if r["split"] == "valid" and int(r["epoch"]) == EPOCHS and _finite(r["ap"])
+    }
+    train = {
+        int(r["task"]): float(r["ap"])
+        for r in per_task
+        if r["split"] == "train" and int(r["epoch"]) == EPOCHS and _finite(r["ap"])
+    }
     for t, v in enumerate(best["valid"]["per_task_ap"]):
         if v is not None:
             valid[int(t)] = float(v)
