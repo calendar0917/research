@@ -229,7 +229,7 @@ Morgan r=2、2048 bit；Valid 每个分子的最大 Train Tanimoto；阈值 = **
 | 排队 | 0 min（上限 5 min）；无远端队列 |
 | 正式训练墙钟 | 565.06 s（9.4 min）；train 387.2 s + eval 175.0 s |
 | 全流程墙钟（含检查/分析/排错） | ≈ 19 min（上限 40 min） |
-| 峰值内存 | ≈ 0.7 GB RSS（无 OOM 风险） |
+| 峰值内存 | 预检实测 ≈ 681 MB RSS（同一 bundle + 模型 + 真实 batch），无 OOM 风险 |
 | 新增训练单元 | 1（`SCAFFOLD_BALANCED`，seed 0）；无其他数据集、无超参搜索、无第二 seed |
 | Test | 未读取、未评分、未进入选择 |
 | 代码基座 | `d2d9c04d574c600af9bd73c6a783416f5bb71dbc`（冻结与训练时仓库 HEAD；本轮所有文件当时未提交，`git_dirty=1` 已记录在 `run.json`） |
