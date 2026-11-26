@@ -57,13 +57,14 @@ def _fgcr_predictor(ckpt_path: Path, ctx, meta: Mapping[str, Any], device) -> Ca
 
 
 def _resp_predictor(ckpt_path: Path, ctx, meta: Mapping[str, Any], fit_rows, scaler,
-                    device) -> Callable:
+                    device, *, universe=None) -> Callable:
     payload = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     state = payload["state_dict"]
     operator = meta["operator"]
     if operator not in ("PRODUCT", "FUSION_MLP"):
         raise RuntimeError(f"checkpoint does not declare a RESP operator: {meta}")
-    bundle = SR.RespBundle(ctx.dataset, fit_rows, scaler, split_name="train")
+    rows_for_bundle = fit_rows if universe is None else universe
+    bundle = SR.RespBundle(ctx.dataset, rows_for_bundle, scaler, split_name="train")
     dims = bundle.dims
     model = SR.build_model(dims, SR.canonical_init(dims), operator, C.RESP_RECIPE)
     model.load_state_dict({k: v for k, v in state.items()}, strict=True)
@@ -93,12 +94,13 @@ def _gine_predictor(ckpt_path: Path, ctx, meta: Mapping[str, Any], device) -> Ca
 
 
 def make_predictor(ckpt_path: Path, ctx, meta: Mapping[str, Any], fit_rows, scaler,
-                   device) -> Callable:
+                   device, *, universe=None) -> Callable:
     family = meta["family"]
     if family == "FGCR":
         return _fgcr_predictor(ckpt_path, ctx, meta, device)
     if family == "RESP":
-        return _resp_predictor(ckpt_path, ctx, meta, fit_rows, scaler, device)
+        return _resp_predictor(ckpt_path, ctx, meta, fit_rows, scaler, device,
+                               universe=universe)
     if family == "GINE":
         return _gine_predictor(ckpt_path, ctx, meta, device)
     raise KeyError(family)
@@ -220,6 +222,7 @@ def main() -> int:
     dd = index.dev_dev_index
 
     pair_union = np.union1d(lab["row_a"], lab["row_b"])
+    resp_universe = np.union1d(fit_rows, dev_rows).astype(np.int64)  # RESP view subset
     print(f"pair row union: {pair_union.size} molecules", flush=True)
 
     # ---------------- frozen checkpoint manifest ----------------------
@@ -258,7 +261,8 @@ def main() -> int:
             payload = torch.load(path, map_location="cpu", weights_only=False)
             meta = dict(payload["extra"])
             meta.setdefault("family", summary["family"])
-            predictor = make_predictor(path, ctx, meta, fit_rows, fit_scaler, device)
+            predictor = make_predictor(path, ctx, meta, fit_rows, fit_scaler, device,
+                                       universe=resp_universe)
             std_union = predictor(pair_union)
             dev_std = predictor(dev_rows)
             pred = {
