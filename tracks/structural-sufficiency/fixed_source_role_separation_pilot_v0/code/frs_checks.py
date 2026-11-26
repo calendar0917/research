@@ -456,10 +456,10 @@ def check_data_identity(task: Any) -> None:
             "historical_source": "dscr-v0 analysis/checks.json A2.1"})
 
 
-def check_real_batch(models: Mapping[str, Any], fixed1: Any, task: Any, batch: Mapping[str, Any]) -> None:
+def check_real_batch_identity(models: Mapping[str, Any], fixed1: Any, task: Any, batch: Mapping[str, Any]) -> None:
+    """Weight-identity + invariance on real rows; must run before any mutation."""
     check_zero_A_equivalence(models, fixed1, batch, label="real_valid_8")
     check_invariance(models, batch, label="real_valid_8")
-    check_gradients(models, batch, label="real_valid_8")
     rows = [int(x) for x in task.train_rows[:8]]
     train_batch = {k: (v.to(next(fixed1.parameters()).device) if torch.is_tensor(v) else v)
                    for k, v in C.PC.collate(task.cache, rows).items()}
@@ -495,14 +495,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         rows = [int(x) for x in task.valid_rows[:8]]
         batch = {k: (v.to(torch.device("cpu")) if torch.is_tensor(v) else v)
                  for k, v in C.PC.collate(task.cache, rows).items()}
-        check_real_batch(models, fixed1, task, batch)
+        check_real_batch_identity(models, fixed1, task, batch)
     check_zero_A_equivalence(models, fixed1, synth, label="synthetic_star")
     check_role_input(models)
     check_dual_form(models)
     check_fixed_source(models)
     check_invariance(models, synth, label="synthetic_star")
-    check_gradients(models, synth, label="synthetic_star")
     check_empty_neighbourhood(models, spec, fixed1)
+    if full:
+        rows = [int(x) for x in task.valid_rows[:8]]
+        real_batch = {k: (v.to(torch.device("cpu")) if torch.is_tensor(v) else v)
+                      for k, v in C.PC.collate(task.cache, rows).items()}
+        check_gradients(models, real_batch, label="real_valid_8")
+    check_gradients(models, synth, label="synthetic_star")
     payload = {
         "schema": FC.SCHEMA_CHECKS,
         "round_id": FC.ROUND_ID,
