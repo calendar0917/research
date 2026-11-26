@@ -221,6 +221,19 @@ def main() -> int:
     pair_union = np.union1d(lab["row_a"], lab["row_b"])
     print(f"pair row union: {pair_union.size} molecules", flush=True)
 
+    # ---------------- frozen checkpoint manifest ----------------------
+    manifest_path = C.CKPT_DIR / "manifest.json"
+    if not manifest_path.is_file():
+        raise SystemExit("run freeze_checkpoints.py before opening the strict-edit evaluation")
+    manifest = C.read_json(manifest_path)
+    manifest_sha = {e["path"]: e["sha256"] for e in manifest["entries"]}
+    for path, expected in manifest_sha.items():
+        actual = C.sha256_file(C.REPO_ROOT / path)
+        if actual != expected:
+            raise SystemExit(f"checkpoint {path} changed after the freeze "
+                             f"({actual} != {expected})")
+    print(f"checkpoint manifest verified: {len(manifest_sha)} files", flush=True)
+
     # ---------------- checkpoints -------------------------------------
     frozen = C.read_json(C.ANALYSIS_DIR / "branch_decision.json")
     rows_family = frozen["d0_rows"]

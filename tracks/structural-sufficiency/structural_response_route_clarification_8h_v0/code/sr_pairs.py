@@ -231,21 +231,17 @@ def subset_masks(index: PairIndex) -> dict[str, np.ndarray]:
 # ---------------------------------------------------------------------------
 
 
-def pair_schedule(index: PairIndex, n_steps: int, pairs_per_step: int = 64,
-                  seed: int = C.PAIR_SEED) -> np.ndarray:
-    """``[n_steps, pairs_per_step]`` indices into ``index.rows`` (Fit-Fit only).
-
-    One component is drawn uniformly from the 340 Fit-only components, then one
-    Fit-Fit edge uniformly inside that component, with replacement.  The stream
-    is generated once, so every family consumes a prefix of the same schedule.
-    """
-    fit_edges = index.fit_fit_index
-    comps = np.asarray([int(index.fit_component_ids[i]) for i in fit_edges.tolist()], dtype=np.int64)
-    order = np.argsort(comps, kind="stable")
-    comps_sorted = comps[order]
-    boundaries = np.searchsorted(comps_sorted, np.unique(comps_sorted), side="left")
-    unique_comps, first = np.unique(comps_sorted, return_index=True)
-    members = np.split(fit_edges[order], first[1:])
+def pair_schedule_generic(edges: np.ndarray, components: np.ndarray, n_steps: int,
+                          pairs_per_step: int = 64, seed: int = C.PAIR_SEED) -> np.ndarray:
+    """Component-then-edge sampler over an arbitrary frozen pair graph."""
+    edges = np.asarray(edges, dtype=np.int64)
+    components = np.asarray(components, dtype=np.int64)
+    if edges.size != components.size:
+        raise ValueError("edges and components must have the same length")
+    order = np.argsort(components, kind="stable")
+    comps_sorted = components[order]
+    _, first = np.unique(comps_sorted, return_index=True)
+    members = np.split(edges[order], first[1:])
     n_comp = len(members)
     rng = np.random.default_rng(int(seed))
     out = np.empty((int(n_steps), int(pairs_per_step)), dtype=np.int32)
@@ -255,6 +251,20 @@ def pair_schedule(index: PairIndex, n_steps: int, pairs_per_step: int = 64,
             group = members[c]
             out[step, j] = group[rng.integers(0, group.size)]
     return out
+
+
+def pair_schedule(index: PairIndex, n_steps: int, pairs_per_step: int = 64,
+                  seed: int = C.PAIR_SEED) -> np.ndarray:
+    """``[n_steps, pairs_per_step]`` indices into ``index.rows`` (Fit-Fit only).
+
+    One component is drawn uniformly from the 340 Fit-only components, then one
+    Fit-Fit edge uniformly inside that component, with replacement.  The stream
+    is generated once, so every family consumes a prefix of the same schedule.
+    """
+    fit_edges = index.fit_fit_index
+    comps = np.asarray([int(index.fit_component_ids[i]) for i in fit_edges.tolist()],
+                       dtype=np.int64)
+    return pair_schedule_generic(fit_edges, comps, n_steps, pairs_per_step, seed)
 
 
 # ---------------------------------------------------------------------------
