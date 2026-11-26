@@ -1,0 +1,75 @@
+{
+  "round_id": "structural-response-route-clarification-8h-v0",
+  "frozen_utc": "2026-11-26",
+  "prompt": "/home/calendar/Downloads/structural_response_route_8h_prompt.txt",
+  "seed": 0,
+  "lambda": 0.5,
+  "pair_seed": 23017,
+  "bootstrap": {"n": 2000, "seed": 1703, "unit": "2133-graph component"},
+  "sigma": {
+    "sigma_A_official_lipo_train": 1.211539840098397,
+    "sigma_fit_d0": 1.2139664740467941,
+    "gate_eta_signal": 0.018173097601475955,
+    "gate_mae_not_worse": 0.01211539840098397,
+    "root_competitiveness_ratio": 1.1,
+    "root_h_full_preference_sigma": 0.01211539840098397
+  },
+  "data": {
+    "lipo_cache": "tracks/structural-query-learning/data/ogbg_mollipo_sq-pilot-cache-v1.npz",
+    "lipo_cache_sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c",
+    "esol_cache": "tracks/structural-query-learning/data/ogbg_molesol_sq-pilot-cache-v1.npz",
+    "lipo_frag_cache_sha256": "ba6e9a41990fc344e5962519caf02e616c9c67d299884843c8b67a5bbab0a1d8",
+    "esol_frag_cache_sha256": "fac644d0d7b73f8bc06239853c97fe65cd3010ab02ea539f9a6bdf4f4852a62d",
+    "d0_split_sha256": "675289f6f997008d44fdabb4ab65350459fe5bccc5e1e5703e31e31fd794e845",
+    "catalogue_pairs_sha256": "64186ac5397e7cfca635f7aa620a5fe3fd60df65e750a2bbae0ccfb14ec14bcc",
+    "splits": {"lipo": [3360, 420], "esol": [902, 113]},
+    "d0": {"fit": 2856, "dev": 504},
+    "test_policy": "no Test forward, no Test metric, no Test selection; the single npz archive is materialised once and the Test block is dropped from the working payload before use"
+  },
+  "phase_A": {
+    "arms": {
+      "A_IS": {"h": "IND", "eta": "STAR"},
+      "A_IJ": {"h": "IND", "eta": "FULL"},
+      "A_FS": {"h": "FULL", "eta": "STAR"},
+      "A_FJ": {"h": "FULL", "eta": "FULL"}
+    },
+    "recipe": {"epochs": 200, "batch_molecules": 64, "eval_batch_molecules": 256,
+               "peak_lr": 0.0003, "min_lr": 0.00001, "weight_decay": 0.0001,
+               "warmup_epochs": 5, "grad_clip": 5.0, "dropout": 0.1,
+               "optimizer": "AdamW", "precision": "float32", "amp": false,
+               "core_selection": "minimum Valid RMSE, ties earlier epoch"},
+    "parameters": 100926
+  },
+  "phase_B": {
+    "units": 9,
+    "targets": ["BASE", "ENDPOINT", "DELTA"],
+    "families": {"ROOT": ["ROOT_STAR", "ROOT_FULL", "GINE_G0"],
+                 "RESPONSE": ["RESP_PRODUCT", "RESP_FUSION_MLP", "GINE_G0"]},
+    "recipes": {
+      "FGCR": {"epochs": 200, "batch_molecules": 64, "peak_lr": 0.0003,
+               "min_lr": 0.00001, "weight_decay": 0.0001, "warmup_epochs": 5,
+               "grad_clip": 5.0, "dropout": 0.1},
+      "RESP": {"epochs": 360, "batch_molecules": 128, "peak_lr": 0.001,
+               "min_lr": 0.00001, "weight_decay": 0.00001, "warmup_epochs": 5,
+               "grad_clip": 5.0, "dropout": 0.1, "betas": [0.9, 0.999], "eps": 1e-08},
+      "GINE_G0": {"epochs": 360, "batch_molecules": 128, "peak_lr": 0.001,
+                  "min_lr": 0.00001, "weight_decay": 0.00001, "warmup_epochs": 5,
+                  "grad_clip": 5.0, "dropout": 0.1, "betas": [0.9, 0.999], "eps": 1e-08}
+    },
+    "pairs_per_step": 64,
+    "schedule_steps": 9000,
+    "evaluation_subsets": {"main": 276, "supported": 119, "stronger": 97, "unsupported": 157, "cross": 238},
+    "checkpoint_selection": "minimum Dev504 molecule RMSE, ties earlier epoch"
+  },
+  "phase_C": {"units": 3, "target": "BASE", "smax": "needed max clique size, ceiling 9"},
+  "phase_P": {"max_units": 3, "gates": [0.015, 0.05, 1.03, 0.01]},
+  "phase_R": {"max_units": 1, "radius": 2, "gate_close": 0.01, "gate_worse": 0.02},
+  "budget": {"gpu_soft_hours": 14, "gpu_hard_hours": 16, "wall_soft_hours": 7,
+             "wall_hard_hours": 8, "no_new_train_after_hours": 7.25},
+  "references": {
+    "fgcr_frozen_full_valid_rmse": 0.7128937193209034,
+    "gine_g0_rf_lipo_valid_rmse_reported": 0.6161,
+    "resp_s0_lipo_valid_rmse_reported": 0.62874,
+    "fusion_mlp_lipo_valid_rmse_reported": 0.66418
+  }
+}

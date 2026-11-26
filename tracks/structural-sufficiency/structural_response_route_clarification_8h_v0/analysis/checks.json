@@ -1,0 +1,270 @@
+{
+  "all_required_pass": true,
+  "checks": {
+    "adjacent_edge_graphs_need_not_coincide": {
+      "chain4_H_increment": 0.1906666538081292,
+      "cycle4_eta_increment": 0.7032011507070339,
+      "pass": true
+    },
+    "aux_eval_path_purity": {
+      "aux_path_has_autograd": true,
+      "base_grad_independent_of_aux_call": true,
+      "base_loss_finite": true,
+      "bn_buffers_unchanged": true,
+      "n_buffers": 15,
+      "numpy_rng_unchanged": true,
+      "pass": true,
+      "torch_rng_unchanged": true
+    },
+    "belief_calls_once_per_forward": {
+      "counts": {
+        "A_FJ": 1,
+        "A_FS": 1,
+        "A_IJ": 1,
+        "A_IS": 0
+      },
+      "pass": true
+    },
+    "checkpoint_reload_reproduces": {
+      "max_abs_pred_diff": 0.0,
+      "pass": true
+    },
+    "data_fit_dev_partition": {
+      "dev": 504,
+      "fit": 2856,
+      "pass": true
+    },
+    "data_lipo_sha256": {
+      "pass": true,
+      "sha256": "fe002287fa9c581278bc5430f5b4a5b26b35d9d4d5207d138f15956d93123c7c"
+    },
+    "data_scaler_train_only": {
+      "fit_scaler": {
+        "max": 4.5,
+        "mean": 2.185815826311436,
+        "min": -1.5,
+        "n": 2856,
+        "std": 1.2139664740467941
+      },
+      "official_train_scaler": {
+        "max": 4.5,
+        "mean": 2.1621607144740187,
+        "min": -1.5,
+        "n": 3360,
+        "std": 1.211539840098397
+      },
+      "pass": true
+    },
+    "data_split_sizes": {
+      "pass": true,
+      "train": 3360,
+      "valid": 420
+    },
+    "data_test_block_dropped": {
+      "pass": true,
+      "statement": "The single npz archive contains official Test row ids, labels and features. The loader materialised it once, then deleted the Test block from the working payload before any training, evaluation or analysis code saw it. No Test row entered any forward pass or metric."
+    },
+    "data_train_valid_disjoint": {
+      "pass": true
+    },
+    "exact_bruteforce_float64": {
+      "cases": {
+        "chain4": {
+          "max_abs_H_full": 8.881784197001252e-16,
+          "max_abs_H_increment": 0.1906666538081292,
+          "max_abs_H_ind": 4.440892098500626e-16,
+          "max_abs_eta_full": 1.7763568394002505e-15,
+          "max_abs_eta_increment": 0.5150137286353766,
+          "max_abs_eta_star": 2.220446049250313e-16,
+          "max_abs_posterior_prob_minus_half": 0.48429835110108543
+        },
+        "cycle4": {
+          "max_abs_H_full": 8.881784197001252e-16,
+          "max_abs_H_increment": 0.3031283437142337,
+          "max_abs_H_ind": 1.1102230246251565e-15,
+          "max_abs_eta_full": 1.3322676295501878e-15,
+          "max_abs_eta_increment": 0.7032011507070339,
+          "max_abs_eta_star": 3.3306690738754696e-16,
+          "max_abs_posterior_prob_minus_half": 0.4677074674930589
+        },
+        "multicomponent_with_isolated_atom": {
+          "max_abs_H_full": 8.881784197001252e-16,
+          "max_abs_H_increment": 0.5752970057706006,
+          "max_abs_H_ind": 3.3306690738754696e-16,
+          "max_abs_eta_full": 1.7763568394002505e-15,
+          "max_abs_eta_increment": 1.0468395747131873,
+          "max_abs_eta_star": 4.440892098500626e-16,
+          "max_abs_posterior_prob_minus_half": 0.4790046414643583
+        },
+        "single_edge": {
+          "max_abs_H_full": 4.440892098500626e-16,
+          "max_abs_H_increment": 3.3306690738754696e-16,
+          "max_abs_H_ind": 2.220446049250313e-16,
+          "max_abs_eta_full": 4.440892098500626e-16,
+          "max_abs_eta_increment": 3.3306690738754696e-16,
+          "max_abs_eta_star": 2.220446049250313e-16,
+          "max_abs_posterior_prob_minus_half": 0.46986696652072457
+        },
+        "star4": {
+          "max_abs_H_full": 8.881784197001252e-16,
+          "max_abs_H_increment": 0.28294417846082565,
+          "max_abs_H_ind": 6.661338147750939e-16,
+          "max_abs_eta_full": 8.881784197001252e-16,
+          "max_abs_eta_increment": 0.7120750059414925,
+          "max_abs_eta_star": 4.440892098500626e-16,
+          "max_abs_posterior_prob_minus_half": 0.47654898028231724
+        },
+        "two_disjoint_single_edges": {
+          "max_abs_H_full": 8.881784197001252e-16,
+          "max_abs_H_increment": 5.551115123125783e-16,
+          "max_abs_H_ind": 3.3306690738754696e-16,
+          "max_abs_eta_full": 4.440892098500626e-16,
+          "max_abs_eta_increment": 4.440892098500626e-16,
+          "max_abs_eta_star": 2.220446049250313e-16,
+          "max_abs_posterior_prob_minus_half": 0.49846024489954427
+        },
+        "zero_psi_cycle4": {
+          "max_abs_H_full": 4.440892098500626e-16,
+          "max_abs_H_increment": 1.6653345369377348e-16,
+          "max_abs_H_ind": 4.996003610813204e-16,
+          "max_abs_eta_full": 8.881784197001252e-16,
+          "max_abs_eta_increment": 8.881784197001252e-16,
+          "max_abs_eta_star": 0.0,
+          "max_abs_posterior_prob_minus_half": 0.4848168633905886
+        }
+      },
+      "pass": true,
+      "worst": 1.7763568394002505e-15
+    },
+    "fgcr_historical_replay_valid_rmse": {
+      "note": "1e-5 is the cross-device target; 1e-4 allows CPU replay",
+      "pass": true,
+      "reference": 0.7128937193209034,
+      "rmse": 0.712893610438409,
+      "tolerance": 0.0001
+    },
+    "fgcr_init_identical_across_arms": {
+      "hashes": {
+        "A_FJ": "fc972f14b3178f98f787cd56e9c86f5ab601675d4fc79746ffffb2c76c645cfd",
+        "A_FS": "fc972f14b3178f98f787cd56e9c86f5ab601675d4fc79746ffffb2c76c645cfd",
+        "A_IJ": "fc972f14b3178f98f787cd56e9c86f5ab601675d4fc79746ffffb2c76c645cfd",
+        "A_IS": "fc972f14b3178f98f787cd56e9c86f5ab601675d4fc79746ffffb2c76c645cfd"
+      },
+      "pass": true
+    },
+    "gradients_finite_and_nonzero": {
+      "max_grad": 1.25589919090271,
+      "min_grad": 0.0063336496241390705,
+      "n_with_grad": 33,
+      "pass": true
+    },
+    "pair_schedule_fit_only": {
+      "n_dev_rows_touched": 0,
+      "n_endpoint_rows": 1081,
+      "pass": true,
+      "schedule_sha256": "5fd6a523072e95f2b899f0b376977065db2befe84a657151f765b99e713d8b8e"
+    },
+    "pair_schedule_prefix_shared": {
+      "pass": true
+    },
+    "pairs_frozen_counts_match": {
+      "meta": {
+        "catalogue_path": "tracks/structural-sufficiency/response_dictionary_task_transfer_s0_v1/analysis/structure/catalogue_pairs.csv",
+        "catalogue_sha256": "64186ac5397e7cfca635f7aa620a5fe3fd60df65e750a2bbae0ccfb14ec14bcc",
+        "dev_dev_supported_other_component": 119,
+        "dev_dev_supported_other_component_components": 51,
+        "dev_dev_supported_other_component_transforms": 65,
+        "dev_dev_supported_two_components": 97,
+        "dev_dev_supported_two_components_components": 45,
+        "dev_dev_supported_two_components_transforms": 46,
+        "dev_dev_transform_seen_in_fit": 123,
+        "n_catalogue": 2597,
+        "n_components_2133": 391,
+        "n_dev_dev_components": 62,
+        "n_dev_dev_molecules": 202,
+        "n_dev_dev_pairs": 276,
+        "n_excluded_not_both_official_train": 464,
+        "n_fit_dev_components": 44,
+        "n_fit_dev_dev_end_molecules": 152,
+        "n_fit_dev_pairs": 238,
+        "n_fit_fit_components": 340,
+        "n_fit_fit_molecules": 1146,
+        "n_fit_fit_pairs": 1619,
+        "n_pairs_2133": 2133,
+        "n_sign_minus_one": 0,
+        "orientation_all_plus_one": true
+      },
+      "mismatch": {},
+      "pass": true
+    },
+    "pairs_orientation_all_canonical": {
+      "n_sign_minus_one": 0,
+      "pass": true
+    },
+    "params_A_FJ": {
+      "n": 100926,
+      "pass": true
+    },
+    "params_A_FS": {
+      "n": 100926,
+      "pass": true
+    },
+    "params_A_IJ": {
+      "n": 100926,
+      "pass": true
+    },
+    "params_A_IS": {
+      "n": 100926,
+      "pass": true
+    },
+    "real_model_symmetries": {
+      "max_abs_H": 3.814697265625e-06,
+      "max_abs_all": 7.62939453125e-06,
+      "max_abs_eta": 7.62939453125e-06,
+      "max_abs_eta_star": 1.1920928955078125e-07,
+      "max_abs_yhat_std": 3.5762786865234375e-07,
+      "pass": true
+    },
+    "single_edge_and_disjoint_edges_full_equals_local": {
+      "pass": true
+    },
+    "target_identity_and_swap_invariance": {
+      "LD": 0.24991968459894875,
+      "LE": 0.8304969520404606,
+      "abs_diff": 2.7755575615628914e-17,
+      "lhs": -0.19352575581383727,
+      "pass": true,
+      "rhs": -0.19352575581383724,
+      "swap_LD_diff": 0.0,
+      "swap_LE_diff": 0.0
+    },
+    "zero_coupling_gives_zero_responses": {
+      "case": {
+        "max_abs_H_full": 4.440892098500626e-16,
+        "max_abs_H_increment": 1.6653345369377348e-16,
+        "max_abs_H_ind": 4.996003610813204e-16,
+        "max_abs_eta_full": 8.881784197001252e-16,
+        "max_abs_eta_increment": 8.881784197001252e-16,
+        "max_abs_eta_star": 0.0,
+        "max_abs_posterior_prob_minus_half": 0.4848168633905886
+      },
+      "pass": true
+    }
+  },
+  "device": "cpu",
+  "environment": {
+    "commit": "67bfac3bb633c763aeb8b0093226efe73d3d668e",
+    "cuda": "12.4",
+    "cuda_available": false,
+    "cuda_visible_devices": null,
+    "cwd": "/home/calendar/code/research",
+    "device_name": "cpu",
+    "dirty": true,
+    "hostname": "main",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "torch": "2.5.1+cu124"
+  },
+  "generated_at": "2026-11-26T16:06:34Z",
+  "round_id": "structural-response-route-clarification-8h-v0"
+}
