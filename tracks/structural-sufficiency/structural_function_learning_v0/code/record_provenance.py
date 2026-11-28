@@ -85,7 +85,7 @@ def main() -> None:
                  for name in ("PROTOCOL.md", "REPORT.md", "ERRATA.md")}
 
     verification = {
-        "pytest_fast_and_slow": "13 passed (tests/), including booster singleton, replay, "
+        "pytest_fast_and_slow": "14 passed (tests/), including booster singleton, replay, "
                                 "f_j(0)=0, closure, init-hash and stored-metric checks",
         "phase0": {
             "closure_zero_baseline": K.read_json(K.ANALYSIS / "phase0_contributions.json")[

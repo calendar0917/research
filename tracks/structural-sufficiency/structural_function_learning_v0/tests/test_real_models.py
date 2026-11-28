@@ -104,6 +104,17 @@ def test_metrics_csv_matches_stored_predictions():
                    - m[split]["average_precision"]) < 1e-12
 
 
+def test_zinc_input_identity_against_historical_predictions():
+    _need(K.SGA_RUNS / "phaseC" / "ZN1_pred.npz",
+          K.SGA_RUNS / "phaseC" / "ZX1_pred.npz")
+    d = K.ZincData()
+    for arm in ("ZN1", "ZX1"):
+        z = np.load(K.SGA_RUNS / "phaseC" / f"{arm}_pred.npz")
+        assert np.array_equal(z["y"], d.y)
+        for split in K.SPLITS:
+            assert np.array_equal(z[f"{split}_rows"], d.rows[split])
+
+
 def test_hiv_input_identity_against_historical_predictions():
     _need(K.ISRD_PRED / "COUNT-ALL.npz")
     d = K.HIVData()
