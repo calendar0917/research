@@ -1,0 +1,214 @@
+{
+  "engineering_deviations": [
+    {
+      "affected": [
+        "R16",
+        "R64",
+        "R128",
+        "B2-L64",
+        "B2-U64",
+        "B2-U+S",
+        "B2-U+P",
+        "B2-U+N",
+        "R64+P",
+        "knowledge cards"
+      ],
+      "changes_numbers": true,
+      "detail": "see ERRATA.md E1",
+      "id": "D1",
+      "what": "v0 arm-specific mapping repaired"
+    },
+    {
+      "affected": [
+        "real joint pair pool",
+        "B2-U+P",
+        "B2-U+N",
+        "R64+P"
+      ],
+      "changes_numbers": true,
+      "detail": "see ERRATA.md E2",
+      "id": "D2",
+      "what": "v0 path extraction rebuilt with thresholds and directions"
+    },
+    {
+      "affected": [
+        "B2-U+P",
+        "B2-U+N",
+        "R64+P"
+      ],
+      "changes_numbers": true,
+      "detail": "see ERRATA.md E3",
+      "id": "D3",
+      "what": "exact condition identity for joint main effects; strict matched random pairs (0.05 / 0.03 tolerances)"
+    },
+    {
+      "affected": [
+        "single-rule candidate pool"
+      ],
+      "changes_numbers": true,
+      "detail": "n_prefilter_truncated = 0 in v1",
+      "id": "D4",
+      "what": "single-condition prefilter cap raised from 4000 to 12000 so no directed condition is truncated (v0 dropped 95 of 4095); the 512-rule budget and all support gates are unchanged"
+    },
+    {
+      "affected": [
+        "COUNT-ALL"
+      ],
+      "changes_numbers": false,
+      "detail": "see verification.json",
+      "id": "D5",
+      "what": "COUNT-ALL solved with a sparse exact-Newton parametrisation instead of materialising the dense standardised design; unit test and real-design check show equality with the dense fit_logistic (max|\u0394coef| < 1e-6)"
+    },
+    {
+      "affected": [
+        "XGB-ALL"
+      ],
+      "changes_numbers": false,
+      "detail": "no tuning",
+      "id": "D6",
+      "what": "XGB-ALL trained once with the frozen historical recipe on the structure+size design; booster kept at analysis/models/XGB-ALL.json"
+    }
+  ],
+  "environment": {
+    "cpu_count": 16,
+    "numpy": "2.1.3",
+    "ogb": "1.3.6",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scipy": "1.14.1",
+    "sklearn": "1.5.2",
+    "xgboost": "2.1.3"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "6453c77bf1c2c05b58929a5fae51fd161c46e69e",
+    "dirty_tracked": true
+  },
+  "inputs": {
+    "b2_coefficients": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseB_coefficients.npz",
+      "sha256": "4fc6a0c26e2fa48a0b52bf984c7f3be119069d674b5fc40061f64eaef1f54222"
+    },
+    "b2_predictions": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseB_predictions.npz",
+      "sha256": "5f5d197b79f76fa4169532d13ef46693c9516fc45dadd321f9afe94d7df795a7"
+    },
+    "boosters": {
+      "X-C": {
+        "num_features": 3012,
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/runs/phaseA/X-C_model.json",
+        "sha256": "fb9f9e48518cbf1486880fb8aa9cf9a0d47ef080d9fea98caa0524fdfabf2e51"
+      },
+      "X-F": {
+        "num_features": 5910,
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/runs/phaseA/X-F_model.json",
+        "sha256": "514e1e6e797eb349d1061d3eee92f5c2583a9f21c063c41fbce57f85a0fa2230"
+      }
+    },
+    "bundle": {
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/bundle/sav1_inputs.npz",
+      "sha256": "6b19265ed31b11d7679269368f29e606a50fcfee0357760257127c306d2d7bff"
+    },
+    "instances": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseA_instances.npz",
+      "sha256": "4f6e703251eaa27abfec46fbe63062b827861b7de9f735fded0ae739aba6e4e3"
+    },
+    "registry": {
+      "C": {
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/registry_v1/structure_registry_coarse_v1.csv",
+        "sha256": "34955c4a7955fc2475f1db7d777a11dd6a10cb31ded9cf3ded712a2492efdfd0"
+      },
+      "F": {
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/registry_v1/structure_registry_full_v1.csv",
+        "sha256": "de1bcf8a7590e7b1b6cb9339b3428f7f8157d616d99578fc53cd82e0195146d6"
+      }
+    },
+    "scaffolds": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/molhiv_scaffolds.npz",
+      "sha256": "00f87fb5021f39c598f7638fd93a50e5ecb1f73e40db799272ef432b65cd39ec"
+    },
+    "split": {
+      "sha256": {
+        "test": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+        "train": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+        "valid": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+      },
+      "sizes": {
+        "test": 4113,
+        "train": 32901,
+        "valid": 4113
+      }
+    }
+  },
+  "outputs": {
+    "contrasts.json": {
+      "bytes": 45133,
+      "sha256": "cc88582f6ef5b28c20de030eb38df4ef5caab3dbec0aad0a502455f4259f8f3f"
+    },
+    "knowledge_cards.md": {
+      "bytes": 10110,
+      "sha256": "6da8bda318898e73e13051b3d3a57ec3c604635df6dd02bc1fef075b60ba2f48"
+    },
+    "metrics.csv": {
+      "bytes": 11027,
+      "sha256": "43cd5b116416d1db37929692ecc3c0a470277b085c2c5ff80f1debcb7903916c"
+    },
+    "models/XGB-ALL.json": {
+      "bytes": 1301896,
+      "sha256": "79420788d98001eb79b51a882f0676736b30537f382eedd256e877f961afde57"
+    },
+    "phaseA_mapping.json": {
+      "bytes": 2750,
+      "sha256": "3b946a5bad5357b365813c20263242ce83a603733a09610514eb922d34cb9599"
+    },
+    "phaseA_rules.json": {
+      "bytes": 2818020,
+      "sha256": "26775753aa333ef4d559acd32b69110cff43f0b85da3b9365764e52ae6e72760"
+    },
+    "phaseBC.json": {
+      "bytes": 81472,
+      "sha256": "44f1cf193f199056d9230e6100aa19f803ad64b539858b017205b108a560be71"
+    },
+    "phaseC.json": {
+      "bytes": 529118,
+      "sha256": "867329c061b9b76b24af494a6efc621e72157eb8ee72b4b12e83f1900048a9ca"
+    },
+    "phaseD.json": {
+      "bytes": 38069,
+      "sha256": "c864f7ee0d3e8a4b2a2f92b72b292fdf0e199b377244a490ef302c127c4c1ee7"
+    },
+    "rule_registry.csv": {
+      "bytes": 166804,
+      "sha256": "c9ff6269c59e4ec3c10192a221d8b9f6cabe85e0fd459bfe75c66f327d656cb3"
+    },
+    "verification.json": {
+      "bytes": 5053,
+      "sha256": "a288f3822756b3b799dfa2e3ab9a41bb1a2ae8e66b1ba31a76385f88ce01641e"
+    }
+  },
+  "phases": {
+    "A": "repaired rule discovery (arm mapping + directed real paths)",
+    "B": "R0/R16/R64/R128, B2-L64/B2-U64, B2-U+S/P/N, R64+P",
+    "C": "COUNT128, COUNT-ALL, XGB-ALL, COUNT-ALL local contributions",
+    "D": "C\u2013S family description, CS-BASE/CS-FINE, cases"
+  },
+  "reused_assets": {
+    "B0/B3/X-C/X-F/X-CF": "historical predictions, metrics recomputed only",
+    "B2": "frozen coefficients/predictions replayed (max|\u0394logit| = 4.344e-07)",
+    "C/F vocabulary, scaling, instances, scaffolds, splits": "unchanged",
+    "R0": "identical to v0 (max|\u0394logit| < 1e-9, EXACT_MATCH)"
+  },
+  "round_id": "interpretable-structural-rule-discovery-v1",
+  "test_policy": "DEVELOPMENT_TEST: evaluated and reported for every arm, never used to select a rule, threshold, capacity, C or design element.",
+  "verification": {
+    "n_checks": 16,
+    "n_fail": 0
+  },
+  "wall_clock_seconds": {
+    "phaseA": 77.9324942129897,
+    "phaseB": 30.360207485966384,
+    "phaseC": 128.91692501993384
+  }
+}
