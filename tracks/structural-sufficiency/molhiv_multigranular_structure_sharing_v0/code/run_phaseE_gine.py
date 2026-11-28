@@ -153,6 +153,7 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=C.SEED)
     ap.add_argument("--device", default="cuda")
     ap.add_argument("--timing-only", action="store_true")
+    ap.add_argument("--max-batches", type=int, default=0, help="debug: stop an epoch after N batches")
     ap.add_argument("--out", default="")
     args = ap.parse_args()
 
@@ -228,14 +229,18 @@ def main() -> None:
         return DataLoader([graphs[int(i)] for i in rows], batch_size=args.batch_size,
                           shuffle=shuffle, generator=gen, num_workers=0)
 
+    def m_scores() -> Any:
+        return torch.sparse.mm(M_sp, model.m_branch.weight.view(-1, 1)).view(-1)
+
+    def s_scores() -> Any:
+        return torch.sparse.mm(S_sp, model.s_branch.weight.view(-1, 1)).view(-1)
+
     def forward(batch):
         z = model.backbone_forward(batch)
         idx = batch.graph_index.view(-1)
-        zm = torch.sparse.mm(M_sp, model.m_branch.weight.view(-1, 1)).view(-1)[idx]
-        z = z + zm
+        z = z + m_scores()[idx]
         if use_struct:
-            zs = torch.sparse.mm(S_sp, model.s_branch.weight.view(-1, 1)).view(-1)[idx]
-            z = z + zs
+            z = z + s_scores()[idx]
         return z
 
     @torch.no_grad()
@@ -268,7 +273,9 @@ def main() -> None:
         t_epoch = time.perf_counter()
         model.train()
         total, seen = 0.0, 0
-        for batch in train_loader:
+        for step, batch in enumerate(train_loader):
+            if args.max_batches and step >= args.max_batches:
+                break
             batch = batch.to(device)
             logit = forward(batch)
             lab = batch.y.view(-1).float()
