@@ -1,0 +1,294 @@
+{
+  "Z": {
+    "columns": {
+      "edge_class_counts": 3,
+      "n_atoms": 1,
+      "n_bonds": 1,
+      "node_class_counts": 21,
+      "typed_wl_counts": 4616
+    },
+    "edge_classes": [
+      1,
+      2,
+      3
+    ],
+    "n_selected_by_round": {
+      "0": 21,
+      "1": 499,
+      "2": 2048,
+      "3": 2048
+    },
+    "n_signatures_all": 83828,
+    "n_signatures_by_round_all": {
+      "0": 21,
+      "1": 499,
+      "2": 13006,
+      "3": 70302
+    },
+    "nnz": 660805,
+    "node_classes": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20
+    ],
+    "scaling": "counts / sqrt(n_atoms); n_atoms and n_bonds kept raw",
+    "width": 4642,
+    "wl_topk_per_round": 2048
+  },
+  "Z_CF": {
+    "coarse_nnz": 68480,
+    "coarse_shape": [
+      12000,
+      9
+    ],
+    "families": [
+      "size-2",
+      "size-3",
+      "size-4",
+      "cycle-5",
+      "cycle-6"
+    ],
+    "filters": {
+      "coarse": {
+        "max_types_per_family": 256,
+        "min_document_frequency_train": 20
+      },
+      "full": {
+        "max_types_per_family": 1024,
+        "min_document_frequency_train": 5,
+        "requires_coarse_parent_retained": true
+      },
+      "ranking": "document_frequency desc, 64-bit digest of the canonical key asc",
+      "scaffold_gate": "dropped: ZINC has no reliable scaffold identity (document-frequency gate only)"
+    },
+    "full_nnz": 642472,
+    "full_shape": [
+      12000,
+      1250
+    ],
+    "full_to_coarse": {
+      "conflicts": 0,
+      "rule": "deterministic projection: the instance node set + internal bonds are re-canonicalised without node/edge attributes",
+      "types_without_retained_parent": 0
+    },
+    "n_coarse_types_by_family_discovered": {
+      "cycle-5": 1,
+      "cycle-6": 1,
+      "size-2": 1,
+      "size-3": 2,
+      "size-4": 4
+    },
+    "n_coarse_types_discovered": 9,
+    "n_full_types_by_family_discovered": {
+      "cycle-5": 225,
+      "cycle-6": 292,
+      "size-2": 73,
+      "size-3": 312,
+      "size-4": 1433
+    },
+    "n_full_types_discovered": 2335,
+    "n_instances": 1369355,
+    "n_instances_by_family": {
+      "cycle-5": 10221,
+      "cycle-6": 21637,
+      "size-2": 298985,
+      "size-3": 413935,
+      "size-4": 624577
+    },
+    "n_selected_coarse": 9,
+    "n_selected_coarse_by_family": {
+      "cycle-5": 1,
+      "cycle-6": 1,
+      "size-2": 1,
+      "size-3": 2,
+      "size-4": 4
+    },
+    "n_selected_full": 1250,
+    "n_selected_full_by_family": {
+      "cycle-5": 106,
+      "cycle-6": 121,
+      "size-2": 50,
+      "size-3": 192,
+      "size-4": 781
+    },
+    "scaling": "count / sqrt(n_atoms)",
+    "type_identity": "canonical key (complete invariant of the attributed induced subgraph); the 64-bit digest is only a dictionary key / tie-break"
+  },
+  "created_utc": "2026-11-28T08:48:04Z",
+  "datasets": {
+    "test": {
+      "edge_classes_observed": [
+        1,
+        2,
+        3
+      ],
+      "file_sha256": "bd7a1ceb5b4ec126160bc095fb2bf28c0019a736c5575afa3ed11fb844a3aced",
+      "n_graphs": 1000,
+      "n_raw_edge_records": 49720,
+      "node_classes_observed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "physical_bonds": 24860
+    },
+    "train": {
+      "edge_classes_observed": [
+        1,
+        2,
+        3
+      ],
+      "file_sha256": "e0f1837b4a19714fcf3a5c6727a30c23f57c3398c8987cab2983214a0e76955b",
+      "n_graphs": 10000,
+      "n_raw_edge_records": 498558,
+      "node_classes_observed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "physical_bonds": 249279
+    },
+    "valid": {
+      "edge_classes_observed": [
+        1,
+        2,
+        3
+      ],
+      "file_sha256": "3f343e47281b85a52bae4b996beb8a230c3d9146d39a45f443bdc36e7e7ab809",
+      "n_graphs": 1000,
+      "n_raw_edge_records": 49692,
+      "node_classes_observed": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "physical_bonds": 24846
+    }
+  },
+  "design": {
+    "C_shape": [
+      12000,
+      9
+    ],
+    "F_shape": [
+      12000,
+      1250
+    ],
+    "Z_shape": [
+      12000,
+      4642
+    ],
+    "path": "/home/hxy/cy/research/tracks/structural-sufficiency/structural_gain_attribution_v1/data/zinc_design.npz",
+    "sha256": "167ad44e37e4e8af473873883be59c702955ee30ffee1d306cb958ae7a922723",
+    "size_bytes": 2177332
+  },
+  "environment": {
+    "cpu_count": 104,
+    "cuda_available": true,
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.8.0-138-generic-x86_64-with-glibc2.35",
+    "python": "3.12.14",
+    "rdkit": null,
+    "scipy": "1.14.1",
+    "sklearn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "8b68632dbd346dd3b1f5b10e1b3603cc3d6f2036",
+    "dirty_tracked": false,
+    "status_short": []
+  },
+  "label": {
+    "max": 3.8048393726348877,
+    "min": -42.036563873291016,
+    "test_mean": 0.012414389703422785,
+    "train_mean": 0.015297334436047822,
+    "train_std": 2.0108199121156365,
+    "units": "PyG ZINC subset=True `y` as provided (upstream log-modulus transformed)",
+    "valid_mean": 0.031454658214992375
+  },
+  "phase": "C prep: ZINC fixed representation",
+  "round_id": "structural-gain-attribution-v1",
+  "seconds": 21.64445051504299,
+  "split": {
+    "no_re_split": true,
+    "rows_sha256": {
+      "test": "c24d11aefc0c4a9fc5073b2c8a1060096c68c652ff89b8039ede495d78e68025",
+      "train": "9e1c19b3fdc185411bd1a987deb6a9fda2531116aac060a84c4d878854d1c099",
+      "valid": "4579b86959bbf589a4be4f514f97060a12e706576d267897d3809a219f46dd3a"
+    },
+    "sizes": {
+      "test": 1000,
+      "train": 10000,
+      "valid": 1000
+    },
+    "source": "PyG ZINC(subset=True) official split, row order train/valid/test"
+  }
+}

@@ -36,5 +36,29 @@ rr run res sga1-pB-N0   --pool res-gpu1  --gpus 1 --result <round>/runs -- \
    python -m run_phaseB_mlp --arm N0
 rr run res sga1-pC-prep --pool res-local --cpus 16 --mem 32G --result <round>/data -- \
    python -m run_phaseC_zinc_prep
-uv run pytest -q tracks/structural-sufficiency/structural_gain_attribution_v1/tests
+# after `rr pull`, copy the JSON/npz back into runs/ and data/, then:
+PYTHONPATH=code uv run python -m run_analysis_abc   # metrics, contrasts, bootstraps, curves
+PYTHONPATH=code uv run python -m run_phaseD         # structure classes, subgroups, cases, figures
+PYTHONPATH=code uv run python -m record_provenance  # analysis/provenance.json
+PYTHONPATH=code uv run python -m write_configs      # configs/protocol.json
+PYTHONPATH=code uv run pytest -q tests              # 18 CPU invariants
 ```
+
+## Deliverables
+
+| path | what |
+|---|---|
+| `PROTOCOL.md` / `configs/protocol.json` | frozen protocol (narrative + machine-readable) |
+| `REPORT.md` | six answers, belief-update table, per-phase numbers and boundaries |
+| `ERRATA.md` + `analysis/registry_v1/` | display-layer correction of MSDS-v0 |
+| `analysis/predictions/*.npz` | per-molecule predictions, every arm, every split |
+| `analysis/curves/` | per-epoch validation curves (Phase B / Phase C MLPs) |
+| `analysis/*.json`, `analysis/*.csv` | metrics, contrasts, bootstraps, OOV, Phase D |
+| `analysis/figures/` | `d1_family_gain.png`, `d2_coverage_gain.png` |
+| `analysis/provenance.json` | commit, data identity, environment, jobs, GPU hours |
+| `bundle/sav1_inputs.npz` | label-free input bundle (all MolHIV design blocks) |
+| `data/zinc_design.npz` | label-free ZINC design (bit-identical local/remote build) |
+| `tests/test_sga_core.py` | 18 CPU invariants (decoding, PRES, MC↔binary, WL, MLP init, bootstrap, OOV, ZINC) |
+
+`runs/` (booster dumps, checkpoints, raw remote payloads) stays local by repository
+convention; everything needed to re-derive a reported number is under `analysis/`.

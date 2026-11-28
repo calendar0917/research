@@ -1,0 +1,364 @@
+{
+  "round_id": "structural-gain-attribution-v1",
+  "seed": 0,
+  "predecessor": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0",
+  "evidence_labels": {
+    "X0": "EXACT_MATCH",
+    "X-CF": "SAME_SPLIT_REFERENCE",
+    "new_arms": "SAME_SPLIT_REFERENCE",
+    "historical_zinc": "HISTORICAL_REFERENCE",
+    "test_split": "EXPOSED_DEVELOPMENT_TEST"
+  },
+  "molhiv": {
+    "splits": {
+      "train": 32901,
+      "valid": 4113,
+      "test": 4113
+    },
+    "n_positive": {
+      "train": 1232,
+      "valid": 81,
+      "test": 130
+    },
+    "frozen_blocks": {
+      "H": {
+        "n_columns": 2258,
+        "source": "MSDS-v0 historical features (median-imputed)"
+      },
+      "C": {
+        "n_columns": 754,
+        "source": "MSDS-v0 design_CF (COARSE, raw counts)"
+      },
+      "F": {
+        "n_columns": 3652,
+        "source": "MSDS-v0 design_CF (FULL, raw counts)"
+      }
+    },
+    "new_representations": {
+      "MC": {
+        "n_columns": 2048,
+        "definition": "GetHashedMorganFingerprint(radius=2, nBits=2048) counts, raw (not scaled)"
+      },
+      "MU": {
+        "n_columns": 4406,
+        "definition": "GetMorganFingerprint(radius=2) unfolded counts, Train document frequency Top-4406 (min df 5), ties by ascending env hash"
+      },
+      "WL": {
+        "n_columns": 4406,
+        "definition": "attributed rooted 1-WL rounds 0/1/2 over OGB FULL atom+bond attributes, blake2b-16 signatures, per-round Train df, global Train df Top-4406"
+      },
+      "PRES": {
+        "n_columns": 4406,
+        "definition": "1/sqrt(n_atoms) on the support of the raw C+F count vector"
+      }
+    },
+    "xgboost_recipe": {
+      "objective": "binary:logistic",
+      "n_estimators": 500,
+      "max_depth": 5,
+      "learning_rate": 0.03,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "reg_lambda": 5.0,
+      "tree_method": "hist",
+      "random_state": 0,
+      "early_stopping": null,
+      "n_jobs": 8
+    },
+    "xgb_arms": {
+      "X0": {
+        "blocks": [
+          "H"
+        ],
+        "role": "reused historical model (EXACT_MATCH)"
+      },
+      "X-CF": {
+        "blocks": [
+          "H",
+          "C",
+          "F"
+        ],
+        "role": "reused MSDS-v0 XGB_STRUCT"
+      },
+      "X-MC": {
+        "blocks": [
+          "H",
+          "MC"
+        ],
+        "role": "new"
+      },
+      "X-MU": {
+        "blocks": [
+          "H",
+          "MU"
+        ],
+        "role": "new"
+      },
+      "X-WL": {
+        "blocks": [
+          "H",
+          "WL"
+        ],
+        "role": "new"
+      },
+      "X-C": {
+        "blocks": [
+          "H",
+          "C"
+        ],
+        "role": "new"
+      },
+      "X-F": {
+        "blocks": [
+          "H",
+          "F"
+        ],
+        "role": "new"
+      },
+      "X-PRES": {
+        "blocks": [
+          "H",
+          "PRES"
+        ],
+        "role": "new"
+      }
+    },
+    "mlp": {
+      "architecture": "Linear->128->ReLU->Dropout(0.1)->128->ReLU->Dropout(0.1)->1",
+      "hidden": 128,
+      "dropout": 0.1,
+      "extra_branch": "W_Q zero-initialised; W_H/H2/out initialised identically across arms",
+      "optimizer": "AdamW",
+      "lr": 0.001,
+      "weight_decay": 0.0001,
+      "batch_size": 256,
+      "epochs": 50,
+      "grad_clip": 5.0,
+      "loss": "class-balanced BCEWithLogitsLoss(mean weight 1, Train positives only)",
+      "selection": "best Valid ROC-AUC checkpoint, every epoch",
+      "arms": {
+        "N0": [
+          "H"
+        ],
+        "N-WL": [
+          "H",
+          "WL"
+        ],
+        "N-CF": [
+          "H",
+          "C",
+          "F"
+        ]
+      }
+    },
+    "contrasts": [
+      [
+        "X-CF",
+        "X-MC"
+      ],
+      [
+        "X-MU",
+        "X-MC"
+      ],
+      [
+        "X-CF",
+        "X-MU"
+      ],
+      [
+        "X-CF",
+        "X-WL"
+      ],
+      [
+        "X-CF",
+        "X-C"
+      ],
+      [
+        "X-CF",
+        "X-F"
+      ],
+      [
+        "X-CF",
+        "X-PRES"
+      ],
+      [
+        "X-MC",
+        "X0"
+      ],
+      [
+        "X-MU",
+        "X0"
+      ],
+      [
+        "X-WL",
+        "X0"
+      ],
+      [
+        "X-C",
+        "X0"
+      ],
+      [
+        "X-F",
+        "X0"
+      ],
+      [
+        "X-PRES",
+        "X0"
+      ],
+      [
+        "X-CF",
+        "X0"
+      ]
+    ],
+    "contrasts_mlp": [
+      [
+        "N-CF",
+        "N0"
+      ],
+      [
+        "N-WL",
+        "N0"
+      ],
+      [
+        "N-CF",
+        "N-WL"
+      ]
+    ],
+    "bootstrap": {
+      "scheme": "paired scaffold bootstrap",
+      "n_boot": 1000,
+      "tail": "percentile 2.5/97.5"
+    }
+  },
+  "zinc": {
+    "source": "PyG ZINC(subset=True) processed/{train,val,test}.pt",
+    "splits": {
+      "train": 10000,
+      "valid": 1000,
+      "test": 1000
+    },
+    "target": "log-modulus transformed y as shipped by PyG upstream",
+    "Z": {
+      "n_columns": 4642,
+      "wl_rounds": 3,
+      "wl_top_k": 2048,
+      "columns": {
+        "edge_class_counts": 3,
+        "n_atoms": 1,
+        "n_bonds": 1,
+        "node_class_counts": 21,
+        "typed_wl_counts": 4616
+      },
+      "n_selected_by_round": {
+        "0": 21,
+        "1": 499,
+        "2": 2048,
+        "3": 2048
+      }
+    },
+    "Z_CF": {
+      "families": [
+        "size-2",
+        "size-3",
+        "size-4",
+        "cycle-5",
+        "cycle-6"
+      ],
+      "coarse": "topology only",
+      "full": "topology + native node/bond classes",
+      "gates": {
+        "coarse_min_df": 20,
+        "full_min_df": 5,
+        "min_scaffold": null
+      },
+      "n_full_columns": 1250,
+      "n_coarse_columns": 9,
+      "n_instances": 1369355,
+      "full_to_coarse_conflicts": {
+        "conflicts": 0,
+        "rule": "deterministic projection: the instance node set + internal bonds are re-canonicalised without node/edge attributes",
+        "types_without_retained_parent": 0
+      },
+      "filters": {
+        "coarse": {
+          "max_types_per_family": 256,
+          "min_document_frequency_train": 20
+        },
+        "full": {
+          "max_types_per_family": 1024,
+          "min_document_frequency_train": 5,
+          "requires_coarse_parent_retained": true
+        },
+        "ranking": "document_frequency desc, 64-bit digest of the canonical key asc",
+        "scaffold_gate": "dropped: ZINC has no reliable scaffold identity (document-frequency gate only)"
+      }
+    },
+    "xgb_recipe": {
+      "objective": "reg:absoluteerror",
+      "n_estimators": 500,
+      "max_depth": 5,
+      "learning_rate": 0.03,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "reg_lambda": 5.0,
+      "tree_method": "hist"
+    },
+    "mlp": {
+      "architecture": "same as MolHIV",
+      "loss": "L1",
+      "target_scaling": "Train-only z-score"
+    },
+    "arms": [
+      "ZX0",
+      "ZX1",
+      "ZN0",
+      "ZN1"
+    ],
+    "bootstrap": {
+      "scheme": "paired molecule bootstrap",
+      "n_boot": 1000,
+      "statistic": "delta_mae = MAE(b) - MAE(a); positive = arm a better"
+    }
+  },
+  "phase_d": {
+    "structure_classes": "per (arm, block, family): columns used and tree gain share",
+    "subgroups": {
+      "edges_from": "Train quantiles",
+      "size_bins": 5,
+      "coverage_bins": [
+        0.0,
+        0.25,
+        0.5,
+        0.75,
+        1.0
+      ],
+      "never_seen_bins": [
+        0.0,
+        0.02,
+        0.1,
+        0.3,
+        1.0
+      ],
+      "min_n_for_auc": 30
+    },
+    "cases": {
+      "n_supported_types": 3,
+      "n_granularity_families": 3,
+      "n_improved": 3,
+      "n_worsened": 3,
+      "definition": "largest |p_XCF - p_X0| whose sign moves toward the true label (improved) or away from it (worsened)"
+    }
+  },
+  "budget": {
+    "wall_clock_hours": 4,
+    "gpu_hours": 4,
+    "new_xgb": 8,
+    "new_mlp": 5
+  },
+  "decision_rules": {
+    "P1": "quantity value = X-CF - X-PRES (and X-MC - X0 for the ordinary-count route)",
+    "P2": "subgraph value = X-CF - max(X-MU, X-WL); requires CI excluding 0 on BOTH splits",
+    "P3": "MLP: same-sign delta vs XGB, and >60% of the XGB AUC delta, is required for 'structure transfers'",
+    "P4": "ZINC: improvement on both splits (delta_mae > 0, CI excluding 0) required",
+    "test_rule": "Test never selects anything; a Valid/Test sign or CI conflict is reported as SPLIT_CONFLICT and neither side is chosen"
+  }
+}

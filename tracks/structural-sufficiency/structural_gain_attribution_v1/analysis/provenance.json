@@ -1,0 +1,827 @@
+{
+  "budget": {
+    "caps": {
+      "gpu_hours": 4,
+      "new_mlp": 5,
+      "new_xgb": 8,
+      "wall_clock_hours": 4
+    },
+    "gpu_hours_used": 0.06861111111111111,
+    "input_caches_built_once": [
+      "bundle/sav1_inputs.npz",
+      "data/zinc_design.npz"
+    ],
+    "new_mlp_models": 5,
+    "new_xgboost_models": 8,
+    "reused_models_not_refitted": [
+      "X0 (historical XGBoost)",
+      "X-CF (MSDS-v0 XGB_STRUCT)"
+    ]
+  },
+  "created_utc": "2026-11-28T09:33:31Z",
+  "data_identity": {
+    "frozen_predecessor_assets": {
+      "design_CF_sha256": "a30e18ebffb3c2b1a06c50f18048a2614268d62d3552a39b7842bb8d3ca480b7",
+      "historical_features_sha256": "7498757ee2d8b6dd0dc3182213995150182ab5b419844c3d55b2a66d044e5071",
+      "historical_manifest_sha256": "12f526d7329ea5051576f8af0f7f681283dde2c32684e50e403e06be3b0d9e60",
+      "phaseA_instances_sha256": "4f6e703251eaa27abfec46fbe63062b827861b7de9f735fded0ae739aba6e4e3",
+      "phaseD_xgb_predictions_sha256": "76788ab7be4e8ec4bf6547ee4a4f85f5c1f9767321a74422964337ae96af9c4a",
+      "vocab_sha256": "66dfc9952d2dbd6d68bd2c3c83c297694fc58589c1fffbfd61eb25429c275c3e"
+    },
+    "input_bundle": {
+      "meta_sha256": "b71c1b203426e8fba7484cf68654cf2060077ce1f45b6b0012a30557c16d71a9",
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/bundle/sav1_inputs.npz",
+      "sha256": "6b19265ed31b11d7679269368f29e606a50fcfee0357760257127c306d2d7bff",
+      "size_bytes": 30328577
+    },
+    "molhiv": {
+      "source": "data/ogb/ogbg_molhiv (official scaffold split)",
+      "splits": {
+        "max": {
+          "test": 10125,
+          "train": 41126,
+          "valid": 22788
+        },
+        "min": {
+          "test": 0,
+          "train": 3,
+          "valid": 10127
+        },
+        "sha256": {
+          "test": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+          "train": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+          "valid": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+        },
+        "sizes": {
+          "test": 4113,
+          "train": 32901,
+          "valid": 4113
+        },
+        "union_size": 41127
+      }
+    },
+    "zinc": {
+      "no_re_split": true,
+      "rows_sha256": {
+        "test": "c24d11aefc0c4a9fc5073b2c8a1060096c68c652ff89b8039ede495d78e68025",
+        "train": "9e1c19b3fdc185411bd1a987deb6a9fda2531116aac060a84c4d878854d1c099",
+        "valid": "4579b86959bbf589a4be4f514f97060a12e706576d267897d3809a219f46dd3a"
+      },
+      "sizes": {
+        "test": 1000,
+        "train": 10000,
+        "valid": 1000
+      },
+      "source": "PyG ZINC(subset=True) processed/train|val|test.pt"
+    },
+    "zinc_design": {
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/data/zinc_design.npz",
+      "sha256": "167ad44e37e4e8af473873883be59c702955ee30ffee1d306cb958ae7a922723"
+    }
+  },
+  "engineering_deviations": [
+    {
+      "affected_results": "none (the affected launches failed before writing anything)",
+      "cause": "the remote job runs from the repository root, so the round code dir is not on sys.path",
+      "fix": "commands run as `env PYTHONPATH=<round>/code python -m <module>`",
+      "what": "`rr run ... -- python -m <module>` could not import the round's modules"
+    },
+    {
+      "affected_results": "none",
+      "cause": "MSDS-v0 wrote Phase-E outputs into the remote checkout",
+      "fix": "moved to /home/hxy/sga1_orphans/ (preserved, never deleted); the same files already exist locally under .rr/pulled/phaseE-*",
+      "what": "remote checkout had an untracked MSDS-v0 Phase-E directory that blocked deploy"
+    },
+    {
+      "affected_results": "none (the model features were already built from the projected key)",
+      "cause": "FULL and COARSE canonical forms use different node orderings, so comparing edge index lists is not a valid projection test",
+      "fix": "replaced by the predecessor's conflict check: a FULL key may only ever map to one projected COARSE key (measured conflicts = 0)",
+      "what": "ZINC FULL->COARSE projection verification was initially a topology comparison"
+    },
+    {
+      "affected_results": "negligible hash-collision probability (~1e-8 for 2.3 k types); no observed anomaly",
+      "cause": "worker payload size (2.4 M instances) and deterministic tie-breaking",
+      "fix": "documented in the ZINC prep meta; the digest is a projection of the complete invariant, used as a dictionary key and tie-break only",
+      "what": "ZINC type identity is keyed by a 64-bit digest of the canonical key"
+    }
+  ],
+  "environment_local": {
+    "cpu_count": 16,
+    "cuda_available": false,
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scipy": "1.14.1",
+    "sklearn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "execution": {
+    "gpu_hours_total": 0.06861111111111111,
+    "gpu_seconds_total": 247.0,
+    "jobs": [
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855753.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pA-X-C",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pA-X-C-20261128-164842-b51564b0",
+        "started_at": 1795855724.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855846.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pA-X-F",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pA-X-F-20261128-164849-58ea8e49",
+        "started_at": 1795855731.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855777.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pA-X-MC",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pA-X-MC-20261128-164805-ff3aed18",
+        "started_at": 1795855687.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855812.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pA-X-MU",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pA-X-MU-20261128-164812-87b95e45",
+        "started_at": 1795855694.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855853.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pA-X-PRES",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pA-X-PRES-20261128-164855-1b6def11",
+        "started_at": 1795855737.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795856043.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pA-X-WL-b",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pA-X-WL-b-20261128-165205-78ac12bf",
+        "started_at": 1795855926.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795856002.0,
+        "cuda_visible_devices": "0",
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pB-N-CF",
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "run_id": "sga1-pB-N-CF-20261128-165154-81321aa3",
+        "started_at": 1795855916.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855974.0,
+        "cuda_visible_devices": "1",
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pB-N-WL",
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "run_id": "sga1-pB-N-WL-20261128-165147-715d0e3b",
+        "started_at": 1795855909.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855951.0,
+        "cuda_visible_devices": "1",
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pB-N0",
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "run_id": "sga1-pB-N0-20261128-165140-c3d6e3c3",
+        "started_at": 1795855902.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795856368.0,
+        "cuda_visible_devices": "1",
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pC-ZN0",
+        "node": "a100-2",
+        "pool": "res-gpu1",
+        "run_id": "sga1-pC-ZN0-20261128-165907-2817841d",
+        "started_at": 1795856349.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795856385.0,
+        "cuda_visible_devices": "0",
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pC-ZN1",
+        "node": "a100-2",
+        "pool": "res-gpu0",
+        "run_id": "sga1-pC-ZN1-20261128-165915-8a542971",
+        "started_at": 1795856357.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795856358.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pC-ZX0",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pC-ZX0-20261128-165853-d53dee7f",
+        "started_at": 1795856335.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795856391.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pC-ZX1",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pC-ZX1-20261128-165900-ddb9e196",
+        "started_at": 1795856342.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      },
+      {
+        "commit": "8b68632dbd34",
+        "completed_at": 1795855707.0,
+        "cuda_visible_devices": null,
+        "driver_version": "550.163.01",
+        "exit_code": 0,
+        "experiment": "sga1-pC-prep",
+        "node": "a100-2",
+        "pool": "res-local",
+        "run_id": "sga1-pC-prep-20261128-164758-0d289f3c",
+        "started_at": 1795855681.0,
+        "state": "completed",
+        "torch_cuda": "12.4",
+        "torch_version": "2.5.1+cu124"
+      }
+    ],
+    "n_jobs": 14,
+    "note": "every job ran on the same host+dependency regime, so all numbers in this round are mutually comparable",
+    "regime": "res / a100-2; pools res-local (CPU), res-gpu0 + res-gpu1 (1 A100 each); driver 550.163.01; torch 2.5.1+cu124"
+  },
+  "git": {
+    "code_revision_used_by_all_remote_runs": "8b68632dbd346dd3b1f5b10e1b3603cc3d6f2036",
+    "note": "every rr job was launched from that committed revision (rr refuses dirty revisions); the analysis/report files in this directory were produced locally afterwards, from the pulled per-molecule predictions",
+    "working_tree_at_generation": {
+      "branch": "main",
+      "commit": "8b68632dbd346dd3b1f5b10e1b3603cc3d6f2036",
+      "dirty_tracked": true,
+      "status_short": [
+        "M .gitignore",
+        " M tracks/structural-sufficiency/structural_gain_attribution_v1/PROTOCOL.md",
+        " M tracks/structural-sufficiency/structural_gain_attribution_v1/README.md",
+        " M tracks/structural-sufficiency/structural_gain_attribution_v1/code/sga_chem.py",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/ERRATA.md",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/REPORT.md",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/code/record_provenance.py",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/code/run_analysis_abc.py",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/code/run_p0_chem_errata.py",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/code/run_p0_oov.py",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/code/run_phaseD.py",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/code/write_configs.py",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/configs/",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/data/",
+        "?? tracks/structural-sufficiency/structural_gain_attribution_v1/tests/"
+      ]
+    }
+  },
+  "round_id": "structural-gain-attribution-v1",
+  "runs": {
+    "N-CF": {
+      "arm": "N-CF",
+      "best_epoch": 3,
+      "device": "cuda",
+      "extra_blocks": [
+        "C",
+        "F"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/N-CF.npz",
+      "parameters": {
+        "per_module": {
+          "h2": 16512,
+          "out": 129,
+          "w_h": 289152,
+          "w_q": 563968
+        },
+        "total": 869761
+      },
+      "phase": "B: MLP readout on the Phase-A inputs",
+      "recipe": {
+        "batch_size": 256,
+        "checkpoint": "best Valid ROC-AUC, ties to the earlier epoch",
+        "dropout": 0.1,
+        "early_stopping": null,
+        "epochs": 50,
+        "grad_clip": 5.0,
+        "loss": "class-balanced BCE (Train only, mean weight 1)",
+        "lr": 0.001,
+        "optimizer": "AdamW",
+        "scheduler": null,
+        "weight_decay": 0.0001
+      },
+      "recorded_metrics": {
+        "test": 0.7784700361150273,
+        "train": 0.9850509049982509,
+        "valid": 0.8328128061924358
+      },
+      "seconds_on_device": 82.02016852120869,
+      "shared_init_hash": "62f16f5a9ee0927cbd469bd19f5071a204958b9ce7e174be782e1a5fc17589fe"
+    },
+    "N-WL": {
+      "arm": "N-WL",
+      "best_epoch": 5,
+      "device": "cuda",
+      "extra_blocks": [
+        "WL"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/N-WL.npz",
+      "parameters": {
+        "per_module": {
+          "h2": 16512,
+          "out": 129,
+          "w_h": 289152,
+          "w_q": 563968
+        },
+        "total": 869761
+      },
+      "phase": "B: MLP readout on the Phase-A inputs",
+      "recipe": {
+        "batch_size": 256,
+        "checkpoint": "best Valid ROC-AUC, ties to the earlier epoch",
+        "dropout": 0.1,
+        "early_stopping": null,
+        "epochs": 50,
+        "grad_clip": 5.0,
+        "loss": "class-balanced BCE (Train only, mean weight 1)",
+        "lr": 0.001,
+        "optimizer": "AdamW",
+        "scheduler": null,
+        "weight_decay": 0.0001
+      },
+      "recorded_metrics": {
+        "test": 0.7626122559338728,
+        "train": 0.9956188464035253,
+        "valid": 0.8323504556143445
+      },
+      "seconds_on_device": 60.34175533009693,
+      "shared_init_hash": "62f16f5a9ee0927cbd469bd19f5071a204958b9ce7e174be782e1a5fc17589fe"
+    },
+    "N0": {
+      "arm": "N0",
+      "best_epoch": 3,
+      "device": "cuda",
+      "extra_blocks": [],
+      "metrics_recomputed_from": "analysis/predictions/N0.npz",
+      "parameters": {
+        "per_module": {
+          "h2": 16512,
+          "out": 129,
+          "w_h": 289152
+        },
+        "total": 305793
+      },
+      "phase": "B: MLP readout on the Phase-A inputs",
+      "recipe": {
+        "batch_size": 256,
+        "checkpoint": "best Valid ROC-AUC, ties to the earlier epoch",
+        "dropout": 0.1,
+        "early_stopping": null,
+        "epochs": 50,
+        "grad_clip": 5.0,
+        "loss": "class-balanced BCE (Train only, mean weight 1)",
+        "lr": 0.001,
+        "optimizer": "AdamW",
+        "scheduler": null,
+        "weight_decay": 0.0001
+      },
+      "recorded_metrics": {
+        "test": 0.7653701307479867,
+        "train": 0.9846599649048415,
+        "valid": 0.8294446893983931
+      },
+      "seconds_on_device": 44.01351821213029,
+      "shared_init_hash": "62f16f5a9ee0927cbd469bd19f5071a204958b9ce7e174be782e1a5fc17589fe"
+    },
+    "X-C": {
+      "arm": "X-C",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [
+        "C"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/X-C.npz",
+      "parameters": null,
+      "phase": "A: XGBoost gain attribution",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "eval_metric": "logloss",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "binary:logistic",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.7926669112960851,
+        "train": 0.9785068810377472,
+        "valid": 0.8444756760728983
+      },
+      "seconds_on_device": 25.775304046925157,
+      "shared_init_hash": null
+    },
+    "X-F": {
+      "arm": "X-F",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [
+        "F"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/X-F.npz",
+      "parameters": null,
+      "phase": "A: XGBoost gain attribution",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "eval_metric": "logloss",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "binary:logistic",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.8002356167558277,
+        "train": 0.9774341473676786,
+        "valid": 0.8325954095630022
+      },
+      "seconds_on_device": 112.35556983505376,
+      "shared_init_hash": null
+    },
+    "X-MC": {
+      "arm": "X-MC",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [
+        "MC"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/X-MC.npz",
+      "parameters": null,
+      "phase": "A: XGBoost gain attribution",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "eval_metric": "logloss",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "binary:logistic",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.7800285830162805,
+        "train": 0.9765677638380439,
+        "valid": 0.8357216343327454
+      },
+      "seconds_on_device": 86.43654435593635,
+      "shared_init_hash": null
+    },
+    "X-MU": {
+      "arm": "X-MU",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [
+        "MU"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/X-MU.npz",
+      "parameters": null,
+      "phase": "A: XGBoost gain attribution",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "eval_metric": "logloss",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "binary:logistic",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.7857239421387049,
+        "train": 0.9757555757340642,
+        "valid": 0.8240557025279246
+      },
+      "seconds_on_device": 115.13254435290582,
+      "shared_init_hash": null
+    },
+    "X-PRES": {
+      "arm": "X-PRES",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [
+        "PRES"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/X-PRES.npz",
+      "parameters": null,
+      "phase": "A: XGBoost gain attribution",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "eval_metric": "logloss",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "binary:logistic",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.7930493057030842,
+        "train": 0.9768657938259915,
+        "valid": 0.8212050509504213
+      },
+      "seconds_on_device": 112.8332504441496,
+      "shared_init_hash": null
+    },
+    "X-WL": {
+      "arm": "X-WL",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [
+        "WL"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/X-WL.npz",
+      "parameters": null,
+      "phase": "A: XGBoost gain attribution",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "device": "cpu",
+        "eval_metric": "logloss",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "binary:logistic",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.7887425404121363,
+        "train": 0.9765273959991193,
+        "valid": 0.830470434058397
+      },
+      "seconds_on_device": 113.4386901089456,
+      "shared_init_hash": null
+    },
+    "ZN0": {
+      "arm": "ZN0",
+      "best_epoch": 18,
+      "device": "cuda",
+      "extra_blocks": [],
+      "metrics_recomputed_from": "analysis/predictions/ZN0.npz",
+      "parameters": {
+        "per_module": {
+          "h2": 16512,
+          "out": 129,
+          "w_h": 594304
+        },
+        "total": 610945
+      },
+      "phase": "C: ZINC transfer (MLP)",
+      "recipe": {
+        "batch_size": 256,
+        "checkpoint": "best Valid MAE (original units), ties to the earlier epoch",
+        "dropout": 0.1,
+        "early_stopping": null,
+        "epochs": 50,
+        "grad_clip": 5.0,
+        "loss": "L1 on the Train-standardised target",
+        "lr": 0.001,
+        "optimizer": "AdamW",
+        "scheduler": null,
+        "weight_decay": 0.0001
+      },
+      "recorded_metrics": {
+        "test": 0.29923722923823426,
+        "train": 0.19285156991544117,
+        "valid": 0.30046031325876194
+      },
+      "seconds_on_device": 15.049264600966126,
+      "shared_init_hash": "4a3ca9b22ac13c01f4f709f928216d7ea28a4796a70c7101f98287ab202e8890"
+    },
+    "ZN1": {
+      "arm": "ZN1",
+      "best_epoch": 46,
+      "device": "cuda",
+      "extra_blocks": [
+        "C",
+        "F"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/ZN1.npz",
+      "parameters": {
+        "per_module": {
+          "h2": 16512,
+          "out": 129,
+          "w_h": 594304,
+          "w_q": 161152
+        },
+        "total": 772097
+      },
+      "phase": "C: ZINC transfer (MLP)",
+      "recipe": {
+        "batch_size": 256,
+        "checkpoint": "best Valid MAE (original units), ties to the earlier epoch",
+        "dropout": 0.1,
+        "early_stopping": null,
+        "epochs": 50,
+        "grad_clip": 5.0,
+        "loss": "L1 on the Train-standardised target",
+        "lr": 0.001,
+        "optimizer": "AdamW",
+        "scheduler": null,
+        "weight_decay": 0.0001
+      },
+      "recorded_metrics": {
+        "test": 0.2743667242354988,
+        "train": 0.11204135091691841,
+        "valid": 0.28407192337370013
+      },
+      "seconds_on_device": 25.1195423619356,
+      "shared_init_hash": "4a3ca9b22ac13c01f4f709f928216d7ea28a4796a70c7101f98287ab202e8890"
+    },
+    "ZX0": {
+      "arm": "ZX0",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [],
+      "metrics_recomputed_from": "analysis/predictions/ZX0.npz",
+      "parameters": null,
+      "phase": "C: ZINC transfer (XGB)",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "dense": true,
+        "device": "cpu",
+        "eval_metric": "mae",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "reg:absoluteerror",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.5011516068670607,
+        "train": 0.3863745046877302,
+        "valid": 0.46909426426974826
+      },
+      "seconds_on_device": 19.85406300588511,
+      "shared_init_hash": null
+    },
+    "ZX1": {
+      "arm": "ZX1",
+      "best_epoch": null,
+      "device": null,
+      "extra_blocks": [
+        "C",
+        "F"
+      ],
+      "metrics_recomputed_from": "analysis/predictions/ZX1.npz",
+      "parameters": null,
+      "phase": "C: ZINC transfer (XGB)",
+      "recipe": {
+        "colsample_bytree": 0.8,
+        "dense": true,
+        "device": "cpu",
+        "eval_metric": "mae",
+        "learning_rate": 0.03,
+        "max_depth": 5,
+        "min_child_weight": 1,
+        "n_estimators": 500,
+        "n_jobs": 8,
+        "objective": "reg:absoluteerror",
+        "random_state": 0,
+        "reg_lambda": 5.0,
+        "subsample": 0.8,
+        "tree_method": "hist"
+      },
+      "recorded_metrics": {
+        "test": 0.4844754520407878,
+        "train": 0.3661240169783443,
+        "valid": 0.4690822015129379
+      },
+      "seconds_on_device": 45.54080815589987,
+      "shared_init_hash": null
+    }
+  }
+}

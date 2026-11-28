@@ -1,0 +1,79 @@
+{
+  "note": "deltas are per-molecule probability differences of the paired arms; the correlation describes where the improvement sits, not its size",
+  "question": "do XGBoost and the MLP gain from explicit structure on the same molecules?",
+  "test": {
+    "correlation_xgb_vs_mlp_delta": {
+      "pearson": 0.06786999048603908,
+      "sign_agreement": 0.5317286652078774,
+      "spearman": 0.10074022012752684
+    },
+    "evidence_label": "EXPOSED_DEVELOPMENT_TEST",
+    "mlp_add": {
+      "delta_auc": 0.013099905367040643,
+      "mean_delta_prob": 0.001760440703292011,
+      "share_positive": 0.5652808169219548
+    },
+    "n": 4113,
+    "top_decile_overlap": {
+      "jaccard": 0.11989100817438691,
+      "k": 411,
+      "n_shared": 88
+    },
+    "wl_branch": {
+      "mlp_delta_auc": -0.0027578748141138254,
+      "spearman_delta": 0.01703012648515539,
+      "xgb_delta_auc": 0.02630216883292469
+    },
+    "xgb_add": {
+      "delta_auc": 0.04452577299677474,
+      "mean_delta_prob": -0.0005296917200212786,
+      "share_positive": 0.474835886214442
+    }
+  },
+  "train_fit_vs_transfer": {
+    "N-CF": {
+      "test": 0.7784700361150273,
+      "train": 0.9850509049982509,
+      "valid": 0.8328128061924358
+    },
+    "N-WL": {
+      "test": 0.7626122559338728,
+      "train": 0.9956188464035253,
+      "valid": 0.8323504556143445
+    },
+    "N0": {
+      "test": 0.7653701307479867,
+      "train": 0.9846599649048415,
+      "valid": 0.8294446893983931
+    }
+  },
+  "valid": {
+    "correlation_xgb_vs_mlp_delta": {
+      "pearson": 0.051907688806483485,
+      "sign_agreement": 0.5280816921954777,
+      "spearman": 0.10073631488314161
+    },
+    "evidence_label": "DEVELOPMENT_VALID",
+    "mlp_add": {
+      "delta_auc": 0.003368116794042697,
+      "mean_delta_prob": -0.003353535990899408,
+      "share_positive": 0.5438852419158765
+    },
+    "n": 4113,
+    "top_decile_overlap": {
+      "jaccard": 0.12141882673942701,
+      "k": 411,
+      "n_shared": 89
+    },
+    "wl_branch": {
+      "mlp_delta_auc": 0.0029057662159513997,
+      "spearman_delta": -0.050735634515086316,
+      "xgb_delta_auc": -0.006221830295904285
+    },
+    "xgb_add": {
+      "delta_auc": -0.003779945620223546,
+      "mean_delta_prob": -0.0008305874155132536,
+      "share_positive": 0.45854607342572334
+    }
+  }
+}

@@ -280,6 +280,21 @@ the chemical object identity: MolHIV and ZINC attribute granularities differ.
 Only real implementation bugs may be fixed; each one is recorded here with its
 affected runs and the reason it cannot change a reported number.
 
+| # | what happened | fix | affects a reported number? |
+|---:|---|---|---|
+| 1 | `rr run -- python -m <module>` runs from the repository root, so the round's `code/` was not importable and the first launches died with `ModuleNotFoundError` | commands now run as `env PYTHONPATH=<round>/code python -m <module>` | no — those jobs failed before writing any file |
+| 2 | the remote checkout carried an untracked MSDS-v0 `analysis/phaseE/` directory, which blocked `rr deploy` | moved to `/home/hxy/sga1_orphans/msds_v0_phaseE_remote_only_...` (preserved, not deleted) | no |
+| 3 | the unfolded-Morgan check initially folded only the Train Top-4406 environments, producing a spurious "MC ≠ fold(MU)" warning | the identity is checked on **all** environments before truncation; it holds exactly | no — only the verification was wrong |
+| 4 | `json.dump` failed on `np.bool_` values in the meta files | explicit Python-native casts at the write sites | no |
+| 5 | `_family_label`/`canonical_key` returned a tuple where a string was expected in the Phase D case table | fixed before the case table was written | no |
+| 6 | the COARSE decoder was fed FULL-length attribute rows | `decode_atom` now takes an explicit granularity and reads only the columns that exist in that representation | no (display only, but it would have mislabelled every COARSE case) |
+| 7 | ZINC's processed files are `train.pt` / `val.pt` / `test.pt` (not `valid.pt`) | loader tries both names | no |
+| 8 | the ZINC design stored canonical keys as npz object arrays | stored as 64-bit digests of the canonical key, with deterministic tie-breaking | negligible (collision ≈ 1e-8 over 2 335 types; no anomaly observed) |
+| 9 | `[dense(b) for b in extra and blocks]` silently dropped the second block when `extra` was a single-element list | rewritten as an explicit loop; verified against the frozen design matrix | yes — it was caught by the C/F rebuild check before any model ran |
+| 10 | the ZINC paired bootstrap reported `MAE(a) − MAE(b)`, i.e. the opposite sign from MolHIV | sign convention unified to `delta = MAE(b) − MAE(a)` (positive = arm *a* better) and the analysis re-run from the stored per-molecule predictions | yes — the sign was flipped in one intermediate table; the re-run replaces it, and `REPORT.md` quotes the re-run |
+| 11 | the AST call-graph scan for "is this decoding display-only?" initially flagged every caller transitively, including `build_inputs` | the rule was narrowed to "the enclosing function's only outputs are CSV/JSON/plot labels", and the conclusion was re-derived from three independent artefacts (no string arrays in the frozen files, vocabulary re-derived from raw integer indices, design matrix rebuilt bit-identically) | no |
+| 12 | the Phase D `X-CF − X-MC` row initially printed the AP delta with the wrong sign in an intermediate table | recomputed from `analysis/contrasts_molhiv.json` | no (REPORT quotes the recomputed value) |
+
 ## 12. Pre-flight verification checklist (all machine-checked)
 
 1. official split sizes/ids and graph-index alignment (MolHIV, ZINC);

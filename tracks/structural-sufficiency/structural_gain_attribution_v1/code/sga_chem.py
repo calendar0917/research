@@ -80,11 +80,23 @@ def _lookup(table: Sequence[Any], index: int, field: str) -> Any:
 # ---------------------------------------------------------------------------
 
 
-def decode_atom(values: Sequence[int]) -> dict[str, Any]:
-    """Decode one OGB atom row (9 categorical indices) into named properties."""
+#: the raw OGB atom columns the COARSE granularity keeps (``msds_common``)
+COARSE_ATOM_FIELDS = ("atomic_num", "formal_charge", "aromatic")
+
+
+def decode_atom(values: Sequence[int], granularity: str = "FULL") -> dict[str, Any]:
+    """Decode one OGB atom row (9 FULL categorical indices, or 3 for COARSE)."""
     out: dict[str, Any] = {}
-    for field, raw in zip(ATOM_FIELDS, values):
-        out[field] = _lookup(_ATOM_TABLE[field], raw, field)
+    if granularity == "COARSE":
+        if len(values) != len(COARSE_ATOM_FIELDS):
+            raise ValueError(f"COARSE atom rows have {len(COARSE_ATOM_FIELDS)} columns, got {len(values)}")
+        for field, raw in zip(COARSE_ATOM_FIELDS, values):
+            out[field] = _lookup(_ATOM_TABLE[field], raw, field)
+        for field in ATOM_FIELDS:
+            out.setdefault(field, None)
+    else:
+        for field, raw in zip(ATOM_FIELDS, values):
+            out[field] = _lookup(_ATOM_TABLE[field], raw, field)
     z = out["atomic_num"]
     out["symbol"] = _symbol(z) if isinstance(z, int) else str(z)
     out["is_misc"] = any(v == "misc" or (isinstance(v, str) and v.startswith("OUT_OF_RANGE"))
@@ -120,7 +132,7 @@ def atom_label(values: Sequence[int], granularity: str) -> str:
     ``COARSE`` keeps what the COARSE granularity actually reads (atomic number,
     formal charge, aromatic flag); ``FULL`` keeps every decoded field.
     """
-    d = decode_atom(values)
+    d = decode_atom(values, granularity)
     sym = d["symbol"]
     if granularity == "COARSE":
         text = sym + ("ar" if d["aromatic"] else "")
@@ -184,7 +196,7 @@ def describe_key(key: tuple, granularity: str) -> dict[str, Any]:
         "node_signature": node_sig,
         "bond_signature": edge_sig,
         "atom_labels": labels,
-        "atom_details": [decode_atom(n) for n in node_part],
+        "atom_details": [decode_atom(n, granularity) for n in node_part],
         "bond_labels": [bond_label(e[2], granularity) for e in edge_part],
         "bond_details": [decode_bond(e[2]) for e in edge_part],
     }
