@@ -252,6 +252,15 @@ XGB-ALL vs H-ADD-TREE +0.094/+0.048；XGB-ALL vs H-NN-ADD +0.078/+0.013
 （Valid CI [+0.012,+0.143]，Test 跨 0）；JOINT vs ADD-NN +0.012/−0.064
 （Test 方向为加性 AP 更高）；JOINT vs BAL +0.018/+0.027。
 
+### 6.1 学习/泛化诊断：四类失败模式
+
+| 模式 | 本轮证据 | 判断 |
+|---|---|---|
+| 表达不足 | `L-NAT-RAW` Train 0.824（Valid 0.802）；`H-ADD-TREE` 500 轮 Train 0.837、仅 91 个特征、曲线仍升；`Z-NN-ADD` Train MAE 0.211 vs ZN1 0.112，Valid/Test 只差 0.009/0.005 且 CI 跨 0 | 线性与加性树受表示/容量限制；ZINC 加性约束降低 Train 拟合，但没有带来泛化收益 |
+| 优化不足 | 线性牛顿法 9–10 步、grad ≤7e-11；`H-NN-JOINT` 第 50 轮 Train 0.9999；加性树 500 轮仍在改善 | 线性与神经已充分优化；**树是例外**，500 轮不是收敛点，不能把树的差距全部归因于“缺少交互” |
+| 泛化不足 | `H-NN-JOINT` best ep4 Train 0.933 / Valid 0.819，ep50 Train 0.9999 / Test 0.774；`H-NN-ADD` best ep7 0.911 / 0.819，ep50 0.973 / 0.779；`Z-NN-ADD` best ep47 Train 0.211 / Valid 0.293 / Test 0.279 | 神经模型的主要问题是早期 epoch 之后的过拟合；best-vs-last 差距真实，但选择只用了 Valid |
+| 复杂函数无价值 | `JOINT−ADD-NN` Test AUC −0.0148 [−0.0349,+0.0070]；`XGB−ADD-NN` +0.0183 [−0.0108,+0.0526]；`Z-NN−ZN1` −0.0049 [−0.0206,+0.0100]；AP 上 JOINT 比 ADD 低 0.064（Test），XGB 比 ADD 高 0.078（Valid，CI 排除 0）/ +0.013（Test，CI 跨 0） | 在本表示与容量下，联合/复杂模型没有可检出的**稳定** AUC/MAE 增益；XGB 的 Valid AP 优势是唯一不跨 0 的复杂模型优势，不能外推为普遍价值 |
+
 **判读**：线性正则化、加性神经与 XGB 的 AUC 对比都获得支持；树与交互的差距只有
 在 Test 点估计上明显，且加性树训练拟合更低；ZINC 树差距伴随明确的容量混杂。
 bootstrap 只描述固定预测的样本不确定性，不代表跨 seed 稳定性；不显著 ≠ 等价。
