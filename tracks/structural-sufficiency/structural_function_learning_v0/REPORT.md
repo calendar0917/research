@@ -8,7 +8,7 @@ Round: `structural-function-learning-v0`；目录
 机器记录：[analysis/provenance.json](analysis/provenance.json)、
 [analysis/metrics.csv](analysis/metrics.csv)、[analysis/contrasts.json](analysis/contrasts.json)。
 
-计算窗口 21:04–22:18（约 **74 分钟**）：模型训练与分析主体在 21:52 前完成
+计算窗口 21:04–22:25（约 **80 分钟**）：模型训练与分析主体在 21:52 前完成
 （约 48 分钟，含最终 JSON 精简后的 phaseD/E 重算），provenance 21:59 组装完成，
 其余为核验、ERRATA 与报告收尾。总时长略超 60 分钟目标，但远低于 120 分钟硬上限；
 GPU 用时 **0.033 A100-hour**（两个单卡神经作业，远低于 2 h 预算）。
@@ -302,7 +302,7 @@ ADD-NN 直接读取 `f_j`。树闭合（2000 行）**7.74e-6**，神经闭合（
 
 ## 8. 预算、核验与停止
 
-* 预算：总墙钟约 74 分钟（21:04–22:18；模型/分析约 48 分钟、provenance 21:59、
+* 预算：总墙钟约 80 分钟（21:04–22:25；模型/分析约 48 分钟、provenance 21:59、
   其余为核验/ERRATA/报告），略超 60 分钟目标、低于 120 分钟硬上限；
   两个 GPU 作业合计 0.033 A100-hour；无额外 seed、
   无 Test 追加实验、无新 GNN、无结构搜索。`rr` 记录见 provenance。
