@@ -1,0 +1,103 @@
+{
+  "round_id": "molhiv-multigranular-structure-sharing-v0",
+  "seed": 0,
+  "dataset": "ogbg-molhiv",
+  "splits": {
+    "train": 32901,
+    "valid": 4113,
+    "test": 4113
+  },
+  "note_splits": "official scaffold split; sizes verified in analysis/data_audit.json",
+  "families": [
+    "size-2",
+    "size-3",
+    "size-4",
+    "cycle-5",
+    "cycle-6"
+  ],
+  "family_scope": {
+    "size-*": "all connected induced k-node subgraphs",
+    "cycle-*": "all chordless induced cycles of that length (restricted family)"
+  },
+  "granularity": {
+    "COARSE": {
+      "atom_columns": [
+        0,
+        3,
+        7
+      ],
+      "bond_columns": [
+        0
+      ]
+    },
+    "FULL": {
+      "atom_columns": "all 9",
+      "bond_columns": "all 3"
+    }
+  },
+  "vocabulary": {
+    "coarse": {
+      "min_document_frequency_train": 20,
+      "min_scaffold_frequency_train": 5,
+      "max_per_family": 256
+    },
+    "full": {
+      "min_document_frequency_train": 5,
+      "min_scaffold_frequency_train": 3,
+      "max_per_family": 1024,
+      "requires_coarse_parent_retained": true
+    }
+  },
+  "phaseB": {
+    "morgan": {
+      "radius": 2,
+      "n_bits": 2048,
+      "folded": "binary"
+    },
+    "count_standardisation": "log1p, Train mean/std",
+    "structure_scaling": "count / sqrt(max(n_atoms,1))",
+    "solver": "liblinear",
+    "penalty": "l2",
+    "class_weight": "balanced",
+    "max_iter": 2000,
+    "max_iter_retry": 5000,
+    "tol": 1e-06,
+    "C_grid": [
+      0.03,
+      0.3,
+      3.0
+    ],
+    "selection": "max Valid ROC-AUC, ties -> smaller C",
+    "support_weight": "clip(sqrt(m_med/m_f), 0.25, 4.0)"
+  },
+  "phaseD": {
+    "base": "historical ECFP4 2048 + 217 RDKit descriptors (unchanged)",
+    "model": "XGBClassifier(500, depth5, lr0.03, subsample0.8, colsample0.8, lambda5, hist, seed0)",
+    "input_format": "dense float32",
+    "historical_retrained_for_reporting": false
+  },
+  "phaseE": {
+    "trigger_valid_auc_delta": 0.005,
+    "gine": {
+      "layers": 3,
+      "hidden": 64,
+      "pool": "mean",
+      "epochs": 30,
+      "batch_size": 128,
+      "lr": 0.001,
+      "backbone_weight_decay": 0.0001,
+      "dropout": 0.0,
+      "grad_clip": 5.0,
+      "lambda": "1/(0.3*n_train)",
+      "class_balance": "train-derived, normalised",
+      "structure_input": "C+F"
+    }
+  },
+  "budgets": {
+    "wall_clock_hours": 4,
+    "gpu_a100_hours": 4,
+    "cpu_structure_minutes": 60,
+    "cpu_linear_minutes": 45,
+    "xgb_minutes": 30
+  }
+}

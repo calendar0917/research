@@ -1,0 +1,161 @@
+{
+  "coarse_matrix": {
+    "nnz": 1649530,
+    "shape": [
+      41127,
+      754
+    ]
+  },
+  "design_cache": {
+    "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/design_CF.npz",
+    "sha256": "a30e18ebffb3c2b1a06c50f18048a2614268d62d3552a39b7842bb8d3ca480b7",
+    "size_bytes": 9540990
+  },
+  "frozen_utc": "2026-11-28T04:05:32Z",
+  "full_matrix": {
+    "nnz": 2320086,
+    "shape": [
+      41127,
+      3652
+    ]
+  },
+  "git": {
+    "branch": "main",
+    "commit": "ce862239a97aef4f9a5d73daca1caf55f64bf1bb",
+    "dirty_tracked": true,
+    "status_short": [
+      "?? tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/"
+    ]
+  },
+  "n_scaffold_groups": 19083,
+  "parent_map": {
+    "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/analysis/parent_child_map.csv",
+    "sha256": "fdb6ed03fbd993b02c16f71c965cb784660097e9b492a12b85abe6721a193a51"
+  },
+  "phase": "A: vocabulary freeze + Phase B design matrices",
+  "registry": {
+    "coarse": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/analysis/structure_registry_coarse.csv",
+      "sha256": "14f51cfdac0349c7b417b34343b612ca1183c79250295d06e37952cff07b4574"
+    },
+    "full": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/analysis/structure_registry_full.csv",
+      "sha256": "cb85733933bd2550eb41d1fd29057ca36f6b15f9d7cc7b48c5f7150f8d026e74"
+    }
+  },
+  "remainder_matrix": {
+    "nnz": 382421
+  },
+  "round_id": "molhiv-multigranular-structure-sharing-v0",
+  "scaffold_meta": {
+    "acyclic_group_handling": "empty Murcko scaffold '' is ONE scaffold group; scaffold counts are not independent samples",
+    "cache_path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/molhiv_scaffolds.npz",
+    "cache_sha256": "00f87fb5021f39c598f7638fd93a50e5ecb1f73e40db799272ef432b65cd39ec",
+    "failed_handling": "kept as distinct sentinel strings; never silently dropped",
+    "impl": "rdkit.Chem.Scaffolds.MurckoScaffold.MurckoScaffoldSmiles(includeChirality=False)",
+    "n_empty_acyclic_scaffold": 1582,
+    "n_failed": 7,
+    "n_molecules": 41127,
+    "n_unique_scaffolds": 19083,
+    "rdkit_version": "2026.09.1"
+  },
+  "seconds": 9.476642673951574,
+  "verification": {
+    "c_null_preserves_per_molecule_mass": {
+      "columns": {
+        "cnull_total": 981678.38733851,
+        "coarse_total": 981678.38733851,
+        "note": "per-column totals are NOT preserved by design: each parent keeps its child COUNT but receives different children"
+      },
+      "max_abs_row_sum_difference": 4.263256414560601e-14,
+      "ok": true
+    },
+    "covered_full_leq_coarse": {
+      "max_excess": 0.0,
+      "ok": true,
+      "violations": 0
+    },
+    "fallback_rule": "an unseen FULL type is never mapped to any FULL column; its COARSE parent still counts",
+    "parent_shuffle": {
+      "definition": "permute the selected FULL types' parent labels within family, numpy default_rng(seed=0)",
+      "fraction_changed": 0.9619386637458927,
+      "n_changed": 3513,
+      "n_full_types": 3652,
+      "parents_multiset_preserved": true,
+      "strength": "ADEQUATE"
+    },
+    "scaling": {
+      "n_columns_coarse": 754,
+      "n_columns_full": 3652,
+      "scaling": "count / sqrt(max(n_atoms, 1))"
+    },
+    "support_weight_reparameterisation": {
+      "definition": "x'_f = F_f / sqrt(a_f) so that plain L2 on w equals sum_f a_f v_f^2",
+      "identity": "v_f = w_f / sqrt(a_f); z = sum_f F_f v_f = sum_f (F_f/sqrt(a_f)) w_f",
+      "ok": true
+    },
+    "vocab_invariant_to_valid_test_label_change": {
+      "ok": false,
+      "same_selection_and_weights": true,
+      "same_train_statistics": false
+    }
+  },
+  "vocab_cache": {
+    "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/vocab.npz",
+    "sha256": "66dfc9952d2dbd6d68bd2c3c83c297694fc58589c1fffbfd61eb25429c275c3e"
+  },
+  "vocabulary": {
+    "filters": {
+      "coarse": {
+        "max_types_per_family": 256,
+        "min_document_frequency_train": 20,
+        "min_scaffold_frequency_train": 5
+      },
+      "family_order": [
+        "size-2",
+        "size-3",
+        "size-4",
+        "cycle-5",
+        "cycle-6"
+      ],
+      "full": {
+        "max_types_per_family": 1024,
+        "min_document_frequency_train": 5,
+        "min_scaffold_frequency_train": 3,
+        "requires_coarse_parent_retained": true
+      },
+      "ranking": "document_frequency desc, scaffold_frequency desc, canonical key asc"
+    },
+    "median_full_scaffold_frequency_train": 87.0,
+    "n_selected_coarse": 754,
+    "n_selected_coarse_by_family": {
+      "cycle-5": 69,
+      "cycle-6": 64,
+      "size-2": 109,
+      "size-3": 256,
+      "size-4": 256
+    },
+    "n_selected_full": 3652,
+    "n_selected_full_by_family": {
+      "cycle-5": 438,
+      "cycle-6": 483,
+      "size-2": 683,
+      "size-3": 1024,
+      "size-4": 1024
+    },
+    "null_support_weight": {
+      "definition": "a_f permuted within structural family, numpy default_rng(seed=0)",
+      "fraction_changed": 0.9592004381161008,
+      "n_changed": 3503
+    },
+    "support_weight": {
+      "definition": "a_f = clip(sqrt(m_med/m_f), 0.25, 4.0); m_f = #distinct Train scaffolds of FULL type f",
+      "max": 4.0,
+      "mean": 1.5637774117440766,
+      "median": 1.0,
+      "min": 0.25,
+      "n_at_lower_clip": 73,
+      "n_at_upper_clip": 394
+    }
+  }
+}

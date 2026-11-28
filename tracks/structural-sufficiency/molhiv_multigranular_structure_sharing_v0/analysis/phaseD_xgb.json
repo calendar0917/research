@@ -1,0 +1,520 @@
+{
+  "created_utc": "2026-11-28T04:13:08Z",
+  "environment": {
+    "cpu_count": 16,
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scipy": "1.14.1",
+    "sklearn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "xgboost": "2.1.3"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "ce862239a97aef4f9a5d73daca1caf55f64bf1bb",
+    "dirty_tracked": true,
+    "status_short": [
+      "?? tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/"
+    ]
+  },
+  "historical_identity": {
+    "descriptor_names_match": true,
+    "evidence_type": "EXACT_MATCH",
+    "features_path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/cache/baseline_features/ogbg-molhiv.npz",
+    "features_sha256": "7498757ee2d8b6dd0dc3182213995150182ab5b419844c3d55b2a66d044e5071",
+    "features_shape": [
+      41127,
+      2265
+    ],
+    "keep_sha256": "cf501a299174538815af1154fe92aa3f02f072f30626110fe1d17486291f0d78",
+    "manifest": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/baseline_manifest.json",
+    "manifest_features_sha256": "7498757ee2d8b6dd0dc3182213995150182ab5b419844c3d55b2a66d044e5071",
+    "manifest_keep_sha256": "cf501a299174538815af1154fe92aa3f02f072f30626110fe1d17486291f0d78",
+    "manifest_median_sha256": "19723d5bb4ed8127a166b1aad1d07a3b7c1be5a288618b714a57f8443c44d1ec",
+    "manifest_n_dropped_columns": 7,
+    "manifest_n_used_columns": 2258,
+    "manifest_sha256": "12f526d7329ea5051576f8af0f7f681283dde2c32684e50e403e06be3b0d9e60",
+    "median_sha256": "19723d5bb4ed8127a166b1aad1d07a3b7c1be5a288618b714a57f8443c44d1ec",
+    "n_dropped_columns": 7,
+    "n_imputed_cells_train": 19379,
+    "n_used_columns": 2258,
+    "preprocessing_reproduced": true,
+    "source_round": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2"
+  },
+  "historical_refit_verification": {
+    "exact_match": true,
+    "note": "the historical XGBoost model is NOT retrained for reporting; this refit only proves EXACT_MATCH identity",
+    "recipe": {
+      "colsample_bytree": 0.8,
+      "device": "cpu",
+      "learning_rate": 0.03,
+      "max_depth": 5,
+      "min_child_weight": 1,
+      "n_estimators": 500,
+      "random_state": 0,
+      "reg_lambda": 5.0,
+      "subsample": 0.8,
+      "tree_method": "hist"
+    },
+    "refit_seconds": 106.80384158494417,
+    "splits": {
+      "test": {
+        "average_precision": 0.32099199175281623,
+        "max_abs_diff_vs_stored_predictions": 0.0,
+        "n": 4113,
+        "n_negative": 3983,
+        "n_positive": 130,
+        "recorded_roc_auc": 0.7624403715792116,
+        "roc_auc": 0.7624403715792116,
+        "status": "OK",
+        "stored_roc_auc": 0.7624403715792116,
+        "stored_rows_match": true
+      },
+      "valid": {
+        "average_precision": 0.38950454035164817,
+        "max_abs_diff_vs_stored_predictions": 0.0,
+        "n": 4113,
+        "n_negative": 4032,
+        "n_positive": 81,
+        "recorded_roc_auc": 0.8366922643543013,
+        "roc_auc": 0.8366922643543013,
+        "status": "OK",
+        "stored_roc_auc": 0.8366922643543013,
+        "stored_rows_match": true
+      }
+    }
+  },
+  "paired": {
+    "test": {
+      "bootstrap": {
+        "contrast": "XGB_STRUCT - historical_XGB",
+        "delta_average_precision": {
+          "crosses_zero": true,
+          "mean": 0.03693241488595036,
+          "p2.5": -0.0019957658550172285,
+          "p97.5": 0.07440527327894884
+        },
+        "delta_roc_auc": {
+          "crosses_zero": false,
+          "mean": 0.04506387580952703,
+          "p2.5": 0.019295893193868582,
+          "p97.5": 0.06965878662734631
+        },
+        "n_bootstrap": 1000,
+        "n_invalid_two_class_missing": 0,
+        "n_scaffold_groups": 4112,
+        "n_valid": 1000,
+        "note": "bootstrap describes sampling uncertainty of fixed predictions; not training-seed stability",
+        "point": {
+          "average_precision_a": 0.359028677542692,
+          "average_precision_b": 0.32099199175281623,
+          "delta_average_precision": 0.03803668578987579,
+          "delta_roc_auc": 0.04452577299677474,
+          "roc_auc_a": 0.8069661445759864,
+          "roc_auc_b": 0.7624403715792116
+        },
+        "seed": 0
+      },
+      "evidence_label": "EXPOSED_DEVELOPMENT_TEST",
+      "historical": {
+        "average_precision": 0.32099199175281623,
+        "n": 4113,
+        "n_negative": 3983,
+        "n_positive": 130,
+        "roc_auc": 0.7624403715792116,
+        "status": "OK"
+      },
+      "xgb_struct": {
+        "average_precision": 0.359028677542692,
+        "evidence_label": "EXPOSED_DEVELOPMENT_TEST",
+        "n": 4113,
+        "n_negative": 3983,
+        "n_positive": 130,
+        "ogb_check": {
+          "abs_diff": 0.0,
+          "consistent": true,
+          "ogb_evaluator_rocauc": 0.8069661445759864,
+          "sklearn_rocauc": 0.8069661445759864
+        },
+        "roc_auc": 0.8069661445759864,
+        "status": "OK"
+      }
+    },
+    "valid": {
+      "bootstrap": {
+        "contrast": "XGB_STRUCT - historical_XGB",
+        "delta_average_precision": {
+          "crosses_zero": false,
+          "mean": 0.040691601824787774,
+          "p2.5": 0.0005043987862125805,
+          "p97.5": 0.08451824932010178
+        },
+        "delta_roc_auc": {
+          "crosses_zero": true,
+          "mean": -0.0032314237831084554,
+          "p2.5": -0.026771099270427492,
+          "p97.5": 0.022154400848223163
+        },
+        "n_bootstrap": 1000,
+        "n_invalid_two_class_missing": 0,
+        "n_scaffold_groups": 4112,
+        "n_valid": 1000,
+        "note": "bootstrap describes sampling uncertainty of fixed predictions; not training-seed stability",
+        "point": {
+          "average_precision_a": 0.4330562982524773,
+          "average_precision_b": 0.38950454035164817,
+          "delta_average_precision": 0.04355175790082916,
+          "delta_roc_auc": -0.003779945620223546,
+          "roc_auc_a": 0.8329123187340778,
+          "roc_auc_b": 0.8366922643543013
+        },
+        "seed": 0
+      },
+      "evidence_label": "DEVELOPMENT_VALID",
+      "historical": {
+        "average_precision": 0.38950454035164817,
+        "n": 4113,
+        "n_negative": 4032,
+        "n_positive": 81,
+        "roc_auc": 0.8366922643543013,
+        "status": "OK"
+      },
+      "xgb_struct": {
+        "average_precision": 0.4330562982524773,
+        "n": 4113,
+        "n_negative": 4032,
+        "n_positive": 81,
+        "ogb_check": {
+          "abs_diff": 0.0,
+          "consistent": true,
+          "ogb_evaluator_rocauc": 0.8329123187340778,
+          "sklearn_rocauc": 0.8329123187340778
+        },
+        "roc_auc": 0.8329123187340778,
+        "status": "OK"
+      }
+    }
+  },
+  "phase": "D: strong traditional baseline increment",
+  "round_id": "molhiv-multigranular-structure-sharing-v0",
+  "seconds": 248.3711632739287,
+  "xgb_struct": {
+    "dense": true,
+    "feature_usage": {
+      "historical_block_gain": 42055.77750045061,
+      "n_columns_historical": 2258,
+      "n_columns_structural": 4406,
+      "n_used_features_structural": 821,
+      "n_used_features_total": 1215,
+      "structural_block_gain": 49483.37938633561,
+      "structural_block_gain_share": 0.5405706264864953,
+      "top_structural_features": [
+        {
+          "block": "F",
+          "block_column": 2078,
+          "column": 2832,
+          "total_gain": 4687.33349609375
+        },
+        {
+          "block": "F",
+          "block_column": 2737,
+          "column": 3491,
+          "total_gain": 2673.9287109375
+        },
+        {
+          "block": "C",
+          "block_column": 419,
+          "column": 419,
+          "total_gain": 1043.9620361328125
+        },
+        {
+          "block": "F",
+          "block_column": 2048,
+          "column": 2802,
+          "total_gain": 1041.7509765625
+        },
+        {
+          "block": "C",
+          "block_column": 14,
+          "column": 14,
+          "total_gain": 913.3042602539062
+        },
+        {
+          "block": "F",
+          "block_column": 443,
+          "column": 1197,
+          "total_gain": 892.55224609375
+        },
+        {
+          "block": "F",
+          "block_column": 1773,
+          "column": 2527,
+          "total_gain": 863.8430786132812
+        },
+        {
+          "block": "F",
+          "block_column": 2038,
+          "column": 2792,
+          "total_gain": 861.0307006835938
+        },
+        {
+          "block": "C",
+          "block_column": 506,
+          "column": 506,
+          "total_gain": 837.5079956054688
+        },
+        {
+          "block": "F",
+          "block_column": 1632,
+          "column": 2386,
+          "total_gain": 756.65673828125
+        },
+        {
+          "block": "F",
+          "block_column": 1783,
+          "column": 2537,
+          "total_gain": 687.5831298828125
+        },
+        {
+          "block": "F",
+          "block_column": 2044,
+          "column": 2798,
+          "total_gain": 659.2786865234375
+        },
+        {
+          "block": "F",
+          "block_column": 185,
+          "column": 939,
+          "total_gain": 649.3932495117188
+        },
+        {
+          "block": "F",
+          "block_column": 1536,
+          "column": 2290,
+          "total_gain": 604.795654296875
+        },
+        {
+          "block": "C",
+          "block_column": 416,
+          "column": 416,
+          "total_gain": 598.0699462890625
+        },
+        {
+          "block": "C",
+          "block_column": 113,
+          "column": 113,
+          "total_gain": 533.13232421875
+        },
+        {
+          "block": "F",
+          "block_column": 1711,
+          "column": 2465,
+          "total_gain": 505.225341796875
+        },
+        {
+          "block": "F",
+          "block_column": 2218,
+          "column": 2972,
+          "total_gain": 503.71148681640625
+        },
+        {
+          "block": "F",
+          "block_column": 1113,
+          "column": 1867,
+          "total_gain": 489.8917236328125
+        },
+        {
+          "block": "F",
+          "block_column": 2116,
+          "column": 2870,
+          "total_gain": 441.68109130859375
+        },
+        {
+          "block": "C",
+          "block_column": 136,
+          "column": 136,
+          "total_gain": 411.6019592285156
+        },
+        {
+          "block": "C",
+          "block_column": 145,
+          "column": 145,
+          "total_gain": 399.253662109375
+        },
+        {
+          "block": "F",
+          "block_column": 2259,
+          "column": 3013,
+          "total_gain": 357.7223205566406
+        },
+        {
+          "block": "F",
+          "block_column": 0,
+          "column": 754,
+          "total_gain": 357.2480773925781
+        },
+        {
+          "block": "F",
+          "block_column": 918,
+          "column": 1672,
+          "total_gain": 328.7977600097656
+        },
+        {
+          "block": "F",
+          "block_column": 3169,
+          "column": 3923,
+          "total_gain": 321.2906494140625
+        },
+        {
+          "block": "F",
+          "block_column": 687,
+          "column": 1441,
+          "total_gain": 316.06488037109375
+        },
+        {
+          "block": "C",
+          "block_column": 390,
+          "column": 390,
+          "total_gain": 312.3673095703125
+        },
+        {
+          "block": "F",
+          "block_column": 2192,
+          "column": 2946,
+          "total_gain": 301.985107421875
+        },
+        {
+          "block": "F",
+          "block_column": 14,
+          "column": 768,
+          "total_gain": 289.6736755371094
+        },
+        {
+          "block": "F",
+          "block_column": 180,
+          "column": 934,
+          "total_gain": 282.9346008300781
+        },
+        {
+          "block": "F",
+          "block_column": 1212,
+          "column": 1966,
+          "total_gain": 276.5162353515625
+        },
+        {
+          "block": "F",
+          "block_column": 1708,
+          "column": 2462,
+          "total_gain": 264.4676818847656
+        },
+        {
+          "block": "C",
+          "block_column": 42,
+          "column": 42,
+          "total_gain": 261.8808898925781
+        },
+        {
+          "block": "C",
+          "block_column": 623,
+          "column": 623,
+          "total_gain": 257.691162109375
+        },
+        {
+          "block": "F",
+          "block_column": 2404,
+          "column": 3158,
+          "total_gain": 255.47015380859375
+        },
+        {
+          "block": "F",
+          "block_column": 1813,
+          "column": 2567,
+          "total_gain": 246.129638671875
+        },
+        {
+          "block": "C",
+          "block_column": 5,
+          "column": 5,
+          "total_gain": 233.9747772216797
+        },
+        {
+          "block": "C",
+          "block_column": 1,
+          "column": 1,
+          "total_gain": 223.55386352539062
+        },
+        {
+          "block": "C",
+          "block_column": 371,
+          "column": 371,
+          "total_gain": 222.7940216064453
+        }
+      ],
+      "total_gain": 91539.15688678622
+    },
+    "features": "historical 2258-column ECFP4+RDKit block (unchanged) + C + F",
+    "fit_seconds": 118.21540566405747,
+    "metrics": {
+      "test": {
+        "average_precision": 0.359028677542692,
+        "evidence_label": "EXPOSED_DEVELOPMENT_TEST",
+        "n": 4113,
+        "n_negative": 3983,
+        "n_positive": 130,
+        "ogb_check": {
+          "abs_diff": 0.0,
+          "consistent": true,
+          "ogb_evaluator_rocauc": 0.8069661445759864,
+          "sklearn_rocauc": 0.8069661445759864
+        },
+        "roc_auc": 0.8069661445759864,
+        "status": "OK"
+      },
+      "train": {
+        "average_precision": 0.7817560932111117,
+        "n": 32901,
+        "n_negative": 31669,
+        "n_positive": 1232,
+        "ogb_check": {
+          "abs_diff": 0.0,
+          "consistent": true,
+          "ogb_evaluator_rocauc": 0.9791879825943106,
+          "sklearn_rocauc": 0.9791879825943106
+        },
+        "roc_auc": 0.9791879825943107,
+        "status": "OK"
+      },
+      "valid": {
+        "average_precision": 0.4330562982524773,
+        "n": 4113,
+        "n_negative": 4032,
+        "n_positive": 81,
+        "ogb_check": {
+          "abs_diff": 0.0,
+          "consistent": true,
+          "ogb_evaluator_rocauc": 0.8329123187340778,
+          "sklearn_rocauc": 0.8329123187340778
+        },
+        "roc_auc": 0.8329123187340778,
+        "status": "OK"
+      }
+    },
+    "n_columns": 6664,
+    "recipe": {
+      "colsample_bytree": 0.8,
+      "device": "cpu",
+      "learning_rate": 0.03,
+      "max_depth": 5,
+      "min_child_weight": 1,
+      "n_estimators": 500,
+      "random_state": 0,
+      "reg_lambda": 5.0,
+      "subsample": 0.8,
+      "tree_method": "hist"
+    },
+    "sparse_missing_policy": "no sparse input: dense float32 with missing=NaN; after Train-only median imputation no cell is NaN, so every explicit zero stays the value 0. Verified that xgboost's sparse DMatrix would treat un-stored zeros as missing"
+  }
+}
