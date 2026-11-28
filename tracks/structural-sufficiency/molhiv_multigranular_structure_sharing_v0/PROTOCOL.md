@@ -258,6 +258,9 @@ datasets. Engineering errors may be fixed, with the affected runs recorded in
 | 2 | Induced-cycle enumerator initially missed cycles whose root is not the closing vertex (root chord was rejected as a chord) | fixed before any statistic was produced; `analysis/phaseA_run.json` hash `4f6e70…` is the post-fix artefact, and it is reproduced bit-identically on a rerun |
 | 3 | First `C_null` check compared columns instead of per-molecule mass | check corrected; column totals are documented as *not* preserved by design |
 | 4 | xgboost sparse input silently treated un-stored zeros as missing | measured explicitly, Phase D switched to dense (see §6) |
+| 5 | Phase E raised `CUDA error: device-side assert triggered` in the graph-branch lookup | PyG's `Data.__inc__` adds the cumulative node count to *any* attribute whose name contains `index`, so `graph_index` left its legal range. Renamed to `gid` (with a comment), no reported result affected |
+| 6 | local RDKit drawing backend unavailable (`libXrender.so.1`) | figures are laid out with `rdDepictor` and painted with matplotlib; the figure script also verifies that the RDKit atom order matches the raw OGB atom order for every drawn molecule |
+| 7 | the earlier "canonical key vs brute force" comparison reported 329/800 mismatches | the two keys are different canonical forms, so tuples need not be equal; the correct test is partition equality, now checked on 17 737 instances (`analysis/canonical_partition_check.json`) and in `tests/test_structure_core.py` |
 
 ## 10. Reproduction
 
@@ -268,7 +271,9 @@ PYTHONPATH=code python -m run_phaseA_vocab                        # ~10 s
 PYTHONPATH=code python -m run_phaseB_linear                       # ~135 s
 PYTHONPATH=code python -m build_phaseE_bundle                     # ~10 s
 PYTHONPATH=code python -m run_phaseD_xgb                          # ~250 s
-PYTHONPATH=code python -m run_phaseC_analysis                     # ~60 s
+PYTHONPATH=code python -m verify_canonical_partition              # ~5 s
+PYTHONPATH=code python -m run_phaseC_analysis                     # ~90 s (needs --group lipo for figures)
+PYTHONPATH=code python -m record_provenance                       # ~2 s
 # GPU (through rr, committed revision):
 rr run res <tag> --result <round>/runs -- python -m run_phaseE_gine --arm G-STRUCT-U --epochs 30
 uv run pytest -q tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/tests

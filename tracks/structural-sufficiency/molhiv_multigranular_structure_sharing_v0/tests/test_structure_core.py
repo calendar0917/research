@@ -73,31 +73,40 @@ def test_canonical_types_invariant_under_relabelling(molecules: D.Molecules) -> 
         assert type_counts(atom, bu, bv, bf) == type_counts(atom2, bu2, bv2, bf2), f"graph {gid} not renumbering invariant"
 
 
-def test_full_to_coarse_projection_is_consistent(molecules: D.Molecules) -> None:
-    for gid in _small_ids(molecules, n=15, max_atoms=12):
-        n = int(molecules.n_atoms[gid])
-        bu, bv, bf = molecules.bonds(gid)
-        atom = molecules.atoms(gid)
-        adj = {}
-        for a, b, f in zip(bu.tolist(), bv.tolist(), bf.tolist()):
-            adj.setdefault(a, {})[b] = tuple(int(x) for x in f)
-            adj.setdefault(b, {})[a] = tuple(int(x) for x in f)
-        for _fam, nodes in E.instances_for_molecule(n, bu, bv):
-            bond_attr = {(a, b): adj[a][b] for a in nodes for b in nodes if b > a and b in adj.get(a, {})}
-            full = E.canonical_key(nodes, atom, bond_attr, tuple(range(9)), (0, 1, 2))
-            coarse_restricted = E.canonical_key(nodes, atom, bond_attr, C.COARSE_ATOM_COLUMNS, C.COARSE_BOND_COLUMNS)
-            # projecting the FULL type's attributes and re-canonicalising must agree
-            # for *every* permutation consistent with the FULL canonical order,
-            # including the global minimum over all permutations
-            assert E.brute_force_key(nodes, atom, bond_attr, C.COARSE_ATOM_COLUMNS, C.COARSE_BOND_COLUMNS) == E.brute_force_key(
-                nodes, atom, bond_attr, C.COARSE_ATOM_COLUMNS, C.COARSE_BOND_COLUMNS
-            )
-            assert coarse_restricted is not None and full is not None
-            # the same instance must always project to one COARSE type
-            key_pairs = {
-                (full, E.brute_force_key(nodes, atom, bond_attr, C.COARSE_ATOM_COLUMNS, C.COARSE_BOND_COLUMNS))
-            }
-            assert len(key_pairs) == 1
+def test_canonical_key_partition_matches_full_permutation_minimum(molecules: D.Molecules) -> None:
+    """``canonical_key`` and the naive all-permutations minimum must induce the *same* partition.
+
+    They are different canonical forms (``canonical_key`` only permutes inside
+    1-WL cells), so their tuple values need not be equal -- comparing tuples
+    would be the wrong test.  What has to hold is that two instances share a
+    canonical key iff they share a brute-force key.
+    """
+    for gran, atom_cols, bond_cols in (
+        ("COARSE", C.COARSE_ATOM_COLUMNS, C.COARSE_BOND_COLUMNS),
+        ("FULL", tuple(range(9)), (0, 1, 2)),
+    ):
+        canon: list[tuple] = []
+        brute: list[tuple] = []
+        for gid in _small_ids(molecules, n=6, max_atoms=12):
+            n = int(molecules.n_atoms[gid])
+            bu, bv, bf = molecules.bonds(gid)
+            atom = molecules.atoms(gid)
+            adj: dict[int, dict[int, tuple]] = {}
+            for a, b, f in zip(bu.tolist(), bv.tolist(), bf.tolist()):
+                adj.setdefault(a, {})[b] = tuple(int(x) for x in f)
+                adj.setdefault(b, {})[a] = tuple(int(x) for x in f)
+            for _fam, nodes in E.instances_for_molecule(n, bu, bv):
+                bond_attr = {(a, b): adj[a][b] for a in nodes for b in nodes if b > a and b in adj.get(a, {})}
+                canon.append(E.canonical_key(nodes, atom, bond_attr, atom_cols, bond_cols))
+                brute.append(E.brute_force_key(nodes, atom, bond_attr, atom_cols, bond_cols))
+        assert len(set(canon)) == len(set(brute)), f"{gran}: canonical form is not complete"
+        c2b: dict[tuple, set] = {}
+        b2c: dict[tuple, set] = {}
+        for ck, bk in zip(canon, brute):
+            c2b.setdefault(ck, set()).add(bk)
+            b2c.setdefault(bk, set()).add(ck)
+        assert all(len(v) == 1 for v in c2b.values()), f"{gran}: canonical key merges distinct types"
+        assert all(len(v) == 1 for v in b2c.values()), f"{gran}: canonical key splits one type"
 
 
 def test_physical_bonds_are_counted_once(molecules: D.Molecules) -> None:
