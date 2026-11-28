@@ -193,6 +193,8 @@ C ∈ {0.03, 0.3, 3.0}，按 Valid ROC-AUC 选 C（并列取小 C）。**8 个�
 | 2 | 87 – 202.5 | 919 | 0.82 | 9.29% | 8.83% | 8.69% |
 | 3（最高） | 203 – 9 158 | 917 | 0.46 | 68.77% | 62.99% | 64.46% |
 
+图：`analysis/figures/support_bins_and_coefficients.png`（左：各划分实例份额；右：B2 vs B3 有效系数）
+
 （占比 = 该档保留类型的实例数 / 该划分全部诱导实例数，所以四档之和 = FULL 覆盖率。）
 
 有效系数（B2 的 `v`、B3 折算回原 F 列的 `w/√a`）：
@@ -245,6 +247,8 @@ node-feat 原子序数列逐位相同（36/36 张图全部为真）**，所以�
 | 0.50–0.75 | 310 | 5 | 0.5580 | 0.5547 | 0.5967 | 0.6032 | 0.5481 | 0.6177 |
 | 0.75–1.00 | 55 | 0 | `INSUFFICIENT_SUPPORT` | — | — | — | — | — |
 | 至少一个词表外 FULL | 4 081 | 130 | 0.7482 | 0.7577 | 0.7687 | 0.7723 | 0.8064 | 0.7698 |
+
+图：`analysis/figures/subgroup_generalisation_test.png`（Test，仅方向性）。
 
 三点必须一起读：(a) 难度差异主要由**分子复杂度**驱动（占比高的分子普遍更大），这不是一个
 干净的难度控制；(b) 在 0.25–0.50 这一档，`G-STRUCT-U`（0.6431）明显好于 `G-M`（0.5580），
@@ -387,7 +391,8 @@ PYTHONPATH=code uv run python -m pytest tests -q                          # 9 pa
 ```
 
 产物清单：`analysis/` 下 `support_bins.csv`、`coefficient_bins.csv`、`case_families.{json,csv}`、
-`figures/case*.png`（36 张）、`subgroup_generalisation.csv`、`bootstrap_contrasts.json`、
+`figures/case*.png`（36 张真实分子高亮图）、`figures/support_bins_and_coefficients.png`、
+`figures/subgroup_generalisation_test.png`、`subgroup_generalisation.csv`、`bootstrap_contrasts.json`、
 `predictions/*.npz`（12 个模型逐分子 Valid/Test logit）、`provenance.json`、
 `canonical_partition_check.json`。
 

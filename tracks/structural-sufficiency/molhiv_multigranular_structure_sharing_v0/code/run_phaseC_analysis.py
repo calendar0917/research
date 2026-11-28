@@ -374,6 +374,9 @@ def main() -> None:
             boot_payload["contrasts"].append(boot)
     C.write_json(C.ANALYSIS / "bootstrap_contrasts.json", boot_payload)
 
+    _plot_support_bins(support_rows, coef_rows)
+    _plot_subgroups(subgroup_rows)
+
     # ---- small bookkeeping payload
     meta = {
         "round_id": C.ROUND_ID,
@@ -394,6 +397,78 @@ def main() -> None:
     print(f"[phaseC] bins {meta['support_bin_counts']} | models {meta['models_with_predictions']}", flush=True)
     print(f"[phaseC] wrote support/coefficient/case/subgroup/bootstrap tables in "
           f"{time.perf_counter() - t0:.1f}s", flush=True)
+
+
+def _plot_support_bins(support_rows: list[dict[str, Any]], coef_rows: list[dict[str, Any]]) -> None:
+    """Two panels: where the instances live, and how B3 reweights the coefficients."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    fig, axes = plt.subplots(1, 2, figsize=(9.2, 3.4), dpi=200)
+    xs = np.arange(4)
+    width = 0.26
+    for offset, split_name, colour in ((-width, "train", "#4c72b0"), (0.0, "valid", "#dd8452"),
+                                       (width, "test", "#55a868")):
+        vals = [float(row[f"share_of_split_instances_{split_name}"]) for row in support_rows]
+        axes[0].bar(xs + offset, vals, width=width, label=split_name, color=colour)
+    axes[0].set_xticks(xs, [f"bin {r['bin']}\n({r['n_full_types']} types)" for r in support_rows])
+    axes[0].set_ylabel("share of that split's induced instances")
+    axes[0].set_title("FULL types by Train scaffold-frequency quartile")
+    axes[0].legend(frameon=False, fontsize=8)
+    axes[0].grid(axis="y", alpha=0.25)
+
+    axes[1].plot(xs, [r["mean_abs_v_B2"] for r in coef_rows], "o-", label="B2 (plain L2)", color="#4c72b0")
+    axes[1].plot(xs, [r["mean_abs_v_B3"] for r in coef_rows], "s-", label="B3 (support-weighted)", color="#c44e52")
+    for i, r in enumerate(coef_rows):
+        axes[1].annotate(f"×{r['ratio_mean_abs_B3_over_B2']:.2f}", (i, max(r["mean_abs_v_B2"], r["mean_abs_v_B3"])),
+                         textcoords="offset points", xytext=(0, 6), ha="center", fontsize=7)
+    axes[1].set_xticks(xs, [f"bin {r['bin']}" for r in coef_rows])
+    axes[1].set_ylabel("mean |effective FULL coefficient|")
+    axes[1].set_title("support weighting shrinks the tail, feeds the head")
+    axes[1].legend(frameon=False, fontsize=8)
+    axes[1].grid(axis="y", alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(C.FIGURES / "support_bins_and_coefficients.png", bbox_inches="tight")
+    plt.close(fig)
+
+
+def _plot_subgroups(rows: list[dict[str, Any]]) -> None:
+    """Test-split AUC per low-support/unseen-ratio bin for the main arms."""
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    arms = ["B0", "B2", "B3", "XGB_STRUCT", "G-STRUCT-U"]
+    groups = [f"ratio_{lo}" for lo in ("0.00-0.25", "0.25-0.50", "0.50-0.75", "0.75-1.00")]
+    lookup = {(r["arm"], r["group"]): r for r in rows if r["split"] == "test"}
+    fig, ax = plt.subplots(figsize=(6.4, 3.4), dpi=200)
+    xs = np.arange(len(groups))
+    for arm in arms:
+        ys, ns = [], []
+        for g in groups:
+            row = lookup.get((arm, g))
+            ys.append(float(row["roc_auc"]) if row and row["roc_auc"] else np.nan)
+            ns.append(row["n"] if row else 0)
+        ax.plot(xs, ys, "o-", label=arm, lw=1.4, ms=4)
+    for i, g in enumerate(groups):
+        row = lookup.get(("B0", g))
+        if row is None or not row["roc_auc"]:
+            ax.annotate("INSUFFICIENT\nSUPPORT", (i, 0.52), ha="center", fontsize=6.5, color="#888888")
+        else:
+            ax.annotate(f"n={row['n']}\npos={row['n_positive']}", (i, 0.505), ha="center", fontsize=6.5,
+                        color="#888888")
+    ax.set_xticks(xs, ["0–0.25", "0.25–0.50", "0.50–0.75", "0.75–1.00"])
+    ax.set_xlabel("share of low-support or unseen FULL instances (Train-defined bins)")
+    ax.set_ylabel("Test ROC-AUC")
+    ax.set_title("EXPOSED_DEVELOPMENT_TEST — directional only", fontsize=8)
+    ax.legend(frameon=False, fontsize=7, ncol=2)
+    ax.grid(alpha=0.25)
+    fig.tight_layout()
+    fig.savefig(C.FIGURES / "subgroup_generalisation_test.png", bbox_inches="tight")
+    plt.close(fig)
 
 
 def _registry(granularity: str) -> list[dict[str, str]]:
