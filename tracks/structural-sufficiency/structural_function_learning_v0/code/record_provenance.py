@@ -76,8 +76,13 @@ def main() -> None:
         "Z-NN-ADD": artifact(K.MODELS / "Z-NN-ADD_best.pt"),
     }
     predictions = {p.stem: artifact(p) for p in sorted(K.PREDICTIONS.glob("*.npz"))}
-    analysis = {p.name: artifact(p) for p in sorted(K.ANALYSIS.glob("*.json"))}
+    analysis = {p.name: artifact(p) for p in sorted(K.ANALYSIS.glob("*.json"))
+                if p.name != "provenance.json"}
+    tables = {"metrics_csv": artifact(K.ANALYSIS / "metrics.csv")}
+    curves = {p.name: artifact(p) for p in sorted(K.CURVES.glob("*"))}
     functions = {p.name: artifact(p) for p in sorted(K.FUNCTIONS.glob("*"))}
+    documents = {name: artifact(K.ROUND / name)
+                 for name in ("PROTOCOL.md", "REPORT.md", "ERRATA.md")}
 
     verification = {
         "pytest_fast_and_slow": "13 passed (tests/), including booster singleton, replay, "
@@ -150,7 +155,10 @@ def main() -> None:
         "new_models": models,
         "predictions": predictions,
         "analysis_outputs": analysis,
+        "tables": tables,
+        "curves": curves,
         "function_outputs": functions,
+        "documents": documents,
         "verification": verification,
         "commands": [
             "uv run python tracks/.../code/phase0_contributions.py",
