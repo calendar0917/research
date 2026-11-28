@@ -1,0 +1,243 @@
+{
+  "C_F_rebuild": {
+    "frozen_design_path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/design_CF.npz",
+    "frozen_design_sha256": "a30e18ebffb3c2b1a06c50f18048a2614268d62d3552a39b7842bb8d3ca480b7",
+    "identical": true,
+    "max_abs_diff_coarse": 0.0,
+    "max_abs_diff_full": 0.0,
+    "shape_match": [
+      true,
+      true
+    ]
+  },
+  "H": {
+    "block": "H = historical ECFP4 binary 2048 + RDKit 2-D descriptors (Train-only median/std preprocessing)",
+    "descriptor_names_match": true,
+    "features_path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/cache/baseline_features/ogbg-molhiv.npz",
+    "features_shape": [
+      41127,
+      2265
+    ],
+    "manifest_features_sha256": "7498757ee2d8b6dd0dc3182213995150182ab5b419844c3d55b2a66d044e5071",
+    "manifest_keep_sha256": "cf501a299174538815af1154fe92aa3f02f072f30626110fe1d17486291f0d78",
+    "manifest_median_sha256": "19723d5bb4ed8127a166b1aad1d07a3b7c1be5a288618b714a57f8443c44d1ec",
+    "manifest_n_dropped_columns": 7,
+    "manifest_n_used_columns": 2258,
+    "n_descriptor_columns": 210,
+    "n_dropped_columns": 7,
+    "n_ecfp_columns": 2048,
+    "n_imputed_cells_train": 19379,
+    "nnz_fraction": 0.06298061419763874,
+    "preprocessing_reproduced": true,
+    "shape": [
+      41127,
+      2258
+    ]
+  },
+  "H_column_roles": {
+    "all_bit_columns_kept": true,
+    "dropped_columns": [
+      2090,
+      2096,
+      2098,
+      2100,
+      2102,
+      2153,
+      2167
+    ],
+    "n_descriptor_kept": 210,
+    "n_ecfp_kept": 2048
+  },
+  "blocks": {
+    "C": [
+      41127,
+      754
+    ],
+    "F": [
+      41127,
+      3652
+    ],
+    "H": [
+      41127,
+      2258
+    ],
+    "MC": [
+      41127,
+      2048
+    ],
+    "MU": [
+      41127,
+      4406
+    ],
+    "PRES": [
+      41127,
+      4406
+    ],
+    "WL": [
+      41127,
+      4406
+    ]
+  },
+  "environment": {
+    "cpu_count": 16,
+    "cuda_available": false,
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scipy": "1.14.1",
+    "sklearn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "72bf3fc28bfa362d12ee20a430cc233c5d64de7f",
+    "dirty_tracked": true,
+    "status_short": [
+      "?? tracks/structural-sufficiency/structural_gain_attribution_v1/"
+    ]
+  },
+  "input_bundle": {
+    "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/bundle/sav1_inputs.npz",
+    "sha256": "6b19265ed31b11d7679269368f29e606a50fcfee0357760257127c306d2d7bff",
+    "size_bytes": 30328577
+  },
+  "mc_equals_fold_of_mu": {
+    "identical": true,
+    "max_abs_diff": 0.0,
+    "n_cells_differing": 0,
+    "note": "when it holds, RDKit's hashed (folded) and unfolded generators agree on the id -> bucket map id % 2048; MU cannot recover MC because MU keeps only top-4406",
+    "rule_tested": "MC[b] == sum over ALL unfolded environments e with (e % 2048) == b of count(e)"
+  },
+  "mc_meta": {
+    "folded": "count per 2048-bucket (NOT bit-OR)",
+    "impl": "rdkit.Chem.rdMolDescriptors.GetHashedMorganFingerprint(mol, 2, nBits=2048)",
+    "n_bits": 2048,
+    "n_molecules": 41127,
+    "n_parse_failed": 0,
+    "n_support_mismatch": 0,
+    "n_unsanitized_fallback": 7,
+    "nnz": 1618242,
+    "radius": 2,
+    "support_identity_holds": true,
+    "support_mismatch_vs_binary_block": [],
+    "total_count": 2934792.0
+  },
+  "morgan_binary_block": {
+    "cache_sha256": "88315a9d522d873576239949bf305507c899f059351df8b237a9bfbaf1a5d3d9",
+    "impl": "rdkit.Chem.rdMolDescriptors.GetMorganFingerprintAsBitVect(mol, 2, nBits=2048)",
+    "n_parse_failed": 0
+  },
+  "mu_meta": {
+    "caveat": "RDKit unfolded Morgan ids are 32-bit hashes; residual collisions are possible",
+    "impl": "rdkit.Chem.rdMolDescriptors.GetMorganFingerprint(mol, 2)",
+    "k_requested": 4406,
+    "k_selected": 4406,
+    "n_distinct_environments_all": 116099,
+    "n_parse_failed": 0,
+    "nnz": 1319881,
+    "radius": 2,
+    "selection": "Train document frequency desc, RDKit environment id asc on ties",
+    "total_count": 2555962.0,
+    "train_df_max_selected": 29922,
+    "train_df_min_selected": 24
+  },
+  "pres_values_are_1_over_sqrt_n": {
+    "max_abs_dev": 5.162287264326437e-08,
+    "note": "PRES_data / (1/sqrt(n_atoms)) must be exactly 1 for every stored cell",
+    "unique": [
+      1.0
+    ]
+  },
+  "reused_arms": {
+    "X-CF_phaseD": {
+      "note": "XGB_STRUCT of MSDS-v0 Phase D is reused as X-CF; nothing is refitted",
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseD_xgb_struct_predictions.npz",
+      "rows_match_official_split": true,
+      "sha256": "76788ab7be4e8ec4bf6547ee4a4f85f5c1f9767321a74422964337ae96af9c4a"
+    },
+    "X0_historical": {
+      "test": {
+        "labels_match": true,
+        "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/baseline/ogbg-molhiv_test_predictions.npz",
+        "rows_match_official_split": true,
+        "sha256": "d6c3b76ac2b1db3a89b394e99c4bb5c9b0c470ee1ed29eeeee48b187f44d5b19"
+      },
+      "valid": {
+        "labels_match": true,
+        "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/baseline/ogbg-molhiv_valid_predictions.npz",
+        "rows_match_official_split": true,
+        "sha256": "bef364d54d13e671ea125f6a7f7cbe6f4063fb79371ab1528d86a4d9ba7487a1"
+      }
+    }
+  },
+  "seconds": 41.82616748299915,
+  "split_fingerprint": {
+    "max": {
+      "test": 10125,
+      "train": 41126,
+      "valid": 22788
+    },
+    "min": {
+      "test": 0,
+      "train": 3,
+      "valid": 10127
+    },
+    "sha256": {
+      "test": "0006fe444e4d331312162f111f24c1f2b735d225f7290238a15527da9673c804",
+      "train": "4e77289653e41be5d2267f54d9f33fda4b70fd622c19b93a282db710a9318b0a",
+      "valid": "ab298cdbd817e15ad190c7a2a73dbb59babbfb471f947b58e9a9761452ce983a"
+    },
+    "sizes": {
+      "test": 4113,
+      "train": 32901,
+      "valid": 4113
+    },
+    "union_size": 41127
+  },
+  "tables_fitted_on_train": {
+    "C_F_vocab": "frozen in MSDS-v0 on Train only; reused unchanged",
+    "H": "historical Train-only median imputation + Train-only zero-variance drop",
+    "MC": "no fitted table (fixed 2048 buckets, generator settings fixed)",
+    "MU": "Train document-frequency top-4406 environment ids",
+    "WL": "Train document-frequency top-4406 (round, signature) keys",
+    "scaling": "count / sqrt(max(n_atoms,1)); no Train statistic involved"
+  },
+  "wl_meta": {
+    "caveat": "WL colour equality is an approximation of rooted-subgraph identity, not isomorphism",
+    "impl": "blake2b-16 attributed rooted 1-WL refinement over all 9 OGB atom + 3 OGB bond features",
+    "k_requested": 4406,
+    "k_selected": 4406,
+    "n_distinct_signatures_all": 128811,
+    "n_selected_by_round": {
+      "0": 90,
+      "1": 1495,
+      "2": 2821
+    },
+    "n_signatures_by_round_all": {
+      "0": 382,
+      "1": 13075,
+      "2": 115354
+    },
+    "nnz": 1435183,
+    "rounds": [
+      0,
+      2
+    ],
+    "selection": "Train document frequency desc, signature bytes asc on ties",
+    "total_count": 2693922.0,
+    "train_df_max_selected": 28073,
+    "train_df_min_selected": 29
+  },
+  "zero_pattern_equals_positive_count": {
+    "C": true,
+    "F": true,
+    "MC": true,
+    "MU": true,
+    "PRES": true,
+    "WL": true
+  }
+}
