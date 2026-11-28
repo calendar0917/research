@@ -98,7 +98,9 @@ def build_graphs(molecules: D.Molecules, torch):
             x=torch.as_tensor(x_all[lo:hi], dtype=torch.long),
             edge_index=edge_index, edge_attr=edge_attr,
             y=torch.tensor([float(molecules.label[g])], dtype=torch.float32),
-            graph_index=torch.tensor([g], dtype=torch.long),
+            # NOTE: must not be called ``graph_index`` -- PyG's Data.__inc__ offsets
+            # every key containing "index" by the cumulative node count during batching
+            gid=torch.tensor([g], dtype=torch.long),
         ))
     return graphs
 
@@ -237,7 +239,7 @@ def main() -> None:
 
     def forward(batch):
         z = model.backbone_forward(batch)
-        idx = batch.graph_index.view(-1)
+        idx = batch.gid.view(-1)
         z = z + m_scores()[idx]
         if use_struct:
             z = z + s_scores()[idx]
@@ -279,7 +281,7 @@ def main() -> None:
             batch = batch.to(device)
             logit = forward(batch)
             lab = batch.y.view(-1).float()
-            w = weight_t[batch.graph_index.view(-1)]
+            w = weight_t[batch.gid.view(-1)]
             loss = F.binary_cross_entropy_with_logits(logit, lab, weight=w, reduction="mean")
             l2 = 0.5 * lam * sum((p * p).sum() for p in branch_params)
             loss = loss + l2
