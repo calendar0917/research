@@ -1,0 +1,147 @@
+{
+  "code": {
+    "isrd_common.py": {
+      "bytes": 14325,
+      "sha256": "a33a335f99de008c388e125243935e839bce81f50f345a4c6182347da9734f17"
+    },
+    "isrd_rules.py": {
+      "bytes": 15411,
+      "sha256": "c5c58d522dba2580e615f470fc15e74e51ac9c4b3b5163ec1b02a561d125782d"
+    },
+    "run_checks.py": {
+      "bytes": 14292,
+      "sha256": "1dfb38f88d8fd797b76d0cd396f888f70e139d42825ad8af5f51b26dcce88425"
+    },
+    "run_contrasts.py": {
+      "bytes": 10663,
+      "sha256": "ae8e8655d6acbeefd77baced0f5b7e1d5e5cfc5712d1694d85f4cbcdc3e61d24"
+    },
+    "run_phaseA_rules.py": {
+      "bytes": 11142,
+      "sha256": "d9b98bd50716c07170aa10707e001ee202fa32bd7ca06e04e1c3b931148e5af8"
+    },
+    "run_phaseBC.py": {
+      "bytes": 19757,
+      "sha256": "0ec98a1ab882b7e85c689d9a0b3cd03d0ba6d5c774cd8cd534c8ffc080376884"
+    },
+    "run_phaseD.py": {
+      "bytes": 13516,
+      "sha256": "597696618acebf85f9e74410d892e7ab4d7fd93a21ccf9c3e7529f8735258419"
+    },
+    "write_report.py": {
+      "bytes": 19628,
+      "sha256": "0532653e5a519e93d025926ff5c425f58df2b31e0982a734e4fb339bd4c2a930"
+    }
+  },
+  "engineering_deviations": [
+    {
+      "affects_reported_numbers": "No: detected during the first pair-mining run; all stored pairs and downstream fits use the corrected key.",
+      "fix": "all conditions keyed by (granularity, block column, threshold), with the global offset resolved per booster; thresholds re-evaluated on the real float32 design and verified against raw tree leaf ids (check passed).",
+      "id": 1,
+      "what": "Phase-A pair mining aggregated conditions across X-C/X-F by (granularity, column, threshold), but X-C and X-F use different global column offsets (2258 vs 3012); one condition set was therefore keyed by a global feature index from an inconsistent block."
+    },
+    {
+      "affects_reported_numbers": "Yes: all Phase B/C numbers in REPORT.md come from the rerun after the fix; no pre-fix number is quoted.",
+      "fix": "selection now picks up to 16 distinct-structure rules per batch, then jointly refits once per batch, as fixed in PROTOCOL \u00a75.2. Full Phase B/C rerun.",
+      "id": 2,
+      "what": "R64 structure uniqueness assertion failed because the initial forward selection refitted after *every* added rule instead of once per 16-rule batch, allowing two thresholds for one structure."
+    },
+    {
+      "affects_reported_numbers": "No: only the Phase-D case descriptions; metrics and model predictions unchanged.",
+      "fix": "case instance lookup now uses discovered_type_id explicitly; the COARSE-419 superset relation is verified on the FULL children's real atom positions.",
+      "id": 3,
+      "what": "COARSE registry rows are indexed by discovered type id while the instance cache examples are indexed by that id, not by the design column index. The first case audit therefore attached FULL-2078's instances to COARSE-419."
+    }
+  ],
+  "environment": {
+    "cpu_count": 16,
+    "numpy": "2.1.3",
+    "ogb": "1.3.6",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scipy": "1.14.1",
+    "sklearn": "1.5.2",
+    "xgboost": "2.1.3"
+  },
+  "git_head": {
+    "branch": "main",
+    "commit": "fa8569686da700c3255a4ed1f053d35d34d5a9f4",
+    "dirty_tracked": true
+  },
+  "inputs": {
+    "B2_coefficients": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseB_coefficients.npz",
+      "sha256": "4fc6a0c26e2fa48a0b52bf984c7f3be119069d674b5fc40061f64eaef1f54222"
+    },
+    "B2_predictions": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseB_predictions.npz",
+      "sha256": "5f5d197b79f76fa4169532d13ef46693c9516fc45dadd321f9afe94d7df795a7"
+    },
+    "X-C_booster": {
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/runs/phaseA/X-C_model.json",
+      "sha256": "fb9f9e48518cbf1486880fb8aa9cf9a0d47ef080d9fea98caa0524fdfabf2e51"
+    },
+    "X-F_booster": {
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/runs/phaseA/X-F_model.json",
+      "sha256": "514e1e6e797eb349d1061d3eee92f5c2583a9f21c063c41fbce57f85a0fa2230"
+    },
+    "case_structures": {
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/case_structures.json",
+      "sha256": "98a0c73df7e998bf2c163a5452632f0bc52eaef022223f248543557acbefce79"
+    },
+    "instance_cache": {
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseA_instances.npz",
+      "sha256": "4f6e703251eaa27abfec46fbe63062b827861b7de9f735fded0ae739aba6e4e3"
+    },
+    "registry_v1": {
+      "C": {
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/registry_v1/structure_registry_coarse_v1.csv",
+        "sha256": "34955c4a7955fc2475f1db7d777a11dd6a10cb31ded9cf3ded712a2492efdfd0"
+      },
+      "F": {
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/registry_v1/structure_registry_full_v1.csv",
+        "sha256": "de1bcf8a7590e7b1b6cb9339b3428f7f8157d616d99578fc53cd82e0195146d6"
+      }
+    },
+    "sav1_bundle": {
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/bundle/sav1_inputs.npz",
+      "sha256": "6b19265ed31b11d7679269368f29e606a50fcfee0357760257127c306d2d7bff"
+    }
+  },
+  "protocol": {
+    "committed_before_fitting": true,
+    "path": "tracks/structural-sufficiency/interpretable_structural_rule_discovery_v0/PROTOCOL.md",
+    "sha256": "aafe39c1e7ff1e0c7942e9e72c83989e798fca91e86f430261ddc38eb51c9f61"
+  },
+  "resource": {
+    "compute": "CPU-only, single workstation",
+    "peak_memory_estimate_gb": 3.0,
+    "seed_count": 1,
+    "wall_clock_hard_limit_min": 120,
+    "wall_clock_target_min": 60
+  },
+  "reused_assets": {
+    "B2": "frozen C=0.03 coefficients/intercept/logits; replayed, not refitted",
+    "C/F design": "SGA-v1 bundle, bit-identical to MSDS-v0 frozen design",
+    "X-C/X-F boosters": "read-only, rule source; no new XGBoost fitted",
+    "X-CF weights": "ABSENT (MSDS-v0 Phase D saved no model); not retrained; same-granularity pairs only",
+    "registry_v1": "corrected OGB categorical decoding, display only"
+  },
+  "round_id": "interpretable-structural-rule-discovery-v0",
+  "seed": 0,
+  "test_policy": "EXPOSED_DEVELOPMENT_TEST \u2014 evaluated, no design/selection based on Test",
+  "timing_seconds": {
+    "checks": 6.4,
+    "contrasts": 175.0,
+    "final_pipeline_total": 253.0,
+    "including_implementation_and_debug": 2760.0,
+    "phaseA_rules": 52.533318959060125,
+    "phaseBC": 18.353585883043706
+  },
+  "verification": {
+    "checks": 15,
+    "failures": 0
+  }
+}
