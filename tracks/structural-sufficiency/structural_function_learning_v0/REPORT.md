@@ -8,9 +8,11 @@ Round: `structural-function-learning-v0`；目录
 机器记录：[analysis/provenance.json](analysis/provenance.json)、
 [analysis/metrics.csv](analysis/metrics.csv)、[analysis/contrasts.json](analysis/contrasts.json)。
 
-计算窗口 21:04–21:35（约 31 分钟）；GPU 用时约 **0.04 A100-hour**（两个单卡神经作业，
-远低于 2 h 预算）。所有远程作业经 `rr`：CPU 树在 `res-local`，HIV 三个神经模型在
-`res-gpu1`，ZINC 加性神经在 `res-gpu0`；commit `9e7f7273`。
+计算窗口 21:04–21:52（约 48 分钟；含最终 JSON 精简后的 phaseD/E 重算），
+provenance 于 21:59 组装完成，总计约 **55 分钟**，在 60 分钟目标内；
+GPU 用时 **0.033 A100-hour**（两个单卡神经作业，远低于 2 h 预算）。
+所有远程作业经 `rr`：CPU 树在 `res-local`，HIV 三个神经模型在
+`res-gpu1`，ZINC 加性神经在 `res-gpu0`；计算 commit `9e7f7273`。
 
 ---
 
@@ -110,7 +112,7 @@ ZINC 树差距同样容量混杂；类别加权带来的 Valid 提升是真实�
 | 原假设 | 证据 | 当前认识 | 剩余不确定性 |
 |---|---|---|---|
 | 全量线性模型的瓶颈是正则化 | L-BAL-STD C=0.0003 vs COUNT-ALL：Valid +0.0510 [+0.0174,+0.0919]，Test +0.0427 [+0.0229,+0.0637]；Train 0.9872→0.9615 | 正则化是**主要**瓶颈之一；Test 差距明显缩小 | 最优在 C=0.0003 下边界；更强正则未测 |
-| 线性模型的失败主要是表达能力不足 | 最佳线性 Valid 0.8025 / Test 0.7670；XGB 0.8153 / 0.8174 | 仍有约 0.013/0.025 Test 差距，不能全部归因于正则 | C 网格两端触界；未做交互项 |
+| 线性模型的失败主要是表达能力不足 | 最佳线性 Valid 0.8025 / Test 0.7670；XGB 0.8153 / 0.8174 | 仍有 Valid 0.013 / Test 0.050 差距（L-NAT-RAW；L-BAL-STD 为 0.018/0.025），不能全部归因于正则 | C 网格两端触界；未做交互项 |
 | HIV 树优势来自结构间交互 | ADD-TREE Test 0.7696 vs XGB 0.8174，Δ +0.0478 [+0.0162,+0.0804]；但 Train 0.8367 vs 0.9561，91 特征，500 轮仍升 | 不能确认交互；容量/拟合不足不可排除 | 预注册容量规则未触发，但训练拟合比 0.875；需更强加性树容量对照 |
 | 联合神经混合是必要的 | JOINT−ADD-NN：Valid −0.0002、Test −0.0148（CI 跨 0）；XGB−ADD-NN Test +0.0183（CI 跨 0） | 在本表示下，**加性神经已保留主要 AUC 价值** | AP 上 XGB Valid 更好；单 seed |
 | 类别加权解释树↔MLP 差距 | JOINT−BAL：Valid −0.0207[−0.0415,+0.0011]、Test +0.0156[−0.0054,+0.0363] | 加权只改变早期 epoch 选择，不解释 Test 差距 | 最佳 epoch 3/4，选择方差大 |
@@ -132,7 +134,8 @@ ZINC 树差距同样容量混杂；类别加权带来的 Valid 提升是真实�
 * 四个远程作业均 `exit_code = 0`；commit `9e7f7273`；单机 A100-40GB，
   driver 550.163.01，torch 2.5.1+cu124。作业/节点/GPU/时长见
   `analysis/provenance.json` 的 `remote_jobs`。第一次尝试因远端空目录和 xgboost 2.1
-  的 JSON dump 返回 list 而失败；修复后重跑，失败运行未产生任何结果文件。
+  的 JSON dump 返回 list 而失败；修复后重跑。失败运行没有产生可报告的预测或指标，
+  同名 checkpoint 被成功的重跑覆盖。
 
 ## 2. Phase 0 — 贡献统计修复（不重训）
 
@@ -289,7 +292,7 @@ ADD-NN 直接读取 `f_j`。树闭合（2000 行）**7.74e-6**，神经闭合（
 
 ## 8. 预算、核验与停止
 
-* 预算：计算窗口约 31 分钟；两个 GPU 作业合计约 0.04 A100-hour；无额外 seed、
+* 预算：计算窗口约 55 分钟（21:04–21:59）；两个 GPU 作业合计 0.033 A100-hour；无额外 seed、
   无 Test 追加实验、无新 GNN、无结构搜索。`rr` 记录见 provenance。
 * 核验（全部通过）：13 个测试；输入/划分/graph id 身份；线性原始单位闭合
   ≤1.1e-14；两种贡献基准闭合；ADD-TREE 合成约束与真实树解析、手工重放；
