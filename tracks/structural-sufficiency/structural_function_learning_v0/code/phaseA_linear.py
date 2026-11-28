@@ -75,8 +75,12 @@ def fit_one(X: sp.csr_matrix, y: np.ndarray, sw: np.ndarray, C: float,
     return out
 
 
+_PARAM_KEYS = {"logit", "coef_standardised", "coef_raw", "mean", "sd"}
+
+
 def strip(fit: dict[str, Any]) -> dict[str, Any]:
-    return {k: v for k, v in fit.items() if k != "logit"}
+    """JSON summary without the 4408-vector parameters (kept in linear_models.json)."""
+    return {k: v for k, v in fit.items() if k not in _PARAM_KEYS}
 
 
 def save_prediction(arm: str, C: float, logit: np.ndarray, tag: str | None = None) -> str:
@@ -114,6 +118,7 @@ def main() -> None:
     sw_nat[train] = 1.0
 
     results: dict[str, Any] = {}
+    selected_models: dict[str, Any] = {}
     all_configs: list[dict[str, Any]] = []
 
     # ---------------- L-BAL-STD -------------------------------------------
@@ -148,6 +153,10 @@ def main() -> None:
     }
     bal_fits.append(hist)
     best = max(bal_fits, key=lambda f: (f["metrics"]["valid"]["roc_auc"], -f["C"]))
+    selected_models["L-BAL-STD"] = {
+        "selected_C": best["C"], "intercept_raw": best["intercept_raw"],
+        "coef_raw": best["coef_raw"], "mean": best["mean"], "sd": best["sd"],
+        "metrics": best["metrics"]}
     results["L-BAL-STD"] = {"arm": "L-BAL-STD", "selected_C": best["C"],
                             "selection_rule": "max Valid AUC, tie -> smaller C",
                             "selected": strip(best), "configs": [strip(f) for f in bal_fits],
@@ -167,6 +176,10 @@ def main() -> None:
                             split_code=data.split_code(), arm="L-NAT-STD",
                             C=float(f["C"]), dataset="hiv")
     best = max(nat_std, key=lambda f: (f["metrics"]["valid"]["roc_auc"], -f["C"]))
+    selected_models["L-NAT-STD"] = {
+        "selected_C": best["C"], "intercept_raw": best["intercept_raw"],
+        "coef_raw": best["coef_raw"], "mean": best["mean"], "sd": best["sd"],
+        "metrics": best["metrics"]}
     results["L-NAT-STD"] = {"arm": "L-NAT-STD", "selected_C": best["C"],
                             "selection_rule": "max Valid AUC, tie -> smaller C",
                             "selected": strip(best),
@@ -186,6 +199,10 @@ def main() -> None:
                             split_code=data.split_code(), arm="L-NAT-RAW",
                             C=float(f["C"]), dataset="hiv")
     best = max(nat_raw, key=lambda f: (f["metrics"]["valid"]["roc_auc"], -f["C"]))
+    selected_models["L-NAT-RAW"] = {
+        "selected_C": best["C"], "intercept_raw": best["intercept_raw"],
+        "coef_raw": best["coef_raw"], "mean": best["mean"], "sd": best["sd"],
+        "metrics": best["metrics"]}
     results["L-NAT-RAW"] = {"arm": "L-NAT-RAW", "selected_C": best["C"],
                             "selection_rule": "max Valid AUC, tie -> smaller C",
                             "selected": strip(best),
@@ -197,10 +214,12 @@ def main() -> None:
     all_configs.extend(results["L-NAT-RAW"]["configs"])
 
     for name, res in results.items():
-        if res["selected_C"] == min(res["C_grid"]):
+        lo, hi = min(res["C_grid"]), max(res["C_grid"])
+        if res["selected_C"] in (lo, hi):
             res["selection_at_grid_boundary"] = True
-            print(f"[A] {name}: best Valid AUC at the smaller edge C={res['selected_C']:g} "
-                  f"-> search range limited", flush=True)
+            res["boundary_side"] = "lower" if res["selected_C"] == lo else "upper"
+            print(f"[A] {name}: best Valid AUC at the {res['boundary_side']} edge "
+                  f"C={res['selected_C']:g} -> search range limited", flush=True)
 
     payload = {
         "phase": "A: linear structure model learning constraints (MolHIV)",
@@ -226,13 +245,7 @@ def main() -> None:
     }
     K.write_json(K.ANALYSIS / "phaseA_linear.json", payload)
     # compact model store for Phase E (selected linear model weights)
-    K.write_json(K.ANALYSIS / "linear_models.json", {
-        name: {"selected_C": r["selected_C"],
-               "intercept_raw": r["selected"]["intercept_raw"],
-               "coef_raw": r["selected"]["coef_raw"],
-               "mean": r["selected"]["mean"], "sd": r["selected"]["sd"],
-               "metrics": r["selected"]["metrics"]}
-        for name, r in results.items()})
+    K.write_json(K.ANALYSIS / "linear_models.json", selected_models)
     print(f"[A] done in {payload['seconds']:.1f}s")
 
 

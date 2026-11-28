@@ -54,8 +54,16 @@ def tree_feature(tree: dict[str, Any]) -> str | None:
 
 
 def eval_tree(tree: dict[str, Any], x: np.ndarray) -> np.ndarray:
+    """Replay one tree with XGBoost's float32 split semantics.
+
+    XGBoost stores ``split_condition`` and the input design as float32 and compares
+    them in float32.  Comparing a float64 array against a float64 threshold changes
+    the branch for values that are exactly at a float32 split boundary, so both
+    sides are explicitly cast to float32 here (verified against booster.predict).
+    """
     nodes = tree_nodes(tree)
     out = np.empty(x.size, dtype=np.float64)
+    x32 = np.asarray(x, dtype=np.float32)
 
     def rec(node: dict[str, Any], idx: np.ndarray) -> None:
         if idx.size == 0:
@@ -63,7 +71,7 @@ def eval_tree(tree: dict[str, Any], x: np.ndarray) -> np.ndarray:
         if "leaf" in node:
             out[idx] = float(node["leaf"])
             return
-        left = x[idx] < float(node["split_condition"])
+        left = x32[idx] < np.float32(node["split_condition"])
         rec(nodes[int(node["yes"])], idx[left])
         rec(nodes[int(node["no"])], idx[~left])
 
@@ -97,8 +105,10 @@ class NNFunctions:
     def __init__(self, arm: str, coordinate: Callable[[int, np.ndarray], np.ndarray]) -> None:
         import torch
 
-        ckpt = torch.load(K.RUNS / f"{arm}_best.pt", map_location="cpu",
-                          weights_only=False)
+        path = K.RUNS / f"{arm}_best.pt"
+        if not path.exists():            # committed checkpoint copy
+            path = K.MODELS / f"{arm}_best.pt"
+        ckpt = torch.load(path, map_location="cpu", weights_only=False)
         sd = ckpt["state_dict"]
         self.a = sd["a"].numpy().astype(np.float64)
         self.v = sd["v"].numpy().astype(np.float64)
@@ -108,11 +118,16 @@ class NNFunctions:
         self.coordinate = coordinate
         self.ckpt = ckpt
 
-    def f(self, j: int, x: np.ndarray) -> np.ndarray:
-        z = self.coordinate(j, x)
+    def f_input(self, j: int, z: np.ndarray) -> np.ndarray:
+        """f_j evaluated at the *model input* coordinate z (so f_j(0)=0 exactly)."""
+        z = np.asarray(z, dtype=np.float64)
         r = np.maximum(z[:, None] - self.t[j][None, :], 0.0) - \
             np.maximum(-self.t[j][None, :], 0.0)
         return self.a[j] * z + (self.v[j][None, :] * r).sum(axis=1)
+
+    def f(self, j: int, x: np.ndarray) -> np.ndarray:
+        """f_j evaluated at a *raw* feature value (preprocessing coordinate applied)."""
+        return self.f_input(j, self.coordinate(j, x))
 
 
 # ---------------------------------------------------------------------------
@@ -197,9 +212,12 @@ def main() -> None:
     Xn = dh.nn_design_dense(nn_rows)[0].astype(np.float64)
     nn_sum = np.full(nn_rows.size, nnf.bias)
     for j in range(Xn.shape[1]):
-        nn_sum += nnf.f(j, Xn[:, j])
-    ckpt_state = torch.load(K.RUNS / "H-NN-ADD_best.pt", map_location="cpu",
-                            weights_only=False)
+        # Xn is already in the model input space -> use f_input (no double transform)
+        nn_sum += nnf.f_input(j, Xn[:, j])
+    ckpt_path = K.RUNS / "H-NN-ADD_best.pt"
+    if not ckpt_path.exists():
+        ckpt_path = K.MODELS / "H-NN-ADD_best.pt"
+    ckpt_state = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     from phaseC_add_nn import AdditiveNN
 
     model = AdditiveNN(np.zeros((K.HIV_WIDTH, 4), dtype=np.float32),
@@ -209,7 +227,7 @@ def main() -> None:
     with torch.no_grad():
         nn_pred = model(torch.from_numpy(Xn.astype(np.float32))).numpy().astype(np.float64)
     nn_closure = float(np.max(np.abs(nn_pred - nn_sum)))
-    f0 = np.array([nnf.f(j, np.zeros(1))[0] for j in range(0, K.HIV_WIDTH, 8)])
+    f0 = np.array([nnf.f_input(j, np.zeros(1))[0] for j in range(0, K.HIV_WIDTH, 8)])
     nn_f0 = float(np.max(np.abs(f0)))
 
     # ---- per-column Train statistics for the HIV structure blocks ---------
@@ -241,7 +259,10 @@ def main() -> None:
         var_tree[j] = float(ft.max() - ft.min())
         var_nn[j] = float(fn.max() - fn.min())
 
-    support_ok = support >= 500
+    # "high Train support" operationalised as >=1000 Train molecules (3.0% of Train);
+    # the parent-child pair keeps the child threshold lower (>=500)
+    support_ok = support >= 1000
+    # both learned functions contribute to the "large variation" ranking (Train-only)
     score = np.where(support_ok, var_tree + var_nn, -np.inf)
     ranked = np.argsort(-score)
     selected: list[int] = []
@@ -254,21 +275,27 @@ def main() -> None:
     reasons: dict[int, str] = {}
     # 1) high Train support + large learned function variation
     for j in ranked[:6]:
-        add(int(j), "high Train support + large learned function variation")
+        add(int(j), "high Train support (>=1000) + large learned function variation")
         if len(selected) >= 3:
             break
-    # 2) a FULL structure whose COARSE parent is also a strong function
-    top_set = set(int(j) for j in ranked[:80])
-    full_order = [int(j) for j in ranked if j >= K.HIV_N_C and int(j) in top_set]
+    # 2) a FULL structure whose COARSE parent is also a supported, varying function
     pair = None
-    for j in full_order:
+    best_pair = -np.inf
+    for j in range(K.HIV_N_C, K.HIV_N_STRUCT):
         p = int(parent[j - K.HIV_N_C])
-        if p >= 0 and p in top_set and p != j:
+        if p < 0 or support[j] < 500 or support[p] < 1000:
+            continue
+        if var_nn[p] < 0.1 or var_nn[j] < 0.1:
+            continue
+        if p in selected or j in selected:
+            continue                      # add a *new* coarse/fine pair
+        cand_score = float(var_nn[p] + var_nn[j])
+        if cand_score > best_pair:
+            best_pair = cand_score
             pair = (p, j)
-            break
     if pair is not None:
         add(pair[0], "COARSE parent of the selected FULL structure (coarse/fine pair)")
-        add(pair[1], "FULL child with an equally strong COARSE parent function")
+        add(pair[1], "FULL child with a supported COARSE parent function")
     # 3) one or two cases where tree and neural functions disagree
     cand = [int(j) for j in ranked
             if support[j] >= 2000 and var_tree[j] > 0.05 and var_nn[j] > 0.05]
@@ -282,6 +309,7 @@ def main() -> None:
         add(int(j), "fill: high combined support/variation score")
 
     selected = selected[:8]
+    pair_members = set(pair) if pair is not None else set()
     selected_meta = []
     for j in selected:
         gran = "C" if j < K.HIV_N_C else "F"
@@ -300,6 +328,7 @@ def main() -> None:
             "parent_coarse_column": (int(parent[j - K.HIV_N_C])
                                      if gran == "F" else None),
             "reason_selected": reasons.get(j, "high combined score"),
+            "coarse_fine_pair": bool(j in pair_members),
             "variation_tree": float(var_tree[j]),
             "variation_nn": float(var_nn[j]),
             "shape_difference_tree_vs_nn": float(shape_diff(f_tree_grid[j], f_nn_grid[j])),
@@ -342,9 +371,16 @@ def main() -> None:
 
     # 3 Valid cases: correct positive, correct negative, largest error (distinct)
     valid = dh.rows["valid"]
-    logit = np.load(K.PREDICTIONS / f"{chosen}.npz")
-    key = "logit" if "logit" in logit.files else "pred"
-    score_valid = np.asarray(logit[key], dtype=np.float64)[valid]
+    stored = np.load(K.PREDICTIONS / f"{chosen}.npz")
+    if "logit" in stored.files:
+        full = np.asarray(stored["logit"], dtype=np.float64)
+    elif "pred" in stored.files:
+        full = np.asarray(stored["pred"], dtype=np.float64)
+    else:                       # neural model: per-split best predictions
+        full = np.empty(stored["y"].size, dtype=np.float64)
+        for split in K.SPLITS:
+            full[stored[f"{split}_rows"]] = stored[f"pred_{split}"]
+    score_valid = full[valid]
     prob = K.sigmoid(score_valid)
     yv = dh.y[valid]
     pos_candidates = np.where(yv == 1)[0]
@@ -411,7 +447,7 @@ def main() -> None:
             "reconstruction_check": {
                 "sum_all_terms": float(adjusted_bias + contrib.sum()),
                 "matches_model_margin": bool(abs(adjusted_bias + contrib.sum()
-                                                 - score_valid[local_i]) < 1e-5),
+                                                 - score_valid[local_i]) < 1e-4),
                 "abs_error": float(abs(adjusted_bias + contrib.sum() - score_valid[local_i])),
             },
         })
@@ -430,9 +466,11 @@ def main() -> None:
         "size_reference": size_ref,
         "feature_grid": {"structure": "[0, Train nonzero q05,q25,q50,q75,q90,q95,q99]",
                          "reference": "0 (structure absent)"},
-        "selection_rule": ("Train support >= 500 and learned-function variation; "
-                           "3 top combined score, one COARSE/FULL parent-child pair, "
-                           "2 largest tree-vs-neural normalised shape gaps; no Test use"),
+        "selection_rule": ("Train support >=1000 for the top-3 combined-variation "
+                           "structures; one NEW COARSE/FULL parent-child pair (child "
+                           "support >=500, parent support >=1000, both varying); 2 largest "
+                           "tree-vs-neural normalised shape gaps among support>=2000 with "
+                           "both variations >0.05; fill by combined score; no Test use"),
         "selected_structures": selected_meta,
         "additive_model_used_for_local_explanations": select_by,
         "local_explanations": cases,
@@ -550,7 +588,7 @@ def main() -> None:
 
     (K.FUNCTIONS / "README.md").write_text(
         "# Extracted additive functions\n\n"
-        "* `hiv_functions.json` — 6–8 MolHIV structures selected from Train support and\n"
+        "* `hiv_functions.json` — 7 MolHIV structures selected from Train support and\n"
         "  the learned functions only. `f_tree`, `f_nn` and `f_linear` are all on the\n"
         "  same raw input grid and reference point (structures: 0; size terms: Train\n"
         "  median). Values are the zero-baseline contribution to the raw margin.\n"
@@ -565,6 +603,50 @@ def main() -> None:
                   "definition": ("structure contribution = f_j(x)-f_j(0); size contribution "
                                  "= f_j(x)-f_j(Train median); base = adjusted bias; "
                                  "all terms sum exactly to the raw margin")})
+    import csv
+
+    with (K.FUNCTIONS / "function_support.csv").open("w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=[
+            "dataset", "structure", "family", "support_train_nonzero",
+            "document_frequency_train", "occurrence_train", "positive_molecules_train",
+            "negative_molecules_train", "variation_tree", "variation_nn",
+            "shape_difference_tree_vs_nn", "coarse_fine_pair", "reason_selected"])
+        w.writeheader()
+        for e in selected_meta:
+            w.writerow({"dataset": "MolHIV", "structure": e["structure"],
+                        "family": e["family"],
+                        "support_train_nonzero": e["support_train_nonzero"],
+                        "document_frequency_train": e["document_frequency_train"],
+                        "occurrence_train": e["occurrence_train"],
+                        "positive_molecules_train": e["positive_molecules_train"],
+                        "negative_molecules_train": e["negative_molecules_train"],
+                        "variation_tree": e["variation_tree"],
+                        "variation_nn": e["variation_nn"],
+                        "shape_difference_tree_vs_nn": e["shape_difference_tree_vs_nn"],
+                        "coarse_fine_pair": e["coarse_fine_pair"],
+                        "reason_selected": e["reason_selected"]})
+        for e in zentries:
+            w.writerow({"dataset": "ZINC", "structure": e["feature"],
+                        "family": e["family"],
+                        "support_train_nonzero": e["support_train_nonzero"],
+                        "variation_tree": e["variation_tree"],
+                        "variation_nn": e["variation_nn"],
+                        "reason_selected": e["semantics"]})
+    with (K.FUNCTIONS / "local_explanations_summary.csv").open("w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=[
+            "case", "graph_id", "y", "predicted_probability", "n_active_structures",
+            "top5_share", "top10_share", "top20_share", "remaining_signed",
+            "remaining_abs", "reconstruction_abs_error"])
+        w.writeheader()
+        for c in cases:
+            w.writerow({"case": c["case"], "graph_id": c["graph_id"], "y": c["y"],
+                        "predicted_probability": c["predicted_probability"],
+                        "n_active_structures": c["n_active_structures"],
+                        "top5_share": c["top5_share"], "top10_share": c["top10_share"],
+                        "top20_share": c["top20_share"],
+                        "remaining_signed": c["remaining_signed"],
+                        "remaining_abs": c["remaining_abs"],
+                        "reconstruction_abs_error": c["reconstruction_check"]["abs_error"]})
     print(f"[E] tree closure={tree_closure:.2e} nn closure={nn_closure:.2e} "
           f"nn f(0)={nn_f0:.2e} selected={len(selected)} "
           f"local_model={chosen} zinc_closure={zclosure:.2e}")

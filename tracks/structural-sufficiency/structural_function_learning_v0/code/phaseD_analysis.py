@@ -62,8 +62,15 @@ def load_hiv_predictions() -> dict[str, np.ndarray]:
     for arm in ("L-BAL-STD", "L-NAT-STD", "L-NAT-RAW", "H-ADD-TREE",
                 "H-NN-JOINT", "H-NN-JOINT-BAL", "H-NN-ADD"):
         z = np.load(K.PREDICTIONS / f"{arm}.npz")
-        key = "logit" if "logit" in z.files else "pred"
-        out[arm] = np.asarray(z[key], dtype=np.float64)
+        if "logit" in z.files:
+            out[arm] = np.asarray(z["logit"], dtype=np.float64)
+        elif "pred" in z.files:
+            out[arm] = np.asarray(z["pred"], dtype=np.float64)
+        else:                      # neural models store per-split best predictions
+            pred = np.empty(z["y"].size, dtype=np.float64)
+            for split in K.SPLITS:
+                pred[z[f"{split}_rows"]] = z[f"pred_{split}"]
+            out[arm] = pred
     return out
 
 
@@ -117,6 +124,8 @@ HIV_CONTRASTS = [
      "additive neural minus full linear"),
     ("XGB-ALL-vs-COUNT-ALL", "XGB-ALL", "COUNT-ALL",
      "historical full tree minus full linear"),
+    ("XGB-ALL-vs-H-NN-ADD", "XGB-ALL", "H-NN-ADD",
+     "full tree minus additive neural"),
 ]
 ZINC_CONTRASTS = [
     ("Z-ADD-TREE-vs-ZX1", "Z-ADD-TREE", "ZX1",
@@ -345,7 +354,14 @@ def main() -> None:
     hpred_with_c = dict(hpred)
     for cfg in pa["all_configs"]:
         tag = f"{cfg['arm']}_C{cfg['C']:g}"
-        hpred_with_c[tag] = np.load(K.PREDICTIONS / f"{tag}.npz")["logit"]
+        path = K.PREDICTIONS / f"{tag}.npz"
+        if path.exists():
+            hpred_with_c[tag] = np.load(path)["logit"]
+        elif cfg.get("source"):
+            # historical C=0.03 fit: the stored COUNT-ALL logit is exactly this fit
+            hpred_with_c[tag] = hpred["COUNT-ALL"]
+        else:
+            raise FileNotFoundError(path)
     contrasts: dict[str, Any] = {"n_boot": N_BOOT, "seed": K.SEED,
                                  "hiv_group_unit": "Bemis-Murcko scaffold",
                                  "zinc_group_unit": "molecule",

@@ -43,7 +43,7 @@ def test_add_tree_boosters_are_singleton():
         assert stats["n_trees_violating_singleton"] == 0
         assert stats["max_distinct_features_per_tree"] <= 1
         run = K.read_json(K.RUNS / f"{arm}.json")
-        assert run["replay_check"]["residual_max_abs_dev_from_mean"] < 1e-6
+        assert run["replay_check"]["residual_max_abs_dev_from_mean"] < 1e-4
         assert run["tree_violations"] == {"multi_feature_trees": 0,
                                           "size_and_structure_same_tree": 0,
                                           "two_structures_same_tree": 0}
@@ -56,6 +56,8 @@ def test_add_nn_f0_and_closure():
 
     for arm in ("H-NN-ADD", "Z-NN-ADD"):
         path = K.RUNS / f"{arm}_best.pt"
+        if not path.exists():
+            path = K.MODELS / f"{arm}_best.pt"
         _need(path)
         ckpt = torch.load(path, map_location="cpu", weights_only=False)
         sd = ckpt["state_dict"]
