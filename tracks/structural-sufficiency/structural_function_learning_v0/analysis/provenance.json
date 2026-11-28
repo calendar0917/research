@@ -1,0 +1,999 @@
+{
+  "analysis_outputs": {
+    "contrasts.json": {
+      "bytes": 22178,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/contrasts.json",
+      "sha256": "637e99ddab98cc2ff0419f4994eaa26cdf6afa05c0e5a8acc57ca5574ff944dd"
+    },
+    "diagnostics.json": {
+      "bytes": 10990,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/diagnostics.json",
+      "sha256": "89fc5bdcd761904049ed07d527a28a61ea5451c50dffb1f796d480e30306a85f"
+    },
+    "linear_models.json": {
+      "bytes": 956497,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/linear_models.json",
+      "sha256": "ee759ae62161b2fbf5db70fca72684df2d4bf7eace6234cc3a12458bd2348ced"
+    },
+    "phase0_contributions.json": {
+      "bytes": 15939,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/phase0_contributions.json",
+      "sha256": "00063bb793230b063c4e358f9e8826d3bc0b281e13b9fc7b2dc3de236a0381c9"
+    },
+    "phaseA_linear.json": {
+      "bytes": 27985,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/phaseA_linear.json",
+      "sha256": "519eda16493a0ef0c05727096503f2a304d05bc4d439ddd39d945a7197f8342c"
+    },
+    "phaseC_H-NN-ADD.json": {
+      "bytes": 21514,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/phaseC_H-NN-ADD.json",
+      "sha256": "612d97dff2c4819cf42c6f6406ee9a8caa8b24b3b0fe8875817fa0da1e6f9014"
+    },
+    "phaseC_H-NN-JOINT-BAL.json": {
+      "bytes": 21071,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/phaseC_H-NN-JOINT-BAL.json",
+      "sha256": "52528ea8747f7480fae028cbf5778e1e2583a371accf109214867ac5e2e47eec"
+    },
+    "phaseC_H-NN-JOINT.json": {
+      "bytes": 21043,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/phaseC_H-NN-JOINT.json",
+      "sha256": "7a267c8f4488bec4b4a50d60680bc6af3a6cb78abf06a604ac114b97053e4257"
+    },
+    "phaseC_Z-NN-ADD.json": {
+      "bytes": 19316,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/phaseC_Z-NN-ADD.json",
+      "sha256": "0f438b658a978d2536398620ce9ae4588f630f3efc9977bcb36a3a98c46a66f5"
+    },
+    "phaseD_summary.json": {
+      "bytes": 9227,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/phaseD_summary.json",
+      "sha256": "1a5d91b37ff3c6bc6da2cac51649e8c16a9ef9002bd1b179ea6cd32f7bd34937"
+    }
+  },
+  "code_git": {
+    "branch": "main",
+    "commit": "5d756e32acd0842713f9063b9bee3c70cedafecf",
+    "dirty_tracked": true,
+    "dirty_tracked_without_this_file": false,
+    "status_short": [
+      "?? tracks/structural-sufficiency/structural_function_learning_v0/analysis/provenance.json"
+    ],
+    "status_short_without_this_file": []
+  },
+  "commands": [
+    "uv run python tracks/.../code/phase0_contributions.py",
+    "uv run python tracks/.../code/phaseA_linear.py",
+    "rr run res sfl2-h-add-tree --pool res-local --cpus 8 -- python .../phaseB_add_tree.py --dataset hiv",
+    "rr run res sfl2-z-add-tree --pool res-local --cpus 8 -- python .../phaseB_add_tree.py --dataset zinc",
+    "rr run res sfl2-h-nn --pool res-gpu1 --gpus 1 -- python .../phaseC_add_nn.py --arms H-NN-JOINT,H-NN-JOINT-BAL,H-NN-ADD",
+    "rr run res sfl2-z-nn --pool res-gpu0 --gpus 1 -- python .../phaseC_add_nn.py --arms Z-NN-ADD",
+    "uv run python tracks/.../code/phaseD_analysis.py",
+    "uv run python tracks/.../code/phaseE_functions.py",
+    "uv run pytest -q tracks/.../tests"
+  ],
+  "created_utc": "2026-11-28T13:59:38Z",
+  "curves": {
+    "H-ADD-TREE_rounds.csv": {
+      "bytes": 561,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/H-ADD-TREE_rounds.csv",
+      "sha256": "53243f5b1a8af803dc12c479d87213dc2247dce2598d33db85205d0f4e2eff89"
+    },
+    "H-NN-ADD_curve.csv": {
+      "bytes": 7031,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/H-NN-ADD_curve.csv",
+      "sha256": "37c617b3cce558548eaffca5731b607978c348bbb36da45432168ab40af26408"
+    },
+    "H-NN-JOINT-BAL_curve.csv": {
+      "bytes": 7054,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/H-NN-JOINT-BAL_curve.csv",
+      "sha256": "d566188c4f0b41d9ac74660dd10437a7cfeef13330fef24f97d68bd95db1d9f4"
+    },
+    "H-NN-JOINT_curve.csv": {
+      "bytes": 7079,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/H-NN-JOINT_curve.csv",
+      "sha256": "47d1ae404f07ff708a812aec5f2c0bb54f0def1facaf5824ae0e197371128064"
+    },
+    "Z-ADD-TREE_rounds.csv": {
+      "bytes": 554,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/Z-ADD-TREE_rounds.csv",
+      "sha256": "bdf87b3fe50a572f1c33f3278de5a9a05ba05530a4f5db9c984302d2c6472197"
+    },
+    "Z-NN-ADD_curve.csv": {
+      "bytes": 6987,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/Z-NN-ADD_curve.csv",
+      "sha256": "a896766ed73f2e43bd74b71c239a418ea24d0ec8de90cba477abfd8f61418d1d"
+    },
+    "ref_H-N-CF_curve.csv": {
+      "bytes": 10060,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/ref_H-N-CF_curve.csv",
+      "sha256": "00b8d180daae4a6e848827e70ff27a1d0af93c1e09a4cc247f39636da922274b"
+    },
+    "ref_H-N0_curve.csv": {
+      "bytes": 10072,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/ref_H-N0_curve.csv",
+      "sha256": "ee7ec255acb8ed186b3eb4808de11b54c505a6a5eca1a7ca50f91b42198a7810"
+    },
+    "ref_Z-N0_curve.csv": {
+      "bytes": 3148,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/ref_Z-N0_curve.csv",
+      "sha256": "6f59590395225bdc907e22f4d4e90b53b235a228eb996ad7be6c89d4f092f463"
+    },
+    "ref_Z-N1_curve.csv": {
+      "bytes": 3139,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves/ref_Z-N1_curve.csv",
+      "sha256": "1a55ab9d929415c13b0ccbd9dc5e2803a553b39574bca1f5c45d70ee9abcf49a"
+    }
+  },
+  "data_identity": {
+    "historical_predictions_identity_checked": true,
+    "molhiv": {
+      "columns": "[log1p(n_atoms), log1p(n_bonds), C(754), F(3652)]",
+      "n_bonds_source": "tracked raw ogbg-molhiv bond_ptr differences / 2; verified equal to MSDS-v0 bond counts locally",
+      "n_columns": 4408,
+      "rows": {
+        "test": 4113,
+        "train": 32901,
+        "valid": 4113
+      },
+      "structure_scale": "frozen count/sqrt(max(n_atoms,1))"
+    },
+    "zinc": {
+      "columns": "Z(4642) + C(9) + F(1250), frozen SGA-v1 design",
+      "n_columns": 5901,
+      "rows": {
+        "test": 1000,
+        "train": 10000,
+        "valid": 1000
+      }
+    }
+  },
+  "documents": {
+    "ERRATA.md": {
+      "bytes": 4666,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/ERRATA.md",
+      "sha256": "0a1f34e1ffa60a948b998abd4f770d3d528d0a1c76fa556942782863eb08e310"
+    },
+    "PROTOCOL.md": {
+      "bytes": 9803,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/PROTOCOL.md",
+      "sha256": "49f6f3cc1c441e5bf9e63778bb9f8aff619e264c4b364fa4234710a009b8777d"
+    },
+    "REPORT.md": {
+      "bytes": 22598,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/REPORT.md",
+      "sha256": "34cf52adafbdbfab0dabe2b1694fc58b263e25062c6fe86bc91b07ef395f0d05"
+    }
+  },
+  "environment": {
+    "cpu_count": 16,
+    "cuda_available": false,
+    "gpu_name": null,
+    "numpy": "2.1.3",
+    "pandas": "2.2.3",
+    "platform": "Linux-6.18.63-x86_64-with-glibc2.44",
+    "python": "3.12.15",
+    "rdkit": "2026.09.1",
+    "scipy": "1.14.1",
+    "sklearn": "1.5.2",
+    "torch": "2.5.1+cu124",
+    "torch_cuda": "12.4",
+    "xgboost": "2.1.3"
+  },
+  "execution_policy": {
+    "cpu": "linear models, trees, all analysis (local 16-core + res-local 8-core)",
+    "gpu": "H-NN-JOINT / H-NN-JOINT-BAL / H-NN-ADD on res GPU1; Z-NN-ADD on res GPU0 (parallel)",
+    "remote_runner": "rr (process backend); commit deployed 9e7f72733350",
+    "test_policy": "DEVELOPMENT_TEST: Test evaluated and reported, never used for selection"
+  },
+  "function_outputs": {
+    "README.md": {
+      "bytes": 695,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/functions/README.md",
+      "sha256": "670b9546c2b6b2aebada3842925b2b2cfaadc37ebcf78667edaa2e679af1dd1e"
+    },
+    "function_support.csv": {
+      "bytes": 2570,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/functions/function_support.csv",
+      "sha256": "08cf699e778ba871cbd936eaf78e1128f2953be354eaf1b683409e42e47246a0"
+    },
+    "hiv_functions.json": {
+      "bytes": 23416,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/functions/hiv_functions.json",
+      "sha256": "75038bf4ea8829993401c3cabb6a0d87d7827f74f35f676029ff966e51368059"
+    },
+    "hiv_local_explanations.json": {
+      "bytes": 11652,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/functions/hiv_local_explanations.json",
+      "sha256": "5fe4678cf3d71e115076ae9a8a4a1919bb5165e8ef81734cd6635dad18efc9c1"
+    },
+    "local_explanations_summary.csv": {
+      "bytes": 654,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/functions/local_explanations_summary.csv",
+      "sha256": "3d4c6937e105cf0a0adac37d4fc5943c012b487f8da5a72ebc66f411e7b7f33f"
+    },
+    "zinc_functions.json": {
+      "bytes": 7621,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/functions/zinc_functions.json",
+      "sha256": "4181554727a431728bc1a655ea170ab178f201b96894575fe6d085b69c0a7222"
+    }
+  },
+  "gpu_accounting": {
+    "a100_gpu_hours": 0.03333333333333333,
+    "budget_a100_hours": 2.0,
+    "nn_job_seconds": 120.0,
+    "note": "wall-clock duration of the two single-GPU neural jobs; tree jobs used no GPU"
+  },
+  "inputs": {
+    "hiv_bundle": {
+      "bytes": 30328577,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/bundle/sav1_inputs.npz",
+      "sha256": "6b19265ed31b11d7679269368f29e606a50fcfee0357760257127c306d2d7bff"
+    },
+    "hiv_raw_graphs_for_bonds": {
+      "bytes": 4536224,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/lcrc_molnet_benchmark_pilot_v2/analysis/source/raw/lcrc_raw_v2/ogbg-molhiv.npz",
+      "sha256": "333cf1cd155bfb80fbf880ee96daaa9782ad081d9fcc9bf2d08bd59c79396693"
+    },
+    "isrd_count_all_params": {
+      "bytes": 529118,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/interpretable_structural_rule_discovery_v1/analysis/phaseC.json",
+      "sha256": "867329c061b9b76b24af494a6efc621e72157eb8ee72b4b12e83f1900048a9ca"
+    },
+    "isrd_predictions": {
+      "COUNT-ALL": {
+        "bytes": 1046741,
+        "exists": true,
+        "path": "tracks/structural-sufficiency/interpretable_structural_rule_discovery_v1/analysis/predictions/COUNT-ALL.npz",
+        "sha256": "7bd209cf0134a81f7ba5fe2bb8f74c056177305d7e60e3834fc46958eaf5f5b7"
+      },
+      "R128": {
+        "bytes": 1033078,
+        "exists": true,
+        "path": "tracks/structural-sufficiency/interpretable_structural_rule_discovery_v1/analysis/predictions/R128.npz",
+        "sha256": "72d9c6a703f934307c2f9e8b196e70d38128a3bb63e9a1e4efbc93436080bc54"
+      },
+      "XGB-ALL": {
+        "bytes": 895257,
+        "exists": true,
+        "path": "tracks/structural-sufficiency/interpretable_structural_rule_discovery_v1/analysis/predictions/XGB-ALL.npz",
+        "sha256": "211d7aa95384d105db4c69ea5229f826ac505810f392fa40d4da5c15635874bf"
+      }
+    },
+    "molhiv_scaffolds_local_analysis_only": {
+      "bytes": 663120,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/molhiv_scaffolds.npz",
+      "sha256": "00f87fb5021f39c598f7638fd93a50e5ecb1f73e40db799272ef432b65cd39ec"
+    },
+    "msds_instances_local_analysis_only": {
+      "bytes": 7810677,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/molhiv_multigranular_structure_sharing_v0/data/phaseA_instances.npz",
+      "sha256": "4f6e703251eaa27abfec46fbe63062b827861b7de9f735fded0ae739aba6e4e3"
+    },
+    "registry_coarse": {
+      "bytes": 214585,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/registry_v1/structure_registry_coarse_v1.csv",
+      "sha256": "34955c4a7955fc2475f1db7d777a11dd6a10cb31ded9cf3ded712a2492efdfd0"
+    },
+    "registry_full": {
+      "bytes": 1619399,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/registry_v1/structure_registry_full_v1.csv",
+      "sha256": "de1bcf8a7590e7b1b6cb9339b3428f7f8157d616d99578fc53cd82e0195146d6"
+    },
+    "sga_joint_mlp_reference": {
+      "N-CF": {
+        "bytes": 10060,
+        "exists": true,
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/curves/phaseB_N-CF_curve.csv",
+        "sha256": "00b8d180daae4a6e848827e70ff27a1d0af93c1e09a4cc247f39636da922274b"
+      },
+      "N0": {
+        "bytes": 10072,
+        "exists": true,
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/analysis/curves/phaseB_N0_curve.csv",
+        "sha256": "ee7ec255acb8ed186b3eb4808de11b54c505a6a5eca1a7ca50f91b42198a7810"
+      }
+    },
+    "sga_zinc_predictions": {
+      "ZN1": {
+        "bytes": 165201,
+        "exists": true,
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/runs/phaseC/ZN1_pred.npz",
+        "sha256": "2f0f009959acc3e7c4dcbb77326a5080aaf97ef2cd80ef3b261d620f1e5de27a"
+      },
+      "ZX1": {
+        "bytes": 125217,
+        "exists": true,
+        "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/runs/phaseC/ZX1_pred.npz",
+        "sha256": "41c8ad9df1e707419d25c54128d2a1e84ed5f2c1cf8ce99c845b2a281424c8b4"
+      }
+    },
+    "xgb_all_booster": {
+      "bytes": 1301896,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/interpretable_structural_rule_discovery_v1/analysis/models/XGB-ALL.json",
+      "sha256": "79420788d98001eb79b51a882f0676736b30537f382eedd256e877f961afde57"
+    },
+    "zinc_design": {
+      "bytes": 2177332,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/data/zinc_design.npz",
+      "sha256": "167ad44e37e4e8af473873883be59c702955ee30ffee1d306cb958ae7a922723"
+    },
+    "zinc_design_meta": {
+      "bytes": 6347,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_gain_attribution_v1/data/zinc_design_meta.json",
+      "sha256": "a7c47eb90fec1b25ccda04359b341c4c75aad910cc685cd907805724007adbe0"
+    }
+  },
+  "new_models": {
+    "H-ADD-TREE": {
+      "bytes": 569325,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models/H-ADD-TREE.json",
+      "sha256": "225b1404f0d876f1c782dc90bbaa1da031064809301b8b10474d9fb64bd39a22"
+    },
+    "H-NN-ADD": {
+      "bytes": 280194,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models/H-NN-ADD_best.pt",
+      "sha256": "a849ac3aa8593c0672aa0d0842af2c886bf1daf11bf5bd4ec61c61a6d6f72667"
+    },
+    "H-NN-JOINT": {
+      "bytes": 2327064,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models/H-NN-JOINT_best.pt",
+      "sha256": "b5132ca31bccacb24543654bff2ca8d7348a246f5f30bd79d2cac0ef62d9ce3d"
+    },
+    "H-NN-JOINT-BAL": {
+      "bytes": 2327104,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models/H-NN-JOINT-BAL_best.pt",
+      "sha256": "0b96757707b11b741b5abcb14da3b3e51462f34701a1d345b4f137fd6ea668a3"
+    },
+    "Z-ADD-TREE": {
+      "bytes": 840991,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models/Z-ADD-TREE.json",
+      "sha256": "2c7864c371779be262b647b700a880f4bb7bea990b32983926c83862d0d6ba05"
+    },
+    "Z-NN-ADD": {
+      "bytes": 370818,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models/Z-NN-ADD_best.pt",
+      "sha256": "52cbf2ffdfa9e6a488fcb6dd7ba484209734045d811af1eb9e73a249ae09ee96"
+    }
+  },
+  "predictions": {
+    "COUNT-ALL": {
+      "bytes": 384361,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/COUNT-ALL.npz",
+      "sha256": "91c88ad33bb6b53d8edbcd93cbf04bc8b683679fd99242fbbb7f61be80147d86"
+    },
+    "H-ADD-TREE": {
+      "bytes": 379585,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/H-ADD-TREE.npz",
+      "sha256": "29f0d18286fd64e14ff846e92836c30237e1fb337f9dadbd245952823801befb"
+    },
+    "H-NN-ADD": {
+      "bytes": 467700,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/H-NN-ADD.npz",
+      "sha256": "deb80f2d23b3bb2b08434afd539101eb8662c1133215cdf56f9b68405c991aea"
+    },
+    "H-NN-JOINT": {
+      "bytes": 472044,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/H-NN-JOINT.npz",
+      "sha256": "374cace4a3d8c912d0bc5954393b156918316bc3bd8c63c410a8d914f0c048d3"
+    },
+    "H-NN-JOINT-BAL": {
+      "bytes": 480775,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/H-NN-JOINT-BAL.npz",
+      "sha256": "d5d018b1a06712892dfcd909852b58778cd02db2b5ab4ab88e8f9639dbd1a2a4"
+    },
+    "L-BAL-STD": {
+      "bytes": 384882,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-BAL-STD.npz",
+      "sha256": "f9ba26bae3e1210ae6a40b59ea739eb4e9018e92cbeb2abb7f705972c1aec046"
+    },
+    "L-BAL-STD_C0.0003": {
+      "bytes": 384882,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-BAL-STD_C0.0003.npz",
+      "sha256": "f9ba26bae3e1210ae6a40b59ea739eb4e9018e92cbeb2abb7f705972c1aec046"
+    },
+    "L-BAL-STD_C0.003": {
+      "bytes": 385452,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-BAL-STD_C0.003.npz",
+      "sha256": "4136b1863bb988d2024248bb340e11b6511a8e46f90dcec64360bd9ebbb8c750"
+    },
+    "L-NAT-RAW": {
+      "bytes": 377562,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-RAW.npz",
+      "sha256": "2f868b4d36add5ccfc9e296d23b9c4ad86a56ea1beb95f00b3ed7248e8ce81a6"
+    },
+    "L-NAT-RAW_C0.0003": {
+      "bytes": 373996,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-RAW_C0.0003.npz",
+      "sha256": "57d1a026f3a8df9e9bf19c86f019eead5dd7c9a0dd8300b2f646f050921dd8fa"
+    },
+    "L-NAT-RAW_C0.003": {
+      "bytes": 376947,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-RAW_C0.003.npz",
+      "sha256": "60df1d87f8896951997bd01ac45625182fa9a701f29e03bd9a3c99af92f7de3f"
+    },
+    "L-NAT-RAW_C0.03": {
+      "bytes": 377562,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-RAW_C0.03.npz",
+      "sha256": "2f868b4d36add5ccfc9e296d23b9c4ad86a56ea1beb95f00b3ed7248e8ce81a6"
+    },
+    "L-NAT-STD": {
+      "bytes": 379875,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-STD.npz",
+      "sha256": "51a3aac8fea44cc9916a0f0f2bafb70a1a35703ce1526f736a8dc26f5ff19542"
+    },
+    "L-NAT-STD_C0.0003": {
+      "bytes": 377810,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-STD_C0.0003.npz",
+      "sha256": "9e2c7b0cb6e2ea95133da9792f96f1339d9919ea1fe8838f5581258b3b579583"
+    },
+    "L-NAT-STD_C0.003": {
+      "bytes": 379875,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-STD_C0.003.npz",
+      "sha256": "51a3aac8fea44cc9916a0f0f2bafb70a1a35703ce1526f736a8dc26f5ff19542"
+    },
+    "L-NAT-STD_C0.03": {
+      "bytes": 380941,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/L-NAT-STD_C0.03.npz",
+      "sha256": "1b033ccf620ab27d2ff9199504cd7ea1ea1ad13582c3e9632a9e5f60263606c2"
+    },
+    "R128": {
+      "bytes": 370678,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/R128.npz",
+      "sha256": "9d6ffbedbb46e3f3906afcc836203842cd1933e3d048b2ff4e0b962672f773c5"
+    },
+    "XGB-ALL": {
+      "bytes": 232869,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/XGB-ALL.npz",
+      "sha256": "fe366dff111de22e74df0b76b98680632e262dae3f6b4dd78aed27b086b713e0"
+    },
+    "Z-ADD-TREE": {
+      "bytes": 124165,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/Z-ADD-TREE.npz",
+      "sha256": "1071a5a26e728138a8725a1a3452bc1eeea12a47ae7b990c946ed24e220cd8c1"
+    },
+    "Z-NN-ADD": {
+      "bytes": 277621,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/Z-NN-ADD.npz",
+      "sha256": "f1351025c31ce6994472247374548dc49222f536a2b6be25bf1c5435c3e9b653"
+    },
+    "ZN1": {
+      "bytes": 183857,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/ZN1.npz",
+      "sha256": "5f9a90668529531bcbae3ed34af38b2b790cceefc91982fca9f7ecc330849800"
+    },
+    "ZX1": {
+      "bytes": 143389,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions/ZX1.npz",
+      "sha256": "819c03d78b6ac6b834e7f01ad57b9140cabb7229fb144e0dd999519e50d9ecc5"
+    }
+  },
+  "protocol": {
+    "bytes": 9803,
+    "exists": true,
+    "path": "tracks/structural-sufficiency/structural_function_learning_v0/PROTOCOL.md",
+    "sha256": "49f6f3cc1c441e5bf9e63778bb9f8aff619e264c4b364fa4234710a009b8777d"
+  },
+  "remote_jobs": {
+    "sfl2-h-add-tree": {
+      "backend": "process",
+      "branch": "main",
+      "commit": "9e7f72733350",
+      "completed_at": "2026-11-28T21:18:12+08:00",
+      "created_at": "2026-11-28T21:16:46+08:00",
+      "cuda_visible_devices": null,
+      "dirty": false,
+      "driver_version": "550.163.01",
+      "exit_code": 0,
+      "experiment": "sfl2-h-add-tree",
+      "failure_reason": null,
+      "gpu_count": 2,
+      "gpu_names": [
+        "NVIDIA A100-SXM4-40GB",
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "host": "res",
+      "job": null,
+      "legacy": false,
+      "meta": {
+        "backend": "process",
+        "command": "python tracks/structural-sufficiency/structural_function_learning_v0/code/phaseB_add_tree.py --dataset hiv",
+        "created_at": "2026-11-28T21:16:46+08:00",
+        "experiment": "sfl2-h-add-tree",
+        "git_branch": "main",
+        "git_commit": "9e7f727333508408e79e863fcf11acf640784826",
+        "git_diff_hash": "e3b0c44298fc1c14",
+        "git_dirty": false,
+        "host": "res",
+        "pool": "res-local",
+        "requested": {
+          "cpus": 8,
+          "eligible_nodes": [],
+          "gpus": 2,
+          "mem": "32G",
+          "partition": null,
+          "time": "00:40:00"
+        },
+        "result_paths": [
+          "tracks/structural-sufficiency/structural_function_learning_v0/runs",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis"
+        ],
+        "run_id": "sfl2-h-add-tree-20261128-211646-175b7a50",
+        "runtime": {
+          "completed_at": "2026-11-28T21:18:12+08:00",
+          "cuda_available": true,
+          "cuda_device_count": 2,
+          "cuda_visible_devices": null,
+          "driver_version": "550.163.01",
+          "exit_code": 0,
+          "gpu_count": 2,
+          "gpus": {
+            "count": 2,
+            "names": [
+              "NVIDIA A100-SXM4-40GB",
+              "NVIDIA A100-SXM4-40GB"
+            ]
+          },
+          "hostname": "a100-2",
+          "node": "a100-2",
+          "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+          "python_version": "3.12.14",
+          "slurm_cpus": null,
+          "slurm_gpus": null,
+          "slurm_job_id": null,
+          "slurm_job_nodelist": null,
+          "slurm_partition": null,
+          "started_at": "2026-11-28T21:16:49+08:00",
+          "torch_cuda": "12.4",
+          "torch_version": "2.5.1+cu124"
+        },
+        "schema": "rr/run-meta/v1",
+        "slurm_job_id": null,
+        "state": "completed",
+        "torch_backend": "cu124"
+      },
+      "node": "a100-2",
+      "ok": true,
+      "pool": "res-local",
+      "pool_or_host": "res-local",
+      "run_id": "sfl2-h-add-tree-20261128-211646-175b7a50",
+      "scheduler_state": null,
+      "started_at": "2026-11-28T21:16:49+08:00",
+      "state": "completed",
+      "torch_cuda": "12.4",
+      "torch_version": "2.5.1+cu124"
+    },
+    "sfl2-h-nn": {
+      "backend": "process",
+      "branch": "main",
+      "commit": "9e7f72733350",
+      "completed_at": "2026-11-28T21:18:54+08:00",
+      "created_at": "2026-11-28T21:17:19+08:00",
+      "cuda_visible_devices": "1",
+      "dirty": false,
+      "driver_version": "550.163.01",
+      "exit_code": 0,
+      "experiment": "sfl2-h-nn",
+      "failure_reason": null,
+      "gpu_count": 2,
+      "gpu_names": [
+        "NVIDIA A100-SXM4-40GB",
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "host": "res",
+      "job": null,
+      "legacy": false,
+      "meta": {
+        "backend": "process",
+        "command": "python tracks/structural-sufficiency/structural_function_learning_v0/code/phaseC_add_nn.py --arms H-NN-JOINT,H-NN-JOINT-BAL,H-NN-ADD",
+        "created_at": "2026-11-28T21:17:19+08:00",
+        "experiment": "sfl2-h-nn",
+        "git_branch": "main",
+        "git_commit": "9e7f727333508408e79e863fcf11acf640784826",
+        "git_diff_hash": "e3b0c44298fc1c14",
+        "git_dirty": false,
+        "host": "res",
+        "pool": "res-gpu1",
+        "requested": {
+          "cpus": 8,
+          "eligible_nodes": [],
+          "gpus": 1,
+          "mem": "32G",
+          "partition": null,
+          "time": "01:00:00"
+        },
+        "result_paths": [
+          "tracks/structural-sufficiency/structural_function_learning_v0/runs",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis"
+        ],
+        "run_id": "sfl2-h-nn-20261128-211719-50947b71",
+        "runtime": {
+          "completed_at": "2026-11-28T21:18:54+08:00",
+          "cuda_available": true,
+          "cuda_device_count": 1,
+          "cuda_visible_devices": "1",
+          "driver_version": "550.163.01",
+          "exit_code": 0,
+          "gpu_count": 2,
+          "gpus": {
+            "count": 2,
+            "names": [
+              "NVIDIA A100-SXM4-40GB",
+              "NVIDIA A100-SXM4-40GB"
+            ]
+          },
+          "hostname": "a100-2",
+          "node": "a100-2",
+          "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+          "python_version": "3.12.14",
+          "slurm_cpus": null,
+          "slurm_gpus": "1",
+          "slurm_job_id": null,
+          "slurm_job_nodelist": null,
+          "slurm_partition": null,
+          "started_at": "2026-11-28T21:17:21+08:00",
+          "torch_cuda": "12.4",
+          "torch_version": "2.5.1+cu124"
+        },
+        "schema": "rr/run-meta/v1",
+        "slurm_job_id": null,
+        "state": "completed",
+        "torch_backend": "cu124"
+      },
+      "node": "a100-2",
+      "ok": true,
+      "pool": "res-gpu1",
+      "pool_or_host": "res-gpu1",
+      "run_id": "sfl2-h-nn-20261128-211719-50947b71",
+      "scheduler_state": null,
+      "started_at": "2026-11-28T21:17:21+08:00",
+      "state": "completed",
+      "torch_cuda": "12.4",
+      "torch_version": "2.5.1+cu124"
+    },
+    "sfl2-z-add-tree": {
+      "backend": "process",
+      "branch": "main",
+      "commit": "9e7f72733350",
+      "completed_at": "2026-11-28T21:18:13+08:00",
+      "created_at": "2026-11-28T21:17:00+08:00",
+      "cuda_visible_devices": null,
+      "dirty": false,
+      "driver_version": "550.163.01",
+      "exit_code": 0,
+      "experiment": "sfl2-z-add-tree",
+      "failure_reason": null,
+      "gpu_count": 2,
+      "gpu_names": [
+        "NVIDIA A100-SXM4-40GB",
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "host": "res",
+      "job": null,
+      "legacy": false,
+      "meta": {
+        "backend": "process",
+        "command": "python tracks/structural-sufficiency/structural_function_learning_v0/code/phaseB_add_tree.py --dataset zinc",
+        "created_at": "2026-11-28T21:17:00+08:00",
+        "experiment": "sfl2-z-add-tree",
+        "git_branch": "main",
+        "git_commit": "9e7f727333508408e79e863fcf11acf640784826",
+        "git_diff_hash": "e3b0c44298fc1c14",
+        "git_dirty": false,
+        "host": "res",
+        "pool": "res-local",
+        "requested": {
+          "cpus": 8,
+          "eligible_nodes": [],
+          "gpus": 2,
+          "mem": "32G",
+          "partition": null,
+          "time": "00:40:00"
+        },
+        "result_paths": [
+          "tracks/structural-sufficiency/structural_function_learning_v0/runs",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis"
+        ],
+        "run_id": "sfl2-z-add-tree-20261128-211700-41680ecc",
+        "runtime": {
+          "completed_at": "2026-11-28T21:18:13+08:00",
+          "cuda_available": true,
+          "cuda_device_count": 2,
+          "cuda_visible_devices": null,
+          "driver_version": "550.163.01",
+          "exit_code": 0,
+          "gpu_count": 2,
+          "gpus": {
+            "count": 2,
+            "names": [
+              "NVIDIA A100-SXM4-40GB",
+              "NVIDIA A100-SXM4-40GB"
+            ]
+          },
+          "hostname": "a100-2",
+          "node": "a100-2",
+          "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+          "python_version": "3.12.14",
+          "slurm_cpus": null,
+          "slurm_gpus": null,
+          "slurm_job_id": null,
+          "slurm_job_nodelist": null,
+          "slurm_partition": null,
+          "started_at": "2026-11-28T21:17:03+08:00",
+          "torch_cuda": "12.4",
+          "torch_version": "2.5.1+cu124"
+        },
+        "schema": "rr/run-meta/v1",
+        "slurm_job_id": null,
+        "state": "completed",
+        "torch_backend": "cu124"
+      },
+      "node": "a100-2",
+      "ok": true,
+      "pool": "res-local",
+      "pool_or_host": "res-local",
+      "run_id": "sfl2-z-add-tree-20261128-211700-41680ecc",
+      "scheduler_state": null,
+      "started_at": "2026-11-28T21:17:03+08:00",
+      "state": "completed",
+      "torch_cuda": "12.4",
+      "torch_version": "2.5.1+cu124"
+    },
+    "sfl2-z-nn": {
+      "backend": "process",
+      "branch": "main",
+      "commit": "9e7f72733350",
+      "completed_at": "2026-11-28T21:18:00+08:00",
+      "created_at": "2026-11-28T21:17:30+08:00",
+      "cuda_visible_devices": "0",
+      "dirty": false,
+      "driver_version": "550.163.01",
+      "exit_code": 0,
+      "experiment": "sfl2-z-nn",
+      "failure_reason": null,
+      "gpu_count": 2,
+      "gpu_names": [
+        "NVIDIA A100-SXM4-40GB",
+        "NVIDIA A100-SXM4-40GB"
+      ],
+      "host": "res",
+      "job": null,
+      "legacy": false,
+      "meta": {
+        "backend": "process",
+        "command": "python tracks/structural-sufficiency/structural_function_learning_v0/code/phaseC_add_nn.py --arms Z-NN-ADD",
+        "created_at": "2026-11-28T21:17:30+08:00",
+        "experiment": "sfl2-z-nn",
+        "git_branch": "main",
+        "git_commit": "9e7f727333508408e79e863fcf11acf640784826",
+        "git_diff_hash": "e3b0c44298fc1c14",
+        "git_dirty": false,
+        "host": "res",
+        "pool": "res-gpu0",
+        "requested": {
+          "cpus": 8,
+          "eligible_nodes": [],
+          "gpus": 1,
+          "mem": "32G",
+          "partition": null,
+          "time": "00:40:00"
+        },
+        "result_paths": [
+          "tracks/structural-sufficiency/structural_function_learning_v0/runs",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/models",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/predictions",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis/curves",
+          "tracks/structural-sufficiency/structural_function_learning_v0/analysis"
+        ],
+        "run_id": "sfl2-z-nn-20261128-211730-ca5baea9",
+        "runtime": {
+          "completed_at": "2026-11-28T21:18:00+08:00",
+          "cuda_available": true,
+          "cuda_device_count": 1,
+          "cuda_visible_devices": "0",
+          "driver_version": "550.163.01",
+          "exit_code": 0,
+          "gpu_count": 2,
+          "gpus": {
+            "count": 2,
+            "names": [
+              "NVIDIA A100-SXM4-40GB",
+              "NVIDIA A100-SXM4-40GB"
+            ]
+          },
+          "hostname": "a100-2",
+          "node": "a100-2",
+          "python_executable": "/home/hxy/cy/research/.venv/bin/python",
+          "python_version": "3.12.14",
+          "slurm_cpus": null,
+          "slurm_gpus": "0",
+          "slurm_job_id": null,
+          "slurm_job_nodelist": null,
+          "slurm_partition": null,
+          "started_at": "2026-11-28T21:17:33+08:00",
+          "torch_cuda": "12.4",
+          "torch_version": "2.5.1+cu124"
+        },
+        "schema": "rr/run-meta/v1",
+        "slurm_job_id": null,
+        "state": "completed",
+        "torch_backend": "cu124"
+      },
+      "node": "a100-2",
+      "ok": true,
+      "pool": "res-gpu0",
+      "pool_or_host": "res-gpu0",
+      "run_id": "sfl2-z-nn-20261128-211730-ca5baea9",
+      "scheduler_state": null,
+      "started_at": "2026-11-28T21:17:33+08:00",
+      "state": "completed",
+      "torch_cuda": "12.4",
+      "torch_version": "2.5.1+cu124"
+    }
+  },
+  "round_id": "structural-function-learning-v0",
+  "seconds_to_assemble": 265.05125164985657,
+  "seed": 0,
+  "tables": {
+    "metrics_csv": {
+      "bytes": 14434,
+      "exists": true,
+      "path": "tracks/structural-sufficiency/structural_function_learning_v0/analysis/metrics.csv",
+      "sha256": "529974b3b1b64683b86f14adacd7e245276e5269d7437c434eedb4a807e08235"
+    }
+  },
+  "verification": {
+    "metrics_recomputed_from_stored_predictions": true,
+    "phase0": {
+      "closure_mean_centred": 1.9539925233402755e-14,
+      "closure_zero_baseline": 1.4210854715202004e-14,
+      "old_buggy_reconstruction_error": 8400.011600349942
+    },
+    "phaseB": {
+      "H-ADD-TREE": {
+        "replay_check": {
+          "n_rows": 1000,
+          "n_trees": 500,
+          "note": "constant residual = base_score margin (identity link: 0 for reg:absoluteerror)",
+          "residual_max_abs_dev_from_mean": 7.4115799160168194e-06,
+          "residual_mean": -1.8502175216348924
+        },
+        "synthetic_constraint_check": {
+          "features_used": [
+            "c0",
+            "c1",
+            "c2"
+          ],
+          "max_distinct_features_per_tree": 1,
+          "n_distinct_features_used": 3,
+          "n_trees": 30,
+          "n_trees_with_more_than_one_feature": 0,
+          "unconstrained_control_distinct_features": 6
+        },
+        "tree_violations": {
+          "multi_feature_trees": 0,
+          "size_and_structure_same_tree": 0,
+          "two_structures_same_tree": 0
+        }
+      },
+      "Z-ADD-TREE": {
+        "replay_check": {
+          "n_rows": 1000,
+          "n_trees": 500,
+          "note": "constant residual = base_score margin (identity link: 0 for reg:absoluteerror)",
+          "residual_max_abs_dev_from_mean": 4.658989762262866e-06,
+          "residual_mean": 0.4410027347594981
+        },
+        "synthetic_constraint_check": {
+          "features_used": [
+            "c0",
+            "c1",
+            "c2"
+          ],
+          "max_distinct_features_per_tree": 1,
+          "n_distinct_features_used": 3,
+          "n_trees": 30,
+          "n_trees_with_more_than_one_feature": 0,
+          "unconstrained_control_distinct_features": 6
+        },
+        "tree_violations": {
+          "multi_feature_trees": 0,
+          "size_and_structure_same_tree": 0,
+          "two_structures_same_tree": 0
+        }
+      }
+    },
+    "phaseC_init_hashes_equal": true,
+    "phaseE": {
+      "hiv": {
+        "nn_f_j_0_zero_analytic": true,
+        "nn_f_j_at_zero_max_abs_sampled": 0.0,
+        "nn_forward_vs_sum_features_max_abs_error": 7.982981422571811e-07,
+        "nn_n_rows": 256,
+        "tree_extraction_max_abs_error": 7.741341844447192e-06,
+        "tree_n_rows": 2000
+      },
+      "zinc": {
+        "base_margin_config": 0.44100288,
+        "base_margin_empirical": 0.4410027224209217,
+        "n_rows": 1000,
+        "tree_extraction_max_abs_error": 3.734572099844957e-06
+      }
+    },
+    "pytest_fast_and_slow": "13 passed (tests/), including booster singleton, replay, f_j(0)=0, closure, init-hash and stored-metric checks"
+  }
+}
