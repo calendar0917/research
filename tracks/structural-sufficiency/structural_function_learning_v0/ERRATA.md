@@ -115,3 +115,14 @@ uv run pytest -q tracks/structural-sufficiency/structural_function_learning_v0/t
 对应核验：`tests/test_real_models.py::test_hiv_input_identity_against_historical_predictions`
 与 `test_phaseE_tree_and_nn_closures`；数值记录在
 `analysis/phase0_contributions.json` 和 `analysis/provenance.json`。
+
+## E6 — 实现偏差：加性神经的偏置初始化
+
+PROTOCOL §6 将 `H-NN-ADD` / `Z-NN-ADD` 的初始化写为 “a、v、b 为确定性
+N(0,0.01) 初始化”。实际代码中 `a`、`v` 由 NumPy `default_rng(0)` 生成
+N(0,0.01)（确定性，但不是 torch RNG），而 `bias` 初始化为 **0**，不是
+N(0,0.01)。这是冻结协议与实现之间的偏差，记录于此。
+
+影响评估：偏置只影响初始输出平移，不改变 `f_j(0)=0`、加性结构或闭包；统一
+50 epochs、AdamW 训练下该常数初始化会被快速吸收。没有因此重训或改选模型。
+所有报告数字来自实际代码；不能把 `bias` 初始化描述为已按协议执行。

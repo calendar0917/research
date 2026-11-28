@@ -1,0 +1,136 @@
+{
+  "all_pass": true,
+  "checks": [
+    {
+      "detail": {
+        "graph_id_sha": "9354b91671e01e890f650be0baa147d43264e866dedf7bbaac51fb52131d2f18",
+        "n": 41127,
+        "y_sha": "363dd03485d2b5bd702a23f4aad3b2e3e24c8509e6396b4e605f32021290792c"
+      },
+      "name": "historical_hiv_prediction_identity",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "n": 12000,
+        "rows": {
+          "test": 1000,
+          "train": 10000,
+          "valid": 1000
+        }
+      },
+      "name": "zinc_design_identity",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "max_abs_error": 1.0658141036401503e-14,
+        "n_configs": 9
+      },
+      "name": "linear_raw_parameterisation_closure",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "mean_centred": 1.9539925233402755e-14,
+        "old_buggy": 8400.011600349942,
+        "zero_baseline": 1.4210854715202004e-14
+      },
+      "name": "contribution_baseline_closures",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "H-ADD-TREE": {
+          "features": 91,
+          "leaves": 3161,
+          "max_features_per_tree": 1,
+          "nonempty": 500,
+          "replay_max_abs_deviation": 7.4115799160168194e-06,
+          "trees": 500,
+          "violations": 0
+        },
+        "Z-ADD-TREE": {
+          "features": 47,
+          "leaves": 5825,
+          "max_features_per_tree": 1,
+          "nonempty": 500,
+          "replay_max_abs_deviation": 4.658989762262866e-06,
+          "trees": 500,
+          "violations": 0
+        }
+      },
+      "name": "add_tree_singleton_and_replay",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "dense_forward_vs_numpy_max_abs": 9.02266670710361e-07,
+        "f_j_0_zero_analytic": true,
+        "f_j_at_zero_max_abs": 0.0,
+        "forward_minus_feature_sum_max_abs": 0.0,
+        "n_rows_checked": 256,
+        "note": "dense evaluation used; f_j(0)=0 holds by construction because relu(0-t)-relu(-t)==0",
+        "sparse_implementation_used": false
+      },
+      "name": "add_nn_f0_and_forward_closure",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "balanced": "e31778b87e94cf6ed8532ff7379fa2f8c2f67a644c5ade15411f1f2f884b1d2b",
+        "joint": "e31778b87e94cf6ed8532ff7379fa2f8c2f67a644c5ade15411f1f2f884b1d2b"
+      },
+      "name": "hiv_mlp_initialisation_hashes_match",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "max_abs_diff": 0.0,
+        "recomputed": {
+          "H-ADD-TREE_test_auc": 0.7695861256493945,
+          "H-NN-ADD_test_ap": 0.34683461637358126,
+          "H-NN-ADD_test_auc": 0.7991521659359972,
+          "L-BAL-STD_test_auc": 0.7922265783425714,
+          "Z-ADD-TREE_test_mae": 0.6822433560958306,
+          "Z-NN-ADD_test_mae": 0.2792615394209825
+        }
+      },
+      "name": "metrics_recomputed_from_predictions",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "nn_f_j_0_zero_analytic": true,
+        "nn_f_j_at_zero_max_abs_sampled": 0.0,
+        "nn_forward_vs_sum_features_max_abs_error": 7.982981422571811e-07,
+        "nn_n_rows": 256,
+        "tree_extraction_max_abs_error": 7.741341844447192e-06,
+        "tree_n_rows": 2000
+      },
+      "name": "phaseE_tree_and_nn_closures",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "H-ADD-TREE": false,
+        "Z-ADD-TREE": true
+      },
+      "name": "capacity_confound_flags_recorded",
+      "status": "PASS"
+    },
+    {
+      "detail": {
+        "hiv": 13,
+        "n_boot": 1000,
+        "seed": 0,
+        "zinc": 3
+      },
+      "name": "contrast_tables",
+      "status": "PASS"
+    }
+  ],
+  "round_id": "structural-function-learning-v0",
+  "seed": 0,
+  "test_suite": "uv run pytest -q tests -> 14 passed"
+}
