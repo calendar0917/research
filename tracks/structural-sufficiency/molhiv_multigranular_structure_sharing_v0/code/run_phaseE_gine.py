@@ -54,11 +54,11 @@ def seed_all(seed: int, torch) -> None:
         pass
 
 
-def param_hash(module, torch) -> str:
+def param_hash(state: dict, torch) -> str:
     h = hashlib.sha256()
-    for name, p in sorted(module.state_dict().items()):
+    for name in sorted(state):
         h.update(name.encode())
-        h.update(np.ascontiguousarray(p.detach().cpu().numpy()).tobytes())
+        h.update(np.ascontiguousarray(state[name].detach().cpu().numpy()).tobytes())
     return h.hexdigest()
 
 
@@ -198,10 +198,8 @@ def main() -> None:
     graphs = build_graphs(molecules, torch)
     model = make_model(args.hidden, args.layers, bundle["M"].shape[1], n_struct, use_struct, torch).to(device)
     init_backbone_hash = param_hash(
-        torch.nn.ModuleDict(
-            {k.replace(".", "_"): v for k, v in model.state_dict().items()
-             if not (k.startswith("m_branch") or k.startswith("s_branch"))}
-        ),
+        {k: v for k, v in model.state_dict().items()
+         if not (k.startswith("m_branch") or k.startswith("s_branch"))},
         torch,
     )
     lam = 1.0 / (0.3 * n_train)
