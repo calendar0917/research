@@ -373,6 +373,11 @@ def main() -> None:
     args = ap.parse_args()
     arms = [a.strip() for a in args.arms.split(",") if a.strip()]
     out_dir = Path(args.out_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    K.ANALYSIS.mkdir(parents=True, exist_ok=True)
+    K.PREDICTIONS.mkdir(parents=True, exist_ok=True)
+    K.CURVES.mkdir(parents=True, exist_ok=True)
+    K.MODELS.mkdir(parents=True, exist_ok=True)
     allowed = {"H-NN-JOINT", "H-NN-JOINT-BAL", "H-NN-ADD", "Z-NN-ADD"}
     if not set(arms) <= allowed:
         raise SystemExit(f"unknown arms {set(arms) - allowed}")

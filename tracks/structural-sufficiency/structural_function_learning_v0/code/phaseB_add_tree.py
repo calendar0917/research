@@ -100,7 +100,8 @@ def json_tree_stats(booster: Any) -> tuple[list[dict[str, Any]], dict[str, Any]]
     """Parse the JSON dump: per-tree feature set, leaf counts, thresholds."""
     import json
 
-    trees = json.loads(booster.get_dump(dump_format="json"))
+    # xgboost 2.1 returns a *list* of per-tree JSON strings
+    trees = booster.get_dump(dump_format="json")
     per_tree = []
     all_features: set[str] = set()
     feature_tree_counts: dict[str, int] = {}
@@ -195,6 +196,8 @@ def main() -> None:
     model_dir = Path(args.model_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     model_dir.mkdir(parents=True, exist_ok=True)
+    K.ANALYSIS.mkdir(parents=True, exist_ok=True)
+    K.PREDICTIONS.mkdir(parents=True, exist_ok=True)
     t0 = time.perf_counter()
     check = synthetic_constraint_check()
     if check["n_trees_with_more_than_one_feature"] > 0 or \
